@@ -35,8 +35,6 @@ import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerEnvContentAccess;
-import org.candlepin.model.OwnerEnvContentAccessCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.pki.PKIUtility;
@@ -182,18 +180,28 @@ public class ContentAccessManager {
         }
     }
 
+    /**
+     * Fetches the default content access mode list database value
+     *
+     * @return the default content access mode list database value as a string
+     */
+    public static String getListDefaultDatabaseValue() {
+        return String.join(",", ContentAccessMode.ENTITLEMENT.toDatabaseValue(),
+            ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
+    }
+
     private Configuration config;
     private PKIUtility pki;
-    private X509V3ExtensionUtil v3extensionUtil;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
     private OwnerCurator ownerCurator;
     private OwnerContentCurator ownerContentCurator;
     private ContentAccessCertificateCurator contentAccessCertificateCurator;
-    private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
+    private X509V3ExtensionUtil v3extensionUtil;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private EnvironmentCurator environmentCurator;
+    private ContentAccessCertificateCurator contentAccessCertCurator;
     private EventSink eventSink;
 
     private boolean standalone;
@@ -208,24 +216,24 @@ public class ContentAccessManager {
         CertificateSerialCurator serialCurator,
         OwnerCurator ownerCurator,
         OwnerContentCurator ownerContentCurator,
-        OwnerEnvContentAccessCurator ownerEnvContentAccessCurator,
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
         EnvironmentCurator environmentCurator,
+        ContentAccessCertificateCurator contentAccessCertCurator,
         EventSink eventSink) {
 
         this.config = Objects.requireNonNull(config);
         this.pki = Objects.requireNonNull(pki);
-        this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.keyPairCurator = Objects.requireNonNull(keyPairCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
+        this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
-        this.ownerEnvContentAccessCurator = Objects.requireNonNull(ownerEnvContentAccessCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
+        this.contentAccessCertCurator = Objects.requireNonNull(contentAccessCertCurator);
         this.eventSink = Objects.requireNonNull(eventSink);
         this.standalone = this.config.getBoolean(ConfigProperties.STANDALONE, true);
     }
@@ -253,123 +261,123 @@ public class ContentAccessManager {
             return null;
         }
 
-        Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
-
         ContentAccessCertificate existing = consumer.getContentAccessCert();
-        OwnerEnvContentAccess oeca = this.ownerEnvContentAccessCurator
-            .getContentAccess(owner.getId(), env == null ? null : env.getId());
-
-        StringBuilder pem = new StringBuilder();
-        boolean regenerate = false;
-
-        // If the cert was last updated before the org's last content update, or the cert has expired,
-        // or the payload has changed, regenerate the header.
-        // TODO: we should probably just store this all in one thing rather than two things.
-        if (existing != null) {
-            Date now = new Date();
-            Date expiration = existing.getSerial().getExpiration();
-            Date contentUpdate = owner.getLastContentUpdate();
-
-            if (expiration.before(now) || !contentUpdate.before(existing.getUpdated()) ||
-                oeca == null || !contentUpdate.before(oeca.getUpdated())) {
-
-                consumer.setContentAccessCert(null);
-                this.contentAccessCertificateCurator.delete(existing);
-                this.ownerEnvContentAccessCurator.delete(oeca);
-
-                regenerate = true;
-            }
-        }
-
-        if (existing == null || regenerate) {
-            log.info("Generating new SCA certificate for organization \"{}\"...", owner.getKey());
-
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.HOUR, -1);
-            Date startDate = cal.getTime();
-            cal.add(Calendar.YEAR, 1);
-            Date endDate = cal.getTime();
-
-            CertificateSerial serial = new CertificateSerial(endDate);
-            // We need the sequence generated id before we create the Certificate,
-            // otherwise we could have used cascading create
-            serialCurator.create(serial);
-
-            KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
-            byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
-
-            X509Certificate x509Cert = createX509Certificate(consumer, owner,
-                BigInteger.valueOf(serial.getId()), keyPair, startDate, endDate);
-
-            existing = new ContentAccessCertificate();
-            existing.setSerial(serial);
-            existing.setKeyAsBytes(pemEncodedKeyPair);
-            existing.setConsumer(consumer);
-
-            pem.append(new String(this.pki.getPemEncoded(x509Cert)));
-            existing.setCert(pem.toString());
-            consumer.setContentAccessCert(existing);
-
-            existing = this.contentAccessCertificateCurator.create(existing);
-            consumer = this.consumerCurator.merge(consumer);
+        ContentAccessCertificate result;
+        if (existing == null) {
+            result = createNewScaCertificate(consumer, owner);
         }
         else {
-            pem.append(existing.getCert());
+            result = updateScaCertificate(consumer, owner, existing);
         }
 
-        // Generate the cert body/payload as necessary
-        if (oeca == null || regenerate) {
-            log.info("Generating new SCA payload for organization \"{}\"...", owner.getKey());
+        return wrap(result);
+    }
 
-            String contentJson = this.createPayloadAndSignature(owner, env);
-            oeca = new OwnerEnvContentAccess(owner, env, contentJson);
-            this.ownerEnvContentAccessCurator.create(oeca, false);
+    private ContentAccessCertificate createNewScaCertificate(Consumer consumer, Owner owner)
+        throws IOException, GeneralSecurityException {
+        log.info("Generating new SCA certificate for consumer: \"{}\"", consumer.getUuid());
+        Validity oneYearValidity = Validity.oneYear();
+        CertificateSerial serial = createSerial(oneYearValidity);
+
+        KeyPair keyPair = this.keyPairCurator.getConsumerKeyPair(consumer);
+        byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
+
+        ContentAccessCertificate existing = new ContentAccessCertificate();
+        existing.setSerial(serial);
+        existing.setKeyAsBytes(pemEncodedKeyPair);
+        existing.setConsumer(consumer);
+
+        existing.setCert(createX509Cert(consumer, owner, serial, keyPair, oneYearValidity));
+        existing.setContent(this.createPayloadAndSignature(owner, consumer));
+        ContentAccessCertificate savedCert = this.contentAccessCertificateCurator.create(existing);
+        consumer.setContentAccessCert(savedCert);
+        this.consumerCurator.merge(consumer);
+        return savedCert;
+    }
+
+    private ContentAccessCertificate updateScaCertificate(Consumer consumer, Owner owner,
+        ContentAccessCertificate existing) throws GeneralSecurityException, IOException {
+        Date now = new Date();
+        Date expiration = existing.getSerial().getExpiration();
+        boolean isX509CertExpired = expiration.before(now);
+
+        if (isX509CertExpired) {
+            Validity oneYearValidity = Validity.oneYear();
+            KeyPair keyPair = this.keyPairCurator.getConsumerKeyPair(consumer);
+            CertificateSerial serial = createSerial(oneYearValidity);
+            existing.setSerial(serial);
+            existing.setCert(createX509Cert(consumer, owner, serial, keyPair, oneYearValidity));
+            this.contentAccessCertificateCurator.saveOrUpdate(existing);
         }
 
-        pem.append(oeca.getContentJson());
+        Date contentUpdate = owner.getLastContentUpdate();
+        boolean shouldUpdateContent = !contentUpdate.before(existing.getUpdated());
+        if (shouldUpdateContent || isX509CertExpired) {
+            existing.setContent(this.createPayloadAndSignature(owner, consumer));
+            this.contentAccessCertificateCurator.saveOrUpdate(existing);
+        }
 
-        // Impl note:
-        // We want our cert to represent the correct dates so the question of "when was this last
-        // updated?" can be answered as accurately as possible. We're also exploiting the fact that
-        // our created dates for a given DB entity will always be before the updated dates (assuming
-        // no one is messing with dates maliciously).
-        Date created = existing.getCreated().before(oeca.getCreated()) ? existing.getCreated() :
-            oeca.getCreated();
-        Date updated = existing.getUpdated().after(oeca.getUpdated()) ? existing.getUpdated() :
-            oeca.getUpdated();
+        return existing;
+    }
 
+    private ContentAccessCertificate wrap(ContentAccessCertificate cert) {
         ContentAccessCertificate result = new ContentAccessCertificate();
-        result.setCert(pem.toString());
-        result.setCreated(created);
-        result.setUpdated(updated);
-        result.setId(existing.getId());
-        result.setConsumer(existing.getConsumer());
-        result.setKey(existing.getKey());
-        result.setSerial(existing.getSerial());
-
+        result.setCert(cert.getCert() + cert.getContent());
+        result.setCreated(cert.getCreated());
+        result.setUpdated(cert.getUpdated());
+        result.setId(cert.getId());
+        result.setConsumer(cert.getConsumer());
+        result.setKey(cert.getKey());
+        result.setSerial(cert.getSerial());
         return result;
     }
 
-    private String createPayloadAndSignature(Owner owner, Environment environment)
-        throws IOException {
+    /**
+     * Represents a duration of certificate validity
+     */
+    private static class Validity {
+        private final Date start;
+        private final Date end;
 
-        byte[] payloadBytes = createContentAccessDataPayload(owner, environment);
+        public Validity(Date start, Date end) {
+            this.start = start;
+            this.end = end;
+        }
 
-        String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
-        payload += Util.toBase64(payloadBytes);
-        payload += "-----END ENTITLEMENT DATA-----\n";
+        /**
+         * Create a validity duration of one year starting from one hour in the past.
+         */
+        public static Validity oneYear() {
+            Calendar cal = Calendar.getInstance();
+            cal.add(Calendar.HOUR, -1);
+            Date start = cal.getTime();
+            cal.add(Calendar.YEAR, 1);
+            Date end = cal.getTime();
+            return new Validity(start, end);
+        }
 
-        byte[] bytes = pki.getSHA256WithRSAHash(new ByteArrayInputStream(payloadBytes));
-        String signature = "-----BEGIN RSA SIGNATURE-----\n";
-        signature += Util.toBase64(bytes);
-        signature += "-----END RSA SIGNATURE-----\n";
-        return payload + signature;
+        public Date start() {
+            return this.start;
+        }
+
+        public Date end() {
+            return this.end;
+        }
+
     }
 
-    private X509Certificate createX509Certificate(Consumer consumer, Owner owner, BigInteger serialNumber,
-        KeyPair keyPair, Date startDate, Date endDate)
-        throws GeneralSecurityException, IOException {
+    private CertificateSerial createSerial(Validity validity) {
+        CertificateSerial serial = new CertificateSerial(validity.end());
+        // We need the sequence generated id before we create the Certificate,
+        // otherwise we could have used cascading create
+        serialCurator.create(serial);
+        return serial;
+    }
 
+    private String createX509Cert(Consumer consumer, Owner owner, CertificateSerial serial,
+        KeyPair keyPair, Validity validity) throws GeneralSecurityException, IOException {
+
+        log.info("Generating X509 certificate for consumer \"{}\"...", consumer.getUuid());
         // fake a product dto as a container for the org content
         org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
         org.candlepin.model.dto.Content dContent = new org.candlepin.model.dto.Content();
@@ -384,11 +392,29 @@ public class ContentAccessManager {
         Set<X509ExtensionWrapper> extensions = prepareV3Extensions();
         Set<X509ByteExtensionWrapper> byteExtensions = prepareV3ByteExtensions(container);
 
-        X509Certificate x509Cert =  this.pki.createX509Certificate(
-            createDN(consumer, owner), extensions, byteExtensions, startDate,
-            endDate, keyPair, serialNumber, null);
+        X509Certificate x509Cert = this.pki.createX509Certificate(
+            createDN(consumer, owner), extensions, byteExtensions, validity.start(),
+            validity.end(), keyPair, BigInteger.valueOf(serial.getId()), null);
+        byte[] encodedCert = this.pki.getPemEncoded(x509Cert);
+        return new String(encodedCert);
+    }
 
-        return x509Cert;
+    private String createPayloadAndSignature(Owner owner, Consumer consumer)
+        throws IOException {
+
+        log.info("Generating SCA payload for consumer \"{}\"...", consumer.getUuid());
+        Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
+        byte[] payloadBytes = createContentAccessDataPayload(owner, env, consumer);
+
+        String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
+        payload += Util.toBase64(payloadBytes);
+        payload += "-----END ENTITLEMENT DATA-----\n";
+
+        byte[] bytes = pki.getSHA256WithRSAHash(new ByteArrayInputStream(payloadBytes));
+        String signature = "-----BEGIN RSA SIGNATURE-----\n";
+        signature += Util.toBase64(bytes);
+        signature += "-----END RSA SIGNATURE-----\n";
+        return payload + signature;
     }
 
     /**
@@ -531,48 +557,44 @@ public class ContentAccessManager {
         throws IOException {
         List<org.candlepin.model.dto.Product> products = new ArrayList<>();
         products.add(container);
-        Set<X509ByteExtensionWrapper> result = v3extensionUtil.getByteExtensions(null, products, null,  null);
-        return result;
+        return v3extensionUtil.getByteExtensions(null, products, null,  null);
     }
 
-    private byte[] createContentAccessDataPayload(Owner owner, Environment environment) throws IOException {
-        // fake a product dto as a container for the org content
-        Set<Product> containerSet = new HashSet<>();
-        Set<String> entitledProductIds = new HashSet<>();
-        List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();
-        Map<String, EnvironmentContent> promotedContent = getPromotedContent(environment);
-        String contentPrefix = this.getContentPrefix(owner, environment);
+    private byte[] createContentAccessDataPayload(Owner owner, Environment environment, Consumer consumer)
+        throws IOException {
         Product container = new Product();
-        Entitlement emptyEnt = new Entitlement();
-        Pool emptyPool = new Pool();
-        Product skuProduct = new Product();
-        Consumer emptyConsumer = new Consumer();
-        emptyConsumer.setOwner(owner);
-
-        containerSet.add(container);
         container.setId("content_access");
         container.setName(" Content Access");
 
         this.ownerContentCurator.getActiveContentByOwner(owner.getId())
-            .forEach((content, enabled) -> container.addContent(content, enabled));
+            .forEach(container::addContent);
 
-        emptyConsumer.setEnvironment(environment);
-        emptyEnt.setPool(emptyPool);
-        emptyEnt.setConsumer(emptyConsumer);
+        Product skuProduct = new Product();
+        skuProduct.setName("Content Access");
+        skuProduct.setId("content_access");
+
+        Pool emptyPool = new Pool();
         emptyPool.setProduct(skuProduct);
         emptyPool.setStartDate(new Date());
         emptyPool.setEndDate(new Date());
-        skuProduct.setName("Content Access");
-        skuProduct.setId("content_access");
+
+        Entitlement emptyEnt = new Entitlement();
+        emptyEnt.setPool(emptyPool);
+        emptyEnt.setConsumer(consumer);
+
+        Set<String> entitledProductIds = new HashSet<>();
         entitledProductIds.add("content-access");
 
+        Map<String, EnvironmentContent> promotedContent = getPromotedContent(environment);
+        String contentPrefix = this.getContentPrefix(owner, environment);
         org.candlepin.model.dto.Product productModel = v3extensionUtil.mapProduct(container, skuProduct,
-            contentPrefix, promotedContent, emptyConsumer, emptyPool, entitledProductIds);
+            contentPrefix, promotedContent, consumer, emptyPool, entitledProductIds);
 
+        List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();
         productModels.add(productModel);
 
         return v3extensionUtil.createEntitlementDataPayload(productModels,
-            emptyConsumer, emptyPool, null);
+            consumer, emptyPool, null);
     }
 
     /**
@@ -632,19 +654,9 @@ public class ContentAccessManager {
 
             // Check cert properties
             ContentAccessCertificate cert = consumer.getContentAccessCert();
-            if (cert == null || date.before(cert.getUpdated()) ||
-                date.after(cert.getSerial().getExpiration())) {
-                return true;
-            }
-
-            // Check payload
-            Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
-            OwnerEnvContentAccess oeca = this.ownerEnvContentAccessCurator
-                .getContentAccess(consumer.getOwnerId(), env == null ? null : env.getId());
-
-            if (oeca == null || date.before(oeca.getUpdated())) {
-                return true;
-            }
+            return cert == null ||
+                date.before(cert.getUpdated()) ||
+                date.after(cert.getSerial().getExpiration());
         }
 
         return false;
@@ -751,7 +763,10 @@ public class ContentAccessManager {
             owner = this.ownerCurator.merge(owner);
             ownerCurator.flush();
 
-            this.refreshOwnerForContentAccess(owner);
+            this.syncOwnerLastContentUpdate(owner);
+            if (isTurningOffSca(updatedMode, currentMode)) {
+                this.contentAccessCertCurator.deleteForOwner(owner);
+            }
             this.eventSink.emitOwnerContentAccessModeChanged(owner);
         }
         else if (listUpdated) {
@@ -770,6 +785,17 @@ public class ContentAccessManager {
 
     }
 
+    private boolean isTurningOffSca(String updatedMode, String currentMode) {
+        return ContentAccessMode.ORG_ENVIRONMENT.matches(currentMode) &&
+            ContentAccessMode.ENTITLEMENT.matches(updatedMode);
+    }
+
+    /**
+     * Resolve the value of a content access mode string by returning the default if empty.
+     * @param value The value as a string or null.
+     * @param resolveNull if true, the default will be returned if the value is null.
+     * @return the input value or the default content access mode.
+     */
     private String resolveContentAccessValue(String value, boolean resolveNull) {
         if (value == null) {
             return resolveNull ? ContentAccessMode.getDefault().toDatabaseValue() : null;
@@ -783,54 +809,21 @@ public class ContentAccessManager {
     }
 
     /**
-     * Refreshes the content access certificates for the given owner.
-     *
-     * @param owner
-     *  The owner for which to refresh content access
-     *
-     * @return
-     *  the owner provided
+     * Resolve the value of a content access mode list string by returning the default if empty.
+     * @param value The value as a string or null.
+     * @param resolveNull if true, the default will be returned if the value is null.
+     * @return the input value or the default content access mode list.
      */
-    @Transactional
-    public Owner refreshOwnerForContentAccess(Owner owner) {
-        if (owner == null) {
-            throw new IllegalArgumentException("owner is null");
+    private String resolveContentAccessListValue(String value, boolean resolveNull) {
+        if (value == null) {
+            return resolveNull ? ContentAccessManager.getListDefaultDatabaseValue() : null;
         }
 
-        // we need to update the owner's consumers if the content access mode has changed
-        this.ownerCurator.lock(owner);
-
-        if (!owner.isUsingSimpleContentAccess()) {
-            this.contentAccessCertificateCurator.deleteForOwner(owner);
+        if (value.isEmpty()) {
+            return ContentAccessManager.getListDefaultDatabaseValue();
         }
 
-        // removed cached versions of content access cert data
-        this.ownerEnvContentAccessCurator.removeAllForOwner(owner.getId());
-        this.ownerCurator.flush();
-
-        return owner;
-    }
-
-    /**
-     * Invalidates the SCA content body for the given environment
-     *
-     * @param environment
-     *  the environment for which to refresh content access certificates
-     *
-     * @throws IllegalArgumentException
-     *  if environment is null
-     *
-     * @return
-     *  the environment provided
-     */
-    @Transactional
-    public Environment refreshEnvironmentContentAccessCerts(Environment environment) {
-        if (environment == null) {
-            throw new IllegalArgumentException("environment is null");
-        }
-
-        this.ownerEnvContentAccessCurator.removeAllForEnvironment(environment.getId());
-        return environment;
+        return value;
     }
 
     /**

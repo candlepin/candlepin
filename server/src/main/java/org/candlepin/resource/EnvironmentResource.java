@@ -40,7 +40,6 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerContentCurator;
-import org.candlepin.model.OwnerEnvContentAccessCurator;
 import org.candlepin.util.RdbmsExceptionTranslator;
 
 import com.google.inject.Inject;
@@ -58,7 +57,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -96,7 +94,6 @@ public class EnvironmentResource {
     private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
     private OwnerContentCurator ownerContentCurator;
-    private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
     private RdbmsExceptionTranslator rdbmsExceptionTranslator;
     private ModelTranslator translator;
     private JobManager jobManager;
@@ -106,9 +103,8 @@ public class EnvironmentResource {
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
         PoolManager poolManager, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator,
-        RdbmsExceptionTranslator rdbmsExceptionTranslator,
-        OwnerEnvContentAccessCurator ownerEnvContentAccessCurator, ModelTranslator translator,
-        JobManager jobManager, ContentAccessManager contentAccessManager) {
+        RdbmsExceptionTranslator rdbmsExceptionTranslator, ModelTranslator translator, JobManager jobManager,
+        ContentAccessManager contentAccessManager) {
 
         this.envCurator = envCurator;
         this.i18n = i18n;
@@ -118,7 +114,6 @@ public class EnvironmentResource {
         this.consumerCurator = consumerCurator;
         this.ownerContentCurator = ownerContentCurator;
         this.rdbmsExceptionTranslator = rdbmsExceptionTranslator;
-        this.ownerEnvContentAccessCurator = ownerEnvContentAccessCurator;
         this.translator = translator;
         this.jobManager = jobManager;
         this.contentAccessManager = contentAccessManager;
@@ -144,7 +139,6 @@ public class EnvironmentResource {
 
         return environment;
     }
-
 
     @ApiOperation(notes = "Retrieves a single Environment", value = "getEnv")
     @ApiResponses({ @ApiResponse(code = 404, message = "") })
@@ -264,9 +258,7 @@ public class EnvironmentResource {
         Set<String> contentIds = new HashSet<>();
 
         try {
-            contentIds = batchCreate(contentToPromote, environment);
-
-            this.contentAccessManager.refreshEnvironmentContentAccessCerts(environment);
+            contentIds = this.batchCreate(contentToPromote, environment);
             this.contentAccessManager.syncOwnerLastContentUpdate(environment.getOwner());
         }
         catch (PersistenceException pe) {
@@ -324,9 +316,7 @@ public class EnvironmentResource {
         }
 
         try {
-            envContentCurator.bulkDeleteTransactional(new ArrayList<>(demotedContent.values()));
-
-            this.contentAccessManager.refreshEnvironmentContentAccessCerts(environment);
+            this.envContentCurator.bulkDelete(demotedContent.values());
             this.contentAccessManager.syncOwnerLastContentUpdate(environment.getOwner());
         }
         catch (RollbackException hibernateException) {
