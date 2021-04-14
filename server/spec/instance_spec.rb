@@ -9,8 +9,11 @@ describe 'Instance Based Subscriptions' do
     @owner = create_owner random_string('instance_owner')
     @user = user_client(@owner, random_string('virt_user'))
 
-    #create_product() creates products with numeric IDs by default
-    @eng_product = create_product()
+    if is_hosted?
+      @eng_product = create_upstream_product()
+    else
+      @eng_product = create_product()
+    end
     installed_prods = [{'productId' => @eng_product['id'],
       'productName' => @eng_product['name']}]
 
@@ -26,21 +29,45 @@ describe 'Instance Based Subscriptions' do
       {'virt.uuid' => @uuid, 'virt.is_guest' => 'true'}, nil, nil,
       [], installed_prods)
     @guest_client = Candlepin.new(nil, nil, @guest1['idCert']['cert'], @guest1['idCert']['key'])
-    # create instance based subscription:
-    @instance_product = create_product(nil, nil, {
-      :attributes => {
-        :instance_multiplier => "2",
-        :virt_limit => "1",
-        :stacking_id => "stackme",
-        :sockets => "2",
-        :host_limited => "true",
-        'multi-entitlement' => "yes"
-      },
-      :providedProducts => [@eng_product.id]
-    })
 
-    create_pool_and_subscription(@owner['key'], @instance_product.id,
-      10, [@eng_product['id']])
+    # create product and instance based subscription:
+    if is_hosted?
+      @instance_product = create_upstream_product(nil, {
+        :attributes => {
+          :instance_multiplier => "2",
+          :virt_limit => "1",
+          :stacking_id => "stackme",
+          :sockets => "2",
+          :host_limited => "true",
+          'multi-entitlement' => "yes"
+        },
+        :providedProducts => [@eng_product]
+      })
+
+      create_upstream_subscription(random_string('instance_sub'), @owner['key'],
+      { :quantity => 10, :product => @instance_product })
+
+      @cp.refresh_pools(@owner['key'])
+    else
+      @instance_product = create_product(nil, nil, {
+        :attributes => {
+          :instance_multiplier => "2",
+          :virt_limit => "1",
+          :stacking_id => "stackme",
+          :sockets => "2",
+          :host_limited => "true",
+          'multi-entitlement' => "yes"
+        },
+        :providedProducts => [@eng_product.id]
+      })
+
+      # In standalone, the pool needs source subscription and upstream pool id
+      # in order for the subpool to be created
+       @cp.create_pool(@owner['key'], @instance_product.id, { :quantity => 10,
+          :subscription_id => random_str('source_sub'),
+          :upstream_pool_id => random_str('upstream')})
+    end
+
     @pools = @cp.list_pools :owner => @owner.id, \
       :product => @instance_product.id
     @pools.size.should == 2

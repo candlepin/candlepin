@@ -486,11 +486,6 @@
         <version>2.10.5</version>
       </dependency>
       <dependency>
-        <groupId>io.swagger</groupId>
-        <artifactId>swagger-models</artifactId>
-        <version>1.5.7</version>
-      </dependency>
-      <dependency>
         <groupId>logdriver</groupId>
         <artifactId>logdriver</artifactId>
         <version>1.0</version>
@@ -539,11 +534,6 @@
         <groupId>com.puppycrawl.tools</groupId>
         <artifactId>checkstyle</artifactId>
         <version>8.29</version>
-      </dependency>
-      <dependency>
-        <groupId>io.swagger</groupId>
-        <artifactId>swagger-core</artifactId>
-        <version>1.5.7</version>
       </dependency>
       <dependency>
         <groupId>com.mattbertolini</groupId>

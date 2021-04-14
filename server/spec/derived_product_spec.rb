@@ -117,7 +117,7 @@ describe 'Derived Products' do
       },
       :providedProducts => [@eng_product.id]
     })
-    create_pool_and_subscription(@owner['key'], instance_product.id, 10, [@eng_product['id']])
+    @cp.create_pool(@owner['key'], instance_product.id, { :quantity => 10 })
 
     @guest_client.consume_product
 

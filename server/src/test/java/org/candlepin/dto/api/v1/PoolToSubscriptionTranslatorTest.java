@@ -52,7 +52,7 @@ public class PoolToSubscriptionTranslatorTest extends
     AbstractTranslatorTest<Pool, SubscriptionDTO, PoolToSubscriptionTranslator> {
 
     ProductCurator productCurator;
-    private PoolToSubscriptionTranslator translator;
+    private PoolToSubscriptionTranslator translator = new PoolToSubscriptionTranslator();
     private CdnTranslatorTest cdnTest = new CdnTranslatorTest();
     private NestedOwnerTranslatorTest ownerTest = new NestedOwnerTranslatorTest();
     private ProductTranslatorTest productTest = new ProductTranslatorTest();
