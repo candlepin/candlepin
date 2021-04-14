@@ -92,9 +92,19 @@ describe 'Content Access' do
     end
   end
 
+  def promote_content_to_environment(user, environment, content, enabled = true)
+    job = user.promote_content(environment['id'], [
+      {
+        :contentId => content['id'],
+        :enabled => enabled
+      }
+    ])
+
+    wait_for_job(job['id'], 15)
+  end
+
   it "does allow changing the content access mode and mode list in hosted mode" do
     skip("candlepin running in standalone mode") unless is_hosted?
-
     @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
     @owner = @cp.get_owner(@owner['key'])
 
@@ -197,12 +207,7 @@ describe 'Content Access' do
       @env = @user.create_environment(@owner['key'], random_string('testenv'),
         "My Test Env 1", "For test systems only.")
 
-      job = @user.promote_content(@env['id'],
-          [{
-            :contentId => @content['id'],
-            :enabled => false,
-          }])
-      wait_for_job(job['id'], 15)
+      promote_content_to_environment(@user, @env, @content, false)
 
       consumer = @user.register(random_string('consumer'), :system, nil,
           {'system.certificate_version' => '3.3'},nil, nil, [], [], @env['id'])
@@ -245,12 +250,8 @@ describe 'Content Access' do
     json_body = extract_payload(cert)
     expect(json_body['products'][0]['content'].length).to eq(0)
 
-    job = @user.promote_content(@env['id'], [{
-      :contentId => @content['id'],
-      :enabled => false,
-    }])
+    promote_content_to_environment(@user, @env, @content, false)
 
-    wait_for_job(job['id'], 15)
     @env = @user.get_environment(@env['id'])
     @env['environmentContent'].size.should == 1
 
@@ -766,9 +767,7 @@ describe 'Content Access' do
     @cp.add_content_to_product(@owner['key'], product['id'], content2['id'], true)
 
     # Promote content with enabled false
-    job = @org_admin.promote_content(@env['id'],
-    [{:contentId => content['id'], :enabled => false , }])
-    wait_for_job(job['id'], 15)
+    promote_content_to_environment(@org_admin, @env, content, false)
 
     pool = @cp.create_pool(@owner['key'], product['id'], {:quantity => 10})
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
@@ -973,42 +972,6 @@ describe 'Content Access' do
     expect(returned_uuids).to include(content_c4.id)
   end
 
-  def regenerate_cert_test(&updater)
-    consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
-    certs = consumer.list_certificates()
-    expect(certs.length).to eq(1)
-    cert_serial = certs[0]['serial']
-    expect(cert_serial).to_not be_nil
-
-    updater.call()
-
-    updated_certs = consumer.list_certificates()
-    expect(updated_certs.length).to eq(1)
-    updated_cert_serial = updated_certs[0]['serial']
-    expect(updated_cert_serial).to_not be_nil
-
-    expect(updated_cert_serial['serial']).to_not eq(cert_serial['serial'])
-  end
-
-  it 'should regenerate SCA cert when content changes affect content view' do
-    regenerate_cert_test do
-      @cp.update_content(@owner['key'], @content['id'], { 'content_url' => '/updated/path' })
-    end
-  end
-
-  it 'should regenerate SCA cert when product changes affect content view' do
-    regenerate_cert_test do
-      @cp.remove_content_from_product(@owner['key'], @product['id'], @content['id'])
-    end
-  end
-
-  it 'should regenerate SCA cert when pool changes affect content view' do
-    regenerate_cert_test do
-      @pool['start_date'] = (DateTime.now + 1)
-      @cp.update_pool(@owner['key'], @pool)
-    end
-  end
-
   it 'should be disabled for owner in SCA mode' do
     consumer = @user.register(random_string('testsystem'), :system, nil,
                {'system.certificate_version' => '3.1'}, nil, nil, [], [], nil)
@@ -1020,6 +983,62 @@ describe 'Content Access' do
     # compliance status
     status = @cp.get_compliance(consumer['uuid'])
     expect(status['status']).to eq("disabled")
+  end
+
+  def regenerate_cert_test(consumer_client, &updater)
+    certs = consumer_client.list_certificates()
+    expect(certs).to_not be_nil
+    expect(certs.length).to eq(1)
+    cert_serial = certs[0]['serial']
+    expect(cert_serial).to_not be_nil
+
+    updater.call()
+
+    updated_certs = consumer_client.list_certificates()
+    expect(updated_certs.length).to eq(1)
+    updated_cert_serial = updated_certs[0]['serial']
+    expect(updated_cert_serial).to_not be_nil
+
+    expect(updated_cert_serial['serial']).to_not eq(cert_serial['serial'])
+  end
+
+  it 'should regenerate SCA cert when content changes affect content view' do
+    client = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
+
+    regenerate_cert_test(client) do
+      @cp.update_content(@owner['key'], @content['id'], { 'content_url' => '/updated/path' })
+    end
+  end
+
+  it 'should regenerate SCA cert when product changes affect content view' do
+    client = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
+
+    regenerate_cert_test(client) do
+      @cp.remove_content_from_product(@owner['key'], @product['id'], @content['id'])
+    end
+  end
+
+  it 'should regenerate SCA cert when pool changes affect content view' do
+    client = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
+
+    regenerate_cert_test(client) do
+      @pool['start_date'] = (DateTime.now + 1)
+      @cp.update_pool(@owner['key'], @pool)
+    end
+  end
+
+  it 'should regenerate SCA cert when environment content changes' do
+    environment = @user.create_environment(@owner['key'], random_string('testenv1'), "My Test Env 1", "For test systems only.")
+    promote_content_to_environment(@user, environment, @content, false)
+
+    consumer = @user.register(random_string('consumer'), :system, nil, {'system.certificate_version' => '3.3'}, nil, nil, [], [], environment['id'])
+    expect(consumer['environment']).to_not be_nil
+
+    client = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
+
+    regenerate_cert_test(client) do
+      @cp.update_content(@owner['key'], @content['id'], { 'content_url' => '/updated/path' })
+    end
   end
 
 end
