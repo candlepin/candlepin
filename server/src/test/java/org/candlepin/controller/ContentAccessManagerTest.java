@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2020 Red Hat, Inc.
+ * Copyright (c) 2009 - 2021 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -149,7 +149,7 @@ public class ContentAccessManagerTest {
         doAnswer(new PersistSimulator()).when(this.mockContentAccessCertCurator)
             .create(any(ContentAccessCertificate.class));
         doAnswer(new PersistSimulator()).when(this.mockOwnerEnvContentAccessCurator)
-            .saveOrUpdate(any(OwnerEnvContentAccess.class));
+            .create(any(OwnerEnvContentAccess.class), anyBoolean());
         doReturn(this.testingKeyPair).when(this.mockKeyPairCurator).getConsumerKeyPair(any(Consumer.class));
 
         doAnswer(iom -> {
@@ -186,8 +186,8 @@ public class ContentAccessManagerTest {
             this.config, this.pkiUtility, this.x509V3ExtensionUtil, this.mockContentAccessCertCurator,
             this.mockKeyPairCurator, this.mockCertSerialCurator, this.mockOwnerCurator,
             this.mockOwnerEnvContentAccessCurator, this.mockConsumerCurator,
-            this.mockConsumerTypeCurator, this.mockEnvironmentCurator, this.mockContentAccessCertCurator,
-            this.mockOwnerProductCurator, this.mockEventSink);
+            this.mockConsumerTypeCurator, this.mockEnvironmentCurator, this.mockOwnerProductCurator,
+            this.mockEventSink);
     }
 
     private Owner mockOwner() {
