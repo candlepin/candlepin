@@ -186,16 +186,15 @@ public class ContentAccessManager {
 
     private Configuration config;
     private PKIUtility pki;
+    private X509V3ExtensionUtil v3extensionUtil;
     private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
     private OwnerCurator ownerCurator;
     private ContentAccessCertificateCurator contentAccessCertificateCurator;
-    private X509V3ExtensionUtil v3extensionUtil;
     private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
     private EnvironmentCurator environmentCurator;
-    private ContentAccessCertificateCurator contentAccessCertCurator;
     private OwnerProductCurator ownerProductCurator;
     private EventSink eventSink;
 
@@ -214,22 +213,20 @@ public class ContentAccessManager {
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
         EnvironmentCurator environmentCurator,
-        ContentAccessCertificateCurator contentAccessCertCurator,
         OwnerProductCurator ownerProductCurator,
         EventSink eventSink) {
 
         this.config = Objects.requireNonNull(config);
         this.pki = Objects.requireNonNull(pki);
+        this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
         this.keyPairCurator = Objects.requireNonNull(keyPairCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
-        this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.ownerEnvContentAccessCurator = Objects.requireNonNull(ownerEnvContentAccessCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
-        this.contentAccessCertCurator = Objects.requireNonNull(contentAccessCertCurator);
         this.eventSink = Objects.requireNonNull(eventSink);
         this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
         this.standalone = this.config.getBoolean(ConfigProperties.STANDALONE, true);
@@ -280,6 +277,7 @@ public class ContentAccessManager {
 
                 consumer.setContentAccessCert(null);
                 this.contentAccessCertificateCurator.delete(existing);
+                this.ownerEnvContentAccessCurator.delete(oeca);
 
                 regenerate = true;
             }
@@ -327,7 +325,7 @@ public class ContentAccessManager {
 
             String contentJson = this.createPayloadAndSignature(owner, env);
             oeca = new OwnerEnvContentAccess(owner, env, contentJson);
-            oeca = this.ownerEnvContentAccessCurator.saveOrUpdate(oeca);
+            this.ownerEnvContentAccessCurator.create(oeca, false);
         }
 
         pem.append(oeca.getContentJson());
@@ -818,7 +816,7 @@ public class ContentAccessManager {
         this.ownerCurator.lock(owner);
 
         if (!owner.isUsingSimpleContentAccess()) {
-            this.contentAccessCertCurator.deleteForOwner(owner);
+            this.contentAccessCertificateCurator.deleteForOwner(owner);
         }
 
         // removed cached versions of content access cert data
