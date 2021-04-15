@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.26
+Version: 3.1.27
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,12 @@ fi
 
 #raw
 %changelog
+* Thu Apr 15 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.27-1
+- 1949698: Fix SCA cert regeneration for consumers in environments
+  (crog@redhat.com)
+- Addressing sporadic spec test failure in import_update_spec.rb
+  (sdhome@redhat.com)
+
 * Mon Mar 15 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.26-1
 - 1937691: Fixed stacked entitlement recovation deleting unrelated pools
   (crog@redhat.com)
