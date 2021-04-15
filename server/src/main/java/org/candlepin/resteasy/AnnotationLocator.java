@@ -14,108 +14,33 @@
  */
 package org.candlepin.resteasy;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Binding;
 import com.google.inject.Injector;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.jboss.resteasy.spi.metadata.ResourceBuilder;
-import org.jboss.resteasy.spi.metadata.ResourceClass;
-import org.jboss.resteasy.spi.metadata.ResourceLocator;
-import org.jboss.resteasy.spi.metadata.ResourceMethod;
-import org.jboss.resteasy.util.GetRestful;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 
 import javax.inject.Inject;
 
 /**
- * Holds a mapping of interface methods to concrete methods.
- *
- * Inspired by ResourceLocatorMap.
- *
- * This map is populated during servlet initialization and then locked. Various filters can use utility
- * methods to get annotations on the implementations as well as the interfaces, so that we can use
- * SecurityHole and other annotations on generated resource implementations.
+ * Various filters can use utility methods to get annotations on the implementations as well as the
+ * interfaces, so that we can use SecurityHole and other annotations on generated resource implementations.
  */
 public class AnnotationLocator {
     private static final Logger log = LoggerFactory.getLogger(AnnotationLocator.class);
 
-    private Map<Method, Method> internalMap;
-    private boolean hasBeenInitialized = false;
+    private MethodLocator methodLocator;
 
     private Injector injector;
 
     @Inject
-    public AnnotationLocator(Injector injector) {
+    public AnnotationLocator(MethodLocator methodLocator) {
         // Maintain the insertion order for nice output in debug statement
-        internalMap = new LinkedHashMap<>();
+        this.methodLocator = methodLocator;
         this.injector = injector;
-    }
-
-    @SuppressWarnings("rawtypes")
-    public synchronized void init() {
-        if (hasBeenInitialized) {
-            throw new IllegalStateException("This map has already been initialized.");
-        }
-
-        List<Binding<?>> rootResourceBindings = new ArrayList<>();
-        for (Binding<?> binding : injector.getBindings().values()) {
-            Type type = binding.getKey().getTypeLiteral().getType();
-            if (type instanceof Class) {
-                Class<?> beanClass = (Class) type;
-                if (GetRestful.isRootResource(beanClass)) {
-                    rootResourceBindings.add(binding);
-                }
-            }
-        }
-
-        for (Binding<?> binding : rootResourceBindings) {
-            Class<?> clazz = (Class) binding.getKey().getTypeLiteral().getType();
-            if (Proxy.isProxyClass(clazz)) {
-                for (Class<?> intf : clazz.getInterfaces()) {
-                    ResourceClass resourceClass = ResourceBuilder.rootResourceFromAnnotations(intf);
-                    registerConcreteMethods(resourceClass, clazz);
-                }
-            }
-            else {
-                ResourceClass resourceClass = ResourceBuilder.rootResourceFromAnnotations(clazz);
-                registerConcreteMethods(resourceClass, clazz);
-            }
-        }
-
-        lock();
-    }
-
-    private void registerConcreteMethods(ResourceClass resourceClass, Class<?> concreteClass) {
-        for (ResourceMethod resourceMethod : resourceClass.getResourceMethods()) {
-            registerConcreteMethod(resourceMethod.getMethod(), concreteClass);
-        }
-
-        for (ResourceLocator resourceMethod : resourceClass.getResourceLocators()) {
-            registerConcreteMethod(resourceMethod.getMethod(), concreteClass);
-        }
-    }
-
-    private void registerConcreteMethod(Method method, Class<?> concreteClass) {
-        try {
-            for (Class<?> iface : concreteClass.getInterfaces()) {
-                Method ifaceMethod = iface.getMethod(method.getName(), method.getParameterTypes());
-                internalMap.put(ifaceMethod, method);
-            }
-        }
-        catch (NoSuchMethodException e) {
-            log.error("Can't find concrete method for method {}!", method);
-        }
     }
 
     /**
@@ -129,7 +54,7 @@ public class AnnotationLocator {
      * @return annotation or null, if no such annotation is present
      */
     public <T extends Annotation> T getAnnotation(Method method, Class<T> annotationClass) {
-        Method concreteMethod = internalMap.get(method);
+        Method concreteMethod = this.methodLocator.getConcreteMethod(method);
         if (concreteMethod != null) {
             T annotation = concreteMethod.getAnnotation(annotationClass);
             if (annotation != null) {
@@ -138,11 +63,6 @@ public class AnnotationLocator {
         }
 
         return method.getAnnotation(annotationClass);
-    }
-
-    private void lock() {
-        hasBeenInitialized = true;
-        internalMap = ImmutableMap.copyOf(internalMap);
     }
 
     /**
@@ -154,7 +74,7 @@ public class AnnotationLocator {
      */
     public Annotation[][] getParameterAnnotations(Method method) {
         Annotation[][] annotations = method.getParameterAnnotations();
-        Method concreteMethod = internalMap.get(method);
+        Method concreteMethod = this.methodLocator.getConcreteMethod(method);
         if (concreteMethod != null) {
             Annotation[][] concreteAnnotations = concreteMethod.getParameterAnnotations();
             for (int i = 0; i < annotations.length; i++) {

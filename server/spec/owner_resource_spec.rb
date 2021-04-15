@@ -797,7 +797,7 @@ describe 'Owner Resource Pool Filter Tests' do
         provided_product3.id ]
     )
 
-    create_pool_and_subscription(owner['key'], product.id, 10, [provided_product.id, provided_product2.id, provided_product3.id])
+    @cp.create_pool(owner['key'], product.id, { :quantity => 10 })
 
     pools = @cp.list_owner_pools(owner['key'], { :consumer => consumer.uuid, :matches => target_prod_name })
     pools.length.should eq(1)

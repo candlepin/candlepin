@@ -20,6 +20,8 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.UsernameConsumersPermission;
+import org.candlepin.dto.api.v1.ConsumptionTypeCountsDTO;
+import org.candlepin.dto.api.v1.OwnerInfo;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -471,6 +473,8 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         assertEquals(expectedPoolCount, info.getEnabledConsumerTypeCountByPool());
     }
 
+
+
     @Test
     public void testOwnerInfoEntitlementsConsumedByFamilyPutsFamilylessInNone() {
         owner.addEntitlementPool(pool1);
@@ -487,12 +491,8 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
-        Map<String, OwnerInfo.ConsumptionTypeCounts> expected =
-            new HashMap<String, OwnerInfo.ConsumptionTypeCounts>() {
-                {
-                    put("none", new OwnerInfo.ConsumptionTypeCounts(1, 0));
-                }
-            };
+        Map<String, ConsumptionTypeCountsDTO> expected = new HashMap<>();
+        expected.put("none", new ConsumptionTypeCountsDTO().physical(1).guest(0));
 
         assertEquals(expected, info.getEntitlementsConsumedByFamily());
     }
@@ -519,12 +519,8 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
-        Map<String, OwnerInfo.ConsumptionTypeCounts> expected =
-            new HashMap<String, OwnerInfo.ConsumptionTypeCounts>() {
-                {
-                    put("test family", new OwnerInfo.ConsumptionTypeCounts(1, 0));
-                }
-            };
+        Map<String, ConsumptionTypeCountsDTO> expected = new HashMap<>();
+        expected.put("test family", new ConsumptionTypeCountsDTO().physical(1).guest(0));
 
         assertEquals(expected, info.getEntitlementsConsumedByFamily());
     }
@@ -550,12 +546,8 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
-        Map<String, OwnerInfo.ConsumptionTypeCounts> expected =
-            new HashMap<String, OwnerInfo.ConsumptionTypeCounts>() {
-                {
-                    put("test family", new OwnerInfo.ConsumptionTypeCounts(1, 0));
-                }
-            };
+        Map<String, ConsumptionTypeCountsDTO> expected = new HashMap<>();
+        expected.put("test family", new ConsumptionTypeCountsDTO().physical(1).guest(0));
 
         assertEquals(expected, info.getEntitlementsConsumedByFamily());
     }
@@ -582,12 +574,8 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
-        Map<String, OwnerInfo.ConsumptionTypeCounts> expected =
-            new HashMap<String, OwnerInfo.ConsumptionTypeCounts>() {
-                {
-                    put("none", new OwnerInfo.ConsumptionTypeCounts(0, 1));
-                }
-            };
+        Map<String, ConsumptionTypeCountsDTO> expected = new HashMap<>();
+        expected.put("none", new ConsumptionTypeCountsDTO().physical(0).guest(1));
 
         assertEquals(expected, info.getEntitlementsConsumedByFamily());
 
@@ -615,12 +603,8 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
         OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
-        Map<String, OwnerInfo.ConsumptionTypeCounts> expected =
-            new HashMap<String, OwnerInfo.ConsumptionTypeCounts>() {
-                {
-                    put("test family", new OwnerInfo.ConsumptionTypeCounts(0, 1));
-                }
-            };
+        Map<String, ConsumptionTypeCountsDTO> expected = new HashMap<>();
+        expected.put("test family", new ConsumptionTypeCountsDTO().physical(0).guest(1));
 
         assertEquals(expected, info.getEntitlementsConsumedByFamily());
     }
@@ -645,16 +629,16 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(physical2);
 
         OwnerInfo info = ownerInfoCurator.getByOwner(owner);
-        assertEquals((Integer) 2, info.getConsumerGuestCounts().get(OwnerInfo.GUEST));
-        assertEquals((Integer) 2, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
+        assertEquals((Integer) 2, info.getConsumerGuestCounts().get(OwnerInfoBuilder.GUEST));
+        assertEquals((Integer) 2, info.getConsumerGuestCounts().get(OwnerInfoBuilder.PHYSICAL));
 
 
         // Create another owner to make sure we don't see another owners consumers:
         Owner anotherOwner = createOwner();
         ownerCurator.create(anotherOwner);
         info = ownerInfoCurator.getByOwner(anotherOwner);
-        assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfo.GUEST));
-        assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfo.PHYSICAL));
+        assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfoBuilder.GUEST));
+        assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfoBuilder.PHYSICAL));
     }
 
     @Test
@@ -771,12 +755,9 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     }
 
     private void assertConsumerCountsByEntitlementStatus(OwnerInfo info) {
-        assertEquals((Integer) 2, info.getConsumerCountByStatus(ComplianceStatus.GREEN));
-        assertEquals((Integer) 1, info.getConsumerCountByStatus(ComplianceStatus.RED));
-        assertEquals((Integer) 1, info.getConsumerCountByStatus(ComplianceStatus.YELLOW));
-
-        // Make sure unknown statuses report 0 consumers:
-        assertEquals((Integer) 0, info.getConsumerCountByStatus("Unknown Status"));
+        assertEquals((Integer) 2, info.getConsumerCountsByComplianceStatus().get(ComplianceStatus.GREEN));
+        assertEquals((Integer) 1, info.getConsumerCountsByComplianceStatus().get(ComplianceStatus.RED));
+        assertEquals((Integer) 1, info.getConsumerCountsByComplianceStatus().get(ComplianceStatus.YELLOW));
     }
 
     private User setupOnlyMyConsumersPrincipal() {
@@ -788,4 +769,10 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         return u;
     }
 
+    @Test
+    public void testOwnerInfoBuilderWithNoGuests() {
+        OwnerInfo info = new OwnerInfoBuilder().build();
+        assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfoBuilder.GUEST));
+        assertEquals((Integer) 0, info.getConsumerGuestCounts().get(OwnerInfoBuilder.PHYSICAL));
+    }
 }

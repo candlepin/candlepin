@@ -15,16 +15,17 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Content;
+import org.candlepin.util.Util;
 
-
+import java.util.HashSet;
 
 /**
  * The ContentTranslator provides translation from Content model objects to
  * ContentDTOs
  */
-public class ContentTranslator extends TimestampedEntityTranslator<Content, ContentDTO> {
+public class ContentTranslator implements ObjectTranslator<Content, ContentDTO> {
 
     /**
      * {@inheritDoc}
@@ -55,22 +56,30 @@ public class ContentTranslator extends TimestampedEntityTranslator<Content, Cont
      */
     @Override
     public ContentDTO populate(ModelTranslator translator, Content source, ContentDTO destination) {
-        destination = super.populate(translator, source, destination);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        destination.setUuid(source.getUuid());
-        destination.setId(source.getId());
-        destination.setType(source.getType());
-        destination.setLabel(source.getLabel());
-        destination.setName(source.getName());
-        destination.setVendor(source.getVendor());
-        destination.setContentUrl(source.getContentUrl());
-        destination.setRequiredTags(source.getRequiredTags());
-        destination.setReleaseVersion(source.getReleaseVersion());
-        destination.setGpgUrl(source.getGpgUrl());
-        destination.setMetadataExpiration(source.getMetadataExpiration());
-        destination.setModifiedProductIds(source.getModifiedProductIds());
-        destination.setArches(source.getArches());
-        destination.setLocked(source.isLocked());
+        if (destination == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
+
+        destination
+            .uuid(source.getUuid())
+            .id(source.getId())
+            .type(source.getType())
+            .label(source.getLabel())
+            .name(source.getName())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .vendor(source.getVendor())
+            .contentUrl(source.getContentUrl())
+            .requiredTags(source.getRequiredTags())
+            .releaseVer(source.getReleaseVersion())
+            .gpgUrl(source.getGpgUrl())
+            .metadataExpire(source.getMetadataExpiration())
+            .modifiedProductIds(new HashSet<>(source.getModifiedProductIds()))
+            .arches(source.getArches());
 
         return destination;
     }

@@ -230,8 +230,8 @@ describe 'Autobind On Owner' do
                               random_string('product'),
                               {:owner => owner_key,
                                :providedProducts => [eng_product.id]})
-    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
-    p2 = create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+    p1 = @cp.create_pool(owner_key, mkt_product1.id, { :quantity => 10 })
+    p2 = @cp.create_pool(owner_key, mkt_product2.id, { :quantity => 10 })
 
     installed = [
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
@@ -266,8 +266,8 @@ describe 'Autobind On Owner' do
                                   random_string('product'),
                                   {:owner => owner_key,
                                   :providedProducts => [eng_product.id]})
-    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
-    p2 = create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+    p1 = @cp.create_pool(owner_key, mkt_product1.id, { :quantity => 10 })
+    p2 = @cp.create_pool(owner_key, mkt_product2.id, { :quantity => 10 })
 
     installed = [
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
@@ -335,8 +335,8 @@ describe 'Autobind On Owner' do
                               random_string('product'),
                               {:owner => owner_key,
                               :providedProducts => [eng_product.id]})
-    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
-    p2 = create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+    p1 = @cp.create_pool(owner_key, mkt_product1.id, { :quantity => 10 })
+    p2 = @cp.create_pool(owner_key, mkt_product2.id, { :quantity => 10 })
 
     installed = [
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
@@ -498,14 +498,13 @@ describe 'Autobind On Owner' do
                               {
                                :owner => owner_key,
                                :providedProducts => [eng_product.id]})
-    pool_with_eng_product_only = create_pool_and_subscription(owner_key, mkt_prod_with_eng_product_only.id,
-                              10, [eng_product.id])
+    pool_with_eng_product_only = @cp.create_pool(owner_key, mkt_prod_with_eng_product_only.id, { :quantity => 10 })
 
     mkt_prod_with_role_only = create_product(random_string('product'),
                               random_string('product'),
                               {:attributes => {:roles => "provided_role,non_provided_role"},
                                :owner => owner_key})
-    pool_with_role_only = create_pool_and_subscription(owner_key, mkt_prod_with_role_only.id, 10, [])
+    pool_with_role_only = @cp.create_pool(owner_key, mkt_prod_with_role_only.id, { :quantity => 10 })
 
     mkt_prod_with_addon_only = create_product(random_string('product'),
                               random_string('product'),
@@ -587,8 +586,8 @@ describe 'Autobind On Owner' do
                                   random_string('product'),
                                   {:owner => owner_key,
                                   :providedProducts => [eng_product.id]})
-    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
-    p2 = create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+    p1 = @cp.create_pool(owner_key, mkt_product1.id, { :quantity => 10 })
+    p2 = @cp.create_pool(owner_key, mkt_product2.id, { :quantity => 10 })
 
     installed = [
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
@@ -617,8 +616,8 @@ describe 'Autobind On Owner' do
                                  {:attributes => {:virt_only => 'True'},
                                   :owner => owner_key,
                                   :providedProducts => [eng_product.id]})
-    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
-    p2 = create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+    p1 = @cp.create_pool(owner_key, mkt_product1.id, { :quantity => 10 })
+    p2 = @cp.create_pool(owner_key, mkt_product2.id, { :quantity => 10 })
 
     installed = [
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
@@ -646,8 +645,8 @@ describe 'Autobind On Owner' do
                                  {:attributes => {:virt_only => 'True', :roles => "random_role", :support_level => "random_sla", :usage => "random_usage"},
                                   :owner => owner_key,
                                   :providedProducts => [eng_product.id]})
-    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
-    p2 = create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+    p1 = @cp.create_pool(owner_key, mkt_product1.id, { :quantity => 10 })
+    p2 = @cp.create_pool(owner_key, mkt_product2.id, { :quantity => 10 })
 
     installed = [
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
@@ -714,8 +713,8 @@ describe 'Autobind On Owner' do
                                   :owner => owner_key,
                                   :providedProducts => [eng_product.id]})
 
-    create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
-    create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+    @cp.create_pool(owner_key, mkt_product1.id, { :quantity => 10 })
+    @cp.create_pool(owner_key, mkt_product2.id, { :quantity => 10 })
 
     installed = [
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
@@ -786,8 +785,8 @@ describe 'Autobind On Owner' do
                                   :owner => owner_key,
                                   :providedProducts => [eng_product.id]})
 
-    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [eng_product.id])
-    p2 = create_pool_and_subscription(owner_key, mkt_product2.id, 10, [eng_product.id])
+    @cp.create_pool(owner_key, mkt_product1.id, { :quantity => 10 })
+    @cp.create_pool(owner_key, mkt_product2.id, { :quantity => 10 })
 
     installed = [
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]

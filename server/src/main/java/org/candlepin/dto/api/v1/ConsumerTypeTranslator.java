@@ -17,6 +17,7 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.util.Util;
 
 
 
@@ -64,11 +65,11 @@ public class ConsumerTypeTranslator implements ObjectTranslator<ConsumerType, Co
             throw new IllegalArgumentException("dest is null");
         }
 
-        dest.setId(source.getId());
-        dest.setLabel(source.getLabel());
-        dest.setManifest(source.isManifest());
-
-        return dest;
+        return dest.id(source.getId())
+            .label(source.getLabel())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .manifest(source.isManifest());
     }
 
 }

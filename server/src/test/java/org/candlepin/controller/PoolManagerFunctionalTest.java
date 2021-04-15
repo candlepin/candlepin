@@ -32,7 +32,6 @@ import org.candlepin.dto.manifest.v1.BrandingDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
-import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -47,7 +46,6 @@ import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -67,7 +65,6 @@ import org.mockito.Mockito;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -307,17 +304,18 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             }
         }
 
-        Subscription fabricated = poolManager.fabricateSubscriptionFromPool(masterPool);
+        org.candlepin.dto.api.v1.SubscriptionDTO fabricated = modelTranslator.translate(masterPool,
+            org.candlepin.dto.api.v1.SubscriptionDTO.class);
         assertNotNull(fabricated);
         assertNotNull(masterPool.getProduct());
         assertNotNull(fabricated.getProduct());
 
-        Collection<Branding> brandingSet = fabricated.getProduct().getBranding();
+        Set<org.candlepin.dto.api.v1.BrandingDTO> brandingSet = fabricated.getProduct().getBranding();
 
         assertNotNull(brandingSet);
         assertEquals(2, brandingSet.size());
-        ArrayList<Branding> list = new ArrayList<>(brandingSet);
-        list.sort(Comparator.comparing(Branding::getName));
+        ArrayList<org.candlepin.dto.api.v1.BrandingDTO> list = new ArrayList<>(brandingSet);
+        list.sort(Comparator.comparing(org.candlepin.dto.api.v1.BrandingDTO::getName));
 
         assertEquals("branding1", list.get(0).getName());
         assertEquals("product1", list.get(0).getProductId());

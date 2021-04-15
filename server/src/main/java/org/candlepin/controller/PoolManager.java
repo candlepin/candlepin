@@ -25,7 +25,6 @@ import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
@@ -261,18 +260,6 @@ public interface PoolManager {
     List<Entitlement> entitleByProductsForHost(Consumer guest, Consumer host,
         Date entitleDate, Collection<String> possiblePools)
         throws EntitlementRefusedException;
-
-    /**
-     * Creates a Subscription object using information derived from the specified pool. Used to
-     * support deprecated API calls that still require a subscription.
-     *
-     * @param pool
-     *  The pool from which to build a subscription
-     *
-     * @return
-     *  a new subscription object derived from the specified pool.
-     */
-    Subscription fabricateSubscriptionFromPool(Pool pool);
 
     /**
      * Retrieves a list of pools associated with the specified subscription ID. If there are no

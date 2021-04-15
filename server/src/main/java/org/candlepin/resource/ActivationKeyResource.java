@@ -14,11 +14,17 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.auth.Access;
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.SubResource;
 import org.candlepin.auth.Verify;
+import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
@@ -27,70 +33,67 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
+import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.activationkey.ActivationKeyRules;
+import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.TransformedIterator;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-
+import org.apache.commons.lang.StringUtils;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
 
 /**
  * ActivationKeyResource
  */
-@Path("/activation_keys")
-@Api(value = "activation_keys", authorizations = { @Authorization("basic") })
-public class ActivationKeyResource {
-    private static Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
-    private ActivationKeyCurator activationKeyCurator;
-    private OwnerProductCurator ownerProductCurator;
-    private PoolManager poolManager;
-    private I18n i18n;
-    private ServiceLevelValidator serviceLevelValidator;
-    private ActivationKeyRules activationKeyRules;
-    private ModelTranslator translator;
+public class ActivationKeyResource implements ActivationKeysApi {
+    private static final Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
     private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
+
+    private final ActivationKeyCurator activationKeyCurator;
+    private final ActivationKeyContentOverrideCurator contentOverrideCurator;
+    private final OwnerProductCurator ownerProductCurator;
+    private final PoolManager poolManager;
+    private final I18n i18n;
+    private final ServiceLevelValidator serviceLevelValidator;
+    private final ActivationKeyRules activationKeyRules;
+    private final ModelTranslator translator;
+    private final DTOValidator dtoValidator;
+    private final ContentOverrideValidator coValidator;
 
     @Inject
     public ActivationKeyResource(ActivationKeyCurator activationKeyCurator, I18n i18n,
         PoolManager poolManager, ServiceLevelValidator serviceLevelValidator,
         ActivationKeyRules activationKeyRules, OwnerProductCurator ownerProductCurator,
-        ModelTranslator translator) {
+        ModelTranslator translator, DTOValidator dtoValidator,
+        ActivationKeyContentOverrideCurator contentOverrideCurator, ContentOverrideValidator coValidator) {
 
-        this.activationKeyCurator = activationKeyCurator;
-        this.i18n = i18n;
-        this.poolManager = poolManager;
-        this.serviceLevelValidator = serviceLevelValidator;
-        this.activationKeyRules = activationKeyRules;
-        this.ownerProductCurator = ownerProductCurator;
-        this.translator = translator;
+        this.activationKeyCurator = Objects.requireNonNull(activationKeyCurator);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.poolManager = Objects.requireNonNull(poolManager);
+        this.serviceLevelValidator = Objects.requireNonNull(serviceLevelValidator);
+        this.activationKeyRules = Objects.requireNonNull(activationKeyRules);
+        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
+        this.translator = Objects.requireNonNull(translator);
+        this.dtoValidator = Objects.requireNonNull(dtoValidator);
+        this.contentOverrideCurator = Objects.requireNonNull(contentOverrideCurator);
+        this.coValidator = Objects.requireNonNull(coValidator);
     }
 
     /**
@@ -106,7 +109,7 @@ public class ActivationKeyResource {
      * @return
      *  an ActivationKey with the specified ID
      */
-    protected ActivationKey fetchActivationKey(String keyId) {
+    private ActivationKey fetchActivationKey(String keyId) {
         if (keyId == null || keyId.isEmpty()) {
             throw new BadRequestException(i18n.tr("Activation key ID is null or empty"));
         }
@@ -114,52 +117,33 @@ public class ActivationKeyResource {
         ActivationKey key = this.activationKeyCurator.secureGet(keyId);
 
         if (key == null) {
-            throw new BadRequestException(i18n.tr("Activation key with ID \"{0}\" could not be found.",
-                keyId));
+            throw new BadRequestException(i18n.tr(
+                "Activation key with ID \"{0}\" could not be found.", keyId));
         }
 
         return key;
     }
 
-    @ApiOperation(notes = "Retrieves a single Activation Key", value = "Get Activation Key")
-    @ApiResponses({ @ApiResponse(code = 400, message = "") })
-    @GET
-    @Path("{activation_key_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ActivationKeyDTO getActivationKey(
-        @PathParam("activation_key_id")
-        @Verify(ActivationKey.class) String activationKeyId) {
-
+    @Override
+    public ActivationKeyDTO getActivationKey(@Verify(ActivationKey.class) String activationKeyId) {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
-
         return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
-    @ApiOperation(notes = "Retrieves a list of Pools based on the Activation Key",
-        value = "Get Activation Key Pools", response = PoolDTO.class, responseContainer = "list")
-    @ApiResponses({ @ApiResponse(code = 400, message = "")})
-    @GET
-    @Path("{activation_key_id}/pools")
-    @Produces(MediaType.APPLICATION_JSON)
-    public Iterator<PoolDTO> getActivationKeyPools(
-        @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId) {
-
+    @Override
+    public Iterable<PoolDTO> getActivationKeyPools(@Verify(ActivationKey.class) String activationKeyId) {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
-
-        return new TransformedIterator<>(key.getPools().iterator(),
+        return () -> new TransformedIterator<>(key.getPools().iterator(),
             akp -> translator.translate(akp.getPool(), PoolDTO.class)
         );
     }
 
-    @ApiOperation(notes = "Updates an Activation Key", value = "Update Activation Key")
-    @ApiResponses({ @ApiResponse(code = 400, message = "") })
-    @PUT
-    @Path("{activation_key_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    public ActivationKeyDTO updateActivationKey(
-        @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
-        @ApiParam(name = "update", required = true) ActivationKeyDTO update) {
+    @Override
+    public ActivationKeyDTO updateActivationKey(@Verify(ActivationKey.class) String activationKeyId,
+        ActivationKeyDTO update) {
+        dtoValidator.validateConstraints(update);
+        dtoValidator.validateCollectionElementsNotNull(update::getProducts, update::getPools,
+            update::getContentOverrides);
 
         ActivationKey toUpdate = this.fetchActivationKey(activationKeyId);
 
@@ -181,8 +165,8 @@ public class ActivationKeyResource {
             toUpdate.setServiceLevel(serviceLevel);
         }
 
-        if (update.getReleaseVersion() != null) {
-            toUpdate.setReleaseVer(new Release(update.getReleaseVersion()));
+        if (update.getReleaseVer() != null) {
+            toUpdate.setReleaseVer(new Release(update.getReleaseVer().getReleaseVer()));
         }
 
         if (update.getDescription() != null) {
@@ -198,30 +182,22 @@ public class ActivationKeyResource {
         }
 
         if (update.getAddOns() != null) {
-            Set<String> addOns = new HashSet<>();
-            addOns.addAll(update.getAddOns());
+            Set<String> addOns = new HashSet<>(update.getAddOns());
             toUpdate.setAddOns(addOns);
         }
 
-        if (update.isAutoAttach() != null) {
-            toUpdate.setAutoAttach(update.isAutoAttach());
+        if (update.getAutoAttach() != null) {
+            toUpdate.setAutoAttach(update.getAutoAttach());
         }
+
         toUpdate = activationKeyCurator.merge(toUpdate);
 
         return this.translator.translate(toUpdate, ActivationKeyDTO.class);
     }
 
-    @ApiOperation(notes = "Adds a Pool to an Activation Key", value = "Add Pool to Key")
-    @ApiResponses({ @ApiResponse(code = 400, message = "")})
-    @POST
-    @Path("{activation_key_id}/pools/{pool_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.WILDCARD)
-    public ActivationKeyDTO addPoolToKey(
-        @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
-        @PathParam("pool_id") @Verify(Pool.class) String poolId,
-        @QueryParam("quantity") Long quantity) {
-
+    @Override
+    public ActivationKeyDTO addPoolToKey(@Verify(ActivationKey.class) String activationKeyId,
+        @Verify(Pool.class) String poolId, Long quantity) {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Pool pool = findPool(poolId);
 
@@ -243,16 +219,9 @@ public class ActivationKeyResource {
         return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
-    @ApiOperation(notes = "Removes a Pool from an Activation Key", value = "Remove Pool From Key")
-    @ApiResponses({ @ApiResponse(code =  400, message = "")})
-    @DELETE
-    @Path("{activation_key_id}/pools/{pool_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ActivationKeyDTO removePoolFromKey(
-        @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
-        @PathParam("pool_id")
+    @Override
+    public ActivationKeyDTO removePoolFromKey(@Verify(ActivationKey.class) String activationKeyId,
         @Verify(Pool.class) String poolId) {
-
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Pool pool = findPool(poolId);
         key.removePool(pool);
@@ -261,15 +230,8 @@ public class ActivationKeyResource {
         return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
-    @ApiOperation(notes = "Adds an Product ID to an Activation Key", value = "Add Product ID to key")
-    @ApiResponses({ @ApiResponse(code = 400, message = "")})
-    @POST
-    @Path("{activation_key_id}/product/{product_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.WILDCARD)
-    public ActivationKeyDTO addProductIdToKey(
-        @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
-        @PathParam("product_id") String productId) {
+    public ActivationKeyDTO addProductIdToKey(@Verify(ActivationKey.class) String activationKeyId,
+        String productId) {
 
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Product product = confirmProduct(key.getOwner(), productId);
@@ -287,44 +249,118 @@ public class ActivationKeyResource {
         return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
-    @ApiOperation(notes = "Removes a Product ID from an Activation Key", value = "Remove Product Id from Key")
-    @ApiResponses({ @ApiResponse(code = 400, message = "") })
-    @DELETE
-    @Path("{activation_key_id}/product/{product_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ActivationKeyDTO removeProductIdFromKey(
-        @PathParam("activation_key_id") @Verify(ActivationKey.class) String activationKeyId,
-        @PathParam("product_id") String productId) {
+    @Override
+    public ActivationKeyDTO removeProductIdFromKey(@Verify(ActivationKey.class) String activationKeyId,
+        String productId) {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Product product = confirmProduct(key.getOwner(), productId);
         key.removeProduct(product);
         activationKeyCurator.update(key);
-
         return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
-    @ApiOperation(notes = "Retrieves a list of Activation Keys", value = "findActivationKey",
-        response = ActivationKeyDTO.class, responseContainer = "list")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
+    @Override
     public CandlepinQuery<ActivationKeyDTO> findActivationKey() {
         CandlepinQuery<ActivationKey> query = this.activationKeyCurator.listAll();
         return this.translator.translateQuery(query, ActivationKeyDTO.class);
     }
 
-    @ApiOperation(notes = "Removes an Activation Key", value = "deleteActivationKey")
-    @ApiResponses({ @ApiResponse(code = 400, message = "") })
-    @DELETE
-    @Path("{activation_key_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public void deleteActivationKey(
-        @PathParam("activation_key_id")
-        @Verify(ActivationKey.class) String activationKeyId) {
+    @Override
+    public void deleteActivationKey(@Verify(ActivationKey.class) String activationKeyId) {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
-
         log.debug("Deleting activation key: {}", activationKeyId);
-
         activationKeyCurator.delete(key);
+    }
+
+    @Override
+    @SecurityHole
+    public Iterable<ContentOverrideDTO> listActivationKeyContentOverrides(String activationKeyId) {
+        Principal principal = ResteasyContext.getContextData(Principal.class);
+        ActivationKey parent = this.verifyAndGetParent(activationKeyId, principal, Access.READ_ONLY);
+
+        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(parent);
+        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+    }
+
+    @Override
+    @Transactional
+    @SecurityHole
+    public Iterable<ContentOverrideDTO> addActivationKeyContentOverrides(
+        String activationKeyId, List<ContentOverrideDTO> entries) {
+        Principal principal = ResteasyContext.getContextData(Principal.class);
+
+        this.coValidator.validate(entries);
+        ActivationKey parent = this.verifyAndGetParent(activationKeyId, principal, Access.ALL);
+        try {
+            for (ContentOverrideDTO dto : entries) {
+                ActivationKeyContentOverride override = this.contentOverrideCurator
+                    .retrieve(parent, dto.getContentLabel(), dto.getName());
+
+                // We're counting on Hibernate to do our batching for us here...
+                if (override != null) {
+                    override.setValue(dto.getValue());
+                    this.contentOverrideCurator.merge(override);
+                }
+                else {
+                    override = new ActivationKeyContentOverride();
+
+                    override.setParent(parent);
+                    override.setContentLabel(dto.getContentLabel());
+                    override.setName(dto.getName());
+                    override.setValue(dto.getValue());
+
+                    this.contentOverrideCurator.create(override);
+                }
+            }
+        }
+        catch (RuntimeException e) {
+            // Make sure we clear all pending changes, since we don't want to risk storing only a
+            // portion of the changes.
+            this.contentOverrideCurator.clear();
+
+            // Re-throw the exception
+            throw e;
+        }
+
+        // Hibernate typically persists automatically before executing a query against a table with
+        // pending changes, but if it doesn't, we can add a flush here to make sure this outputs the
+        // correct values
+        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(parent);
+        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+    }
+
+    @Override
+    @Transactional
+    @SecurityHole
+    public Iterable<ContentOverrideDTO> deleteActivationKeyContentOverrides(
+        String activationKeyId, List<ContentOverrideDTO> entries) {
+        Principal principal = ResteasyContext.getContextData(Principal.class);
+
+        ActivationKey parent = this.verifyAndGetParent(activationKeyId, principal, Access.ALL);
+
+        if (entries.size() == 0) {
+            this.contentOverrideCurator.removeByParent(parent);
+        }
+        else {
+            for (ContentOverrideDTO dto : entries) {
+                String label = dto.getContentLabel();
+                if (StringUtils.isBlank(label)) {
+                    this.contentOverrideCurator.removeByParent(parent);
+                }
+                else {
+                    String name = dto.getName();
+                    if (StringUtils.isBlank(name)) {
+                        this.contentOverrideCurator.removeByContentLabel(parent, dto.getContentLabel());
+                    }
+                    else {
+                        this.contentOverrideCurator.removeByName(parent, dto.getContentLabel(), name);
+                    }
+                }
+            }
+        }
+
+        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(parent);
+        return this.translator.translateQuery(query, ContentOverrideDTO.class);
     }
 
     private Pool findPool(String poolId) {
@@ -345,6 +381,18 @@ public class ActivationKeyResource {
         }
 
         return prod;
+    }
+
+    private ActivationKey verifyAndGetParent(String parentId, Principal principal, Access access) {
+        // Throws exception if criteria block the id
+        ActivationKey result = this.fetchActivationKey(parentId);
+
+        // Now that we know it exists, verify access level
+        if (!principal.canAccess(result, SubResource.NONE, access)) {
+            throw new ForbiddenException(i18n.tr("Insufficient permissions"));
+        }
+
+        return result;
     }
 
 }

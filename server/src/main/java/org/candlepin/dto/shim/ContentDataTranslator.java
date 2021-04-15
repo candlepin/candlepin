@@ -18,7 +18,9 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.model.dto.ContentData;
+import org.candlepin.util.Util;
 
+import java.util.HashSet;
 
 
 /**
@@ -64,23 +66,21 @@ public class ContentDataTranslator implements ObjectTranslator<ContentData, Cont
             throw new IllegalArgumentException("dest is null");
         }
 
-        dest.setCreated(source.getCreated());
-        dest.setUpdated(source.getUpdated());
-
-        dest.setUuid(source.getUuid());
-        dest.setId(source.getId());
-        dest.setType(source.getType());
-        dest.setLabel(source.getLabel());
-        dest.setName(source.getName());
-        dest.setVendor(source.getVendor());
-        dest.setContentUrl(source.getContentUrl());
-        dest.setRequiredTags(source.getRequiredTags());
-        dest.setReleaseVersion(source.getReleaseVersion());
-        dest.setGpgUrl(source.getGpgUrl());
-        dest.setMetadataExpiration(source.getMetadataExpiration());
-        dest.setModifiedProductIds(source.getModifiedProductIds());
-        dest.setArches(source.getArches());
-        dest.setLocked(source.isLocked());
+        dest.uuid(source.getUuid())
+            .id(source.getId())
+            .type(source.getType())
+            .label(source.getLabel())
+            .name(source.getName())
+            .vendor(source.getVendor())
+            .contentUrl(source.getContentUrl())
+            .requiredTags(source.getRequiredTags())
+            .releaseVer(source.getReleaseVersion())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .gpgUrl(source.getGpgUrl())
+            .metadataExpire(source.getMetadataExpiration())
+            .modifiedProductIds(new HashSet<>(source.getModifiedProductIds()))
+            .arches(source.getArches());
 
         return dest;
     }

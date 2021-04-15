@@ -18,8 +18,8 @@ import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
 
@@ -1074,7 +1074,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @SuppressWarnings("checkstyle:indentation")
     public CandlepinQuery<Consumer> searchOwnerConsumers(Owner owner, String userName,
         Collection<ConsumerType> types, List<String> uuids, List<String> hypervisorIds,
-        List<KeyValueParameter> factFilters, List<String> skus,
+        List<KeyValueParamDTO> factFilters, List<String> skus,
         List<String> subscriptionIds, List<String> contracts) {
 
         DetachedCriteria crit = super.createSecureDetachedCriteria();
@@ -1089,7 +1089,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (types != null && !types.isEmpty()) {
             Collection<String> typeIds = types.stream()
                 .filter(t -> t.getId() != null)
-                .map(t -> t.getId())
+                .map(ConsumerType::getId)
                 .collect(Collectors.toList());
 
             crit.add(CPRestrictions.in("typeId", typeIds));
@@ -1112,7 +1112,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         if (factFilters != null && !factFilters.isEmpty()) {
             // Process the filters passed for the attributes
             FilterBuilder factFilter = new FactFilterBuilder();
-            for (KeyValueParameter filterParam : factFilters) {
+            for (KeyValueParamDTO filterParam : factFilters) {
                 factFilter.addAttributeFilter(filterParam.getKey(), filterParam.getValue());
             }
             factFilter.applyTo(crit);

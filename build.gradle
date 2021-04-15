@@ -4,7 +4,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 // vim: set expandtab sts=4 sw=4 ai:
 
 buildscript {
-    ext.openapi_version = '4.2.3'
+    ext.openapi_version = '5.0.0'
     repositories {
         mavenCentral()
     }
@@ -31,7 +31,7 @@ ext.versions = [
     jackson_general: "2.10.5",
     guice     : "4.2.3",
     checkstyle: "8.29",
-    junit5    : "5.4.2"
+    junit5    : "5.7.0"
 ]
 
 ext.libraries = [
@@ -53,10 +53,14 @@ ext.libraries = [
         "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
         "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5",
         "com.fasterxml.jackson.datatype:jackson-datatype-jdk8",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jsr310",
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
+        "com.fasterxml.jackson.dataformat:jackson-dataformat-xml",
     ],
     swagger: [
-        "io.swagger:swagger-jaxrs",
         "io.swagger:swagger-annotations",
+
+        "org.reflections:reflections:0.9.10",
         "org.apache.commons:commons-lang3",
     ],
     sun_jaxb: [
@@ -120,11 +124,11 @@ ext.libraries = [
     gettext: "com.googlecode.gettext-commons:gettext-commons",
     javax_servlet: "javax.servlet:servlet-api",
     javax_validation: "javax.validation:validation-api",
-    jmock                 : [
+    jmock: [
         "org.jmock:jmock",
         "org.jmock:jmock-junit4",
     ],
-    validator             : [
+    validator: [
         "org.hibernate.validator:hibernate-validator",
         "org.hibernate.validator:hibernate-validator-annotation-processor",
     ],
@@ -217,7 +221,6 @@ allprojects {
                 entry "artemis-stomp-protocol"
             }
             dependencySet(group: "io.swagger", version: "1.5.7") {
-                entry "swagger-jaxrs"
                 entry "swagger-annotations"
             }
             dependencySet(group: "com.fasterxml.jackson.core", version: "$versions.jackson_databind") {
@@ -234,7 +237,7 @@ allprojects {
             dependencySet(group: "com.fasterxml.jackson.datatype", version: "$versions.jackson_general") {
                 entry "jackson-datatype-hibernate5"
                 entry "jackson-datatype-jdk8"
-                //entry "jackson-datatype-jsr310"
+                entry "jackson-datatype-jsr310"
             }
             dependencySet(group: "com.fasterxml.jackson.jaxrs", version: "$versions.jackson_general") {
                 entry "jackson-jaxrs-base"
@@ -338,8 +341,8 @@ project(":api") {
       configFile = config_file
       outputDir = "$buildDir/generated"
       configOptions = [
-          interfaceOnly: "true",
-          generatePom: "false",
+          interfaceOnly: 'true',
+          generatePom: 'false',
           dateLibrary: "java8"
       ]
       templateDir = "$rootDir/buildSrc/src/main/resources/templates"
@@ -411,6 +414,45 @@ project(":api") {
                                     }
                                 }
                             }
+                            plugin {
+                                groupId 'org.apache.maven.plugins'
+                                artifactId 'maven-resources-plugin'
+                                version '3.1.0'
+                                executions {
+                                    execution {
+                                        phase 'install'
+                                        goals {
+                                            goal 'copy-resources'
+                                        }
+                                        configuration {
+                                            outputDirectory '../server/src/main/webapp/docs/'
+                                            resources {
+                                                resource {
+                                                    directory '${basedir}'
+                                                    includes {
+                                                        include 'candlepin-api-spec.yaml'
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            plugin {
+                                groupId 'org.apache.maven.plugins'
+                                artifactId 'maven-clean-plugin'
+                                version '3.1.0'
+                                configuration {
+                                    filesets {
+                                        fileset {
+                                            directory '../server/src/main/webapp/docs/'
+                                            includes {
+                                                include 'candlepin-api-spec.yaml'
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -434,6 +476,7 @@ project(":api") {
         compile 'javax.ws.rs:javax.ws.rs-api'
         compile 'io.swagger:swagger-annotations'
         compile 'javax.annotation:javax.annotation-api'
+        compile 'org.jboss.resteasy:resteasy-multipart-provider'
     }
 
     sourceSets.main.java.srcDirs = ["${buildDir}/generated/src/gen/java"]
@@ -450,7 +493,6 @@ configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "can
 
     dependencies {
         checkstyle libraries.checkstyle
-        checkstyle project(":checks")
     }
 
     test {
@@ -498,4 +540,8 @@ configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "can
 
 wrapper {
     distributionType = Wrapper.DistributionType.ALL
+}
+
+clean.doFirst {
+    delete "${rootDir}/server/src/main/webapp/docs/candlepin-api-spec.yaml"
 }

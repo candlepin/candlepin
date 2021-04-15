@@ -26,13 +26,11 @@ describe 'Healing' do
 
   it 'entitles non-compliant products' do
     parent_prod = create_product(nil, nil, :providedProducts => [@product1.id , @product2.id])
-    current_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
-      10, [@product1['id'], @product2['id']])
+    current_pool = @cp.create_pool(@owner['key'], parent_prod['id'], { :quantity => 10 })
 
     # Create a future sub, the entitlement should not come from this one:
-    future_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
-      10, [@product1['id'], @product2['id']], '', '', @now + 30,
-        @now + 60)
+    future_pool = @cp.create_pool(@owner['key'], parent_prod['id'], { :quantity => 10,
+      :start_date => @now + 30, :end_date => @now + 60 })
 
     ents = @consumer_cp.consume_product()
     ents.size.should == 1
@@ -41,12 +39,11 @@ describe 'Healing' do
 
   it 'entitles non-compliant products despite a valid future entitlement' do
     parent_prod = create_product(nil, nil, :providedProducts => [@product1.id, @product2.id])
-    current_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
-      10, [@product1['id'], @product2['id']])
+    current_pool = @cp.create_pool(@owner['key'], parent_prod['id'], { :quantity => 10 })
 
     # Create a future sub, the entitlement should not come from this one:
-    future_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
-      10, [@product1['id'], @product2['id']], '', '', '', @now + 30, @now + 60)
+    future_pool = @cp.create_pool(@owner['key'], parent_prod['id'], { :quantity => 10,
+      :start_date => @now + 30, :end_date => @now + 60 })
 
     # 35 days in future should land in our sub:
     future_iso8601 = (Time.now + (60 * 60 * 24 * 35)).utc.iso8601 # a string
@@ -62,12 +59,11 @@ describe 'Healing' do
     parent_prod = create_product(nil, nil, :providedProducts => [@product1.id,@product2.id])
 
     # This one should be skipped, as we're going to specify a future date:
-    current_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
-      10, [@product1['id'], @product2['id']])
+    current_pool = @cp.create_pool(@owner['key'], parent_prod['id'], { :quantity => 10 })
 
     # Create a future sub, entitlement should end up coming from here:
-    future_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
-      10, [@product1['id'], @product2['id']], '', '', '', @now + 365 * 2, @now + 365 * 4) # valid 2-4 years from now
+    future_pool = @cp.create_pool(@owner['key'], parent_prod['id'], { :quantity => 10,
+      :start_date => @now + 365 * 2, :end_date => @now + 365 * 4 })
 
     future_iso8601 = (Time.now + (60 * 60 * 24 * 365 * 3)).utc.iso8601 # a string
 
@@ -82,8 +78,7 @@ describe 'Healing' do
     stack_id = 'mystack'
     parent_prod = create_product(nil, nil, :attributes => {
       :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id}, :providedProducts => [@product1.id, @product2.id])
-    current_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
-      10, [@product1['id'], @product2['id']])
+    current_pool = @cp.create_pool(@owner['key'], parent_prod['id'], { :quantity => 10 })
 
     ents = @consumer_cp.consume_product()
     ents.size.should == 1
@@ -95,8 +90,7 @@ describe 'Healing' do
     stack_id = 'mystack'
     parent_prod = create_product(nil, nil, :attributes => {
       :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id}, :providedProducts => [@product3.id])
-    current_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
-      10, [@product3['id']])
+    current_pool = @cp.create_pool(@owner['key'], parent_prod['id'], { :quantity => 10 })
 
     # Consume 2 of the four required
     @consumer_cp.consume_pool(current_pool['id'], {:quantity => 2})
@@ -113,12 +107,10 @@ describe 'Healing' do
     stack_id = 'mystack'
     parent_prod = create_product(nil, nil, :attributes => {
       :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id}, :providedProducts => [@product1.id, @product2.id])
-    create_pool_and_subscription(@owner['key'], parent_prod['id'],
-      2, [@product1['id'], @product2['id']])
+    current_pool = @cp.create_pool(@owner['key'], parent_prod['id'], { :quantity => 2 })
     parent_prod2 = create_product(nil, nil, :attributes => {
       :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id}, :providedProducts => [@product1.id, @product2.id])
-    create_pool_and_subscription(@owner['key'], parent_prod2['id'],
-      2, [@product1['id'], @product2['id']])
+    @cp.create_pool(@owner['key'], parent_prod2['id'], { :quantity => 2 })
 
     ents = @consumer_cp.consume_product()
     ents.size.should == 2
@@ -130,8 +122,7 @@ describe 'Healing' do
     stack_id = 'mystack'
     parent_prod = create_product(nil, nil, :attributes => {
       :sockets => '2', :'multi-entitlement' => 'yes', :stacking_id => stack_id}, :providedProducts => [@product1.id, @product2.id])
-    current_pool = create_pool_and_subscription(@owner['key'], parent_prod['id'],
-      10, [@product1['id'], @product2['id']])
+    current_pool = @cp.create_pool(@owner['key'], parent_prod['id'], { :quantity => 10 })
 
     # First a normal bind to get two entitlements covering 4 of our 8 sockets:
     @consumer_cp.consume_pool(current_pool['id'], {:quantity => 2})

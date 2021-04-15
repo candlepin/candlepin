@@ -81,7 +81,7 @@ public class PermissionBlueprint extends AbstractHibernateObject implements Perm
         this.type = type;
     }
 
-    protected PermissionBlueprint() {
+    public PermissionBlueprint() {
         // JPA
     }
 

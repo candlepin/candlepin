@@ -24,33 +24,16 @@ import org.candlepin.policy.js.JsRunnerProvider;
 
 import com.google.inject.Inject;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiResponse;
-import io.swagger.annotations.ApiResponses;
-import io.swagger.annotations.Authorization;
-
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 
 /**
  * Rules API entry path
  */
-@Path("/rules")
-@Api(value = "rules", authorizations = { @Authorization("basic") })
-public class RulesResource {
+public class RulesResource implements RulesApi {
     private static Logger log = LoggerFactory.getLogger(RulesResource.class);
     private RulesCurator rulesCurator;
     private I18n i18n;
@@ -70,18 +53,15 @@ public class RulesResource {
         this.jsProvider = jsProvider;
     }
 
-    @ApiOperation(notes = "Uploads the Rules Returns a copy of the uploaded rules.", value = "upload")
-    @ApiResponses({ @ApiResponse(code = 400, message = "") })
-    @POST
-    @Consumes({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
-    @Produces({ MediaType.TEXT_PLAIN, MediaType.APPLICATION_JSON })
-    public String upload(String rulesBuffer) {
-
+    @Override
+    public String uploadRules(String rulesBuffer) {
         if (rulesBuffer == null || rulesBuffer.isEmpty()) {
-            throw new WebApplicationException(Response.Status.BAD_REQUEST);
+            log.error("Rules file is empty");
+            throw new BadRequestException(i18n.tr("Rules file is empty"));
         }
 
         Rules rules = null;
+
         try {
             String decoded = new String(Base64.decodeBase64(rulesBuffer));
             rules = new Rules(decoded);
@@ -94,7 +74,6 @@ public class RulesResource {
 
         Rules oldRules = rulesCurator.getRules();
         rulesCurator.update(rules);
-
         sink.emitRulesModified(oldRules, rules);
 
         // Trigger a recompile of the JS rules so version/source are set correctly:
@@ -103,11 +82,8 @@ public class RulesResource {
         return rulesBuffer;
     }
 
-    @ApiOperation(notes = "Retrieves the Rules", value = "get")
-    @ApiResponses({ @ApiResponse(code = 503, message = "") })
-    @GET
-    @Produces({ MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN })
-    public String get() {
+    @Override
+    public String getRules() {
         try {
             String rules = rulesCurator.getRules().getRules();
             if ((rules != null) && (rules.length() > 0)) {
@@ -121,11 +97,8 @@ public class RulesResource {
         }
     }
 
-    @ApiOperation(notes = "Removes the Rules  Deletes any uploaded rules, uses bundled rules instead",
-        value = "delete")
-    @DELETE
-    @Produces(MediaType.APPLICATION_JSON)
-    public void delete() {
+    @Override
+    public void deleteRules() {
         Rules deleteRules = rulesCurator.getRules();
         rulesCurator.delete(deleteRules);
         log.warn("Deleting rules version: " + deleteRules.getVersion());

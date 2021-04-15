@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
@@ -30,14 +31,12 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
-import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
@@ -50,6 +49,8 @@ import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.ReleaseVerDTO;
+import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.CloudProfileFacts;
@@ -64,17 +65,15 @@ import org.candlepin.model.Product;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.pki.CertificateReader;
-import org.candlepin.resource.util.ConsumerBindUtil;
-import org.candlepin.resource.util.ConsumerEnricher;
-import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
-import com.google.inject.util.Providers;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
@@ -83,7 +82,6 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -92,11 +90,8 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
-
-
 
 /**
  * ConsumerResourceTest
@@ -112,7 +107,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Inject private ConsumerResource consumerResource;
     @Inject private IdentityCertServiceAdapter icsa;
     @Inject private CertificateSerialCurator serialCurator;
-    @Inject private ConsumerEnricher consumerEnricher;
     @Inject protected ModelTranslator modelTranslator;
     @Inject protected JobManager jobManager;
 
@@ -124,10 +118,13 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     private Product product;
     private Pool pool;
 
+
     private Principal principal;
     private Owner owner;
     private OwnerDTO ownerDTO;
     private Role ownerAdminRole;
+
+    private PrincipalProvider principalProvider;
 
     private User someuser;
 
@@ -148,7 +145,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ownerDTO = modelTranslator.translate(owner, OwnerDTO.class);
         owner.setDefaultServiceLevel(DEFAULT_SERVICE_LEVEL);
         ownerCurator.create(owner);
-
+        this.principalProvider = mock(PrincipalProvider.class);
         someuser = userCurator.create(new User(USER_NAME, "dontcare"));
 
         ownerAdminRole = createAdminRole(owner);
@@ -198,7 +195,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Long serial1 = certificates.get(0).getSerial().getId();
         Long serial2 = certificates.get(3).getSerial().getId();
 
-        String serialsToFilter = serial1.toString() + "," + serial2.toString();
+        String serialsToFilter = serial1 + "," + serial2;
 
         certificates = consumerResource.getEntitlementCertificates(consumer.getUuid(), serialsToFilter);
         assertEquals(2, certificates.size());
@@ -211,28 +208,24 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testCreateConsumer() {
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null,
             standardSystemTypeDTO);
-        toSubmit.setFact(METADATA_NAME, METADATA_VALUE);
-        ConsumerDTO submitted = consumerResource.create(
+        toSubmit.putFacts(METADATA_NAME, METADATA_VALUE);
+        ConsumerDTO submitted = consumerResource.createConsumer(
             toSubmit,
-            new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] {
-                new OwnerPermission(owner, Access.ALL) }), false),
             someuser.getUsername(),
             owner.getKey(), null, true);
 
         assertNotNull(submitted);
         assertNotNull(consumerCurator.get(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
-        assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
+        assertEquals(METADATA_VALUE, consumerResource.getFactValue(submitted.getFacts(), METADATA_NAME));
     }
 
     @Test
     @SuppressWarnings("checkstyle:indentation")
     public void testCreateConsumerVsDefaultServiceLevelForOwner() {
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
-        ConsumerDTO submitted = consumerResource.create(
+        ConsumerDTO submitted = consumerResource.createConsumer(
             toSubmit,
-            new UserPrincipal(someuser.getUsername(), Arrays.asList(new Permission [] {
-                new OwnerPermission(owner, Access.ALL) }), false),
             someuser.getUsername(),
             owner.getKey(), null, true);
 
@@ -246,26 +239,26 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
         assertNull(toSubmit.getId());
         toSubmit.setUuid(uuid);
-        toSubmit.setFact(METADATA_NAME, METADATA_VALUE);
+        toSubmit.putFacts(METADATA_NAME, METADATA_VALUE);
 
-        ConsumerDTO submitted = consumerResource.create(toSubmit, principal, null, owner.getKey(), null,
+        ConsumerDTO submitted = consumerResource.createConsumer(toSubmit, null, owner.getKey(), null,
             true);
         assertNotNull(submitted);
         assertNotNull(submitted.getId());
         assertNotNull(consumerCurator.get(submitted.getId()));
         assertNotNull(consumerCurator.findByUuid(uuid));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
-        assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
+        assertEquals(METADATA_VALUE, consumerResource.getFactValue(submitted.getFacts(), METADATA_NAME));
         assertEquals(uuid, submitted.getUuid());
 
         // The second post should fail because of constraint failures
         ConsumerDTO anotherToSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null,
             standardSystemTypeDTO);
         anotherToSubmit.setUuid(uuid);
-        anotherToSubmit.setFact(METADATA_NAME, METADATA_VALUE);
+        anotherToSubmit.putFacts(METADATA_NAME, METADATA_VALUE);
         anotherToSubmit.setId(null);
         assertThrows(BadRequestException.class, () ->
-            consumerResource.create(anotherToSubmit, principal, null, owner.getKey(), null, true));
+            consumerResource.createConsumer(anotherToSubmit, null, owner.getKey(), null, true));
     }
 
     @Test
@@ -273,7 +266,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testDeleteResource() {
         Consumer created = consumerCurator.create(new Consumer(CONSUMER_NAME,
             USER_NAME, owner, standardSystemType));
-        consumerResource.deleteConsumer(consumer.getUuid(), principal);
+        consumerResource.deleteConsumer(consumer.getUuid());
 
         assertNull(consumerCurator.get(created.getId()));
     }
@@ -283,7 +276,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         // not setting the username here - this should be set by
         // examining the user principal
         ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
-        consumer = consumerResource.create(consumer, principal, null, null, null, true);
+        consumer = consumerResource.createConsumer(consumer, null, null, null, true);
 
         assertEquals(USER_NAME, consumer.getUsername());
     }
@@ -301,7 +294,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerCurator.update(consumer);
         setupPrincipal(owner, Access.READ_ONLY);
         securityInterceptor.enable();
-        consumerResource.exportData(mock(HttpServletResponse.class), consumer.getUuid(), null, null, null);
+        ResteasyContext.pushContext(HttpServletResponse.class, mock(HttpServletResponse.class));
+        consumerResource.exportData(consumer.getUuid(), null, null, null);
         // if no exception, we're good
     }
 
@@ -332,26 +326,25 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testRegisterWithConsumerId() {
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
         toSubmit.setUuid("1023131");
-        toSubmit.setFact(METADATA_NAME, METADATA_VALUE);
+        toSubmit.putFacts(METADATA_NAME, METADATA_VALUE);
 
-        ConsumerDTO submitted = consumerResource.create(
-            toSubmit, TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
-            null, null, null, true);
+        ConsumerDTO submitted = consumerResource.createConsumer(
+            toSubmit, null, null, null, true);
 
         assertNotNull(submitted);
         assertEquals(toSubmit.getUuid(), submitted.getUuid());
         assertNotNull(consumerCurator.get(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
-        assertEquals(METADATA_VALUE, submitted.getFact(METADATA_NAME));
+        assertEquals(METADATA_VALUE, consumerResource.getFactValue(submitted.getFacts(), METADATA_NAME));
 
         // now pass in consumer type with null id just like the client would
         ConsumerTypeDTO type = new ConsumerTypeDTO()
-            .setLabel(standardSystemType.getLabel());
+            .label(standardSystemType.getLabel());
 
         assertNull(type.getId());
         ConsumerDTO nulltypeid = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, type);
-        submitted = consumerResource.create(
-            nulltypeid, TestUtil.createPrincipal(someuser.getUsername(), owner, Access.ALL),
+        submitted = consumerResource.createConsumer(
+            nulltypeid,
             null, null, null, true);
         assertNotNull(submitted);
         assertNotNull(submitted.getUuid());
@@ -366,9 +359,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             .getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
 
-        consumerResource.unbindBySerial(consumer.getUuid(), serials.get(0).getSerial().getId());
+        consumerResource.unbindBySerial(consumer.getUuid(), Long.valueOf(serials.get(0).getSerial().getId()));
         assertEquals(0, consumerResource.listEntitlements(
-            consumer.getUuid(), null, true, "", new ArrayList<>(), null).size());
+            consumer.getUuid(), null, true, "", new ArrayList<>()).size());
     }
 
     @Test
@@ -399,7 +392,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
-
         setupPrincipal(new ConsumerPrincipal(consumer, owner));
 
         assertEquals(3, consumerResource.getEntitlementCertificates(consumer.getUuid(), null).size());
@@ -409,12 +401,12 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void canNotDeleteConsumerOtherThanSelf() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
-        setupPrincipal(new ConsumerPrincipal(evilConsumer, owner));
+        Principal p = setupPrincipal(new ConsumerPrincipal(evilConsumer, owner));
 
         securityInterceptor.enable();
-
+        when(this.principalProvider.get()).thenReturn(p);
         assertThrows(NotFoundException.class, () ->
-            consumerResource.deleteConsumer(consumer.getUuid(), principal)
+            consumerResource.deleteConsumer(consumer.getUuid())
         );
     }
 
@@ -428,7 +420,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         IdentityCertificate idCert = icsa.generateIdentityCert(c);
         c.setIdCert(idCert);
         setupPrincipal(new ConsumerPrincipal(c, owner));
-        consumerResource.deleteConsumer(c.getUuid(), principal);
+        consumerResource.deleteConsumer(c.getUuid());
     }
 
     @Test
@@ -462,7 +454,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertThrows(ForbiddenException.class, () ->
-            consumerResource.list(null, null, null, new ArrayList<>(), null, null, null)
+            consumerResource.searchConsumers(null, null, null, new ArrayList<>(), null, null)
         );
     }
 
@@ -475,8 +467,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         List<String> uuidList = new ArrayList<>();
         uuidList.add(consumer.getUuid());
-        assertThrows(BadRequestException.class, () -> consumerResource.list("username", toSet("typeLabel"),
-            owner.getKey(), uuidList, null, null, new PageRequest())
+        assertThrows(BadRequestException.class, () -> consumerResource.searchConsumers("username",
+            toSet("typeLabel"),
+            owner.getKey(), uuidList, null, null)
         );
     }
 
@@ -493,7 +486,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertEquals(3, consumerResource.listEntitlements(
-            consumer.getUuid(), null, true, "", new ArrayList<>(), null).size());
+            consumer.getUuid(), null, true, "", new ArrayList<>()).size());
     }
 
     @Test
@@ -512,7 +505,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertThrows(NotFoundException.class, () -> consumerResource.listEntitlements(consumer.getUuid(),
-            null, true, "", new ArrayList<>(), null)
+            null, true, "", new ArrayList<>())
         );
     }
 
@@ -532,7 +525,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(evilOwner, Access.ALL);
 
         assertThrows(NotFoundException.class, () -> consumerResource.listEntitlements(consumer.getUuid(),
-            null, true, "", new ArrayList<>(), null)
+            null, true, "", new ArrayList<>())
         );
     }
 
@@ -544,18 +537,17 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
-
         securityInterceptor.enable();
 
         assertEquals(3, consumerResource.listEntitlements(
-            consumer.getUuid(), null, true, "", new ArrayList<>(), null).size());
+            consumer.getUuid(), null, true, "", new ArrayList<>()).size());
     }
 
     @Test
     public void personalNameOverride() {
         ConsumerDTO personal = createConsumerDTO(personTypeDTO, ownerDTO);
 
-        personal = consumerResource.create(personal, principal, null, null, null, true);
+        personal = consumerResource.createConsumer(personal, null, null, null, true);
 
         // Not sure if this should be hard-coded to default
         assertEquals(USER_NAME, personal.getName());
@@ -574,7 +566,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ConsumerDTO personal = createConsumerDTO(personTypeDTO, ownerDTO);
         personal.setName(emailuser.getUsername());
 
-        personal = consumerResource.create(personal, emailuser, username, null, null, true);
+        personal = consumerResource.createConsumer(personal, username, null, null, true);
 
         // Not sure if this should be hard-coded to default
         assertEquals(username, personal.getName());
@@ -583,12 +575,12 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void onlyOnePersonalConsumer() {
         ConsumerDTO personal = createConsumerDTO(personTypeDTO, ownerDTO);
-        consumerResource.create(personal, principal, null, null, null, true);
+        consumerResource.createConsumer(personal, null, null, null, true);
 
         personal = createConsumerDTO(personTypeDTO, ownerDTO);
         ConsumerDTO finalPersonal = personal;
         assertThrows(BadRequestException.class, () ->
-            consumerResource.create(finalPersonal, principal, null, null, null, true)
+            consumerResource.createConsumer(finalPersonal, null, null, null, true)
         );
     }
 
@@ -598,17 +590,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @SuppressWarnings("unchecked")
     @Test
     public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() throws JobException {
-        GuestMigration testMigration = new GuestMigration(consumerCurator);
-        Provider<GuestMigration> migrationProvider = Providers.of(testMigration);
-
-        ConsumerResource cr = new ConsumerResource(
-            this.consumerCurator, this.consumerTypeCurator, null, null, null, this.entitlementCurator, null,
-            null, null, null, null, null, null, this.poolManager, null, null, null, null,
-            null, null, null, null, null,
-            new CandlepinCommonTestConfig(), null, null, mock(ConsumerBindUtil.class),
-            null, null, null, null, consumerEnricher, migrationProvider, this.modelTranslator,
-            this.jobManager);
-
         Response rsp = consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null,
             null, false, null, null);
 
@@ -617,7 +598,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(1, ent.getCertificates().size());
         CertificateDTO entCertBefore = ent.getCertificates().iterator().next();
 
-        cr.regenerateEntitlementCertificates(this.consumer.getUuid(), ent.getId(), false);
+        consumerResource.regenerateEntitlementCertificates(this.consumer.getUuid(), ent.getId(), false);
 
         Entitlement entWithRefreshedCerts = entitlementCurator.get(ent.getId());
         ent = this.modelTranslator.translate(entWithRefreshedCerts, EntitlementDTO.class);
@@ -642,9 +623,9 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         }
     }
 
-    private Set<String> toSet(String s) {
+    private Set<String> toSet(String item) {
         Set<String> result = new HashSet<>();
-        result.add(s);
+        result.add(item);
         return result;
     }
 
@@ -663,10 +644,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         CertificateDTO original = serials.get(0);
         CertificateSerialDTO serialDTO  = original.getSerial();
-        CertificateSerial serial = new CertificateSerial(serialDTO.getId(), serialDTO.getExpiration());
-        serial.setSerial(serialDTO.getSerial().longValue());
-        serial.setCollected(serialDTO.isCollected());
-        serial.setRevoked(serialDTO.isRevoked());
+        CertificateSerial serial = new CertificateSerial(serialDTO.getId(),
+            Util.toDate(serialDTO.getExpiration()));
+        serial.setSerial(serialDTO.getSerial());
+        serial.setCollected(serialDTO.getCollected());
+        serial.setRevoked(serialDTO.getRevoked());
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(serial.getExpiration());
@@ -684,16 +666,16 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void testCloudProfileUpdatedOnConsumerSysRoleUpdate() {
         ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
-        consumer = consumerResource.create(consumer, principal, null, null, null, true);
+        consumer = consumerResource.createConsumer(consumer, null, null, null, true);
 
         consumer.setRole("test-role");
-        consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
+        consumerResource.updateConsumer(consumer.getUuid(), consumer);
         Date profileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
         assertNotNull(consumerCurator.get(consumer.getId()).getRHCloudProfileModified());
 
         consumer.setRole("update-role");
-        consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
+        consumerResource.updateConsumer(consumer.getUuid(), consumer);
         Date updatedProfileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
         assertNotNull(consumerCurator.get(consumer.getId()).getRHCloudProfileModified());
@@ -703,16 +685,16 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void testCloudProfileUpdatedOnInstalledProductsUpdate() {
         ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
-        consumer = consumerResource.create(consumer, principal, null, null, null, true);
+        consumer = consumerResource.createConsumer(consumer, null, null, null, true);
 
         Date beforeUpdateTimestamp = consumerCurator.findByUuid(consumer.getUuid())
             .getRHCloudProfileModified();
 
         Product prod = TestUtil.createProduct("Product One");
-        ConsumerInstalledProductDTO updatedInstalledProduct =
-            new ConsumerInstalledProductDTO(prod.getId(), prod.getName());
-        consumer.addInstalledProduct(updatedInstalledProduct);
-        consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
+        ConsumerInstalledProductDTO updatedInstalledProduct = new ConsumerInstalledProductDTO()
+            .productId(prod.getId()).productName(prod.getName());
+        consumer.addInstalledProducts(updatedInstalledProduct);
+        consumerResource.updateConsumer(consumer.getUuid(), consumer);
 
         Date afterUpdateTimestamp = consumerCurator.findByUuid(consumer.getUuid())
             .getRHCloudProfileModified();
@@ -724,14 +706,14 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void testCloudProfileUpdatedOnHypervisorUpdate() {
         ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
-        consumer = consumerResource.create(consumer, principal, null, null, null, true);
+        consumer = consumerResource.createConsumer(consumer, null, null, null, true);
 
         Date beforeUpdateTimestamp = consumerCurator.findByUuid(consumer.getUuid())
             .getRHCloudProfileModified();
 
         HypervisorIdDTO updatedHypervisorId = new HypervisorIdDTO();
         consumer.setHypervisorId(updatedHypervisorId);
-        consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
+        consumerResource.updateConsumer(consumer.getUuid(), consumer);
 
         Date afterUpdateTimestamp = consumerCurator.findByUuid(consumer.getUuid())
             .getRHCloudProfileModified();
@@ -743,20 +725,20 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void testCloudProfileUpdatedOnSpecificConsumerFactsUpdate() {
         ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
-        consumer = consumerResource.create(consumer, principal, null, null, null, true);
+        consumer = consumerResource.createConsumer(consumer, null, null, null, true);
         Date modifiedDateOnCreate = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
         ConsumerDTO updatedConsumerDTO = new ConsumerDTO();
-        updatedConsumerDTO.setFact("FACT", "FACT_VALUE");
-        consumerResource.updateConsumer(consumer.getUuid(), updatedConsumerDTO, principal);
+        updatedConsumerDTO.putFacts("FACT", "FACT_VALUE");
+        consumerResource.updateConsumer(consumer.getUuid(), updatedConsumerDTO);
         Date modifiedTSOnUnnecessaryFactUpdate = consumerCurator.get(consumer.getId())
             .getRHCloudProfileModified();
 
         assertEquals(modifiedDateOnCreate, modifiedTSOnUnnecessaryFactUpdate);
 
         updatedConsumerDTO = new ConsumerDTO();
-        updatedConsumerDTO.setFact(CloudProfileFacts.CPU_CORES_PERSOCKET.getFact(), "1");
-        consumerResource.updateConsumer(consumer.getUuid(), updatedConsumerDTO, principal);
+        updatedConsumerDTO.putFacts(CloudProfileFacts.CPU_CORES_PERSOCKET.getFact(), "1");
+        consumerResource.updateConsumer(consumer.getUuid(), updatedConsumerDTO);
         Date modifiedTSOnNecessaryFactUpdate = consumerCurator.get(consumer.getId())
             .getRHCloudProfileModified();
 
@@ -767,14 +749,14 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void testCloudProfileNotUpdatedOnConsumerUpdates() {
         ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
-        consumer = consumerResource.create(consumer, principal, null, null, null, true);
+        consumer = consumerResource.createConsumer(consumer, null, null, null, true);
         Date profileCreated = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
         consumer.setAutoheal(true);
         consumer.setSystemPurposeStatus("test-status");
-        consumer.setReleaseVersion("test-release-version");
-        consumer.setFact("lscpu.model", "78");
-        consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
+        consumer.setReleaseVer(new ReleaseVerDTO().releaseVer("test-release-version"));
+        consumer.putFacts("lscpu.model", "78");
+        consumerResource.updateConsumer(consumer.getUuid(), consumer);
         Date profileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
         assertEquals(profileCreated, profileModified);
@@ -783,12 +765,12 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     public void testCloudProfileNotUpdatedOnNonCloudFactUpdates() {
         ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
-        consumer = consumerResource.create(consumer, principal, null, null, null, true);
+        consumer = consumerResource.createConsumer(consumer, null, null, null, true);
         Date profileCreated = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
-        consumer.setFact("lscpu.model", "78");
-        consumer.setFact("test-dmi.bios.vendor", "vendorA");
-        consumerResource.updateConsumer(consumer.getUuid(), consumer, principal);
+        consumer.putFacts("lscpu.model", "78");
+        consumer.putFacts("test-dmi.bios.vendor", "vendorA");
+        consumerResource.updateConsumer(consumer.getUuid(), consumer);
         Date profileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
         assertEquals(profileCreated, profileModified);

@@ -1207,13 +1207,13 @@ describe 'Refresh Pools' do
     # verify serial does not change on content update request that does not regenerate cert
     entitlement = @cp.get_entitlement(entitlement['id'])
     bonus_entitlement = @cp.get_entitlement(bonus_entitlement['id'])
-    concat_serials(entitlement, bonus_entitlement).should == serial_concat
+    expect(concat_serials(entitlement, bonus_entitlement)).to eq(serial_concat)
 
     # this time when we refresh, serial should change
     @cp.refresh_pools(owner_key, false, false, false)
     entitlement = @cp.get_entitlement(entitlement['id'])
     bonus_entitlement = @cp.get_entitlement(bonus_entitlement['id'])
-    concat_serials(entitlement, bonus_entitlement).should_not == serial_concat
+    expect(concat_serials(entitlement, bonus_entitlement)).to_not eq(serial_concat)
     json_body = extract_payload(entitlement['certificates'][0]['cert'])
 
     return json_body, product

@@ -23,17 +23,26 @@ import java.util.Set;
 
 /**
  * This class is used to see whether or not we should apply our security
- * Intercepter to a method.  In actuality, this class is a bit of a no-op
+ * interceptor to a method.  In actuality, this class is a bit of a no-op
  * in the real application because RestEasy uses IsHttpMethod to pick up the
  * ResourceMethods that it will handle.  However, we need this matcher for testing
- * because we test with a AOP method intercepter which we don't want to apply
+ * because we test with a AOP method interceptor which we don't want to apply
  * to just plain public/protected methods.  Also note that this matcher runs
  * on application deployment and not on every request.
  */
 public class HttpMethodMatcher extends AbstractMatcher<Method> {
     @Override
     public boolean matches(Method m) {
-        Set<String> verbs = IsHttpMethod.getHttpMethods(m);
-        return verbs != null && !verbs.isEmpty() && !m.isSynthetic();
+        for (Class<?> iface : m.getDeclaringClass().getInterfaces()) {
+            try {
+                Method ifaceMethod = iface.getMethod(m.getName(), m.getParameterTypes());
+                Set<String> verbs = IsHttpMethod.getHttpMethods(ifaceMethod);
+                return verbs != null && !verbs.isEmpty() && !m.isSynthetic();
+            }
+            catch (NoSuchMethodException ignored) {
+                // nothing to do
+            }
+        }
+        return false;
     }
 }

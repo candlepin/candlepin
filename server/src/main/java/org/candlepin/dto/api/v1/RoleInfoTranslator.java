@@ -19,6 +19,7 @@ import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.service.model.PermissionBlueprintInfo;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
+import org.candlepin.util.Util;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -70,12 +71,10 @@ public class RoleInfoTranslator implements ObjectTranslator<RoleInfo, RoleDTO> {
             throw new IllegalArgumentException("dest is null");
         }
 
-        dest.setCreated(source.getCreated());
-        dest.setUpdated(source.getUpdated());
-
-        // Service model objects don't provide an ID
-        dest.setId(null);
-        dest.setName(source.getName());
+        dest.id(null) // Service model objects don't provide an ID
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .name(source.getName());
 
         if (translator != null) {
             // Users
@@ -84,10 +83,10 @@ public class RoleInfoTranslator implements ObjectTranslator<RoleInfo, RoleDTO> {
             if (users != null) {
                 dest.setUsers(users.stream()
                     .map(translator.getStreamMapper(UserInfo.class, UserDTO.class))
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toSet()));
             }
             else {
-                dest.setUsers(Collections.<UserDTO>emptyList());
+                dest.setUsers(Collections.<UserDTO>emptySet());
             }
 
             // Permissions
@@ -104,7 +103,7 @@ public class RoleInfoTranslator implements ObjectTranslator<RoleInfo, RoleDTO> {
             }
         }
         else {
-            dest.setUsers(Collections.<UserDTO>emptyList());
+            dest.setUsers(Collections.<UserDTO>emptySet());
             dest.setPermissions(Collections.<PermissionBlueprintDTO>emptyList());
         }
 

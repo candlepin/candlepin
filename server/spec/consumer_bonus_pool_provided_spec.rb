@@ -27,7 +27,12 @@ describe 'Consumer Resource Host/Guest' do
         :host_limited => 'true'},
         :owner => @owner1['key'], :providedProducts => [provided_product['id']]})
 
-    create_pool_and_subscription(@owner1['key'], std_product.id, 10, [provided_product.id])
+    # Make sure to create the pool with a source subscription and upstream pool id,
+    # in order for the bonus pool to be created
+    @cp.create_pool(@owner1['key'], std_product.id, { :quantity => 10,
+      :subscription_id => random_str('source_sub'),
+      :upstream_pool_id => random_str('upstream')})
+
     all_pools =  @user1.list_owner_pools(@owner1['key'])
     all_pools.size.should == 2
     unmapped_pool = all_pools.find {|p| p['type'] == 'UNMAPPED_GUEST'} 

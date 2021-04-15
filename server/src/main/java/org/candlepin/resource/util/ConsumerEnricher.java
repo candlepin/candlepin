@@ -14,13 +14,14 @@
  */
 package org.candlepin.resource.util;
 
+import org.candlepin.dto.api.v1.DateRange;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-import org.candlepin.util.DateRange;
+import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
@@ -104,8 +105,8 @@ public class ConsumerEnricher {
 
             // Set the compliance date range if we have it
             if (range != null) {
-                cip.setStartDate(range.getStartDate());
-                cip.setEndDate(range.getEndDate());
+                cip.setStartDate(Util.toDate(range.getStartDate()));
+                cip.setEndDate(Util.toDate(range.getEndDate()));
             }
 
             // Fetch missing product information from the actual product

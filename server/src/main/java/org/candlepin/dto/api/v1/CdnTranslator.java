@@ -15,14 +15,15 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
+import org.candlepin.util.Util;
 
 /**
  * The CdnTranslator provides translation from Cdn model objects to CdnDTOs
  */
-public class CdnTranslator extends TimestampedEntityTranslator<Cdn, CdnDTO> {
+public class CdnTranslator implements ObjectTranslator<Cdn, CdnDTO> {
 
     /**
      * {@inheritDoc}
@@ -53,12 +54,20 @@ public class CdnTranslator extends TimestampedEntityTranslator<Cdn, CdnDTO> {
      */
     @Override
     public CdnDTO populate(ModelTranslator modelTranslator, Cdn source, CdnDTO dest) {
-        dest = super.populate(modelTranslator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        dest.setId(source.getId())
-            .setName(source.getName())
-            .setLabel(source.getLabel())
-            .setUrl(source.getUrl());
+        if (dest == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
+
+        dest.id(source.getId())
+            .name(source.getName())
+            .label(source.getLabel())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .url(source.getUrl());
 
         // Process nested objects if we have a model translator to use to the translation...
         if (modelTranslator != null) {

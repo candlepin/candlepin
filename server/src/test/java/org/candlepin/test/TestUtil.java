@@ -26,9 +26,10 @@ import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
+import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.AbstractHibernateCurator;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
@@ -50,6 +51,8 @@ import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.resource.util.InfoAdapter;
+import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.Transactional;
 import org.candlepin.util.Util;
 
@@ -117,16 +120,28 @@ public class TestUtil {
 
     public static ConsumerDTO createConsumerDTO(String name, String userName, OwnerDTO owner,
         ConsumerTypeDTO type) {
-        return (new ConsumerDTO()).setName(name)
-            .setUsername(userName)
-            .setOwner(owner)
-            .setType(type)
-            .setAutoheal(true)
-            .setServiceLevel("")
-            .setEntitlementCount(0L)
-            .setFacts(new HashMap<>())
-            .setInstalledProducts(new HashSet<>())
-            .setGuestIds(new ArrayList<>());
+        ConsumerDTO consumer = new ConsumerDTO().name(name)
+            .username(userName)
+            .type(type)
+            .autoheal(true)
+            .serviceLevel("")
+            .entitlementCount(0L)
+            .facts(new HashMap<>())
+            .installedProducts(new HashSet<>())
+            .guestIds(new ArrayList<>());
+
+        if (owner != null) {
+            consumer.setOwner(new NestedOwnerDTO()
+                .key(owner.getKey())
+                .id(owner.getId())
+                .displayName(owner.getDisplayName()));
+
+        }
+        else {
+            consumer.setOwner(null);
+        }
+
+        return consumer;
     }
 
     public static Consumer createConsumer(ConsumerType type, Owner owner, String username) {
@@ -226,12 +241,11 @@ public class TestUtil {
             content.setVendor(dto.getVendor());
             content.setContentUrl(dto.getContentUrl());
             content.setRequiredTags(dto.getRequiredTags());
-            content.setReleaseVersion(dto.getReleaseVersion());
+            content.setReleaseVersion(dto.getReleaseVer());
             content.setGpgUrl(dto.getGpgUrl());
-            content.setMetadataExpiration(dto.getMetadataExpiration());
+            content.setMetadataExpiration(dto.getMetadataExpire());
             content.setModifiedProductIds(dto.getModifiedProductIds());
             content.setArches(dto.getArches());
-            content.setLocked(dto.isLocked());
         }
 
         return content;
@@ -299,22 +313,21 @@ public class TestUtil {
             product.setUuid(dto.getUuid());
             product.setMultiplier(dto.getMultiplier());
 
-            product.setAttributes(dto.getAttributes());
+            product.setAttributes(Util.toMap(dto.getAttributes()));
 
             if (dto.getProductContent() != null) {
                 for (ProductContentDTO pcd : dto.getProductContent()) {
                     if (pcd != null) {
-                        Content content = createContent((ContentDTO) pcd.getContent());
+                        Content content = createContent(pcd.getContent());
 
                         if (content != null) {
-                            product.addContent(content, pcd.isEnabled() != null ? pcd.isEnabled() : true);
+                            product.addContent(content, pcd.getEnabled() != null ? pcd.getEnabled() : true);
                         }
                     }
                 }
             }
 
             product.setDependentProductIds(dto.getDependentProductIds());
-            product.setLocked(dto.isLocked() != null ? dto.isLocked() : false);
         }
 
         return product;
@@ -334,7 +347,7 @@ public class TestUtil {
             if (pdata.getProductContent() != null) {
                 for (ProductContentData pcd : pdata.getProductContent()) {
                     if (pcd != null) {
-                        Content content = createContent((ContentData) pcd.getContent());
+                        Content content = createContent(pcd.getContent());
 
                         if (content != null) {
                             product.addContent(content, pcd.isEnabled() != null ? pcd.isEnabled() : true);
@@ -355,6 +368,8 @@ public class TestUtil {
 
         dto.setId(id);
         dto.setName(name);
+        dto.setAttributes(new ArrayList<>());
+        dto.setBranding(new HashSet<>());
 
         return dto;
     }
@@ -365,6 +380,26 @@ public class TestUtil {
 
     public static ProductDTO createProductDTO() {
         return createProductDTO("test-product-" + randomInt());
+    }
+
+    public static ProductInfo createProductInfo(String id, String name) {
+        return InfoAdapter.productInfoAdapter(createProductDTO(id, name));
+    }
+
+    public static ProductInfo createProductInfo(String id) {
+        return InfoAdapter.productInfoAdapter(createProductDTO(id));
+    }
+
+    public static ProductInfo createProductInfo() {
+        return InfoAdapter.productInfoAdapter(createProductDTO());
+    }
+
+    public static Branding createBranding(String productId, String brandName) {
+        Branding branding = new Branding();
+        branding.setProductId(productId);
+        branding.setName(brandName);
+        branding.setType("OS");
+        return branding;
     }
 
     public static Subscription createSubscription() {
@@ -549,8 +584,8 @@ public class TestUtil {
 
     public static GuestIdDTO createGuestIdDTO(String guestId) {
         GuestIdDTO dto = new GuestIdDTO()
-            .setGuestId(guestId)
-            .setAttributes(Collections.<String, String>emptyMap());
+            .guestId(guestId)
+            .attributes(Collections.<String, String>emptyMap());
 
         return dto;
     }

@@ -17,7 +17,7 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.service.model.UserInfo;
-
+import org.candlepin.util.Util;
 
 
 /**
@@ -62,17 +62,12 @@ public class UserInfoTranslator implements ObjectTranslator<UserInfo, UserDTO> {
             throw new IllegalArgumentException("dest is null");
         }
 
-        dest.setCreated(source.getCreated());
-        dest.setUpdated(source.getUpdated());
-
-        // We don't have an ID from the adapters, so we'll just null it out.
-        dest.setId(null);
-
-        dest.setUsername(source.getUsername());
-        dest.setSuperAdmin(source.isSuperAdmin());
-
-        // The password field should never be set when populating from an entity
-        dest.setPassword(null);
+        dest.created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .username(source.getUsername())
+            .superAdmin(source.isSuperAdmin())
+            .password(null) // The password field should never be set when populating from an entity
+            .id(null);      // We don't have an ID from the adapters, so we'll just null it out.
 
         return dest;
     }

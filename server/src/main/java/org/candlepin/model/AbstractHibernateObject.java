@@ -20,8 +20,6 @@ import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import io.swagger.annotations.ApiModelProperty;
-
 import java.io.Serializable;
 import java.util.Date;
 
@@ -48,9 +46,7 @@ public abstract class AbstractHibernateObject<T extends AbstractHibernateObject>
 
     public static final String DEFAULT_SORT_FIELD = "created";
 
-    @ApiModelProperty(readOnly = true)
     private Date created;
-    @ApiModelProperty(readOnly = true)
     private Date updated;
 
     @PrePersist

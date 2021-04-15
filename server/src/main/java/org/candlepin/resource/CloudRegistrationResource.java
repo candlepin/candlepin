@@ -15,60 +15,55 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.CloudRegistrationAuth;
+import org.candlepin.auth.CloudRegistrationData;
 import org.candlepin.auth.Principal;
 import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotAuthorizedException;
 import org.candlepin.common.exceptions.NotImplementedException;
 import org.candlepin.dto.api.v1.CloudRegistrationDTO;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
 import org.candlepin.service.exception.MalformedCloudRegistrationException;
 
-
 import com.google.inject.Inject;
 
+import org.jboss.resteasy.core.ResteasyContext;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Objects;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.MediaType;
-
 
 
 /**
  * End point(s) for cloud registration token generation
  */
-@Path("/cloud")
-public class CloudRegistrationResource {
+public class CloudRegistrationResource implements CloudApi {
     private final CloudRegistrationAuth cloudRegistrationAuth;
-
     private final I18n i18n;
+    private final DTOValidator validator;
 
     @Inject
-    public CloudRegistrationResource(I18n i18n, CloudRegistrationAuth cloudRegistrationAuth) {
+    public CloudRegistrationResource(I18n i18n, CloudRegistrationAuth cloudRegistrationAuth,
+        DTOValidator validator) {
+
         this.i18n = Objects.requireNonNull(i18n);
         this.cloudRegistrationAuth = Objects.requireNonNull(cloudRegistrationAuth);
+        this.validator = Objects.requireNonNull(validator);
     }
 
-    @POST
-    @Path("authorize")
-    @Produces(MediaType.TEXT_PLAIN)
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Override
     @SecurityHole(noAuth = true)
-    public String authorize(CloudRegistrationDTO cloudRegDTO,
-        @Context Principal principal) {
+    public String cloudAuthorize(CloudRegistrationDTO cloudRegistrationDTO) {
 
-        if (cloudRegDTO == null) {
+        if (cloudRegistrationDTO == null) {
             throw new BadRequestException(this.i18n.tr("No cloud registration information provided"));
         }
+        this.validator.validateConstraints(cloudRegistrationDTO);
 
+        Principal principal = ResteasyContext.getContextData(Principal.class);
+        CloudRegistrationData registrationData = getCloudRegistrationData(cloudRegistrationDTO);
         try {
-            return this.cloudRegistrationAuth.generateRegistrationToken(principal, cloudRegDTO);
+            return this.cloudRegistrationAuth.generateRegistrationToken(principal, registrationData);
         }
         catch (UnsupportedOperationException e) {
             String errmsg = this.i18n.tr("Cloud registration is not supported by this Candlepin instance");
@@ -80,5 +75,13 @@ public class CloudRegistrationResource {
         catch (MalformedCloudRegistrationException e) {
             throw new BadRequestException(e.getMessage());
         }
+    }
+
+    private CloudRegistrationData getCloudRegistrationData(CloudRegistrationDTO cloudRegistrationDTO) {
+        CloudRegistrationData registrationData = new CloudRegistrationData();
+        registrationData.setType(cloudRegistrationDTO.getType());
+        registrationData.setMetadata(cloudRegistrationDTO.getMetadata());
+        registrationData.setSignature(cloudRegistrationDTO.getSignature());
+        return registrationData;
     }
 }

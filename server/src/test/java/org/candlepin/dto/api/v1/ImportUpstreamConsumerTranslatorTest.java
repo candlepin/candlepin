@@ -80,12 +80,14 @@ public class ImportUpstreamConsumerTranslatorTest extends
             assertEquals(source.getApiUrl(), dest.getApiUrl());
             assertEquals(source.getWebUrl(), dest.getWebUrl());
             assertEquals(source.getOwnerId(), dest.getOwnerId());
+            assertEquals(source.getCreated(), dest.getCreated());
+            assertEquals(source.getUpdated(), dest.getUpdated());
 
             if (childrenGenerated) {
-                this.consumerTypeTranslatorTest.verifyOutput(source.getType(), dest.getConsumerType(), true);
+                this.consumerTypeTranslatorTest.verifyOutput(source.getType(), dest.getType(), true);
             }
             else {
-                assertNull(dest.getConsumerType());
+                assertNull(dest.getType());
             }
         }
         else {

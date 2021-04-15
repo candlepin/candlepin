@@ -75,7 +75,6 @@ import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.common.resteasy.filter.DynamicJsonFilter;
 import org.candlepin.common.resteasy.filter.LinkHeaderResponseFilter;
 import org.candlepin.common.resteasy.filter.PageRequestFilter;
-import org.candlepin.common.util.VersionUtil;
 import org.candlepin.common.validation.CandlepinMessageInterpolator;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.CandlepinPoolManager;
@@ -111,13 +110,11 @@ import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.policy.js.pool.PoolRules;
-import org.candlepin.resource.ActivationKeyContentOverrideResource;
 import org.candlepin.resource.ActivationKeyResource;
 import org.candlepin.resource.AdminResource;
 import org.candlepin.resource.CdnResource;
 import org.candlepin.resource.CertificateSerialResource;
 import org.candlepin.resource.CloudRegistrationResource;
-import org.candlepin.resource.ConsumerContentOverrideResource;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.ConsumerTypeResource;
 import org.candlepin.resource.ContentResource;
@@ -126,11 +123,8 @@ import org.candlepin.resource.DeletedConsumerResource;
 import org.candlepin.resource.DistributorVersionResource;
 import org.candlepin.resource.EntitlementResource;
 import org.candlepin.resource.EnvironmentResource;
-import org.candlepin.resource.GuestIdResource;
 import org.candlepin.resource.HypervisorResource;
 import org.candlepin.resource.JobResource;
-import org.candlepin.resource.OwnerContentResource;
-import org.candlepin.resource.OwnerProductResource;
 import org.candlepin.resource.OwnerResource;
 import org.candlepin.resource.PoolResource;
 import org.candlepin.resource.ProductResource;
@@ -143,8 +137,10 @@ import org.candlepin.resource.UserResource;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resteasy.AnnotationLocator;
-import org.candlepin.resteasy.DateFormatter;
 import org.candlepin.resteasy.JsonProvider;
+import org.candlepin.resteasy.MethodLocator;
+import org.candlepin.resteasy.converter.KeyValueParamConverterProvider;
+import org.candlepin.resteasy.converter.OffsetDateTimeParamConverterProvider;
 import org.candlepin.resteasy.filter.AuthenticationFilter;
 import org.candlepin.resteasy.filter.AuthorizationFeature;
 import org.candlepin.resteasy.filter.CandlepinQueryInterceptor;
@@ -158,7 +154,6 @@ import org.candlepin.resteasy.filter.VersionResponseFilter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.impl.DefaultUniqueIdGenerator;
 import org.candlepin.service.impl.HypervisorUpdateAction;
-import org.candlepin.swagger.CandlepinSwaggerModelConverter;
 import org.candlepin.sync.ConsumerExporter;
 import org.candlepin.sync.ConsumerTypeExporter;
 import org.candlepin.sync.Exporter;
@@ -184,6 +179,7 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
@@ -193,10 +189,6 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
-
-import io.swagger.jaxrs.config.BeanConfig;
-import io.swagger.jaxrs.listing.ApiListingResource;
-import io.swagger.jaxrs.listing.SwaggerSerializers;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
@@ -275,7 +267,10 @@ public class CandlepinModule extends AbstractModule {
         bind(RuntimeExceptionMapper.class);
         bind(JAXBMarshalExceptionMapper.class);
         bind(JAXBUnmarshalExceptionMapper.class);
+        bind(OffsetDateTimeParamConverterProvider.class);
+        bind(KeyValueParamConverterProvider.class);
         bind(AnnotationLocator.class).asEagerSingleton();
+        bind(MethodLocator.class).asEagerSingleton();
 
         bind(Principal.class).toProvider(PrincipalProvider.class);
         bind(JsRunnerProvider.class).asEagerSingleton();
@@ -285,7 +280,6 @@ public class CandlepinModule extends AbstractModule {
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
         bind(AttributeValidator.class);
         bind(FactValidator.class);
-        bind(DateFormatter.class);
         requestStaticInjection(CPRestrictions.class);
 
         bind(SystemPurposeComplianceRules.class);
@@ -313,14 +307,12 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void resources() {
-        bind(ActivationKeyContentOverrideResource.class);
         bind(ActivationKeyResource.class);
         bind(AdminResource.class);
         bind(CdnResource.class);
         bind(CertificateSerialResource.class);
         bind(CloudRegistrationResource.class);
         bind(CrlResource.class);
-        bind(ConsumerContentOverrideResource.class);
         bind(ConsumerResource.class);
         bind(ConsumerTypeResource.class);
         bind(ContentResource.class);
@@ -328,11 +320,8 @@ public class CandlepinModule extends AbstractModule {
         bind(DistributorVersionResource.class);
         bind(EntitlementResource.class);
         bind(EnvironmentResource.class);
-        bind(GuestIdResource.class);
         bind(HypervisorResource.class);
         bind(JobResource.class);
-        bind(OwnerContentResource.class);
-        bind(OwnerProductResource.class);
         bind(OwnerResource.class);
         bind(PoolResource.class);
         bind(ProductResource.class);
@@ -351,7 +340,6 @@ public class CandlepinModule extends AbstractModule {
         configureActiveMQComponents();
         configureAsyncJobs();
         configureExporter();
-        configureSwagger();
         configureBindFactories();
     }
 
@@ -458,29 +446,6 @@ public class CandlepinModule extends AbstractModule {
         bind(RulesExporter.class);
     }
 
-    private void configureSwagger() {
-        if (!config.getBoolean(ConfigProperties.SWAGGER_ENABLED, true)) {
-            return;
-        }
-
-        /*
-         * Using this binding, the swagger.(json|xml) will be available
-         * for an authenticated user at context: URL/candlepin/swagger.json
-         */
-        bind(ApiListingResource.class);
-        bind(SwaggerSerializers.class);
-
-        bind(CandlepinSwaggerModelConverter.class);
-
-        BeanConfig beanConfig = new BeanConfig();
-        beanConfig.setSchemes(new String[] { "https" });
-        beanConfig.setBasePath("/candlepin");
-        beanConfig.setResourcePackage("org.candlepin.resource");
-        beanConfig.setVersion(VersionUtil.getVersionString());
-        beanConfig.setTitle("Candlepin");
-        beanConfig.setScan(true);
-    }
-
     private void configureActiveMQComponents() {
         if (config.getBoolean(ConfigProperties.ACTIVEMQ_ENABLED)) {
             bind(MessageSource.class).to(ArtemisMessageSource.class);
@@ -523,10 +488,6 @@ public class CandlepinModule extends AbstractModule {
             SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
         filterProvider = filterProvider.addFilter("EntitlementCertificateFilter",
             SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
-        filterProvider = filterProvider.addFilter("PoolAttributeFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"));
-        filterProvider = filterProvider.addFilter("ProductPoolAttributeFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId", "id"));
         filterProvider = filterProvider.addFilter("SubscriptionCertificateFilter",
             SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
         mapper.setFilterProvider(filterProvider);
@@ -535,6 +496,7 @@ public class CandlepinModule extends AbstractModule {
         hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
         mapper.registerModule(hbm);
         mapper.registerModule(new Jdk8Module());
+        mapper.registerModule(new JavaTimeModule());
 
         AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
         AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());

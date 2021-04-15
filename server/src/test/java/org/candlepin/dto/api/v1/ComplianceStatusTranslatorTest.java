@@ -24,7 +24,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
-import org.candlepin.util.DateRange;
+import org.candlepin.util.Util;
 
 import java.util.Arrays;
 import java.util.Calendar;
@@ -91,13 +91,13 @@ public class ComplianceStatusTranslatorTest extends
             Calendar sdc = Calendar.getInstance();
             sdc.add(Calendar.HOUR, i);
 
-            range.setStartDate(sdc.getTime());
+            range.setStartDate(Util.toDateTime(sdc.getTime()));
 
             Calendar edc = Calendar.getInstance();
             edc.add(Calendar.HOUR, i);
             edc.add(Calendar.YEAR, 1);
 
-            range.setEndDate(edc.getTime());
+            range.setEndDate(Util.toDateTime(edc.getTime()));
 
             ranges.put("test_prod-" + i, range);
         }
@@ -149,8 +149,8 @@ public class ComplianceStatusTranslatorTest extends
 
         if (source != null) {
             assertEquals(source.getStatus(), dest.getStatus());
-            assertEquals(source.getDate(), dest.getDate());
-            assertEquals(source.getCompliantUntil(), dest.getCompliantUntil());
+            assertEquals(source.getDate(), Util.toDate(dest.getDate()));
+            assertEquals(source.getCompliantUntil(), Util.toDate(dest.getCompliantUntil()));
             assertEquals(source.getNonCompliantProducts(), dest.getNonCompliantProducts());
             assertEquals(source.getProductComplianceDateRanges(), dest.getProductComplianceDateRanges());
 

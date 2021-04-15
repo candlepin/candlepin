@@ -16,7 +16,6 @@ package org.candlepin.pki;
 
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
@@ -67,11 +66,12 @@ public class CertificateReader {
     }
 
     protected void validateArguments() {
-        Util.assertNotNull(this.caCertPath,
-            "caCertPath cannot be null. Unable to load CA Certificate");
-
-        Util.assertNotNull(this.caKeyPath,
-            "caKeyPath cannot be null. Unable to load PrivateKey");
+        if (this.caCertPath == null) {
+            throw new IllegalArgumentException("caCertPath cannot be null. Unable to load CA Certificate");
+        }
+        if (this.caKeyPath == null) {
+            throw new IllegalArgumentException("caKeyPath cannot be null. Unable to load PrivateKey");
+        }
     }
 
     protected RSAPrivateKey readPrivateKey(PrivateKeyReader reader) throws IOException {

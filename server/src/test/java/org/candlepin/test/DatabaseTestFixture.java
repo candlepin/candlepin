@@ -73,7 +73,10 @@ import org.candlepin.model.UserCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.resteasy.AnnotationLocator;
+import org.candlepin.resteasy.MethodLocator;
+import org.candlepin.resteasy.ResourceLocatorMap;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.Util;
 
@@ -111,6 +114,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Validation;
 
 
 
@@ -151,10 +155,12 @@ public class DatabaseTestFixture {
     @Inject protected PoolCurator poolCurator;
     @Inject protected RoleCurator roleCurator;
     @Inject protected UserCurator userCurator;
-
     @Inject protected PermissionFactory permissionFactory;
-    @Inject protected AnnotationLocator annotationLocator;
     @Inject protected ModelTranslator modelTranslator;
+
+    protected ResourceLocatorMap locatorMap;
+    protected MethodLocator methodLocator;
+    protected AnnotationLocator annotationLocator;
 
     private static Injector parentInjector;
     protected Injector injector;
@@ -164,6 +170,7 @@ public class DatabaseTestFixture {
     protected DateSourceForTesting dateSource;
     protected I18n i18n;
     protected Provider<I18n> i18nProvider = () -> i18n;
+    protected DTOValidator validator;
 
     @BeforeAll
     public static void initClass() {
@@ -204,12 +211,18 @@ public class DatabaseTestFixture {
         this.injector = parentInjector.createChildInjector(
             Modules.override(testingModule).with(getGuiceOverrideModule()));
 
-        annotationLocator = this.injector.getInstance(AnnotationLocator.class);
-        annotationLocator.init();
+        methodLocator = new MethodLocator(injector);
+        methodLocator.init();
+
+        locatorMap = new ResourceLocatorMap(injector, methodLocator);
+        locatorMap.init();
+
+        annotationLocator = new AnnotationLocator(methodLocator);
 
         securityInterceptor = this.injector.getInstance(TestingInterceptor.class);
 
         cpRequestScope = injector.getInstance(CandlepinRequestScope.class);
+        this.validator = new DTOValidator(Validation.buildDefaultValidatorFactory());
 
         // Because all candlepin operations are running in the CandlepinRequestScope
         // we'll force the instance creations to be done inside the scope.

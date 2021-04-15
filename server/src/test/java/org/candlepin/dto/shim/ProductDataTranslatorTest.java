@@ -17,6 +17,7 @@ package org.candlepin.dto.shim;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
@@ -24,14 +25,16 @@ import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.BrandingTranslator;
 import org.candlepin.dto.api.v1.BrandingTranslatorTest;
 import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.dto.api.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
+import org.candlepin.model.Product;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -69,7 +72,7 @@ public class ProductDataTranslatorTest extends
     }
 
     @Override
-    protected ProductData initSourceObject() {
+    public ProductData initSourceObject() {
         ProductData source = new ProductData();
 
         Map<String, String> attributes = new HashMap<>();
@@ -101,6 +104,18 @@ public class ProductDataTranslatorTest extends
         brandingSet.add(this.productBrandingTranslatorTest.initSourceObject());
         source.setBranding(brandingSet);
 
+        for (int i = 0; i < 3; ++i) {
+            Product providedProduct = TestUtil.createProduct("provided-product-" + i);
+            providedProduct.setUuid(providedProduct.getId() + "_uuid");
+            ProductData productData = new ProductData(providedProduct);
+
+            source.addProvidedProduct(productData);
+        }
+
+        Product derivedProduct = TestUtil.createProduct("derived-product-1");
+        ProductData derivedProductData = new ProductData(derivedProduct);
+        source.setDerivedProduct(derivedProductData);
+
         return source;
     }
 
@@ -111,15 +126,14 @@ public class ProductDataTranslatorTest extends
     }
 
     @Override
-    protected void verifyOutput(ProductData source, ProductDTO dto, boolean childrenGenerated) {
+    public void verifyOutput(ProductData source, ProductDTO dto, boolean childrenGenerated) {
         if (source != null) {
             assertEquals(source.getUuid(), dto.getUuid());
             assertEquals(source.getId(), dto.getId());
             assertEquals(source.getName(), dto.getName());
             assertEquals(source.getMultiplier(), dto.getMultiplier());
-            assertEquals(source.getAttributes(), dto.getAttributes());
+            assertEquals(source.getAttributes(), Util.toMap(dto.getAttributes()));
             assertEquals(source.getDependentProductIds(), dto.getDependentProductIds());
-            assertEquals(source.isLocked(), dto.isLocked());
             assertEquals(source.getHref(), dto.getHref());
 
             if (childrenGenerated) {
@@ -134,7 +148,7 @@ public class ProductDataTranslatorTest extends
                         assertNotNull(cdto.getUuid());
 
                         if (cdto.getUuid().equals(content.getUuid())) {
-                            assertEquals(pc.isEnabled(), pcdto.isEnabled());
+                            assertEquals(pc.isEnabled(), pcdto.getEnabled());
 
                             // Pass the content off to the ContentTranslatorTest to verify it
                             this.contentDataTranslatorTest.verifyOutput(content, cdto, childrenGenerated);
@@ -158,8 +172,8 @@ public class ProductDataTranslatorTest extends
                 }
             }
             else {
-                assertNull(dto.getProductContent());
-                assertNull(dto.getBranding());
+                assertTrue(dto.getProductContent().isEmpty());
+                assertTrue(dto.getBranding().isEmpty());
             }
         }
         else {

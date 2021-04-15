@@ -15,17 +15,17 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.ImportUpstreamConsumer;
-
+import org.candlepin.util.Util;
 
 
 /**
  * The ImportUpstreamConsumerTranslator provides translation from ImportUpstreamConsumer model objects to
  * ImportUpstreamConsumerDTOs
  */
-public class ImportUpstreamConsumerTranslator extends
-    TimestampedEntityTranslator<ImportUpstreamConsumer, ImportUpstreamConsumerDTO> {
+public class ImportUpstreamConsumerTranslator implements
+    ObjectTranslator<ImportUpstreamConsumer, ImportUpstreamConsumerDTO> {
 
     /**
      * {@inheritDoc}
@@ -60,22 +60,30 @@ public class ImportUpstreamConsumerTranslator extends
     public ImportUpstreamConsumerDTO populate(ModelTranslator translator, ImportUpstreamConsumer source,
         ImportUpstreamConsumerDTO dest) {
 
-        dest = super.populate(translator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        dest.setId(source.getId());
-        dest.setUuid(source.getUuid());
-        dest.setName(source.getName());
-        dest.setOwnerId(source.getOwnerId());
-        dest.setApiUrl(source.getApiUrl());
-        dest.setWebUrl(source.getWebUrl());
-        dest.setContentAccessMode(source.getContentAccessMode());
+        if (dest == null) {
+            throw new IllegalArgumentException("dest is null");
+        }
+
+        dest.id(source.getId())
+            .uuid(source.getUuid())
+            .name(source.getName())
+            .ownerId(source.getOwnerId())
+            .apiUrl(source.getApiUrl())
+            .webUrl(source.getWebUrl())
+            .contentAccessMode(source.getContentAccessMode())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()));
 
         // Process nested objects if we have a ModelTranslator to use to the translation...
         if (translator != null) {
-            dest.setConsumerType(translator.translate(source.getType(), ConsumerTypeDTO.class));
+            dest.setType(translator.translate(source.getType(), ConsumerTypeDTO.class));
         }
         else {
-            dest.setConsumerType(null);
+            dest.setType(null);
         }
 
         return dest;

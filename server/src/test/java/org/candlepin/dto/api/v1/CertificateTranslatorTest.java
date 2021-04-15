@@ -50,7 +50,7 @@ public class CertificateTranslatorTest
     }
 
     @Override
-    protected Certificate initSourceObject() {
+    protected IdentityCertificate initSourceObject() {
         IdentityCertificate cert = new IdentityCertificate();
 
         cert.setId("123");

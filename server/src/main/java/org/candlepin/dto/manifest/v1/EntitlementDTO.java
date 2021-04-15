@@ -49,7 +49,6 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
 
     private String id;
     private OwnerDTO owner;
-    private ConsumerDTO consumer;
     private PoolDTO pool;
     private Integer quantity;
     private Boolean deletedFromPool;
@@ -117,27 +116,6 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
     @JsonProperty
     public EntitlementDTO setOwner(OwnerDTO owner) {
         this.owner = owner;
-        return this;
-    }
-
-    /**
-     * Returns the consumer of this entitlement.
-     *
-     * @return return the associated Consumer.
-     */
-    public ConsumerDTO getConsumer() {
-        return consumer;
-    }
-
-    /**
-     * Associates the given consumer with this entitlement.
-     *
-     * @param consumer consumer to associate.
-     *
-     * @return a reference to this EntitlementDTO object.
-     */
-    public EntitlementDTO setConsumer(ConsumerDTO consumer) {
-        this.consumer = consumer;
         return this;
     }
 
@@ -340,11 +318,10 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
      */
     @Override
     public String toString() {
-        return String.format("EntitlementDTO [id: %s, product id: %s, pool id: %s, consumer uuid: %s]",
+        return String.format("EntitlementDTO [id: %s, product id: %s, pool id: %s]",
             this.id,
             this.pool != null ? pool.getProductId() : null,
-            this.pool != null ? pool.getId() : null,
-            this.consumer != null ? consumer.getUuid() : null);
+            this.pool != null ? pool.getId() : null);
     }
 
     /**
@@ -367,14 +344,10 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
             String thisPoolId = this.getPool() != null ? this.getPool().getId() : null;
             String thatPoolId = that.getPool() != null ? that.getPool().getId() : null;
 
-            String thisConsumerId = this.getConsumer() != null ? this.getConsumer().getUuid() : null;
-            String thatConsumerId = that.getConsumer() != null ? that.getConsumer().getUuid() : null;
-
             EqualsBuilder builder = new EqualsBuilder()
                 .append(this.getId(), that.getId())
                 .append(thisOwnerId, thatOwnerId)
                 .append(thisPoolId, thatPoolId)
-                .append(thisConsumerId, thatConsumerId)
                 .append(this.getQuantity(), that.getQuantity())
                 .append(this.isDeletedFromPool(), that.isDeletedFromPool())
                 .append(this.getEndDate(), that.getEndDate())
@@ -423,7 +396,6 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
             .append(this.getId())
             .append(this.getOwner() != null ? this.getOwner().getId() : null)
             .append(this.getPool() != null ? this.getPool().getId() : null)
-            .append(this.getConsumer() != null ? this.getConsumer().getUuid() : null)
             .append(this.getQuantity())
             .append(this.isDeletedFromPool())
             .append(this.getEndDate())
@@ -446,9 +418,6 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
         PoolDTO pool = this.getPool();
         copy.setPool(pool != null ? pool.clone() : null);
 
-        ConsumerDTO consumer = this.getConsumer();
-        copy.setConsumer(consumer != null ? consumer.clone() : null);
-
         Date startDate = this.getStartDate();
         copy.setStartDate(startDate != null ? (Date) startDate.clone() : null);
 
@@ -470,7 +439,6 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
         this.setId(source.getId())
             .setOwner(source.getOwner())
             .setPool(source.getPool())
-            .setConsumer(source.getConsumer())
             .setQuantity(source.getQuantity())
             .setDeletedFromPool(source.isDeletedFromPool())
             .setCertificates(source.getCertificates())

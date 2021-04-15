@@ -20,7 +20,6 @@ import static org.junit.Assert.assertNull;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.EnvironmentDTO.EnvironmentContentDTO;
 import org.candlepin.model.Content;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
@@ -39,6 +38,7 @@ public class EnvironmentTranslatorTest extends
     protected EnvironmentTranslator environmentTranslator = new EnvironmentTranslator();
     protected ContentTranslatorTest contentTranslatorTest = new ContentTranslatorTest();
     protected OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
+    protected NestedOwnerTranslatorTest nestedOwnerTranslatorTest = new NestedOwnerTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
@@ -88,7 +88,8 @@ public class EnvironmentTranslatorTest extends
             assertEquals(source.getDescription(), dto.getDescription());
 
             if (childrenGenerated) {
-                this.ownerTranslatorTest.verifyOutput(source.getOwner(), dto.getOwner(), childrenGenerated);
+                this.nestedOwnerTranslatorTest.verifyOutput(source.getOwner(),
+                    dto.getOwner(), childrenGenerated);
                 assertNotNull(dto.getEnvironmentContent());
                 for (EnvironmentContent ec : source.getEnvironmentContent()) {
                     for (EnvironmentContentDTO ecdto : dto.getEnvironmentContent()) {
@@ -99,7 +100,7 @@ public class EnvironmentTranslatorTest extends
                         assertNotNull(cdto.getUuid());
 
                         if (cdto.getUuid().equals(content.getUuid())) {
-                            assertEquals(ec.getEnabled(), ecdto.isEnabled());
+                            assertEquals(ec.getEnabled(), ecdto.getEnabled());
 
                             // Pass the content off to the ContentTranslatorTest to verify it
                             this.contentTranslatorTest.verifyOutput(content, cdto, childrenGenerated);

@@ -15,16 +15,16 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.UpstreamConsumer;
-
+import org.candlepin.util.Util;
 
 
 /**
  * The OwnerTranslator provides translation from Owner model objects to OwnerDTOs
  */
-public class OwnerTranslator extends TimestampedEntityTranslator<Owner, OwnerDTO> {
+public class OwnerTranslator implements ObjectTranslator<Owner, OwnerDTO> {
 
     /**
      * {@inheritDoc}
@@ -55,28 +55,41 @@ public class OwnerTranslator extends TimestampedEntityTranslator<Owner, OwnerDTO
      */
     @Override
     public OwnerDTO populate(ModelTranslator translator, Owner source, OwnerDTO dest) {
-        dest = super.populate(translator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        dest.setId(source.getId());
-        dest.setKey(source.getKey());
-        dest.setDisplayName(source.getDisplayName());
-        dest.setContentPrefix(source.getContentPrefix());
-        dest.setDefaultServiceLevel(source.getDefaultServiceLevel());
-        dest.setLogLevel(source.getLogLevel());
-        dest.setAutobindDisabled(source.isAutobindDisabled());
-        dest.setAutobindHypervisorDisabled(source.isAutobindHypervisorDisabled());
-        dest.setContentAccessMode(source.getContentAccessMode());
-        dest.setContentAccessModeList(source.getContentAccessModeList());
-        dest.setLastRefreshed(source.getLastRefreshed());
+        if (dest == null) {
+            throw new IllegalArgumentException("dest is null");
+        }
 
-        // TODO: Should this actually follow the nested child rules of all the other objects?
-        Owner parent = source.getParentOwner();
-        dest.setParentOwner(parent != null ? this.translate(translator, parent) : null);
+        dest.id(source.getId())
+            .key(source.getKey())
+            .displayName(source.getDisplayName())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .contentPrefix(source.getContentPrefix())
+            .defaultServiceLevel(source.getDefaultServiceLevel())
+            .logLevel(source.getLogLevel())
+            .autobindDisabled(source.isAutobindDisabled())
+            .autobindHypervisorDisabled(source.isAutobindHypervisorDisabled())
+            .contentAccessMode(source.getContentAccessMode())
+            .contentAccessModeList(source.getContentAccessModeList())
+            .lastRefreshed(Util.toDateTime(source.getLastRefreshed()));
+
+        if (translator != null) {
+            Owner parent = source.getParentOwner();
+            dest.setParentOwner(parent != null ? translator.translate(parent, NestedOwnerDTO.class) : null);
+        }
+        else {
+            dest.setParentOwner(null);
+        }
 
         // Process nested objects if we have a model translator to use to the translation...
         if (translator != null) {
             UpstreamConsumer consumer = source.getUpstreamConsumer();
-            dest.setUpstreamConsumer(translator.translate(consumer, UpstreamConsumerDTO.class));
+            dest.upstreamConsumer(consumer != null ?
+                translator.translate(consumer, UpstreamConsumerDTO.class) : null);
         }
         else {
             dest.setUpstreamConsumer(null);

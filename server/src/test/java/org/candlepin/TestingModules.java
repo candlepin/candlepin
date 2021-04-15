@@ -112,6 +112,7 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
@@ -221,6 +222,7 @@ public class TestingModules {
             bind(UnitOfWork.class).toInstance(mock(UnitOfWork.class));
             bind(PersistService.class).toInstance(mock(PersistService.class));
             bind(EntityManager.class).toInstance(em);
+            bind(ValidatorFactory.class).toInstance(mock(ValidatorFactory.class));
 
             /* The JsRunnerProvider is profoundly annoying because when it is created it
              * begins by trying to read the rules out of the database with the RulesCurator.
@@ -364,10 +366,6 @@ public class TestingModules {
                 SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
             filterProvider = filterProvider.addFilter("EntitlementCertificateFilter",
                 SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
-            filterProvider = filterProvider.addFilter("PoolAttributeFilter",
-                SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"));
-            filterProvider = filterProvider.addFilter("ProductPoolAttributeFilter",
-                SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "productId", "id"));
             filterProvider = filterProvider.addFilter("SubscriptionCertificateFilter",
                 SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
             mapper.setFilterProvider(filterProvider);
@@ -376,6 +374,7 @@ public class TestingModules {
             hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
             mapper.registerModule(hbm);
             mapper.registerModule(new Jdk8Module());
+            mapper.registerModule(new JavaTimeModule());
 
             AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
             AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());

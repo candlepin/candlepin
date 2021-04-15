@@ -15,17 +15,15 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.ContentOverride;
-
-
+import org.candlepin.util.Util;
 
 /**
  * The ContentOverrideTranslator provides the base translation bits for ContentOverride model
  * objects and their derivatives.
  */
-public class ContentOverrideTranslator
-    extends TimestampedEntityTranslator<ContentOverride, ContentOverrideDTO> {
+public class ContentOverrideTranslator implements ObjectTranslator<ContentOverride, ContentOverrideDTO> {
 
     /**
      * {@inheritDoc}
@@ -57,12 +55,19 @@ public class ContentOverrideTranslator
     @Override
     public ContentOverrideDTO populate(ModelTranslator translator, ContentOverride source,
         ContentOverrideDTO dest) {
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        dest = super.populate(translator, source, dest);
+        if (dest == null) {
+            throw new IllegalArgumentException("dest is null");
+        }
 
-        dest.setContentLabel(source.getContentLabel())
-            .setName(source.getName())
-            .setValue(source.getValue());
+        dest.contentLabel(source.getContentLabel())
+            .name(source.getName())
+            .value(source.getValue())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()));
 
         return dest;
     }

@@ -16,7 +16,6 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerActivationKey;
 import org.candlepin.model.ConsumerCapability;
@@ -28,6 +27,7 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Release;
+import org.candlepin.util.Util;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -39,7 +39,7 @@ import java.util.Set;
  * The ConsumerTranslator provides translation from Consumer model objects to
  * ConsumerDTOs
  */
-public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, ConsumerDTO> {
+public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDTO> {
 
     protected ConsumerTypeCurator consumerTypeCurator;
     protected EnvironmentCurator environmentCurator;
@@ -92,39 +92,48 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("checkstyle:methodlength")
     @Override
     public ConsumerDTO populate(ModelTranslator translator, Consumer source, ConsumerDTO dest) {
-        dest = super.populate(translator, source, dest);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        dest.setId(source.getId())
-            .setUuid(source.getUuid())
-            .setName(source.getName())
-            .setUsername(source.getUsername())
-            .setEntitlementStatus(source.getEntitlementStatus())
-            .setServiceLevel(source.getServiceLevel())
-            .setRole(source.getRole())
-            .setUsage(source.getUsage())
-            .setSystemPurposeStatus(source.getSystemPurposeStatus())
-            .setAddOns(source.getAddOns())
-            .setEntitlementCount(source.getEntitlementCount())
-            .setFacts(source.getFacts())
-            .setLastCheckin(source.getLastCheckin())
-            .setCanActivate(source.isCanActivate())
-            .setContentTags(source.getContentTags())
-            .setAutoheal(source.isAutoheal())
-            .setAnnotations(source.getAnnotations())
-            .setContentAccessMode(source.getContentAccessMode());
+        if (dest == null) {
+            throw new IllegalArgumentException("dest is null");
+        }
+        dest.id(source.getId())
+            .uuid(source.getUuid())
+            .name(source.getName())
+            .username(source.getUsername())
+            .entitlementStatus(source.getEntitlementStatus())
+            .serviceLevel(source.getServiceLevel())
+            .role(source.getRole())
+            .usage(source.getUsage())
+            .systemPurposeStatus(source.getSystemPurposeStatus())
+            .addOns(source.getAddOns())
+            .entitlementCount(source.getEntitlementCount())
+            .facts(source.getFacts())
+            .lastCheckin(Util.toDateTime(source.getLastCheckin()))
+            .canActivate(source.isCanActivate())
+            .contentTags(source.getContentTags())
+            .autoheal(source.isAutoheal())
+            .annotations(source.getAnnotations())
+            .contentAccessMode(source.getContentAccessMode())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .href(source.getUuid() != null ? String.format("/consumers/%s", source.getUuid()) : null);
 
         Release release = source.getReleaseVer();
         if (release != null) {
-            dest.setReleaseVersion(release.getReleaseVer());
+            dest.releaseVer(new ReleaseVerDTO().releaseVer(release.getReleaseVer()));
         }
 
         // Process nested objects if we have a ModelTranslator to use to the translation...
         if (translator != null) {
             if (StringUtils.isNotEmpty(source.getOwnerId())) {
                 Owner owner = ownerCurator.findOwnerById(source.getOwnerId());
-                dest.setOwner(translator.translate(owner, OwnerDTO.class));
+                dest.setOwner(owner != null ? translator.translate(owner, NestedOwnerDTO.class) : null);
             }
 
             Environment environment = this.environmentCurator.getConsumerEnvironment(source);
@@ -190,17 +199,17 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
             dest.setGuestIds(new ArrayList<>());
 
             dest.setHypervisorId(translator.translate(source.getHypervisorId(), HypervisorIdDTO.class));
-            dest.setIdCertificate(translator.translate(source.getIdCert(), CertificateDTO.class));
+            dest.setIdCert(translator.translate(source.getIdCert(), CertificateDTO.class));
         }
         else {
-            dest.setReleaseVersion(null);
+            dest.setReleaseVer(null);
             dest.setOwner(null);
             dest.setEnvironment(null);
             dest.setInstalledProducts(null);
             dest.setCapabilities(null);
             dest.setHypervisorId(null);
             dest.setType(null);
-            dest.setIdCertificate(null);
+            dest.setIdCert(null);
         }
 
         return dest;

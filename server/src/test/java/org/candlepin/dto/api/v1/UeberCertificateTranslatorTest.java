@@ -35,6 +35,7 @@ public class UeberCertificateTranslatorTest extends
         new CertificateSerialTranslatorTest();
 
     protected OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
+    protected NestedOwnerTranslatorTest nestedOwnerTranslatorTest = new NestedOwnerTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
@@ -77,10 +78,14 @@ public class UeberCertificateTranslatorTest extends
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getKey(), dest.getKey());
             assertEquals(source.getCert(), dest.getCert());
+            assertEquals(source.getCreated(), dest.getCreated());
+            assertEquals(source.getUpdated(), dest.getUpdated());
 
             if (childrenGenerated) {
-                this.certSerialTranslatorTest.verifyOutput(source.getSerial(), dest.getSerial(), true);
-                this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), true);
+                this.certSerialTranslatorTest.verifyOutput(source.getSerial(),
+                    dest.getSerial(), true);
+                this.nestedOwnerTranslatorTest.verifyOutput(source.getOwner(),
+                    dest.getOwner(), true);
             }
             else {
                 assertNull(dest.getSerial());

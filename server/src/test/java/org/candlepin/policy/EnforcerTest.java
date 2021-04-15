@@ -47,7 +47,6 @@ import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.EntitlementRules.Rule;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.TestUtil;
@@ -76,7 +75,6 @@ import javax.inject.Inject;
 public class EnforcerTest extends DatabaseTestFixture {
     @Inject private I18n i18n;
 
-    @Mock private ProductServiceAdapter productAdapter;
     @Mock private RulesCurator rulesCurator;
     @Mock private Configuration config;
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;

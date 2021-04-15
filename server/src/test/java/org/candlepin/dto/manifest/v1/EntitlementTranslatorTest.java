@@ -40,14 +40,12 @@ public class EntitlementTranslatorTest extends
     private OwnerTranslatorTest ownerTranslatorTest = new OwnerTranslatorTest();
     private CertificateTranslatorTest certificateTranslatorTest = new CertificateTranslatorTest();
     private PoolTranslatorTest poolTranslatorTest = new PoolTranslatorTest();
-    private ConsumerTranslatorTest consumerTranslatorTest = new ConsumerTranslatorTest();
 
     @Override
     protected EntitlementTranslator initObjectTranslator() {
         this.ownerTranslatorTest.initObjectTranslator();
         this.certificateTranslatorTest.initObjectTranslator();
         this.poolTranslatorTest.initObjectTranslator();
-        this.consumerTranslatorTest.initObjectTranslator();
 
         this.translator = new EntitlementTranslator();
         return this.translator;
@@ -58,7 +56,6 @@ public class EntitlementTranslatorTest extends
         this.ownerTranslatorTest.initModelTranslator(modelTranslator);
         this.certificateTranslatorTest.initModelTranslator(modelTranslator);
         this.poolTranslatorTest.initModelTranslator(modelTranslator);
-        this.consumerTranslatorTest.initModelTranslator(modelTranslator);
 
         modelTranslator.registerTranslator(this.translator, Entitlement.class, EntitlementDTO.class);
     }
@@ -110,7 +107,6 @@ public class EntitlementTranslatorTest extends
             if (childrenGenerated) {
                 this.ownerTranslatorTest.verifyOutput(source.getOwner(), dest.getOwner(), true);
                 this.poolTranslatorTest.verifyOutput(source.getPool(), dest.getPool(), true);
-                this.consumerTranslatorTest.verifyOutput(source.getConsumer(), dest.getConsumer(), true);
 
                 for (Certificate sourceCertificate : source.getCertificates()) {
                     for (CertificateDTO certDTO : dest.getCertificates()) {
@@ -128,7 +124,6 @@ public class EntitlementTranslatorTest extends
                 assertNull(dest.getOwner());
                 assertNull(dest.getPool());
                 assertNull(dest.getCertificates());
-                assertNull(dest.getConsumer());
             }
         }
         else {

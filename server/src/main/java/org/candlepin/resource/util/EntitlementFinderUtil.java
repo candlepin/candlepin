@@ -14,8 +14,8 @@
  */
 package org.candlepin.resource.util;
 
+import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.model.EntitlementFilterBuilder;
-import org.candlepin.resteasy.parameter.KeyValueParameter;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -29,10 +29,11 @@ public class EntitlementFinderUtil {
     private EntitlementFinderUtil() {
     }
 
-    public static EntitlementFilterBuilder createFilter(String matches, List<KeyValueParameter> attrFilters) {
+    public static EntitlementFilterBuilder createFilter(
+        String matches, List<KeyValueParamDTO> attrFilters) {
         EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
         if (attrFilters != null) {
-            for (KeyValueParameter filterParam : attrFilters) {
+            for (KeyValueParamDTO filterParam : attrFilters) {
                 filters.addAttributeFilter(filterParam.getKey(), filterParam.getValue());
             }
         }

@@ -24,10 +24,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.inject.Inject;
 
@@ -64,20 +64,7 @@ public class RulesObjectMapper {
         this.mapper = new ObjectMapper();
 
         SimpleFilterProvider filterProvider = new SimpleFilterProvider()
-            .setFailOnUnknownId(false)
-            .addFilter("PoolAttributeFilter",
-                SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id"))
-            .addFilter("ProductAttributeFilter",
-                SimpleBeanPropertyFilter.serializeAllExcept("created", "updated", "id", "product"))
-            .addFilter("ProvidedProductFilter",
-                SimpleBeanPropertyFilter.serializeAllExcept("created", "updated"))
-            .addFilter("ConsumerFilter",
-                SimpleBeanPropertyFilter.serializeAllExcept("idCert"))
-            .addFilter("EntitlementFilter",
-                SimpleBeanPropertyFilter.serializeAllExcept("certificates", "consumer"))
-            .addFilter("OwnerFilter",
-                SimpleBeanPropertyFilter.serializeAllExcept("parentOwner", "consumers", "activationKeys",
-                    "environments", "pools"));
+            .setFailOnUnknownId(false);
 
         this.mapper.setFilterProvider(filterProvider);
 
@@ -85,6 +72,7 @@ public class RulesObjectMapper {
         hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
 
         mapper.registerModule(new Jdk8Module());
+        mapper.registerModule(new JavaTimeModule());
         mapper.registerModule(hbm);
 
         // Very important for deployments so new rules files can return additional

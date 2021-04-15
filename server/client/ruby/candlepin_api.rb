@@ -1104,6 +1104,10 @@ class Candlepin
     return get("/subscriptions/#{sub_id}")
   end
 
+  def activate_subscription(uuid, email, email_locale)
+    return post("/subscriptions", {:consumer_uuid => uuid, :email => email, :email_locale => email_locale})
+  end
+
   def get_pools_for_subscription(owner_key, sub_id)
     return get("/owners/#{owner_key}/pools", {:subscription => sub_id})
   end

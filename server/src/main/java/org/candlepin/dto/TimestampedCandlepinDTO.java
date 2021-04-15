@@ -14,8 +14,6 @@
  */
 package org.candlepin.dto;
 
-import io.swagger.annotations.ApiModel;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -30,7 +28,6 @@ import java.util.Date;
  * @param <T>
  *  The DTO type extending this class; should be the name of the subclass
  */
-@ApiModel(parent = CandlepinDTO.class)
 public abstract class TimestampedCandlepinDTO<T extends TimestampedCandlepinDTO> extends CandlepinDTO<T> {
     public static final long serialVersionUID = 1L;
 

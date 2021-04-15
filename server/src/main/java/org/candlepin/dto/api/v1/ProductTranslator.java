@@ -16,23 +16,25 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Branding;
-import org.candlepin.model.Content;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
+import org.candlepin.util.Util;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 
 /**
  * The ProductTranslator provides translation from Product model objects to ProductDTOs
  */
-public class ProductTranslator extends TimestampedEntityTranslator<Product, ProductDTO> {
+public class ProductTranslator implements ObjectTranslator<Product, ProductDTO> {
 
     /**
      * {@inheritDoc}
@@ -63,16 +65,25 @@ public class ProductTranslator extends TimestampedEntityTranslator<Product, Prod
      */
     @Override
     public ProductDTO populate(ModelTranslator translator, Product source, ProductDTO destination) {
-        destination = super.populate(translator, source, destination);
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
 
-        destination.setUuid(source.getUuid());
-        destination.setId(source.getId());
-        destination.setName(source.getName());
-        destination.setMultiplier(source.getMultiplier());
-        destination.setHref(source.getHref());
-        destination.setLocked(source.isLocked());
-        destination.setAttributes(source.getAttributes());
-        destination.setDependentProductIds(source.getDependentProductIds());
+        if (destination == null) {
+            throw new IllegalArgumentException("destination is null");
+        }
+
+        destination.created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .uuid(source.getUuid())
+            .id(source.getId())
+            .name(source.getName())
+            .multiplier(source.getMultiplier())
+            .href(source.getHref())
+            .attributes(toAttributes(source.getAttributes()))
+            .productContent(new HashSet<>())
+            .branding(new HashSet<>())
+            .dependentProductIds(new HashSet<>(source.getDependentProductIds()));
 
         // Translate children products (recursive op)
         Product srcDerived = source.getDerivedProduct();
@@ -96,41 +107,60 @@ public class ProductTranslator extends TimestampedEntityTranslator<Product, Prod
         // Translate other children
         if (translator != null) {
             Collection<ProductContent> productContent = source.getProductContent();
-            destination.setProductContent(Collections.emptyList());
-
             if (productContent != null) {
-                ObjectTranslator<Content, ContentDTO> contentTranslator = translator
-                    .findTranslatorByClass(Content.class, ContentDTO.class);
+                ObjectTranslator<ProductContent, ProductContentDTO> contentTranslator = translator
+                    .findTranslatorByClass(ProductContent.class, ProductContentDTO.class);
 
+                Set<ProductContentDTO> content = new HashSet<>();
                 for (ProductContent pc : productContent) {
                     if (pc != null) {
-                        ContentDTO dto = contentTranslator.translate(translator, pc.getContent());
-
+                        ProductContentDTO dto = contentTranslator.translate(translator, pc);
                         if (dto != null) {
-                            destination.addContent(dto, pc.isEnabled());
+                            content.add(dto);
                         }
                     }
                 }
+                destination.productContent(content);
+            }
+            else {
+                destination.productContent(Collections.emptySet());
             }
 
             Collection<Branding> branding = source.getBranding();
             if (branding != null && !branding.isEmpty()) {
+                Set<BrandingDTO> dtos = new HashSet<>();
                 for (Branding brand : branding) {
                     if (brand != null) {
-                        destination.addBranding(translator.translate(brand, BrandingDTO.class));
+                        dtos.add(translator.translate(brand, BrandingDTO.class));
                     }
                 }
+                destination.setBranding(dtos);
             }
             else {
                 destination.setBranding(Collections.emptySet());
             }
         }
         else {
-            destination.setProductContent(Collections.emptyList());
+            destination.productContent(Collections.emptySet());
             destination.setBranding(Collections.emptySet());
         }
 
         return destination;
+    }
+
+    private List<AttributeDTO> toAttributes(Map<String, String> source) {
+        if (source == null || source.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return source.entrySet().stream()
+            .map(this::toAttribute)
+            .collect(Collectors.toList());
+    }
+
+    private AttributeDTO toAttribute(Map.Entry<String, String> entry) {
+        return new AttributeDTO()
+            .name(entry.getKey())
+            .value(entry.getValue());
     }
 
 }

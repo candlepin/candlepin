@@ -37,6 +37,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Release;
+import org.candlepin.util.Util;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -212,8 +213,8 @@ public class ConsumerTranslatorTest extends
             assertEquals(source.getSystemPurposeStatus(), dest.getSystemPurposeStatus());
             assertEquals(source.getEntitlementCount(), (long) dest.getEntitlementCount());
             assertEquals(source.getFacts(), dest.getFacts());
-            assertEquals(source.getLastCheckin(), dest.getLastCheckin());
-            assertEquals(source.isCanActivate(), dest.isCanActivate());
+            assertEquals(source.getLastCheckin(), Util.toDate(dest.getLastCheckin()));
+            assertEquals(source.isCanActivate(), dest.getCanActivate());
             assertEquals(source.getContentTags(), dest.getContentTags());
             assertEquals(source.isAutoheal(), dest.getAutoheal());
             assertEquals(source.getAnnotations(), dest.getAnnotations());
@@ -226,7 +227,7 @@ public class ConsumerTranslatorTest extends
                 Environment environment = this.mockEnvironmentCurator.getConsumerEnvironment(source);
                 this.environmentTranslatorTest.verifyOutput(environment, dest.getEnvironment(), true);
 
-                assertEquals(source.getReleaseVer().getReleaseVer(), dest.getReleaseVersion());
+                assertEquals(source.getReleaseVer().getReleaseVer(), dest.getReleaseVer().getReleaseVer());
                 String destOwnerId = null;
                 if (dest.getOwner() != null) {
                     destOwnerId = dest.getOwner().getId();
@@ -236,7 +237,7 @@ public class ConsumerTranslatorTest extends
                     childrenGenerated);
 
                 this.certificateTranslatorTest.verifyOutput(source.getIdCert(),
-                    dest.getIdCertificate(), true);
+                    dest.getIdCert(), true);
 
                 if (source.getInstalledProducts() != null) {
                     for (ConsumerInstalledProduct cip : source.getInstalledProducts()) {
@@ -286,12 +287,12 @@ public class ConsumerTranslatorTest extends
                 assertEquals(0, dest.getGuestIds().size());
             }
             else {
-                assertNull(dest.getReleaseVersion());
+                assertNull(dest.getReleaseVer());
                 assertNull(dest.getOwner());
                 assertNull(dest.getEnvironment());
                 assertNull(dest.getHypervisorId());
                 assertNull(dest.getType());
-                assertNull(dest.getIdCertificate());
+                assertNull(dest.getIdCert());
                 assertNull(dest.getInstalledProducts());
                 assertNull(dest.getCapabilities());
                 assertNull(dest.getGuestIds());

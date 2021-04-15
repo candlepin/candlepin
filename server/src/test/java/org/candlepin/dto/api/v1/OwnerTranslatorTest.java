@@ -21,6 +21,7 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Owner;
 
+import java.time.ZoneOffset;
 import java.util.Date;
 
 
@@ -32,13 +33,15 @@ public class OwnerTranslatorTest extends
     AbstractTranslatorTest<Owner, OwnerDTO, OwnerTranslator> {
 
     protected OwnerTranslator translator = new OwnerTranslator();
-
     protected UpstreamConsumerTranslatorTest upstreamConsumerTranslatorTest =
         new UpstreamConsumerTranslatorTest();
+    protected NestedOwnerTranslatorTest nestedOwnerTranslatorTest =
+        new NestedOwnerTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
         this.upstreamConsumerTranslatorTest.initModelTranslator(modelTranslator);
+        this.nestedOwnerTranslatorTest.initModelTranslator(modelTranslator);
         modelTranslator.registerTranslator(this.translator, Owner.class, OwnerDTO.class);
     }
 
@@ -89,18 +92,23 @@ public class OwnerTranslatorTest extends
             assertEquals(source.getContentPrefix(), dest.getContentPrefix());
             assertEquals(source.getDefaultServiceLevel(), dest.getDefaultServiceLevel());
             assertEquals(source.getLogLevel(), dest.getLogLevel());
-            assertEquals(source.isAutobindDisabled(), dest.isAutobindDisabled());
+            assertEquals(source.isAutobindDisabled(), dest.getAutobindDisabled());
             assertEquals(source.getContentAccessMode(), dest.getContentAccessMode());
             assertEquals(source.getContentAccessModeList(), dest.getContentAccessModeList());
-            assertEquals(source.getLastRefreshed(), dest.getLastRefreshed());
-
-            // Parent owner is a special case, since it's recursion-based rather than relying on a
-            // factory to handle it. As such, it should always be present.
-            this.verifyOutput(source.getParentOwner(), dest.getParentOwner(), childrenGenerated);
+            assertEquals(source.getLastRefreshed() != null ? source.getLastRefreshed()
+                .toInstant().atOffset(ZoneOffset.UTC) : null, dest.getLastRefreshed());
 
             if (childrenGenerated) {
-                this.upstreamConsumerTranslatorTest
-                    .verifyOutput(source.getUpstreamConsumer(), dest.getUpstreamConsumer(), true);
+                this.nestedOwnerTranslatorTest.verifyOutput(source.getParentOwner(),
+                    dest.getParentOwner(), childrenGenerated);
+            }
+            else {
+                assertNull(dest.getUpstreamConsumer());
+            }
+
+            if (childrenGenerated) {
+                this.upstreamConsumerTranslatorTest.verifyOutput(source.getUpstreamConsumer(),
+                    dest.getUpstreamConsumer(), true);
             }
             else {
                 assertNull(dest.getUpstreamConsumer());

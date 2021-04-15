@@ -15,10 +15,11 @@
 package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.TimestampedEntityTranslator;
+import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
+import org.candlepin.util.Util;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -30,7 +31,7 @@ import java.util.stream.Collectors;
  * The RoleTranslator provides translation from Role model objects to
  * RoleDTOs
  */
-public class RoleTranslator extends TimestampedEntityTranslator<Role, RoleDTO> {
+public class RoleTranslator implements ObjectTranslator<Role, RoleDTO> {
 
     /**
      * {@inheritDoc}
@@ -61,10 +62,19 @@ public class RoleTranslator extends TimestampedEntityTranslator<Role, RoleDTO> {
      */
     @Override
     public RoleDTO populate(ModelTranslator translator, Role source, RoleDTO dest) {
-        dest = super.populate(translator, source, dest);
 
-        dest.setId(source.getId());
-        dest.setName(source.getName());
+        if (source == null) {
+            throw new IllegalArgumentException("source is null");
+        }
+
+        if (dest == null) {
+            throw new IllegalArgumentException("dest is null");
+        }
+
+        dest.id(source.getId())
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .name(source.getName());
 
         if (translator != null) {
             // Users
@@ -73,10 +83,10 @@ public class RoleTranslator extends TimestampedEntityTranslator<Role, RoleDTO> {
             if (users != null) {
                 dest.setUsers(users.stream()
                     .map(translator.getStreamMapper(User.class, UserDTO.class))
-                    .collect(Collectors.toList()));
+                    .collect(Collectors.toSet()));
             }
             else {
-                dest.setUsers(Collections.<UserDTO>emptyList());
+                dest.setUsers(Collections.emptySet());
             }
 
             // Permissions
@@ -88,12 +98,12 @@ public class RoleTranslator extends TimestampedEntityTranslator<Role, RoleDTO> {
                     .collect(Collectors.toList()));
             }
             else {
-                dest.setPermissions(Collections.<PermissionBlueprintDTO>emptyList());
+                dest.setPermissions(Collections.emptyList());
             }
         }
         else {
-            dest.setUsers(Collections.<UserDTO>emptyList());
-            dest.setPermissions(Collections.<PermissionBlueprintDTO>emptyList());
+            dest.setUsers(Collections.emptySet());
+            dest.setPermissions(Collections.emptyList());
         }
 
         return dest;

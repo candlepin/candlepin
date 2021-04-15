@@ -86,12 +86,11 @@ public class ContentDataTranslatorTest extends
             assertEquals(source.getVendor(), dto.getVendor());
             assertEquals(source.getContentUrl(), dto.getContentUrl());
             assertEquals(source.getRequiredTags(), dto.getRequiredTags());
-            assertEquals(source.getReleaseVersion(), dto.getReleaseVersion());
+            assertEquals(source.getReleaseVersion(), dto.getReleaseVer());
             assertEquals(source.getGpgUrl(), dto.getGpgUrl());
-            assertEquals(source.getMetadataExpiration(), dto.getMetadataExpiration());
+            assertEquals(source.getMetadataExpiration(), dto.getMetadataExpire());
             assertEquals(source.getModifiedProductIds(), dto.getModifiedProductIds());
             assertEquals(source.getArches(), dto.getArches());
-            assertEquals(source.isLocked(), dto.isLocked());
         }
         else {
             assertNull(dto);
