@@ -27,8 +27,7 @@ plugins {
 }
 
 ext.versions = [
-    jackson_databind: "2.10.5.1",
-    jackson_general: "2.10.5",
+    jackson: "2.12.3",
     guice     : "4.2.3",
     checkstyle: "8.29",
     junit5    : "5.7.0"
@@ -223,27 +222,25 @@ allprojects {
             dependencySet(group: "io.swagger", version: "1.5.7") {
                 entry "swagger-annotations"
             }
-            dependencySet(group: "com.fasterxml.jackson.core", version: "$versions.jackson_databind") {
+            dependencySet(group: "com.fasterxml.jackson.core", version: "$versions.jackson") {
                 entry "jackson-databind"
-            }
-            dependencySet(group: "com.fasterxml.jackson.core", version: "$versions.jackson_general") {
                 entry "jackson-core"
                 entry "jackson-annotations"
             }
-            dependencySet(group: "com.fasterxml.jackson.dataformat", version: "$versions.jackson_general") {
+            dependencySet(group: "com.fasterxml.jackson.dataformat", version: "$versions.jackson") {
                 entry "jackson-dataformat-yaml"
                 entry "jackson-dataformat-xml"
             }
-            dependencySet(group: "com.fasterxml.jackson.datatype", version: "$versions.jackson_general") {
+            dependencySet(group: "com.fasterxml.jackson.datatype", version: "$versions.jackson") {
                 entry "jackson-datatype-hibernate5"
                 entry "jackson-datatype-jdk8"
                 entry "jackson-datatype-jsr310"
             }
-            dependencySet(group: "com.fasterxml.jackson.jaxrs", version: "$versions.jackson_general") {
+            dependencySet(group: "com.fasterxml.jackson.jaxrs", version: "$versions.jackson") {
                 entry "jackson-jaxrs-base"
                 entry "jackson-jaxrs-json-provider"
             }
-            dependencySet(group: "com.fasterxml.jackson.module", version: "$versions.jackson_general") {
+            dependencySet(group: "com.fasterxml.jackson.module", version: "$versions.jackson") {
                 entry "jackson-module-jsonSchema"
                 entry "jackson-module-jaxb-annotations"
             }
