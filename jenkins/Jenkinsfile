@@ -7,6 +7,7 @@ pipeline {
     agent { label 'docker' }
     options {
         skipDefaultCheckout true
+        timeout(time: 16, unit: 'HOURS')
     }
     environment {
         CANDLEPIN_QUAY_BOT = credentials("candlepin-quay-bot")
