@@ -160,6 +160,21 @@ describe 'Content Access' do
     }.to raise_exception(RestClient::BadRequest)
   end
 
+  it "sets mode to default when the list is updated to no longer have the original mode value" do
+    skip("candlepin running in standalone mode") unless is_hosted?
+
+    # The owner is in SCA mode
+    @owner = @cp.get_owner(@owner['key'])
+    expect(@owner['contentAccessModeList']).to eq("org_environment,entitlement")
+    expect(@owner['contentAccessMode']).to eq("org_environment")
+
+    # If we remove SCA mode from the list, the mode should also be forced to the default (entitlement)
+    @cp.update_owner(@owner['key'], {'contentAccessModeList' => "entitlement"})
+    @owner = @cp.get_owner(@owner['key'])
+    expect(@owner['contentAccessModeList']).to eq("entitlement")
+    expect(@owner['contentAccessMode']).to eq("entitlement")
+  end
+
   it "does produce a content access certificate for the consumer on registration" do
       @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
       certs = @consumer.list_certificates
