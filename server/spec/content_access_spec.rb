@@ -396,18 +396,21 @@ describe 'Content Access' do
 
   RSpec.shared_examples "manifest import" do |async|
     it "will import a manifest when only the access mode changes" do
-
       cp = Candlepin.new('admin', 'admin')
       cp_export = async ? AsyncStandardExporter.new : StandardExporter.new
-      owner = cp_export.owner
 
+      owner = cp_export.owner
+      candlepin_client = cp_export.candlepin_client
+
+      # Ensure the consumer is using the standard content access mode initially
+      candlepin_client.update_consumer({'contentAccessMode' => "entitlement"})
       export1 = cp_export.create_candlepin_export()
       export1_file = cp_export.export_filename
 
       # Sleep long enough to ensure the timestamps would change
       sleep 1
 
-      candlepin_client = cp_export.candlepin_client
+      # Update the content access mode and create a new export
       candlepin_client.update_consumer({'contentAccessMode' => "org_environment"})
       export2 = cp_export.create_candlepin_export()
       export2_file = cp_export.export_filename
