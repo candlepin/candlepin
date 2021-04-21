@@ -78,6 +78,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -88,6 +91,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
@@ -259,6 +263,101 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         anotherToSubmit.setId(null);
         assertThrows(BadRequestException.class, () ->
             consumerResource.createConsumer(anotherToSubmit, null, owner.getKey(), null, true));
+    }
+
+    public static Stream<Arguments> manifestConsumerContentAccessModeInputSource() {
+        String entMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
+        String scaMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
+        String combined = String.join(",", entMode, scaMode);
+
+        return Stream.of(
+            Arguments.of(entMode, entMode, entMode, entMode, true),
+            Arguments.of(entMode, entMode, scaMode, entMode, false),
+            Arguments.of(entMode, entMode, "potato", entMode, false),
+            Arguments.of(entMode, entMode, "", null, true),
+            Arguments.of(entMode, entMode, null, entMode, true),
+
+            Arguments.of(scaMode, scaMode, entMode, scaMode, false),
+            Arguments.of(scaMode, scaMode, scaMode, scaMode, true),
+            Arguments.of(scaMode, scaMode, "potato", scaMode, false),
+            Arguments.of(scaMode, scaMode, "", null, true),
+            Arguments.of(scaMode, scaMode, null, scaMode, true),
+
+            Arguments.of(combined, entMode, entMode, entMode, true),
+            Arguments.of(combined, entMode, scaMode, scaMode, true),
+            Arguments.of(combined, entMode, "potato", scaMode, false),
+            Arguments.of(combined, entMode, "", null, true),
+            Arguments.of(combined, entMode, null, scaMode, true),
+
+            Arguments.of(combined, scaMode, entMode, entMode, true),
+            Arguments.of(combined, scaMode, scaMode, scaMode, true),
+            Arguments.of(combined, scaMode, "potato", null, false),
+            Arguments.of(combined, scaMode, "", null, true),
+            Arguments.of(combined, scaMode, null, scaMode, true)
+        );
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("manifestConsumerContentAccessModeInputSource")
+    public void testManifestConsumerCreationContentAccessMode(String ownerModeList, String ownerMode,
+        String providedContentAccessMode, String expectedConsumerMode, boolean validInputs) {
+
+        this.owner.setContentAccessModeList(ownerModeList);
+        this.owner.setContentAccessMode(ownerMode);
+
+        ConsumerType manifestType = new ConsumerType("manifest");
+        manifestType.setManifest(true);
+        manifestType = this.consumerTypeCurator.create(manifestType);
+        ConsumerTypeDTO manifestTypeDTO = modelTranslator.translate(manifestType, ConsumerTypeDTO.class);
+
+        ConsumerDTO dto = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, manifestTypeDTO);
+        dto.setContentAccessMode(providedContentAccessMode);
+
+        if (validInputs) {
+            ConsumerDTO output = this.consumerResource
+                .createConsumer(dto, null, this.owner.getKey(), null, false);
+
+            assertNotNull(output);
+            assertEquals(expectedConsumerMode, output.getContentAccessMode());
+        }
+        else {
+            assertThrows(BadRequestException.class, () ->
+                this.consumerResource.createConsumer(dto, null, this.owner.getKey(), null, false));
+        }
+    }
+
+    public static Stream<Arguments> systemConsumerContentAccessModeInputSource() {
+        String entMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
+        String scaMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
+
+        return Stream.of(
+            Arguments.of(entMode, null, false),
+            Arguments.of(scaMode, null, false),
+            Arguments.of("potato", null, false),
+            Arguments.of("", null, true),
+            Arguments.of(null, null, true)
+        );
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("systemConsumerContentAccessModeInputSource")
+    public void testSystemConsumerCreationContentAccessMode(String providedConsumerMode,
+        String expectedConsumerMode, boolean validInputs) {
+
+        ConsumerDTO dto = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, this.standardSystemTypeDTO);
+        dto.setContentAccessMode(providedConsumerMode);
+
+        if (validInputs) {
+            ConsumerDTO output = this.consumerResource
+                .createConsumer(dto, null, this.owner.getKey(), null, false);
+
+            assertNotNull(output);
+            assertNull(output.getContentAccessMode());
+        }
+        else {
+            assertThrows(BadRequestException.class, () ->
+                this.consumerResource.createConsumer(dto, null, this.owner.getKey(), null, false));
+        }
     }
 
     @Test
