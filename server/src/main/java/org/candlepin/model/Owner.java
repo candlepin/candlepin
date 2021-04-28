@@ -599,10 +599,22 @@ public class Owner extends AbstractHibernateObject<Owner>
         return this;
     }
 
-    @XmlTransient
     public boolean isAllowedContentAccessMode(String mode) {
         String[] list = contentAccessModeList.split(",");
         return ArrayUtils.contains(list, mode);
+    }
+
+    /**
+     * Checks whether or not this owner is able to use the specified content access mode
+     *
+     * @param mode
+     *  the mode to check
+     *
+     * @return
+     *  true if the specified content access mode is available to this owner; false otherwise
+     */
+    public boolean isAllowedContentAccessMode(ContentAccessMode mode) {
+        return mode != null && this.isAllowedContentAccessMode(mode.toDatabaseValue());
     }
 
     /**
@@ -610,7 +622,6 @@ public class Owner extends AbstractHibernateObject<Owner>
      *
      * @return Boolean
      */
-    @XmlTransient
     public boolean isContentAccessEnabled() {
         return ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue().equals(this.getContentAccessMode());
     }

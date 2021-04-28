@@ -470,6 +470,115 @@ describe 'Consumer Resource' do
     consumer['created'].should == created_date
   end
 
+  def self.test_sca_consumer_creation_for_manifest(owner_mode_list, owner_mode, consumer_input_mode, expected_consumer_mode)
+    it "should use best available content access mode when none is provided (\"#{owner_mode_list}\", \"#{owner_mode}\" => #{expected_consumer_mode})" do
+      # TODO: Remove this once SCA mode is configurable directly in standalone mode
+      skip("Candlepin running in standalone mode") unless is_hosted?
+
+      owner = create_owner(random_string('owner'), nil, {
+        'contentAccessModeList' => owner_mode_list,
+        'contentAccessMode' => owner_mode
+      })
+
+      user_name = random_string('user')
+      client = user_client(owner, user_name)
+
+      consumer = client.register(random_string('system'), type=:candlepin, nil, {}, user_name, owner['key'],
+        [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil,
+        consumer_input_mode)
+
+      expect(consumer).to_not be_nil
+      expect(consumer['contentAccessMode']).to eq(expected_consumer_mode)
+    end
+  end
+
+  def self.test_sca_consumer_create_for_manifest_invalid_modes(owner_mode_list, owner_mode, consumer_input_mode)
+    it "should throw bad request with invalid manifest consumer content access mode (\"#{owner_mode_list}\", \"#{owner_mode}\" => \"#{consumer_input_mode}\")" do
+      # TODO: Remove this once SCA mode is configurable directly in standalone mode
+      skip("Candlepin running in standalone mode") unless is_hosted?
+
+      owner = create_owner(random_string('owner'), nil, {
+        'contentAccessModeList' => owner_mode_list,
+        'contentAccessMode' => owner_mode
+      })
+
+      user_name = random_string('user')
+      client = user_client(owner, user_name)
+
+      expect {
+        client.register(random_string('system'), type=:candlepin, nil, {}, user_name, owner['key'],
+          [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil,
+          consumer_input_mode)
+      }.to raise_exception(RestClient::BadRequest)
+    end
+  end
+
+  def self.test_sca_consumer_creation_for_system(consumer_input_mode)
+    it "should allow using empty content access modes for system consumers" do
+      owner = create_owner(random_string('owner'))
+      user_name = random_string('user')
+      client = user_client(owner, user_name)
+
+      consumer = client.register(random_string('system'), type=:system, nil, {}, user_name, owner['key'],
+        [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil,
+        consumer_input_mode)
+
+      expect(consumer).to_not be_nil
+      expect(consumer['contentAccessMode']).to be_nil
+    end
+  end
+
+  def self.test_sca_consumer_creation_for_system_invalid_modes(consumer_input_mode)
+    it "should not allow setting content access mode for system consumers (\"#{consumer_input_mode}\")" do
+      owner = create_owner(random_string('owner'))
+      user_name = random_string('user')
+      client = user_client(owner, user_name)
+
+      expect {
+        consumer = client.register(random_string('system'), type=:system, nil, {}, user_name, owner['key'],
+          [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil,
+          consumer_input_mode)
+      }.to raise_exception(RestClient::BadRequest)
+    end
+  end
+
+
+  ent_mode = 'entitlement'
+  sca_mode = 'org_environment'
+  combined = "#{ent_mode},#{sca_mode}"
+
+  test_sca_consumer_creation_for_manifest(ent_mode, ent_mode, ent_mode, ent_mode)
+  test_sca_consumer_creation_for_manifest(ent_mode, ent_mode, '', nil)
+  test_sca_consumer_creation_for_manifest(ent_mode, ent_mode, nil, ent_mode)
+
+  test_sca_consumer_creation_for_manifest(sca_mode, sca_mode, sca_mode, sca_mode)
+  test_sca_consumer_creation_for_manifest(sca_mode, sca_mode, '', nil)
+  test_sca_consumer_creation_for_manifest(sca_mode, sca_mode, nil, sca_mode)
+
+  test_sca_consumer_creation_for_manifest(combined, ent_mode, ent_mode, ent_mode)
+  test_sca_consumer_creation_for_manifest(combined, ent_mode, sca_mode, sca_mode)
+  test_sca_consumer_creation_for_manifest(combined, ent_mode, '', nil)
+  test_sca_consumer_creation_for_manifest(combined, ent_mode, nil, sca_mode)
+
+  test_sca_consumer_creation_for_manifest(combined, sca_mode, ent_mode, ent_mode)
+  test_sca_consumer_creation_for_manifest(combined, sca_mode, sca_mode, sca_mode)
+  test_sca_consumer_creation_for_manifest(combined, sca_mode, '', nil)
+  test_sca_consumer_creation_for_manifest(combined, sca_mode, nil, sca_mode)
+
+  test_sca_consumer_create_for_manifest_invalid_modes(ent_mode, ent_mode, sca_mode)
+  test_sca_consumer_create_for_manifest_invalid_modes(sca_mode, sca_mode, ent_mode)
+  test_sca_consumer_create_for_manifest_invalid_modes(ent_mode, ent_mode, 'potato')
+  test_sca_consumer_create_for_manifest_invalid_modes(sca_mode, sca_mode, 'potato')
+  test_sca_consumer_create_for_manifest_invalid_modes(combined, ent_mode, 'potato')
+  test_sca_consumer_create_for_manifest_invalid_modes(combined, sca_mode, 'potato')
+
+  test_sca_consumer_creation_for_system('')
+  test_sca_consumer_creation_for_system(nil)
+
+  test_sca_consumer_creation_for_system_invalid_modes(ent_mode)
+  test_sca_consumer_creation_for_system_invalid_modes(sca_mode)
+  test_sca_consumer_creation_for_system_invalid_modes('potato')
+
   it 'should let a consumer register and set service level' do
     owner = create_owner(random_string('owner'))
     user_name = random_string('user')
