@@ -90,7 +90,7 @@ ext.libraries = [
         "javax.transaction:jta",
         "javax.persistence:javax.persistence-api",
         "javax.xml.bind:jaxb-api",
-        "javax.annotation:javax.annotation-api", 
+        "javax.annotation:javax.annotation-api",
     ],
     commons: [
         "commons-codec:commons-codec",
@@ -178,7 +178,7 @@ allprojects {
             dependency group: 'org.hibernate', name: 'hibernate-jcache', version: '5.4.6.Final'
             dependency group: 'commons-codec', name: 'commons-codec', version: '1.11'
             dependency group: 'commons-collections', name: 'commons-collections', version: '3.2.2'
-            dependency group: 'commons-io', name: 'commons-io', version: '1.4'
+            dependency group: 'commons-io', name: 'commons-io', version: '2.7'
             dependency group: 'commons-lang', name: 'commons-lang', version: '2.5'
             dependency group: 'org.apache.commons', name: 'commons-lang3', version: '3.2.1'
             dependency group: 'com.googlecode.gettext-commons', name: 'gettext-commons', version: '0.9.8'
