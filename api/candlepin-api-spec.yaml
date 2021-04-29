@@ -6568,12 +6568,10 @@ paths:
 
     put:
       description: |
-        Tickle an owner to have all of their entitlement pools synced with their
-        subscriptions. This method (and the one below may not be entirely RESTful,
-        as the updated data is not supplied as an argument.
-        This API call is only relevant in a top level hosted deployment where
-        subscriptions and products are sourced from adapters. Calling this in
-        an on-site deployment is just a no-op.
+        Triggers an asynchronous "refresh" operation, updating the entitlement and subscription
+        information for the specified owner.
+        This endpoint is only functional in hosted mode, and no operation will be triggered
+        when called in a standalone, or on-site, deployment.
       tags:
         - Owner
       operationId: refreshPools
@@ -6587,16 +6585,10 @@ paths:
             type: string
         - name: auto_create_owner
           in: query
-          description: Specify Whether or not to create an owner automatically. Default is false.
+          description: Specify whether or not to create an owner automatically. Default is false.
           schema:
             type: boolean
             default: false
-        - name: lazy_regen
-          in: query
-          description: Regenerate certificates immediatelly or allow them to be regenerated on demand. Default is true.
-          schema:
-            type: boolean
-            default: true
       responses:
         200:
           description: A successful operation
