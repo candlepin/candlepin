@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-18 03:03-0400\n"
+"POT-Creation-Date: 2021-04-29 03:03-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -463,6 +463,34 @@ msgstr ""
 #: server/src/main/java/org/candlepin/model/UeberCertificateGenerator.java:107
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
+msgstr ""
+
+#: server/src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:90
+#, java-format
+msgid ""
+"The requested role \"{0}\" is not provided by a currently consumed "
+"subscription."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:130
+#, java-format
+msgid ""
+"The requested add-on \"{0}\" is not provided by a currently consumed "
+"subscription."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:184
+#, java-format
+msgid ""
+"The service level preference \"{0}\" is not provided by a currently consumed "
+"subscription."
+msgstr ""
+
+#: server/src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:201
+#, java-format
+msgid ""
+"The requested usage preference \"{0}\" is not provided by a currently "
+"consumed subscription."
 msgstr ""
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
