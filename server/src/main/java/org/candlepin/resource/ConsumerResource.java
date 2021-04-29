@@ -47,6 +47,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -749,10 +750,6 @@ public class ConsumerResource implements ConsumersApi {
             entity.setAutoheal(dto.getAutoheal());
         }
 
-        if (dto.getContentAccessMode() != null) {
-            entity.setContentAccessMode(dto.getContentAccessMode());
-        }
-
         if (dto.getAnnotations() != null) {
             entity.setAnnotations(dto.getAnnotations());
         }
@@ -911,9 +908,7 @@ public class ConsumerResource implements ConsumersApi {
         updateCapabilities(consumerToCreate, null);
         logNewConsumerDebugInfo(consumerToCreate, keys, type);
 
-        validateContentAccessMode(consumerToCreate, owner);
-        // BZ 1618398 Remove validation check on consumer service level
-        // consumerBindUtil.validateServiceLevel(owner.getId(), consumerToCreate.getServiceLevel());
+        this.setContentAccessMode(consumer, type, owner, consumerToCreate);
 
         Set<ConsumerActivationKey> aks = new HashSet<>();
 
@@ -985,17 +980,57 @@ public class ConsumerResource implements ConsumersApi {
         }
     }
 
-    private void validateContentAccessMode(Consumer consumer, Owner owner) throws BadRequestException {
-        ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
+    /**
+     * Validates the incoming content access mode value and sets it on the destination consumer if
+     * necessary.
+     *
+     * @param srcConsumer
+     *  the consumer DTO containing the requested content access mode
+     *
+     * @param ctype
+     *  the consumer's type
+     *
+     * @param owner
+     *  the owner of the consumer being updated
+     *
+     * @param dstConsumer
+     *  the destination consumer entity to update
+     *
+     * @throws BadRequestException
+     *  if the requested content access mode is invalid or otherwise cannot be set on the consumer
+     */
+    private void setContentAccessMode(ConsumerDTO srcConsumer, ConsumerType ctype, Owner owner,
+        Consumer dstConsumer) throws BadRequestException {
 
-        if (consumer.getContentAccessMode() != null) {
-            if (!ctype.isManifest()) {
+        String caMode = srcConsumer.getContentAccessMode();
+
+        if (ctype.isManifest()) {
+            if (caMode == null) {
+                // ENT-3755: Use the "best available" if nothing was provided
+                ContentAccessMode best = owner.isAllowedContentAccessMode(ContentAccessMode.ORG_ENVIRONMENT) ?
+                    ContentAccessMode.ORG_ENVIRONMENT :
+                    ContentAccessMode.ENTITLEMENT;
+
+                caMode = best.toDatabaseValue();
+            }
+            else if (caMode.isEmpty()) {
+                // Clear consumer's content access mode and defer to the org's instead
+                caMode = null;
+            }
+            else {
+                // Validate user's choice and use it if possible
+                if (!owner.isAllowedContentAccessMode(caMode)) {
+                    throw new BadRequestException(
+                        i18n.tr("The consumer cannot use the supplied content access mode."));
+                }
+            }
+
+            dstConsumer.setContentAccessMode(caMode);
+        }
+        else {
+            if (caMode != null && !caMode.isEmpty()) {
                 throw new BadRequestException(
                     i18n.tr("The consumer cannot be assigned a content access mode."));
-            }
-            if (!owner.isAllowedContentAccessMode(consumer.getContentAccessMode())) {
-                throw new BadRequestException(
-                    i18n.tr("The consumer cannot use the supplied content access mode."));
             }
         }
     }
