@@ -4,7 +4,7 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 // vim: set expandtab sts=4 sw=4 ai:
 
 buildscript {
-    ext.openapi_version = '5.0.0'
+    ext.openapi_version = '5.1.0'
     repositories {
         mavenCentral()
     }
