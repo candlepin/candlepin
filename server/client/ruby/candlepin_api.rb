@@ -578,13 +578,12 @@ class Candlepin
     return get(path, params)
   end
 
-  def refresh_pools(owner_key, immediate=false, create_owner=false, lazy_regen=true)
+  def refresh_pools(owner_key, immediate=false, create_owner=false)
     return async_call(immediate) do
       url = "/owners/#{owner_key}/subscriptions"
 
       params = {}
       params[:auto_create_owner] = true if create_owner
-      params[:lazy_regen] = false if !lazy_regen
 
       put(url, params)
     end

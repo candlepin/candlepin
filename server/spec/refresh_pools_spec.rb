@@ -1194,7 +1194,7 @@ describe 'Refresh Pools' do
     serial_concat = concat_serials(entitlement, bonus_entitlement)
 
     # verify serial does not change on simple refresh
-    @cp.refresh_pools(owner_key, false, false, false)
+    @cp.refresh_pools(owner_key, false, false)
     entitlement = @cp.get_entitlement(entitlement['id'])
     bonus_entitlement = @cp.get_entitlement(bonus_entitlement['id'])
 
@@ -1210,7 +1210,7 @@ describe 'Refresh Pools' do
     expect(concat_serials(entitlement, bonus_entitlement)).to eq(serial_concat)
 
     # this time when we refresh, serial should change
-    @cp.refresh_pools(owner_key, false, false, false)
+    @cp.refresh_pools(owner_key, false, false)
     entitlement = @cp.get_entitlement(entitlement['id'])
     bonus_entitlement = @cp.get_entitlement(bonus_entitlement['id'])
     expect(concat_serials(entitlement, bonus_entitlement)).to_not eq(serial_concat)
