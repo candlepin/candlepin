@@ -15,10 +15,19 @@ import subprocess
 import shutil
 import tempfile
 import requests
+import urllib3
+import logging
+
+from deploy_pkg.logger import build_logger
 
 # To disable warning that we do insecure connection to localhost
-import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# We don't care about urllib/requests logging
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+log = build_logger(name='create_test_repos')
 
 RPM_SPEC_FILE_TEMPLATE = """
 Summary:        ${Name} package
@@ -28,7 +37,7 @@ Release:        ${release}
 License:        GPL License
 Packager:       John Doe <john doe com>
 Vendor:         Red Hat
-URL:            http://www.tricky-testing-animals.org/
+URL:            https://www.tricky-testing-animals.org/
 BuildArch:      noarch
 
 %%install
@@ -86,7 +95,7 @@ RPMMACROS_KEY_VALUE = {
 }
 
 # Create content from dictionary
-RPMMACROS_CONTENT = "\n".join([ key + " " + value for key,value in RPMMACROS_KEY_VALUE.items()])
+RPMMACROS_CONTENT = "\n".join([key + " " + value for key, value in RPMMACROS_KEY_VALUE.items()])
 
 RPMBUILD_ROOT_DIR = os.path.expanduser("~") + "/rpmbuild"
 
@@ -134,10 +143,10 @@ def read_test_data(filename):
             try:
                 data = json.load(fp)
             except ValueError as err:
-                print("Unable to read file %s with test data: %s" % (filename, str(err)))
+                log.error("Unable to read file {} with test data: {}".format(filename, str(err)))
                 return None
     except IOError as err:
-        print("Unable to read file: %s with test data: %s" % (filename, str(err)))
+        log.error("Unable to read file: {} with test data: {}".format(filename, str(err)))
         return None
 
     global TEST_DATA_JSON_MTIME
@@ -186,7 +195,12 @@ def get_repo_definitions_for_products(product_definitions, content_definitions):
             content_id = prod_cont[0]
             content = find_content(content_definitions, content_id)
             if content is None:
-                print("Info: unable to find content_id: %s in definition of product: %s" % (content_id, product['name']))
+                log.info(
+                    "Unable to find content_id: {content_id} in definition of product: {product_name}".format(
+                        content_id=content_id,
+                        product_name=product['name']
+                    )
+                )
                 continue
             repo = create_repo_definition(product, content)
             repo_definitions.append(repo)
@@ -207,12 +221,12 @@ def get_repo_definitions(test_data):
     try:
         product_definitions = test_data['products']
     except KeyError as err:
-        print('Info: Test data does not include any global definition of products')
+        log.warning('Test data does not include any global definition of products')
         product_definitions = []
     try:
         content_definitions = test_data['content']
     except KeyError as err:
-        print('Info: Test data does not include any global definition of contents')
+        log.warning('Test data does not include any global definition of contents')
         content_definitions = []
 
     glob_repo_defs = get_repo_definitions_for_products(product_definitions, content_definitions)
@@ -248,7 +262,7 @@ def add_packages_to_repo(packages_list, repo_path, package_definitions):
         # Try to get information about package from package definitions
         try:
             pkg = package_definitions[pkg_name]
-        except KeyError, TypeError:
+        except (KeyError, TypeError):
             version = '1'
             release = '0'
             arch = 'noarch'
@@ -264,10 +278,10 @@ def add_packages_to_repo(packages_list, repo_path, package_definitions):
 
         # Check if RPm file exist
         if os.path.isfile(src_pkg_file_path):
-            print("\tadding package %s" % pkg_name)
+            log.info("  Adding package {pkg_name}".format(pkg_name=pkg_name))
             shutil.copyfile(src_pkg_file_path, dst_pkg_file_path)
         else:
-            print("\tpackage %s not defined" % pkg_name)
+            log.info("  Package {pkg_name} not defined".format(pkg_name=pkg_name))
 
 
 def get_owners():
@@ -280,11 +294,11 @@ def get_owners():
             auth=(CANDLEPIN_USER, CANDLEPIN_PASS),
             verify=False)
     except Exception as err:
-        print('Error: %s' % str(err))
+        log.error('Unable to get owner: {err}'.format(err=str(err)))
         return None
 
     json_data = response.json()
-    owner_names = [ owner['key'] for owner in json_data ]
+    owner_names = [owner['key'] for owner in json_data]
     return owner_names
 
 
@@ -302,11 +316,16 @@ def generate_symlinks_for_owners(owner_names):
     for owner_name in owner_names:
         symlink_name = os.path.join(REPO_ROOT_DIR, owner_name)
         try:
-            print('\tcreating symbolic link %s' % symlink_name)
+            log.info('  Creating symbolic link %s' % symlink_name)
             if not os.path.islink(symlink_name):
                 os.symlink(REPO_ROOT_DIR, symlink_name)
         except OSError as err:
-            print("Unable to create symbolic link: %s (%s)" % (symlink_name, str(err)))
+            log.error(
+                "Unable to create symbolic link: {link} ({err})".format(
+                    link=symlink_name,
+                    err=str(err)
+                )
+            )
 
 
 def generate_repositories(repo_definitions, package_definitions):
@@ -321,12 +340,17 @@ def generate_repositories(repo_definitions, package_definitions):
         if not os.path.exists(REPO_ROOT_DIR):
             os.makedirs(REPO_ROOT_DIR)
     except OSError as err:
-        print("Unable to create directory: %s, %s" % (REPO_ROOT_DIR, str(err)))
+        log.error(
+            "Unable to create directory: {repo_dir}, {err}".format(
+                repo_dir=REPO_ROOT_DIR,
+                err=str(err)
+            )
+        )
         return None
 
     for repo in repo_definitions:
         repo_path = REPO_ROOT_DIR + repo['content_url']
-        print("creating repository %s in %s" % (repo['name'], repo_path ))
+        log.info("creating repository %s in %s" % (repo['name'], repo_path ))
 
         repo_path_rpms = os.path.join(repo_path, 'RPMS')
         if not os.path.exists(repo_path_rpms):
@@ -361,10 +385,15 @@ def generate_repositories(repo_definitions, package_definitions):
     try:
         shutil.copyfile(GPG_EXPORTED_CANDLEPIN_KEY, gpg_key_path)
     except OSError as err:
-        print("Unable to copy GPG key: %s (%s)" % (gpg_key_path, str(err)))
+        log.error(
+            "Unable to copy GPG key: {gpg_key_path} ({err})".format(
+                gpg_key_path=gpg_key_path,
+                err=str(err)
+            )
+        )
 
     # Create symbolic links for owners (golden ticket)
-    print("\nCreating symbolic links for owners...")
+    log.info("\nCreating symbolic links for owners...")
     owner_names = get_owners()
     generate_symlinks_for_owners(owner_names)
 
@@ -393,7 +422,7 @@ def get_productid_cert(repo_definition, owner='admin'):
             auth=(CANDLEPIN_USER, CANDLEPIN_PASS),
             verify=False)
     except Exception as err:
-        print('Error: %s' % str(err))
+        log.error('Unable to get product certificate: {err}'.format(err=str(err)))
         return None
 
     if r.status_code != 200:
@@ -428,7 +457,7 @@ def get_package_definitions(test_data):
     try:
         package_definitions = test_data['packages']
     except KeyError as err:
-        print('Test data does not include any definition of packages')
+        log.warning('Test data does not include any definition of packages')
         return None
 
     # Convert list to dictionary to be able to find packages faster
@@ -474,8 +503,12 @@ def create_dummy_package(package, expect_script_path, keygrip):
                 install_cmds += 'mkdir -p $RPM_BUILD_ROOT/{path}\n'.format(
                     path=path)
             else:
-                print('Skipping file: "%s", because file type: "%s" is not supported' %
-                    (path, file_type))
+                log.warning(
+                    'Skipping file: "{path}", because file type: "{file_type}" is not supported'.format(
+                        path=path,
+                        file_type=file_type
+                    )
+                )
                 continue
             install_cmds += 'chown {owner} $RPM_BUILD_ROOT/{path}\n'.format(
                 owner=owner, path=path)
@@ -494,10 +527,10 @@ def create_dummy_package(package, expect_script_path, keygrip):
     if os.path.isfile(rpm_file_path):
         rpm_mtime = os.path.getmtime(rpm_file_path)
         if rpm_mtime > TEST_DATA_JSON_MTIME:
-            print("RPM %s already exist" % name)
+            log.info("RPM %s already exist" % name)
             return True
 
-    print("creating RPM %s" % name)
+    log.info("creating RPM %s" % name)
 
     # Create content of spec file
     template = string.Template(RPM_SPEC_FILE_TEMPLATE)
@@ -519,21 +552,22 @@ def create_dummy_package(package, expect_script_path, keygrip):
         fp.write(rpm_spec_content)
 
     # Generate RPM package using rpmbuild
-    ret,_ = run_command('rpmbuild -bb %s' % spec_file_path, verbose=True)
+    ret, _ = run_command('rpmbuild -bb %s' % spec_file_path, verbose=False)
 
     if ret != 0:
-        print("Error: creating RPM %s FAILED" % name)
+        log.error('Creating RPM "{name}" FAILED'.format(name=name))
         return False
 
-    print("signing RPM %s" % name)
+    log.info("Signing RPM %s" % name)
+
     if keygrip is None:
-        ret,_ = run_command('%s %s' % (expect_script_path, rpm_file_path), verbose=True)
+        ret, _ = run_command('%s %s' % (expect_script_path, rpm_file_path), verbose=False)
     else:
-        ret,_ = run_command('%s %s' % ("rpm --addsign", rpm_file_path), verbose=True)
+        ret, _ = run_command('%s %s' % ("rpm --addsign", rpm_file_path), verbose=False)
 
     # RPM has to be signed. Otherwise it will not be able to install it from testing repository
     if ret != 0:
-        print("Error: signing of RPM %s FAILED" % name)
+        log.error('Signing of RPM "{name}" FAILED'.format(name=name))
         # Unsigned RPM file is useless. Delete it.
         os.remove(rpm_file_path)
         return False
@@ -588,6 +622,7 @@ def generate_packages(package_definitions, keygrip):
 
     return True
 
+
 def create_gpg_batch_gen_script():
     """
     This function tries to create temporary script file for creating gpg key.
@@ -613,7 +648,7 @@ def does_gpg_key_exist():
     key_id = '"%s <%s>"' % (GPG_NAME_REAL, GPG_NAME_EMAIL)
 
     # Try to get list of GPG key with given key ID
-    ret,_ = run_command('gpg --list-keys %s' % key_id)
+    ret, _ = run_command('gpg --list-keys %s' % key_id)
 
     return ret
 
@@ -624,7 +659,7 @@ def gpg_key_keygrip():
     """
     key_id = '"%s <%s>"' % (GPG_NAME_REAL, GPG_NAME_EMAIL)
 
-    ret,output = run_command('gpg2 --list-keys --with-keygrip %s' % key_id, verbose=False)
+    ret, output = run_command('gpg2 --list-keys --with-keygrip %s' % key_id, verbose=False)
 
     return ret, output
 
@@ -653,15 +688,15 @@ def create_gpg_key():
     shutil.rmtree(temp_dir_path)
 
     # Export gpg key
-    res,_ = run_command('gpg --export -a %s > %s' % (GPG_NAME_REAL, GPG_EXPORTED_CANDLEPIN_KEY))
+    res, _ = run_command('gpg --export -a %s > %s' % (GPG_NAME_REAL, GPG_EXPORTED_CANDLEPIN_KEY))
     ret += res
 
     # Import GPG key to rpm db (not necessary), but "rpm -K signed_file.rpm" can be used
-    res,_ = run_command('rpm --import %s' % GPG_EXPORTED_CANDLEPIN_KEY)
+    res, _ = run_command('rpm --import %s' % GPG_EXPORTED_CANDLEPIN_KEY)
     ret += res
 
     # Copy exported GPG key to root dir of static content provided by tomcat
-    res,_ = run_command('cp %s %s' % (GPG_EXPORTED_CANDLEPIN_KEY, REPO_ROOT_DIR))
+    res, _ = run_command('cp %s %s' % (GPG_EXPORTED_CANDLEPIN_KEY, REPO_ROOT_DIR))
     ret += res
 
     return ret
@@ -711,7 +746,7 @@ def modify_rpmmacros():
 
 def main():
     if len(sys.argv) != 2:
-        print("Error: syntax %s test_data.json" % sys.argv[0])
+        log.error("Syntax {name} test_data.json".format(name=sys.argv[0]))
         return 1
 
     test_data = read_test_data(sys.argv[1])
@@ -719,48 +754,52 @@ def main():
     gpg_exists = does_gpg_key_exist()
 
     if gpg_exists != 0:
-        print("")
-        print("Creating GPG key...")
+        log.info("")
+        log.info("Creating GPG key...")
         create_gpg_key()
 
-    # Try to find keygrip in output of gpg command
-    keygrip = None
-    ret,pgp_output = gpg_key_keygrip()
+    # Try to find key_grip in output of gpg command
+    key_grip = None
+    ret, pgp_output = gpg_key_keygrip()
     if ret == 0:
         pattern = re.compile(r'^ *Keygrip = (.*)$')
         for line in pgp_output:
             result = pattern.search(line)
-            # When gpg supported keygrip, then preset passphrase has to be used
+            # When gpg supported key_grip, then preset passphrase has to be used
             if result is not None:
-                keygrip = result.groups()[0]
+                key_grip = result.groups()[0]
                 # Make sure that preset passphrases are allowed
-                ret,_ = run_command("grep 'allow-preset-passphrase' /root/.gnupg/gpg-agent.conf")
+                ret, _ = run_command("grep 'allow-preset-passphrase' /root/.gnupg/gpg-agent.conf")
                 if ret != 0:
-                    print("Updating gpg-agent.conf")
+                    log.info("Updating gpg-agent.conf")
                     run_command("echo 'allow-preset-passphrase' >> /root/.gnupg/gpg-agent.conf")
                 # Make sure that gpg-agent is running
                 run_command('gpg-connect-agent reloadagent /bye')
-                print("Using GPG keygrip: %s" % keygrip)
-                run_command('/usr/libexec/gpg-preset-passphrase --passphrase %s --preset %s' %
-                    (GPG_PASSPHRASE, keygrip))
+                log.info("Using GPG keygrip: %s" % key_grip)
+                run_command(
+                    '/usr/libexec/gpg-preset-passphrase --passphrase {gpg_passphrase} --preset {key_grip}'.format(
+                        gpg_passphrase=GPG_PASSPHRASE,
+                        key_grip=key_grip
+                    )
+                )
                 break
 
     modify_rpmmacros()
 
-    print("")
-    print("Creating packages...")
+    log.info("")
+    log.info("Creating packages...")
 
     package_definitions = get_package_definitions(test_data)
 
-    ret = generate_packages(package_definitions, keygrip)
+    ret = generate_packages(package_definitions, key_grip)
 
     if ret is False:
-        print("")
-        print("Error: unable to generate all packages")
+        log.info("")
+        log.error("Unable to generate all packages")
         return 1
 
-    print("")
-    print("Creating repositories...")
+    log.info("")
+    log.info("Creating repositories...")
 
     repo_definitions = get_repo_definitions(test_data)
 
