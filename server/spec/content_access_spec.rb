@@ -19,7 +19,6 @@ describe 'Content Access' do
       'contentAccessMode' => "org_environment"
     })
     @org_admin = user_client(@owner, random_string('guy'))
-
     @username = random_string("user")
     @consumername = random_string("consumer")
     @consumername2 = random_string("consumer")
@@ -36,7 +35,11 @@ describe 'Content Access' do
 
     @product = create_product('test-product', 'some product')
     @cp.add_content_to_product(@owner['key'], @product['id'], @content_id)
-    @cp.create_pool(@owner['key'], @product['id'], {:quantity => 10})
+    @pool = @cp.create_pool(@owner['key'], @product['id'], {:quantity => 10})
+
+    # We need to sleep here to ensure enough time passes from the last content update to whatever
+    # cert fetching we do at the start of most of these tests.
+    sleep 1
   end
 
   it "does allow addition of the content access level" do
@@ -287,8 +290,9 @@ describe 'Content Access' do
     certs = @consumer.list_certificates
     json_body = extract_payload(certs[0]['cert'])
     content = json_body['products'][0]['content'][0]
-    certs[0]['serial']['serial'].should == serial_id
-    content['name'].should == 'cname-extreme'
+
+    expect(certs[0]['serial']['serial']).to_not eq(serial_id)
+    expect(content['name']).to eq('cname-extreme')
   end
 
   it "does update second existing content access cert content when product data changes" do
@@ -296,18 +300,32 @@ describe 'Content Access' do
     @consumer2 = consumer_client(@user, @consumername2, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
     certs1 = @consumer1.list_certificates
     certs2 = @consumer2.list_certificates
-    certs2.length.should == 1
-    serial_id2 = certs2[0]['serial']['serial']
+
+    expect(certs1.length).to eq(1)
+    expect(certs2.length).to eq(1)
+
+    cert_serial_1 = certs1[0]['serial']['serial']
+    cert_serial_2 = certs2[0]['serial']['serial']
+
     sleep 1
 
     @cp.update_content(@owner['key'], @content_id, {:name=>'cname-extreme'})
 
     certs1 = @consumer1.list_certificates
     certs2 = @consumer2.list_certificates
+
+    expect(certs1.length).to eq(1)
+    expect(certs2.length).to eq(1)
+
     json_body = extract_payload(certs2[0]['cert'])
     content = json_body['products'][0]['content'][0]
-    certs2[0]['serial']['serial'].should == serial_id2
-    content['name'].should == 'cname-extreme'
+
+    # The cert should have changed due to the content change, but both consumers should still have the
+    # same cert
+    expect(certs1[0]['serial']['serial']).to_not eq(cert_serial_1)
+    expect(certs2[0]['serial']['serial']).to_not eq(cert_serial_2)
+
+    expect(content['name']).to eq('cname-extreme')
   end
 
   it "does not update existing content access cert content when no data changes" do
@@ -820,6 +838,43 @@ describe 'Content Access' do
     expect(returned_uuids).to include(content_c2.id)
     expect(returned_uuids).to include(content_c3.id)
     expect(returned_uuids).to include(content_c4.id)
+  end
+
+
+  def regenerate_cert_test(&updater)
+    consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
+    certs = consumer.list_certificates()
+    expect(certs.length).to eq(1)
+    cert_serial = certs[0]['serial']
+    expect(cert_serial).to_not be_nil
+
+    updater.call()
+
+    updated_certs = consumer.list_certificates()
+    expect(updated_certs.length).to eq(1)
+    updated_cert_serial = updated_certs[0]['serial']
+    expect(updated_cert_serial).to_not be_nil
+
+    expect(updated_cert_serial['serial']).to_not eq(cert_serial['serial'])
+  end
+
+  it 'should regenerate SCA cert when content changes affect content view' do
+    regenerate_cert_test do
+      @cp.update_content(@owner['key'], @content['id'], { 'content_url' => '/updated/path' })
+    end
+  end
+
+  it 'should regenerate SCA cert when product changes affect content view' do
+    regenerate_cert_test do
+      @cp.remove_content_from_product(@owner['key'], @product['id'], @content['id'])
+    end
+  end
+
+  it 'should regenerate SCA cert when pool changes affect content view' do
+    regenerate_cert_test do
+      @pool['start_date'] = (DateTime.now + 1)
+      @cp.update_pool(@owner['key'], @pool)
+    end
   end
 
 end

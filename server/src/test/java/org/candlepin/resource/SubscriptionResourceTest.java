@@ -19,6 +19,7 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
+import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -52,6 +53,7 @@ import javax.ws.rs.core.Response;
 public class SubscriptionResourceTest  {
     private SubscriptionResource subResource;
 
+    @Mock private ContentAccessManager mockContentAccessManager;
     @Mock private SubscriptionServiceAdapter subService;
     @Mock private ConsumerCurator consumerCurator;
     @Mock private PoolManager poolManager;
@@ -66,7 +68,8 @@ public class SubscriptionResourceTest  {
             I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
         );
 
-        this.subResource = new SubscriptionResource(subService, consumerCurator, poolManager, i18n);
+        this.subResource = new SubscriptionResource(subService, consumerCurator, poolManager,
+            mockContentAccessManager, i18n);
     }
 
     @Test

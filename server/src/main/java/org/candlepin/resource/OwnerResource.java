@@ -1683,6 +1683,11 @@ public class OwnerResource {
         }
 
         poolManager.createAndEnrichPools(subscription);
+
+        log.debug("Synchronizing last content update for org: {}", owner);
+        owner.syncLastContentUpdate();
+        this.ownerCurator.merge(owner);
+
         return subscription;
     }
 
@@ -1818,6 +1823,11 @@ public class OwnerResource {
         }
 
         pool = poolManager.createAndEnrichPools(pool);
+
+        log.debug("Synchronizing last content update for org: {}", owner);
+        owner.syncLastContentUpdate();
+        this.ownerCurator.merge(owner);
+
         return this.translator.translate(pool, PoolDTO.class);
     }
 
@@ -1912,6 +1922,11 @@ public class OwnerResource {
 
         // Apply changes to the pool and its derived pools
         this.poolManager.updateMasterPool(newPool);
+
+        Owner owner = newPool.getOwner();
+        log.debug("Synchronizing last content update for org: {}", owner);
+        owner.syncLastContentUpdate();
+        this.ownerCurator.merge(owner);
     }
 
     /**

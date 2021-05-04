@@ -50,18 +50,20 @@ import java.util.Arrays;
 public class ContentManagerTest extends DatabaseTestFixture {
 
     private ContentManager contentManager;
+    private ContentAccessManager mockContentAccessManager;
     private EntitlementCertificateGenerator mockEntCertGenerator;
     private ProductManager productManager;
 
     @BeforeEach
     public void setup() throws Exception {
         this.mockEntCertGenerator = mock(EntitlementCertificateGenerator.class);
+        this.mockContentAccessManager = mock(ContentAccessManager.class);
 
-        this.productManager = new ProductManager(
+        this.productManager = new ProductManager(this.mockContentAccessManager,
             this.mockEntCertGenerator, this.ownerContentCurator, this.ownerProductCurator,
             this.productCurator);
 
-        this.contentManager = new ContentManager(
+        this.contentManager = new ContentManager(this.mockContentAccessManager,
             this.contentCurator, this.mockEntCertGenerator, this.ownerContentCurator,
             this.productCurator, this.productManager, this.modelTranslator);
     }

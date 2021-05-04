@@ -262,6 +262,11 @@ public class PoolResource {
         }
 
         poolManager.deletePools(Collections.singleton(pool));
+
+        Owner owner = pool.getOwner();
+        log.debug("Synchronizing last content update for org: {}", owner);
+        owner.syncLastContentUpdate();
+        this.ownerCurator.merge(owner);
     }
 
     @ApiOperation(notes = "Retrieve a CDN for a Pool", value = "getPoolCdn")
