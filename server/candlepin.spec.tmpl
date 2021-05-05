@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.16
+Version: 3.2.17
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,14 @@ fi
 
 #raw
 %changelog
+* Wed May 05 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.17-1
+- 1947368: Missing Compliance/SyspurposeCompliance translations
+  (sdhome@redhat.com)
+- 1952912: Added additional checks for regenerating SCA certificates
+  (crog@redhat.com)
+- 1949122: Changed how content access mode is validated for new consumers
+  (crog@redhat.com)
+
 * Tue Apr 13 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.16-1
 - change default content access mode list (jharriso@redhat.com)
 - Addressing sporadic spec test failure in import_update_spec.rb
