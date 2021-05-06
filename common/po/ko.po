@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-07 02:02-0500\n"
-"PO-Revision-Date: 2021-03-31 12:01+0000\n"
-"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
+"PO-Revision-Date: 2021-04-20 12:02+0000\n"
+"Last-Translator: simmon <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-3-1-hotfix/ko/>\n"
 "Language: ko\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.5.2\n"
+"X-Generator: Weblate 4.6\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -146,7 +146,7 @@ msgstr "올바른 URL이어야 합니다"
 
 #: server/src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
-msgstr "존재하지 않는 조직 키 \"{}\"을/를 수정하려고 했습니다"
+msgstr "존재하지 않는 조직 키 \"{}\"를 수정하려고 했습니다"
 
 #: server/src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:95
 #, java-format
@@ -156,7 +156,7 @@ msgstr "{0}{1} 소유자의 자동 연결이 비활성화되어 있습니다."
 #: server/src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:190
 #, java-format
 msgid "Subscriptions deleted by {0}"
-msgstr "{0}에 의해 서브스크립션이 삭제되었습니다"
+msgstr "{0}에 의해 서브스크립션 삭제되었습니다"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -204,7 +204,7 @@ msgstr "{0}은(는) 소유자 {1}을(를) 삭제했습니다"
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
 #, java-format
 msgid "{0} attached a subscription for product {1}"
-msgstr "{0}은 제품 {1}의 서브스크립션을 첨부했습니다"
+msgstr "{0}은 서브스크립션 {1}의 서브스크립션을 첨부했습니다"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -212,7 +212,7 @@ msgstr "{0}은 제품 {1}의 서브스크립션을 첨부했습니다"
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
 #, java-format
 msgid "{0} modified a subscription for product {1}"
-msgstr "{0}은(는) 제품 {1}에 대한 서브스크립션을 수정했습니다"
+msgstr "{0}은 제품 {1}에 대한 서브스크립션을 수정했습니다"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -220,7 +220,7 @@ msgstr "{0}은(는) 제품 {1}에 대한 서브스크립션을 수정했습니�
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
 #, java-format
 msgid "{0} returned the subscription for {1}"
-msgstr "{0}은(는) {1}에 대한 서브스크립션을 반환했습니다"
+msgstr "{0}은 {1}에 대한 서브스크립션을 반환했습니다"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -302,14 +302,14 @@ msgstr "{0}은(는) 역할 {1}을 삭제했습니다"
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
 #, java-format
 msgid "{0} created new subscription for product {1}"
-msgstr "{0}은(는) 제품 {1}에 대한 새 서브스크립션을 생성했습니다"
+msgstr "{0}은 제품 {1}에 대한 새로운 서브스크립션을 생성했습니다"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
 #, java-format
 msgid "{0} deleted a subscription for product {1}"
-msgstr "{0}은(는) 제품 {1}에 대한 서브스크립션을 삭제했습니다"
+msgstr "{0}은 제품 {1}에 대한 서브스크립션을 삭제했습니다"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -342,7 +342,7 @@ msgstr "{0}은 게스트 id {1}을 삭제했습니다"
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
 #, java-format
 msgid "{0} updated the rules in the database to version {1}"
-msgstr "{0}에 따라 데이터베이스에 있는 규칙이 버전 {1}로 업데이트되었습니다"
+msgstr "{0}에 따라 데이타베이스에 있는 규칙이 버전{1으}로 최신화되었습니다"
 
 #: server/src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
 #, java-format
@@ -411,7 +411,7 @@ msgstr "사용자를 찾을 수 없습니다: {0}"
 #: server/src/main/java/org/candlepin/bind/BindContext.java:117
 #, java-format
 msgid "Subscription pool(s) {0} do not exist."
-msgstr "서브스크립션 풀 {0}이/가 존재하지 않습니다."
+msgstr "서브스크립션 풀 {0}가 존재하지 않습니다."
 
 #: server/src/main/java/org/candlepin/controller/CandlepinPoolManager.java:306
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:56
@@ -452,7 +452,7 @@ msgstr "자동-첨부는 사용자 \"{0}\"를 위해 비활성화 됩니다."
 msgid ""
 "Development units may only be used on hosted servers and with orgs that have "
 "active subscriptions."
-msgstr "개발 장치는 활성 서브스크립션이 있는 조직에서 호스팅되는 서버에서만 사용할 수 있습니다."
+msgstr "개발 장치는 활성 서브스크립션이 있는 조직에서 호스팅 되는 서버에서만 사용할 수 있습니다."
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:432
 #, java-format
@@ -482,7 +482,7 @@ msgstr "지정한 소비자에 대해 유효한 내보내기를 확인할 수 �
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:312
 #, java-format
 msgid "Unable to download manifest: {0}"
-msgstr "매니페스트를 다운로드할 수 없습니다: {0}"
+msgstr "명세서를 내려받기 할 수 없습니다: {0}"
 
 #: server/src/main/java/org/candlepin/controller/ManifestManager.java:323
 #, java-format
@@ -544,7 +544,7 @@ msgstr "유효한 서브스크립션에 의해 지원되지 않습니다."
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:55
 #, java-format
 msgid "Supports architecture {1} but the system is {2}."
-msgstr "아키텍처 {1}을/를 지원하지만 시스템은 {2}입니다."
+msgstr "구조 {1}를 지원하지만 시스템은 {2}입니다."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:57
 #, java-format
@@ -577,7 +577,7 @@ msgid ""
 "guest subscription. For more information, please see https://access.redhat."
 "com/solutions/1592573"
 msgstr ""
-"게스트가 호스트에서 보고되어 있지 않으며 매핑되지 않은 임시 게스트 서브스크립션을 사용하고 있습니다. 보다 자세한 내용은 "
+"게스트가 호스트에서 보고되어 있지 않으며 일치 되지 않은 임시 게스트 서브스크립션을 사용하고 있습니다. 보다 자세한 내용은 "
 "https://access.redhat.com/solutions/1592573에서 참조하십시오"
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
@@ -588,7 +588,7 @@ msgstr "{2}TB 스토리지 중 {1}TB만 지원합니다."
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:73
 #, java-format
 msgid "{0} COVERAGE PROBLEM.  Supports {1} of {2}"
-msgstr "{0} 적용 범위 문제. {2} 중 {1}을/를 지원합니다"
+msgstr "{0} 적용 범위 문제. {2} 중 {1}를 지원합니다"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:269
 #, java-format
@@ -640,7 +640,7 @@ msgstr "풀 ''{1}''은/는 특정 소비자로 제한됩니다."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:161
 msgid "Pool not available to subscription management applications."
-msgstr "서브스크립션 관리 애플리케이션에서 사용할 수 있는 풀이 없습니다."
+msgstr "서브스크립션 관리 응용프로그램에서 사용 할 수 있는 풀이 없습니다."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:163
 #, java-format
@@ -657,7 +657,7 @@ msgstr "풀은 물리적 시스템으로 제한됩니다: ''{1}''."
 msgid ""
 "Subscription \"{2}\" must be attached using a quantity evenly divisible by "
 "{3}"
-msgstr "서브스크립션 ''{2}''은/는 {3}로/으로 균등하게 나눌 수 있는 수량을 사용하여 연결해야 합니다"
+msgstr "서브스크립션 ''{2}''은 {3으로 균등하게 나눌 수 있는 수량을 사용하여 연결해야 합니다"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:169
 #, java-format
@@ -728,7 +728,7 @@ msgstr "이 장치 유형은 제품 ''{1}''에 허용되지 않습니다."
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:199
 #, java-format
 msgid "Only virtual systems can have subscription \"{1}\" attached."
-msgstr "가상 시스템에만 서브스크립션 ''{1}''을/를 연결할 수 있습니다."
+msgstr "가상 시스템에만 서브스크립션 ''{1}''를 연결 할 수 있습니다."
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:201
 #, java-format
@@ -845,7 +845,7 @@ msgstr "UUID가 없습니다."
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:602
 #, java-format
 msgid "Environment \"{0}\" could not be found."
-msgstr "환경 \"{0}\"을/를 찾을 수 없습니다."
+msgstr "환경 \"{0}\"을 찾을 수 없습니다."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:761
 msgid "Unit type must be specified."
@@ -914,7 +914,7 @@ msgstr "시스템 이름을 # 문자로 시작할 수 없음"
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1093
 #, java-format
 msgid "Activation key \"{0}\" not found for organization \"{1}\"."
-msgstr "조직 ''{1}''에 대한 활성화키 ''{0}''을/를 찾을 수 없습니다."
+msgstr "조직 ''{1}''에 대한 활성화키 ''{0}''를 찾을 수 없습니다."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1118
 #, java-format
@@ -969,9 +969,7 @@ msgstr "이름이 ''{0}''인 환경을 찾을 수 없습니다."
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1522
 #, java-format
 msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
-msgstr ""
-"장치 {0}을/를 업데이트하는 도중 문제가 발생했습니다. 하이퍼바이저 ID: {1}은/"
-"는 이미 사용되고 있습니다."
+msgstr "장치 {0}을 업데이트하는 도중 문제가 발생했습니다. 하이퍼바이저 ID: {1}은 이미 사용되고 있습니다."
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1750
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1761
@@ -1291,7 +1289,7 @@ msgstr "작업 키가 null이거나 비어있습니다"
 #: server/src/main/java/org/candlepin/resource/JobResource.java:405
 #, java-format
 msgid "Job \"{0}\" is not configured for manual scheduling"
-msgstr "작업 \"{0}\"이/가 수동 스케줄링 용으로 설정되어 있지 않습니다"
+msgstr "작업 \"{0}\"가 수동 스케줄링 용으로 설정되어 있지 않습니다"
 
 #: server/src/main/java/org/candlepin/resource/JobResource.java:427
 #, java-format
@@ -1327,7 +1325,7 @@ msgstr "ID ''{0}''의 컨텐츠를 찾을 수 없습니다."
 #: server/src/main/java/org/candlepin/resource/OwnerContentResource.java:298
 #, java-format
 msgid "content \"{0}\" is locked"
-msgstr "컨텐츠 \"{0}\"이/가 잠겨있습니다"
+msgstr "내용 \"{0}\"가 잠겨있습니다"
 
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:239
 msgid "Only numeric product IDs are allowed."
@@ -1344,12 +1342,12 @@ msgstr "업데이트 요청 ID가 일치하지 않습니다: {0}, {1}"
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:450
 #, java-format
 msgid "product \"{0}\" is locked"
-msgstr "제품 \"{0}\"이/가 잠겨있습니다"
+msgstr "제품 \"{0}\"가 잠겨있습니다"
 
 #: server/src/main/java/org/candlepin/resource/OwnerProductResource.java:455
 #, java-format
 msgid "Product with ID \"{0}\" cannot be deleted while subscriptions exist."
-msgstr "서브스크립션이 존재하는 동안 ID ''{0}''인 제품을 삭제할 수 없습니다."
+msgstr "서브스크립션이 존재하는 동안 ID ''{0}''인 제품을 삭제 할 수 없습니다."
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:290
 msgid "Owner key is null or empty."
@@ -1503,7 +1501,7 @@ msgstr "\"{0}\" 풀이 지정된 소유자 \"{1}\"에 속해있지 않습니다"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1830
 msgid "Cannot update bonus pools, as they are auto generated"
-msgstr "보너스 풀은 자동 생성되므로 업데이트할 수 없습니다"
+msgstr "보너스 풀은 자동 생성되므로 최신화 할 수 없습니다"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1762,18 +1760,18 @@ msgstr "독립형 candlepin은 서브스크립션 교환을 지원하지 않습�
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:68
 msgid "No ID for upstream subscription management application."
-msgstr "업스트림 서브스크립션 관리 애플리케이션의 ID가 없습니다."
+msgstr "업스트림 서브스크립션 관리 응용프로그램의 ID가 없습니다."
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:82
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr "이 서브스크립션 관리 애플리케이션은 다른 소유자에 의해 이미 가져오기 되었습니다."
+msgstr "이 서브스크립션 관리 응용프로그램은 다른 소유자에 의해 이미 가져오기 되었습니다."
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:89
 msgid ""
 "Owner has already imported from another subscription management application."
-msgstr "소유자가 이미 다른 서브스크립션 관리 애플리케이션에서 가져오기되었습니다."
+msgstr "소유자가 이미 다른 서브스크립션 관리 응용프로그램에서 가져오기 되었습니다."
 
 #: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:201
 #, java-format
@@ -1802,7 +1800,7 @@ msgstr "파일에서 활성 서브스크립션을 찾을 수 없습니다."
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:263
 msgid "One or more inactive subscriptions found in the file."
-msgstr "파일에서 여러개의 사용되지 않는 서브스크립션이 발견되었습니다."
+msgstr "파일에서 여러 개의 사용되지 않는 서브스크립션이 발견되었습니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
