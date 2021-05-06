@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-03-11 02:03-0500\n"
-"PO-Revision-Date: 2021-03-28 21:01+0000\n"
+"PO-Revision-Date: 2021-04-18 21:02+0000\n"
 "Last-Translator: Igor Gorbounov <igor.gorbounov@gmail.com>\n"
 "Language-Team: Russian <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-2-9-hotfix/ru/>\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.5.2\n"
+"X-Generator: Weblate 4.5.3\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1477,7 +1477,7 @@ msgstr "Не удается найти буфер с идентификатор�
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1760
 #, java-format
 msgid "Pool \"{0}\" does not belong to the specified owner \"{1}\""
-msgstr ""
+msgstr "Буфер «{0}» не принадлежит указанному владельцу «{1}»"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1766
 msgid "Cannot update bonus pools, as they are auto generated"
@@ -1492,7 +1492,7 @@ msgstr "Ошибка чтения архива"
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:1992
 msgid "Error storing uploaded archive for asynchronous processing."
-msgstr ""
+msgstr "Ошибка при сохранении загруженного архива для асинхронной обработки."
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:2128
 #, java-format
@@ -1550,31 +1550,32 @@ msgstr "клиент {0} не найден"
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:307
 #, java-format
 msgid "Subscription Pool with ID \"{0}\" could not be found."
-msgstr ""
+msgstr "Не удалось найти буфер подписки с ID «{0}»."
 
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:257
 #, java-format
 msgid "Entitlement Pool with ID \"{0}\" could not be found."
-msgstr ""
+msgstr "Не удалось найти буфер привилегий с идентификатором «{0}»."
 
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:261
 msgid "Cannot delete bonus pools, as they are auto generated"
 msgstr ""
+"Не удалось удалить бонусные буферы, так как они генерируются автоматически"
 
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:336
 #, java-format
 msgid "Pool with ID \"{0}\" could not be found."
-msgstr ""
+msgstr "Не удалось найти буфер с идентификатором «{0}»."
 
 #: server/src/main/java/org/candlepin/resource/PoolResource.java:341
 #, java-format
 msgid "A certificate was not found for pool \"{0}\""
-msgstr ""
+msgstr "Не найден сертификат для буфера «{0}»"
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:112
 #, java-format
 msgid "Product with UUID \"{0}\" could not be found."
-msgstr ""
+msgstr "Не удалось найти продукт с UUID «{0}»."
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:160
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:178
@@ -1584,6 +1585,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:252
 msgid "Organization-agnostic product write operations are no longer supported."
 msgstr ""
+"Операции записи продуктов без учета организации больше не поддерживаются."
 
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:266
 #: server/src/main/java/org/candlepin/resource/ProductResource.java:284
@@ -1592,30 +1594,30 @@ msgstr "Идентификаторы продуктов не указаны."
 
 #: server/src/main/java/org/candlepin/resource/RoleResource.java:99
 msgid "role name is null or empty"
-msgstr ""
+msgstr "название роли нулевое или пустое"
 
 #: server/src/main/java/org/candlepin/resource/RoleResource.java:104
 #, java-format
 msgid "Role not found: {0}"
-msgstr ""
+msgstr "Не найдена роль: {0}"
 
 #: server/src/main/java/org/candlepin/resource/RoleResource.java:128
 #: server/src/main/java/org/candlepin/resource/UserResource.java:106
 msgid "username is null or empty"
-msgstr ""
+msgstr "имя пользователя нулевое или пустое"
 
 #: server/src/main/java/org/candlepin/resource/RoleResource.java:146
 msgid "role data is null or empty"
-msgstr ""
+msgstr "данные роли нулевые или пустые"
 
 #: server/src/main/java/org/candlepin/resource/RoleResource.java:150
 msgid "role name not specified"
-msgstr ""
+msgstr "не указано название роли"
 
 #: server/src/main/java/org/candlepin/resource/RoleResource.java:154
 #, java-format
 msgid "Role already exists: {0}"
-msgstr ""
+msgstr "Роль уже существует: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -1652,16 +1654,16 @@ msgstr "Подписка с ID «{0}» не найдена."
 
 #: server/src/main/java/org/candlepin/resource/UserResource.java:177
 msgid "user data is null or empty"
-msgstr ""
+msgstr "данные пользователя нулевые или пустые"
 
 #: server/src/main/java/org/candlepin/resource/UserResource.java:181
 msgid "Username not specified"
-msgstr ""
+msgstr "Имя пользователя не указано"
 
 #: server/src/main/java/org/candlepin/resource/UserResource.java:185
 #, java-format
 msgid "User already exists: {0}"
-msgstr ""
+msgstr "Пользователь уже существует: {0}"
 
 #: server/src/main/java/org/candlepin/resource/util/CalculatedAttributesUtil.java:56
 #, java-format
@@ -1671,12 +1673,13 @@ msgstr "{0}{1}"
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:117
 msgid ""
 "None of the subscriptions on the activation key were available for attaching."
-msgstr ""
+msgstr "Нет доступных для прикрепления подписок на ключ активации."
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:145
 #, java-format
 msgid "Cannot bind to pool \"{0}\" in activation key \"{1}\": {2}"
 msgstr ""
+"Не удается выполнить привязку к буферу «{0}» в ключе активации «{1}»: {2}"
 
 #: server/src/main/java/org/candlepin/resource/util/ConsumerTypeValidator.java:59
 #, java-format
@@ -1692,7 +1695,7 @@ msgstr "Продукт не задан или не содержит иденти
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:109
 #, java-format
 msgid "Unable to find a product with the UUID \"{0}\""
-msgstr ""
+msgstr "Не удалось найти продукт с UUID «{0}»"
 
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:140
 #: server/src/main/java/org/candlepin/resource/util/ResolverUtil.java:176
@@ -1702,7 +1705,7 @@ msgstr "Подписка не определена"
 #: server/src/main/java/org/candlepin/resteasy/DateFormatter.java:78
 #: server/src/main/java/org/candlepin/resteasy/DateFormatter.java:91
 msgid "Unable to parse date parameter"
-msgstr ""
+msgstr "Не удалось обработать параметр даты"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -1755,7 +1758,7 @@ msgstr "Продукт с ID «{0}» не обнаружен."
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:190
 msgid "Uploaded manifest file does not exist."
-msgstr ""
+msgstr "Загруженный файл манифеста не существует."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -1855,56 +1858,56 @@ msgstr "Недопустимый формат архива {0} или пусто
 #: server/src/main/java/org/candlepin/util/ContentOverrideValidator.java:111
 #, java-format
 msgid "The following content labels are invalid: {0}"
-msgstr ""
+msgstr "Следующие метки содержимого недействительны: {0}"
 
 #: server/src/main/java/org/candlepin/util/ContentOverrideValidator.java:120
 #, java-format
 msgid "The following content properties cannot be overridden: {0}"
-msgstr ""
+msgstr "Следующие свойства содержимого нельзя переопределить: {0}"
 
 #: server/src/main/java/org/candlepin/util/ContentOverrideValidator.java:129
 #, java-format
 msgid "The following override values are invalid: {0}"
-msgstr ""
+msgstr "Следующие значения переопределения недопустимы: {0}"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:79
 #, java-format
 msgid "The {0} name \"{1}\" must not exceed {2} characters in length"
-msgstr ""
+msgstr "Длина названия {0} «{1}» не должна превышать {2} символов"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:86
 #, java-format
 msgid "The value for {0} \"{1}\" must not exceed {2} characters in length"
-msgstr ""
+msgstr "Длина значения {0} «{1}» не должна превышать {2} символов"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:107
 #, java-format
 msgid "The {0} \"{1}\" must be an integer value"
-msgstr ""
+msgstr "{0} «{1}» должно быть целым числом"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:126
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:131
 #, java-format
 msgid "The {0} \"{1}\" must be a positive, integer value"
-msgstr ""
+msgstr "{0} «{1}» должно быть положительным целым числом"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:150
 #, java-format
 msgid "The {0} \"{1}\" must be a long-integer value"
-msgstr ""
+msgstr "{0} «{1}» должно быть длинным целым числом"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:169
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:174
 #, java-format
 msgid "The {0} \"{1}\" must be a positive, long-integer value"
-msgstr ""
+msgstr "{0} «{1}» должно быть положительным длинным целым числом"
 
 #: server/src/main/java/org/candlepin/util/PropertyValidator.java:193
 #, java-format
 msgid "The {0} \"{1}\" must be a Boolean value"
-msgstr ""
+msgstr "{0} «{1}» должно быть логическим значением"
 
 #: server/src/main/java/org/candlepin/util/ServiceLevelValidator.java:72
 #, java-format
 msgid "Service level \"{0}\" is not available to units of organization {1}."
-msgstr ""
+msgstr "Уровень службы «{0}» недоступен для модулей организации {1}."
