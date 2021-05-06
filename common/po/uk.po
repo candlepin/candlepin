@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-05-06 03:04-0400\n"
-"PO-Revision-Date: 2021-03-07 10:01+0000\n"
+"PO-Revision-Date: 2021-05-06 10:02+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-3-1-hotfix/uk/>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.5.1\n"
+"X-Generator: Weblate 4.6.1\n"
 
 #: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:72
 #: server/src/main/java/org/candlepin/guice/I18nProvider.java:84
@@ -493,6 +493,8 @@ msgid ""
 "The requested role \"{0}\" is not provided by a currently consumed "
 "subscription."
 msgstr ""
+"Потрібна вам роль «{0}» не надається у межах поточного передплаченого "
+"тарифного плану."
 
 #: server/src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:130
 #, java-format
@@ -500,6 +502,8 @@ msgid ""
 "The requested add-on \"{0}\" is not provided by a currently consumed "
 "subscription."
 msgstr ""
+"Потрібний вам додаток «{0}» не надається у межах поточного передплаченого "
+"тарифного плану."
 
 #: server/src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:184
 #, java-format
@@ -507,6 +511,8 @@ msgid ""
 "The service level preference \"{0}\" is not provided by a currently consumed "
 "subscription."
 msgstr ""
+"Пріоритетність рівня обслуговування «{0}» не надається у межах поточного "
+"передплаченого тарифного плану."
 
 #: server/src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:201
 #, java-format
@@ -514,6 +520,8 @@ msgid ""
 "The requested usage preference \"{0}\" is not provided by a currently "
 "consumed subscription."
 msgstr ""
+"Потрібна вам пріоритетність рівня користування «{0}» не надається у межах "
+"поточного передплаченого тарифного плану."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
 msgid "Not supported by a valid subscription."
