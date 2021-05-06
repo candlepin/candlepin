@@ -50,7 +50,7 @@ def fetch_master_version():
     global master_version
     if master_version:
         return master_version
-    spec_file = requests.get('https://raw.githubusercontent.com/candlepin/candlepin/master/server/candlepin.spec.tmpl').text
+    spec_file = requests.get('https://raw.githubusercontent.com/candlepin/candlepin/master/candlepin.spec.tmpl').text
     for line in spec_file.split('\n'):
         if line.startswith('Version:'):
             match = re.search('^Version: (\d+\.\d+)\.\d+$', line)

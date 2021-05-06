@@ -1,0 +1,4 @@
+[org.candlepin-candlepin]
+scmurl=${mead_scm}#${git_ref}
+maven_options=-N ${maven_options}
+packages=gettext
