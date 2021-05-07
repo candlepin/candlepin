@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.17
+Version: 3.2.18
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,10 @@ fi
 
 #raw
 %changelog
+* Fri May 07 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.18-1
+- 1957779: Fix SCA cert regeneration for consumers in environments
+  (crog@redhat.com)
+
 * Wed May 05 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.17-1
 - 1947368: Missing Compliance/SyspurposeCompliance translations
   (sdhome@redhat.com)
