@@ -501,6 +501,71 @@ describe 'Refresh Pools' do
     expect(updated_cert_serial).to_not eq(ent_cert_serial)
   end
 
+  it 'regenerates SCA cert when content for an org changes' do
+    # Create owner in SCA mode, add upstream product/content/subscription data and refresh
+    owner_key = random_string('test_owner')
+    owner = create_owner(owner_key, nil, {
+      'contentAccessModeList' => 'org_environment,entitlement',
+      'contentAccessMode' => "org_environment"
+    })
+
+    content_id = random_string('test_content')
+    original_content = create_upstream_content(content_id, { :label => 'test_label', :content_url => 'http://www.url.com' })
+
+    product_id = random_string(nil, true)
+    product = create_upstream_product(product_id)
+
+    add_content_to_product_upstream(product_id, content_id)
+
+    sub_id = random_string('test_subscription')
+    create_upstream_subscription(sub_id, owner_key, { :product => product })
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(1)
+
+    # Verify the content exists in its initial state
+    ds_content = @cp.get_product(owner_key, product_id).productContent[0]
+    expect(ds_content).to_not be_nil
+    expect(ds_content['content']['label']).to eq(original_content['label'])
+    expect(ds_content['content']['contentUrl']).to eq(original_content['contentUrl'])
+
+    # Register a consumer and check the SCA cert contains the correct content data
+    user = user_client(owner, random_string('test_user'))
+    consumer_client = consumer_client(user, random_string('test_consumer'), :system, nil,
+      { 'system.certificate_version' => '3.0' })
+
+    certs = consumer_client.list_certificates
+    certs.length.should == 1
+
+    json_body = extract_payload(certs[0]['cert'])
+    content_data = json_body['products'][0]['content'][0]
+    expect(content_data['label']).to eq(original_content['label'])
+    expect(content_data['path']).to eq(original_content['contentUrl'])
+
+    # Modify the content for this product/sub
+    updated_content = update_upstream_content(content_id, { :label => 'updated_label', :content_url => 'http://www.updated-url.com' })
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(1)
+
+    # Verify the content change has been pulled down
+    ds_content = @cp.get_product(owner_key, product_id).productContent[0]
+    expect(ds_content).to_not be_nil
+    expect(ds_content['content']['label']).to eq(updated_content['label'])
+    expect(ds_content['content']['contentUrl']).to eq(updated_content['contentUrl'])
+
+    # Verify the SCA cert has changed as a result
+    certs = consumer_client.list_certificates
+    certs.length.should == 1
+
+    json_body = extract_payload(certs[0]['cert'])
+    content_data = json_body['products'][0]['content'][0]
+    expect(content_data['label']).to eq(updated_content['label'])
+    expect(content_data['path']).to eq(updated_content['contentUrl'])
+  end
+
   it 'regenerates entitlements when products for an entitled pool changes' do
     owner_key = random_string('test_owner')
     owner = create_owner(owner_key)
