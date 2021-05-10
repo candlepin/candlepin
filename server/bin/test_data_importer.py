@@ -17,38 +17,8 @@ import string
 import sys
 import time
 
+from deploy_pkg.logger import build_logger
 
-def build_logger(name, msg_format):
-    """Builds and configures our logger"""
-    class EmptyLineFilter(logging.Filter):
-        """Logging filter implementation that filters on empty or whitespace-only lines"""
-        def __init__(self, invert=False):
-            self.invert = invert
-
-        def filter(self, record):
-            result = bool(record.msg) and not record.msg.isspace()
-            if self.invert:
-                result = not result
-
-            return result
-
-    # Create the base/standard handler
-    std_handler = logging.StreamHandler(sys.stdout)
-    std_handler.setFormatter(logging.Formatter(fmt=msg_format))
-    std_handler.addFilter(EmptyLineFilter())
-
-    # Create an empty-line handler
-    empty_handler = logging.StreamHandler(sys.stdout)
-    empty_handler.setFormatter(logging.Formatter(fmt=''))
-    empty_handler.addFilter(EmptyLineFilter(True))
-
-    # Create a logger using the above handlers
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
-    logger.addHandler(std_handler)
-    logger.addHandler(empty_handler)
-
-    return logger
 
 # Disable HTTP warnings that'll be kicked out by urllib (used internally by requests)
 requests.packages.urllib3.disable_warnings()
@@ -57,7 +27,7 @@ requests.packages.urllib3.disable_warnings()
 logging.getLogger("requests").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
-log = build_logger('test_data_importer', '%(asctime)-15s %(levelname)-7s %(name)s -- %(message)s')
+log = build_logger(name='test_data_importer')
 
 
 def ci_in(src_dict, search):
@@ -414,7 +384,7 @@ def create_users(cp, data):
         log.info('Creating %d user(s)...', len(data['users']))
 
         for user_data in data['users']:
-            log.info('  User: %s  [password: %s, superuser: %s', user_data['username'], user_data['password'],
+            log.info('  User: %s  [password: %s, superuser: %s]', user_data['username'], user_data['password'],
                 user_data['superadmin'] if 'superadmin' in user_data else False)
 
             user = cp.create_user(user_data)
@@ -499,7 +469,7 @@ def gather_products(data, hosted_test):
                         errmsg = 'product references a non-existent product: {name} ({pid}) => {ref_pid}'.format(
                             name=product['name'], pid=product['id'], ref_pid=pid)
 
-                        raise ReferenceError(ermsg)
+                        raise ReferenceError(errmsg)
 
                     traverse_product(product_map[pid])
 
@@ -569,7 +539,6 @@ def map_content_to_product(cp, owner_key, product_data, content_data):
             name=product_data['name'], pid=product_data['id'], ref_cid=content_id)
 
         raise ReferenceError(errmsg)
-
 
     content_map = {}
     product_content = []
