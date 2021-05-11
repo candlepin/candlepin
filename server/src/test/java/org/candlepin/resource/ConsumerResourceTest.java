@@ -15,23 +15,8 @@
 package org.candlepin.resource;
 
 import static org.candlepin.test.TestUtil.createIdCert;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.nullable;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.Event.Target;
@@ -60,14 +45,15 @@ import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.v1.ContentAccessDTO;
+import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -108,16 +94,15 @@ import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
-import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
 
 import org.apache.commons.lang.RandomStringUtils;
-import org.hibernate.mapping.Collection;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
@@ -134,6 +119,7 @@ import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
@@ -141,6 +127,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Provider;
 import javax.persistence.OptimisticLockException;
@@ -259,6 +248,15 @@ public class ConsumerResourceTest {
         mockedConsumerResource = Mockito.spy(consumerResource);
     }
 
+    protected ConsumerType buildConsumerType() {
+        int rnd = TestUtil.randomInt();
+
+        ConsumerType type = new ConsumerType("consumer_type-" + rnd);
+        type.setId("test-ctype-" + rnd);
+
+        return this.mockConsumerType(type);
+    }
+
     protected ConsumerType mockConsumerType(ConsumerType ctype) {
         if (ctype != null) {
             // Ensure the type has an ID
@@ -322,6 +320,7 @@ public class ConsumerResourceTest {
         if (key == null) {
             key = "test-owner-key-" + rand;
         }
+
         Owner owner = new Owner(key, "Test Owner " + rand);
         owner.setId("test-owner-" + rand);
 
@@ -727,88 +726,6 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testFetchAllConsumers() {
-        assertThrows(BadRequestException.class, () ->
-            consumerResource.searchConsumers(null, null, null,
-            null, null, null)
-        );
-    }
-
-    @Test
-    public void testFetchAllConsumersForUser() {
-        ArrayList<Consumer> consumers = new ArrayList<>();
-
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(consumers);
-        when(cqmock.iterator()).thenReturn(consumers.iterator());
-        when(consumerCurator.searchOwnerConsumers(
-            nullable(Owner.class), anyString(),
-            (java.util.Collection<ConsumerType>) nullable(Collection.class),
-            nullable(List.class), nullable(List.class), nullable(List.class), anyList(),
-            anyList(), anyList())).thenReturn(cqmock);
-        when(cqmock.transform(any(ElementTransformer.class))).thenReturn(cqmock);
-        CandlepinQuery<ConsumerDTOArrayElement> result = consumerResource
-            .searchConsumers("TaylorSwift", null, null,
-            null, null, null);
-
-        assertNotNull(result);
-        assertEquals(consumers, result.list());
-    }
-
-    public void testFetchAllConsumersForOwner() {
-        ArrayList<Consumer> consumers = new ArrayList<>();
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(consumers);
-        when(cqmock.iterator()).thenReturn(consumers.iterator());
-
-        when(ownerCurator.getByKey(eq("taylorOwner"))).thenReturn(new Owner());
-        when(consumerCurator.searchOwnerConsumers(
-            any(Owner.class), anyString(), (java.util.Collection<ConsumerType>) any(Collection.class),
-            anyList(), anyList(), anyList(), anyList(), anyList(),
-            anyList())).thenReturn(cqmock);
-
-        Iterable<ConsumerDTOArrayElement> result = consumerResource.searchConsumers(null, null, "taylorOwner",
-            null, null, null);
-        assertEquals(consumers, result);
-    }
-
-    @Test
-    public void testFetchAllConsumersForEmptyUUIDs() {
-        assertThrows(BadRequestException.class, () ->
-            consumerResource.searchConsumers(null, null, null, new ArrayList<>(), null, null)
-        );
-    }
-
-    @Test
-    public void testFetchAllConsumersForSomeUUIDs() {
-        ArrayList<Consumer> consumers = new ArrayList<>();
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(consumers);
-        when(cqmock.iterator()).thenReturn(consumers.iterator());
-
-        when(consumerCurator.searchOwnerConsumers(
-            nullable(Owner.class),
-            nullable(String.class),
-            (java.util.Collection<ConsumerType>) nullable(Collection.class),
-            anyList(),
-            nullable(List.class),
-            nullable(List.class),
-            anyList(),
-            anyList(),
-            anyList())
-        ).thenReturn(cqmock);
-        when(cqmock.transform(any(ElementTransformer.class))).thenReturn(cqmock);
-
-        List<String> uuids = new ArrayList<>();
-        uuids.add("swiftuuid");
-        CandlepinQuery<ConsumerDTOArrayElement> result = consumerResource.searchConsumers(null, null,
-            null, uuids, null, null);
-
-        assertNotNull(result);
-        assertEquals(consumers, result.list());
-    }
-
-    @Test
     public void testcheckForGuestsMigrationSerialList() {
         Consumer consumer = createConsumer(createOwner());
         List<EntitlementCertificate> certificates = createEntitlementCertificates();
@@ -982,6 +899,283 @@ public class ConsumerResourceTest {
             .getContentAccessForConsumer("test-uuid");
 
         assertEquals(expectedModeList, contentAccess.getContentAccessModeList());
+    }
+
+    @Test
+    public void testSearchConsumersRequiresNonNullSearchCriteria() {
+        assertThrows(BadRequestException.class, () ->
+            consumerResource.searchConsumers(null, null, null, null, null, null));
+    }
+
+    @Test
+    @SuppressWarnings("checkstyle:indentation")
+    public void testSearchConsumersRequiresNonEmptySearchCriteria() {
+        assertThrows(BadRequestException.class, () ->
+            consumerResource.searchConsumers("", Collections.emptySet(), "", Collections.emptyList(),
+                Collections.emptyList(), Collections.emptyList()));
+    }
+
+    @Test
+    public void testSearchConsumersRequiresPagingForLargeResultSets() {
+        List<Consumer> expected = Stream.generate(this::createConsumer)
+            .limit(5)
+            .collect(Collectors.toList());
+
+        doReturn(5L).when(this.consumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
+        doReturn(expected).when(this.consumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        Stream<ConsumerDTOArrayElement> result = this.consumerResource
+            .searchConsumers("username", null, null, null, null, null);
+
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        doReturn(5000L).when(this.consumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
+
+        assertThrows(BadRequestException.class, () -> this.consumerResource
+            .searchConsumers("username", null, null, null, null, null));
+    }
+
+    @Test
+    public void testFindConsumersByOwner() {
+        Owner owner = this.createOwner("test_owner");
+
+        List<Consumer> expected = Stream.generate(this::createConsumer)
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.consumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = this.consumerResource.searchConsumers(null, null,
+            owner.getKey(), null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.consumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertSame(owner, builder.getOwner());
+        assertNull(builder.getUsername());
+        assertNull(builder.getUuids());
+        assertNull(builder.getTypes());
+        assertNull(builder.getHypervisorIds());
+        assertNull(builder.getFacts());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @Test
+    public void testFindConsumersByUsername() {
+        String username = "test_user";
+
+        List<Consumer> expected = Stream.generate(this::createConsumer)
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.consumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = this.consumerResource.searchConsumers(username, null, null,
+            null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.consumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getOwner());
+        assertEquals(username, builder.getUsername());
+        assertNull(builder.getUuids());
+        assertNull(builder.getTypes());
+        assertNull(builder.getHypervisorIds());
+        assertNull(builder.getFacts());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @Test
+    public void testFindConsumersByUuid() {
+        List<String> uuids = Arrays.asList("uuid-1", "uuid-2", "uuid-3");
+
+        List<Consumer> expected = Stream.generate(this::createConsumer)
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.consumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = this.consumerResource.searchConsumers(null, null, null,
+            uuids, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.consumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getOwner());
+        assertNull(builder.getUsername());
+        assertEquals(uuids, builder.getUuids());
+        assertNull(builder.getTypes());
+        assertNull(builder.getHypervisorIds());
+        assertNull(builder.getFacts());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @Test
+    public void testFindConsumersByType() {
+        List<ConsumerType> types = Stream.generate(this::buildConsumerType)
+            .limit(3)
+            .collect(Collectors.toList());
+
+        Map<String, ConsumerType> typeMap = types.stream()
+            .collect(Collectors.toMap(ConsumerType::getLabel, Function.identity()));
+
+        doAnswer(new Answer<List<ConsumerType>>() {
+                @Override
+                public List<ConsumerType> answer(InvocationOnMock iom) throws Throwable {
+                    Set<String> labels = (Set<String>) iom.getArguments()[0];
+                    List<ConsumerType> output = new ArrayList<>();
+
+                    for (String label : labels) {
+                        if (typeMap.containsKey(label)) {
+                            output.add(typeMap.get(label));
+                        }
+                    }
+
+                    return output;
+                }
+            }).when(this.consumerTypeCurator).getByLabels(anySet());
+
+        List<Consumer> expected = Stream.generate(this::createConsumer)
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.consumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = this.consumerResource.searchConsumers(null, typeMap.keySet(),
+            null, null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.consumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getOwner());
+        assertNull(builder.getUsername());
+        assertNull(builder.getUuids());
+        // We need an order-agnostic check here, and Hamcrest's matcher is busted, so we have to
+        // do this one manually.
+        assertTrue(Util.collectionsAreEqual(types, builder.getTypes()));
+        assertNull(builder.getHypervisorIds());
+        assertNull(builder.getFacts());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @Test
+    public void testFindConsumersByHypervisorId() {
+        List<String> hids = Arrays.asList("hypervisor-1", "hypervisor-2", "hypervisor-3");
+
+        List<Consumer> expected = Stream.generate(this::createConsumer)
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.consumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = this.consumerResource.searchConsumers(null, null, null,
+            null, hids, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.consumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getOwner());
+        assertNull(builder.getUsername());
+        assertNull(builder.getUuids());
+        assertNull(builder.getTypes());
+        assertEquals(hids, builder.getHypervisorIds());
+        assertNull(builder.getFacts());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    private KeyValueParamDTO buildFactParam(String key, String value) {
+        return new KeyValueParamDTO()
+            .key(key)
+            .value(value);
+    }
+
+    @Test
+    public void testFindConsumersByFact() {
+        List<KeyValueParamDTO> factsParam = Arrays.asList(
+            this.buildFactParam("fact-1", "value-1a"),
+            this.buildFactParam("fact-1", "value-1b"),
+            this.buildFactParam("fact-2", "value-2"),
+            this.buildFactParam("fact-3", "value-3"));
+
+        Map<String, Collection<String>> factsMap = Map.of(
+            "fact-1", Set.of("value-1a", "value-1b"),
+            "fact-2", Set.of("value-2"),
+            "fact-3", Set.of("value-3"));
+
+        List<Consumer> expected = Stream.generate(this::createConsumer)
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.consumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = this.consumerResource.searchConsumers(null, null, null,
+            null, null, factsParam);
+
+        // Verify the input passthrough is working properly
+        verify(this.consumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertNull(builder.getOwner());
+        assertNull(builder.getUsername());
+        assertNull(builder.getUuids());
+        assertNull(builder.getTypes());
+        assertNull(builder.getHypervisorIds());
+        assertEquals(factsMap, builder.getFacts());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
     }
 
 }

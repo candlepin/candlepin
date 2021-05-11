@@ -17,10 +17,17 @@ package org.candlepin.auth.permissions;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Consumer_;
 import org.candlepin.model.Owner;
 
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Predicate;
+
+
 
 /**
  *
@@ -51,6 +58,18 @@ public class ConsumerPermission extends TypedPermission<Consumer> {
         if (entityClass.equals(Consumer.class)) {
             return Restrictions.idEq(consumer.getId());
         }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> Predicate getQueryRestriction(Class<T> entityClass, CriteriaBuilder builder, From<?, T> path) {
+        if (Consumer.class.equals(entityClass)) {
+            return builder.equal(((From<?, Consumer>) path).get(Consumer_.id), this.getConsumer().getId());
+        }
+
         return null;
     }
 

@@ -17,19 +17,30 @@ package org.candlepin.auth.permissions;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Consumer_;
 import org.candlepin.model.Environment;
+import org.candlepin.model.Environment_;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContent;
+import org.candlepin.model.OwnerContent_;
 import org.candlepin.model.OwnerProduct;
+import org.candlepin.model.OwnerProduct_;
+import org.candlepin.model.Owner_;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Pool_;
 import org.candlepin.model.activationkeys.ActivationKey;
+import org.candlepin.model.activationkeys.ActivationKey_;
 
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
 import java.io.Serializable;
 import java.util.Objects;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Predicate;
 
 
 
@@ -87,6 +98,36 @@ public class OwnerPermission implements Permission, Serializable {
         }
         else if (OwnerContent.class.equals(entityClass)) {
             return Restrictions.eq("owner", owner);
+        }
+
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> Predicate getQueryRestriction(Class<T> entityClass, CriteriaBuilder builder, From<?, T> path) {
+        if (Owner.class.equals(entityClass)) {
+            return builder.equal(((From<?, Owner>) path).get(Owner_.key), this.getOwner().getKey());
+        }
+        else if (Consumer.class.equals(entityClass)) {
+            return builder.equal(((From<?, Consumer>) path).get(Consumer_.ownerId), this.getOwner().getId());
+        }
+        else if (Pool.class.equals(entityClass)) {
+            return builder.equal(((From<?, Pool>) path).get(Pool_.owner), this.getOwner());
+        }
+        else if (ActivationKey.class.equals(entityClass)) {
+            return builder.equal(((From<?, ActivationKey>) path).get(ActivationKey_.owner), this.getOwner());
+        }
+        else if (Environment.class.equals(entityClass)) {
+            return builder.equal(((From<?, Environment>) path).get(Environment_.owner), this.getOwner());
+        }
+        else if (OwnerProduct.class.equals(entityClass)) {
+            return builder.equal(((From<?, OwnerProduct>) path).get(OwnerProduct_.owner), this.getOwner());
+        }
+        else if (OwnerContent.class.equals(entityClass)) {
+            return builder.equal(((From<?, OwnerContent>) path).get(OwnerContent_.owner), this.getOwner());
         }
 
         return null;

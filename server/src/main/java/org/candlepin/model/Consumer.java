@@ -198,6 +198,10 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "consumer", fetch = FetchType.LAZY)
     private Set<Entitlement> entitlements;
 
+    // TODO: FIXME:
+    // Hibernate has a known issue with map-backed element collections that contain entries with
+    // null values. Upon persist, and entries with null values will be silently discarded rather
+    // than persisted, even if the configuration explicitly allows such a thing.
     @ElementCollection
     @CollectionTable(name = "cp_consumer_facts", joinColumns = @JoinColumn(name = "cp_consumer_id"))
     @MapKeyColumn(name = "mapkey")
@@ -363,9 +367,13 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     /**
      * @param name the name of this consumer.
+     *
+     * @return
+     *  a reference to this consumer instance
      */
-    public void setName(String name) {
+    public Consumer setName(String name) {
         this.name = name;
+        return this;
     }
 
     /**
@@ -377,9 +385,13 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     /**
      * @param userName the userName to set
+     *
+     * @return
+     *  a reference to this consumer instance
      */
-    public void setUsername(String userName) {
+    public Consumer setUsername(String userName) {
         this.username = userName;
+        return this;
     }
 
     /**
@@ -394,10 +406,15 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      *
      * @param typeId
      *  The ID of the consumer type to use for this consumer
+     *
+     * @return
+     *  a reference to this consumer instance
      */
-    public void setTypeId(String typeId) {
+    public Consumer setTypeId(String typeId) {
         this.typeId = typeId;
         this.updateRHCloudProfileModified();
+
+        return this;
     }
 
     /**
@@ -405,13 +422,16 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      *
      * @param type
      *  The ConsumerType instance to use as the type for this consumer
+     *
+     * @return
+     *  a reference to this consumer instance
      */
-    public void setType(ConsumerType type) {
+    public Consumer setType(ConsumerType type) {
         if (type == null || type.getId() == null) {
             throw new IllegalArgumentException("type is null or has not been persisted");
         }
-        this.typeId = type.getId();
-        this.updateRHCloudProfileModified();
+
+        return this.setTypeId(type.getId());
     }
 
     /**
@@ -479,12 +499,16 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     /**
      * @param factsIn facts about this consumer.
+     *
+     * @return
+     *  a reference to this consumer instance
      */
-    public void setFacts(Map<String, String> factsIn) {
+    public Consumer setFacts(Map<String, String> factsIn) {
         if (this.checkForCloudProfileFacts(factsIn)) {
             this.updateRHCloudProfileModified();
         }
         facts = factsIn;
+        return this;
     }
 
     /**
@@ -856,13 +880,19 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     /**
      * @param hypervisorId the hypervisorId to set
+     *
+     * @return
+     *  a reference to this consumer instance
      */
-    public void setHypervisorId(HypervisorId hypervisorId) {
+    public Consumer setHypervisorId(HypervisorId hypervisorId) {
         if (hypervisorId != null) {
             hypervisorId.setConsumer(this);
         }
+
         this.hypervisorId = hypervisorId;
         this.updateRHCloudProfileModified();
+
+        return this;
     }
 
     @XmlTransient

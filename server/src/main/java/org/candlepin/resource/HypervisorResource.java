@@ -345,9 +345,12 @@ public class HypervisorResource implements HypervisorsApi {
         consumer.setOwner(owner);
 
         // Create HypervisorId
-        HypervisorId hypervisorId = new HypervisorId(consumer, owner, incHypervisorId);
-        hypervisorId.setOwner(owner);
-        consumer.setHypervisorId(hypervisorId);
+        HypervisorId hid = new HypervisorId()
+            .setOwner(owner)
+            .setConsumer(consumer)
+            .setHypervisorId(incHypervisorId);
+
+        consumer.setHypervisorId(hid);
 
         // Create Consumer
         return consumerResource.createConsumerFromDTO(

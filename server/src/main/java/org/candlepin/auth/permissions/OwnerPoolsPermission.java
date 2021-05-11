@@ -20,6 +20,12 @@ import org.candlepin.model.Owner;
 
 import org.hibernate.criterion.Criterion;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Predicate;
+
+
+
 /**
  * Grants access to view an owner's pools, as well as their backing subscriptions.
  */
@@ -47,6 +53,14 @@ public class OwnerPoolsPermission extends TypedPermission<Owner> {
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> Predicate getQueryRestriction(Class<T> entityClass, CriteriaBuilder builder, From<?, T> path) {
         return null;
     }
 

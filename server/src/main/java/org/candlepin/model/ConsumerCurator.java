@@ -18,7 +18,6 @@ import org.candlepin.auth.Principal;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.common.exceptions.BadRequestException;
 import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
@@ -27,7 +26,6 @@ import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Criteria;
@@ -38,11 +36,8 @@ import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
-import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.criterion.Subqueries;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +52,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.inject.Provider;
@@ -65,6 +63,14 @@ import javax.inject.Singleton;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.MapJoin;
+import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 
 
@@ -73,7 +79,102 @@ import javax.persistence.TypedQuery;
  */
 @Singleton
 public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
-    private static Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
+    private static final Logger log = LoggerFactory.getLogger(ConsumerCurator.class);
+
+    /** Defines the maximum number of consumer facts that can be provided for a single query */
+    public static final int MAX_CONSUMER_FACTS_PER_QUERY = 10;
+
+    /** Regular expression used to convert fact expressions to SQL-safe LIKE expressions */
+    private static final Pattern FACT_TRANSLATION_REGEX = Pattern.compile("(\\\\?+)([*?]|(?<=\\\\)\\\\)");
+
+    /**
+     * Container object for providing various arguments to the consumer lookup method(s).
+     */
+    public static class ConsumerQueryArguments extends QueryArguments<ConsumerQueryArguments> {
+
+        private Owner owner;
+        private String username;
+        private Collection<String> uuids;
+        private Collection<ConsumerType> types;
+        private Collection<String> hypervisorIds;
+        private Map<String, Collection<String>> facts;
+
+        public ConsumerQueryArguments setOwner(Owner owner) {
+            this.owner = owner;
+            return this;
+        }
+
+        public Owner getOwner() {
+            return this.owner;
+        }
+
+        public ConsumerQueryArguments setUsername(String username) {
+            this.username = username;
+            return this;
+        }
+
+        public String getUsername() {
+            return this.username;
+        }
+
+        public ConsumerQueryArguments setUuids(Collection<String> uuids) {
+            this.uuids = uuids;
+            return this;
+        }
+
+        public ConsumerQueryArguments setUuids(String... uuids) {
+            return this.setUuids(uuids != null ? Arrays.asList(uuids) : null);
+        }
+
+        public Collection<String> getUuids() {
+            return this.uuids;
+        }
+
+        public ConsumerQueryArguments setTypes(Collection<ConsumerType> types) {
+            this.types = types;
+            return this;
+        }
+
+        public ConsumerQueryArguments setTypes(ConsumerType... types) {
+            return this.setTypes(types != null ? Arrays.asList(types) : null);
+        }
+
+        public Collection<ConsumerType> getTypes() {
+            return this.types;
+        }
+
+        public ConsumerQueryArguments setHypervisorIds(Collection<String> hypervisorIds) {
+            this.hypervisorIds = hypervisorIds;
+            return this;
+        }
+
+        public ConsumerQueryArguments setHypervisorIds(String... hypervisorIds) {
+            return this.setHypervisorIds(hypervisorIds != null ? Arrays.asList(hypervisorIds) : null);
+        }
+
+        public Collection<String> getHypervisorIds() {
+            return this.hypervisorIds;
+        }
+
+        public ConsumerQueryArguments addFact(String fact, String value) {
+            if (fact == null || fact.isEmpty()) {
+                throw new IllegalArgumentException("fact is null or empty");
+            }
+
+            if (this.facts == null) {
+                this.facts = new HashMap<>();
+            }
+
+            this.facts.computeIfAbsent(fact, key -> new HashSet<>())
+                .add(value);
+
+            return this;
+        }
+
+        public Map<String, Collection<String>> getFacts() {
+            return this.facts;
+        }
+    }
 
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
@@ -706,7 +807,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .createAlias("consumer", "gconsumer")
             .add(Restrictions.eq("gconsumer.ownerId", ownerId))
             .add(guestIdCrit)
-            .addOrder(Order.desc("updated"))
+            .addOrder(org.hibernate.criterion.Order.desc("updated"))
             .setMaxResults(1)
             .setProjection(Projections.property("consumer"));
 
@@ -980,7 +1081,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .createAlias("hypervisorId", "hvsr")
             .add(Restrictions.eq("ownerId", ownerId))
             .add(this.getHypervisorIdRestriction(hypervisorIds))
-            .addOrder(Order.asc("hvsr.hypervisorId"))
+            .addOrder(org.hibernate.criterion.Order.asc("hvsr.hypervisorId"))
             .setFetchMode("type", FetchMode.SELECT);
 
         return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria)
@@ -1071,191 +1172,93 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return consumer;
     }
 
-    @SuppressWarnings("checkstyle:indentation")
-    public CandlepinQuery<Consumer> searchOwnerConsumers(Owner owner, String userName,
-        Collection<ConsumerType> types, List<String> uuids, List<String> hypervisorIds,
-        List<KeyValueParamDTO> factFilters, List<String> skus,
-        List<String> subscriptionIds, List<String> contracts) {
+    /**
+     * Fetches a collection of consumers based on the provided filter data in the query builder. If
+     * the query builder is null or contains no arguments, this method will return all known
+     * consumers.
+     *
+     * @param queryArgs
+     *  an ConsumerQueryArguments instance containing the various arguments or filters to use to
+     *  select consumers
+     *
+     * @return
+     *  a list of consumers matching the provided query arguments/filters
+     */
+    public List<Consumer> findConsumers(ConsumerQueryArguments queryArgs) {
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Consumer> criteriaQuery = criteriaBuilder.createQuery(Consumer.class);
 
-        DetachedCriteria crit = super.createSecureDetachedCriteria();
-        if (owner != null) {
-            crit.add(Restrictions.eq("ownerId", owner.getId()));
+        Root<Consumer> root = criteriaQuery.from(Consumer.class);
+        criteriaQuery.select(root)
+            .distinct(true);
+
+        List<Predicate> predicates = this.buildConsumerQueryPredicates(criteriaBuilder, root, queryArgs);
+        Predicate securityPredicate = this.getSecurityPredicate(Consumer.class, criteriaBuilder, root);
+
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
         }
 
-        if (userName != null && !userName.isEmpty()) {
-            crit.add(Restrictions.eq("username", userName));
+        if (!predicates.isEmpty()) {
+            criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
         }
 
-        if (types != null && !types.isEmpty()) {
-            Collection<String> typeIds = types.stream()
-                .filter(t -> t.getId() != null)
-                .map(ConsumerType::getId)
-                .collect(Collectors.toList());
-
-            crit.add(CPRestrictions.in("typeId", typeIds));
+        List<Order> order = this.buildJPAQueryOrder(criteriaBuilder, root, queryArgs);
+        if (order != null && order.size() > 0) {
+            criteriaQuery.orderBy(order);
         }
 
-        if (uuids != null && !uuids.isEmpty()) {
-            crit.add(CPRestrictions.in("uuid", uuids));
-        }
+        TypedQuery<Consumer> query = this.getEntityManager()
+            .createQuery(criteriaQuery);
 
-        if (hypervisorIds != null && !hypervisorIds.isEmpty()) {
-            // Cannot use Restrictions.in here because hypervisorId is case insensitive
-            Set<Criterion> ors = new HashSet<>();
-            for (String hypervisorId : hypervisorIds) {
-                ors.add(Restrictions.eq("hvsr.hypervisorId", hypervisorId.toLowerCase()));
+        if (queryArgs != null) {
+            Integer offset = queryArgs.getOffset();
+            if (offset != null && offset > 0) {
+                query.setFirstResult(offset);
             }
-            crit.createAlias("hypervisorId", "hvsr");
-            crit.add(Restrictions.or(ors.toArray(new Criterion[ors.size()])));
-        }
 
-        if (factFilters != null && !factFilters.isEmpty()) {
-            // Process the filters passed for the attributes
-            FilterBuilder factFilter = new FactFilterBuilder();
-            for (KeyValueParamDTO filterParam : factFilters) {
-                factFilter.addAttributeFilter(filterParam.getKey(), filterParam.getValue());
-            }
-            factFilter.applyTo(crit);
-        }
-
-        boolean hasSkus = (skus != null && !skus.isEmpty());
-        boolean hasSubscriptionIds = (subscriptionIds != null && !subscriptionIds.isEmpty());
-        boolean hasContractNumbers = (contracts != null && !contracts.isEmpty());
-
-        if (hasSkus || hasSubscriptionIds || hasContractNumbers) {
-            if (hasSkus) {
-                for (String sku : skus) {
-                    DetachedCriteria subCrit = DetachedCriteria.forClass(Consumer.class, "subquery_consumer");
-
-                    if (owner != null) {
-                        subCrit.add(Restrictions.eq("ownerId", owner.getId()));
-                    }
-
-                    subCrit.createCriteria("entitlements")
-                        .createCriteria("pool")
-                        .createCriteria("product")
-                        .createAlias("attributes", "attrib")
-                        .add(Restrictions.eq("id", sku))
-                        .add(Restrictions.eq("attrib.indices", "type"))
-                        .add(Restrictions.eq("attrib.elements", "MKT"));
-
-                    subCrit.add(Restrictions.eqProperty("this.id", "subquery_consumer.id"));
-
-                    crit.add(Subqueries.exists(
-                        subCrit.setProjection(Projections.property("subquery_consumer.name")))
-                    );
-                }
-            }
-            if (hasSubscriptionIds) {
-                for (String subId : subscriptionIds) {
-                    DetachedCriteria subCrit = DetachedCriteria.forClass(Consumer.class, "subquery_consumer");
-
-                    if (owner != null) {
-                        subCrit.add(Restrictions.eq("ownerId", owner.getId()));
-                    }
-
-                    subCrit.createCriteria("entitlements").createCriteria("pool")
-                        .createCriteria("sourceSubscription").add(Restrictions.eq("subscriptionId", subId));
-                    subCrit.add(Restrictions.eqProperty("this.id", "subquery_consumer.id"));
-
-                    crit.add(Subqueries.exists(
-                        subCrit.setProjection(Projections.property("subquery_consumer.name")))
-                    );
-                }
-            }
-            if (hasContractNumbers) {
-                for (String contract : contracts) {
-                    DetachedCriteria subCrit = DetachedCriteria.forClass(Consumer.class, "subquery_consumer");
-
-                    if (owner != null) {
-                        subCrit.add(Restrictions.eq("ownerId", owner.getId()));
-                    }
-
-                    subCrit.createCriteria("entitlements").createCriteria("pool").add(
-                        Restrictions.eq("contractNumber", contract)
-                    );
-                    subCrit.add(Restrictions.eqProperty("this.id", "subquery_consumer.id"));
-
-                    crit.add(Subqueries.exists(
-                        subCrit.setProjection(Projections.property("subquery_consumer.name")))
-                    );
-                }
+            Integer limit = queryArgs.getLimit();
+            if (limit != null && limit > 0) {
+                query.setMaxResults(limit);
             }
         }
 
-        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), crit);
+        return query.getResultList();
     }
 
-    /*
-     *  JPQL of below criteria can look like this.
-     *  If all parameters aren't passed then only sub-parts of it are returned.
+    /**
+     * Fetches the count of consumers matching the provided filter data in the query builder. If the
+     * query builder is null or contains no arguments, this method will return the count of all
+     * known consumers.
      *
-     *   select count(distinct c.id) from Consumer c join c.owner o
-     *       join c.type ct
-     *       join c.entitlements e
-     *       join e.pool po
-     *       join po.product pr
-     *       join pr.attributes pa
-     *       join po.sourceSubscription ss
-     *   where o.key = :key
-     *   and ct.label in (...)
-     *   and pr.id in (...)
-     *   and pa.name = 'type'
-     *   and pa.value = 'MKT'
-     *   and ss.subscriptionId in (...)
-     *   and po.contractNumber in (...)
+     * @param queryArgs
+     *  a ConsumerQueryArguments instance containing the various arguments or filters to use to count
+     *  consumers
      *
+     * @return
+     *  the number of consumers matching the provided query arguments/filters
      */
-    public int countConsumers(String ownerKey,
-        Collection<String> typeLabels, Collection<String> skus,
-        Collection<String> subscriptionIds, Collection<String> contracts) {
+    public long getConsumerCount(ConsumerQueryArguments queryArgs) {
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Long> criteriaQuery = criteriaBuilder.createQuery(Long.class);
 
-        if (ownerKey == null || ownerKey.isEmpty()) {
-            throw new IllegalArgumentException("Owner key can't be null or empty");
+        Root<Consumer> root = criteriaQuery.from(Consumer.class);
+        criteriaQuery.select(criteriaBuilder.countDistinct(root));
+
+        List<Predicate> predicates = this.buildConsumerQueryPredicates(criteriaBuilder, root, queryArgs);
+        Predicate securityPredicate = this.getSecurityPredicate(Consumer.class, criteriaBuilder, root);
+
+        if (securityPredicate != null) {
+            predicates.add(securityPredicate);
         }
 
-        Criteria crit = super.createSecureCriteria("c");
-
-        DetachedCriteria ownerCriteria = DetachedCriteria.forClass(Owner.class, "o")
-            .setProjection(Property.forName("o.id"))
-            .add(Restrictions.eq("o.key", ownerKey));
-        crit.add(Property.forName("c.ownerId").in(ownerCriteria));
-
-        if (!CollectionUtils.isEmpty(typeLabels)) {
-            DetachedCriteria typeQuery = DetachedCriteria.forClass(ConsumerType.class, "ctype")
-                .add(CPRestrictions.in("ctype.label", typeLabels))
-                .setProjection(Projections.id());
-
-            crit.add(Subqueries.propertyIn("c.typeId", typeQuery));
+        if (!predicates.isEmpty()) {
+            criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
         }
 
-        boolean hasSkus = !CollectionUtils.isEmpty(skus);
-        boolean hasSubscriptionIds = !CollectionUtils.isEmpty(subscriptionIds);
-        boolean hasContracts = !CollectionUtils.isEmpty(contracts);
-        if (hasSkus || hasSubscriptionIds || hasContracts) {
-            crit.createAlias("c.entitlements", "e").createAlias("e.pool", "po");
-        }
-
-        if (hasSkus) {
-            crit.createAlias("po.product", "pr")
-                .createAlias("pr.attributes", "pa")
-                .add(CPRestrictions.in("pr.id", skus))
-                .add(Restrictions.eq("pa.indices", "type"))
-                .add(Restrictions.eq("pa.elements", "MKT"));
-        }
-
-        if (hasSubscriptionIds) {
-            crit.createAlias("po.sourceSubscription", "ss")
-                .add(CPRestrictions.in("ss.subscriptionId", subscriptionIds));
-        }
-
-        if (hasContracts) {
-            crit.add(CPRestrictions.in("po.contractNumber", contracts));
-        }
-
-        crit.setProjection(Projections.countDistinct("c.id"));
-
-        return ((Long) crit.uniqueResult()).intValue();
+        return this.getEntityManager()
+            .createQuery(criteriaQuery)
+            .getSingleResult();
     }
 
     /**
@@ -1265,13 +1268,233 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * @param type the type of the Consumer to filter on.
      * @return the number of consumers based on the type.
      */
-    public int getConsumerCount(Owner owner, ConsumerType type) {
-        Criteria c = this.createSecureCriteria()
-            .add(Restrictions.eq("ownerId", owner.getId()))
-            .add(Restrictions.eq("typeId", type.getId()))
-            .setProjection(Projections.rowCount());
+    public long getConsumerCount(Owner owner, ConsumerType type) {
+        ConsumerQueryArguments builder = new ConsumerQueryArguments()
+            .setOwner(owner)
+            .setTypes(Collections.singleton(type));
 
-        return ((Long) c.uniqueResult()).intValue();
+        return this.getConsumerCount(builder);
+    }
+
+    /**
+     * Builds a collection of predicates to be used for querying consumers using the JPA criteria
+     * query API.
+     *
+     * @param critBuilder
+     *  the CriteriaBuilder instance to use to create predicates
+
+     * @param root
+     *  the root of the query, should be a reference to the Consumer root
+     *
+     * @param queryArgs
+     *  a ConsumerQueryArguments instance containing the various arguments or filters to use to select
+     *  consumers
+     *
+     * @return
+     *  a list of predicates to select consumers based on the query parameters provided
+     */
+    private List<Predicate> buildConsumerQueryPredicates(CriteriaBuilder criteriaBuilder, Root<Consumer> root,
+        ConsumerQueryArguments queryArgs) {
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        if (queryArgs != null) {
+            if (queryArgs.getOwner() != null) {
+                predicates.add(
+                    criteriaBuilder.equal(root.get(Consumer_.ownerId), queryArgs.getOwner().getId()));
+            }
+
+            if (queryArgs.getUsername() != null) {
+                predicates.add(
+                    criteriaBuilder.equal(root.get(Consumer_.username), queryArgs.getUsername()));
+            }
+
+            if (this.checkQueryArgumentCollection(queryArgs.getUuids())) {
+                predicates.add(root.get(Consumer_.uuid).in(queryArgs.getUuids()));
+            }
+
+            if (this.checkQueryArgumentCollection(queryArgs.getTypes())) {
+                List<String> typeIds = queryArgs.getTypes().stream()
+                    .map(ConsumerType::getId)
+                    .collect(Collectors.toList());
+
+                predicates.add(root.get(Consumer_.typeId).in(typeIds));
+            }
+
+            if (this.checkQueryArgumentCollection(queryArgs.getHypervisorIds())) {
+                // Impl note:
+                // This "case-insensitive" check is entirely dependent on a bit of code in the
+                // HypervisorId class which converts hypervisor IDs to lowercase.
+                List<String> lcaseHIDs = queryArgs.getHypervisorIds().stream()
+                    .filter(Objects::nonNull)
+                    .map(String::toLowerCase)
+                    .collect(Collectors.toList());
+
+                Predicate hidPredicate;
+
+                if (lcaseHIDs.isEmpty()) {
+                    // list contained nothing but nulls
+                    Join<Consumer, HypervisorId> hypervisor =
+                        root.join(Consumer_.hypervisorId, JoinType.LEFT);
+
+                    hidPredicate = hypervisor.get(HypervisorId_.hypervisorId).isNull();
+                }
+                else if (lcaseHIDs.size() < queryArgs.getHypervisorIds().size()) {
+                    // nulls + non-nulls
+                    Join<Consumer, HypervisorId> hypervisor =
+                        root.join(Consumer_.hypervisorId, JoinType.LEFT);
+
+                    hidPredicate = criteriaBuilder.or(hypervisor.get(HypervisorId_.hypervisorId).isNull(),
+                        hypervisor.get(HypervisorId_.hypervisorId).in(lcaseHIDs));
+                }
+                else {
+                    // non-nulls only
+                    Join<Consumer, HypervisorId> hypervisor = root.join(Consumer_.hypervisorId);
+                    hidPredicate = hypervisor.get(HypervisorId_.hypervisorId).in(lcaseHIDs);
+                }
+
+                predicates.add(hidPredicate);
+            }
+
+            Map<String, Collection<String>> facts = queryArgs.getFacts();
+            if (facts != null && !facts.isEmpty()) {
+                // Sanity check: make sure we don't have too many arguments for the backend to handle
+                // in a single query. 10 is well below the technical limits, but if we're hitting that
+                // we're probably doing something wrong, and this query will be sloooooooooow.
+                if (facts.size() > MAX_CONSUMER_FACTS_PER_QUERY) {
+                    throw new IllegalArgumentException("query arguments contains too many facts");
+                }
+
+                // Impl note:
+                // This behavior is kind of strange -- we use an implicit conjunction to combine
+                // facts of different keys, even though none of the other criteria function that way.
+                // However, until we're willing to break backward compatibility, this is how this
+                // part of the lookup needs to function.
+                facts.entrySet().stream()
+                    .map(entry -> this.buildConsumerFactPredicate(criteriaBuilder, root,
+                        entry.getKey(), entry.getValue()))
+                    .filter(Objects::nonNull)
+                    .forEach(predicates::add);
+            }
+        }
+
+        return predicates;
+    }
+
+    /**
+     * Builds a predicate for finding consumers with a fact containing one or more of the specified
+     * values.
+     *
+     * @param criteriaBuilder
+     *  the CriteriaBuilder to use to construct the predicate
+     *
+     * @param root
+     *  the Consumer root from which to build the predicate
+     *
+     * @param fact
+     *  the fact to use to select consumers
+     *
+     * @param values
+     *  a collection containing the desired values of the target fact
+     *
+     * @return
+     *  a predicate to be used for matching consumers by the specified fact and value
+     */
+    private Predicate buildConsumerFactPredicate(CriteriaBuilder criteriaBuilder, Root<Consumer> root,
+        String fact, Collection<String> values) {
+
+        // Impl note:
+        // Fact filtering is irritatingly complex. To maintain backward compatibility with endpoints
+        // that use this, we need to implement the following:
+        //  - For a given fact key, each unique value is combined via OR:
+        //      (mapkey = 'my_fact' AND (element = 'value1' OR element = 'value2' OR ...))
+        //  - Each given map key set is combined with an AND. This means each fact key
+        //    constitutes a correlated subquery or join
+        //  - Values are not compared with equals as indicated above, but with a custom
+        //    like statement that converts shell-style wildcards (* and ?) into like-compatible
+        //    wildcards, escaping any present like-native wildcards:
+        //      "myvalue*" => "myvalue%"
+        //      "%my_val?" => "!%my!_val_" (ESCAPE '!')
+        //  - Value comparison are case-insensitive at the query level, not collation :(
+        //  - The complexity with value comparison also applies to keys, sans case-insensitivity
+
+        // Ensure we have some kind of fact data to filter on
+        if (fact == null || fact.isEmpty() || values == null || values.isEmpty()) {
+            return null;
+        }
+
+        MapJoin<Consumer, String, String> consumerFacts = root.join(Consumer_.facts);
+
+        String keyExp = this.translateFactExpression(fact);
+        List<Predicate> valuePredicates = new ArrayList<>();
+
+        for (String value : values) {
+            String valueExp = this.translateFactExpression(value);
+
+            if (valueExp != null && !valueExp.isEmpty()) {
+                valuePredicates.add(criteriaBuilder.like(criteriaBuilder.lower(consumerFacts.value()),
+                    criteriaBuilder.lower(criteriaBuilder.literal(valueExp)), '!'));
+            }
+            else {
+                valuePredicates.add(criteriaBuilder.isNull(consumerFacts.value()));
+                valuePredicates.add(criteriaBuilder.equal(consumerFacts.value(), ""));
+            }
+        }
+
+        Predicate[] predicateArray = new Predicate[valuePredicates.size()];
+
+        return criteriaBuilder.and(
+            criteriaBuilder.like(consumerFacts.key(), keyExp, '!'),
+            criteriaBuilder.or(valuePredicates.toArray(predicateArray)));
+    }
+
+    /**
+     * Translates a fact expression from the external syntax with shell-style wildcards to an
+     * expression compatible with an SQL LIKE operation.
+     * <p></p>
+     * The following translations are performed by this operation:
+     *
+     * <ul>
+     *  <li>
+     *      LIKE-compatible wildcards and exclamation points (bangs) are escaped using an exclamation point:
+     *      "_" and "%" become "!_" and "!%" respectively
+     *  </li>
+     *  <li>
+     *      Shell-style wildcards that are not escaped with a backslash (\) are translated to LIKE-compatible
+     *      wildcards: "?" and "*" become "_" and "%" respectively
+     *  </li>
+     *  <li>
+     *      Escaped escapes (\\) are translated to a single backslash (\)
+     *  <li>
+     * </ul>
+     *
+     * Any other characters and sequences are left as-is (such as unrecognized escape sequences).
+     *
+     * @param expression
+     *  the fact expression to translate
+     *
+     * @return
+     *  the translated fact expression
+     */
+    private String translateFactExpression(String expression) {
+        if (expression != null && !expression.isEmpty()) {
+            Matcher matcher = FACT_TRANSLATION_REGEX.matcher(expression.replaceAll("([!_%])", "!$1"));
+            StringBuilder builder = new StringBuilder();
+
+            while (matcher.find()) {
+                if (!matcher.group(1).isEmpty()) {
+                    matcher.appendReplacement(builder, "$2");
+                }
+                else {
+                    matcher.appendReplacement(builder, "*".equals(matcher.group(2)) ? "%" : "_");
+                }
+            }
+
+            matcher.appendTail(builder);
+            return builder.toString();
+        }
+
+        return null;
     }
 
     public int getConsumerEntitlementCount(Owner owner, ConsumerType type) {

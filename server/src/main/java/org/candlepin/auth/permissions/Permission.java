@@ -20,6 +20,10 @@ import org.candlepin.model.Owner;
 
 import org.hibernate.criterion.Criterion;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Predicate;
+
 
 
 /**
@@ -47,6 +51,23 @@ public interface Permission {
      * @return The modified Criteria query to be run.
      */
     Criterion getCriteriaRestrictions(Class entityClass);
+
+    /**
+     * Fetches a predicate to add to a JPA query to limit the results.
+     *
+     * @param entityClass
+     *  the class of the entity being queried
+     *
+     * @param builder
+     *  a CriteriaBuilder instance to use to build predicates
+     *
+     * @param path
+     *  the path of the query from which to apply the predicates
+     *
+     * @return
+     *  a predicate to apply to a query to further limit the results based on this permission
+     */
+    <T> Predicate getQueryRestriction(Class<T> entityClass, CriteriaBuilder builder, From<?, T> path);
 
     /**
      * @return an owner if this permission is specific to one, otherwise null

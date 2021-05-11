@@ -252,8 +252,14 @@ public class HypervisorUpdateAction {
 
         if (consumer.getHypervisorId() == null) {
             log.debug("Existing hypervisor id is null, changing hypervisor id to [" + hypervisorId + "]");
-            consumer.setHypervisorId(new HypervisorId(consumer, owner, hypervisorId,
-                reporterId));
+
+            HypervisorId hid = new HypervisorId()
+                .setOwner(owner)
+                .setConsumer(consumer)
+                .setHypervisorId(hypervisorId)
+                .setReporterId(reporterId);
+
+            consumer.setHypervisorId(hid);
         }
         else if (!hypervisorId.equalsIgnoreCase(consumer.getHypervisorId().getHypervisorId())) {
             log.debug("New hypervisor id is different, Changing hypervisor id to [" + hypervisorId + "]");
@@ -342,12 +348,10 @@ public class HypervisorUpdateAction {
         consumer.setOwner(owner);
         consumer.setAutoheal(true);
         consumer.setCanActivate(subAdapter.canActivateSubscription(consumer));
-        if (owner.getDefaultServiceLevel() != null) {
-            consumer.setServiceLevel(owner.getDefaultServiceLevel());
-        }
-        else {
-            consumer.setServiceLevel("");
-        }
+        consumer.setServiceLevel(owner.getDefaultServiceLevel() != null ?
+            owner.getDefaultServiceLevel() :
+            "");
+
         if (principal != null) {
             consumer.setUsername(principal);
         }
@@ -357,8 +361,12 @@ public class HypervisorUpdateAction {
 
 
         // Create HypervisorId
-        HypervisorId hypervisorId = new HypervisorId(consumer, owner, incHypervisorId);
-        hypervisorId.setReporterId(reporterId);
+        HypervisorId hypervisorId = new HypervisorId()
+            .setOwner(owner)
+            .setConsumer(consumer)
+            .setHypervisorId(incHypervisorId)
+            .setReporterId(reporterId);
+
         consumer.setHypervisorId(hypervisorId);
 
         // TODO: Refactor this to not call resource methods directly

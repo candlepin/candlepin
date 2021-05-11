@@ -543,8 +543,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertThrows(NotFoundException.class, () ->
-            consumerResource.getEntitlementCertificates(consumer.getUuid(), null)
-        );
+            consumerResource.getEntitlementCertificates(consumer.getUuid(), null));
     }
 
     @Test
@@ -553,23 +552,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertThrows(ForbiddenException.class, () ->
-            consumerResource.searchConsumers(null, null, null, new ArrayList<>(), null, null)
-        );
-    }
-
-    @Test
-    public void testConsumerCannotListWithUuidsAndOtherParameters() {
-        Consumer consumer = TestUtil.createConsumer(standardSystemType, owner);
-        consumerCurator.create(consumer);
-
-        setupAdminPrincipal("admin");
-        securityInterceptor.enable();
-        List<String> uuidList = new ArrayList<>();
-        uuidList.add(consumer.getUuid());
-        assertThrows(BadRequestException.class, () -> consumerResource.searchConsumers("username",
-            toSet("typeLabel"),
-            owner.getKey(), uuidList, null, null)
-        );
+            consumerResource.searchConsumers(null, null, null, new ArrayList<>(), null, null));
     }
 
     @Test

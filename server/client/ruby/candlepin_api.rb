@@ -1007,14 +1007,11 @@ class Candlepin
     return get(path, params)
   end
 
-  def count_owner_consumers(owner_key, consumer_types=[], skus=[], subscription_ids=[], contracts=[])
+  def count_owner_consumers(owner_key, consumer_types=[])
     path = "/owners/#{owner_key}/consumers/count"
 
     params = {}
     params[:type] = consumer_types if !consumer_types.empty?
-    params[:sku] = skus if !skus.empty?
-    params[:subscription_id] = subscription_ids if !subscription_ids.empty?
-    params[:contract] = contracts if !contracts.empty?
 
     return get(path, params, accept_header=:json, dont_parse=true)
   end

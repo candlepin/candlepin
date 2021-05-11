@@ -19,7 +19,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.model.AsyncJobStatus.JobState;
-import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
+import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryArguments;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.Util;
 
@@ -321,10 +321,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobIds(jobIds);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -355,10 +355,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         jobIds.addAll(expectedJobIds);
         jobIds.addAll(extraneousJobIds);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobIds(jobIds);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -385,10 +385,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobKeys(jobKeys);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -414,10 +414,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobKeys(jobKeys);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -448,10 +448,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         jobKeys.addAll(expectedKeys);
         jobKeys.addAll(extraneousKeys);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobKeys(jobKeys);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -478,10 +478,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobStates(jobStates);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -507,10 +507,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobStates(jobStates);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -541,10 +541,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         jobStates.addAll(expectedStates);
         jobStates.addAll(extraneousStates);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobStates(jobStates);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -575,10 +575,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(ownerIds);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -609,10 +609,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(ownerIds);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -648,10 +648,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         ownerIds.addAll(expectedKeys);
         ownerIds.addAll(extraneousKeys);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(ownerIds);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -685,10 +685,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(ownerIds);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -720,10 +720,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(ownerIds);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -749,10 +749,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setEndDate(now);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -778,10 +778,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setStartDate(now);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -808,11 +808,11 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setStartDate(start)
             .setEndDate(end);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -839,10 +839,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .filter(job -> expected.contains(job.getPrincipalName()))
             .count();
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setPrincipalNames(query);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expectedCount, fetched.size());
@@ -868,10 +868,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .filter(job -> expected.contains(job.getOrigin()))
             .count();
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOrigins(query);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expectedCount, fetched.size());
@@ -897,10 +897,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .filter(job -> expected.contains(job.getExecutor()))
             .count();
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setExecutors(query);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expectedCount, fetched.size());
@@ -924,10 +924,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         assertTrue(offset > 0);
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOffset(offset);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
         List<AsyncJobStatus> allJobs = this.asyncJobCurator.findJobs(null);
 
         assertNotNull(fetched);
@@ -954,10 +954,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         assertTrue(limit > 0);
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setLimit(limit);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
         List<AsyncJobStatus> allJobs = this.asyncJobCurator.findJobs(null);
 
         assertNotNull(fetched);
@@ -978,10 +978,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
-            .setOrder(Arrays.asList(new AsyncJobStatusQueryBuilder.Order("id", false)));
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
+            .setOrder(Arrays.asList(new AsyncJobStatusQueryArguments.Order("id", false)));
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
 
@@ -1004,10 +1004,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
-            .setOrder(Arrays.asList(new AsyncJobStatusQueryBuilder.Order("id", true)));
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
+            .setOrder(Arrays.asList(new AsyncJobStatusQueryArguments.Order("id", true)));
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
 
@@ -1030,14 +1030,14 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
 
-        List<AsyncJobStatusQueryBuilder.Order> order = Arrays.asList(
-            new AsyncJobStatusQueryBuilder.Order("jobKey", false),
-            new AsyncJobStatusQueryBuilder.Order("id", true));
+        List<AsyncJobStatusQueryArguments.Order> order = Arrays.asList(
+            new AsyncJobStatusQueryArguments.Order("jobKey", false),
+            new AsyncJobStatusQueryArguments.Order("id", true));
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOrder(order);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
 
@@ -1061,10 +1061,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testFindJobsWithInvalidOrderKey() {
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
-            .setOrder(Arrays.asList(new AsyncJobStatusQueryBuilder.Order("bad_key", true)));
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
+            .setOrder(Arrays.asList(new AsyncJobStatusQueryArguments.Order("bad_key", true)));
 
-        assertThrows(InvalidOrderKeyException.class, () -> this.asyncJobCurator.findJobs(queryBuilder));
+        assertThrows(InvalidOrderKeyException.class, () -> this.asyncJobCurator.findJobs(queryArgs));
     }
 
     @Test
@@ -1104,7 +1104,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobKeys(jobKeys)
             .setJobStates(jobStates)
             .setOwnerIds(ownerIds)
@@ -1114,7 +1114,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .setStartDate(start)
             .setEndDate(end);
 
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(expected, fetched.size());
@@ -1138,8 +1138,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryBuilder);
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments();
+        List<AsyncJobStatus> fetched = this.asyncJobCurator.findJobs(queryArgs);
 
         assertNotNull(fetched);
         assertEquals(created.size(), fetched.size());
@@ -1184,10 +1184,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .map(job -> job.getId())
             .collect(Collectors.toList());
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobIds(jobIds);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(expected.size(), deleted);
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1221,10 +1221,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         jobIds.addAll(expectedJobIds);
         jobIds.addAll(extraneousJobIds);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobIds(jobIds);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(expected.size(), deleted);
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1252,10 +1252,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobKeys(jobKeys);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1283,10 +1283,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobKeys(jobKeys);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1319,10 +1319,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         jobKeys.addAll(expectedKeys);
         jobKeys.addAll(extraneousKeys);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobKeys(jobKeys);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1350,10 +1350,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobStates(jobStates);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1381,10 +1381,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobStates(jobStates);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1417,10 +1417,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         jobStates.addAll(expectedStates);
         jobStates.addAll(extraneousStates);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobStates(jobStates);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1452,10 +1452,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(ownerIds);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1487,10 +1487,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(ownerIds);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1527,10 +1527,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         ownerIds.addAll(expectedKeys);
         ownerIds.addAll(extraneousKeys);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(ownerIds);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1563,10 +1563,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(ownerIds);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1600,10 +1600,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(ownerIds);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1631,10 +1631,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setEndDate(now);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1662,10 +1662,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setStartDate(now);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1694,11 +1694,11 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setStartDate(start)
             .setEndDate(end);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1726,10 +1726,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .filter(job -> expected.contains(job.getPrincipalName()))
             .collect(Collectors.toList());
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setPrincipalNames(query);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(toDelete.size(), deleted);
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1757,10 +1757,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .filter(job -> expected.contains(job.getOrigin()))
             .collect(Collectors.toList());
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOrigins(query);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(toDelete.size(), deleted);
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1788,10 +1788,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .filter(job -> expected.contains(job.getExecutor()))
             .collect(Collectors.toList());
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setExecutors(query);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(toDelete.size(), deleted);
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1840,7 +1840,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expected.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobKeys(jobKeys)
             .setJobStates(jobStates)
             .setOwnerIds(ownerIds)
@@ -1850,7 +1850,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .setStartDate(start)
             .setEndDate(end);
 
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
         assertEquals(deleted, expected.size());
 
         List<AsyncJobStatus> remaining = this.asyncJobCurator.listAll().list();
@@ -1870,8 +1870,8 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
-        int deleted = this.asyncJobCurator.deleteJobs(queryBuilder);
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments();
+        int deleted = this.asyncJobCurator.deleteJobs(queryArgs);
 
         // The sanity check should cause this to delete nothing.
         assertEquals(0, deleted);
@@ -1904,11 +1904,6 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             assertTrue(created.contains(job));
         }
     }
-
-
-
-
-
 
     /**
      * Validates the job states by checking that the jobs in the provided map have been updated to the
@@ -1963,10 +1958,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .map(job -> job.getId())
             .collect(Collectors.toList());
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobIds(expectedJobIds);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -1995,10 +1990,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         jobIds.addAll(expectedJobIds);
         jobIds.addAll(extraneousJobIds);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobIds(jobIds);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(extraneousJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2029,10 +2024,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobKeys(combined);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2063,10 +2058,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobKeys(combined);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2097,10 +2092,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobKeys(combined);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2131,10 +2126,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobStates(combined);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2165,10 +2160,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobStates(combined);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2199,10 +2194,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobStates(combined);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2233,10 +2228,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(combined);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2267,10 +2262,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(combined);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2301,10 +2296,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(combined);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2331,10 +2326,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(expected);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2365,10 +2360,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOwnerIds(combined);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2395,10 +2390,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setEndDate(now);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2425,10 +2420,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setStartDate(now);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2456,11 +2451,11 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setStartDate(start)
             .setEndDate(end);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2487,10 +2482,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .map(job -> job.getId())
             .collect(Collectors.toList());
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setPrincipalNames(query);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2517,10 +2512,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .map(job -> job.getId())
             .collect(Collectors.toList());
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setOrigins(query);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2547,10 +2542,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .map(job -> job.getId())
             .collect(Collectors.toList());
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setExecutors(query);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2600,7 +2595,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         assertTrue(expectedJobIds.size() > 0);
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobKeys(jobKeys)
             .setJobStates(jobStates)
             .setOwnerIds(ownerIds)
@@ -2610,7 +2605,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .setStartDate(start)
             .setEndDate(end);
 
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
@@ -2628,10 +2623,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             jobMap.put(job.getId(), job);
         }
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder();
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments();
 
         // The sanity check should cause this to update nothing.
-        int updated = this.asyncJobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
         assertEquals(0, updated);
 
         this.validateJobStates(jobMap, Arrays.asList(), JobState.ABORTED);

@@ -14,14 +14,13 @@
  */
 package org.candlepin.model;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItem;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.permissions.Permission;
 import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.test.DatabaseTestFixture;
 
@@ -35,12 +34,22 @@ import org.junit.jupiter.params.provider.MethodSource;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+
+
 
 /**
  * AbstractHibernateCuratorTest
@@ -71,6 +80,17 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         @Override
         public Collection<E> lockAndLoad(Class<E> entityClass, Iterable<? extends Serializable> ids) {
             return super.lockAndLoad(entityClass, ids);
+        }
+
+        @Override
+        public boolean checkQueryArgumentCollection(Collection<?> collection) {
+            return super.checkQueryArgumentCollection(collection);
+        }
+
+        @Override
+        public <T> Predicate getSecurityPredicate(Class<T> entityClass, CriteriaBuilder builder,
+            From<?, T> root) {
+            return super.getSecurityPredicate(entityClass, builder, root);
         }
     }
 
@@ -832,7 +852,177 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         assertFalse(this.testOwnerCurator.exists("randomOwnerId"));
         assertTrue(this.environmentCurator.exists(environment.getId()));
         assertFalse(this.environmentCurator.exists("randomEnvId"));
+    }
 
+    @Test
+    public void testCheckQueryArgumentCollection() {
+        List<Double> collection = Stream.generate(Math::random)
+            .limit(5)
+            .collect(Collectors.toList());
+
+        TestHibernateCurator<?> curator = new TestHibernateCurator<>(Owner.class);
+        boolean result = curator.checkQueryArgumentCollection(collection);
+
+        assertTrue(result);
+    }
+
+    @Test
+    public void testCheckQueryArgumentCollectionWithNull() {
+        TestHibernateCurator<?> curator = new TestHibernateCurator<>(Owner.class);
+        boolean result = curator.checkQueryArgumentCollection(null);
+
+        assertFalse(result);
+    }
+
+    @Test
+    public void testCheckQueryArgumentCollectionWithEmpty() {
+        List<?> collection = Collections.emptyList();
+
+        TestHibernateCurator<?> curator = new TestHibernateCurator<>(Owner.class);
+        boolean result = curator.checkQueryArgumentCollection(collection);
+
+        assertFalse(result);
+    }
+
+    @Test
+    public void testCheckQueryArgumentCollectionFailsWithTooManyElements() {
+        List<Double> collection = Stream.generate(Math::random)
+            .limit(QueryArguments.COLLECTION_SIZE_LIMIT + 1)
+            .collect(Collectors.toList());
+
+        TestHibernateCurator<?> curator = new TestHibernateCurator<>(Owner.class);
+        assertThrows(IllegalArgumentException.class, () -> curator.checkQueryArgumentCollection(collection));
+    }
+
+    @Test
+    public void testGetSecurityPredicateWithNoPrincipal() {
+        TestHibernateCurator<?> curator = spy(new TestHibernateCurator<>(Owner.class));
+        doReturn(null).when(curator).getPrincipal();
+
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> criteriaQuery = criteriaBuilder.createQuery(Owner.class);
+        Root<Owner> root = criteriaQuery.from(Owner.class);
+
+        Predicate result = curator.getSecurityPredicate(Owner.class, criteriaBuilder, root);
+
+        assertNull(result);
+    }
+
+    private Principal mockPrincipal(boolean superAdmin, Permission... permissions) {
+        Principal principal = mock(Principal.class);
+
+        List<Permission> plist = permissions != null && permissions.length > 0 ?
+            Arrays.asList(permissions) :
+            new LinkedList<>();
+
+        doReturn(superAdmin).when(principal).hasFullAccess();
+        doReturn(plist).when(principal).getPermissions();
+
+        return principal;
+    }
+
+    @Test
+    public void testGetSecurityPredicateWithSuperAdminPrincipal() {
+        Principal mockPrincipal = this.mockPrincipal(true);
+
+        TestHibernateCurator<?> curator = spy(new TestHibernateCurator<>(Owner.class));
+        this.injectMembers(curator);
+        doReturn(mockPrincipal).when(curator).getPrincipal();
+
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> criteriaQuery = criteriaBuilder.createQuery(Owner.class);
+        Root<Owner> root = criteriaQuery.from(Owner.class);
+
+        Predicate result = curator.getSecurityPredicate(Owner.class, criteriaBuilder, root);
+
+        assertNull(result);
+    }
+
+    @Test
+    public void testGetSecurityPredicateWithNoRestrictivePermissions() {
+        Permission mockPermission1 = mock(Permission.class);
+        Permission mockPermission2 = mock(Permission.class);
+        // impl note: we don't need to do anything more with these permission mocks, as the
+        // default non-restrictive result is null already.
+        Principal mockPrincipal = this.mockPrincipal(false, mockPermission1, mockPermission2);
+
+        TestHibernateCurator<?> curator = spy(new TestHibernateCurator<>(Owner.class));
+        this.injectMembers(curator);
+        doReturn(mockPrincipal).when(curator).getPrincipal();
+
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> criteriaQuery = criteriaBuilder.createQuery(Owner.class);
+        Root<Owner> root = criteriaQuery.from(Owner.class);
+
+        Predicate result = curator.getSecurityPredicate(Owner.class, criteriaBuilder, root);
+
+        assertNull(result);
+    }
+
+    @Test
+    public void testGetSecurityPredicateWithSingleRestrictivePermission() {
+        Permission mockPermission1 = mock(Permission.class);
+        Permission mockPermission2 = mock(Permission.class);
+        Principal mockPrincipal = this.mockPrincipal(false, mockPermission1, mockPermission2);
+
+        TestHibernateCurator<?> curator = spy(new TestHibernateCurator<>(Owner.class));
+        this.injectMembers(curator);
+        doReturn(mockPrincipal).when(curator).getPrincipal();
+
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> criteriaQuery = criteriaBuilder.createQuery(Owner.class);
+        Root<Owner> root = criteriaQuery.from(Owner.class);
+
+        Predicate permissionPredicate = criteriaBuilder.equal(root.get(Owner_.key), "some key");
+
+        doReturn(permissionPredicate).when(mockPermission2)
+            .getQueryRestriction(Owner.class, criteriaBuilder, root);
+
+        Predicate result = curator.getSecurityPredicate(Owner.class, criteriaBuilder, root);
+
+        assertNotNull(result);
+
+        if (result != permissionPredicate) {
+            // If the predicate wasn't passed through, it needs to be wrapped in an OR like
+            // the multi-predicate case.
+            assertEquals(Predicate.BooleanOperator.OR, result.getOperator());
+            assertEquals(1, result.getExpressions().size());
+            assertThat(result.getExpressions(), hasItem(permissionPredicate));
+        }
+        else {
+            // In this single-predicate case, that one predicate being passed through is valid
+        }
+    }
+
+    @Test
+    public void testGetSecurityPredicateWithMultipleRestrictivePermissions() {
+        Permission mockPermission1 = mock(Permission.class);
+        Permission mockPermission2 = mock(Permission.class);
+        Principal mockPrincipal = this.mockPrincipal(false, mockPermission1, mockPermission2);
+
+        TestHibernateCurator<?> curator = spy(new TestHibernateCurator<>(Owner.class));
+        this.injectMembers(curator);
+        doReturn(mockPrincipal).when(curator).getPrincipal();
+
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Owner> criteriaQuery = criteriaBuilder.createQuery(Owner.class);
+        Root<Owner> root = criteriaQuery.from(Owner.class);
+
+        Predicate permissionPredicate1 = criteriaBuilder.equal(root.get(Owner_.id), "some id");
+        Predicate permissionPredicate2 = criteriaBuilder.equal(root.get(Owner_.key), "some key");
+
+        doReturn(permissionPredicate1).when(mockPermission1)
+            .getQueryRestriction(Owner.class, criteriaBuilder, root);
+        doReturn(permissionPredicate2).when(mockPermission2)
+            .getQueryRestriction(Owner.class, criteriaBuilder, root);
+
+        Predicate result = curator.getSecurityPredicate(Owner.class, criteriaBuilder, root);
+
+        assertNotNull(result);
+        assertEquals(Predicate.BooleanOperator.OR, result.getOperator());
+        assertEquals(2, result.getExpressions().size());
+        assertThat(result.getExpressions(), hasItem(permissionPredicate1));
+        assertThat(result.getExpressions(), hasItem(permissionPredicate2));
     }
 
 }

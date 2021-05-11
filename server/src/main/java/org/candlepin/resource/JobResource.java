@@ -33,7 +33,7 @@ import org.candlepin.dto.api.v1.SchedulerStatusDTO;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
-import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
+import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryArguments;
 import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -50,7 +50,6 @@ import org.xnap.commons.i18n.I18n;
 
 import java.time.OffsetDateTime;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -156,7 +155,7 @@ public class JobResource implements JobsApi {
         // TODO: Should we bother checking the other params as well? Seems like they're
         // self-validating
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobIds(ids)
             .setJobKeys(keys)
             .setJobStates(jobStates)
@@ -167,6 +166,8 @@ public class JobResource implements JobsApi {
             .setStartDate(after != null ? new Date(after.toInstant().toEpochMilli())  : null)
             .setEndDate(before != null ? new Date(before.toInstant().toEpochMilli())  : null);
 
+        int count = (int) this.jobCurator.getJobCount(queryArgs);
+
         // Do paging bits, if necessary
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
         if (pageRequest != null) {
@@ -174,23 +175,23 @@ public class JobResource implements JobsApi {
             page.setPageRequest(pageRequest);
 
             if (pageRequest.isPaging()) {
-                queryBuilder.setOffset((pageRequest.getPage() - 1) * pageRequest.getPerPage())
+                queryArgs.setOffset((pageRequest.getPage() - 1) * pageRequest.getPerPage())
                     .setLimit(pageRequest.getPerPage());
             }
 
             if (pageRequest.getSortBy() != null) {
-                queryBuilder.setOrder(Collections.singleton(new AsyncJobStatusQueryBuilder.Order(
-                    pageRequest.getSortBy(), pageRequest.getOrder() == PageRequest.Order.DESCENDING)));
+                boolean reverse = pageRequest.getOrder() == PageRequest.Order.DESCENDING;
+                queryArgs.addOrder(pageRequest.getSortBy(), reverse);
             }
 
-            page.setMaxRecords((int) this.jobCurator.getJobCount(queryBuilder));
+            page.setMaxRecords(count);
 
             // Store the page for the LinkHeaderResponseFilter
             ResteasyContext.pushContext(Page.class, page);
         }
         // If no paging was specified, force a limit on amount of results
         else {
-            if (this.jobCurator.getJobCount(queryBuilder) > MAX_JOB_RESULTS) {
+            if (count > MAX_JOB_RESULTS) {
                 String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
                     "results at a time, please use paging.", MAX_JOB_RESULTS);
                 throw new BadRequestException(errmsg);
@@ -198,7 +199,7 @@ public class JobResource implements JobsApi {
         }
 
         try {
-            return this.jobManager.findJobs(queryBuilder).stream()
+            return this.jobManager.findJobs(queryArgs).stream()
                 .map(this.translator.getStreamMapper(AsyncJobStatus.class, AsyncJobStatusDTO.class));
         }
         catch (InvalidOrderKeyException e) {
@@ -277,7 +278,7 @@ public class JobResource implements JobsApi {
         // TODO: Should we bother checking the other params as well? Seems like they're
         // self-validating
 
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobIds(ids)
             .setJobKeys(keys)
             .setJobStates(jobStates)
@@ -293,10 +294,10 @@ public class JobResource implements JobsApi {
         if (force) {
             // If we're forcing the cleanup (see: deletion), skip the job manager and go right to
             // the DB, doing whatever unchecked badness the user has decided to do with this.
-            count = this.jobCurator.deleteJobs(queryBuilder);
+            count = this.jobCurator.deleteJobs(queryArgs);
         }
         else {
-            count = this.jobManager.cleanupJobs(queryBuilder);
+            count = this.jobManager.cleanupJobs(queryArgs);
         }
 
         return count;

@@ -69,7 +69,11 @@ import javax.persistence.OptimisticLockException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+
+
 
 /**
  * AbstractHibernateCurator base class for all Candlepin curators. Curators are
@@ -429,6 +433,17 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
+     * Fetches the principal for the current request or scope. If the scope does not have a
+     * principal, this method returns null.
+     *
+     * @return
+     *  the principal for the current scope
+     */
+    protected Principal getPrincipal() {
+        return this.principalProvider.get();
+    }
+
+    /**
      * Gives the permissions a chance to add aliases and then restrictions to the query.
      * Uses an "or" so a principal could carry permissions for multiple owners
      * (for example), but still have their results filtered without one of the perms
@@ -547,7 +562,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      *  necessary.
      */
     protected Criterion getSecureCriteriaRestrictions(Class entityClass) {
-        Principal principal = this.principalProvider.get();
+        Principal principal = this.getPrincipal();
         Criterion restrictions = null;
 
         // If we do not yet have a principal (during authentication) or the principal has full
@@ -567,6 +582,69 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
 
         return restrictions;
+    }
+
+    /**
+     * Builds the security predicate for the given entity class using the provided builder and query
+     * root. If the current principal does not require a security predicate, this method returns
+     * null.
+     *
+     * @param entityClass
+     *  the entity class for which to build the security predicate
+     *
+     * @param builder
+     *  a CriteriaBuilder instance to use to build the security predicate
+     *
+     * @param root
+     *  the root path to use to build the security predicate
+     *
+     * @throws IllegalArgumentException
+     *  if entityClass, builder, or root are null
+     *
+     * @return
+     *  the security predicate to apply to a query, or null if the current principal does not
+     *  require any query restrictions
+     */
+    protected <T> Predicate getSecurityPredicate(Class<T> entityClass, CriteriaBuilder builder,
+        From<?, T> root) {
+
+        if (entityClass == null) {
+            throw new IllegalArgumentException("entityClass is null");
+        }
+
+        if (builder == null) {
+            throw new IllegalArgumentException("builder is null");
+        }
+
+        if (root == null) {
+            throw new IllegalArgumentException("root is null");
+        }
+
+        Principal principal = this.getPrincipal();
+        Predicate predicate = null;
+
+        if (principal != null && !principal.hasFullAccess()) {
+            List<Predicate> predicates = new ArrayList<>();
+
+            for (Permission permission : principal.getPermissions()) {
+                Predicate restriction = permission.getQueryRestriction(entityClass, builder, root);
+
+                if (restriction != null) {
+                    log.debug("Received restriction predicate from permission {} for {}: {}",
+                        permission, entityClass, restriction);
+
+                    predicates.add(restriction);
+                }
+            }
+
+            if (!predicates.isEmpty()) {
+                predicate = predicates.size() > 1 ?
+                    builder.or(predicates.toArray(new Predicate[predicates.size()])) :
+                    predicates.get(0);
+            }
+        }
+
+        return predicate;
     }
 
     @SuppressWarnings("unchecked")
@@ -1479,5 +1557,72 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
 
         return blockList;
+    }
+
+    /**
+     * Checks if the given collection contains data to be applied to the query and, if so, verifies
+     * that the size of the collection is below safe limits for execution.
+     *
+     * @param collection
+     *  the collection to check
+     *
+     * @throws IllegalArgumentException
+     *  if the collection contains more elements than are allowed in a query built from the query
+     *  builder
+     *
+     * @return
+     *  true if the collection contains data to be added to the query; false otherwise
+     */
+    protected boolean checkQueryArgumentCollection(Collection<?> collection) {
+        if (collection != null && !collection.isEmpty()) {
+            if (collection.size() > QueryArguments.COLLECTION_SIZE_LIMIT) {
+                // TODO: Do we have a better exception to throw here?
+                throw new IllegalArgumentException("Collection contains too many elements");
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Builds a collection of order instances to be used with the JPA criteria query API.
+     *
+     * @param critBuilder
+     *  the CriteriaBuilder instance to use to create order
+
+     * @param root
+     *  the root of the query
+     *
+     * @param queryArguments
+     *  a QueryArguments instance containing the ordering information
+     *
+     * @throws InvalidOrderKeyException
+     *  if an order is provided referencing an attribute name (key) that does not exist
+     *
+     * @return
+     *  a list of order instances to sort the query results
+     */
+    protected List<javax.persistence.criteria.Order> buildJPAQueryOrder(CriteriaBuilder criteriaBuilder,
+        Root<?> root, QueryArguments<?> queryArguments) {
+
+        List<javax.persistence.criteria.Order> orderList = new ArrayList<>();
+
+        if (queryArguments != null && queryArguments.getOrder() != null) {
+            for (QueryArguments.Order order : queryArguments.getOrder()) {
+                try {
+                    orderList.add(order.reverse() ?
+                        criteriaBuilder.desc(root.get(order.column())) :
+                        criteriaBuilder.asc(root.get(order.column())));
+                }
+                catch (IllegalArgumentException e) {
+                    String errmsg = String.format("Invalid attribute key: %s", order.column());
+                    throw new InvalidOrderKeyException(errmsg, e);
+                }
+            }
+        }
+
+        return orderList;
     }
 }
