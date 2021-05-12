@@ -1846,7 +1846,7 @@ public class ConsumerResource {
         }
 
         consumerRules.onConsumerDelete(toDelete);
-
+        contentAccessManager.removeContentAccessCert(toDelete);
         Event event = eventFactory.consumerDeleted(toDelete);
         consumerCurator.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
