@@ -1072,6 +1072,26 @@ describe 'Owner Resource Future Pool Tests' do
     end.should raise_exception(RestClient::BadRequest)
   end
 
+  it 'can consume future pools' do
+    user = user_client(@owner, 'username')
+    consumer = consumer_client(user, random_string('consumer'))
+
+    consumer.consume_pool(@future_pool1['id'])
+  end
+
+  it 'can fetch consumer future pools with entitlements' do
+    user = user_client(@owner, 'username')
+    consumer = user.register(random_string('consumer'), :system, nil, {}, nil, @owner['key'])
+    consumer_client = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
+
+    consumer_client.consume_pool(@future_pool1['id'])
+
+    test_date = @now + 350
+    pools = consumer_client.list_owner_pools(@owner['key'], {:consumer => consumer['uuid'], :after => test_date.to_s})
+    expect(pools.length).to eq(1)
+    expect(pools[0]['id']).to eq(@future_pool2['id'])
+  end
+
 end
 
 describe 'Owner Resource counting feature' do
