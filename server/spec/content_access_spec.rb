@@ -1039,4 +1039,22 @@ describe 'Content Access' do
     expect(status['status']).to eq("disabled")
   end
 
+  it 'should revoke sca certs upon un-registration' do
+    consumer = consumer_client(@user, @consumername, type=:system, username=nil,
+      facts= {'system.certificate_version' => '3.3'})
+    certs = consumer.list_certificates()
+
+    expect(certs.length).to eq(1)
+
+    cert_serial = certs[0]['serial']
+
+    expect(cert_serial).to_not be_nil
+    expect(cert_serial.revoked).to be(false)
+
+    consumer.unregister(consumer.uuid)
+    serial_after_unregistration = @cp.get_serial(cert_serial.id)
+
+    expect(serial_after_unregistration.revoked).to be(true)
+  end
+
 end

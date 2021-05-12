@@ -663,12 +663,10 @@ public class ContentAccessManager {
 
     @Transactional
     public void removeContentAccessCert(Consumer consumer) {
-        if (consumer.getContentAccessCert() == null) {
-            return;
+        if (consumer.getContentAccessCert() != null) {
+            this.contentAccessCertificateCurator.delete(consumer.getContentAccessCert());
+            consumer.setContentAccessCert(null);
         }
-
-        this.contentAccessCertificateCurator.delete(consumer.getContentAccessCert());
-        consumer.setContentAccessCert(null);
     }
 
 
