@@ -1551,10 +1551,6 @@ public class OwnerResource {
                     i18n.tr("The flags add_future and only_future cannot be used with the parameter after."));
         }
 
-        if (after != null) {
-            activeOn = null;
-        }
-
         // Process the filters passed for the attributes
         PoolFilterBuilder poolFilters = new PoolFilterBuilder();
         for (KeyValueParameter filterParam : attrFilters) {
@@ -1572,8 +1568,8 @@ public class OwnerResource {
         }
 
         Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(
-            c, key, owner.getId(), productId, subscriptionId, activeOn, listAll, poolFilters, pageRequest,
-            addFuture, onlyFuture, after);
+            c, key, owner.getId(), productId, subscriptionId, after == null ? activeOn : null, listAll,
+            poolFilters, pageRequest, addFuture, onlyFuture, after);
 
         List<Pool> poolList = page.getPageData();
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOn);
