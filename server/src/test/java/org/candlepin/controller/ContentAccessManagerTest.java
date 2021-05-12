@@ -282,6 +282,14 @@ public class ContentAccessManagerTest {
         return environment;
     }
 
+    private ContentAccessCertificate mockContentAccessCertificate(Consumer consumer) {
+        ContentAccessCertificate cert = new ContentAccessCertificate();
+        cert.setId("123456789");
+        cert.setKey("test-key");
+        cert.setConsumer(consumer);
+        return cert;
+    }
+
     @Test
     public void testContentAccessModeResolveNameWithValidNames() {
         ContentAccessMode output = ContentAccessMode.resolveModeName(entitlementMode);
@@ -676,5 +684,18 @@ public class ContentAccessManagerTest {
 
         verify(this.x509V3ExtensionUtil, times(1)).mapProduct(any(Product.class), any(Product.class),
             eq(expectedPrefix), any(Map.class), any(Consumer.class), any(Pool.class), any(Set.class));
+    }
+
+    @Test
+    public void testRemoveContentAccessCert() {
+        Owner owner = this.mockOwner();
+        Consumer consumer = this.mockConsumer(owner);
+        ContentAccessManager manager = this.createManager();
+        ContentAccessCertificate cert = this.mockContentAccessCertificate(consumer);
+        consumer.setContentAccessCert(cert);
+        doNothing().when(this.mockContentAccessCertCurator).delete(any(ContentAccessCertificate.class));
+        manager.removeContentAccessCert(consumer);
+
+        assertNull(consumer.getContentAccessCert());
     }
 }
