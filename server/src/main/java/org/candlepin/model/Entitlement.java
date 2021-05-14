@@ -359,9 +359,13 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
     }
 
     @XmlTransient
-    public boolean isValidOnDate(Date d) {
-        return (d.after(this.getStartDate()) || d.equals(this.getStartDate())) &&
-            (d.before(this.getEndDate()) || d.equals(this.getEndDate()));
+    public boolean isValidOnDate(Date date) {
+        if (date == null) {
+            throw new IllegalArgumentException("date is null");
+        }
+
+        return (date.after(this.getStartDate()) || date.equals(this.getStartDate())) &&
+            (date.before(this.getEndDate()) || date.equals(this.getEndDate()));
     }
 
     @XmlTransient
