@@ -78,6 +78,7 @@ import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
@@ -89,6 +90,7 @@ import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
+import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
@@ -166,6 +168,7 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.PersistenceException;
 import javax.ws.rs.core.GenericType;
@@ -179,6 +182,9 @@ public class OwnerResource implements OwnersApi {
     private static Logger log = LoggerFactory.getLogger(OwnerResource.class);
 
     private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
+
+    /** The maximum number of consumers to return per list or find request */
+    private static final int MAX_CONSUMERS_PER_REQUEST = 1000;
 
     private OwnerCurator ownerCurator;
     private OwnerInfoCurator ownerInfoCurator;
@@ -1216,43 +1222,96 @@ public class OwnerResource implements OwnersApi {
     }
 
     @Override
-    public CandlepinQuery<ConsumerDTOArrayElement> listConsumers(
+    public Stream<ConsumerDTOArrayElement> listConsumers(
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
-        String userName,
+        String username,
         Set<String> typeLabels,
         @Verify(value = Consumer.class, nullable = true) List<String> uuids,
         List<String> hypervisorIds,
-        List<KeyValueParamDTO> attrFilters,
-        List<String> skus,
-        List<String> subscriptionIds,
-        List<String> contracts) {
+        List<KeyValueParamDTO> facts) {
 
         Owner owner = findOwnerByKey(ownerKey);
-        List<ConsumerType> types = consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
+        List<ConsumerType> types = this.consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
 
-        CandlepinQuery<Consumer> query = this.consumerCurator.searchOwnerConsumers(
-            owner, userName, types, uuids, hypervisorIds, attrFilters, skus,
-            subscriptionIds, contracts);
-        return translator.translateQuery(query, ConsumerDTOArrayElement.class);
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setOwner(owner)
+            .setUsername(username)
+            .setUuids(uuids)
+            .setTypes(types)
+            .setHypervisorIds(hypervisorIds);
+
+        if (facts != null) {
+            for (KeyValueParamDTO fact : facts) {
+                queryArgs.addFact(fact.getKey(), fact.getValue());
+            }
+        }
+
+        long count = this.consumerCurator.getConsumerCount(queryArgs);
+        log.debug("Consumer query will fetch {} consumers", count);
+
+        // Do paging bits, if necessary
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
+        if (pageRequest != null) {
+            Page<Stream<ConsumerDTOArrayElement>> page = new Page<>();
+            page.setPageRequest(pageRequest);
+
+            if (pageRequest.isPaging()) {
+                queryArgs.setOffset((pageRequest.getPage() - 1) * pageRequest.getPerPage())
+                    .setLimit(pageRequest.getPerPage());
+            }
+
+            if (pageRequest.getSortBy() != null) {
+                boolean reverse = pageRequest.getOrder() == PageRequest.Order.DESCENDING;
+                queryArgs.addOrder(pageRequest.getSortBy(), reverse);
+            }
+
+            page.setMaxRecords((int) count);
+
+            // Store the page for the LinkHeaderResponseFilter
+            ResteasyContext.pushContext(Page.class, page);
+        }
+        // If no paging was specified, force a limit on amount of results
+        else {
+            if (count > MAX_CONSUMERS_PER_REQUEST) {
+                String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
+                    "results at a time, please use paging.", MAX_CONSUMERS_PER_REQUEST);
+                throw new BadRequestException(errmsg);
+            }
+        }
+
+        try {
+            return this.consumerCurator.findConsumers(queryArgs).stream()
+                .map(this.translator.getStreamMapper(Consumer.class, ConsumerDTOArrayElement.class));
+        }
+        catch (InvalidOrderKeyException e) {
+            throw new BadRequestException(e.getMessage(), e);
+        }
     }
 
     @Override
     public Integer countConsumers(
         @Verify(value = Owner.class, subResource = SubResource.CONSUMERS) String ownerKey,
+        String username,
         Set<String> typeLabels,
-        List<String> skus,
-        List<String> subscriptionIds,
-        List<String> contracts) {
+        @Verify(value = Consumer.class, nullable = true) List<String> uuids,
+        List<String> hypervisorIds) {
 
-        this.findOwnerByKey(ownerKey);
-        consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
+        Owner owner = this.findOwnerByKey(ownerKey);
+        List<ConsumerType> types = this.consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
 
-        return consumerCurator.countConsumers(ownerKey, typeLabels, skus, subscriptionIds, contracts);
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setOwner(owner)
+            .setUsername(username)
+            .setUuids(uuids)
+            .setTypes(types)
+            .setHypervisorIds(hypervisorIds);
+
+        return (int) this.consumerCurator.getConsumerCount(queryArgs);
     }
 
     @Override
     @Transactional
-    public List<PoolDTO> listPools(
+    public Stream<PoolDTO> listPools(
         @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
         String consumerUuid,
         String activationKeyName,
@@ -1341,12 +1400,8 @@ public class OwnerResource implements OwnersApi {
         // Store the page for the LinkHeaderResponseFilter
         ResteasyContext.pushContext(Page.class, page);
 
-        List<PoolDTO> poolDTOs = new ArrayList<>();
-        for (Pool pool : poolList) {
-            poolDTOs.add(translator.translate(pool, PoolDTO.class));
-        }
-
-        return poolDTOs;
+        return poolList.stream()
+            .map(this.translator.getStreamMapper(Pool.class, PoolDTO.class));
     }
 
     @Override

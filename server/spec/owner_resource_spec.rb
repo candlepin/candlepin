@@ -894,7 +894,7 @@ describe 'Owner Resource Consumer Fact Filter Tests' do
     consumers.length.should == 2
   end
 
-  it 'lets owners filterconsumers by facts with wildcards' do
+  it 'lets owners filter consumers by facts with wildcards' do
     consumers = @cp.list_owner_consumers(@owner['key'], [], ['*key*:*val*'])
     consumers.length.should == 3
 
@@ -1137,69 +1137,6 @@ describe 'Owner Resource counting feature' do
     expect(Integer(json_count)).to be == 1
 
     json_count = @owner_cp.count_owner_consumers(@owner['key'], type=[:system, :hypervisor])
-    expect(Integer(json_count)).to be == 2
-  end
-
-  it 'should count consumers only with specific skus' do
-    c = @owner_cp.register('consumer_name')
-    sku1 = create_product_and_bint_it_to_consumer_return_sku(c)
-    sku2 = create_product_and_bint_it_to_consumer_return_sku(c)
-    sku3 = create_consumer_with_binding_to_new_product_return_sku
-    expect(sku1).not_to be(sku2)
-    expect(sku2).not_to be(sku3)
-
-    json_count = @owner_cp.count_owner_consumers(@owner['key'], [], ["not-existing-sku"])
-    expect(Integer(json_count)).to be == 0
-
-    json_count = @owner_cp.count_owner_consumers(@owner['key'], [], [sku1])
-    expect(Integer(json_count)).to be == 1
-
-    json_count = @owner_cp.count_owner_consumers(@owner['key'], [], [sku1, sku2])
-    expect(Integer(json_count)).to be == 1
-
-    json_count = @owner_cp.count_owner_consumers(@owner['key'], [], [sku1, sku2, sku3])
-    expect(Integer(json_count)).to be == 2
-  end
-
-  it 'should count consumers only with specific subscriptionIds' do
-    c = @owner_cp.register('consumer_name')
-    subId1 = create_product_and_bint_it_to_consumer_return_subId(c)
-    subId2 = create_product_and_bint_it_to_consumer_return_subId(c)
-    subId3 = create_consumer_with_binding_to_new_product_return_subId
-    expect(subId1).not_to be(subId2)
-    expect(subId2).not_to be(subId3)
-
-    json_count = @owner_cp.count_owner_consumers(@owner['key'], [], [], ["not-existing-subId"])
-    expect(Integer(json_count)).to be == 0
-
-    json_count = @owner_cp.count_owner_consumers(@owner['key'], [], [], [subId1])
-    expect(Integer(json_count)).to be == 1
-
-    json_count = @owner_cp.count_owner_consumers(@owner['key'], [], [], [subId1, subId2])
-    expect(Integer(json_count)).to be == 1
-
-    json_count = @owner_cp.count_owner_consumers(@owner['key'], [], [], [subId1, subId2, subId3])
-    expect(Integer(json_count)).to be == 2
-  end
-
-  it 'should count consumer only with specific contract numbers' do
-    c = @owner_cp.register('consumer_name')
-    cn1 = create_product_and_bint_it_to_consumer_return_contractNr(c)
-    cn2 = create_product_and_bint_it_to_consumer_return_contractNr(c)
-    cn3 = create_consumer_with_binding_to_new_product_return_contractNr
-    expect(cn1).not_to be(cn2)
-    expect(cn2).not_to be(cn3)
-
-    json_count = @owner_cp.count_owner_consumers(@owner['key'], [], [], [], ["not-exisitng-cn"])
-    expect(Integer(json_count)).to be == 0
-
-    json_count = @owner_cp.count_owner_consumers(@owner['key'], [], [], [], [cn1])
-    expect(Integer(json_count)).to be == 1
-
-    json_count = @owner_cp.count_owner_consumers(@owner['key'], [], [], [], [cn1, cn2])
-    expect(Integer(json_count)).to be == 1
-
-    json_count = @owner_cp.count_owner_consumers(@owner['key'], [], [], [], [cn1, cn2, cn3])
     expect(Integer(json_count)).to be == 2
   end
 

@@ -29,7 +29,7 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
-import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
+import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryArguments;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.util.Util;
@@ -513,7 +513,7 @@ public class JobManager implements ModeChangeListener {
      * rerun.
      */
     private void recoverAbandonedJobs() {
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobStates(Collections.singleton(JobState.RUNNING))
             .setExecutors(Collections.singleton(Util.getHostname()));
 
@@ -522,7 +522,7 @@ public class JobManager implements ModeChangeListener {
         // set the job's state to QUEUED, which will allow us to pick up the job and run it again
         // next time the message is received. If the message has been lost, then the job cleaner
         // will eventually nuke this job as part of its non-terminal job aborting step.
-        for (AsyncJobStatus job : this.jobCurator.findJobs(queryBuilder)) {
+        for (AsyncJobStatus job : this.jobCurator.findJobs(queryArgs)) {
             log.warn("Recovering abandoned job: {}", job);
 
             job.setState(JobState.QUEUED);
@@ -1055,15 +1055,15 @@ public class JobManager implements ModeChangeListener {
      * Fetches a collection of jobs based on the provided filter data in the query builder. If the
      * query builder is null or contains no arguments, this method will return all known async jobs.
      *
-     * @param queryBuilder
-     *  an AsyncJobStatusQueryBuilder instance containing the various arguments or filters to use
+     * @param queryArgs
+     *  an AsyncJobStatusQueryArguments instance containing the various arguments or filters to use
      *  to select jobs
      *
      * @return
      *  a list of jobs matching the provided query arguments/filters
      */
-    public List<AsyncJobStatus> findJobs(AsyncJobStatusQueryBuilder queryBuilder) {
-        return this.jobCurator.findJobs(queryBuilder);
+    public List<AsyncJobStatus> findJobs(AsyncJobStatusQueryArguments queryArgs) {
+        return this.jobCurator.findJobs(queryArgs);
     }
 
     /**
@@ -1764,22 +1764,22 @@ public class JobManager implements ModeChangeListener {
      * are provided, this method defaults to all terminal states. If non-terminal states are
      * provided, they will be ignored.
      *
-     * @param queryBuilder
-     *  an AsyncJobStatusQueryBuilder instance containing the various arguments or filters to use
+     * @param queryArgs
+     *  an AsyncJobStatusQueryArguments instance containing the various arguments or filters to use
      *  to select jobs
      *
      * @return
      *  the number of jobs deleted as a result of this operation
      */
     @Transactional
-    public int cleanupJobs(AsyncJobStatusCurator.AsyncJobStatusQueryBuilder queryBuilder) {
+    public int cleanupJobs(AsyncJobStatusCurator.AsyncJobStatusQueryArguments queryArgs) {
         // Prepare for the defaults...
-        if (queryBuilder == null) {
-            queryBuilder = new AsyncJobStatusQueryBuilder();
+        if (queryArgs == null) {
+            queryArgs = new AsyncJobStatusQueryArguments();
         }
 
         // Make sure we don't attempt to blast some non-terminal jobs.
-        Collection<JobState> states = queryBuilder.getJobStates();
+        Collection<JobState> states = queryArgs.getJobStates();
         Stream<JobState> stateStream = states != null && !states.isEmpty() ?
             states.stream() :
             Arrays.stream(JobState.values());
@@ -1788,7 +1788,7 @@ public class JobManager implements ModeChangeListener {
             .collect(Collectors.toSet());
 
         // Only delete jobs if we haven't filtered out every state provided
-        return !states.isEmpty() ? this.jobCurator.deleteJobs(queryBuilder.setJobStates(states)) : 0;
+        return !states.isEmpty() ? this.jobCurator.deleteJobs(queryArgs.setJobStates(states)) : 0;
     }
 
     /**
@@ -1796,22 +1796,22 @@ public class JobManager implements ModeChangeListener {
      * specify any states, this method defaults to all non-terminal states. If any
      * terminal or running states are provided, they will be ignored.
      *
-     * @param queryBuilder
-     *  an AsyncJobStatusQueryBuilder instance containing the various arguments or filters to use
+     * @param queryArgs
+     *  an AsyncJobStatusQueryArguments instance containing the various arguments or filters to use
      *  to select jobs to abort
      *
      * @return
      *  the number of jobs aborted as a result of this operation
      */
     @Transactional
-    public int abortNonTerminalJobs(AsyncJobStatusQueryBuilder queryBuilder) {
+    public int abortNonTerminalJobs(AsyncJobStatusQueryArguments queryArgs) {
         // Prepare for the defaults...
-        if (queryBuilder == null) {
-            queryBuilder = new AsyncJobStatusQueryBuilder();
+        if (queryArgs == null) {
+            queryArgs = new AsyncJobStatusQueryArguments();
         }
 
         // Make sure we don't attempt to abort some terminal jobs
-        Collection<JobState> states = queryBuilder.getJobStates();
+        Collection<JobState> states = queryArgs.getJobStates();
         Stream<JobState> stateStream = states != null && !states.isEmpty() ?
             states.stream() :
             Arrays.stream(JobState.values());
@@ -1827,11 +1827,11 @@ public class JobManager implements ModeChangeListener {
             }
         }
 
-        queryBuilder.setJobStates(states);
+        queryArgs.setJobStates(states);
 
         // Add any other sanity restrictions deemed necessary here
 
-        return this.jobCurator.updateJobState(queryBuilder, JobState.ABORTED);
+        return this.jobCurator.updateJobState(queryArgs, JobState.ABORTED);
     }
 
     /**

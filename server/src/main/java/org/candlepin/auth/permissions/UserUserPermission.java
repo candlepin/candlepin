@@ -18,9 +18,16 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.model.Owner;
 import org.candlepin.model.User;
+import org.candlepin.model.User_;
 
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Predicate;
+
+
 
 /**
  * A permission granting an authenticated user permission to view itself.
@@ -49,6 +56,18 @@ public class UserUserPermission extends TypedPermission<User> {
         if (entityClass.equals(User.class)) {
             return Restrictions.eq("username", username);
         }
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> Predicate getQueryRestriction(Class<T> entityClass, CriteriaBuilder builder, From<?, T> path) {
+        if (User.class.equals(entityClass)) {
+            return builder.equal(((From<?, User>) path).get(User_.username), this.getUsername());
+        }
+
         return null;
     }
 

@@ -608,6 +608,9 @@ paths:
       tags:
         - Consumer
       operationId: searchConsumers
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
       security: []
       parameters:
         - name: username
@@ -649,9 +652,6 @@ paths:
             type: array
             items:
               $ref: '#/components/schemas/KeyValueParamDTO'
-      x-java-response:
-        type: Iterable
-        isContainer: true
       responses:
         200:
           description: List of consumers
@@ -4748,7 +4748,7 @@ paths:
         - Owner
       operationId: listConsumers
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       parameters:
         - name: owner_key
@@ -4791,27 +4791,6 @@ paths:
             type: array
             items:
               $ref: '#/components/schemas/KeyValueParamDTO'
-        - name: sku
-          in: query
-          description: The list of skus
-          schema:
-            type: array
-            items:
-              type: string
-        - name: subscription_id
-          in: query
-          description: The list of subscription IDs
-          schema:
-            type: array
-            items:
-              type: string
-        - name: contract
-          in: query
-          description: The list of contract numbers
-          schema:
-            type: array
-            items:
-              type: string
       security: []
       responses:
         200:
@@ -4856,31 +4835,29 @@ paths:
           required: true
           schema:
             type: string
+        - name: username
+          in: query
+          description: The username of the consumer
+          schema:
+            type: string
         - name: type
           in: query
-          description: The type of the consumer
+          description: The consumer type
           schema:
             type: array
             uniqueItems: true
             items:
               type: string
-        - name: sku
+        - name: uuid
           in: query
-          description: The list product ids
+          description: The UUID of consumers
           schema:
             type: array
             items:
               type: string
-        - name: subscription_id
+        - name: hypervisor_id
           in: query
-          description: The list of subscription ids
-          schema:
-            type: array
-            items:
-              type: string
-        - name: contract
-          in: query
-          description: The list of contract numbers
+          description: The hypervisor IDs
           schema:
             type: array
             items:
@@ -5588,7 +5565,7 @@ paths:
         - Owner
       operationId: listPools
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       parameters:
         - name: owner_key

@@ -17,6 +17,7 @@ package org.candlepin.auth.permissions;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Consumer_;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.service.model.UserInfo;
@@ -25,6 +26,12 @@ import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
 import java.io.Serializable;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Predicate;
+
+
 
 /**
  * A permission allowing a user access to consumers in their org only if they were the ones
@@ -82,6 +89,18 @@ public class UsernameConsumersPermission implements Permission, Serializable {
     public Criterion getCriteriaRestrictions(Class entityClass) {
         if (entityClass.equals(Consumer.class)) {
             return Restrictions.eq("username", user.getUsername());
+        }
+
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> Predicate getQueryRestriction(Class<T> entityClass, CriteriaBuilder builder, From<?, T> path) {
+        if (Consumer.class.equals(entityClass)) {
+            return builder.equal(((From<?, Consumer>) path).get(Consumer_.username), this.getUsername());
         }
 
         return null;

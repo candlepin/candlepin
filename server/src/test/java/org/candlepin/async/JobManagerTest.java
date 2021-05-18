@@ -52,7 +52,7 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator;
-import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
+import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryArguments;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.util.Util;
@@ -1260,7 +1260,7 @@ public class JobManagerTest {
             .setJobKey(TestJob.JOB_KEY)
             .setState(JobState.RUNNING));
 
-        AsyncJobStatusQueryBuilder input = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments input = new AsyncJobStatusQueryArguments()
             .setJobStates(Collections.singleton(JobState.RUNNING))
             .setExecutors(Collections.singleton(Util.getHostname()));
 
@@ -1387,15 +1387,15 @@ public class JobManagerTest {
         Date start = Util.yesterday();
         Date end = Util.tomorrow();
 
-        AsyncJobStatusQueryBuilder input = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments input = new AsyncJobStatusQueryArguments()
             .setJobKeys(jobKeys)
             .setJobStates(jobStates)
             .setOwnerIds(ownerIds)
             .setStartDate(start)
             .setEndDate(end);
 
-        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
 
         doReturn(expected).when(this.jobCurator).findJobs(eq(input));
 
@@ -1409,7 +1409,7 @@ public class JobManagerTest {
         // Verify input is passed through, unmodified
         verify(this.jobCurator, times(1)).findJobs(captor.capture());
 
-        AsyncJobStatusQueryBuilder captured = captor.getValue();
+        AsyncJobStatusQueryArguments captured = captor.getValue();
 
         assertNotNull(captured);
         assertEquals(input, captured);
@@ -1422,8 +1422,8 @@ public class JobManagerTest {
         AsyncJobStatus status3 = this.createJobStatus("test_job-3");
         List<AsyncJobStatus> expected = Arrays.asList(status1, status2, status3);
 
-        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
 
         doReturn(expected).when(this.jobCurator).findJobs(eq(null));
 
@@ -1437,12 +1437,12 @@ public class JobManagerTest {
         // Verify input is passed through, unmodified
         verify(this.jobCurator, times(1)).findJobs(captor.capture());
 
-        AsyncJobStatusQueryBuilder captured = captor.getValue();
+        AsyncJobStatusQueryArguments captured = captor.getValue();
         assertNull(captured);
     }
 
-    private AsyncJobStatusQueryBuilder generateQueryBuilder() {
-        return new AsyncJobStatusQueryBuilder()
+    private AsyncJobStatusQueryArguments generateQueryArguments() {
+        return new AsyncJobStatusQueryArguments()
             .setJobIds(Util.asSet("job_id-1", "job_id-2", "job_id-3"))
             .setJobKeys(Util.asSet("job_key-1", "job_key-2", "job_key-3"))
             .setJobStates(Util.asSet(JobState.CREATED, JobState.QUEUED, JobState.RUNNING, JobState.FINISHED))
@@ -1460,13 +1460,13 @@ public class JobManagerTest {
             .filter(JobState::isTerminal)
             .collect(Collectors.toSet());
 
-        AsyncJobStatusQueryBuilder input = this.generateQueryBuilder()
+        AsyncJobStatusQueryArguments input = this.generateQueryArguments()
             .setJobStates(jobStates);
 
         int expected = new Random().nextInt();
 
-        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
 
         doReturn(expected).when(this.jobCurator).deleteJobs(eq(input));
 
@@ -1479,7 +1479,7 @@ public class JobManagerTest {
         // Verify input is passed through, unmodified
         verify(this.jobCurator, times(1)).deleteJobs(captor.capture());
 
-        AsyncJobStatusQueryBuilder captured = captor.getValue();
+        AsyncJobStatusQueryArguments captured = captor.getValue();
 
         assertNotNull(captured);
         assertEquals(input, captured);
@@ -1489,13 +1489,13 @@ public class JobManagerTest {
     public void testCleanupJobsLimitsJobStatesToTerminalStates() {
         Set<JobState> jobStates = Util.asSet(JobState.values());
 
-        AsyncJobStatusQueryBuilder input = this.generateQueryBuilder()
+        AsyncJobStatusQueryArguments input = this.generateQueryArguments()
             .setJobStates(jobStates);
 
         int expected = new Random().nextInt();
 
-        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
 
         doReturn(expected).when(this.jobCurator).deleteJobs(eq(input));
 
@@ -1504,7 +1504,7 @@ public class JobManagerTest {
 
         verify(this.jobCurator, times(1)).deleteJobs(captor.capture());
 
-        AsyncJobStatusQueryBuilder captured = captor.getValue();
+        AsyncJobStatusQueryArguments captured = captor.getValue();
 
         assertNotNull(captured);
         Collection<JobState> actual = captured.getJobStates();
@@ -1525,34 +1525,34 @@ public class JobManagerTest {
             .filter(state -> !state.isTerminal())
             .collect(Collectors.toSet());
 
-        AsyncJobStatusQueryBuilder input = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments input = new AsyncJobStatusQueryArguments()
             .setJobStates(jobStates);
 
-        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
 
         doThrow(new RuntimeException("this should not happen"))
             .when(this.jobCurator)
-            .deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+            .deleteJobs(any(AsyncJobStatusQueryArguments.class));
 
         JobManager manager = this.createJobManager();
         int output = manager.cleanupJobs(input);
 
-        verify(this.jobCurator, never()).deleteJobs(any(AsyncJobStatusQueryBuilder.class));
+        verify(this.jobCurator, never()).deleteJobs(any(AsyncJobStatusQueryArguments.class));
         assertEquals(0, output);
     }
 
     @Test
     public void testCleanupJobsDefaultsToTerminalStates() {
-        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
 
         JobManager manager = this.createJobManager();
         int output = manager.cleanupJobs(null);
 
         verify(this.jobCurator, times(1)).deleteJobs(captor.capture());
 
-        AsyncJobStatusQueryBuilder captured = captor.getValue();
+        AsyncJobStatusQueryArguments captured = captor.getValue();
 
         assertNotNull(captured);
         Collection<JobState> actual = captured.getJobStates();
@@ -1576,13 +1576,13 @@ public class JobManagerTest {
             .filter(state -> !state.isTerminal())
             .collect(Collectors.toSet());
 
-        AsyncJobStatusQueryBuilder input = this.generateQueryBuilder()
+        AsyncJobStatusQueryArguments input = this.generateQueryArguments()
             .setJobStates(states);
 
         int expected = new Random().nextInt();
 
-        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
 
         doReturn(expected).when(this.jobCurator).updateJobState(eq(input), eq(JobState.ABORTED));
 
@@ -1595,7 +1595,7 @@ public class JobManagerTest {
         // Verify input is passed through, unmodified
         verify(this.jobCurator, times(1)).updateJobState(captor.capture(), eq(JobState.ABORTED));
 
-        AsyncJobStatusQueryBuilder captured = captor.getValue();
+        AsyncJobStatusQueryArguments captured = captor.getValue();
 
         assertNotNull(captured);
         assertEquals(input, captured);
@@ -1605,13 +1605,13 @@ public class JobManagerTest {
     public void testAbortNonTerminalJobsLimitsJobStatesToNonTerminalStates() {
         Set<JobState> jobStates = Util.asSet(JobState.values());
 
-        AsyncJobStatusQueryBuilder input = this.generateQueryBuilder()
+        AsyncJobStatusQueryArguments input = this.generateQueryArguments()
             .setJobStates(jobStates);
 
         int expected = new Random().nextInt();
 
-        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
 
         doReturn(expected).when(this.jobCurator).updateJobState(eq(input), eq(JobState.ABORTED));
 
@@ -1622,7 +1622,7 @@ public class JobManagerTest {
 
         verify(this.jobCurator, times(1)).updateJobState(captor.capture(), eq(JobState.ABORTED));
 
-        AsyncJobStatusQueryBuilder captured = captor.getValue();
+        AsyncJobStatusQueryArguments captured = captor.getValue();
 
         assertNotNull(captured);
         Collection<JobState> actual = captured.getJobStates();
@@ -1639,15 +1639,15 @@ public class JobManagerTest {
 
     @Test
     public void testAbortNonTerminalJobsDefaultsToNoneTerminalStates() {
-        ArgumentCaptor<AsyncJobStatusQueryBuilder> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
 
         JobManager manager = this.createJobManager();
         int output = manager.abortNonTerminalJobs(null);
 
         verify(this.jobCurator, times(1)).updateJobState(captor.capture(), eq(JobState.ABORTED));
 
-        AsyncJobStatusQueryBuilder captured = captor.getValue();
+        AsyncJobStatusQueryArguments captured = captor.getValue();
 
         assertNotNull(captured);
         Collection<JobState> actual = captured.getJobStates();

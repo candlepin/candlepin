@@ -82,7 +82,7 @@ public class OwnerInfoCurator {
             typeHash.put(type.getLabel(), type);
 
             // Do the real work
-            int consumers = consumerCurator.getConsumerCount(owner, type);
+            int consumers = (int) consumerCurator.getConsumerCount(owner, type);
             int entCount = consumerCurator.getConsumerEntitlementCount(owner, type);
             info.addTypeTotal(type, consumers, entCount);
 

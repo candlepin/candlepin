@@ -137,10 +137,12 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
         consumerTypeCurator.create(system);
 
         String hypervisorid = "test-host";
+        HypervisorId hid = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(hypervisorid);
+
         Consumer testConsumer = new Consumer(hypervisorid, someuser.getUsername(), owner, system);
-        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
-        hypervisorId.setOwner(owner);
-        testConsumer.setHypervisorId(hypervisorId);
+        testConsumer.setHypervisorId(hid);
         testConsumer = consumerCurator.create(testConsumer);
 
         Map<String, List<String>> hostGuestMap = new HashMap<>();

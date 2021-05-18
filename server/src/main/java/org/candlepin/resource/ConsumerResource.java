@@ -82,6 +82,7 @@ import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -102,6 +103,7 @@ import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -167,6 +169,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import javax.inject.Provider;
 import javax.persistence.OptimisticLockException;
@@ -174,11 +177,16 @@ import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+
+
 /**
  * API Gateway for Consumers
  */
 public class ConsumerResource implements ConsumersApi {
     private static final Logger log = LoggerFactory.getLogger(ConsumerResource.class);
+
+    /** The maximum number of consumers to return per list or find request */
+    private static final int MAX_CONSUMERS_PER_REQUEST = 1000;
 
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
@@ -302,6 +310,28 @@ public class ConsumerResource implements ConsumersApi {
             ConfigProperties.CONSUMER_PERSON_NAME_PATTERN));
         this.consumerSystemNamePattern = Pattern.compile(config.getString(
             ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
+    }
+
+    /**
+     * Validates the specified owner key and resolves it to an Owner object. If the key is not valid
+     * or cannot be resolved to an organization, this method throws a NotFoundException
+     *
+     * @param ownerKey
+     *  the key of the owner to validate and resolve
+     *
+     * @throws NotFoundException
+     *  if the provided key cannot be resolved to an Owner
+     *
+     * @return
+     *  the resolved owner object
+     */
+    private Owner validateOwnerKey(String ownerKey) {
+        Owner owner = this.ownerCurator.getByKey(ownerKey);
+        if (owner == null) {
+            throw new NotFoundException(i18n.tr("Organization {0} does not exist", ownerKey));
+        }
+
+        return owner;
     }
 
     @Override
@@ -516,34 +546,75 @@ public class ConsumerResource implements ConsumersApi {
     @Override
     @Wrapped(element = "consumers")
     @SuppressWarnings("checkstyle:indentation")
-    public CandlepinQuery<ConsumerDTOArrayElement> searchConsumers(String userName, Set<String> typeLabels,
-        String ownerKey, List<String> uuids, List<String> hypervisorIds, List<KeyValueParamDTO> attrFilters) {
+    public Stream<ConsumerDTOArrayElement> searchConsumers(String username, Set<String> typeLabels,
+        String ownerKey, List<String> uuids, List<String> hypervisorIds, List<KeyValueParamDTO> facts) {
 
-        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
+        if ((username == null || username.isEmpty()) &&
+            (typeLabels == null || typeLabels.isEmpty()) &&
+            (ownerKey == null || ownerKey.isEmpty()) &&
+            (uuids == null || uuids.isEmpty()) &&
+            (hypervisorIds == null || hypervisorIds.isEmpty()) &&
+            (facts == null || facts.isEmpty())) {
 
-        if (userName == null && (typeLabels == null || typeLabels.isEmpty()) && ownerKey == null &&
-            (uuids == null || uuids.isEmpty()) && (hypervisorIds == null || hypervisorIds.isEmpty()) &&
-            (attrFilters == null || attrFilters.isEmpty())) {
             throw new BadRequestException(i18n.tr("Must specify at least one search criteria."));
         }
 
-        Owner owner = null;
-        if (ownerKey != null) {
-            owner = ownerCurator.getByKey(ownerKey);
+        Owner owner = ownerKey != null ? this.validateOwnerKey(ownerKey) : null;
+        List<ConsumerType> types = this.consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
 
-            if (owner == null) {
-                throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setOwner(owner)
+            .setUsername(username)
+            .setUuids(uuids)
+            .setTypes(types)
+            .setHypervisorIds(hypervisorIds);
+
+        if (facts != null) {
+            for (KeyValueParamDTO fact : facts) {
+                queryArgs.addFact(fact.getKey(), fact.getValue());
             }
         }
 
-        List<ConsumerType> types = consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
+        long count = this.consumerCurator.getConsumerCount(queryArgs);
+        log.debug("Consumer query will fetch {} consumers", count);
 
-        CandlepinQuery<Consumer> query = this.consumerCurator.searchOwnerConsumers(
-            owner, userName, types, uuids, hypervisorIds, attrFilters,
-            Collections.emptyList(), Collections.emptyList(),
-            Collections.emptyList());
+        // Do paging bits, if necessary
+        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
+        if (pageRequest != null) {
+            Page<Stream<ConsumerDTOArrayElement>> page = new Page<>();
+            page.setPageRequest(pageRequest);
 
-        return this.translator.translateQuery(query, ConsumerDTOArrayElement.class);
+            if (pageRequest.isPaging()) {
+                queryArgs.setOffset((pageRequest.getPage() - 1) * pageRequest.getPerPage())
+                    .setLimit(pageRequest.getPerPage());
+            }
+
+            if (pageRequest.getSortBy() != null) {
+                boolean reverse = pageRequest.getOrder() == PageRequest.Order.DESCENDING;
+                queryArgs.addOrder(pageRequest.getSortBy(), reverse);
+            }
+
+            page.setMaxRecords((int) count);
+
+            // Store the page for the LinkHeaderResponseFilter
+            ResteasyContext.pushContext(Page.class, page);
+        }
+        // If no paging was specified, force a limit on amount of results
+        else {
+            if (count > MAX_CONSUMERS_PER_REQUEST) {
+                String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
+                    "results at a time, please use paging.", MAX_CONSUMERS_PER_REQUEST);
+                throw new BadRequestException(errmsg);
+            }
+        }
+
+        try {
+            return this.consumerCurator.findConsumers(queryArgs).stream()
+                .map(this.translator.getStreamMapper(Consumer.class, ConsumerDTOArrayElement.class));
+        }
+        catch (InvalidOrderKeyException e) {
+            throw new BadRequestException(e.getMessage(), e);
+        }
     }
 
     @Override
@@ -723,23 +794,26 @@ public class ConsumerResource implements ConsumersApi {
         }
 
         if (dto.getHypervisorId() != null && entity.getOwnerId() != null) {
-            HypervisorId hypervisorId = new HypervisorId(
-                entity,
-                ownerCurator.findOwnerById(entity.getOwnerId()),
-                dto.getHypervisorId().getHypervisorId(),
-                dto.getHypervisorId().getReporterId());
-            entity.setHypervisorId(hypervisorId);
+            HypervisorId hid = new HypervisorId()
+                .setOwner(this.ownerCurator.findOwnerById(entity.getOwnerId()))
+                .setConsumer(entity)
+                .setHypervisorId(dto.getHypervisorId().getHypervisorId())
+                .setReporterId(dto.getHypervisorId().getReporterId());
+
+            entity.setHypervisorId(hid);
         }
 
         if (dto.getHypervisorId() == null &&
             getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID) != null &&
             !"true".equals(getFactValue(dto.getFacts(), "virt.is_guest")) &&
             entity.getOwnerId() != null) {
-            HypervisorId hypervisorId = new HypervisorId(
-                entity,
-                ownerCurator.findOwnerById(entity.getOwnerId()),
-                getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID));
-            entity.setHypervisorId(hypervisorId);
+
+            HypervisorId hid = new HypervisorId()
+                .setOwner(this.ownerCurator.findOwnerById(entity.getOwnerId()))
+                .setConsumer(entity)
+                .setHypervisorId(this.getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID));
+
+            entity.setHypervisorId(hid);
         }
 
         if (dto.getContentTags() != null) {
@@ -1626,13 +1700,16 @@ public class ConsumerResource implements ConsumersApi {
                 if ((existingId == null ||
                     !incomingId.getHypervisorId().equals(existingId.getHypervisorId())) &&
                     isUsedByOwner(incomingId, owner)) {
+
                     throw new BadRequestException(i18n.tr(
                         "Problem updating unit {0}. Hypervisor id: {1} is already used.",
                         incoming, incomingId.getHypervisorId()));
                 }
+
                 if (existingId != null) {
                     if (existingId.getHypervisorId() != null &&
                         !existingId.getHypervisorId().equals(incomingId.getHypervisorId())) {
+
                         existingId.setHypervisorId(incomingId.getHypervisorId());
                         existingId.setOwner(owner);
                     }
@@ -1642,11 +1719,14 @@ public class ConsumerResource implements ConsumersApi {
                 }
                 else {
                     // Safer to build a new clean HypervisorId object
-                    HypervisorId hypervisorId = new HypervisorId(incomingId.getHypervisorId());
-                    hypervisorId.setOwner(owner);
-                    existing.setHypervisorId(hypervisorId);
+                    HypervisorId hid = new HypervisorId()
+                        .setOwner(owner)
+                        .setHypervisorId(incomingId.getHypervisorId());
+
+                    existing.setHypervisorId(hid);
                 }
             }
+
             return true;
         }
         return false;

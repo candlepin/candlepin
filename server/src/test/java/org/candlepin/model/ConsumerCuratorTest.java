@@ -17,7 +17,6 @@ package org.candlepin.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -44,7 +43,6 @@ import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -1344,8 +1342,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisor() {
         String hypervisorid = "hypervisor";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
-        hypervisorId.setOwner(owner);
+        HypervisorId hypervisorId = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(hypervisorid);
+
         consumer.setHypervisorId(hypervisorId);
         consumer = consumerCurator.create(consumer);
         Consumer result = consumerCurator.getHypervisor(hypervisorid, owner);
@@ -1356,8 +1356,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisorCaseInsensitive() {
         String hypervisorid = "HYpervisor";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
-        hypervisorId.setOwner(owner);
+        HypervisorId hypervisorId = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(hypervisorid);
+
         consumer.setHypervisorId(hypervisorId);
         consumer = consumerCurator.create(consumer);
         Consumer result = consumerCurator.getHypervisor(hypervisorid.toUpperCase(), owner);
@@ -1370,8 +1372,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         otherOwner = ownerCurator.create(otherOwner);
         String hypervisorid = "hypervisor";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
-        hypervisorId.setOwner(owner);
+        HypervisorId hypervisorId = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(hypervisorid);
+
         consumer.setHypervisorId(hypervisorId);
         consumerCurator.create(consumer);
         Consumer result = consumerCurator.getHypervisor(hypervisorid, otherOwner);
@@ -1382,16 +1386,18 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisorConsumerMap() {
         String hypervisorId1 = "Hypervisor";
         Consumer consumer1 = new Consumer("testConsumer", "testUser", owner, ct);
-        HypervisorId hypervisorId = new HypervisorId(hypervisorId1);
-        hypervisorId.setOwner(owner);
-        consumer1.setHypervisorId(hypervisorId);
+        HypervisorId hid1 = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(hypervisorId1);
+        consumer1.setHypervisorId(hid1);
         consumer1 = consumerCurator.create(consumer1);
 
         String hypervisorId2 = "hyPERvisor2";
         Consumer consumer2 = new Consumer("testConsumer", "testUser", owner, ct);
-        HypervisorId hypervisorID2 = new HypervisorId(hypervisorId2);
-        hypervisorID2.setOwner(owner);
-        consumer2.setHypervisorId(hypervisorID2);
+        HypervisorId hid2 = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(hypervisorId2);
+        consumer2.setHypervisorId(hid2);
         consumer2 = consumerCurator.create(consumer2);
 
         Set<String> hypervisorIds = new HashSet<>();
@@ -1410,9 +1416,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         String hypervisorId1 = "Hypervisor";
         Consumer consumer1 = new Consumer("testConsumer", "testUser", owner, ct);
         consumer1.setFact(Consumer.Facts.SYSTEM_UUID, "blah");
-        HypervisorId hypervisorId = new HypervisorId(hypervisorId1);
-        hypervisorId.setOwner(owner);
-        consumer1.setHypervisorId(hypervisorId);
+        HypervisorId hid1 = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(hypervisorId1);
+        consumer1.setHypervisorId(hid1);
         consumer1 = consumerCurator.create(consumer1);
 
         List<Consumer> hypervisors = Collections.singletonList(consumer1);
@@ -1433,15 +1440,17 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         // next consumer set with the hypervisor, not the fact
         String hypervisorId2 = "hypervisor2";
         Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
-        HypervisorId hypervisorId2Obj = new HypervisorId(hypervisorId2);
-        hypervisorId2Obj.setOwner(owner);
-        consumer2.setHypervisorId(hypervisorId2Obj);
+        HypervisorId hid2 = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(hypervisorId2);
+        consumer2.setHypervisorId(hid2);
         consumer2 = consumerCurator.create(consumer2);
 
         // hypervisor report will have both the hypervisor and the fact
-        HypervisorId hypervisorId1Obj = new HypervisorId(hypervisorId1);
-        hypervisorId1Obj.setOwner(owner);
-        consumer1.setHypervisorId(hypervisorId1Obj);
+        HypervisorId hid1 = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(hypervisorId1);
+        consumer1.setHypervisorId(hid1);
         List<Consumer> hypervisors = Arrays.asList(consumer1, consumer2);
 
         VirtConsumerMap hypervisorMap = consumerCurator.getHostConsumersMap(owner, hypervisors);
@@ -1454,8 +1463,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisorsBulk() {
         String hypervisorid = "hypervisor";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
-        hypervisorId.setOwner(owner);
+        HypervisorId hypervisorId = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(hypervisorid);
+
         consumer.setHypervisorId(hypervisorId);
         consumer = consumerCurator.create(consumer);
         List<String> hypervisorIds = new LinkedList<>();
@@ -1470,8 +1481,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisorsBulkCaseInsensitive() {
         String hypervisorid = "hYPervisor";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
-        hypervisorId.setOwner(owner);
+        HypervisorId hypervisorId = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(hypervisorid);
+
         consumer.setHypervisorId(hypervisorId);
         consumer = consumerCurator.create(consumer);
         List<String> hypervisorIds = new LinkedList<>();
@@ -1487,8 +1500,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisorsBulkEmpty() {
         String hypervisorid = "hypervisor";
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
-        hypervisorId.setOwner(owner);
+        HypervisorId hypervisorId = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId(hypervisorid);
+
         consumer.setHypervisorId(hypervisorId);
         consumerCurator.create(consumer);
         List<Consumer> results = consumerCurator
@@ -1500,19 +1515,27 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetHypervisorsByOwner() {
+        HypervisorId hid = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId("hypervisor");
+
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        HypervisorId hypervisorId = new HypervisorId("hypervisor");
-        hypervisorId.setOwner(owner);
-        consumer.setHypervisorId(hypervisorId);
+        consumer.setHypervisorId(hid);
         consumer = consumerCurator.create(consumer);
+
         Owner otherOwner = ownerCurator.create(new Owner("other owner"));
+
+        HypervisorId hid2 = new HypervisorId()
+            .setOwner(owner)
+            .setHypervisorId("hypervisortwo");
+
         Consumer consumer2 = new Consumer("testConsumer2", "testUser2", otherOwner, ct);
-        HypervisorId hypervisorId2 = new HypervisorId("hypervisortwo");
-        hypervisorId2.setOwner(owner);
-        consumer2.setHypervisorId(hypervisorId2);
+        consumer2.setHypervisorId(hid2);
         consumerCurator.create(consumer2);
+
         Consumer nonHypervisor = new Consumer("testConsumer3", "testUser3", owner, ct);
         consumerCurator.create(nonHypervisor);
+
         List<Consumer> results = consumerCurator.getHypervisorsForOwner(owner.getId()).list();
         assertEquals(1, results.size());
         assertEquals(consumer, results.get(0));
@@ -1566,396 +1589,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.delete(c);
         i = (BigInteger) em.createNativeQuery(countQuery).getSingleResult();
         assertEquals(new BigInteger("0"), i);
-    }
-
-    // select by owner
-    @Test
-    public void nullCollectionsShouldCountAllExistingConsumers() throws Exception {
-        createConsumer(owner);
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(1, count);
-    }
-
-    @Test
-    public void emptyCollectionsShouldCountAllExistingConsumers() throws Exception {
-        createConsumer(owner);
-        typeLabels = new HashSet<>();
-        skus = new LinkedList<>();
-        subscriptionIds = new LinkedList<>();
-        contracts = new LinkedList<>();
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(1, count);
-    }
-
-    @Test
-    public void countShouldThrowExceptionIfOwnerKeyIsNull() throws Exception {
-        String ownerKey = null;
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-            consumerCurator.countConsumers(ownerKey, typeLabels, skus, subscriptionIds, contracts)
-        );
-        assertEquals("Owner key can't be null or empty", ex.getMessage());
-    }
-
-    @Test
-    public void countShouldThrowExceptionIfOwnerKeyIsEmpty() throws Exception {
-        String ownerKey = "";
-
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
-            consumerCurator.countConsumers(ownerKey, typeLabels, skus, subscriptionIds, contracts)
-        );
-        assertEquals("Owner key can't be null or empty", ex.getMessage());
-    }
-
-    @Test
-    public void countShouldReturnZeroIfOwnerHasNotAnyConsumers() throws Exception {
-        createConsumer(owner);
-        Owner ownerWithoutConsumers = createOwner();
-
-        int count = consumerCurator.countConsumers(ownerWithoutConsumers.getKey(), typeLabels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(0, count);
-    }
-
-    @Test
-    public void shouldCountConsumersOnlyOfGivenOwner() {
-        createConsumer(owner);
-        Owner otherOwner = createOwner();
-        createConsumer(otherOwner);
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(1, count);
-    }
-
-    @Test
-    public void countShouldReturnZeroIfUnkownOwner() throws Exception {
-        createConsumer(owner);
-
-        int count = consumerCurator.countConsumers("unknown-key", typeLabels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(0, count);
-    }
-
-    //select by TypeLabels
-    @Test
-    public void shouldCountOwnerConsumersOnlyWithTypeLabels() {
-        Consumer c1 = createConsumer(owner);
-        Consumer c2 = createConsumer(owner);
-        ConsumerType c1t = consumerTypeCurator.getConsumerType(c1);
-        ConsumerType c2t = consumerTypeCurator.getConsumerType(c2);
-        String l1 = c1t.getLabel();
-        String l2 = c2t.getLabel();
-
-        assertNotEquals(l1, l2);
-        HashSet<String> typeLabels = new HashSet<>(1);
-        typeLabels.add(l1);
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(1, count);
-    }
-
-    @Test
-    public void testDisjunctionInCountingWithTypeLabels() {
-        Consumer c1 = createConsumer(owner);
-        Consumer c2 = createConsumer(owner);
-        ConsumerType c1t = consumerTypeCurator.getConsumerType(c1);
-        ConsumerType c2t = consumerTypeCurator.getConsumerType(c2);
-        String l1 = c1t.getLabel();
-        String l2 = c2t.getLabel();
-
-        assertNotEquals(l1, l2);
-        HashSet<String> typeLabels = new HashSet<>(1);
-        typeLabels.add(l1);
-        typeLabels.add(l2);
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(2, count);
-    }
-
-    @Test
-    public void countShouldReturnZeroWhenUnknownLabel() throws Exception {
-        createConsumer(owner);
-        Set<String> labels = new HashSet<>();
-        labels.add("unknown-label");
-
-        int count = consumerCurator.countConsumers(owner.getKey(), labels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(0, count);
-    }
-
-    // select by SKUs
-    @Test
-    public void countWithSkuShouldWorkOnlyWithMarketingProducts() {
-        Consumer c = createConsumer(owner);
-        Product mktProduct = createMktProductAndBindItToConsumer(owner, c);
-        Product notMktproduct = createProductAndBindItToConsumer(owner, c);
-        List<String> skus = new ArrayList<>();
-        skus.add(notMktproduct.getId());
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(0, count);
-
-        skus.clear();
-        skus.add(mktProduct.getId());
-
-        count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(1, count);
-    }
-
-    @Test
-    public void shouldCountConsumersOnlyWithSkus() {
-        Product p1 = createConsumerWithBindingToMKTProduct(owner);
-        Product p2 = createConsumerWithBindingToMKTProduct(owner);
-
-        assertNotEquals(p1.getId(), p2.getId());
-
-        List<String> skus = new ArrayList<>();
-        skus.add(p1.getId());
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(1, count);
-    }
-
-    @Test
-    public void testDisjunctionInCountingWithSkus() {
-        Product p1 = createConsumerWithBindingToMKTProduct(owner);
-        Product p2 = createConsumerWithBindingToMKTProduct(owner);
-        List<String> skus = new ArrayList<>();
-        skus.add(p1.getId());
-        skus.add(p2.getId());
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(2, count);
-    }
-
-    @Test
-    public void countConsumerOnlyOnceIfMoreSkusMatchToSameConsumer() {
-        Consumer c = createConsumer(owner);
-        Product p1 = createMktProductAndBindItToConsumer(owner, c);
-        Product p2 = createMktProductAndBindItToConsumer(owner, c);
-        assertNotEquals(p1.getId(), p2.getId());
-
-        List<String> skus = new ArrayList<>();
-        skus.add(p1.getId());
-        skus.add(p2.getId());
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(1, count);
-    }
-
-    @Test
-    public void countShouldReturnZeroIfUnknownSku() throws Exception {
-        createConsumer(owner);
-        List<String> skus = new ArrayList<>();
-        skus.add("unknown-sku");
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(0, count);
-    }
-
-    // select by subscriptionIds
-    @Test
-    public void shouldCountConsumersOnlyWithSubscriptionIds() throws Exception {
-        Product product = createProduct(owner);
-        Pool p1 = createConsumerWithBindingToProduct(owner, product);
-        Pool p2 = createConsumerWithBindingToProduct(owner, product);
-        assertNotEquals(p1.getSubscriptionId(), p2.getSubscriptionId());
-
-        List<String> ids = new ArrayList<>();
-        ids.add(p1.getSubscriptionId());
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, ids, contracts);
-
-        assertEquals(1, count);
-    }
-
-    @Test
-    public void testDisjunctionInCountingWithSubscriptionIds() throws Exception {
-        Product product = createProduct(owner);
-        Pool p1 = createConsumerWithBindingToProduct(owner, product);
-        Pool p2 = createConsumerWithBindingToProduct(owner, product);
-        assertNotEquals(p1.getSubscriptionId(), p2.getSubscriptionId());
-
-        List<String> ids = new ArrayList<>();
-        ids.add(p1.getSubscriptionId());
-        ids.add(p2.getSubscriptionId());
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, ids, contracts);
-
-        assertEquals(2, count);
-    }
-
-    @Test
-    public void countConsumerOnlyOnceIfMoreSubIdsMatchToSameConsumer() throws Exception {
-        Consumer c = createConsumer(owner);
-        Pool p1 = createPoolAndBindItToConsumer(owner, c);
-        Pool p2 = createPoolAndBindItToConsumer(owner, c);
-        assertNotEquals(p1.getSubscriptionId(), p2.getSubscriptionId());
-
-        List<String> ids = new ArrayList<>();
-        ids.add(p1.getSubscriptionId());
-        ids.add(p2.getSubscriptionId());
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, ids, contracts);
-
-        assertEquals(1, count);
-    }
-
-    @Test
-    public void countShouldReturnZeroIfUnknownSubscriptionId() throws Exception {
-        createConsumer(owner);
-        List<String> ids = new ArrayList<>();
-        ids.add("unknown-subId");
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, ids, contracts);
-
-        assertEquals(0, count);
-    }
-
-    // select by contract number
-    @Test
-    public void shouldCountConsumersOnlyWithContractNums() throws Exception {
-        Product product = createProduct(owner);
-        Pool p1 = createConsumerWithBindingToProduct(owner, product, "contract-1");
-        createConsumerAndEntitlement(owner, p1);
-        createConsumerWithBindingToProduct(owner, product, "contract-2");
-        List<String> c = new ArrayList<>();
-        c.add(p1.getContractNumber());
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, c);
-
-        assertEquals(2, count);
-    }
-
-    @Test
-    public void testDisjunctionInCountingWithContractNums() throws Exception {
-        Product product = createProduct(owner);
-        Pool p1 = createConsumerWithBindingToProduct(owner, product, "contract-1");
-        Pool p2 = createConsumerWithBindingToProduct(owner, product, "contract-2");
-        List<String> c = new ArrayList<>();
-        c.add(p1.getContractNumber());
-        c.add(p2.getContractNumber());
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, c);
-
-        assertEquals(2, count);
-    }
-
-    @Test
-    public void countConsumerOnlyOnceIfMoreContractsMatchToSameConsumer() throws Exception {
-        Consumer c = createConsumer(owner);
-        String contr1 = "contract-1";
-        String contr2 = "contract-2";
-        createProductAndBindItToConsumer(owner, c, contr1);
-        createProductAndBindItToConsumer(owner, c, contr2);
-        List<String> contracts = new ArrayList<>();
-        contracts.add(contr1);
-        contracts.add(contr2);
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels,
-            skus, subscriptionIds, contracts);
-
-        assertEquals(1, count);
-    }
-
-    @Test
-    public void countShouldReturnZeroIfUnknownContractNumber() throws Exception {
-        createConsumer(owner);
-        List<String> c = new ArrayList<>();
-        c.add("unknown-contract");
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels, skus, subscriptionIds, c);
-
-        assertEquals(0, count);
-    }
-
-    @Test
-    public void countShouldUseConjuctionBetweenAllParameters() throws Exception {
-        String sku = "sku";
-        String subscriptionId = "subscriptionId";
-        String poolContract = "contract";
-
-        Product skuProduct = createTransientMarketingProduct(sku);
-        skuProduct = createProduct(skuProduct, owner);
-
-        Consumer c1 = createConsumer(owner);
-        Consumer c2 = createConsumerAndBindItToProduct(owner, skuProduct);
-        Consumer c3 = createConsumerAndBindItToProduct(owner, skuProduct, subscriptionId);
-        Consumer c4 = createConsumerAndBindItToProduct(owner, skuProduct, subscriptionId, poolContract);
-        ConsumerType c1t = consumerTypeCurator.getConsumerType(c1);
-        ConsumerType c2t = consumerTypeCurator.getConsumerType(c2);
-        ConsumerType c3t = consumerTypeCurator.getConsumerType(c3);
-        ConsumerType c4t = consumerTypeCurator.getConsumerType(c4);
-
-        Set<String> labels = new HashSet<>();
-        List<String> skus = new ArrayList<>();
-        List<String> subIds = new ArrayList<>();
-        List<String> contracts = new ArrayList<>();
-        labels.add(c1t.getLabel());
-        labels.add(c2t.getLabel());
-        labels.add(c3t.getLabel());
-        labels.add(c4t.getLabel());
-        skus.add(sku);
-        subIds.add(subscriptionId);
-        contracts.add(poolContract);
-
-        int count = consumerCurator.countConsumers(owner.getKey(), typeLabels, skus, subIds, contracts);
-
-        assertEquals(1, count);
-    }
-
-    @Test
-    public void countShouldBeIdempotent() throws Exception {
-        int n = 5;
-        int expectedCount = 0;
-        countConsumersAndAssertResultManyTimes(n, expectedCount);
-
-        for (int i = 0; i < n; i++) {
-            createConsumer(owner);
-        }
-
-        expectedCount = n;
-        countConsumersAndAssertResultManyTimes(n, expectedCount);
-    }
-
-    private void countConsumersAndAssertResultManyTimes(int many, int expectedCount) {
-        for (int i = 0; i < many; i++) {
-            int count = consumerCurator.countConsumers(owner.getKey(), typeLabels, skus,
-                subscriptionIds, contracts);
-            assertEquals(expectedCount, count);
-        }
     }
 
 }

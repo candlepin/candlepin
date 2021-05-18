@@ -223,7 +223,7 @@ public class HypervisorUpdateJobTest {
         hypervisor.setName("hypervisor_name");
         hypervisor.setOwner(owner);
         String hypervisorId = "uuid_999";
-        hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
+        hypervisor.setHypervisorId(new HypervisorId().setHypervisorId(hypervisorId));
         when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
             nullable(String.class))).thenReturn(hypervisor);
 
@@ -247,7 +247,7 @@ public class HypervisorUpdateJobTest {
         hypervisor.setName("hypervisor_name");
         hypervisor.setOwner(owner);
         String hypervisorId = "uuid_999";
-        hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
+        hypervisor.setHypervisorId(new HypervisorId().setHypervisorId(hypervisorId));
         when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
             nullable(String.class))).thenReturn(hypervisor);
 
@@ -272,7 +272,7 @@ public class HypervisorUpdateJobTest {
         hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");
         hypervisor.setId("the-id");
         String hypervisorId = "existing_hypervisor_id";
-        hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
+        hypervisor.setHypervisorId(new HypervisorId().setHypervisorId(hypervisorId));
         when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
             any(String.class))).thenReturn(hypervisor);
         when(config.getBoolean(eq(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING))).thenReturn(true);
@@ -311,7 +311,7 @@ public class HypervisorUpdateJobTest {
         hypervisor.setOwner(owner);
         hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");
         String hypervisorId = "existing_hypervisor_id";
-        hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
+        hypervisor.setHypervisorId(new HypervisorId().setHypervisorId(hypervisorId));
         when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
             isNull())).thenReturn(null);
         // if it uses the uuid then it will return the hypervisor and update it. That will fail the test.
@@ -427,7 +427,7 @@ public class HypervisorUpdateJobTest {
         hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");
         hypervisor.setId("the-id");
         String hypervisorId = "existing_hypervisor_id";
-        hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
+        hypervisor.setHypervisorId(new HypervisorId().setHypervisorId(hypervisorId));
         when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
             any(String.class))).thenReturn(hypervisor);
         when(config.getBoolean(eq(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING))).thenReturn(true);
@@ -498,7 +498,7 @@ public class HypervisorUpdateJobTest {
         hypervisor.setName("hypervisor_name");
         hypervisor.setOwner(owner);
         String hypervisorId = "uuid_999";
-        hypervisor.setHypervisorId(new HypervisorId(hypervisorId));
+        hypervisor.setHypervisorId(new HypervisorId().setHypervisorId(hypervisorId));
         hypervisor.setType(consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true));
 
         // This must be the last operation in the sequence, or we could run into minor amounts of drift

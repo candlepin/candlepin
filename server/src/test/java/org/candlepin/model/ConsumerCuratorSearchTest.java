@@ -14,934 +14,1054 @@
  */
 package org.candlepin.model;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.dto.api.v1.KeyValueParamDTO;
-import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
+import org.candlepin.auth.Access;
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.permissions.OwnerPermission;
+import org.candlepin.auth.permissions.Permission;
+import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javax.inject.Inject;
+import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 
 /**
- * ConsumerCuratorSearchTest
+ * Test suite for the consumer searching functionality provided by the ConsumerCurator class
  */
 public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
-    @Inject private Configuration config;
+    private Consumer createConsumer(Owner owner, String name, String uuid, ConsumerType type, String username,
+        Map<String, String> facts, String hypervisorId) {
 
-    private Owner owner;
-    private ConsumerType ct;
+        HypervisorId hid = null;
+        if (hypervisorId != null) {
+            hid = new HypervisorId()
+                .setOwner(owner)
+                .setHypervisorId(hypervisorId);
+        }
 
-    @BeforeEach
-    public void setUp() {
-        owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
-        ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
-        ct = consumerTypeCurator.create(ct);
-        config.setProperty(ConfigProperties.INTEGER_FACTS, "system.count, system.multiplier");
-        config.setProperty(ConfigProperties.NON_NEG_INTEGER_FACTS, "system.count");
+        Consumer consumer = new Consumer()
+            .setOwner(owner)
+            .setName(name)
+            .setUuid(uuid)
+            .setType(type)
+            .setUsername(username)
+            .setHypervisorId(hid)
+            .setFacts(facts);
+
+        return this.consumerCurator.create(consumer);
+    }
+
+    private List<Consumer> createConsumersForQueryTests() {
+        List<Owner> owners = Stream.generate(this::createOwner)
+            .limit(3)
+            .collect(Collectors.toList());
+
+        List<ConsumerType> types = Stream.generate(this::createConsumerType)
+            .limit(3)
+            .collect(Collectors.toList());
+
+        List<String> usernames = Arrays.asList(null, "username1", "username2", "username3");
+
+        // Testing/Impl note:
+        // Map.of doesn't support null values, but that turns out to be kind of acceptable here,
+        // since a Hibernate "quirk" with how ElementCollection interacts with maps that contain
+        // null values prevents us from persisting any facts with null values anyhow.
+        Map<String, String> factsMap1 = Map.of(
+            "factkey-1", "value-1",
+            "factkey-2", "",
+            "factkey-3", "value-3!",
+            "factkey-4", "value-4!",
+            "factkey-5", "value-*",
+            "factkey-6", "value-6",
+            "factkey-*", "value-7");
+
+        Map<String, String> factsMap2 = Map.of(
+            "factkey-1", "value-1b",
+            "factkey-2", "",
+            "factkey-3", "value-3b",
+            "factkey-4", "value_4!",
+            "factkey-5", "value??",
+            "factkey_6", "value-6",
+            "factkey-?", "value-7");
+
+        Map<String, String> factsMap3 = Map.of(
+            "factkey-1", "value-1c",
+            "factkey-2", "value-2c",
+            "factkey-3", "value-3!",
+            "factkey-4", "value%4!",
+            "factkey-5", "value\\5",
+            "factkey%6", "value-6",
+            "factkey\\7", "value-7");
+
+        List<Map<String, String>> facts = Arrays.asList(null, factsMap1, factsMap2, factsMap3);
+
+        List<Consumer> created = new LinkedList<>();
+        int count = 0;
+
+        for (Owner owner : owners) {
+            for (ConsumerType type : types) {
+                for (String username : usernames) {
+                    for (Map<String, String> factMap : facts) {
+                        ++count;
+                        created.add(this.createConsumer(owner, "consumer-" + count, "uuid-" + count, type,
+                            username, factMap, null));
+
+                        ++count;
+                        created.add(this.createConsumer(owner, "consumer-" + count, "uuid-" + count, type,
+                            username, factMap, "hypervisor-" + count));
+                    }
+                }
+            }
+        }
+
+        this.asyncJobCurator.flush();
+        return created;
     }
 
     @Test
-    public void testSearchOwnerConsumersNoMatches() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("testkey", "testval");
-        facts.put("otherkey", "otherval");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByOwner() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        // Create another consumer to make sure we're not just retreiving everyhting
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<>();
-        otherFacts.put("otherconsumerkey", "testval");
-        otherConsumer.setFacts(otherFacts);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        Owner owner = created.stream()
+            .map(Consumer::getOwner)
+            .filter(Objects::nonNull)
+            .findFirst()
+            .get();
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("notAKey", "notAVal"));
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null, null, null).list();
-        assertEquals(0, results.size());
-    }
+        long expected = created.stream()
+            .filter(consumer -> owner.getId().equals(consumer.getOwnerId()))
+            .count();
+        assertTrue(expected > 0);
 
-    private KeyValueParamDTO getE(String key, String val) {
-        return new KeyValueParamDTO()
-            .key(key)
-            .value(val);
-    }
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setOwner(owner);
 
-    @Test
-    public void testSearchConsumersNoOwner() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("testkey", "testval");
-        facts.put("otherkey", "otherval");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
 
-        // Create another consumer to make sure we're not just retrieving everything
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<>();
-        otherFacts.put("otherconsumerkey", "testval");
-        otherConsumer.setFacts(otherFacts);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("testkey", "testval"));
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            null, null, null, null, null, factFilters, null, null, null).list();
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        for (Consumer consumer : fetched) {
+            assertEquals(owner.getId(), consumer.getOwnerId());
+        }
     }
 
     @Test
-    public void testSearchConsumersUuids() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("key", "val");
-        facts.put("otherkey", "otherval");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByOwnerNoMatch() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        // Create another consumer to make sure we're not just retrieving everything
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<>();
-        otherFacts.put("key", "val");
-        otherConsumer.setFacts(otherFacts);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        Owner owner = this.createOwner();
+        long expected = 0;
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("key", "val"));
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setOwner(owner);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+    }
+
+    @Test
+    public void testFindConsumersByUsername() {
+        List<Consumer> created = this.createConsumersForQueryTests();
+
+        String username = created.stream()
+            .map(Consumer::getUsername)
+            .filter(Objects::nonNull)
+            .findFirst()
+            .get();
+
+        long expected = created.stream()
+            .filter(consumer -> username.equals(consumer.getUsername()))
+            .count();
+        assertTrue(expected > 0);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setUsername(username);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertEquals(username, consumer.getUsername());
+        }
+    }
+
+    @Test
+    public void testFindConsumersByUsernameNoMatch() {
+        List<Consumer> created = this.createConsumersForQueryTests();
+
+        String username = "bad username";
+        long expected = 0;
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setUsername(username);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+    }
+
+    @Test
+    public void testFindConsumersByUuids() {
+        List<Consumer> created = this.createConsumersForQueryTests();
+        assertTrue(created.size() > 3);
+
+        List<String> expectedUuids = created.subList(1, 3).stream()
+            .map(Consumer::getUuid)
+            .collect(Collectors.toList());
+
+        long expected = expectedUuids.size();
+        assertTrue(expected > 0);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setUuids(expectedUuids);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertThat(expectedUuids, hasItem(consumer.getUuid()));
+        }
+    }
+
+    @Test
+    public void testFindConsumersByUuidsWithExtraneous() {
+        List<Consumer> created = this.createConsumersForQueryTests();
+        assertTrue(created.size() > 3);
+
+        List<String> expectedUuids = created.subList(1, 3).stream()
+            .map(Consumer::getUuid)
+            .collect(Collectors.toList());
+        List<String> extraneousUuids = Arrays.asList("bad_uuid-1", "bad_uuid-2", "bad_uuid-3");
+
+        long expected = expectedUuids.size();
+        assertTrue(expected > 0);
+
         List<String> uuids = new LinkedList<>();
-        uuids.add(consumer.getUuid());
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            null, null, null, uuids, null, factFilters, null, null, null).list();
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        uuids.addAll(expectedUuids);
+        uuids.addAll(extraneousUuids);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setUuids(uuids);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertThat(expectedUuids, hasItem(consumer.getUuid()));
+            assertThat(extraneousUuids, not(hasItem(consumer.getUuid())));
+        }
     }
 
     @Test
-    public void testSearchHypervisorIdsCaseInsensitive() {
-        String hypervisorid = "HyPuUiD";
-        String hypervisorid2 = "HyPuUiD2";
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        HypervisorId hypervisorId = new HypervisorId(hypervisorid);
-        hypervisorId.setOwner(owner);
-        consumer.setHypervisorId(hypervisorId);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByUuidsNoMatch() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
-        HypervisorId hypervisorId2 = new HypervisorId(hypervisorid2);
-        hypervisorId2.setOwner(owner);
-        consumer2.setHypervisorId(hypervisorId2);
-        consumer2 = consumerCurator.create(consumer2);
+        List<String> extraneousUuids = Arrays.asList("bad_uuid-1", "bad_uuid-2", "bad_uuid-3");
+        long expected = 0;
 
-        List<String> hypervisorIds = new ArrayList<>();
-        hypervisorIds.add(hypervisorid.toUpperCase());
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setUuids(extraneousUuids);
 
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            null, null, null, null, hypervisorIds, null, null, null, null).list();
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
     }
 
     @Test
-    public void testSearchConsumersUuidsAndOwner() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("key", "val");
-        facts.put("otherkey", "otherval");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByTypes() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        // Create another consumer to make sure we're not just retrieving everything
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<>();
-        otherFacts.put("key", "val");
-        otherConsumer.setFacts(otherFacts);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        Set<String> typeIds = created.stream()
+            .map(Consumer::getTypeId)
+            .collect(Collectors.toSet());
 
-        Owner otherOwner = new Owner("test-owner1", "Test Owner1");
-        otherOwner = ownerCurator.create(otherOwner);
-        Consumer otherOwnCons = new Consumer("testConsumer3", "testUser3", otherOwner, ct);
-        Map<String, String> otherOwnFacts = new HashMap<>();
-        otherOwnFacts.put("key", "val");
-        otherOwnCons.setFacts(otherOwnFacts);
-        otherOwnCons = consumerCurator.create(otherOwnCons);
+        Set<String> expectedTypeIds = typeIds.stream()
+            .limit(2)
+            .collect(Collectors.toSet());
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("key", "val"));
-        List<String> uuids = new LinkedList<>();
-        uuids.add(consumer.getUuid());
-        uuids.add(otherOwnCons.getUuid());
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, uuids, null, factFilters, null, null, null).list();
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        Set<ConsumerType> expectedTypes = expectedTypeIds.stream()
+            .map(id -> this.consumerTypeCurator.get(id))
+            .collect(Collectors.toSet());
+
+        long expected = created.stream()
+            .filter(consumer -> expectedTypeIds.contains(consumer.getTypeId()))
+            .count();
+        assertTrue(expected > 0);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setTypes(expectedTypes);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertThat(expectedTypeIds, hasItem(consumer.getTypeId()));
+        }
     }
 
     @Test
-    public void testSearchOwnerConsumers() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("testkey", "testval");
-        facts.put("otherkey", "otherval");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByTypesWithExtraneous() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        // Create another consumer to make sure we're not just retrieving everything
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<>();
-        otherFacts.put("otherconsumerkey", "testval");
-        otherConsumer.setFacts(otherFacts);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        Set<String> typeIds = created.stream()
+            .map(Consumer::getTypeId)
+            .collect(Collectors.toSet());
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("testkey", "testval"));
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null, null, null).list();
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        Set<String> expectedTypeIds = typeIds.stream()
+            .limit(2)
+            .collect(Collectors.toSet());
+
+        Set<ConsumerType> expectedTypes = expectedTypeIds.stream()
+            .map(id -> this.consumerTypeCurator.get(id))
+            .collect(Collectors.toSet());
+
+        Set<ConsumerType> extraneousTypes = Stream.generate(this::createConsumerType)
+            .limit(3)
+            .collect(Collectors.toSet());
+
+        Set<String> extraneousTypeIds = extraneousTypes.stream()
+            .map(ConsumerType::getId)
+            .collect(Collectors.toSet());
+
+        long expected = created.stream()
+            .filter(consumer -> expectedTypeIds.contains(consumer.getTypeId()))
+            .count();
+        assertTrue(expected > 0);
+
+        List<ConsumerType> searchTypes = new LinkedList<>();
+        searchTypes.addAll(expectedTypes);
+        searchTypes.addAll(extraneousTypes);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setTypes(searchTypes);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertThat(expectedTypeIds, hasItem(consumer.getTypeId()));
+            assertThat(extraneousTypeIds, not(hasItem(consumer.getTypeId())));
+        }
     }
 
     @Test
-    public void testSearchOwnerConsumersEscaping() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("a", "\"')");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByTypesNoMatch() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("a", "\"')"));
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null, null, null).list();
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        List<ConsumerType> extraneousTypes = Stream.generate(this::createConsumerType)
+            .limit(3)
+            .collect(Collectors.toList());
+
+        long expected = 0;
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setTypes(extraneousTypes);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
     }
 
     @Test
-    public void testSearchOwnerConsumersKeyEscaping() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("%", "'); SELECT id from cp_owners");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByHypervisorIds() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("%", "'); SELECT id from cp_owners"));
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null, null, null).list();
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        Set<String> hypervisorIds = created.stream()
+            .filter(consumer -> consumer.getHypervisorId() != null)
+            .map(consumer -> consumer.getHypervisorId().getHypervisorId())
+            .collect(Collectors.toSet());
+
+        Set<String> expectedHids = hypervisorIds.stream()
+            .limit(2)
+            .collect(Collectors.toSet());
+
+        long expected = expectedHids.size();
+        assertTrue(expected > 0);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setHypervisorIds(expectedHids);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer.getHypervisorId());
+            assertThat(expectedHids, hasItem(consumer.getHypervisorId().getHypervisorId()));
+        }
     }
 
     @Test
-    public void testSearchOwnerConsumersMoreEscapingWithWildcard() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("%", "'); SELECT * from cp_owners");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByHypervisorIdsWithExtraneous() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("%", "'); SELECT * from cp_owners"));
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null, null, null).list();
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        Set<String> hypervisorIds = created.stream()
+            .filter(consumer -> consumer.getHypervisorId() != null)
+            .map(consumer -> consumer.getHypervisorId().getHypervisorId())
+            .collect(Collectors.toSet());
+
+        Set<String> expectedHids = hypervisorIds.stream()
+            .limit(2)
+            .collect(Collectors.toSet());
+
+        List<String> extraneousHids = Arrays.asList("bad_hv-1", "bad_hv-2", "bad_hv-3");
+
+        long expected = expectedHids.size();
+        assertTrue(expected > 0);
+
+        List<String> hids = new LinkedList<>();
+        hids.addAll(expectedHids);
+        hids.addAll(extraneousHids);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setHypervisorIds(hids);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer.getHypervisorId());
+
+            assertThat(expectedHids, hasItem(consumer.getHypervisorId().getHypervisorId()));
+            assertThat(extraneousHids, not(hasItem(consumer.getHypervisorId().getHypervisorId())));
+        }
     }
 
     @Test
-    public void testSearchOwnerConsumersInsensitiveValue() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("testkey", "testval");
-        facts.put("otherkey", "otherval");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByHypervisorIdsNoMatch() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        // Create another consumer to make sure we're not just retreiving everyhting
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<>();
-        otherFacts.put("otherconsumerkey", "testval");
-        otherConsumer.setFacts(otherFacts);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        List<String> extraneousHids = Arrays.asList("bad_hv-1", "bad_hv-2", "bad_hv-3");
+        long expected = 0;
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("testkey", "teSTVal"));
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null, null, null).list();
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setHypervisorIds(extraneousHids);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
     }
 
     @Test
-    public void testSearchOwnerConsumersSensitiveKey() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("testkey", "testval");
-        facts.put("otherkey", "otherval");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByHypervisorIdsWithNull() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        // Create another consumer to make sure we're not just retreiving everyhting
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<>();
-        otherFacts.put("otherconsumerkey", "testval");
-        otherConsumer.setFacts(otherFacts);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        List<String> expectedHids = Arrays.asList((String) null);
+        long expected = created.stream()
+            .filter(consumer -> consumer.getHypervisorId() == null)
+            .count();
+        assertTrue(expected > 0);
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("Testkey", "testval"));
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null, null, null).list();
-        assertEquals(0, results.size());
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setHypervisorIds(expectedHids);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertNull(consumer.getHypervisorId());
+        }
     }
 
     @Test
-    public void testSearchOwnerConsumersKeyWildcard() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("testkey", "testval");
-        //facts.put("otherkey", "otherval");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByHypervisorIdsWithNullsAndNonNulls() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        // Create another consumer to make sure we're not just retreiving everyhting
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<>();
-        otherFacts.put("otherconsumerkey123", "testval");
-        otherConsumer.setFacts(otherFacts);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        Set<String> hypervisorIds = created.stream()
+            .filter(consumer -> consumer.getHypervisorId() != null)
+            .map(consumer -> consumer.getHypervisorId().getHypervisorId())
+            .collect(Collectors.toSet());
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("*key*", "testval"));
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null, null, null).list();
-        assertEquals(2, results.size());
+        Set<String> expectedHids = hypervisorIds.stream()
+            .limit(2)
+            .collect(Collectors.toSet());
+
+        expectedHids.add(null);
+
+        long expectedNullHidCount = created.stream()
+            .filter(consumer -> consumer.getHypervisorId() == null)
+            .count();
+
+        int expectedNonNullHidCount = expectedHids.size() - 1;
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setHypervisorIds(expectedHids);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expectedNullHidCount + expectedNonNullHidCount, fetched.size());
+
+        int nullCount = 0;
+        int nonNullCount = 0;
+
+        for (Consumer consumer : fetched) {
+            if (consumer.getHypervisorId() != null) {
+                ++nonNullCount;
+                assertThat(expectedHids, hasItem(consumer.getHypervisorId().getHypervisorId()));
+            }
+            else {
+                ++nullCount;
+            }
+        }
+
+        assertEquals(expectedNullHidCount, nullCount);
+        assertEquals(expectedNonNullHidCount, nonNullCount);
     }
 
     @Test
-    public void testSearchOwnerConsumersValueWildcard() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("key", "testingval");
-        //facts.put("otherkey", "otherval");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByFacts() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        // Create another consumer to make sure we're not just retreiving everyhting
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<>();
-        otherFacts.put("key", "testvaltwo");
-        otherConsumer.setFacts(otherFacts);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        String expFactKey = "factkey-1";
+        String expFactValue = "value-1";
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("key", "*val*"));
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null, null, null).list();
-        assertEquals(2, results.size());
+        long expected = created.stream()
+            .filter(consumer -> expFactValue.equals(consumer.getFact(expFactKey)))
+            .count();
+        assertTrue(expected > 0);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .addFact(expFactKey, expFactValue);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+            assertTrue(consumer.hasFact(expFactKey));
+            assertEquals(expFactValue, consumer.getFact(expFactKey));
+        }
     }
 
     @Test
-    public void testSearchOwnerConsumersValueWildcardMiddle() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("key", "testingvaltest");
-        //facts.put("otherkey", "otherval");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByFactsUsesDisjunctionForMultiValueSingleFact() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        // Create another consumer to make sure we're not just retreiving everyhting
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<>();
-        otherFacts.put("key", "testvaltwotest");
-        otherConsumer.setFacts(otherFacts);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        String expFactKey = "factkey-1";
+        List<String> expFactValues = Arrays.asList("value-1", "value-1c", "extraneous-value");
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("key", "test*test"));
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null, null, null).list();
-        assertEquals(2, results.size());
+        long expected = created.stream()
+            .filter(consumer -> expFactValues.contains(consumer.getFact(expFactKey)))
+            .count();
+        assertTrue(expected > 0);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments();
+        for (String factValue : expFactValues) {
+            queryArgs.addFact(expFactKey, factValue);
+        }
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+            assertTrue(consumer.hasFact(expFactKey));
+            assertThat(expFactValues, hasItem(consumer.getFact(expFactKey)));
+        }
     }
 
     @Test
-    public void testSearchOwnerConsumersValueAnd() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("key1", "value1");
-        facts.put("key2", "value2");
-        //facts.put("otherkey", "otherval");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByFactsUsesConjunctionForMultipleFacts() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        // Create another consumer to make sure we're not just retreiving everyhting
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<>();
-        otherFacts.put("key1", "value1");
-        otherFacts.put("key2", "value3notsame");
-        otherConsumer.setFacts(otherFacts);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        String expFactKey1 = "factkey-1";
+        String expFactValue1 = "value-1";
+        String expFactKey2 = "factkey-3";
+        String expFactValue2 = "value-3!";
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("key1", "value1"));
-        factFilters.add(getE("key2", "value2"));
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null, null, null).list();
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        long expected = created.stream()
+            .filter(consumer -> expFactValue1.equals(consumer.getFact(expFactKey1)))
+            .filter(consumer -> expFactValue2.equals(consumer.getFact(expFactKey2)))
+            .count();
+        assertTrue(expected > 0);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .addFact(expFactKey1, expFactValue1)
+            .addFact(expFactKey2, expFactValue2);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+
+            assertTrue(consumer.hasFact(expFactKey1));
+            assertTrue(consumer.hasFact(expFactKey2));
+
+            assertEquals(expFactValue1, consumer.getFact(expFactKey1));
+            assertEquals(expFactValue2, consumer.getFact(expFactKey2));
+        }
     }
 
     @Test
-    public void testSearchOwnerConsumersValueAndOr() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("key1", "value1");
-        facts.put("key2", "value2");
-        //facts.put("otherkey", "otherval");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    @SuppressWarnings("checkstyle:indentation")
+    public void testFindConsumersByFactsProperlyHandlesNullValues() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        // Create another consumer to make sure we're not just retreiving everyhting
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<>();
-        otherFacts.put("key1", "value1");
-        otherFacts.put("key2", "value3");
-        otherConsumer.setFacts(otherFacts);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        String expFactKey = "factkey-2";
+        String expFactValue = null;
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("key1", "value1"));
-        factFilters.add(getE("key2", "value2"));
-        factFilters.add(getE("key2", "value3"));
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null, null, null).list();
-        assertEquals(2, results.size());
+        long expected = created.stream()
+            .filter(consumer -> consumer.hasFact(expFactKey))
+            .filter(consumer -> consumer.getFact(expFactKey) == null ||
+                consumer.getFact(expFactKey).isEmpty())
+            .count();
+        assertTrue(expected > 0);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .addFact(expFactKey, expFactValue);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+            assertTrue(consumer.hasFact(expFactKey));
+
+            assertThat(Arrays.asList("", null), hasItem(consumer.getFact(expFactKey)));
+        }
     }
 
     @Test
-    public void testSearchOwnerConsumersNoMatch() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Map<String, String> facts = new HashMap<>();
-        facts.put("key1", "value1");
-        facts.put("key2", "value2");
-        //facts.put("otherkey", "otherval");
-        consumer.setFacts(facts);
-        consumer = consumerCurator.create(consumer);
+    @SuppressWarnings("checkstyle:indentation")
+    public void testFindConsumersByFactsProperlyHandlesEmptyValues() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        // Create another consumer to make sure we're not just retreiving everyhting
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        Map<String, String> otherFacts = new HashMap<>();
-        otherFacts.put("key1", "value2");
-        otherFacts.put("key2", "value1");
-        otherConsumer.setFacts(otherFacts);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        String expFactKey = "factkey-2";
+        String expFactValue = "";
 
-        List<KeyValueParamDTO> factFilters = new LinkedList<>();
-        factFilters.add(getE("key1", "value2"));
-        factFilters.add(getE("key2", "value1"));
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, factFilters, null, null, null).list();
-        assertEquals(1, results.size());
-        assertEquals(otherConsumer, results.get(0));
+        long expected = created.stream()
+            .filter(consumer -> consumer.hasFact(expFactKey))
+            .filter(consumer -> consumer.getFact(expFactKey) == null ||
+                consumer.getFact(expFactKey).isEmpty())
+            .count();
+        assertTrue(expected > 0);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .addFact(expFactKey, expFactValue);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+            assertTrue(consumer.hasFact(expFactKey));
+
+            assertThat(Arrays.asList("", null), hasItem(consumer.getFact(expFactKey)));
+        }
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = {"VALUE-1", "vAlUe-1", "value-1"})
+    public void testFindConsumersByFactsMatchesValuesCaseInsensitively(String factValue) {
+        List<Consumer> created = this.createConsumersForQueryTests();
+
+        String expFactKey = "factkey-1";
+
+        long expected = created.stream()
+            .filter(consumer -> factValue.equalsIgnoreCase(consumer.getFact(expFactKey)))
+            .count();
+        assertTrue(expected > 0);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .addFact(expFactKey, factValue);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+            assertTrue(consumer.hasFact(expFactKey));
+            assertThat(consumer.getFact(expFactKey), equalToIgnoringCase(factValue));
+        }
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = {"value-4!", "value_4!", "value%4!"})
+    public void testFindConsumersByFactsEscapesLikeWildcardsInValues(String expFactValue) {
+        List<Consumer> created = this.createConsumersForQueryTests();
+
+        String expFactKey = "factkey-4";
+
+        long expected = created.stream()
+            .filter(consumer -> expFactValue.equals(consumer.getFact(expFactKey)))
+            .count();
+        assertTrue(expected > 0);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .addFact(expFactKey, expFactValue);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+            assertTrue(consumer.hasFact(expFactKey));
+            assertEquals(expFactValue, consumer.getFact(expFactKey));
+        }
     }
 
     @Test
-    public void testSearchBySubscriptionId() {
-        // Create another consumer to make sure we're not just retrieving everything
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        otherConsumer = consumerCurator.create(otherConsumer);
+    public void testFindConsumersByFactsConvertsShellSingleCharWildcardInValues() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer = consumerCurator.create(consumer);
+        String expFactKey = "factkey-4";
+        String expFactValue = "v?lue?4!";
+        String expFactValueRegex = "\\Av.lue.4!\\z";
 
-        Product p = TestUtil.createProduct("SKU1", "Product 1");
-        productCurator.create(p);
+        long expected = created.stream()
+            .filter(consumer -> consumer.getFact(expFactKey) != null)
+            .filter(consumer -> Pattern.matches(expFactValueRegex, consumer.getFact(expFactKey)))
+            .count();
 
-        Pool pool = new Pool()
-            .setOwner(owner)
-            .setProduct(p)
-            .setQuantity(1L)
-            .setStartDate(TestUtil.createDate(2010, 1, 1))
-            .setEndDate(TestUtil.createDate(2030, 1, 1))
-            .setContractNumber("CONTRACT_123")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789");
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .addFact(expFactKey, expFactValue);
 
-        Pool pool2 = new Pool()
-            .setOwner(owner)
-            .setProduct(p)
-            .setQuantity(1L)
-            .setStartDate(TestUtil.createDate(2010, 1, 1))
-            .setEndDate(TestUtil.createDate(2030, 1, 1))
-            .setContractNumber("CONTRACT_123")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789");
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
 
-        String source1 = Util.generateDbUUID();
-        String source2 = Util.generateDbUUID();
-        pool.setSourceSubscription(new SourceSubscription(source1, "master"));
-        pool2.setSourceSubscription(new SourceSubscription(source2, "master2"));
-        poolCurator.create(pool);
-        poolCurator.create(pool2);
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
 
-        EntitlementCertificate cert = createEntitlementCertificate("entkey", "ecert");
-
-        Entitlement e = createEntitlement(owner, consumer, pool, cert);
-        entitlementCurator.create(e);
-
-        Entitlement e2 = createEntitlement(owner, otherConsumer, pool2, cert);
-        entitlementCurator.create(e2);
-
-        List<String> subscriptionIds = new ArrayList<>();
-        subscriptionIds.add(source1);
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, null, null, subscriptionIds, null).list();
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+            assertTrue(consumer.hasFact(expFactKey));
+            assertTrue(Pattern.matches(expFactValueRegex, consumer.getFact(expFactKey)));
+        }
     }
 
     @Test
-    public void testSearchByContractNumber() {
-        // Create another consumer to make sure we're not just retrieving everything
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        otherConsumer = consumerCurator.create(otherConsumer);
+    public void testFindConsumersByFactsConvertsShellMultiCharWildcardInValues() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer = consumerCurator.create(consumer);
+        String expFactKey = "factkey-1";
+        String expFactValue = "val*1*";
+        String expFactValueRegex = "\\Aval.*1.*\\z";
 
-        Product product = this.createProduct("SKU1", "Product 1");
+        long expected = created.stream()
+            .filter(consumer -> consumer.getFact(expFactKey) != null)
+            .filter(consumer -> Pattern.matches(expFactValueRegex, consumer.getFact(expFactKey)))
+            .count();
 
-        Pool pool1 = new Pool()
-            .setOwner(owner)
-            .setProduct(product)
-            .setQuantity(1L)
-            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
-            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
-            .setContractNumber("CONTRACT_123")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789")
-            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .addFact(expFactKey, expFactValue);
 
-        Pool pool2 = new Pool()
-            .setOwner(owner)
-            .setProduct(product)
-            .setQuantity(1L)
-            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
-            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
-            .setContractNumber("CONTRACT_XXX")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789")
-            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
 
-        poolCurator.create(pool1);
-        poolCurator.create(pool2);
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
 
-        EntitlementCertificate cert = createEntitlementCertificate("entkey", "ecert");
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+            assertTrue(consumer.hasFact(expFactKey));
+            assertTrue(Pattern.matches(expFactValueRegex, consumer.getFact(expFactKey)));
+        }
+    }
 
-        Entitlement e = createEntitlement(owner, consumer, pool1, cert);
-        entitlementCurator.create(e);
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = {"factkey-6", "factkey_6", "factkey%6"})
+    public void testFindConsumersByFactsEscapesLikeWildcardsInKeys(String expFactKey) {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        Entitlement e2 = createEntitlement(owner, otherConsumer, pool2, cert);
-        entitlementCurator.create(e2);
+        String expFactValue = "value-6";
 
-        List<String> contracts = new ArrayList<>();
-        contracts.add("CONTRACT_123");
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, null, null, null, contracts).list();
+        long expected = created.stream()
+            .filter(consumer -> expFactValue.equals(consumer.getFact(expFactKey)))
+            .count();
+        assertTrue(expected > 0);
 
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .addFact(expFactKey, expFactValue);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+            assertTrue(consumer.hasFact(expFactKey));
+            assertEquals(expFactValue, consumer.getFact(expFactKey));
+        }
+    }
+
+    public static boolean consumerHasFactMatching(Consumer consumer, String regex, String value) {
+        if (consumer == null || consumer.getFacts() == null) {
+            return false;
+        }
+
+        return consumer.getFacts().entrySet()
+            .stream()
+            .filter(entry -> Pattern.matches(regex, entry.getKey()))
+            .anyMatch(entry -> value.equalsIgnoreCase(entry.getValue()));
     }
 
     @Test
-    public void testSearchBySku() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByFactsConvertsShellSingleCharWildcardInKeys() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        // Create another consumer to make sure we're not just retrieving everything
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        String expFactKey = "fa??key-?";
+        String expFactKeyRegex = "\\Afa..key-.\\z";
+        String expFactValue = "value-5";
 
-        Product p = TestUtil.createProduct("SKU1", "Product 1");
-        p.setAttribute(Product.Attributes.TYPE, "MKT");
+        long expected = created.stream()
+            .filter(consumer -> consumerHasFactMatching(consumer, expFactKeyRegex, expFactValue))
+            .count();
 
-        Product p2 = TestUtil.createProduct("SVC_ID", "Product 2");
-        p2.setAttribute(Product.Attributes.TYPE, "SVC");
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .addFact(expFactKey, expFactValue);
 
-        productCurator.create(p);
-        productCurator.create(p2);
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
 
-        Pool pool1 = new Pool()
-            .setOwner(owner)
-            .setProduct(p)
-            .setQuantity(1L)
-            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
-            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
-            .setContractNumber("CONTRACT_123")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789")
-            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
 
-        Pool pool2 = new Pool()
-            .setOwner(owner)
-            .setProduct(p2)
-            .setQuantity(1L)
-            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
-            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
-            .setContractNumber("CONTRACT_XXX")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789")
-            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-
-        poolCurator.create(pool1);
-        poolCurator.create(pool2);
-
-        EntitlementCertificate cert = createEntitlementCertificate("entkey", "ecert");
-
-        Entitlement e = createEntitlement(owner, consumer, pool1, cert);
-        entitlementCurator.create(e);
-
-        Entitlement e2 = createEntitlement(owner, consumer, pool2, cert);
-        entitlementCurator.create(e2);
-
-        List<String> skus = new ArrayList<>();
-        skus.add("SKU1");
-        List<Consumer> results = consumerCurator
-            .searchOwnerConsumers(owner, null, null, null, null, null, skus, null, null).list();
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
-
-        // MKT_ID should not appear since it is a marketing product
-        skus.clear();
-        skus.add("SVC_ID");
-        results = consumerCurator
-            .searchOwnerConsumers(owner, null, null, null, null, null, skus, null, null)
-            .list();
-        assertTrue(results.isEmpty());
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+            assertTrue(consumerHasFactMatching(consumer, expFactKeyRegex, expFactValue));
+        }
     }
 
     @Test
-    public void testSearchBySkuIsConjunction() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumersByFactsConvertsShellMultiCharWildcardInKeys() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        String expFactKey = "fact*-*";
+        String expFactKeyRegex = "\\Afact.*-.*\\z";
+        String expFactValue = "value-5";
 
-        Product product1 = TestUtil.createProduct("SKU1", "Product 1");
-        product1.setAttribute(Product.Attributes.TYPE, "MKT");
+        long expected = created.stream()
+            .filter(consumer -> consumerHasFactMatching(consumer, expFactKeyRegex, expFactValue))
+            .count();
 
-        Product product2 = TestUtil.createProduct("SKU2", "Product 2");
-        product2.setAttribute(Product.Attributes.TYPE, "MKT");
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .addFact(expFactKey, expFactValue);
 
-        productCurator.create(product1);
-        productCurator.create(product2);
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
 
-        Pool pool1 = new Pool()
-            .setOwner(owner)
-            .setProduct(product1)
-            .setQuantity(10L)
-            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
-            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
-            .setContractNumber("CONTRACT_123")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789")
-            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
 
-        Pool pool2 = new Pool()
-            .setOwner(owner)
-            .setProduct(product2)
-            .setQuantity(10L)
-            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
-            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
-            .setContractNumber("CONTRACT_XXX")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789")
-            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+            assertTrue(consumerHasFactMatching(consumer, expFactKeyRegex, expFactValue));
+        }
+    }
 
-        poolCurator.create(pool1);
-        poolCurator.create(pool2);
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = {"factkey-\\*", "factkey-\\?", "factkey\\7"})
+    public void testFindConsumerByFactsProperlyHandlesEscapesInKeys(String factKey) {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        EntitlementCertificate cert = createEntitlementCertificate("entkey", "entcert");
+        String resolvedFactKey = factKey.replaceAll("\\\\([*?])", "$1");
+        String expFactValue = "value-7";
 
-        Entitlement e = createEntitlement(owner, consumer, pool1, cert);
-        entitlementCurator.create(e);
+        long expected = created.stream()
+            .filter(consumer -> expFactValue.equals(consumer.getFact(resolvedFactKey)))
+            .count();
+        assertTrue(expected > 0);
 
-        Entitlement e2 = createEntitlement(owner, consumer, pool2, cert);
-        entitlementCurator.create(e2);
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .addFact(factKey, expFactValue);
 
-        Entitlement e3 = createEntitlement(owner, otherConsumer, pool2, cert);
-        entitlementCurator.create(e3);
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
 
-        List<String> skus = new ArrayList<>();
-        skus.add("SKU1");
-        skus.add("SKU2");
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, null, skus, null, null).list();
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
 
-        skus.clear();
-        skus.add("SKU2");
-        results = consumerCurator.searchOwnerConsumers(owner, null, null, null, null, null, skus, null, null)
-            .list();
-        assertEquals(2, results.size());
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+            assertTrue(consumer.hasFact(resolvedFactKey));
+            assertEquals(expFactValue, consumer.getFact(resolvedFactKey));
+        }
+    }
 
-        skus.clear();
-        skus.add("SKU1");
-        results = consumerCurator.searchOwnerConsumers(owner, null, null, null, null, null, skus, null, null)
-            .list();
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = {"value-\\*", "value\\?\\?", "value\\5"})
+    public void testFindConsumerByFactsProperlyHandlesEscapesInValues(String factValue) {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
+        String expFactKey = "factkey-5";
+        String resolvedFactValue = factValue.replaceAll("\\\\([*?])", "$1");
+
+        long expected = created.stream()
+            .filter(consumer -> resolvedFactValue.equals(consumer.getFact(expFactKey)))
+            .count();
+        assertTrue(expected > 0);
+
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .addFact(expFactKey, factValue);
+
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
+
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected, fetched.size());
+
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+            assertTrue(consumer.hasFact(expFactKey));
+            assertEquals(resolvedFactValue, consumer.getFact(expFactKey));
+        }
     }
 
     @Test
-    public void testSearchBySkuIsWithinOneOwner() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer = consumerCurator.create(consumer);
+    public void testFindConsumerAddsSecurityRestrictions() {
+        List<Consumer> created = this.createConsumersForQueryTests();
 
-        Owner owner2 = new Owner("test-owner2", "Test Owner2");
-        owner2 = ownerCurator.create(owner2);
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner2, ct);
-        otherConsumer = consumerCurator.create(otherConsumer);
+        Owner owner = created.stream()
+            .map(Consumer::getOwner)
+            .filter(Objects::nonNull)
+            .findFirst()
+            .get();
 
-        // Two owners, two different products, but with the same SKU
-        Product product1 = TestUtil.createProduct("SKU1", "Product 1");
-        product1.setAttribute(Product.Attributes.TYPE, "MKT");
+        String username = created.stream()
+            .map(Consumer::getUsername)
+            .filter(Objects::nonNull)
+            .findFirst()
+            .get();
 
-        Product product2 = TestUtil.createProduct("SKU1", "Product 1");
-        product2.setAttribute(Product.Attributes.TYPE, "MKT");
+        // OwnerPermission should trigger an implicit Consumer.owner == owner restriction
+        Principal principal = mock(Principal.class);
+        Permission permission = new OwnerPermission(owner, Access.ALL);
 
-        productCurator.create(product1);
-        productCurator.create(product2);
+        doReturn(false).when(principal).hasFullAccess();
+        doReturn(Arrays.asList(permission)).when(principal).getPermissions();
 
-        Pool pool1 = new Pool()
-            .setOwner(owner)
-            .setProduct(product1)
-            .setQuantity(10L)
-            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
-            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
-            .setContractNumber("CONTRACT_123")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789")
-            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        this.setupPrincipal(principal);
 
-        Pool pool2 = new Pool()
-            .setOwner(owner2)
-            .setProduct(product2)
-            .setQuantity(10L)
-            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
-            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
-            .setContractNumber("CONTRACT_XXX")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789")
-            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+        List<Consumer> expected = created.stream()
+            .filter(consumer -> owner.equals(consumer.getOwner()))
+            .filter(consumer -> username.equals(consumer.getUsername()))
+            .collect(Collectors.toList());
 
-        poolCurator.create(pool1);
-        poolCurator.create(pool2);
+        ConsumerQueryArguments queryArgs = new ConsumerQueryArguments()
+            .setUsername(username);
 
-        EntitlementCertificate cert = createEntitlementCertificate("entkey", "entcert");
+        List<Consumer> fetched = this.consumerCurator.findConsumers(queryArgs);
+        long fetchCount = this.consumerCurator.getConsumerCount(queryArgs);
 
-        Entitlement e = createEntitlement(owner, consumer, pool1, cert);
-        entitlementCurator.create(e);
+        assertNotNull(fetched);
+        assertEquals(fetched.size(), fetchCount);
+        assertEquals(expected.size(), fetched.size());
+        assertEquals(expected.size(), fetchCount);
 
-        Entitlement e2 = createEntitlement(owner2, otherConsumer, pool2, cert);
-        entitlementCurator.create(e2);
-
-        List<String> skus = new ArrayList<>();
-        skus.add("SKU1");
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, null, skus, null, null).list();
-
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
-
-        results = consumerCurator.searchOwnerConsumers(owner2, null, null, null, null, null, skus, null, null)
-            .list();
-
-        assertEquals(1, results.size());
-        assertEquals(otherConsumer, results.get(0));
-
-        // Searching with no owner cuts across the whole data set
-        results = consumerCurator.searchOwnerConsumers(null, null, null, null, null, null, skus, null, null)
-            .list();
-
-        assertEquals(2, results.size());
+        for (Consumer consumer : fetched) {
+            assertNotNull(consumer);
+            assertEquals(owner, consumer.getOwner());
+            assertEquals(username, consumer.getUsername());
+        }
     }
 
-    @Test
-    public void testSearchByContractNumberIsConjunction() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer = consumerCurator.create(consumer);
-
-        Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner, ct);
-        otherConsumer = consumerCurator.create(otherConsumer);
-
-        Product product = TestUtil.createProduct("SKU1", "Product 1");
-        product.setAttribute(Product.Attributes.TYPE, "MKT");
-
-        productCurator.create(product);
-
-        Pool pool1 = new Pool()
-            .setOwner(owner)
-            .setProduct(product)
-            .setQuantity(10L)
-            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
-            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
-            .setContractNumber("CONTRACT_123")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789")
-            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-
-        Pool pool2 = new Pool()
-            .setOwner(owner)
-            .setProduct(product)
-            .setQuantity(10L)
-            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
-            .setEndDate(TestUtil.createDateOffset(1, 0, 0))
-            .setContractNumber("CONTRACT_XXX")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789")
-            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-
-        poolCurator.create(pool1);
-        poolCurator.create(pool2);
-
-        EntitlementCertificate cert = createEntitlementCertificate("entkey", "entcert");
-
-        Entitlement e = createEntitlement(owner, consumer, pool1, cert);
-        entitlementCurator.create(e);
-
-        Entitlement e2 = createEntitlement(owner, consumer, pool2, cert);
-        entitlementCurator.create(e2);
-
-        Entitlement e3 = createEntitlement(owner, otherConsumer, pool2, cert);
-        entitlementCurator.create(e3);
-
-        List<String> contracts = new ArrayList<>();
-        contracts.add("CONTRACT_123");
-        contracts.add("CONTRACT_XXX");
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, null, null, null, contracts).list();
-
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
-
-        contracts.clear();
-        contracts.add("CONTRACT_XXX");
-        results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, null, null, null, contracts).list();
-        assertEquals(2, results.size());
-
-        contracts.clear();
-        contracts.add("CONTRACT_123");
-        results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, null, null, null, contracts).list();
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
-    }
-
-    @Test
-    public void testSearchByContractAndSku() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer = consumerCurator.create(consumer);
-
-        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
-        consumer2 = consumerCurator.create(consumer2);
-
-        Consumer consumer3 = new Consumer("testConsumer3", "testUser3", owner, ct);
-        consumer3 = consumerCurator.create(consumer3);
-
-        Product p = TestUtil.createProduct("SKU1", "Product 1");
-        p.setAttribute(Product.Attributes.TYPE, "MKT");
-
-        Product p2 = TestUtil.createProduct("SKU2", "Product 2");
-        p2.setAttribute(Product.Attributes.TYPE, "MKT");
-
-        productCurator.create(p);
-        productCurator.create(p2);
-
-        Pool pool1 = new Pool()
-            .setOwner(owner)
-            .setProduct(p)
-            .setQuantity(1L)
-            .setStartDate(TestUtil.createDateOffset(-3, 0, 0))
-            .setEndDate(TestUtil.createDateOffset(3, 0, 0))
-            .setContractNumber("CONTRACT_123")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789")
-            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-
-        Pool pool2 = new Pool()
-            .setOwner(owner)
-            .setProduct(p)
-            .setQuantity(1L)
-            .setStartDate(TestUtil.createDateOffset(-3, 0, 0))
-            .setEndDate(TestUtil.createDateOffset(3, 0, 0))
-            .setContractNumber("CONTRACT_XXX")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789")
-            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-
-        // Same contract as 1 but different SKU
-        Pool pool3 = new Pool()
-            .setOwner(owner)
-            .setProduct(p2)
-            .setQuantity(1L)
-            .setStartDate(TestUtil.createDateOffset(-3, 0, 0))
-            .setEndDate(TestUtil.createDateOffset(3, 0, 0))
-            .setContractNumber("CONTRACT_123")
-            .setAccountNumber("ACCOUNT_456")
-            .setOrderNumber("ORDER_789")
-            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
-
-        this.poolCurator.create(pool1);
-        this.poolCurator.create(pool2);
-        this.poolCurator.create(pool3);
-
-        EntitlementCertificate cert = createEntitlementCertificate("entkey", "ecert");
-
-        Entitlement e = createEntitlement(owner, consumer, pool1, cert);
-        entitlementCurator.create(e);
-
-        Entitlement e2 = createEntitlement(owner, consumer2, pool2, cert);
-        entitlementCurator.create(e2);
-
-        Entitlement e3 = createEntitlement(owner, consumer3, pool3, cert);
-        entitlementCurator.create(e3);
-
-        List<String> skus = new ArrayList<>();
-        skus.add("SKU1");
-
-        List<String> contracts = new ArrayList<>();
-        contracts.add("CONTRACT_123");
-
-        List<Consumer> results = consumerCurator.searchOwnerConsumers(
-            owner, null, null, null, null, null, skus, null, contracts).list();
-
-        assertEquals(1, results.size());
-        assertEquals(consumer, results.get(0));
-    }
 }

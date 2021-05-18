@@ -31,7 +31,7 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.AsyncJobStatus.JobState;
-import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
+import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryArguments;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -113,11 +113,11 @@ public class JobCleanerTest {
         this.setMaxAgeConfig(JobCleaner.CFG_MAX_NONTERMINAL_JOB_AGE, maxAge);
         this.setMaxAgeConfig(JobCleaner.CFG_MAX_RUNNING_JOB_AGE, maxAge);
 
-        ArgumentCaptor<AsyncJobStatusQueryBuilder> termCaptor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> termCaptor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
 
-        ArgumentCaptor<AsyncJobStatusQueryBuilder> nontermCaptor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryBuilder.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> nontermCaptor =
+            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
 
         long minTime = this.subtractMinutes(System.currentTimeMillis(), maxAge);
 
@@ -136,31 +136,31 @@ public class JobCleanerTest {
         verify(this.jobManager, times(1)).cleanupJobs(termCaptor.capture());
         verify(this.jobManager, times(2)).abortNonTerminalJobs(nontermCaptor.capture());
 
-        AsyncJobStatusQueryBuilder termBuilder = termCaptor.getValue();
-        AsyncJobStatusQueryBuilder nontermBuilder = nontermCaptor.getAllValues().get(0);
-        AsyncJobStatusQueryBuilder runningBuilder = nontermCaptor.getAllValues().get(1);
+        AsyncJobStatusQueryArguments termArgs = termCaptor.getValue();
+        AsyncJobStatusQueryArguments nontermArgs = nontermCaptor.getAllValues().get(0);
+        AsyncJobStatusQueryArguments runningArgs = nontermCaptor.getAllValues().get(1);
 
-        this.verifyQueryBuilder(termBuilder, this.getExpectedTerminalJobStates(), minTime, maxTime);
-        this.verifyQueryBuilder(nontermBuilder, this.getExpectedNonTerminalJobStates(), minTime, maxTime);
-        this.verifyQueryBuilder(runningBuilder, this.getExpectedRunningJobStates(), minTime, maxTime);
+        this.verifyQueryArguments(termArgs, this.getExpectedTerminalJobStates(), minTime, maxTime);
+        this.verifyQueryArguments(nontermArgs, this.getExpectedNonTerminalJobStates(), minTime, maxTime);
+        this.verifyQueryArguments(runningArgs, this.getExpectedRunningJobStates(), minTime, maxTime);
     }
 
-    private void verifyQueryBuilder(AsyncJobStatusQueryBuilder builder, Set<JobState> expectedStates,
+    private void verifyQueryArguments(AsyncJobStatusQueryArguments args, Set<JobState> expectedStates,
         long minTime, long maxTime) {
 
-        assertNotNull(builder);
+        assertNotNull(args);
 
         // The job cleaner is not job-specific nor owner-specific
-        assertNull(builder.getJobKeys());
-        assertNull(builder.getOwnerIds());
+        assertNull(args.getJobKeys());
+        assertNull(args.getOwnerIds());
 
         // It should also not care about the origin, executor, or principals
-        assertNull(builder.getOrigins());
-        assertNull(builder.getExecutors());
-        assertNull(builder.getPrincipalNames());
+        assertNull(args.getOrigins());
+        assertNull(args.getExecutors());
+        assertNull(args.getPrincipalNames());
 
         // Verify the states are as we expect
-        Collection<JobState> states = builder.getJobStates();
+        Collection<JobState> states = args.getJobStates();
 
         assertNotNull(states);
         assertEquals(expectedStates.size(), states.size());
@@ -170,10 +170,10 @@ public class JobCleanerTest {
         }
 
         // It should not define an "after" date limit
-        assertNull(builder.getStartDate());
+        assertNull(args.getStartDate());
 
         // The cutoff date should be defined as the "end" date/time:
-        Date endTime = builder.getEndDate();
+        Date endTime = args.getEndDate();
 
         assertNotNull(endTime);
 
@@ -212,8 +212,8 @@ public class JobCleanerTest {
         Object result = resultCaptor.getValue();
         assertNotNull(result);
 
-        verify(this.jobManager, times(1)).cleanupJobs(any(AsyncJobStatusQueryBuilder.class));
-        verify(this.jobManager, times(0)).abortNonTerminalJobs(any(AsyncJobStatusQueryBuilder.class));
+        verify(this.jobManager, times(1)).cleanupJobs(any(AsyncJobStatusQueryArguments.class));
+        verify(this.jobManager, times(0)).abortNonTerminalJobs(any(AsyncJobStatusQueryArguments.class));
     }
 
 }

@@ -14,21 +14,8 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
@@ -87,6 +74,7 @@ import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
@@ -142,7 +130,10 @@ import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -163,6 +154,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 import javax.inject.Inject;
@@ -288,7 +282,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             this.principalProvider);
     }
 
-    // TODO: This test does not belong here; it does not hit the resource at all
     private org.candlepin.dto.api.v1.ProductDTO buildTestProductDTO() {
         org.candlepin.dto.api.v1.ProductDTO dto = TestUtil.createProductDTO("test_product");
         dto.getAttributes().add(createAttribute(Product.Attributes.VERSION, "1.0"));
@@ -699,15 +692,22 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         poolCurator.create(pool2);
 
         when(this.principalProvider.get()).thenReturn(principal);
-        List<PoolDTO> nowList = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, null, false,
+        Stream<PoolDTO> result = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, null, false,
             Util.toDateTime(new Date()), null, new ArrayList<>(), false, false, null, null);
+
+        assertNotNull(result);
+        List<PoolDTO> nowList = result.collect(Collectors.toList());
 
         assertEquals(1, nowList.size());
         assert (nowList.get(0).getId().equals(pool1.getId()));
 
         Date activeOn = new Date(pool2.getStartDate().getTime() + 1000L * 60 * 60 * 24);
-        List<PoolDTO> futureList = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, null,
-            false, Util.toDateTime(activeOn), null, new ArrayList<>(), false, false, null, null);
+        result = ownerResource.listPools(owner.getKey(), c.getUuid(), null, null, null, false,
+            Util.toDateTime(activeOn), null, new ArrayList<>(), false, false, null, null);
+
+        assertNotNull(result);
+        List<PoolDTO> futureList = result.collect(Collectors.toList());
+
         assertEquals(1, futureList.size());
         assert (futureList.get(0).getId().equals(pool2.getId()));
     }
@@ -724,8 +724,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         when(this.principalProvider.get()).thenReturn(principal);
 
-        List<PoolDTO> pools = ownerResource.listPools(owner.getKey(),
-            null, null, null, null, true, null, null, new ArrayList<>(), false, false, null, null);
+        Stream<PoolDTO> result = ownerResource.listPools(owner.getKey(), null, null, null, null, true,
+            null, null, new ArrayList<>(), false, false, null, null);
+
+        assertNotNull(result);
+        List<PoolDTO> pools = result.collect(Collectors.toList());
         assertEquals(2, pools.size());
     }
 
@@ -748,16 +751,24 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         params.add(createKeyValueParam("cores", "12"));
 
         when(this.principalProvider.get()).thenReturn(principal);
-        List<PoolDTO> pools = ownerResource.listPools(owner.getKey(), null,
+        Stream<PoolDTO> result = ownerResource.listPools(owner.getKey(), null,
             null, null, null, true, null, null, params, false, false, null, null);
+
+        assertNotNull(result);
+        List<PoolDTO> pools = result.collect(Collectors.toList());
+
         assertEquals(1, pools.size());
         assertModelEqualsDTO(pool2, pools.get(0));
 
         params.clear();
         params.add(createKeyValueParam("virt_only", "true"));
 
-        pools = ownerResource.listPools(owner.getKey(), null, null,
+        result = ownerResource.listPools(owner.getKey(), null, null,
             null, null, true, null, null, params, false, false, null, null);
+
+        assertNotNull(result);
+        pools = result.collect(Collectors.toList());
+
         assertEquals(1, pools.size());
         assertModelEqualsDTO(pool1, pools.get(0));
     }
@@ -779,14 +790,23 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         List<KeyValueParamDTO> params = new ArrayList<>();
 
         when(this.principalProvider.get()).thenReturn(principal);
-        List<PoolDTO> pools = ownerResource.listPools(owner.getKey(), null,
-            null, null, null, true, null, null, params, false, false, null, null);
+        Stream<PoolDTO> result = ownerResource.listPools(owner.getKey(), null, null, null, null, true,
+            null, null, params, false, false, null, null);
+
+        assertNotNull(result);
+        List<PoolDTO> pools = result.collect(Collectors.toList());
+
         assertEquals(2, pools.size());
 
         params = new ArrayList<>();
         params.add(createKeyValueParam(Pool.Attributes.DEVELOPMENT_POOL, "!true"));
-        pools = ownerResource.listPools(owner.getKey(), null,
-            null, null, null, true, null, null, params, false, false, null, null);
+
+        result = ownerResource.listPools(owner.getKey(), null, null, null, null,
+            true, null, null, params, false, false, null, null);
+
+        assertNotNull(result);
+        pools = result.collect(Collectors.toList());
+
         assertEquals(1, pools.size());
         assertModelEqualsDTO(pool2, pools.get(0));
     }
@@ -835,22 +855,20 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Principal principal = setupPrincipal(owner, Access.ALL);
         when(this.principalProvider.get()).thenReturn(principal);
         securityInterceptor.enable();
-        assertThrows(ForbiddenException.class, () ->
-            ownerResource.deleteOwner(owner.getKey(), true, false)
-        );
+
+        assertThrows(ForbiddenException.class, () -> ownerResource.deleteOwner(owner.getKey(), true, false));
     }
 
     @Test
     public void consumerCannotListAllConsumersInOwner() {
         Consumer c = createConsumer(owner);
+
         Principal principal = setupPrincipal(new ConsumerPrincipal(c, owner));
         when(this.principalProvider.get()).thenReturn(principal);
-
         securityInterceptor.enable();
+
         assertThrows(ForbiddenException.class, () ->
-            ownerResource.listConsumers(owner.getKey(), null, null, new ArrayList<>(), null, null, null,
-            null, null)
-        );
+            ownerResource.listConsumers(owner.getKey(), null, null, new ArrayList<>(), null, null));
     }
 
     @Test
@@ -866,11 +884,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         types.add("type");
         consumerTypeCurator.create(new ConsumerType("type"));
 
-        CandlepinQuery<ConsumerDTOArrayElement> result = ownerResource.listConsumers(
-            owner.getKey(), "username", types, uuids, null, null, null, null, null);
+        Stream<ConsumerDTOArrayElement> result = ownerResource
+            .listConsumers(owner.getKey(), "username", types, uuids, null, null);
 
         assertNotNull(result);
-        List<ConsumerDTOArrayElement> consumers = result.list();
+        List<ConsumerDTOArrayElement> consumers = result.collect(Collectors.toList());
 
         assertEquals(0, consumers.size());
     }
@@ -889,11 +907,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        CandlepinQuery<ConsumerDTOArrayElement> result = ownerResource.listConsumers(
-            owner.getKey(), null, null, uuids, null, null, null, null, null);
+        Stream<ConsumerDTOArrayElement> result = ownerResource
+            .listConsumers(owner.getKey(), null, null, uuids, null, null);
 
         assertNotNull(result);
-        List<ConsumerDTOArrayElement> consumers = result.list();
+        List<ConsumerDTOArrayElement> consumers = result.collect(Collectors.toList());
 
         assertEquals(1, consumers.size());
     }
@@ -909,9 +927,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         types.add("unknown");
 
         BadRequestException ex = assertThrows(BadRequestException.class, () ->
-            ownerResource.listConsumers(owner.getKey(), null, types, new ArrayList<>(), null,
-            null, null, null, null)
-        );
+            ownerResource.listConsumers(owner.getKey(), null, types, new ArrayList<>(), null, null));
         assertEquals("No such unit type(s): unknown", ex.getMessage());
     }
 
@@ -927,13 +943,364 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         setupPrincipal(owner, Access.ALL);
         securityInterceptor.enable();
 
-        CandlepinQuery<ConsumerDTOArrayElement> result = ownerResource.listConsumers(
-            owner.getKey(), null, null, uuids, null, null, null, null, null);
+        Stream<ConsumerDTOArrayElement> result = ownerResource
+            .listConsumers(owner.getKey(), null, null, uuids, null, null);
 
         assertNotNull(result);
-        List<ConsumerDTOArrayElement> consumers = result.list();
+        List<ConsumerDTOArrayElement> consumers = result.collect(Collectors.toList());
 
         assertEquals(2, consumers.size());
+    }
+
+    protected ConsumerType mockConsumerType() {
+        int rnd = TestUtil.randomInt();
+        ConsumerType ctype = new ConsumerType();
+        ctype.setId("test_ctype-" + rnd);
+        ctype.setLabel("ctype_label-" + rnd);
+
+        doReturn(ctype).when(this.mockConsumerTypeCurator).getByLabel(eq(ctype.getLabel()));
+        doReturn(ctype).when(this.mockConsumerTypeCurator).getByLabel(eq(ctype.getLabel()), anyBoolean());
+        doReturn(ctype).when(this.mockConsumerTypeCurator).get(eq(ctype.getId()));
+
+        doAnswer(new Answer<ConsumerType>() {
+            @Override
+            public ConsumerType answer(InvocationOnMock invocation) throws Throwable {
+                Object[] args = invocation.getArguments();
+                Consumer consumer = (Consumer) args[0];
+                ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
+                ConsumerType ctype = null;
+
+                if (consumer == null || consumer.getTypeId() == null) {
+                    throw new IllegalArgumentException("consumer is null or lacks a type ID");
+                }
+
+                ctype = curator.get(consumer.getTypeId());
+                if (ctype == null) {
+                    throw new IllegalStateException("No such consumer type: " + consumer.getTypeId());
+                }
+
+                return ctype;
+            }
+        }).when(this.mockConsumerTypeCurator).getConsumerType(any(Consumer.class));
+
+        return ctype;
+    }
+
+    protected Owner mockOwner(String ownerKey) {
+        int rnd = TestUtil.randomInt();
+
+        Owner owner = new Owner()
+            .setId("test-owner-" + rnd)
+            .setKey(ownerKey)
+            .setDisplayName("Test Owner " + rnd);
+
+        doReturn(owner).when(this.mockOwnerCurator).getByKey(eq(owner.getKey()));
+        return owner;
+    }
+
+    protected Consumer mockConsumer(Owner owner, ConsumerType ctype) {
+        int rnd = TestUtil.randomInt();
+
+        Consumer consumer = new Consumer()
+            .setName("test_consumer-" + rnd)
+            .setUsername("test_user-" + rnd)
+            .setOwner(owner)
+            .setType(ctype);
+
+        consumer.setId("test_consumer-" + rnd);
+        consumer.ensureUUID();
+
+        doReturn(consumer).when(this.mockConsumerCurator).verifyAndLookupConsumer(eq(consumer.getUuid()));
+        doReturn(consumer).when(this.mockConsumerCurator)
+            .verifyAndLookupConsumerWithEntitlements(eq(consumer.getUuid()));
+
+        return consumer;
+    }
+
+    @Test
+    public void testListConsumersRequiresPagingForLargeResultSets() {
+        Owner owner = this.mockOwner("test_owner");
+        ConsumerType ctype = this.mockConsumerType();
+
+        List<Consumer> expected = Stream.generate(() -> this.mockConsumer(owner, ctype))
+            .limit(5)
+            .collect(Collectors.toList());
+
+        doReturn(5L).when(this.mockConsumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
+        doReturn(expected).when(this.mockConsumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        OwnerResource resource = this.buildOwnerResource();
+        Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), "username", null,
+            null, null, null);
+
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        doReturn(5000L).when(this.mockConsumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
+
+        assertThrows(BadRequestException.class, () ->
+            resource.listConsumers(owner.getKey(), "username", null, null, null, null));
+    }
+
+    @Test
+    public void testListConsumersByOwner() {
+        Owner owner = this.mockOwner("test_owner");
+        ConsumerType ctype = this.mockConsumerType();
+
+        List<Consumer> expected = Stream.generate(() -> this.mockConsumer(owner, ctype))
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.mockConsumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        OwnerResource resource = this.buildOwnerResource();
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), null,
+            null, null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertSame(owner, builder.getOwner());
+        assertNull(builder.getUsername());
+        assertNull(builder.getUuids());
+        assertNull(builder.getTypes());
+        assertNull(builder.getHypervisorIds());
+        assertNull(builder.getFacts());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @Test
+    public void testListConsumersByUsername() {
+        String username = "test_user";
+        Owner owner = this.mockOwner("test_owner");
+        ConsumerType ctype = this.mockConsumerType();
+
+        List<Consumer> expected = Stream.generate(() -> this.mockConsumer(owner, ctype))
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.mockConsumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        OwnerResource resource = this.buildOwnerResource();
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), username, null,
+            null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertEquals(owner, builder.getOwner());
+        assertEquals(username, builder.getUsername());
+        assertNull(builder.getUuids());
+        assertNull(builder.getTypes());
+        assertNull(builder.getHypervisorIds());
+        assertNull(builder.getFacts());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @Test
+    public void testListConsumersByUuid() {
+        List<String> uuids = Arrays.asList("uuid-1", "uuid-2", "uuid-3");
+        Owner owner = this.mockOwner("test_owner");
+        ConsumerType ctype = this.mockConsumerType();
+
+        List<Consumer> expected = Stream.generate(() -> this.mockConsumer(owner, ctype))
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.mockConsumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        OwnerResource resource = this.buildOwnerResource();
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), null, null,
+            uuids, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertEquals(owner, builder.getOwner());
+        assertNull(builder.getUsername());
+        assertEquals(uuids, builder.getUuids());
+        assertNull(builder.getTypes());
+        assertNull(builder.getHypervisorIds());
+        assertNull(builder.getFacts());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @Test
+    public void testListConsumersByType() {
+        List<ConsumerType> types = Stream.generate(this::mockConsumerType)
+            .limit(3)
+            .collect(Collectors.toList());
+
+        Map<String, ConsumerType> typeMap = types.stream()
+            .collect(Collectors.toMap(ConsumerType::getLabel, Function.identity()));
+
+        doAnswer(new Answer<List<ConsumerType>>() {
+                @Override
+                public List<ConsumerType> answer(InvocationOnMock iom) throws Throwable {
+                    Set<String> labels = (Set<String>) iom.getArguments()[0];
+                    List<ConsumerType> output = new ArrayList<>();
+
+                    for (String label : labels) {
+                        if (typeMap.containsKey(label)) {
+                            output.add(typeMap.get(label));
+                        }
+                    }
+
+                    return output;
+                }
+            }).when(this.mockConsumerTypeCurator).getByLabels(anySet());
+
+        Owner owner = this.mockOwner("test_owner");
+        ConsumerType ctype = this.mockConsumerType();
+
+        List<Consumer> expected = Stream.generate(() -> this.mockConsumer(owner, ctype))
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.mockConsumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        OwnerResource resource = this.buildOwnerResource();
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), null,
+            typeMap.keySet(), null, null, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertEquals(owner, builder.getOwner());
+        assertNull(builder.getUsername());
+        assertNull(builder.getUuids());
+        // We need an order-agnostic check here, and Hamcrest's matcher is busted, so we have to
+        // do this one manually.
+        assertTrue(Util.collectionsAreEqual(types, builder.getTypes()));
+        assertNull(builder.getHypervisorIds());
+        assertNull(builder.getFacts());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    @Test
+    public void testListConsumersByHypervisorId() {
+        List<String> hids = Arrays.asList("hypervisor-1", "hypervisor-2", "hypervisor-3");
+        Owner owner = this.mockOwner("test_owner");
+        ConsumerType ctype = this.mockConsumerType();
+
+        List<Consumer> expected = Stream.generate(() -> this.mockConsumer(owner, ctype))
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.mockConsumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        OwnerResource resource = this.buildOwnerResource();
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), null, null,
+            null, hids, null);
+
+        // Verify the input passthrough is working properly
+        verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertEquals(owner, builder.getOwner());
+        assertNull(builder.getUsername());
+        assertNull(builder.getUuids());
+        assertNull(builder.getTypes());
+        assertEquals(hids, builder.getHypervisorIds());
+        assertNull(builder.getFacts());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
+    }
+
+    private KeyValueParamDTO buildFactParam(String key, String value) {
+        return new KeyValueParamDTO()
+            .key(key)
+            .value(value);
+    }
+
+    @Test
+    public void testListConsumersByFact() {
+        List<KeyValueParamDTO> factsParam = Arrays.asList(
+            this.buildFactParam("fact-1", "value-1a"),
+            this.buildFactParam("fact-1", "value-1b"),
+            this.buildFactParam("fact-2", "value-2"),
+            this.buildFactParam("fact-3", "value-3"));
+
+        Map<String, Collection<String>> factsMap = Map.of(
+            "fact-1", Set.of("value-1a", "value-1b"),
+            "fact-2", Set.of("value-2"),
+            "fact-3", Set.of("value-3"));
+
+        Owner owner = this.mockOwner("test_owner");
+        ConsumerType ctype = this.mockConsumerType();
+
+        List<Consumer> expected = Stream.generate(() -> this.mockConsumer(owner, ctype))
+            .limit(3)
+            .collect(Collectors.toList());
+
+        doReturn(expected).when(this.mockConsumerCurator).findConsumers(any(ConsumerQueryArguments.class));
+
+        OwnerResource resource = this.buildOwnerResource();
+        ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
+        Stream<ConsumerDTOArrayElement> result = resource.listConsumers(owner.getKey(), null, null,
+            null, null, factsParam);
+
+        // Verify the input passthrough is working properly
+        verify(this.mockConsumerCurator, times(1)).findConsumers(captor.capture());
+        ConsumerQueryArguments builder = captor.getValue();
+
+        assertNotNull(builder);
+        assertEquals(owner, builder.getOwner());
+        assertNull(builder.getUsername());
+        assertNull(builder.getUuids());
+        assertNull(builder.getTypes());
+        assertNull(builder.getHypervisorIds());
+        assertEquals(factsMap, builder.getFacts());
+
+        // Verify the output passthrough is working properly
+        assertNotNull(result);
+        assertEquals(expected.size(), result.count());
+
+        // Impl note: the DTOs converted from mocks will have nothing in them, so there's no reason
+        // to bother checking that we got the exact ones we're expecting.
     }
 
     //copied from consumerCannotListAllConsumersInOwner
@@ -945,8 +1312,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertThrows(ForbiddenException.class, () ->
-            ownerResource.countConsumers(owner.getKey(), typeLabels, skus, subscriptionIds, contracts)
-        );
+            ownerResource.countConsumers(owner.getKey(), null, null, null, null));
     }
 
     //copied from failWhenListingByBadConsumerType
@@ -956,8 +1322,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         types.add("unknown");
 
         BadRequestException ex = assertThrows(BadRequestException.class, () ->
-            ownerResource.countConsumers(owner.getKey(), types, skus, subscriptionIds, contracts)
-        );
+            ownerResource.countConsumers(owner.getKey(), null, types, null, null));
+
         assertEquals("No such unit type(s): unknown", ex.getMessage());
     }
 
@@ -967,8 +1333,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         createConsumer(owner);
 
         NotFoundException ex = assertThrows(NotFoundException.class, () ->
-            ownerResource.countConsumers(key, typeLabels, skus, subscriptionIds, contracts)
-        );
+            ownerResource.countConsumers(key, null, null, null, null));
         assertEquals(i18n.tr("Owner with key \"{0}\" was not found", key), ex.getMessage());
     }
 
@@ -985,8 +1350,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         securityInterceptor.enable();
 
-        List<PoolDTO> pools = ownerResource.listPools(owner.getKey(), c.getUuid(), null,
+        Stream<PoolDTO> poolStream = ownerResource.listPools(owner.getKey(), c.getUuid(), null,
             p.getId(), null, true, null, null, new ArrayList<>(), false, false, null, null);
+
+        assertNotNull(poolStream);
+        List<PoolDTO> pools = poolStream.collect(Collectors.toList());
+
         assertEquals(1, pools.size());
         PoolDTO returnedPool = pools.get(0);
         assertNotNull(returnedPool.getCalculatedAttributes());

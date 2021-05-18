@@ -27,6 +27,10 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Predicate;
+
 
 
 /**
@@ -66,6 +70,15 @@ public class AsyncJobStatusPermission extends TypedPermission<AsyncJobStatus> {
 
     @Override
     public Criterion getCriteriaRestrictions(Class entityClass) {
+        // This behavior is deprecated. Always return null.
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> Predicate getQueryRestriction(Class<T> entityClass, CriteriaBuilder builder, From<?, T> path) {
         // This behavior is deprecated. Always return null.
         return null;
     }

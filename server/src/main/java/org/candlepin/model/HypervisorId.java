@@ -30,10 +30,8 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * HypervisorId represents a hypervisor host, unique per organization
@@ -46,8 +44,6 @@ import javax.xml.bind.annotation.XmlTransient;
  * with a hypervisorId so that hypervisorCheckIn can update its guest list
  * without additional info or lookups.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = HypervisorId.DB_TABLE, uniqueConstraints =
     @UniqueConstraint(name = "cp_consumer_hypervisor_ukey", columnNames = {"owner_id", "hypervisor_id"}))
@@ -74,32 +70,16 @@ public class HypervisorId extends AbstractHibernateObject {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, unique = true)
-    @XmlTransient
     @NotNull
     private Consumer consumer;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
-    @XmlTransient
     @NotNull
     private Owner owner;
 
     public HypervisorId() {
-    }
-
-    public HypervisorId(String hypervisorId) {
-        this.setHypervisorId(hypervisorId);
-    }
-
-    public HypervisorId(Consumer consumer, Owner owner, String hypervisorId) {
-        this(hypervisorId);
-        this.setConsumer(consumer);
-        this.setOwner(owner);
-    }
-
-    public HypervisorId(Consumer consumer, Owner owner, String hypervisorId, String reporterId) {
-        this(consumer, owner, hypervisorId);
-        this.setReporterId(reporterId);
+        // Intentionally left empty
     }
 
     @Override
@@ -109,9 +89,13 @@ public class HypervisorId extends AbstractHibernateObject {
 
     /**
      * @param id the id to set
+     *
+     * @return
+     *  a reference to this HypervisorId
      */
-    public void setId(String id) {
+    public HypervisorId setId(String id) {
         this.id = id;
+        return this;
     }
 
     /**
@@ -123,17 +107,18 @@ public class HypervisorId extends AbstractHibernateObject {
 
     /**
      * @param hypervisorId the hypervisorId to set
+     *
+     * @return
+     *  a reference to this HypervisorId
      */
-    public void setHypervisorId(String hypervisorId) {
+    public HypervisorId setHypervisorId(String hypervisorId) {
         // Hypervisor uuid is case insensitive, we need to force it to lower
         // case in order to enforce the unique hypervisorId per org constraint
         //
         // Queries in Candlepin are dependent on the fact this attribute is
         // being stored in lower case.
-        if (hypervisorId != null) {
-            hypervisorId = hypervisorId.toLowerCase();
-        }
-        this.hypervisorId = hypervisorId;
+        this.hypervisorId = hypervisorId != null ? hypervisorId.toLowerCase() : null;
+        return this;
     }
 
     /**
@@ -145,38 +130,48 @@ public class HypervisorId extends AbstractHibernateObject {
 
     /**
      * @param reporterId the reporterId to set
+     *
+     * @return
+     *  a reference to this HypervisorId
      */
-    public void setReporterId(String reporterId) {
+    public HypervisorId setReporterId(String reporterId) {
         this.reporterId = reporterId;
+        return this;
     }
 
     /**
      * @return the consumer
      */
-    @XmlTransient
     public Consumer getConsumer() {
         return consumer;
     }
 
     /**
      * @param consumer the consumer to set
+     *
+     * @return
+     *  a reference to this HypervisorId
      */
-    public void setConsumer(Consumer consumer) {
+    public HypervisorId setConsumer(Consumer consumer) {
         this.consumer = consumer;
+        return this;
     }
 
     /**
      * @return the owner
      */
-    @XmlTransient
     public Owner getOwner() {
         return owner;
     }
 
     /**
      * @param owner the owner to set
+     *
+     * @return
+     *  a reference to this HypervisorId
      */
-    public void setOwner(Owner owner) {
+    public HypervisorId setOwner(Owner owner) {
         this.owner = owner;
+        return this;
     }
 }

@@ -22,7 +22,7 @@ import org.candlepin.async.JobManager;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.model.AsyncJobStatus.JobState;
-import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryBuilder;
+import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryArguments;
 import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
@@ -128,11 +128,11 @@ public class JobCleaner implements AsyncJob {
             .collect(Collectors.toSet());
 
         // Build the query builder with our config
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobStates(jobStates)
             .setEndDate(cutoff);
 
-        int removed = this.jobManager.cleanupJobs(queryBuilder);
+        int removed = this.jobManager.cleanupJobs(queryArgs);
         log.info("Removed {} terminal jobs older than {}", removed, cutoff);
 
         return removed;
@@ -145,11 +145,11 @@ public class JobCleaner implements AsyncJob {
             .collect(Collectors.toSet());
 
         // Build the query builder with our config
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobStates(jobStates)
             .setEndDate(cutoff);
 
-        int aborted = this.jobManager.abortNonTerminalJobs(queryBuilder);
+        int aborted = this.jobManager.abortNonTerminalJobs(queryArgs);
         log.info("Aborted {} non-running jobs older than {}", aborted, cutoff);
 
         return aborted;
@@ -160,11 +160,11 @@ public class JobCleaner implements AsyncJob {
         Set<JobState> jobStates = Util.asSet(JobState.RUNNING);
 
         // Build the query builder with our config
-        AsyncJobStatusQueryBuilder queryBuilder = new AsyncJobStatusQueryBuilder()
+        AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobStates(jobStates)
             .setEndDate(cutoff);
 
-        int aborted = this.jobManager.abortNonTerminalJobs(queryBuilder);
+        int aborted = this.jobManager.abortNonTerminalJobs(queryArgs);
         log.info("Aborted {} running jobs older than {}", aborted, cutoff);
 
         return aborted;
