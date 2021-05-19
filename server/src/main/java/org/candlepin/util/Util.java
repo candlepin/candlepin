@@ -603,15 +603,18 @@ public class Util {
     }
 
     /**
-     * Split a given string and return in as a List
+     * Splits a given string by comma and returns it as a List.
+     *
+     * Handles redundant whitespace and repeated commas.
+     *
      * @param list a string to be split
      * @return a list of values
      */
     public static List<String> toList(String list) {
-        if (list == null) {
+        if (StringUtils.isBlank(list)) {
             return Collections.emptyList();
         }
-        return Arrays.asList(list.split(","));
+        return Arrays.asList(list.trim().split("\\s*,[\\s,]*"));
     }
 
     /*

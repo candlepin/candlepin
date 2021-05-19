@@ -14,13 +14,14 @@
  */
 package org.candlepin.common.config;
 
+import org.candlepin.common.util.Util;
+
 import org.apache.commons.lang.BooleanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -146,8 +147,7 @@ public class PropertyConverter {
 
     public static List<String> toList(Object value) {
         if (value instanceof String) {
-            String[] parts = ((String) value).trim().split("\\s*,\\s*");
-            return Arrays.asList(parts);
+            return Util.toList((String) value);
         }
         else {
             String msg = formatErrorMessage(value, List.class);
@@ -158,8 +158,7 @@ public class PropertyConverter {
 
     public static Set<String> toSet(Object value) {
         if (value instanceof String) {
-            String[] parts = ((String) value).trim().split("\\s*,\\s*");
-            return new HashSet<>(Arrays.asList(parts));
+            return new HashSet<>(Util.toList((String) value));
         }
         else {
             String msg = formatErrorMessage(value, Set.class);

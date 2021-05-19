@@ -33,8 +33,8 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
@@ -49,9 +49,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
-/**
- * Tests for SystemPurposeComplianceRules
- */
+
+
 public class SystemPurposeComplianceRulesTest {
 
     private SystemPurposeComplianceRules complianceRules;
@@ -62,7 +61,7 @@ public class SystemPurposeComplianceRulesTest {
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private PoolCurator poolCurator;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         Locale locale = new Locale("en_US");

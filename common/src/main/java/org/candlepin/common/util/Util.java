@@ -15,10 +15,14 @@
 package org.candlepin.common.util;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Basic utilities.
@@ -41,4 +45,14 @@ public class Util {
             return new String(data);
         }
     }
+
+    // TODO A copy of Util.toList from server module. Delete after modules are merged
+    @Deprecated
+    public static List<String> toList(String list) {
+        if (StringUtils.isBlank(list)) {
+            return Collections.emptyList();
+        }
+        return Arrays.asList(list.trim().split("\\s*,[\\s,]*"));
+    }
+
 }

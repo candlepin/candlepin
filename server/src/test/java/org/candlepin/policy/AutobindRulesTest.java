@@ -751,7 +751,8 @@ public class AutobindRulesTest {
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
-        Product prod1 = createSysPurposeProduct(null, "RHEL Server", "RHEL EUS", null, "Production");
+        Product prod1 = createSysPurposeProduct(
+            null, " RHEL Server , RHEL Server2 ", "RHEL EUS", null, "Production");
         prod1.addProvidedProduct(product69);
 
         Pool p1 = TestUtil.createPool(owner, prod1)
@@ -1718,7 +1719,7 @@ public class AutobindRulesTest {
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
-        Product prodMCT1650 = createSysPurposeProduct(null, null, "Smart Management,Other Management",
+        Product prodMCT1650 = createSysPurposeProduct(null, null, " Smart Management , Other Management ",
             null, null);
         prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
@@ -4017,7 +4018,7 @@ public class AutobindRulesTest {
         consumer.setRole("JBoss");
 
         // Product with multiple roles:
-        Product prod1 = createSysPurposeProduct(null, "RHEL Server,  JBoss,  Satellite", null, null, null);
+        Product prod1 = createSysPurposeProduct(null, " RHEL Server ,  JBoss,  Satellite", null, null, null);
         Pool p1 = TestUtil.createPool(owner, prod1);
         p1.setId("p1");
         List<Pool> pools = new ArrayList<>();
@@ -4042,7 +4043,7 @@ public class AutobindRulesTest {
         consumer.setAddOns(addons);
 
         // Product with multiple addons:
-        Product prod1 = createSysPurposeProduct(null, null, "RHEL EUS,   RHEL ELS ", null, null);
+        Product prod1 = createSysPurposeProduct(null, null, " RHEL EUS ,,   RHEL ELS ", null, null);
         Pool p1 = TestUtil.createPool(owner, prod1);
         p1.setId("p1");
         List<Pool> pools = new ArrayList<>();

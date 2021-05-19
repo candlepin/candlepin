@@ -36,6 +36,7 @@ import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -59,21 +59,21 @@ import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterOutputStream;
 
-/**
- * X509ExtensionUtil
- */
+
+
 public class X509V3ExtensionUtil extends X509Util {
 
     private static Logger log = LoggerFactory.getLogger(X509V3ExtensionUtil.class);
+    private static final Object END_NODE = new Object();
+    private static final boolean TREE_DEBUG = false;
+    public static final String CERT_VERSION = "3.4";
+
     private ObjectMapper mapper;
     private Configuration config;
     private EntitlementCurator entCurator;
-    public static final String CERT_VERSION = "3.4";
 
     private long pathNodeId = 0;
     private long huffNodeId = 0;
-    private static final Object END_NODE = new Object();
-    private static boolean treeDebug = false;
 
     @Inject
     public X509V3ExtensionUtil(Configuration config, EntitlementCurator entCurator,
@@ -172,7 +172,7 @@ public class X509V3ExtensionUtil extends X509Util {
         toReturn.setName(product.getName());
 
         String warningPeriod = product.getAttributeValue(Product.Attributes.WARNING_PERIOD);
-        if (warningPeriod != null && !warningPeriod.trim().equals("")) {
+        if (StringUtils.isNotBlank(warningPeriod)) {
             // only included if not the default value of 0
             if (!warningPeriod.equals("0")) {
                 toReturn.setWarning(new Integer(warningPeriod));
@@ -180,22 +180,22 @@ public class X509V3ExtensionUtil extends X509Util {
         }
 
         String socketLimit = product.getAttributeValue(Product.Attributes.SOCKETS);
-        if (socketLimit != null && !socketLimit.trim().equals("")) {
+        if (StringUtils.isNotBlank(socketLimit)) {
             toReturn.setSockets(new Integer(socketLimit));
         }
 
         String ramLimit = product.getAttributeValue(Product.Attributes.RAM);
-        if (ramLimit != null && !ramLimit.trim().equals("")) {
+        if (StringUtils.isNotBlank(ramLimit)) {
             toReturn.setRam(new Integer(ramLimit));
         }
 
         String coreLimit = product.getAttributeValue(Product.Attributes.CORES);
-        if (coreLimit != null && !coreLimit.trim().equals("")) {
+        if (StringUtils.isNotBlank(coreLimit)) {
             toReturn.setCores(new Integer(coreLimit));
         }
 
         String management = product.getAttributeValue(Product.Attributes.MANAGEMENT_ENABLED);
-        if (management != null && !management.trim().equals("")) {
+        if (StringUtils.isNotBlank(management)) {
             // only included if not the default value of false
             if (management.equalsIgnoreCase("true") || management.equalsIgnoreCase("1")) {
                 toReturn.setManagement(Boolean.TRUE);
@@ -203,15 +203,15 @@ public class X509V3ExtensionUtil extends X509Util {
         }
 
         String stackingId = product.getAttributeValue(Product.Attributes.STACKING_ID);
-        if (stackingId != null && !stackingId.trim().equals("")) {
+        if (StringUtils.isNotBlank(stackingId)) {
             toReturn.setStackingId(stackingId);
         }
 
         String virtOnly = pool.getAttributeValue(Product.Attributes.VIRT_ONLY);
-        if (virtOnly != null && !virtOnly.trim().equals("")) {
+        if (StringUtils.isNotBlank(virtOnly)) {
             // only included if not the default value of false
-            Boolean vo = Boolean.valueOf(virtOnly.equalsIgnoreCase("true") ||
-                virtOnly.equalsIgnoreCase("1"));
+            Boolean vo = virtOnly.equalsIgnoreCase("true") ||
+                virtOnly.equalsIgnoreCase("1");
             if (vo) {
                 toReturn.setVirtOnly(vo);
             }
@@ -220,18 +220,18 @@ public class X509V3ExtensionUtil extends X509Util {
         toReturn.setService(createService(pool));
 
         String usage = product.getAttributeValue(Product.Attributes.USAGE);
-        if (usage != null && !usage.trim().equals("")) {
+        if (StringUtils.isNotBlank(usage)) {
             toReturn.setUsage(usage);
         }
 
         String roles = product.getAttributeValue(Product.Attributes.ROLES);
-        if (roles != null && !roles.trim().equals("")) {
-            toReturn.setRoles(Arrays.asList(roles.trim().split("\\s*,\\s*")));
+        if (StringUtils.isNotBlank(roles)) {
+            toReturn.setRoles(Util.toList(roles));
         }
 
         String addons = product.getAttributeValue(Product.Attributes.ADDONS);
-        if (addons != null && !addons.trim().equals("")) {
-            toReturn.setAddons(Arrays.asList(addons.trim().split("\\s*,\\s*")));
+        if (StringUtils.isNotBlank(addons)) {
+            toReturn.setAddons(Util.toList(addons));
         }
         return toReturn;
     }
@@ -257,13 +257,11 @@ public class X509V3ExtensionUtil extends X509Util {
         toReturn.setStart(iso8601DateFormat.format(pool.getStartDate()));
         toReturn.setEnd(iso8601DateFormat.format(pool.getEndDate()));
 
-        if (pool.getContractNumber() != null &&
-            !pool.getContractNumber().trim().equals("")) {
+        if (StringUtils.isNotBlank(pool.getContractNumber())) {
             toReturn.setContract(pool.getContractNumber());
         }
 
-        if (pool.getAccountNumber() != null &&
-            !pool.getAccountNumber().trim().equals("")) {
+        if (StringUtils.isNotBlank(pool.getAccountNumber())) {
             toReturn.setAccount(pool.getAccountNumber());
         }
 
@@ -461,17 +459,17 @@ public class X509V3ExtensionUtil extends X509Util {
         for (Content c : contents) {
             String path = c.getPath();
 
-            if (treeDebug) {
+            if (TREE_DEBUG) {
                 log.debug(path);
             }
             StringTokenizer st = new StringTokenizer(path, "/");
             makePathForURL(st, parent, endMarker);
         }
-        if (treeDebug) {
+        if (TREE_DEBUG) {
             printTree(parent, 0);
         }
         condenseSubTreeNodes(endMarker);
-        if (treeDebug) {
+        if (TREE_DEBUG) {
             printTree(parent, 0);
         }
         return parent;
@@ -640,7 +638,7 @@ public class X509V3ExtensionUtil extends X509Util {
                 }
             }
         }
-        if (treeDebug) {
+        if (TREE_DEBUG) {
             log.debug("Parts List: " + parts);
         }
         return parts;
@@ -695,7 +693,7 @@ public class X509V3ExtensionUtil extends X509Util {
         if (result.size() == 2) {
             result.add(new PathNode());
         }
-        if (treeDebug) {
+        if (TREE_DEBUG) {
             log.debug("{}", result);
         }
         return result;
@@ -766,7 +764,7 @@ public class X509V3ExtensionUtil extends X509Util {
             baos.write(next);
         }
         byte[] result = baos.toByteArray();
-        if (treeDebug) {
+        if (TREE_DEBUG) {
             ByteArrayInputStream bais = new ByteArrayInputStream(result);
             int value = bais.read();
             while (value != -1) {
@@ -872,7 +870,7 @@ public class X509V3ExtensionUtil extends X509Util {
             nodesList.remove(hn2);
             nodesList.add(merged);
         }
-        if (treeDebug) {
+        if (TREE_DEBUG) {
             printTrie(nodesList.get(0), 0);
         }
         return nodesList.get(0);
