@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-05-20 03:00-0400\n"
-"PO-Revision-Date: 2021-04-29 10:00+0000\n"
+"PO-Revision-Date: 2021-05-20 20:46+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/uk/>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.6\n"
+"X-Generator: Weblate 4.6.2\n"
 
 #: common/src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:72
 #: server/src/main/java/org/candlepin/guice/I18nProvider.java:84
@@ -833,10 +833,9 @@ msgstr ""
 "У цьому екземплярі Candlepin не передбачено підтримки хмарної реєстрації"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:331
-#, fuzzy, java-format
-#| msgid "Organization {0} does not exist."
+#, java-format
 msgid "Organization {0} does not exist"
-msgstr "Запису організації {0} не існує."
+msgstr "Запису організації {0} не існує"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:559
 msgid "Must specify at least one search criteria."
