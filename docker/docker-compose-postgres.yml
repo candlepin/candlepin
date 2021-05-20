@@ -23,6 +23,7 @@ services:
     privileged: true
     volumes:
       - ../:/candlepin-dev
+      - ${SONAR_CRT:-../server/conf/candlepin-redhat-ca.crt}:/candlepin-dev/certs/SONAR.crt
     depends_on:
       - db
 networks:

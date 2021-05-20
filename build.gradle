@@ -24,6 +24,8 @@ plugins {
     id "com.github.ben-manes.versions" version "0.28.0"
     id "org.candlepin.gradle.SpecVersion"
     id "java"
+    id "jacoco"
+    id "org.sonarqube" version "3.2.0"
 }
 
 ext.versions = [
@@ -533,7 +535,16 @@ configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "can
             }
         }
     }
+
+    jacocoTestReport {
+        reports {
+            xml.enabled true
+        }
+    }
 }
+
+project.tasks["sonarqube"].dependsOn "test"
+project.tasks["sonarqube"].dependsOn "jacocoTestReport"
 
 wrapper {
     distributionType = Wrapper.DistributionType.ALL

@@ -119,6 +119,34 @@ pipeline {
                         sh 'docker logout quay.io'
                     }
                 }
+                stage('Upload-PR-to-SonarQube') {
+                    agent { label 'docker' }
+                    steps {
+                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+                        checkout scm
+                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
+                        sh 'sh jenkins/upload-on-sonarqube.sh'
+                        sh 'docker logout quay.io'
+                    }
+                }
+                stage('Upload-Branch-to-SonarQube') {
+                    agent { label 'docker' }
+                    environment {
+                        BRANCH_UPLOAD = 'true'
+                    }
+                    when {
+                        not {
+                            changeRequest()
+                        }
+                    }
+                    steps {
+                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+                        checkout scm
+                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
+                        sh 'sh jenkins/upload-on-sonarqube.sh'
+                        sh 'docker logout quay.io'
+                    }
+                }
             }
         }
     }
