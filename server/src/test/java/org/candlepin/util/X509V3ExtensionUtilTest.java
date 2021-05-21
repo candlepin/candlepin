@@ -14,9 +14,10 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.TestingModules;
@@ -24,7 +25,6 @@ import org.candlepin.common.config.Configuration;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -42,8 +42,8 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -53,16 +53,13 @@ import java.util.Set;
 
 
 
-/**
- * X509V3ExtensionUtilTest
- */
 public class X509V3ExtensionUtilTest {
     private Configuration config;
     private EntitlementCurator ec;
     private X509V3ExtensionUtil util;
     @Inject @Named("X509V3ExtensionUtilObjectMapper") private ObjectMapper mapper;
 
-    @Before
+    @BeforeEach
     public void init() {
         config = mock(Configuration.class);
         ec = mock(EntitlementCurator.class);
@@ -84,25 +81,25 @@ public class X509V3ExtensionUtilTest {
         assertEquals(np, np1);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test
     public void nullCompareTo() {
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
-        assertEquals(1, np.compareTo(null));
+        assertThrows(NullPointerException.class, () -> np.compareTo(null));
     }
 
     @Test
     public void nullEquals() {
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
-        assertFalse(np.equals(null));
+        assertNotEquals(null, np);
     }
 
     @Test
     public void otherObjectEquals() {
         PathNode pn = util.new PathNode();
         NodePair np = new NodePair("name", pn);
-        assertFalse(np.equals(pn));
+        assertNotEquals(np, pn);
     }
 
     @Test
@@ -111,12 +108,11 @@ public class X509V3ExtensionUtilTest {
         NodePair np = new NodePair("name", pn);
         NodePair np1 = new NodePair("diff", pn);
         assertTrue(np.compareTo(np1) > 0);
-        assertFalse(np.equals(np1));
+        assertNotEquals(np, np1);
     }
 
     @Test
     public void testPrefixLogic() {
-        Owner owner = new Owner("Test Corporation");
         Product p = new Product("JarJar", "Binks");
         Content c = new Content();
         c.setContentUrl("/some/path");
@@ -161,7 +157,6 @@ public class X509V3ExtensionUtilTest {
         Pool pool = TestUtil.createPool(mktProd);
         Consumer consumer = new Consumer();
         consumer.setOwner(owner);
-        Entitlement e = new Entitlement(pool, consumer, owner, 10);
 
         List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
             prods, "", new HashMap<>(), consumer, pool);
@@ -205,25 +200,27 @@ public class X509V3ExtensionUtilTest {
     }
 
     @Test
-    public void susbcriptionWithSyspurposeAttributes() throws JsonProcessingException {
+    public void subscriptionWithSysPurposeAttributes() throws JsonProcessingException {
         Owner owner = new Owner("Test Corporation");
         Product mktProd = new Product("mkt", "MKT SKU");
         mktProd.setAttribute(Product.Attributes.USAGE, "my_usage");
         mktProd.setAttribute(Product.Attributes.SUPPORT_LEVEL, "my_support_level");
         mktProd.setAttribute(Product.Attributes.SUPPORT_TYPE, "my_support_type");
-        mktProd.setAttribute(Product.Attributes.ROLES, " my_role1, my_role2 ");
-        mktProd.setAttribute(Product.Attributes.ADDONS, " my_addon1, my_addon2 ");
+        mktProd.setAttribute(Product.Attributes.ROLES, " my_role1, my_role2 , my_role3 ");
+        mktProd.setAttribute(Product.Attributes.ADDONS, " my_addon1, my_addon2 , my_addon3 ");
         Pool pool = TestUtil.createPool(owner, mktProd);
 
         TinySubscription subscription = util.createSubscription(pool);
         String output = this.mapper.writeValueAsString(subscription);
-        assertTrue("The serialized data should contain usage!", output.contains("my_usage"));
-        assertTrue("The serialized data should contain support level!", output.contains("my_support_level"));
-        assertTrue("The serialized data should contain support type!", output.contains("my_support_type"));
-        assertTrue("The serialized data should contain role!", output.contains("my_role1"));
-        assertTrue("The serialized data should contain role!", output.contains("my_role2"));
-        assertTrue("The serialized data should contain addon!", output.contains("my_addon1"));
-        assertTrue("The serialized data should contain addon!", output.contains("my_addon2"));
+        assertTrue(output.contains("my_usage"), "The serialized data should contain usage!");
+        assertTrue(output.contains("my_support_level"), "The serialized data should contain support level!");
+        assertTrue(output.contains("my_support_type"), "The serialized data should contain support type!");
+        assertTrue(output.contains("my_role1"), "The serialized data should contain role!");
+        assertTrue(output.contains("my_role2"), "The serialized data should contain role!");
+        assertTrue(output.contains("my_role3"), "The serialized data should contain role!");
+        assertTrue(output.contains("my_addon1"), "The serialized data should contain addon!");
+        assertTrue(output.contains("my_addon2"), "The serialized data should contain addon!");
+        assertTrue(output.contains("my_addon3"), "The serialized data should contain addon!");
     }
 
 }

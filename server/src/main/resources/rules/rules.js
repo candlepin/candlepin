@@ -1,4 +1,4 @@
-// Version: 5.41
+// Version: 5.42
 
 /*
  * Default Candlepin rule set.
@@ -308,7 +308,7 @@ function createPool(pool, consumer) {
         }
         else {
             if (attribute === 'addons' || attribute === 'roles') {
-                poolSet = this.getProductAttribute(attribute).split(',');
+                poolSet = this.getProductAttribute(attribute).trim().split(/\s*,[\s,]*/);
             }
             else if (attribute === 'support_level' || attribute === 'usage') {
                 poolSet = [this.getProductAttribute(attribute)];

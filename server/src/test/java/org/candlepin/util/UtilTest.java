@@ -38,7 +38,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.LoggerFactory;
 
@@ -426,4 +430,31 @@ public class UtilTest {
         OffsetDateTime actualDate = Util.parseOffsetDateTime(formatter, "Mon, 11 Jan 2021");
         Assertions.assertEquals("2021-01-11T00:00Z", actualDate.toString());
     }
+
+    @Nested
+    class ToListTest {
+
+        @Test
+        @DisplayName("A null cannot be split")
+        void nullString() {
+            assertTrue(Util.toList(null).isEmpty());
+        }
+
+        @ParameterizedTest(name = "An invalid value: \"{0}\" cannot be split")
+        @ValueSource(strings = { "", " ", " , " })
+        void emptyString(String list) {
+            assertTrue(Util.toList(list).isEmpty());
+        }
+
+        @ParameterizedTest(name = "A valid value: \"{0}\" can be split")
+        @ValueSource(strings = { "item1, item2", " item1,item2 ", " item1 , item2 " })
+        void validString(String list) {
+            List<String> items = Util.toList(list);
+
+            assertEquals(2, items.size());
+            assertTrue(items.contains("item1"));
+            assertTrue(items.contains("item2"));
+        }
+    }
+
 }

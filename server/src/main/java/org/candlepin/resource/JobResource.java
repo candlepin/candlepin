@@ -26,6 +26,7 @@ import org.candlepin.common.exceptions.IseException;
 import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.common.util.Util;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
@@ -360,7 +361,7 @@ public class JobResource implements JobsApi {
 
             String jobList = this.config.getString(ConfigProperties.ASYNC_JOBS_TRIGGERABLE_JOBS, null);
             if (jobList != null) {
-                for (String job : jobList.split("\\s*,\\s*")) {
+                for (String job : Util.toList(jobList)) {
                     if (job.length() > 0) {
                         this.triggerableJobKeys.add(job.toLowerCase());
                     }

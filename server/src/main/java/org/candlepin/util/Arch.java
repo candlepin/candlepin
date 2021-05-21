@@ -54,7 +54,7 @@ public class Arch {
 
         // split on comma, but try to include any whitespace
         // or repeated commas
-        for (String arch : arches.split(",[\\s,]*")) {
+        for (String arch : Util.toList(arches)) {
             if (!arch.isEmpty()) {
                 archesSet.add(arch.trim());
             }

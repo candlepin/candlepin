@@ -105,7 +105,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.inject.Provider;
@@ -120,7 +119,6 @@ public class CandlepinPoolManager implements PoolManager {
 
     private static final Logger log = LoggerFactory.getLogger(CandlepinPoolManager.class);
     private static final int MAX_ENTITLE_RETRIES = 3;
-    private static final Pattern ATTRIBUTE_VALUE_DELIMITER = Pattern.compile("\\s*,\\s*");
 
     private final I18n i18n;
     private final PoolCurator poolCurator;
@@ -1466,7 +1464,7 @@ public class CandlepinPoolManager implements PoolManager {
 
                 // Since we need a case-insensitive lookup here, we can't use the set's
                 // .contains method. :(
-                for (String prodAddon : ATTRIBUTE_VALUE_DELIMITER.split(prodAddons.trim())) {
+                for (String prodAddon : Util.toList(prodAddons)) {
                     for (String consumerAddon : consumerAddons) {
                         if (consumerAddon != null &&
                             prodAddon.equalsIgnoreCase(consumerAddon.trim())) {
@@ -1498,7 +1496,7 @@ public class CandlepinPoolManager implements PoolManager {
         // Check if the product's roles match the consumer's role
         String prodRoles = pool.getProductAttributes().get(Product.Attributes.ROLES);
         if (prodRoles != null) {
-            for (String prodRole : ATTRIBUTE_VALUE_DELIMITER.split(prodRoles)) {
+            for (String prodRole : Util.toList(prodRoles)) {
                 if (prodRole.equalsIgnoreCase(consumer.getRole())) {
                     return true;
                 }

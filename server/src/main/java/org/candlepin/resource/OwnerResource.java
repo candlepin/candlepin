@@ -1719,7 +1719,7 @@ public class OwnerResource implements OwnersApi {
                 String purposeValue = p.getAttributeValue(type.toString());
                 Set<String> purposes = new LinkedHashSet<>();
                 if (purposeValue != null) {
-                    purposes = new LinkedHashSet<>(Arrays.asList(purposeValue.split("\\s*,\\s*")));
+                    purposes = new LinkedHashSet<>(Util.toList(purposeValue));
                 }
                 dtoMap.get(type.toString()).addAll(purposes);
             }

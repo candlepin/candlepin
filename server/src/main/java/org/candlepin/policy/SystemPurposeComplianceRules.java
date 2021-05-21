@@ -24,6 +24,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.policy.js.compliance.hash.ComplianceStatusHasher;
+import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
@@ -33,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
@@ -187,9 +187,7 @@ public class SystemPurposeComplianceRules {
             for (Product product : entitlementProducts) {
                 if (StringUtils.isNotEmpty(unsatisfedRole) &&
                     product.hasAttribute(Product.Attributes.ROLES)) {
-                    List<String> roles =
-                        Arrays.asList(product.getAttributeValue(Product.Attributes.ROLES)
-                        .trim().split("\\s*,\\s*"));
+                    List<String> roles = Util.toList(product.getAttributeValue(Product.Attributes.ROLES));
 
                     final String unsatisfedRoleFinalCopy = unsatisfedRole;
                     if (roles.stream()
@@ -202,9 +200,7 @@ public class SystemPurposeComplianceRules {
                 Set<String> addonsFound = new HashSet<>();
                 if (CollectionUtils.isNotEmpty(unsatisfiedAddons) &&
                     product.hasAttribute(Product.Attributes.ADDONS)) {
-                    List<String> addOns =
-                        Arrays.asList(product.getAttributeValue(Product.Attributes.ADDONS)
-                        .trim().split("\\s*,\\s*"));
+                    List<String> addOns = Util.toList(product.getAttributeValue(Product.Attributes.ADDONS));
                     for (String addOn: unsatisfiedAddons) {
                         if (addOns.stream().anyMatch(str -> str.equalsIgnoreCase(addOn.trim()))) {
                             status.addCompliantAddOn(addOn, entitlement);
