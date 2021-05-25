@@ -14,7 +14,6 @@
  */
 package org.candlepin.controller.refresher.visitors;
 
-import org.candlepin.controller.refresher.mappers.NodeMapper;
 import org.candlepin.controller.refresher.nodes.EntityNode;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.service.model.ServiceAdapterModel;
@@ -47,17 +46,10 @@ public interface NodeVisitor<E extends AbstractHibernateObject, I extends Servic
      * Processes (visits) a the specified node. The node processor and mapper provided can be used
      * for performing processing and lookup of children nodes.
      *
-     * @param processor
-     *  A NodeProcessor instance to use for performing processing of children or nested entity
-     *  nodes
-     *
-     * @param mapper
-     *  A NodeMapper instance that can be used to perform a lookup of other entity nodes
-     *
      * @param node
      *  the EntityNode instance to process
      */
-    void processNode(NodeProcessor processor, NodeMapper mapper, EntityNode<E, I> node);
+    void processNode(EntityNode<E, I> node);
 
     /**
      * Checks if this node should be pruned and deletes the backing entity as necessary.
@@ -66,6 +58,16 @@ public interface NodeVisitor<E extends AbstractHibernateObject, I extends Servic
      *  the EntityNode instance to process
      */
     void pruneNode(EntityNode<E, I> node);
+
+    /**
+     * Applies changes that were calculated and queued in the previous processing and pruning steps
+     * to the given node. If no changes were prepared for the provided node, this method should
+     * silently return.
+     *
+     * @param node
+     *  the EntityNode instance for which to apply pending changes
+     */
+    void applyChanges(EntityNode<E, I> node);
 
     /**
      * Completes any processing operations that may be pending from one or more previous calls to

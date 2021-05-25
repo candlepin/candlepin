@@ -117,20 +117,6 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
     Map<String, I> getImportedEntities();
 
     /**
-     * Fetches a set of entities with the same ID, owned by other owners which may be used for
-     * version resolution and entity deduplication. If there are no other candidate entities for the
-     * given ID, this method returns null.
-     *
-     * @param id
-     *  the entity ID for which to fetch candidate entities
-     *
-     * @return
-     *  a set of candidate entities for the given entity ID, or null if no candidate entities are
-     *  available
-     */
-    Set<E> getCandidateEntities(String id);
-
-    /**
      * Adds an existing entity to this mapper. The entity must not be null and it must have a valid
      * entity ID.
      *
@@ -235,18 +221,6 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
      *  the number of new entity mappings created as a result of this operation
      */
     int addImportedEntities(Collection<I> entities);
-
-    /**
-     * Sets the mapping of candidate entities (versioned entities) to use for performing lookups of
-     * candidate entities. The map should be a mapping of entity IDs to sets of existing database
-     * entities owner by other organizations.
-     *
-     * @param versionedEntitiesMap
-     *
-     * @return
-     *  true if the candidate entities are updated sucessfully; false if no change occurred
-     */
-    boolean setCandidateEntitiesMap(Map<String, Set<E>> versionedEntitiesMap);
 
     /**
      * Clears this entity mapper, removing all known existing and imported entities, and clearing any

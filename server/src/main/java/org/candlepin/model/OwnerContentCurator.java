@@ -38,11 +38,6 @@ import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 
 
 
@@ -394,91 +389,49 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
     }
 
     /**
-     * Retrieves a criteria which can be used to fetch a list of content with the specified Red Hat
-     * content ID and entity version belonging to owners other than the owner provided. If no
-     * content were found matching the given criteria, this method returns an empty list.
+     * Fetches all content belonging to organizations other than the one provided having an entity
+     * version equal to one of the versions provided.
      *
-     * @param owner
-     *  The owner whose content should be excluded from the results. If an owner is not provided,
-     *  no additional filtering will be performed.
+     * @param exclude
+     *  The owner/organization to exclude from the search. If null, no organizations will be
+     *  excluded
      *
-     * @param contentVersions
-     *  A mapping of Red Hat content IDs to content versions to fetch
+     * @param versions
+     *  A collection of entity versions to use to select contents
      *
      * @return
-     *  a mapping of Red Hat content IDs to candidate alternate versions
+     *  a map containing the contents found, keyed by content ID
      */
-    @SuppressWarnings("checkstyle:indentation")
-    public Map<String, List<Content>> getContentByVersions(Owner owner,
-        Map<String, Integer> contentVersions) {
+    public Map<String, List<Content>> getContentByVersions(Owner exclude, Collection<Integer> versions) {
+        Map<String, List<Content>> result = new HashMap<>();
 
-        Map<String, List<Content>> contentMap = new HashMap<>();
+        if (versions != null && !versions.isEmpty()) {
+            TypedQuery<Content> query;
 
-        if (contentVersions == null || contentVersions.isEmpty()) {
-            return contentMap;
-        }
+            if (exclude != null) {
+                String jpql = "SELECT c FROM OwnerContent op JOIN op.content c " +
+                    "WHERE op.owner.id != :owner_id AND c.entityVersion IN (:vblock)";
 
-        // Impl note:
-        // We perform this operation with two queries here to optimize out some unnecessary queries
-        // when pulling content information. Even when pulling content in a batch, Hibernate will
-        // pull the content collections (modified product IDs) as a separate query for each content
-        // (ugh). By breaking this into two queries -- one for getting the content UUIDs and one
-        // for pulling the actual content -- we will save upwards of two DB hits per content
-        // filtered. We will lose time in the cases where we don't filter any content, or the
-        // content we filter don't have any data in their collections; but we're only using one
-        // additional query in those cases, versus n additional in the normal case.
+                query = this.getEntityManager()
+                    .createQuery(jpql, Content.class)
+                    .setParameter("owner_id", exclude.getId());
+            }
+            else {
+                String jpql = "SELECT c FROM Content c WHERE c.entityVersion IN (:vblock)";
 
-        Set<String> uuids = new HashSet<>();
-
-        EntityManager entityManager = this.getEntityManager();
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<String> query = builder.createQuery(String.class);
-
-        Root<OwnerContent> root = query.from(OwnerContent.class);
-        Join<OwnerContent, Content> content = root.join(OwnerContent_.content);
-
-        query.select(content.get(Content_.uuid))
-            .distinct(true);
-
-        // Impl note:
-        // We have room to go higher with the block size here, but building this query is so slow that
-        // as the block size goes up, it's actually slower than issuing smaller queries more often.
-        // Also, around a block size of around 2.5k, Hibernate's query builder starts hitting stack
-        // overflows.
-        int blockSize = 1000;
-        for (List<Map.Entry<String, Integer>> block : this.partition(contentVersions.entrySet(), blockSize)) {
-            Predicate[] predicates = new Predicate[block.size()];
-            int index = 0;
-
-            for (Map.Entry<String, Integer> entry : block) {
-                predicates[index++] = builder.and(
-                    builder.equal(content.get(Content_.id), entry.getKey()),
-                    builder.equal(content.get(Content_.entityVersion), entry.getValue()));
+                query = this.getEntityManager()
+                    .createQuery(jpql, Content.class);
             }
 
-            Predicate predicate = builder.or(predicates);
-
-            query.where(owner != null ?
-                builder.and(builder.notEqual(root.get(OwnerContent_.ownerId), owner.getId()), predicate) :
-                predicate);
-
-            uuids.addAll(entityManager.createQuery(query)
-                .getResultList());
-        }
-
-        if (uuids != null && !uuids.isEmpty()) {
-            String jpql = "SELECT c FROM Content c WHERE c.uuid IN (:content_uuids)";
-            TypedQuery<Content> cquery = entityManager.createQuery(jpql, Content.class);
-
-            for (List<String> block : this.partition(uuids)) {
-                for (Content element : cquery.setParameter("content_uuids", block).getResultList()) {
-                    contentMap.computeIfAbsent(element.getId(), k -> new LinkedList<>())
+            for (Collection<Integer> block : this.partition(versions)) {
+                for (Content element : query.setParameter("vblock", block).getResultList()) {
+                    result.computeIfAbsent(element.getId(), k -> new LinkedList<>())
                         .add(element);
                 }
             }
         }
 
-        return contentMap;
+        return result;
     }
 
     /**

@@ -15,7 +15,6 @@
 package org.candlepin.controller.refresher.visitors;
 
 import org.candlepin.controller.ContentManager;
-import org.candlepin.controller.refresher.mappers.NodeMapper;
 import org.candlepin.controller.refresher.nodes.EntityNode;
 import org.candlepin.controller.refresher.nodes.EntityNode.NodeState;
 import org.candlepin.model.Content;
@@ -25,8 +24,13 @@ import org.candlepin.model.OwnerContent;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.service.model.ContentInfo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -36,12 +40,16 @@ import java.util.Set;
  * A NodeVisitor implementation that supports content entity nodes
  */
 public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
+    private static final Logger log = LoggerFactory.getLogger(ContentNodeVisitor.class);
+
     private final ContentCurator contentCurator;
     private final OwnerContentCurator ownerContentCurator;
 
     private Set<OwnerContent> ownerContentEntities;
     private Map<Owner, Map<String, String>> ownerContentUuidMap;
     private Map<Owner, Set<String>> deletedContentUuids;
+    private Map<Owner, Set<Integer>> ownerEntityVersions;
+    private Map<Owner, Map<String, List<Content>>> ownerVersionedEntityMap;
 
 
     /**
@@ -72,6 +80,8 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
         this.ownerContentEntities = new HashSet<>();
         this.ownerContentUuidMap = new HashMap<>();
         this.deletedContentUuids = new HashMap<>();
+        this.ownerEntityVersions = new HashMap<>();
+        this.ownerVersionedEntityMap = new HashMap<>();
     }
 
     /**
@@ -86,9 +96,7 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
      * {@inheritDoc}
      */
     @Override
-    public void processNode(NodeProcessor processor, NodeMapper mapper,
-        EntityNode<Content, ContentInfo> node) {
-
+    public void processNode(EntityNode<Content, ContentInfo> node) {
         // Content nodes should not have any children
         if (!node.isLeafNode()) {
             throw new IllegalStateException("Content node has one or more children nodes");
@@ -108,12 +116,8 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
         if (existingEntity != null) {
             if (importedEntity != null) {
                 if (ContentManager.isChangedBy(existingEntity, importedEntity)) {
-                    Content mergedEntity = this.createEntity(mapper, node);
+                    Content mergedEntity = this.createEntity(node);
                     node.setMergedEntity(mergedEntity);
-
-                    // Store the mapping to be updated later
-                    this.ownerContentUuidMap.computeIfAbsent(node.getOwner(), key -> new HashMap<>())
-                        .put(existingEntity.getUuid(), mergedEntity.getUuid());
 
                     node.setNodeState(NodeState.UPDATED);
                 }
@@ -121,12 +125,8 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
         }
         else if (importedEntity != null) {
             // Node is new
-            Content mergedEntity = this.createEntity(mapper, node);
+            Content mergedEntity = this.createEntity(node);
             node.setMergedEntity(mergedEntity);
-
-            // Create a new owner-content mapping for this entity. This will get persisted
-            // later during completion
-            this.ownerContentEntities.add(new OwnerContent(node.getOwner(), mergedEntity));
 
             node.setNodeState(NodeState.CREATED);
         }
@@ -171,13 +171,72 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
 
         // Otherwise, if the node is referenced by one or more parent nodes that are not being
         // deleted themselves, we should keep it.
-        for (EntityNode parent : node.getParentNodes()) {
-            if (parent.getNodeState() != NodeState.DELETED) {
-                return false;
+        return !node.getParentNodes()
+            .anyMatch(elem -> elem.getNodeState() != NodeState.DELETED);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void applyChanges(EntityNode<Content, ContentInfo> node) {
+        // If we don't have a state, bad things have happened...
+        if (node.getNodeState() == null) {
+            throw new IllegalStateException("Attempting to apply changes to a node without a state: " + node);
+        }
+
+        // We only need to do work in the UPDATED or CREATED cases; all other states are no-ops here
+        if (node.getNodeState() == NodeState.UPDATED) {
+            node.setMergedEntity(this.resolveEntityVersion(node));
+
+            // Store the mapping to be updated later
+            Content existingEntity = node.getExistingEntity();
+            Content mergedEntity = node.getMergedEntity();
+
+            this.ownerContentUuidMap.computeIfAbsent(node.getOwner(), key -> new HashMap<>())
+                .put(existingEntity.getUuid(), mergedEntity.getUuid());
+        }
+        else if (node.getNodeState() == NodeState.CREATED) {
+            node.setMergedEntity(this.resolveEntityVersion(node));
+
+            // Create a new owner-content mapping for this entity. This will get persisted later
+            // during the completion step
+            this.ownerContentEntities.add(new OwnerContent(node.getOwner(), node.getMergedEntity()));
+        }
+    }
+
+    /**
+     * Performs version resolution for the specified entity node. If a local version of the entity
+     * already exists, this method returns the existing entity; otherwise, the new entity stored in
+     * the provided node is persisted and returned.
+     *
+     * @param node
+     *  the entity node on which to perform version resolution
+     *
+     * @return
+     *  the existing version of the entity if such a version exists, or the persisted version of
+     *  the newly created entity
+     */
+    private Content resolveEntityVersion(EntityNode<Content, ContentInfo> node) {
+        Owner owner = node.getOwner();
+        Content entity = node.getMergedEntity();
+        int entityVersion = entity.getEntityVersion();
+
+        Map<String, List<Content>> entityMap = this.ownerVersionedEntityMap.computeIfAbsent(owner, key -> {
+            Set<Integer> versions = this.ownerEntityVersions.remove(key);
+
+            return versions != null ?
+                this.ownerContentCurator.getContentByVersions(key, versions) :
+                Collections.emptyMap();
+        });
+
+        for (Content candidate : entityMap.getOrDefault(entity.getId(), Collections.emptyList())) {
+            if (entityVersion == candidate.getEntityVersion(true) && entity.equals(candidate)) {
+                return candidate;
             }
         }
 
-        return true;
+        return this.contentCurator.create(entity, false);
     }
 
     /**
@@ -191,7 +250,8 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
         }
 
         // Save new owner-content entities
-        this.ownerContentCurator.saveAll(this.ownerContentEntities, false, false);
+        this.ownerContentEntities.stream()
+            .forEach(elem -> this.ownerContentCurator.create(elem, false));
         this.ownerContentCurator.flush();
 
         // Update owner content references
@@ -199,16 +259,18 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
             this.ownerContentCurator.updateOwnerContentReferences(entry.getKey(), entry.getValue());
         }
 
-        // Clear our cache
+        // Clear our various caches
         this.ownerContentUuidMap.clear();
         this.ownerContentEntities.clear();
         this.deletedContentUuids.clear();
+        this.ownerEntityVersions.clear();
+        this.ownerVersionedEntityMap.clear();
     }
 
     /**
      * Creates a new entity for the given node, potentially remapping to an existing node
      */
-    private Content createEntity(NodeMapper mapper, EntityNode<Content, ContentInfo> node) {
+    private Content createEntity(EntityNode<Content, ContentInfo> node) {
         Content existingEntity = node.getExistingEntity();
         ContentInfo importedEntity = node.getImportedEntity();
         ContentInfo sourceEntity = importedEntity != null ? importedEntity : existingEntity;
@@ -273,20 +335,10 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
             }
         }
 
-        // Do version resolution
-        int version = updatedEntity.getEntityVersion();
-        Set<Content> candidates = node.getCandidateEntities();
+        // Save entity version for later version resolution
+        this.ownerEntityVersions.computeIfAbsent(node.getOwner(), key -> new HashSet<>())
+            .add(updatedEntity.getEntityVersion());
 
-        if (candidates != null) {
-            for (Content candidate : candidates) {
-                if (candidate.getEntityVersion(true) == version && updatedEntity.equals(candidate)) {
-                    // We've a pre-existing version; use it rather than our updatedEntity
-                    return candidate;
-                }
-            }
-        }
-
-        // No matching versions. Persist and return our updated entity.
-        return this.contentCurator.saveOrUpdate(updatedEntity);
+        return updatedEntity;
     }
 }
