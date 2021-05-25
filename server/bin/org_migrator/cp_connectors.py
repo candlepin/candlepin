@@ -7,12 +7,28 @@
 # This requires mysql-connector or psycopg2 for mysql/mariadb and postgresql respectively. "Compatible"
 # packages may introduce odd issues (i.e. mysql-connector-python is known to cause problems)
 
-import os
-
 import logging
+import os
+import sys
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(levelname)-7s %(name)-16s %(message)s")
-log = logging.getLogger('cp_connector')
+from contextlib import contextmanager
+
+
+def build_logger(name, msg_format):
+    """Builds and configures our logger"""
+
+    # Create the base/standard handler
+    std_handler = logging.StreamHandler(sys.stdout)
+    std_handler.setFormatter(logging.Formatter(fmt=msg_format))
+
+    # Create a logger using the above handlers
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+    logger.addHandler(std_handler)
+
+    return logger
+
+log = build_logger('cp_connector', '%(asctime)-15s %(levelname)-7s %(name)s -- %(message)s')
 
 
 
@@ -69,6 +85,12 @@ class DBConnector(object):
         # This will be automatically shut off once a transaction is started.
         self.db.autocommit = True
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
     def __del__(self):
         self.close()
 
@@ -104,41 +126,36 @@ class DBConnector(object):
         self.db.rollback()
         self.db.autocommit=True
 
+    @contextmanager
     def cursor(self):
-        return self.db.cursor()
-
-    def execQuery(self, query, parameters=()):
         cursor = None
 
         try:
-            cursor = self.cursor()
-            cursor.execute(query, parameters)
-
-            return cursor
-        except Exception as error:
+            cursor = self.db.cursor()
+            yield cursor
+        finally:
             if cursor is not None:
                 cursor.close()
 
-            raise error
+    @contextmanager
+    def execQuery(self, query, parameters=()):
+        cursor = None
+
+        with self.cursor() as cursor:
+            cursor.execute(query, parameters)
+            yield cursor
 
     def execUpdate(self, query, parameters=()):
         cursor = None
 
         try:
-            cursor = self.cursor()
-
-            cursor.execute(query, parameters)
-            count = cursor.rowcount
-
-            cursor.close()
+            with self.cursor() as cursor:
+                cursor.execute(query, parameters)
+                count = cursor.rowcount
 
             return count
         except Exception as error:
             self.rollback()
-
-            if cursor is not None:
-                cursor.close()
-
             raise error
 
 
@@ -168,13 +185,11 @@ class PSQLConnector(DBConnector):
         return 'PostgreSQL'
 
     def _init_types(self):
-        cursor = self.execQuery('SELECT oid, typname FROM pg_type')
-
         self._type_map = {}
-        for row in cursor:
-            self._type_map[row[0]] = row[1]
 
-        cursor.close()
+        with self.execQuery('SELECT oid, typname FROM pg_type') as cursor:
+            for row in cursor:
+                self._type_map[row[0]] = row[1]
 
     def get_type_as_string(self, type_code):
         if type_code in self._type_map:
@@ -202,9 +217,8 @@ class PSQLConnector(DBConnector):
 
         # Transactions are automatically started on the first command if autocommit is set to false, so
         # let's do a quick no-op query to get things started
-        cursor = self.cursor()
-        cursor.execute('SELECT 1')
-        cursor.close()
+        with self.cursor() as cursor:
+            cursor.execute('SELECT 1')
 
         return DBConnector.TransactionContext(self)
 
@@ -295,7 +309,7 @@ def set_log_level(level):
 def get_http_connector(host, username, password, secure):
     pass #TODO
 
-def get_db_connector(type, host='localhost', port=None, username='candlepin', password='', dbname='candlepin'):
+def get_db_connector(type):
     connectors = {
         'psql':         PSQLConnector,
         'postgre':      PSQLConnector,
@@ -306,4 +320,4 @@ def get_db_connector(type, host='localhost', port=None, username='candlepin', pa
         'mysql':        MySQLConnector
     }
 
-    return connectors[str(type).lower()](host, port, username, password, dbname)
+    return connectors[str(type).lower()]

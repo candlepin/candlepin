@@ -14,11 +14,25 @@ import zipfile
 
 import cp_connectors as cp
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(levelname)-7s %(name)-16s %(message)s")
-log = logging.getLogger('org_migrator')
 
 LOGLVL_TRACE = 5
 logging.addLevelName(LOGLVL_TRACE, 'TRACE')
+
+def build_logger(name, msg_format):
+    """Builds and configures our logger"""
+
+    # Create the base/standard handler
+    std_handler = logging.StreamHandler(sys.stdout)
+    std_handler.setFormatter(logging.Formatter(fmt=msg_format))
+
+    # Create a logger using the above handlers
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+    logger.addHandler(std_handler)
+
+    return logger
+
+log = build_logger('org_migrator', '%(asctime)-15s %(levelname)-7s %(name)s -- %(message)s')
 
 
 
@@ -43,13 +57,11 @@ def get_cursor_column_types(db, cursor):
 def resolve_org(db, org):
     org_id = None
 
-    cursor = db.execQuery("SELECT id FROM cp_owner WHERE account=%s", (org,))
-    row = cursor.fetchone()
+    with db.execQuery("SELECT id FROM cp_owner WHERE account=%s", (org,)) as cursor:
+        row = cursor.fetchone()
 
-    if row is not None:
-        org_id = row[0]
-
-    cursor.close()
+        if row is not None:
+            org_id = row[0]
 
     return org_id
 
@@ -57,9 +69,9 @@ def resolve_org(db, org):
 def list_orgs(db):
     orgs = []
 
-    cursor = db.execQuery("SELECT DISTINCT account FROM cp_owner");
-    for row in cursor:
-        orgs.append(row[0])
+    with db.execQuery("SELECT DISTINCT account FROM cp_owner") as cursor:
+        for row in cursor:
+            orgs.append(row[0])
 
     return orgs
 
@@ -77,7 +89,6 @@ def jsonify(data):
         else:
             if isinstance(obj, buffer):
                 return binascii.b2a_base64(obj)
-
 
         raise TypeError("Unexpected type: %s" % (type(obj)))
 
@@ -166,9 +177,8 @@ class ModelManager(object):
         log.debug('Exported %d rows for table: %s', len(output['rows']), table)
 
     def _export_query(self, file, table, query, params=()):
-        cursor = self.db.execQuery(query, params)
-        self._write_cursor_to_json(file, table, cursor)
-        cursor.close()
+        with self.db.execQuery(query, params) as cursor:
+            self._write_cursor_to_json(file, table, cursor)
 
     def _bulk_insert(self, table, columns, rows, row_hook=None):
         validate_column_names(table, columns)
@@ -177,21 +187,18 @@ class ModelManager(object):
         statement = self.db.build_insert_statement(table, columns, self.ignore_dupes)
 
         # try:
-        cursor = self.db.cursor()
+        with self.db.cursor() as cursor:
+            if len(rows) > 0:
+                log.log(LOGLVL_TRACE, 'Inserting using statement: %s', statement)
+            else:
+                log.log(LOGLVL_TRACE, 'No rows to insert; skipping insert')
 
-        if len(rows) > 0:
-            log.log(LOGLVL_TRACE, 'Inserting using statement: %s', statement)
-        else:
-            log.log(LOGLVL_TRACE, 'No rows to insert; skipping insert')
+            for row in rows:
+                if callable(row_hook):
+                    row = row_hook(columns, row)
 
-        for row in rows:
-            if callable(row_hook):
-                row = row_hook(columns, row)
-
-            log.log(LOGLVL_TRACE, '  row: %s', row)
-            cursor.execute(statement, row)
-
-        cursor.close()
+                log.log(LOGLVL_TRACE, '  row: %s', row)
+                cursor.execute(statement, row)
 
         return True
         # TODO: Uncomment this if we figure out a sane way to get Python to not hide the original
@@ -351,15 +358,14 @@ class ProductManager(ModelManager):
         # Product exporting is recursive as of CP4.0, due to the derived mapping. We can skip it for the
         # provided product mapping, since that's a separate table which we can populate last, but derived
         # products force us to pull product info in the order in which it is referenced.
-        cursor = self.db.execQuery('SELECT p.* FROM cp2_products p JOIN cp2_owner_products op ON op.product_uuid = p.uuid WHERE op.owner_id = %s', (self.org_id,))
-        columns = get_cursor_columns(self.db, cursor)
-        column_types = get_cursor_column_types(self.db, cursor)
+        with self.db.execQuery('SELECT p.* FROM cp2_products p JOIN cp2_owner_products op ON op.product_uuid = p.uuid WHERE op.owner_id = %s', (self.org_id,)) as cursor:
+            columns = get_cursor_columns(self.db, cursor)
+            column_types = get_cursor_column_types(self.db, cursor)
 
-        uuid_idx = columns.index('uuid')
-        derived_uuid_idx = columns.index('derived_product_uuid')
+            uuid_idx = columns.index('uuid')
+            derived_uuid_idx = columns.index('derived_product_uuid')
 
-        products = { row[uuid_idx]: row for row in cursor }
-        cursor.close()
+            products = { row[uuid_idx]: row for row in cursor }
 
         ordered = []
         insertion_order = {}
@@ -577,10 +583,8 @@ class ConsumerManager(ModelManager):
                 # impl note:
                 # This sucks, but at the time of writing, there is no platform-agnostic upsert statement
                 label = row[label_idx]
-                cursor = self.db.execQuery('SELECT id FROM ' + table + ' WHERE label=%s', (label,))
-
-                erow = cursor.fetchone()
-                cursor.close()
+                with self.db.execQuery('SELECT id FROM ' + table + ' WHERE label=%s', (label,)) as cursor:
+                    erow = cursor.fetchone()
 
                 if erow is not None:
                     # Existing row, update it with the data we have
@@ -645,11 +649,10 @@ class PoolManager(ModelManager):
                 eids = eids[param_limit:]
 
                 pblock = ', '.join(['%s'] * len(block))
-                cursor = self.db.execQuery('SELECT e.* FROM cp_pool p WHERE p.sourceentitlement_id IN (' + pblock + ') ORDER BY created ASC', block)
-                columns = get_cursor_columns(self.db, cursor)
-                column_types = get_cursor_column_types(self.db, cursor)
-                rows = rows + list(cursor)
-                cursor.close()
+                with self.db.execQuery('SELECT e.* FROM cp_pool p WHERE p.sourceentitlement_id IN (' + pblock + ') ORDER BY created ASC', block) as cursor:
+                    columns = get_cursor_columns(self.db, cursor)
+                    column_types = get_cursor_column_types(self.db, cursor)
+                    rows = rows + list(cursor)
 
             output = {
                 'table':        'cp_pool',
@@ -674,11 +677,10 @@ class PoolManager(ModelManager):
                 pids = pids[param_limit:]
 
                 pblock = ', '.join(['%s'] * len(block))
-                cursor = self.db.execQuery('SELECT e.* FROM cp_entitlement e WHERE e.pool_id IN (' + pblock + ') ORDER BY created ASC', block)
-                columns = get_cursor_columns(self.db, cursor)
-                column_types = get_cursor_column_types(self.db, cursor)
-                rows = rows + list(cursor)
-                cursor.close()
+                with self.db.execQuery('SELECT e.* FROM cp_entitlement e WHERE e.pool_id IN (' + pblock + ') ORDER BY created ASC', block) as cursor:
+                    columns = get_cursor_columns(self.db, cursor)
+                    column_types = get_cursor_column_types(self.db, cursor)
+                    rows = rows + list(cursor)
 
             output = {
                 'table':        'cp_entitlement',
@@ -693,9 +695,8 @@ class PoolManager(ModelManager):
         # Fetch base pools (those not originating from source entitlements)
         pids = []
 
-        cursor = self.db.execQuery('SELECT p.* FROM cp_pool p WHERE owner_id=%s AND sourceentitlement_id is NULL ORDER BY created ASC', (self.org_id,))
-        self._write_cursor_to_json('cp_pool-0.json', 'cp_pool', cursor, partial(id_puller, pids, 0))
-        cursor.close()
+        with self.db.execQuery('SELECT p.* FROM cp_pool p WHERE owner_id=%s AND sourceentitlement_id is NULL ORDER BY created ASC', (self.org_id,)) as cursor:
+            self._write_cursor_to_json('cp_pool-0.json', 'cp_pool', cursor, partial(id_puller, pids, 0))
 
         fetch_entitlements(pids)
 
@@ -937,10 +938,7 @@ def main():
         log.setLevel(LOGLVL_TRACE)
         cp.set_log_level(LOGLVL_TRACE)
 
-    db = None
-
-    try:
-        db = cp.get_db_connector(options.dbtype, options.host, options.port, options.username, options.password, options.db)
+    with cp.get_db_connector(options.dbtype)(options.host, options.port, options.username, options.password, options.db) as db:
         log.info('Using database: %s @ %s', db.backend(), options.host)
 
         if options.act_import:
@@ -957,7 +955,7 @@ def main():
             importer = OrgImporter(db, options.file, None, options.ignore_dupes)
 
             log.info('Importing data from file: %s', options.file)
-            with(db.start_transaction(readonly=False)) as transaction:
+            with (db.start_transaction(readonly=False)) as transaction:
                 if importer.execute():
                     transaction.commit()
                     log.info('Task complete! Shutting down...')
@@ -986,10 +984,6 @@ def main():
 
         elif options.act_list:
             print("Available orgs: %s" % (list_orgs(db)))
-
-    finally:
-        if db is not None:
-            db.close()
 
 
 if __name__ == "__main__":
