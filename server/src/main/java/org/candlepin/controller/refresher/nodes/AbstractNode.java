@@ -18,9 +18,10 @@ import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Owner;
 import org.candlepin.service.model.ServiceAdapterModel;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Stream;
 
 
 
@@ -40,13 +41,12 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
     private String id;
     private Owner owner;
 
-    private Set<EntityNode<?, ?>> parents;
-    private Set<EntityNode<?, ?>> children;
+    private Map<Class<?>, Map<String, EntityNode<?, ?>>> parents;
+    private Map<Class<?>, Map<String, EntityNode<?, ?>>> children;
     private NodeState state;
 
     private E existingEntity;
     private I importedEntity;
-    private Set<E> candidateEntities;
     private E mergedEntity;
 
     /**
@@ -73,8 +73,8 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
         this.id = id;
         this.owner = owner;
 
-        this.parents = new HashSet<>();
-        this.children = new HashSet<>();
+        this.parents = new HashMap<>();
+        this.children = new HashMap<>();
     }
 
     /**
@@ -106,7 +106,13 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
             throw new IllegalArgumentException("cannot add a node to itself as a parent");
         }
 
-        this.parents.add(parent);
+        EntityNode<?, ?> prev = this.parents.computeIfAbsent(parent.getEntityClass(), key -> new HashMap<>())
+            .put(parent.getEntityId(), parent);
+
+        if (prev != parent) {
+            parent.addChildNode(this);
+        }
+
         return this;
     }
 
@@ -114,8 +120,21 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
      * {@inheritDoc}
      */
     @Override
-    public Collection<EntityNode<?, ?>> getParentNodes() {
-        return this.parents;
+    public <T extends AbstractHibernateObject, D extends ServiceAdapterModel> EntityNode<T, D> getParentNode(
+        Class<T> entityClass, String entityId) {
+
+        return (EntityNode<T, D>) this.parents.getOrDefault(entityClass, Collections.emptyMap())
+            .get(entityId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Stream<EntityNode<?, ?>> getParentNodes() {
+        return this.parents.values()
+            .stream()
+            .flatMap(map -> map.values().stream());
     }
 
     /**
@@ -131,7 +150,13 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
             throw new IllegalArgumentException("cannot add a node to itself as a child");
         }
 
-        this.children.add(child);
+        EntityNode<?, ?> prev = this.children.computeIfAbsent(child.getEntityClass(), key -> new HashMap<>())
+            .put(child.getEntityId(), child);
+
+        if (prev != child) {
+            child.addParentNode(this);
+        }
+
         return this;
     }
 
@@ -139,8 +164,21 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
      * {@inheritDoc}
      */
     @Override
-    public Collection<EntityNode<?, ?>> getChildrenNodes() {
-        return this.children;
+    public <T extends AbstractHibernateObject, D extends ServiceAdapterModel> EntityNode<T, D> getChildNode(
+        Class<T> entityClass, String entityId) {
+
+        return (EntityNode<T, D>) this.children.getOrDefault(entityClass, Collections.emptyMap())
+            .get(entityId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Stream<EntityNode<?, ?>> getChildrenNodes() {
+        return this.children.values()
+            .stream()
+            .flatMap(map -> map.values().stream());
     }
 
     /**
@@ -234,23 +272,6 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
     @Override
     public E getMergedEntity() {
         return this.mergedEntity;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityNode<E, I> setCandidateEntities(Set<E> entities) {
-        this.candidateEntities = entities;
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Set<E> getCandidateEntities() {
-        return this.candidateEntities;
     }
 
     /**

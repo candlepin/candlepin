@@ -77,27 +77,19 @@ public class RefreshWorkerTest {
 
         doAnswer(returnsFirstArg())
             .when(this.mockProductCurator)
-            .saveOrUpdate(Mockito.any(Product.class));
+            .create(Mockito.any(Product.class), anyBoolean());
 
         doAnswer(returnsFirstArg())
             .when(this.mockOwnerProductCurator)
-            .saveOrUpdate(Mockito.any(OwnerProduct.class));
+            .create(Mockito.any(OwnerProduct.class), anyBoolean());
 
         doAnswer(returnsFirstArg())
             .when(this.mockContentCurator)
-            .saveOrUpdate(Mockito.any(Content.class));
+            .create(Mockito.any(Content.class), anyBoolean());
 
         doAnswer(returnsFirstArg())
             .when(this.mockOwnerContentCurator)
-            .saveOrUpdate(Mockito.any(OwnerContent.class));
-
-        doReturn(Collections.emptyMap())
-            .when(this.mockOwnerContentCurator)
-            .getVersionedContentById(Mockito.any(Owner.class), anyCollection());
-
-        doReturn(Collections.emptyMap())
-            .when(this.mockOwnerProductCurator)
-            .getVersionedProductsById(Mockito.any(Owner.class), anyCollection());
+            .create(Mockito.any(OwnerContent.class), anyBoolean());
     }
 
     private RefreshWorker buildRefreshWorker() {
@@ -1049,17 +1041,9 @@ public class RefreshWorkerTest {
             .when(this.mockOwnerProductCurator)
             .getProductsByOwner(eq(owner));
 
-        doReturn(Collections.emptyMap())
-            .when(this.mockOwnerProductCurator)
-            .getVersionedProductsById(eq(owner), anyCollection());
-
         doReturn(this.mockCandlepinQuery(null))
             .when(this.mockOwnerContentCurator)
             .getContentByOwner(eq(owner));
-
-        doReturn(Collections.emptyMap())
-            .when(this.mockOwnerContentCurator)
-            .getVersionedContentById(eq(owner), anyCollection());
 
 
         RefreshResult result = worker.execute(owner);
@@ -1218,7 +1202,5 @@ public class RefreshWorkerTest {
         assertNotNull(result.getEntities(Content.class));
         assertEquals(0, result.getEntities(Content.class).size());
     }
-
-
 
 }

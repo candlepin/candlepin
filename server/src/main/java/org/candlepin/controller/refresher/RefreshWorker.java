@@ -26,14 +26,12 @@ import org.candlepin.controller.refresher.visitors.ContentNodeVisitor;
 import org.candlepin.controller.refresher.visitors.NodeProcessor;
 import org.candlepin.controller.refresher.visitors.PoolNodeVisitor;
 import org.candlepin.controller.refresher.visitors.ProductNodeVisitor;
-import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
-import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
@@ -50,7 +48,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 
 
@@ -444,19 +441,6 @@ public class RefreshWorker {
 
         this.productMapper.addExistingEntities(this.ownerProductCurator.getProductsByOwner(owner).list());
         this.contentMapper.addExistingEntities(this.ownerContentCurator.getContentByOwner(owner).list());
-
-        // If we have any versioned entities, fetch the candidate mapping
-        Set<String> pids = this.productMapper.getEntityIds();
-        if (pids != null && !pids.isEmpty()) {
-            Map<String, Set<Product>> vmap = this.ownerProductCurator.getVersionedProductsById(owner, pids);
-            this.productMapper.setCandidateEntitiesMap(vmap);
-        }
-
-        Set<String> cids = this.contentMapper.getEntityIds();
-        if (cids != null && !cids.isEmpty()) {
-            Map<String, Set<Content>> vmap = this.ownerContentCurator.getVersionedContentById(owner, cids);
-            this.contentMapper.setCandidateEntitiesMap(vmap);
-        }
 
         // Have our node factory build the node trees
         nodeFactory.buildNodes(owner);
