@@ -453,7 +453,9 @@ msgstr "소유자 \"{0}\"{1}의 자동 연결이 비활성화되어 있습니다
 msgid ""
 "Development units may only be used on hosted servers and with orgs that have "
 "active subscriptions."
-msgstr "개발 장치는 활성 서브스크립션이 있는 조직에서 호스팅되는 서버에서만 사용할 수 있습니다."
+msgstr ""
+"개발 장치는 활성 서브스크립션이 있는 조직에서 호스팅되는 서버에서만 사용할 "
+"수 있습니다."
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:487
 #, java-format
@@ -573,8 +575,9 @@ msgid ""
 "guest subscription. For more information, please see https://access.redhat."
 "com/solutions/1592573"
 msgstr ""
-"게스트가 호스트에서 보고되어 있지 않으며 매핑되지 않은 임시 게스트 서브스크립션을 사용하고 있습니다. 보다 자세한 내용은 "
-"https://access.redhat.com/solutions/1592573에서 참조하십시오"
+"게스트가 호스트에서 보고되어 있지 않으며 매핑되지 않은 임시 게스트 서브스크립"
+"션을 사용하고 있습니다. 보다 자세한 내용은 https://access.redhat.com/"
+"solutions/1592573에서 참조하십시오"
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
@@ -653,7 +656,9 @@ msgstr "풀은 물리적 시스템으로 제한됩니다: ''{1}''."
 msgid ""
 "Subscription \"{2}\" must be attached using a quantity evenly divisible by "
 "{3}"
-msgstr "서브스크립션 ''{2}''은/는 {3}로/으로 균등하게 나눌 수 있는 수량을 사용하여 연결해야 합니다"
+msgstr ""
+"서브스크립션 ''{2}''은/는 {3}로/으로 균등하게 나눌 수 있는 수량을 사용하여 연"
+"결해야 합니다"
 
 #: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:169
 #, java-format
@@ -1421,7 +1426,9 @@ msgstr "소유자 생성 시 기본 서비스 수준을 지정할 수 없습니�
 msgid ""
 "The owner content access mode and content access mode list cannot be set "
 "directly in standalone mode."
-msgstr "소유자 컨텐츠 액세스 모드 및 컨텐츠 액세스 모드 목록은 독립형 모드에서 직접 설정할 수 없습니다."
+msgstr ""
+"소유자 컨텐츠 액세스 모드 및 컨텐츠 액세스 모드 목록은 독립형 모드에서 직접 "
+"설정할 수 없습니다."
 
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:942
 #: server/src/main/java/org/candlepin/resource/OwnerResource.java:954
@@ -1750,8 +1757,9 @@ msgid ""
 "to address this problem. See knowledge database https://access.redhat.com/"
 "knowledge/node/129003 for more information."
 msgstr ""
-"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 이 문제를 처리할 수 있습니다. 자세한 내용은 지식 "
-"데이터베이스(https://access.redhat.com/knowledge/node/129003)를 참조하십시오."
+"너무 많은 컨텐츠가 인증서 {0}에 설정되어 있습니다. 새로운 클라이언트의 경우 "
+"이 문제를 처리할 수 있습니다. 자세한 내용은 지식 데이터베이스(https://access."
+"redhat.com/knowledge/node/129003)를 참조하십시오."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -1772,12 +1780,15 @@ msgstr "업스트림 서브스크립션 관리 애플리케이션의 ID가 없�
 msgid ""
 "This subscription management application has already been imported by "
 "another owner."
-msgstr "이 서브스크립션 관리 애플리케이션은 다른 소유자에 의해 이미 가져오기 되었습니다."
+msgstr ""
+"이 서브스크립션 관리 애플리케이션은 다른 소유자에 의해 이미 가져오기 되었습니"
+"다."
 
 #: server/src/main/java/org/candlepin/sync/ConsumerImporter.java:89
 msgid ""
 "Owner has already imported from another subscription management application."
-msgstr "소유자가 이미 다른 서브스크립션 관리 애플리케이션에서 가져오기되었습니다."
+msgstr ""
+"소유자가 이미 다른 서브스크립션 관리 애플리케이션에서 가져오기되었습니다."
 
 #: server/src/main/java/org/candlepin/sync/EntitlementImporter.java:197
 #, java-format
