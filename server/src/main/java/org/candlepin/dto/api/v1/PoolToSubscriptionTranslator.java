@@ -91,7 +91,9 @@ public class PoolToSubscriptionTranslator implements ObjectTranslator<Pool, Subs
             .upstreamEntitlementId(source.getUpstreamEntitlementId())
             .upstreamPoolId(source.getUpstreamPoolId())
             .stacked(source.isStacked())
-            .stackId(source.getStackId());
+            .stackId(source.getStackId())
+            .providedProducts(Collections.emptySet())
+            .derivedProvidedProducts(Collections.emptySet());
 
         if (translator != null) {
 
