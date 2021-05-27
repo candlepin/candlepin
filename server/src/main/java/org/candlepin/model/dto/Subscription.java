@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -184,7 +185,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
 
     public Collection<ProductData> getProvidedProducts() {
         ProductData product = this.getProduct();
-        return product != null ? product.getProvidedProducts() : null;
+        return product != null ? product.getProvidedProducts() : Collections.emptySet();
     }
 
     public ProductData getDerivedProduct() {
@@ -194,7 +195,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
 
     public Collection<ProductData> getDerivedProvidedProducts() {
         ProductData derived = this.getDerivedProduct();
-        return derived != null ? derived.getProvidedProducts() : null;
+        return derived != null ? derived.getProvidedProducts() : Collections.emptySet();
     }
 
     /**
