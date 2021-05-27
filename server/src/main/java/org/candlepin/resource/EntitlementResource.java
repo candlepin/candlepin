@@ -271,7 +271,7 @@ public class EntitlementResource implements EntitlementsApi {
             status = this.jobManager.queueJob(config);
         }
         catch (JobException e) {
-            e.printStackTrace();
+            log.error("Failed to regenerate entitlement certificates for product: {}", productId, e);
         }
         return this.translator.translate(status, AsyncJobStatusDTO.class);
     }

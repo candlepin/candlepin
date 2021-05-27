@@ -75,8 +75,8 @@ public class EventFilter {
         try {
             defaultFilterPolicy = Enum.valueOf(FilterPolicy.class, policyString.trim());
         }
-        catch (Exception ex) {
-            throw new IllegalArgumentException("Unknown default policy settings: " + policyString);
+        catch (Exception e) {
+            throw new IllegalArgumentException("Unknown default policy settings: " + policyString, e);
         }
 
         List<String> toNotFilterConfig = config.getList(ConfigProperties.AUDIT_FILTER_DO_NOT_FILTER);
@@ -101,17 +101,17 @@ public class EventFilter {
             String[] split = item.split("-");
             if (split.length != 2) {
                 throw new IllegalArgumentException("Invalid include/exclude rule: " + item +
-                        "Each filter auditing" +
-            "include/exclude must be in format TYPE-TARGET. For example MODIFIED-CONSUMER.");
+                    "Each filter auditing" +
+                    "include/exclude must be in format TYPE-TARGET. For example MODIFIED-CONSUMER.");
             }
             try {
                 Type type = Enum.valueOf(Type.class, split[0].trim());
                 Target target = Enum.valueOf(Target.class, split[1].trim());
                 set.add(new EventTypeAndTarget(type, target));
             }
-            catch (Exception ex) {
+            catch (Exception e) {
                 throw new IllegalArgumentException("Invalid filtering tuple: " + item +
-                        " . Please use only enum values of Type and Target enums, e.g. MODIFIED-CONSUMER");
+                    " . Please use only enum values of Type and Target enums, e.g. MODIFIED-CONSUMER", e);
             }
         }
     }
@@ -160,7 +160,7 @@ public class EventFilter {
             final int prime = 31;
             int result = 1;
             result = prime * result +
-                    ((target == null) ? 0 : target.hashCode());
+                ((target == null) ? 0 : target.hashCode());
             result = prime * result + ((type == null) ? 0 : type.hashCode());
             return result;
         }

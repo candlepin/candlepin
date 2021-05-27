@@ -46,7 +46,7 @@ public class CdnCurator extends AbstractHibernateCurator<Cdn> {
                 .uniqueResult();
         }
         catch (NonUniqueResultException e) {
-            throw new IllegalStateException("Multiple CDN instances found with the same label: " + label);
+            throw new IllegalStateException("Multiple CDN instances found with the same label: " + label, e);
         }
     }
 

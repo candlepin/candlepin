@@ -219,7 +219,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 .getName();
         }
         catch (IllegalArgumentException e) {
-            log.debug("Unable to get primary key for entity {}", entityType);
+            log.debug("Unable to get primary key for entity {}", entityType, e);
         }
 
         return primaryColumn;

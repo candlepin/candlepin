@@ -131,7 +131,7 @@ public class Entitler {
             // TODO: Could be multiple errors, but we'll just report the first one for now
             Pool pool = poolCurator.get(poolId);
             throw new ForbiddenException(messageTranslator.poolErrorToMessage(
-                pool, e.getResults().get(poolId).getErrors().get(0)));
+                pool, e.getResults().get(poolId).getErrors().get(0)), e);
         }
     }
 
@@ -165,7 +165,7 @@ public class Entitler {
         catch (EntitlementRefusedException e) {
             // TODO: Could be multiple errors, but we'll just report the first one for now:
             throw new ForbiddenException(messageTranslator.entitlementErrorToMessage(
-                ent, e.getResults().values().iterator().next().getErrors().get(0))
+                ent, e.getResults().values().iterator().next().getErrors().get(0)), e
             );
         }
     }
@@ -278,7 +278,7 @@ public class Entitler {
                 catch (Exception e) {
                     //log and continue, this should NEVER block
                     log.debug("Healing failed for host UUID {} with message: {}",
-                        host.getUuid(), e.getMessage());
+                        host.getUuid(), e.getMessage(), e);
                 }
 
                 /* Consumer is stale at this point.  Note that we use get() instead of
@@ -335,8 +335,7 @@ public class Entitler {
             }
 
             throw new ForbiddenException(messageTranslator.productErrorToMessage(
-                productId, e.getResults().values().iterator().next().getErrors().get(0)
-            ));
+                productId, e.getResults().values().iterator().next().getErrors().get(0)), e);
         }
     }
 
@@ -534,7 +533,7 @@ public class Entitler {
             // We will debug log the message, but returning does not seem to add
             // to the process
             if (log.isDebugEnabled()) {
-                log.debug("consumer {} dry-run errors:", consumer.getUuid());
+                log.debug("consumer {} dry-run errors:", consumer.getUuid(), e);
                 for (Entry<String, ValidationResult> entry : e.getResults().entrySet()) {
                     log.debug("errors for pool id: {}", entry.getKey());
                     for (ValidationError error : entry.getValue().getErrors()) {

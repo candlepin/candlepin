@@ -927,7 +927,7 @@ public class OwnerResource implements OwnersApi {
         }
         catch (Exception e) {
             log.debug("Unable to create owner: ", e);
-            throw new BadRequestException(i18n.tr("Could not create the Owner: {0}", owner));
+            throw new BadRequestException(i18n.tr("Could not create the Owner: {0}", owner), e);
         }
 
         log.info("Created owner: {}", owner);
@@ -1020,7 +1020,7 @@ public class OwnerResource implements OwnersApi {
                 }
                 catch (IllegalArgumentException e) {
                     throw new BadRequestException(this.i18n.tr("Content access mode list contains " +
-                    "an unsupported mode: {0}", mode));
+                    "an unsupported mode: {0}", mode), e);
                 }
             }
         }
@@ -1826,7 +1826,7 @@ public class OwnerResource implements OwnersApi {
             overrides = new ConflictOverrides(overrideConflicts);
         }
         catch (IllegalArgumentException e) {
-            throw new BadRequestException(i18n.tr("Unknown conflict to force"));
+            throw new BadRequestException(i18n.tr("Unknown conflict to force"), e);
         }
 
         return overrides;

@@ -91,7 +91,7 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
                 // encoding (as marketing products have non-numeric IDs), and fails out with
                 // an IAE.
                 log.warn("Attempted to create a product certificate for a non-engineering product: {}",
-                    product);
+                    product, e);
             }
             catch (Exception e) {
                 log.error("Error creating product certificate!", e);

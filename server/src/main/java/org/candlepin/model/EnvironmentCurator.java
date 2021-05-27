@@ -191,8 +191,8 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
                     .setParameter("env_name", envName)
                     .getSingleResult();
             }
-            catch (NoResultException exp) {
-                log.trace("Unable to find environment Id by envName {}", envName);
+            catch (NoResultException e) {
+                log.trace("Unable to find environment Id by envName {}", envName, e);
             }
         }
 

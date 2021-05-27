@@ -409,7 +409,7 @@ public class JobMessageReceiver {
 
                 if (intendedState != null && !intendedState.isTerminal()) {
                     log.error("Job processing failed; rolling back job message to retry later: {}",
-                        this.serializeMessage(message));
+                        this.serializeMessage(message), e);
 
                     // The intended state is non-terminal (likely fail-with-retry), so we'll rollback
                     // to allow the message to be redelivered so the job can be re-attempted.
@@ -417,7 +417,7 @@ public class JobMessageReceiver {
                 }
                 else {
                     log.error("Job processing failed terminally; committing job message as acknowledged: {}",
-                        message);
+                        message, e);
 
                     // The state is unknown or terminal. We don't want to redeliver the message as
                     // the job was intended to be put in a "completed" state.
@@ -437,7 +437,7 @@ public class JobMessageReceiver {
                 // want anyway.
 
                 log.error("Failed to dispatch job message during job execution; rolling back job message " +
-                    "to retry later: {}", this.serializeMessage(message));
+                    "to retry later: {}", this.serializeMessage(message), e);
 
                 this.rollback(session);
             }
@@ -454,7 +454,7 @@ public class JobMessageReceiver {
 
                 if (e.isTerminal()) {
                     log.error("Job processing failed terminally; committing job message as acknowledged: {}",
-                        this.serializeMessage(message));
+                        this.serializeMessage(message), e);
 
                     // TODO: Move the message to another queue for cleanup/resync later
                     this.commit(session);

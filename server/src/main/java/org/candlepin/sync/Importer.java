@@ -611,9 +611,9 @@ public class Importer {
         try (Reader reader = new FileReader(rulesFile)) {
             rulesImporter.importObject(reader);
         }
-        catch (FileNotFoundException fnfe) {
+        catch (FileNotFoundException e) {
             log.warn("Skipping rules import, manifest does not contain rules file: {}",
-                ImportFile.RULES_FILE.fileName());
+                ImportFile.RULES_FILE.fileName(), e);
         }
     }
 

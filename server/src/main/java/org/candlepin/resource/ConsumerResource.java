@@ -531,7 +531,7 @@ public class ConsumerResource implements ConsumersApi {
                 this.factValidator.validate(key, value);
             }
             catch (PropertyValidationException e) {
-                log.warn("  {}", e.getMessage());
+                log.warn("  {}", e.getMessage(), e);
                 log.warn("  Discarding fact \"{}\"...", key);
                 continue;
             }
@@ -1050,7 +1050,7 @@ public class ConsumerResource implements ConsumersApi {
         }
         catch (Exception e) {
             log.error("Problem creating unit:", e);
-            throw new BadRequestException(i18n.tr("Problem creating unit {0}", consumer));
+            throw new BadRequestException(i18n.tr("Problem creating unit {0}", consumer), e);
         }
     }
 
@@ -1161,7 +1161,7 @@ public class ConsumerResource implements ConsumersApi {
                 keys.add(key);
             }
             catch (NotFoundException e) {
-                log.warn(e.getMessage());
+                log.warn(e.getMessage(), e);
             }
         }
         if ((principal instanceof NoAuthPrincipal) && keys.isEmpty()) {
@@ -1291,7 +1291,7 @@ public class ConsumerResource implements ConsumersApi {
             user = userService.findByLogin(username);
         }
         catch (UnsupportedOperationException e) {
-            log.warn("User service does not allow user lookups, cannot verify person consumer.");
+            log.warn("User service does not allow user lookups, cannot verify person consumer.", e);
         }
 
         if (user == null) {
@@ -1463,7 +1463,7 @@ public class ConsumerResource implements ConsumersApi {
             }
             catch (Exception e) {
                 log.error("Problem updating unit:", e);
-                throw new BadRequestException(i18n.tr("Problem updating unit {0}", dto));
+                throw new BadRequestException(i18n.tr("Problem updating unit {0}", dto), e);
             }
         }
     }
@@ -1895,11 +1895,8 @@ public class ConsumerResource implements ConsumersApi {
                     List<Entitlement> ents = entitler.bindByProducts(autobindData);
                     entitler.sendEvents(ents);
                 }
-                catch (AutobindDisabledForOwnerException e) {
-                    log.warn("Guest auto-attach skipped. {}", e.getMessage());
-                }
-                catch (AutobindHypervisorDisabledException e) {
-                    log.warn("Guest auto-attach skipped. {}", e.getMessage());
+                catch (AutobindDisabledForOwnerException | AutobindHypervisorDisabledException e) {
+                    log.warn("Guest auto-attach skipped. {}", e.getMessage(), e);
                 }
             }
         }
@@ -2016,11 +2013,8 @@ public class ConsumerResource implements ConsumersApi {
                 returnCerts.add(translator.translate(cert, CertificateDTO.class));
             }
         }
-        catch (IOException ioe) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), ioe);
-        }
-        catch (GeneralSecurityException gse) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), gse);
+        catch (IOException | GeneralSecurityException e) {
+            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), e);
         }
 
         return returnCerts;
@@ -2064,11 +2058,8 @@ public class ConsumerResource implements ConsumersApi {
             return Response.ok(result, MediaType.APPLICATION_JSON)
                 .build();
         }
-        catch (IOException ioe) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), ioe);
-        }
-        catch (GeneralSecurityException gse) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate", gse));
+        catch (IOException | GeneralSecurityException e) {
+            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), e);
         }
     }
 
@@ -2148,11 +2139,8 @@ public class ConsumerResource implements ConsumersApi {
                 allCerts.add(new CertificateSerialDTO().serial(cac.getSerial().getId()));
             }
         }
-        catch (IOException ioe) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), ioe);
-        }
-        catch (GeneralSecurityException gse) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate", gse));
+        catch (IOException | GeneralSecurityException e) {
+            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), e);
         }
 
         return allCerts;
@@ -2236,7 +2224,7 @@ public class ConsumerResource implements ConsumersApi {
                 (System.currentTimeMillis() - subTermsStart));
         }
         catch (CandlepinException e) {
-            log.debug(e.getMessage());
+            log.debug(e.getMessage(), e);
             throw e;
         }
 
@@ -2306,20 +2294,20 @@ public class ConsumerResource implements ConsumersApi {
             catch (AutobindDisabledForOwnerException e) {
                 if (owner.isUsingSimpleContentAccess()) {
                     log.debug("Ignoring request to auto-attach. " +
-                        "It is disabled for org \"{0}\" because of the content access mode setting."
-                        , owner.getKey());
+                        "It is disabled for org \"{}\" because of the content access mode setting."
+                        , owner.getKey(), e);
                     return Response.status(Response.Status.OK).build();
                 }
                 else {
                     throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
                         "It is disabled for org \"{0}\"."
-                        , owner.getKey()));
+                        , owner.getKey()), e);
                 }
             }
             catch (AutobindHypervisorDisabledException e) {
                 throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
                         "It is disabled for org \"{0}\" because of the hypervisor autobind setting."
-                    , owner.getKey()));
+                    , owner.getKey()), e);
             }
         }
 
@@ -2370,15 +2358,15 @@ public class ConsumerResource implements ConsumersApi {
             // consumerBindUtil.validateServiceLevel(consumer.getOwnerId(), serviceLevel);
             dryRunPools = entitler.getDryRun(consumer, owner, serviceLevel);
         }
-        catch (ForbiddenException fe) {
+        catch (ForbiddenException e) {
             return Collections.emptyList();
         }
-        catch (BadRequestException bre) {
-            throw bre;
+        catch (BadRequestException e) {
+            throw e;
         }
-        catch (RuntimeException re) {
-            log.debug("Unexpected exception occurred while performing dry-run:", re);
-            return Collections.<PoolQuantityDTO>emptyList();
+        catch (RuntimeException e) {
+            log.debug("Unexpected exception occurred while performing dry-run:", e);
+            return Collections.emptyList();
         }
 
         if (dryRunPools != null) {
@@ -2728,11 +2716,7 @@ public class ConsumerResource implements ConsumersApi {
                 errored = true;
             }
         }
-        catch (GeneralSecurityException e) {
-            log.error("Problem regenerating ID cert for unit:", e);
-            errored = true;
-        }
-        catch (IOException e) {
+        catch (GeneralSecurityException | IOException e) {
             log.error("Problem regenerating ID cert for unit:", e);
             errored = true;
         }
