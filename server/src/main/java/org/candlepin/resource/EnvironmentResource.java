@@ -195,8 +195,6 @@ public class EnvironmentResource implements EnvironmentsApi {
         Set<String> contentIds;
         try {
             contentIds = this.batchCreate(contentToPromote, environment);
-
-            this.contentAccessManager.refreshEnvironmentContentAccessCerts(environment);
             this.contentAccessManager.syncOwnerLastContentUpdate(environment.getOwner());
         }
         catch (PersistenceException pe) {
@@ -238,8 +236,6 @@ public class EnvironmentResource implements EnvironmentsApi {
 
         try {
             this.envContentCurator.bulkDelete(demotedContent.values());
-
-            this.contentAccessManager.refreshEnvironmentContentAccessCerts(environment);
             this.contentAccessManager.syncOwnerLastContentUpdate(environment.getOwner());
         }
         catch (RollbackException hibernateException) {

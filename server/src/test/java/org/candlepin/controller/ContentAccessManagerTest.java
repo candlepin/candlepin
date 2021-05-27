@@ -14,8 +14,21 @@
  */
 package org.candlepin.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.nullable;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.config.Configuration;
@@ -43,8 +56,6 @@ import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerEnvContentAccess;
-import org.candlepin.model.OwnerEnvContentAccessCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.pki.CertificateReader;
@@ -84,7 +95,6 @@ import java.util.Map;
 import java.util.Set;
 
 
-
 /**
  * Test suite for the ContentAccessManager class
  */
@@ -104,7 +114,6 @@ public class ContentAccessManagerTest {
     @Mock private ContentAccessCertificateCurator mockContentAccessCertCurator;
     @Mock private OwnerCurator mockOwnerCurator;
     @Mock private OwnerContentCurator mockOwnerContentCurator;
-    @Mock private OwnerEnvContentAccessCurator mockOwnerEnvContentAccessCurator;
     @Mock private EnvironmentCurator mockEnvironmentCurator;
     @Mock private EntitlementCurator mockEntitlementCurator;
     private PKIUtility pkiUtility;
@@ -144,12 +153,10 @@ public class ContentAccessManagerTest {
         // FIXME: This mess of mocks is why we should not be using mocks in this way. We should be
         // using a test database framework and our actual curators and objects.
 
-        doAnswer(new PersistSimulator()).when(this.mockOwnerCurator).merge(any(Owner.class));
-        doAnswer(new PersistSimulator()).when(this.mockConsumerCurator).merge(any(Consumer.class));
-        doAnswer(new PersistSimulator()).when(this.mockContentAccessCertCurator)
+        doAnswer(new PersistSimulator<>()).when(this.mockOwnerCurator).merge(any(Owner.class));
+        doAnswer(new PersistSimulator<>()).when(this.mockConsumerCurator).merge(any(Consumer.class));
+        doAnswer(new PersistSimulator<>()).when(this.mockContentAccessCertCurator)
             .create(any(ContentAccessCertificate.class));
-        doAnswer(new PersistSimulator()).when(this.mockOwnerEnvContentAccessCurator)
-            .saveOrUpdate(any(OwnerEnvContentAccess.class));
         doReturn(this.testingKeyPair).when(this.mockKeyPairCurator).getConsumerKeyPair(any(Consumer.class));
 
         doAnswer(iom -> {
@@ -185,9 +192,8 @@ public class ContentAccessManagerTest {
         return new ContentAccessManager(
             this.config, this.pkiUtility, this.x509V3ExtensionUtil, this.mockContentAccessCertCurator,
             this.mockKeyPairCurator, this.mockCertSerialCurator, this.mockOwnerCurator,
-            this.mockOwnerContentCurator, this.mockOwnerEnvContentAccessCurator, this.mockConsumerCurator,
-            this.mockConsumerTypeCurator, this.mockEnvironmentCurator, this.mockContentAccessCertCurator,
-            this.mockEventSink);
+            this.mockOwnerContentCurator, this.mockConsumerCurator, this.mockConsumerTypeCurator,
+            this.mockEnvironmentCurator, this.mockContentAccessCertCurator, this.mockEventSink);
     }
 
     private Owner mockOwner() {
