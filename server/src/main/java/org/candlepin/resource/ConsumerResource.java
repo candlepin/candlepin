@@ -804,14 +804,14 @@ public class ConsumerResource implements ConsumersApi {
         }
 
         if (dto.getHypervisorId() == null &&
-            getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID) != null &&
-            !"true".equals(getFactValue(dto.getFacts(), "virt.is_guest")) &&
+            this.getFactValue(dto.getFacts(), Consumer.Fact.DMI_SYSTEM_UUID) != null &&
+            !"true".equals(this.getFactValue(dto.getFacts(), Consumer.Fact.VIRT_IS_GUEST)) &&
             entity.getOwnerId() != null) {
 
             HypervisorId hid = new HypervisorId()
                 .setOwner(this.ownerCurator.findOwnerById(entity.getOwnerId()))
                 .setConsumer(entity)
-                .setHypervisorId(this.getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID));
+                .setHypervisorId(this.getFactValue(dto.getFacts(), Consumer.Fact.DMI_SYSTEM_UUID));
 
             entity.setHypervisorId(hid);
         }
@@ -899,11 +899,12 @@ public class ConsumerResource implements ConsumersApi {
         // fix for duplicate hypervisor/consumer problem
         Consumer consumer = null;
         if (config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING) &&
-            getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID) != null &&
-            !"true".equalsIgnoreCase(getFactValue(dto.getFacts(), "virt.is_guest"))) {
+            this.getFactValue(dto.getFacts(), Consumer.Fact.DMI_SYSTEM_UUID) != null &&
+            !"true".equalsIgnoreCase(this.getFactValue(dto.getFacts(), Consumer.Fact.VIRT_IS_GUEST))) {
 
-            consumer = consumerCurator.getHypervisor(
-                getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID), owner);
+            consumer = this.consumerCurator.getHypervisor(
+                this.getFactValue(dto.getFacts(), Consumer.Fact.DMI_SYSTEM_UUID), owner);
+
             if (consumer != null) {
                 consumer.setIdCert(generateIdCert(consumer, false));
                 this.updateConsumer(consumer.getUuid(), dto);
@@ -916,7 +917,6 @@ public class ConsumerResource implements ConsumersApi {
         }
 
         ConsumerType ctype = this.consumerTypeCurator.getByLabel(dto.getType().getLabel());
-
         if (ctype == null) {
             throw new BadRequestException(i18n.tr("Invalid unit type: {0}", dto.getType().getLabel()));
         }
@@ -1188,9 +1188,9 @@ public class ConsumerResource implements ConsumersApi {
             // create
             if ((existing.getCapabilities() == null ||
                 existing.getCapabilities().isEmpty()) &&
-                existing.getFact("distributor_version") != null) {
+                existing.getFact(Consumer.Fact.DISTRIBUTOR_VERSION) != null) {
                 Set<DistributorVersionCapability> capabilities = distributorVersionCurator.
-                    findCapabilitiesByDistVersion(existing.getFact("distributor_version"));
+                    findCapabilitiesByDistVersion(existing.getFact(Consumer.Fact.DISTRIBUTOR_VERSION));
                 if (capabilities != null) {
                     Set<ConsumerCapability> ccaps = new HashSet<>();
                     for (DistributorVersionCapability dvc : capabilities) {
@@ -1212,9 +1212,9 @@ public class ConsumerResource implements ConsumersApi {
                     change = true;
                 }
             }
-            else if (getFactValue(update.getFacts(), "distributor_version") !=  null) {
+            else if (getFactValue(update.getFacts(), Consumer.Fact.DISTRIBUTOR_VERSION) !=  null) {
                 DistributorVersion dv = distributorVersionCurator.findByName(
-                    getFactValue(update.getFacts(), "distributor_version"));
+                    getFactValue(update.getFacts(), Consumer.Fact.DISTRIBUTOR_VERSION));
 
                 if (dv != null) {
                     Set<ConsumerCapability> ccaps = new HashSet<>();
@@ -2853,8 +2853,6 @@ public class ConsumerResource implements ConsumersApi {
         deletedConsumerCurator.delete(dc);
     }
 
-
-
     private void addCalculatedAttributes(Entitlement ent) {
         // With no consumer/date, this will not build suggested quantity
         Map<String, String> calculatedAttributes =
@@ -2862,11 +2860,8 @@ public class ConsumerResource implements ConsumersApi {
         ent.getPool().setCalculatedAttributes(calculatedAttributes);
     }
 
-    public String getFactValue(Map<String, String> facts, String factsKey) {
-        if (facts != null) {
-            return facts.get(factsKey);
-        }
-        return null;
+    private String getFactValue(Map<String, String> facts, Consumer.Fact fact) {
+        return facts != null && fact != null ? facts.get(fact.key()) : null;
     }
 
     @Override

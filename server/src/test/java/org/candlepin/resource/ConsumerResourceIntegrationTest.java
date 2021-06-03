@@ -53,7 +53,6 @@ import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.model.CloudProfileFacts;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -90,6 +89,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -221,7 +221,10 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertNotNull(submitted);
         assertNotNull(consumerCurator.get(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
-        assertEquals(METADATA_VALUE, consumerResource.getFactValue(submitted.getFacts(), METADATA_NAME));
+
+        Map<String, String> facts = submitted.getFacts();
+        assertNotNull(facts);
+        assertEquals(METADATA_VALUE, facts.get(METADATA_NAME));
     }
 
     @Test
@@ -252,8 +255,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertNotNull(consumerCurator.get(submitted.getId()));
         assertNotNull(consumerCurator.findByUuid(uuid));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
-        assertEquals(METADATA_VALUE, consumerResource.getFactValue(submitted.getFacts(), METADATA_NAME));
         assertEquals(uuid, submitted.getUuid());
+
+        Map<String, String> facts = submitted.getFacts();
+        assertNotNull(facts);
+        assertEquals(METADATA_VALUE, facts.get(METADATA_NAME));
 
         // The second post should fail because of constraint failures
         ConsumerDTO anotherToSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null,
@@ -434,7 +440,10 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(toSubmit.getUuid(), submitted.getUuid());
         assertNotNull(consumerCurator.get(submitted.getId()));
         assertEquals(standardSystemType.getLabel(), submitted.getType().getLabel());
-        assertEquals(METADATA_VALUE, consumerResource.getFactValue(submitted.getFacts(), METADATA_NAME));
+
+        Map<String, String> facts = submitted.getFacts();
+        assertNotNull(facts);
+        assertEquals(METADATA_VALUE, facts.get(METADATA_NAME));
 
         // now pass in consumer type with null id just like the client would
         ConsumerTypeDTO type = new ConsumerTypeDTO()
@@ -804,8 +813,14 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertNotEquals(beforeUpdateTimestamp, afterUpdateTimestamp);
     }
 
-    @Test
-    public void testCloudProfileUpdatedOnSpecificConsumerFactsUpdate() {
+    public static Stream<Arguments> cloudProfileFactProvider() {
+        return Stream.of(Consumer.Fact.getCloudProfileFacts())
+            .map(fact -> Arguments.of(fact.key()));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("cloudProfileFactProvider")
+    public void testCloudProfileUpdatedOnSpecificConsumerFactsUpdate(String cpFact) {
         ConsumerDTO consumer = createConsumerDTO("random-consumer", null, null, standardSystemTypeDTO);
         consumer = consumerResource.createConsumer(consumer, null, null, null, true);
         Date modifiedDateOnCreate = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
@@ -819,7 +834,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(modifiedDateOnCreate, modifiedTSOnUnnecessaryFactUpdate);
 
         updatedConsumerDTO = new ConsumerDTO();
-        updatedConsumerDTO.putFacts(CloudProfileFacts.CPU_CORES_PERSOCKET.getFact(), "1");
+        updatedConsumerDTO.putFacts(cpFact, "123");
         consumerResource.updateConsumer(consumer.getUuid(), updatedConsumerDTO);
         Date modifiedTSOnNecessaryFactUpdate = consumerCurator.get(consumer.getId())
             .getRHCloudProfileModified();

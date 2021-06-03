@@ -136,7 +136,7 @@ public class HypervisorUpdateAction {
 
     public Consumer reconcileHost(Owner owner, Consumer incomingHost, HypervisorUpdateResultDTO result,
         boolean create, String principal, String jobReporterId) {
-        String systemUuid = incomingHost.getFact(Consumer.Facts.SYSTEM_UUID);
+        String systemUuid = incomingHost.getFact(Consumer.Fact.DMI_SYSTEM_UUID);
         String hypervisorId = incomingHost.getHypervisorId().getHypervisorId();
         Consumer resultHost = consumerCurator.getExistingConsumerByHypervisorIdOrUuid(owner.getId(),
             hypervisorId,

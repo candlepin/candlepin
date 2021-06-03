@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -31,10 +32,13 @@ import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
@@ -519,76 +523,157 @@ public class ConsumerTest extends DatabaseTestFixture {
         assertTrue(consumer.getUsage().isEmpty());
     }
 
-    @Test
-    public void testCloudProfileFactDidNotChange() {
+    public static Stream<Arguments> cloudProfileFactProvider() {
+        return Stream.of(Consumer.Fact.getCloudProfileFacts())
+            .map(elem -> Arguments.of(elem.key()));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("cloudProfileFactProvider")
+    public void testSetFactTriggersCloudProfileUpdateWhenCPFactIsAdded(String cpfact) throws Exception {
         Consumer consumer = new Consumer();
-        consumer.setFact("dmi.bios.vendor", "vendorA");
-        consumer.setFact("lscpu.model", "78");
 
-        Map<String, String> newFacts = new HashMap<>();
-        newFacts.put("dmi.bios.vendor", "vendorA");
-        newFacts.put("lscpu.model", "100");
+        Date cpupdate1 = consumer.getRHCloudProfileModified();
+        Thread.sleep(50);
 
-        // this should return false because the only cloud fact  the consumer has did not change
-        assertFalse(consumer.checkForCloudProfileFacts(newFacts));
+        consumer.setFact(cpfact, "test_value");
+
+        Date cpupdate2 = consumer.getRHCloudProfileModified();
+
+        assertNotNull(cpupdate2);
+        assertNotEquals(cpupdate1, cpupdate2);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("cloudProfileFactProvider")
+    public void testSetFactTriggersCloudProfileUpdateWhenCPFactIsUpdated(String cpfact) throws Exception {
+        Consumer consumer = new Consumer()
+            .setFact(cpfact, "test_value");
+
+        Date cpupdate1 = consumer.getRHCloudProfileModified();
+        Thread.sleep(50);
+
+        consumer.setFact(cpfact, "updated_value");
+
+        Date cpupdate2 = consumer.getRHCloudProfileModified();
+
+        assertNotNull(cpupdate2);
+        assertNotEquals(cpupdate1, cpupdate2);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("cloudProfileFactProvider")
+    public void testSetFactOmitsCloudProfileUpdateWhenCPFactIsUnchanged(String cpfact) throws Exception {
+        Consumer consumer = new Consumer()
+            .setFact(cpfact, "test_value");
+
+        Date cpupdate1 = consumer.getRHCloudProfileModified();
+        Thread.sleep(50);
+
+        consumer.setFact(cpfact, "test_value");
+
+        Date cpupdate2 = consumer.getRHCloudProfileModified();
+
+        assertNotNull(cpupdate2);
+        assertEquals(cpupdate1, cpupdate2);
     }
 
     @Test
-    public void testCloudProfileFactDidNotChangeWhenPassingSingleFact() {
+    public void testSetFactOmitsCloudProfileUpdateWhenNonCPFactIsChanged() throws Exception {
         Consumer consumer = new Consumer();
-        consumer.setFact("dmi.bios.vendor", "vendorA");
-        consumer.setFact("lscpu.model", "78");
+        consumer.updateRHCloudProfileModified();
 
-        Map<String, String> newFacts = new HashMap<>();
-        newFacts.put("dmi.bios.vendor", "vendorA");
+        Date cpupdate1 = consumer.getRHCloudProfileModified();
+        Thread.sleep(50);
 
-        assertFalse(consumer.checkForCloudProfileFacts(newFacts));
+        consumer.setFact("test_fact", "test_value");
+
+        Date cpupdate2 = consumer.getRHCloudProfileModified();
+
+        assertNotNull(cpupdate2);
+        assertEquals(cpupdate1, cpupdate2);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("cloudProfileFactProvider")
+    public void testSetFactsTriggersCloudProfileUpdateWhenCPFactIsAdded(String cpfact) throws Exception {
+        Consumer consumer = new Consumer();
+
+        Date cpupdate1 = consumer.getRHCloudProfileModified();
+        Thread.sleep(50);
+
+        consumer.setFacts(Map.of(cpfact, "test_value"));
+
+        Date cpupdate2 = consumer.getRHCloudProfileModified();
+
+        assertNotNull(cpupdate2);
+        assertNotEquals(cpupdate1, cpupdate2);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("cloudProfileFactProvider")
+    public void testSetFactsTriggersCloudProfileUpdateWhenCPFactIsUpdated(String cpfact) throws Exception {
+        Consumer consumer = new Consumer()
+            .setFact(cpfact, "test_value");
+
+        Date cpupdate1 = consumer.getRHCloudProfileModified();
+        Thread.sleep(50);
+
+        consumer.setFacts(Map.of(cpfact, "updated_value"));
+
+        Date cpupdate2 = consumer.getRHCloudProfileModified();
+
+        assertNotNull(cpupdate2);
+        assertNotEquals(cpupdate1, cpupdate2);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("cloudProfileFactProvider")
+    public void testSetFactsTriggersCloudProfileUpdateWhenCPFactIsRemoved(String cpfact) throws Exception {
+        Consumer consumer = new Consumer()
+            .setFact(cpfact, "test_value");
+
+        Date cpupdate1 = consumer.getRHCloudProfileModified();
+        Thread.sleep(50);
+
+        consumer.setFacts(Map.of("new_fact", "new_value"));
+
+        Date cpupdate2 = consumer.getRHCloudProfileModified();
+
+        assertNotNull(cpupdate2);
+        assertNotEquals(cpupdate1, cpupdate2);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("cloudProfileFactProvider")
+    public void testSetFactsOmitsCloudProfileUpdateWhenCPFactIsUnchanged(String cpfact) throws Exception {
+        Consumer consumer = new Consumer()
+            .setFact(cpfact, "test_value");
+
+        Date cpupdate1 = consumer.getRHCloudProfileModified();
+        Thread.sleep(50);
+
+        consumer.setFacts(Map.of(cpfact, "test_value"));
+
+        Date cpupdate2 = consumer.getRHCloudProfileModified();
+
+        assertNotNull(cpupdate2);
+        assertEquals(cpupdate1, cpupdate2);
     }
 
     @Test
-    public void testCloudProfileFactOnEmptyExistingFacts() {
+    public void testSetFactsOmitsCloudProfileUpdateWhenNonCPFactIsChanged() throws Exception {
         Consumer consumer = new Consumer();
+        consumer.updateRHCloudProfileModified();
 
-        Map<String, String> newFacts = new HashMap<>();
-        newFacts.put("dmi.bios.vendor", "vendorA");
+        Date cpupdate1 = consumer.getRHCloudProfileModified();
+        Thread.sleep(50);
 
-        assertTrue(consumer.checkForCloudProfileFacts(newFacts));
-    }
+        consumer.setFacts(Map.of("test_fact", "test_value"));
 
-    @Test
-    public void testCloudProfileFactOnEmptyIncomingFacts() {
-        Consumer consumer = new Consumer();
-        consumer.setFact("dmi.bios.vendor", "vendorA");
+        Date cpupdate2 = consumer.getRHCloudProfileModified();
 
-        Map<String, String> newFacts = null;
-
-        assertFalse(consumer.checkForCloudProfileFacts(newFacts));
-    }
-
-    @Test
-    public void testCloudProfileFactOnNullValueOfIncomingFacts() {
-        Consumer consumer = new Consumer();
-        consumer.setFact("dmi.bios.vendor", "vendorA");
-
-        Map<String, String> newFacts = new HashMap<>();
-        newFacts.put("dmi.bios.vendor", null);
-
-        assertTrue(consumer.checkForCloudProfileFacts(newFacts));
-
-        newFacts = new HashMap<>();
-        newFacts.put("null", "vendorA");
-
-        assertFalse(consumer.checkForCloudProfileFacts(newFacts));
-    }
-
-    @Test
-    public void testCloudProfileFactExistingIncomingFacts() {
-        Consumer consumer = new Consumer();
-        consumer.setFact("dmi.bios.vendor", "vendorA");
-
-        Map<String, String> newFacts = new HashMap<>();
-        newFacts.put("dmi.bios.vendor", "vendorA");
-
-        assertFalse(consumer.checkForCloudProfileFacts(newFacts));
+        assertNotNull(cpupdate2);
+        assertEquals(cpupdate1, cpupdate2);
     }
 }

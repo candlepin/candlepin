@@ -30,6 +30,8 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -39,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -82,6 +85,52 @@ import javax.xml.bind.annotation.XmlTransient;
 @JsonFilter("ConsumerFilter")
 public class Consumer extends AbstractHibernateObject implements Linkable, Owned, Named, ConsumerProperty,
     Eventful, ConsumerInfo {
+    private static final Logger log = LoggerFactory.getLogger(Consumer.class);
+
+    /** Commonly used/recognized consumer facts */
+    public static enum Fact {
+        CPU_COUNT("cpu.cpu(s)"),
+        CPU_ARCH("lscpu.architecture"),
+        CPU_CORES_PER_SOCKET("cpu.core(s)_per_socket"),
+        CPU_SOCKETS("cpu.cpu_socket(s)"),
+        CPU_THREADS_PER_CORE("cpu.thread(s)_per_core"),
+        DISTRIBUTOR_VERSION("distributor_version"),
+        DMI_BIOS_VENDOR("dmi.bios.vendor"),
+        DMI_BIOS_VERSION("dmi.bios.version"),
+        DMI_CHASSIS_ASSET_TAG("dmi.chassis.asset_tag"),
+        DMI_SYSTEM_MANUFACTURER("dmi.system.manufacturer"),
+        DMI_SYSTEM_UUID("dmi.system.uuid"),
+        MEMORY_MEMTOTAL("memory.memtotal"),
+        OCM_UNITS("ocm.units"),
+        UNAME_MACHINE("uname.machine"),
+        VIRT_IS_GUEST("virt.is_guest");
+
+        private final String key;
+
+        Fact(String key) {
+            this.key = key;
+        }
+
+        public String key() {
+            return this.key;
+        }
+
+        @Override
+        public String toString() {
+            return this.key();
+        }
+
+        public static Fact[] getCloudProfileFacts() {
+            return new Fact[] { CPU_CORES_PER_SOCKET, CPU_SOCKETS, DMI_BIOS_VENDOR, DMI_BIOS_VERSION,
+                DMI_CHASSIS_ASSET_TAG, DMI_SYSTEM_MANUFACTURER, DMI_SYSTEM_UUID, MEMORY_MEMTOTAL, OCM_UNITS,
+                UNAME_MACHINE, VIRT_IS_GUEST };
+        }
+
+        public static Fact[] getCPUFacts() {
+            return new Fact[] { CPU_COUNT, CPU_ARCH, CPU_SOCKETS, CPU_CORES_PER_SOCKET,
+                CPU_THREADS_PER_CORE };
+        }
+    }
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_consumer";
@@ -89,11 +138,13 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     public static final int MAX_LENGTH_OF_CONSUMER_NAME = 255;
 
     /**
-     * Commonly used/recognized consumer facts
+     * Assumed threads-per-core for guests which report a threads-per-core value of 1.
+     * FIXME: TODO: This will no longer be valid once SMT4+ becomes available on x86 CPUs.
      */
-    public static final class Facts {
-        public static final String SYSTEM_UUID = "dmi.system.uuid";
-    }
+    private static final int VCPU_SMT_FIX_ASSUMED_SMT_THREAD_COUNT = 2;
+
+    /** The arch to which the fix should be applied */
+    private static final String VCPU_SMT_FIX_GUEST_ARCH = "x86_64";
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -476,13 +527,34 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @return all facts about this consumer.
      */
-    @HateoasArrayExclude
     public Map<String, String> getFacts() {
         return facts;
     }
 
+    /**
+     * Checks whether or not the specified fact is defined for this consumer.
+     *
+     * @param fact
+     *  the fact to check
+     *
+     * @return
+     *  true if the fact is defined; false otherwise
+     */
     public boolean hasFact(String fact) {
         return facts != null && facts.containsKey(fact);
+    }
+
+    /**
+     * Checks whether or not the specified fact is defined for this consumer.
+     *
+     * @param fact
+     *  the fact to check
+     *
+     * @return
+     *  true if the fact is defined; false otherwise
+     */
+    public boolean hasFact(Fact fact) {
+        return fact != null && this.hasFact(fact.key);
     }
 
     /**
@@ -491,10 +563,77 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * @return the value of the fact with the given key.
      */
     public String getFact(String factKey) {
-        if (facts != null) {
-            return facts.get(factKey);
+        return this.facts != null ? this.facts.get(factKey) : null;
+    }
+
+    /**
+     * Returns the value of the specified fact, or null if the fact is not defined for this
+     * consumer.
+     *
+     * @param fact
+     *  the fact for which to retrieve the value
+     *
+     * @return
+     *  the value of the specified fact, or null if the fact is not defined
+     */
+    public String getFact(Fact fact) {
+        return fact != null ? this.getFact(fact.key) : null;
+    }
+
+    /**
+     * Sets the specified fact to the given value.
+     *
+     * @param name
+     *  the fact to update
+     *
+     * @param value
+     *  the value to set for the fact
+     *
+     * @throws IllegalArgumentException
+     *  if fact is null
+     *
+     * @return
+     *  a reference to this consumer instance
+     */
+    public Consumer setFact(String name, String value) {
+        if (this.facts == null) {
+            this.facts = new HashMap<>();
         }
-        return null;
+
+        if (this.updatesAnyFact(name, value, Fact.getCloudProfileFacts())) {
+            this.updateRHCloudProfileModified();
+        }
+
+        this.facts.put(name, value);
+
+        if (this.isGuest() && this.updatesAnyFact(name, value, Fact.getCPUFacts())) {
+            this.recalculateVCPUFacts();
+        }
+
+        return this;
+    }
+
+    /**
+     * Sets the specified fact to the given value.
+     *
+     * @param fact
+     *  the fact to update
+     *
+     * @param value
+     *  the value to set for the fact
+     *
+     * @throws IllegalArgumentException
+     *  if fact is null
+     *
+     * @return
+     *  a reference to this consumer instance
+     */
+    public Consumer setFact(Fact fact, String value) {
+        if (fact == null) {
+            throw new IllegalArgumentException("fact is null");
+        }
+
+        return this.setFact(fact.key, value);
     }
 
     /**
@@ -504,11 +643,60 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      *  a reference to this consumer instance
      */
     public Consumer setFacts(Map<String, String> factsIn) {
-        if (this.checkForCloudProfileFacts(factsIn)) {
-            this.updateRHCloudProfileModified();
+        if (factsIn != null) {
+            if (this.updatesAnyFact(factsIn, Fact.getCloudProfileFacts())) {
+                this.updateRHCloudProfileModified();
+            }
+
+            this.facts = factsIn;
+
+            if (this.updatesAnyFact(factsIn, Fact.getCPUFacts())) {
+                this.recalculateVCPUFacts();
+            }
         }
-        facts = factsIn;
+        else {
+            this.updateRHCloudProfileModified();
+            this.facts = null;
+        }
+
         return this;
+    }
+
+    /**
+     * Recalculates facts surrounding vCPU for guest consumers on specific platforms where
+     * SMT/vCPU billing is unnecessarily complex. This method will no-op if the consumer is
+     * not flagged as a guest, has an explicit value set for the SMT fact which is greater
+     * than 1, or the CPU facts are missing or malformed.
+     */
+    private void recalculateVCPUFacts() {
+        if (!this.isGuest()) {
+            return;
+        }
+
+        try {
+            String arch = this.getFact(Fact.CPU_ARCH);
+            String smt = this.getFact(Fact.CPU_THREADS_PER_CORE);
+
+            if (VCPU_SMT_FIX_GUEST_ARCH.equals(arch) && "1".equals(smt)) {
+                // We're assuming SMT is actually on and the hypervisor is either lying on behalf of/to
+                // the guest system, or it's on a distributed "cloud" platform where such a thing has no
+                // meaning. Either way, divide all our counts by whatever the current common SMT value
+                // is for billing/bookkeeping purposes... I guess.
+                int coresPerSocket = Integer.parseInt(this.getFact(Fact.CPU_CORES_PER_SOCKET));
+                int cores = Integer.parseInt(this.getFact(Fact.CPU_COUNT));
+
+                coresPerSocket /= VCPU_SMT_FIX_ASSUMED_SMT_THREAD_COUNT;
+                int cpuSockets = cores / coresPerSocket;
+
+                this.facts.put(Fact.CPU_CORES_PER_SOCKET.key, String.valueOf(coresPerSocket));
+                this.facts.put(Fact.CPU_SOCKETS.key, String.valueOf(cpuSockets));
+            }
+        }
+        catch (NumberFormatException e) {
+            // If any of the facts triggers this, we can't do anything and must abort. This consumer
+            // will likely fail fact validation before persistence anyway.
+            log.warn("Unable to recalculate guest core count: ", e);
+        }
     }
 
     /**
@@ -546,25 +734,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         }
 
         return true;
-    }
-
-    /**
-     * Set a fact
-     * @param name to set
-     * @param value to set
-     */
-    public void setFact(String name, String value) {
-        if (this.facts == null) {
-            this.facts = new HashMap<>();
-        }
-
-        HashMap<String, String> fact = new HashMap<>();
-        fact.put(name, value);
-        if (this.checkForCloudProfileFacts(fact)) {
-            this.updateRHCloudProfileModified();
-        }
-
-        this.facts.put(name, value);
     }
 
     public long getEntitlementCount() {
@@ -975,26 +1144,58 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     /**
-     * Check if the consumers facts have changed and contains the cloud profile facts.
-     * It returns true if incoming facts are cloud profile facts
+     * Checks if the provided fact key-value pair would update one of the specified facts for this
+     * consumer.
      *
-     * @param incomingFacts incoming facts
-     * @return a boolean
+     * @param fact
+     *  the fact key being updated
+     *
+     * @param value
+     *  the new value of the fact; or null if the fact is being removed
+     *
+     * @param targetFacts
+     *  a collection of facts to check for updates
+     *
+     * @return
+     *  true if the given fact key-value pair would result in a change to the specified facts
+     *  for this consumer; false otherwise
      */
-    public boolean checkForCloudProfileFacts(Map<String, String> incomingFacts) {
-        if (incomingFacts == null) {
-            return false;
+    private boolean updatesAnyFact(String fact, String value, Fact... targetFacts) {
+        boolean matches = Stream.of(targetFacts)
+            .map(Fact::key)
+            .anyMatch(elem -> elem.equals(fact));
+
+        if (matches) {
+            String existing = this.getFact(fact);
+            return value != null ? !value.equals(existing) : value != existing;
         }
 
-        if (this.facts != null && this.facts.equals(incomingFacts)) {
-            return false;
-        }
+        return false;
+    }
 
-        for (CloudProfileFacts profileFact : CloudProfileFacts.values()) {
-            if (incomingFacts.containsKey(profileFact.getFact())) {
-                if (this.facts == null ||
-                    !this.facts.containsKey(profileFact.getFact()) ||
-                    !this.facts.get(profileFact.getFact()).equals(incomingFacts.get(profileFact.getFact()))) {
+    /**
+     * Checks if the provided facts would update one or more of the target facts for this consumer.
+     *
+     * @param incomingFacts
+     *  a map containing the incoming facts to assign to this consumer
+     *
+     * @param targetFacts
+     *  a collection of facts to check for updates
+     *
+     * @return
+     *  true if one or more of the target facts would be updated by the incoming facts; false
+     *  otherwise.
+     */
+    private boolean updatesAnyFact(Map<String, String> incomingFacts, Fact... targetFacts) {
+        for (Fact fact : targetFacts) {
+            boolean exists = this.hasFact(fact);
+            boolean changed = incomingFacts.containsKey(fact.key());
+
+            if (changed || exists != changed) {
+                String existing = this.getFact(fact);
+                String updated = incomingFacts.get(fact.key());
+
+                if (existing != null ? !existing.equals(updated) : existing != updated) {
                     return true;
                 }
             }

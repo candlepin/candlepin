@@ -979,25 +979,28 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Map<String, HypervisorId> systemUuidHypervisorMap = new HashMap<>();
         List<String> remainingHypervisorIds = new LinkedList<>();
         for (Consumer consumer : hypervisors) {
-            if (consumer.hasFact(Consumer.Facts.SYSTEM_UUID)) {
-                systemUuidHypervisorMap.put(consumer.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase(),
+            if (consumer.hasFact(Consumer.Fact.DMI_SYSTEM_UUID)) {
+                systemUuidHypervisorMap.put(consumer.getFact(Consumer.Fact.DMI_SYSTEM_UUID).toLowerCase(),
                     consumer.getHypervisorId());
             }
             remainingHypervisorIds.add(consumer.getHypervisorId().getHypervisorId());
         }
+
         if (!systemUuidHypervisorMap.isEmpty()) {
             String sql = "select id from cp_consumer " +
                 "inner join cp_consumer_facts " +
                 "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
-                "where cp_consumer_facts.mapkey = '" + Consumer.Facts.SYSTEM_UUID + "' and " +
+                "where cp_consumer_facts.mapkey = :fact_key and " +
                 "lower(cp_consumer_facts.element) in (:uuids) " +
                 "and cp_consumer.owner_id = :ownerid " +
                 "order by cp_consumer.updated desc";
 
             Iterable<List<String>> blocks = Iterables.partition(systemUuidHypervisorMap.keySet(),
                 getInBlockSize());
+
             Query query = this.currentSession()
                 .createSQLQuery(sql)
+                .setParameter("fact_key", Consumer.Fact.DMI_SYSTEM_UUID.key())
                 .setParameter("ownerid", owner.getId());
 
             List<String> consumerIds = new LinkedList<>();
@@ -1005,16 +1008,19 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 query.setParameterList("uuids", block);
                 consumerIds.addAll(query.list());
             }
-            for (Consumer consumer: this.getConsumers(consumerIds)) {
+
+            for (Consumer consumer : this.getConsumers(consumerIds)) {
                 if (consumer.getHypervisorId() != null) {
                     hypervisorMap.add(consumer.getHypervisorId().getHypervisorId(), consumer);
                     remainingHypervisorIds.remove(consumer.getHypervisorId().getHypervisorId());
                 }
                 else {
-                    hypervisorMap.add(consumer.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase(), consumer);
+                    hypervisorMap.add(
+                        consumer.getFact(Consumer.Fact.DMI_SYSTEM_UUID).toLowerCase(), consumer);
                 }
             }
         }
+
         if (!remainingHypervisorIds.isEmpty()) {
             for (Consumer consumer : this.getHypervisorsBulk(remainingHypervisorIds, owner.getId())) {
                 hypervisorMap.add(consumer.getHypervisorId().getHypervisorId(), consumer);
@@ -1045,17 +1051,19 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             found = (Consumer) ((List) this.getConsumers(one)).get(0);
         }
         else if (systemUuid != null) {
-            sql =
-                "select cp_consumer.id from cp_consumer " +
-                    "join cp_consumer_facts on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
-                    "where cp_consumer_facts.mapkey = '" + Consumer.Facts.SYSTEM_UUID + "' and " +
-                    "lower(cp_consumer_facts.element) = :uuid " +
-                    "and cp_consumer.owner_id = :ownerId " +
-                    "order by cp_consumer.updated desc";
+            sql = "select cp_consumer.id from cp_consumer " +
+                "join cp_consumer_facts on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
+                "where cp_consumer_facts.mapkey = :fact_key and " +
+                "lower(cp_consumer_facts.element) = :uuid " +
+                "and cp_consumer.owner_id = :ownerId " +
+                "order by cp_consumer.updated desc";
+
             query = this.currentSession()
                 .createSQLQuery(sql)
+                .setParameter("fact_key", Consumer.Fact.DMI_SYSTEM_UUID.key())
                 .setParameter("ownerId", ownerId)
                 .setParameter("uuid", systemUuid.toLowerCase());
+
             consumerIds = query.list();
             if (consumerIds != null && consumerIds.size() > 0) {
                 List<String> one = Collections.singletonList(consumerIds.get(0));
