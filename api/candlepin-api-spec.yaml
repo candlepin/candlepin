@@ -5596,7 +5596,13 @@ paths:
             type: string
         - name: listall
           in: query
-          description: Include pools that are not suited to the unit's facts
+          description: |
+            Includes pools which are not applicable based on some of the consumer's current system facts
+            (i.e. system architecture, sockets, cores, ram, storage_band, instance_multiplier), but will
+            still filter pools based on other factors, such as pools restricted to a consumer of specific
+            types, usernames, or uuids; pools restricted to guests of specific hosts; non-multi-entitlement
+            pools that the consumer has already attached; unmapped guest pools for which the consumer is
+            ineligible; and expired pools.
           schema:
             type: boolean
             default: false
