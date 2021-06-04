@@ -34,6 +34,7 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.quantity.QuantityRules;
+import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.version.CertVersionConflictException;
@@ -161,7 +162,7 @@ public class ConsumerBindUtil {
             }
             catch (ForbiddenException e) {
                 log.warn(i18n.tr("Cannot bind to pool \"{0}\" in activation key \"{1}\": {2}",
-                    akp.getPool().getId(), akp.getKey().getName(), e.getMessage()));
+                    akp.getPool().getId(), akp.getKey().getName(), e.getMessage()), e);
             }
         }
 
@@ -190,15 +191,12 @@ public class ConsumerBindUtil {
             List<Entitlement> ents = entitler.bindByProducts(autobindData);
             entitler.sendEvents(ents);
         }
-        catch (ForbiddenException fe) {
-            throw fe;
+        catch (ForbiddenException | CertVersionConflictException e) {
+            throw e;
         }
-        catch (CertVersionConflictException cvce) {
-            throw cvce;
-        }
-        catch (RuntimeException re) {
+        catch (RuntimeException e) {
             log.warn("Unable to attach a subscription for a product that " +
-                "has no pool: " + re.getMessage());
+                "has no pool: " + e.getMessage(), e);
         }
     }
 
@@ -225,8 +223,8 @@ public class ConsumerBindUtil {
                 consumer.setServiceLevel(level);
                 return true;
             }
-            catch (BadRequestException bre) {
-                log.warn(bre.getMessage());
+            catch (BadRequestException e) {
+                log.warn(e.getMessage(), e);
                 return false;
             }
         }

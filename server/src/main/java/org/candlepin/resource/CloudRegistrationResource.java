@@ -67,13 +67,13 @@ public class CloudRegistrationResource implements CloudApi {
         }
         catch (UnsupportedOperationException e) {
             String errmsg = this.i18n.tr("Cloud registration is not supported by this Candlepin instance");
-            throw new NotImplementedException(errmsg);
+            throw new NotImplementedException(errmsg, e);
         }
         catch (CloudRegistrationAuthorizationException e) {
             throw new NotAuthorizedException(e.getMessage());
         }
         catch (MalformedCloudRegistrationException e) {
-            throw new BadRequestException(e.getMessage());
+            throw new BadRequestException(e.getMessage(), e);
         }
     }
 

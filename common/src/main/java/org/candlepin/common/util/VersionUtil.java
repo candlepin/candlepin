@@ -41,11 +41,9 @@ public class VersionUtil {
         map.put("version", "Unknown");
         map.put("release", "Unknown");
 
-        InputStream in = VersionUtil.class.getClassLoader().getResourceAsStream("version.properties");
-
         Properties props = new Properties();
 
-        try {
+        try (InputStream in = VersionUtil.class.getClassLoader().getResourceAsStream("version.properties")) {
             props.load(in);
             if (props.containsKey("version")) {
                 map.put("version", props.getProperty("version"));
@@ -54,18 +52,8 @@ public class VersionUtil {
                 map.put("release", props.getProperty("release"));
             }
         }
-        catch (IOException ioe) {
-            log.error("Can not load version.properties", ioe);
-        }
-        finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-            }
-            catch (IOException ioe) {
-                log.error("problem closing version reader");
-            }
+        catch (IOException e) {
+            log.error("Can not load version.properties", e);
         }
 
         return map;

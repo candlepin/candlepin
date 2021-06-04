@@ -115,13 +115,13 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
             /* If we can't deserialize the result data, try to deserialize it as a Java object since that
              * is the legacy format.
              */
-            log.debug("Could not read result data as JSON. Trying as Java object.");
+            log.debug("Could not read result data as JSON. Trying as Java object.", e);
             result = deserializeJava(data);
         }
         catch (Exception e) {
             // This catch will also catch IOException which readValue also throws but for low level IO errors
             // that we likely wouldn't want to send on to deserializeJava
-            log.warn("Could not read result data");
+            log.warn("Could not read result data", e);
             throw new RuntimeException(e);
         }
 
@@ -165,8 +165,8 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
                 mapper.writeValue(generator, value);
                 data = baos.toByteArray();
             }
-            catch (IOException ioe) {
-                throw new RuntimeException(ioe);
+            catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
 
@@ -227,8 +227,8 @@ public class ResultDataUserType implements UserType, DynamicParameterizedType {
             try {
                 jsonClass = classForName(jsonClassName, this.getClass());
             }
-            catch (ClassNotFoundException exception) {
-                throw new HibernateException("Class not found: " + jsonClass, exception);
+            catch (ClassNotFoundException e) {
+                throw new HibernateException("Class not found: " + jsonClass, e);
             }
         }
     }

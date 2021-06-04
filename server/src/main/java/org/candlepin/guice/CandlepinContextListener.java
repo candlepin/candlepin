@@ -243,7 +243,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
                 DriverManager.deregisterDriver(driver);
             }
             catch (SQLException e) {
-                log.info("Failed to de-registering driver {}", driver);
+                log.info("Failed to de-registering driver {}", driver, e);
             }
         }
 

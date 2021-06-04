@@ -543,7 +543,7 @@ public class JSSX509CRLStreamWriter extends AbstractX509CRLStreamWriter {
                     signatureUnchanged = false;
                 }
                 catch (NoSuchAlgorithmException e) {
-                    throw new IOException("Could not find algorithm: " + signingAlg);
+                    throw new IOException("Could not find algorithm: " + signingAlg, e);
                 }
             }
             else if (tagNo == GENERALIZED_TIME_TAG_NUM || tagNo == UTC_TIME_TAG_NUM) {

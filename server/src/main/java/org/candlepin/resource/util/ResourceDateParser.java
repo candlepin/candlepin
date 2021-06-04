@@ -68,7 +68,7 @@ public class ResourceDateParser {
             d = DatatypeConverter.parseDateTime(activeOn).getTime();
         }
         catch (IllegalArgumentException e) {
-            throw new BadRequestException("Invalid date, must use ISO 8601 format");
+            throw new BadRequestException("Invalid date, must use ISO 8601 format", e);
         }
 
         return d;

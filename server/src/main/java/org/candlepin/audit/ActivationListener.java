@@ -16,8 +16,6 @@ package org.candlepin.audit;
 
 import org.candlepin.service.SubscriptionServiceAdapter;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -43,26 +41,21 @@ public class ActivationListener implements EventListener {
     }
 
     @Override
-    public void onEvent(Event e) {
-        if (e.getType().equals(Event.Type.CREATED) &&
-            e.getTarget().equals(Event.Target.POOL)) {
+    public void onEvent(Event event) {
+        if (event.getType().equals(Event.Type.CREATED) &&
+            event.getTarget().equals(Event.Target.POOL)) {
             try {
-                String subscriptionId = mapper.readTree(e.getEventData()).get("subscriptionId").asText();
+                String subscriptionId = mapper.readTree(event.getEventData())
+                    .get("subscriptionId").asText();
                 subscriptionService.sendActivationEmail(subscriptionId);
             }
-            catch (JsonMappingException ex) {
-                logError(e);
-            }
-            catch (JsonParseException ex) {
-                logError(e);
-            }
-            catch (IOException ex) {
-                logError(e);
+            catch (IOException e) {
+                logError(event, e);
             }
         }
     }
 
-    private void logError(Event e) {
-        log.debug("Invalid JSON for pool : " + e.getEntityId());
+    private void logError(Event event, Exception e) {
+        log.debug("Invalid JSON for pool : " + event.getEntityId(), e);
     }
 }

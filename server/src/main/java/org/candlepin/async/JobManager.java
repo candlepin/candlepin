@@ -863,7 +863,7 @@ public class JobManager implements ModeChangeListener {
                 }
                 catch (JobPersistenceException e) {
                     log.warn("Unable to load job detail for job, removing it from the scheduler: {}",
-                        key.getName());
+                        key.getName(), e);
 
                     unschedule.add(key);
                     continue;
@@ -929,8 +929,8 @@ public class JobManager implements ModeChangeListener {
 
         // Schedule new jobs
         for (Map.Entry<String, Configuration> entry : this.jobConfig.entrySet()) {
+            String jobName = entry.getKey();
             try {
-                String jobName = entry.getKey();
                 Configuration config = entry.getValue();
 
                 String schedule = config.getString(ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE, null);
@@ -958,7 +958,7 @@ public class JobManager implements ModeChangeListener {
                 log.info("Scheduled job \"{}\" with cron schedule: {}", jobName, schedule);
             }
             catch (Exception e) {
-                log.error("Unable to schedule job \"{}\":", e);
+                log.error("Unable to schedule job \"{}\":", jobName, e);
             }
         }
     }
@@ -1156,7 +1156,7 @@ public class JobManager implements ModeChangeListener {
             }
             else {
                 log.error("Unable to update state for job: {}; leaving job in its previous state for " +
-                    "state resync upon execution", status.getName());
+                    "state resync upon execution", status.getName(), e);
             }
 
             // We were unable to update the state from CREATED->QUEUED, but we were able to send
@@ -1485,7 +1485,7 @@ public class JobManager implements ModeChangeListener {
             }
         }
         catch (PersistenceException e) {
-            log.error("Unable to cleanup remnant job session; post-job database state is now undefined!");
+            log.error("Unable to cleanup remnant job session; post-job database state is now undefined!", e);
             throw e;
         }
     }
