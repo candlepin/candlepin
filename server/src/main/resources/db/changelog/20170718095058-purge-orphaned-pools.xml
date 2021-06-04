@@ -13,16 +13,6 @@
     <property dbms="postgresql" name="revoked_value" value="true"/>
     <property dbms="oracle" name="revoked_value" value="1"/>
 
-    <!-- Make sure we always delete the temporary table in the event we didn't fully complete a run -->
-    <changeSet id="20170718095058-0" author="crog" runAlways="true">
-      <preConditions onFail="CONTINUE">
-        <tableExists tableName="tmp_orphaned_pools"/>
-      </preConditions>
-
-      <dropTable tableName="tmp_orphaned_pools"/>
-    </changeSet>
-
-
     <changeSet id="20170718095058-1" author="vrjain, crog">
       <validCheckSum>7:5494d3a96b8e4205ce7993d2c2b96e29</validCheckSum>
       <validCheckSum>7:65a81a9ed61eca97c087f8518499e247</validCheckSum>
