@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.2
+Version: 4.0.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,12 @@ fi
 
 #raw
 %changelog
+* Fri Jun 04 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.3-1
+- 1964106: derivedProvidedProducts is now null where it was previously []
+  (sdhome@redhat.com)
+- 1960148: Fixed NPE when listing future pools with entitlements
+  (crog@redhat.com)
+
 * Tue Apr 20 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.2-1
 - 1949980: Fix SCA cert regeneration for consumers in environments
   (crog@redhat.com)
