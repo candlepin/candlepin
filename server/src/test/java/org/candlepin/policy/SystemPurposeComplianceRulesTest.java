@@ -315,4 +315,27 @@ public class SystemPurposeComplianceRulesTest {
         assertEquals(0, status.getNonCompliantAddOns().size());
         assertEquals(0, status.getReasons().size());
     }
+
+    /*
+     * Tests that a consumer is syspurpose compliant when their specified service type value matches their
+     * entitlement's service type value case insensitively.
+     */
+    @Test
+    public void testConsumerServiceTypeIsCompliantCaseInsensitively() {
+        Consumer consumer = mockConsumer();
+        consumer.setServiceType("ServicE_TypE");
+
+        Product prod1 = new Product();
+        prod1.setAttribute(Product.Attributes.SUPPORT_TYPE, "service_type");
+        List<Entitlement> ents = new LinkedList<>();
+        ents.add(mockEntitlement(consumer, TestUtil.createProduct("Awesome Product"), prod1));
+
+        SystemPurposeComplianceStatus status =
+            complianceRules.getStatus(consumer, ents, null, false);
+
+        assertTrue(status.isCompliant());
+        assertNull(status.getNonCompliantServiceType());
+        assertEquals(0, status.getReasons().size());
+    }
+
 }

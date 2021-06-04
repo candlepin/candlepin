@@ -93,6 +93,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
     protected Set<String> installedProducts;
     protected Set<String> capabilities;
     protected ConsumerTypeDTO type;
+    protected String serviceType;
 
     /**
      * Initializes a new ConsumerDTO instance with null values.
@@ -486,6 +487,28 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
     }
 
     /**
+     * Retrieves the service type field of this ConsumerDTO object.
+     *
+     * @return the service type of the consumer.
+     */
+    public String getServiceType() {
+        return this.serviceType;
+    }
+
+    /**
+     * Sets the consumer service type to set on this ConsumerDTO object.
+     *
+     * @param serviceType to set on this ConsumerDTO object.
+     *
+     * @return a reference to this DTO object.
+     */
+    public ConsumerDTO setServiceType(String serviceType) {
+        this.serviceType = serviceType;
+        return this;
+    }
+
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -516,7 +539,8 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
                 .append(this.getFacts(), that.getFacts())
                 .append(this.getInstalledProducts(), that.getInstalledProducts())
                 .append(this.getCapabilities(), that.getCapabilities())
-                .append(this.getType(), that.getType());
+                .append(this.getType(), that.getType())
+                .append(this.getServiceType(), that.getServiceType());
 
             return builder.isEquals();
         }
@@ -541,7 +565,8 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
             .append(this.getFacts())
             .append(this.getInstalledProducts())
             .append(this.getCapabilities())
-            .append(this.getType());
+            .append(this.getType())
+            .append(this.getServiceType());
 
         return builder.toHashCode();
     }
@@ -586,6 +611,7 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
         this.setInstalledProducts(source.getInstalledProducts());
         this.setCapabilities(source.getCapabilities());
         this.setType(source.getType());
+        this.setServiceType(source.getServiceType());
 
         return this;
     }

@@ -162,4 +162,5 @@
     <include file="db/changelog/20210211154615-add-owner-last-content-updated-column.xml"/>
     <include file="db/changelog/20210317160453-drop_pool_provided_product_fks.xml"/>
     <include file="db/changelog/20210412145432-drop_content_cache.xml"/>
+    <include file="db/changelog/20210503150950-add-consumer-service_type-column.xml"/>
 </databaseChangeLog>

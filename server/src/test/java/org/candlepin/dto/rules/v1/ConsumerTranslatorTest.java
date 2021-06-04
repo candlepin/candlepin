@@ -84,6 +84,7 @@ public class ConsumerTranslatorTest extends
         when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
         consumer.setOwner(owner);
         consumer.setType(ctype);
+        consumer.setServiceType("consumer_service_type");
 
         Set<String> addOns = new HashSet<>();
         for (int i = 0; i < 5; i++) {
@@ -138,6 +139,7 @@ public class ConsumerTranslatorTest extends
             assertEquals(source.getFacts(), dest.getFacts());
             assertEquals(source.getCreated(), dest.getCreated());
             assertEquals(source.getUpdated(), dest.getUpdated());
+            assertEquals(source.getServiceType(), dest.getServiceType());
 
             if (childrenGenerated) {
                 ConsumerType ctype = this.mockConsumerTypeCurator.getConsumerType(source);

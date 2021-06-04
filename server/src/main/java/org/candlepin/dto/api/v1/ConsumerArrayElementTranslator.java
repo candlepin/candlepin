@@ -112,6 +112,7 @@ public class ConsumerArrayElementTranslator implements ObjectTranslator<Consumer
             .usage(source.getUsage())
             .systemPurposeStatus(source.getSystemPurposeStatus())
             .addOns(source.getAddOns())
+            .serviceType(source.getServiceType())
             .entitlementCount(source.getEntitlementCount())
             .lastCheckin(Util.toDateTime(source.getLastCheckin()))
             .canActivate(source.isCanActivate())

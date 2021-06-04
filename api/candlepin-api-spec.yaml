@@ -8528,6 +8528,8 @@ components:
                 uniqueItems: true
                 items:
                   $ref: '#/components/schemas/ConsumerActivationKeyDTO'
+              serviceType:
+                type: string
 
     ConsumerActivationKeyDTO:
       description: Represent activation keys used by consumer in registration
@@ -8610,6 +8612,8 @@ components:
               items:
                 $ref: '#/components/schemas/GuestIdDTOArrayElement'
             href:
+              type: string
+            serviceType:
               type: string
 
     ConsumerInstalledProductDTO:
@@ -9563,6 +9567,8 @@ components:
           type: string
         nonCompliantUsage:
           type: string
+        nonCompliantServiceType:
+          type: string
         compliantRole:
           type: object
           additionalProperties:
@@ -9596,6 +9602,13 @@ components:
           uniqueItems: true
           items:
             type: string
+        compliantServiceType:
+          type: object
+          additionalProperties:
+            type: array
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/EntitlementDTO'
         reasons:
           type: array
           uniqueItems: true

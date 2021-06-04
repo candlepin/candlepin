@@ -591,4 +591,34 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         assertFalse(consumer.checkForCloudProfileFacts(newFacts));
     }
+
+
+    @Test
+    public void testServiceTypeConvertedToEmpty() throws Exception {
+        Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
+        consumerCurator.create(consumer);
+
+        String cid = consumer.getId();
+
+        consumer.setServiceType("test_service_type");
+        consumer = consumerCurator.merge(consumer);
+        consumerCurator.flush();
+
+        consumer = null;
+        consumerCurator.clear();
+
+        consumer = consumerCurator.get(cid);
+        assertEquals("test_service_type", consumer.getServiceType());
+
+        consumer.setServiceType("");
+        consumer = consumerCurator.merge(consumer);
+        consumerCurator.flush();
+
+        consumer = null;
+        consumerCurator.clear();
+
+        consumer = consumerCurator.get(cid);
+        assertTrue(consumer.getServiceType().isEmpty());
+    }
+
 }

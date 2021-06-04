@@ -43,10 +43,12 @@ public class SystemPurposeComplianceStatus {
     private Set<String> nonCompliantAddOns;
     private String nonCompliantSLA;
     private String nonCompliantUsage;
+    private String nonCompliantServiceType;
     private Map<String, Set<Entitlement>> compliantRole;
     private Map<String, Set<Entitlement>> compliantAddOns;
     private Map<String, Set<Entitlement>> compliantSLA;
     private Map<String, Set<Entitlement>> compliantUsage;
+    private Map<String, Set<Entitlement>> compliantServiceType;
     private Set<String> reasons;
     private I18n i18n;
     private boolean disabled = false;
@@ -57,6 +59,7 @@ public class SystemPurposeComplianceStatus {
         this.compliantAddOns = new HashMap<>();
         this.compliantSLA = new HashMap<>();
         this.compliantUsage = new HashMap<>();
+        this.compliantServiceType = new HashMap<>();
         this.reasons = new HashSet<>();
         this.i18n = i18n;
         this.date = new Date();
@@ -228,6 +231,39 @@ public class SystemPurposeComplianceStatus {
         return reasons.isEmpty();
     }
 
+    /**
+     *
+     * @param serviceType the usage that is non compliant
+     */
+    public void setNonCompliantServiceType(String serviceType) {
+        nonCompliantServiceType = serviceType;
+        this.addReason(
+            I18n.marktr("The requested service type preference \"{0}\" is not provided " +
+            "by a currently consumed subscription."),
+            nonCompliantServiceType
+        );
+    }
+
+    public String getNonCompliantServiceType() {
+        return nonCompliantServiceType;
+    }
+
+    /**
+     *
+     * @return the service type that is compliant and the entitlement that provide it
+     */
+    public Map<String, Set<Entitlement>> getCompliantServiceType() {
+        return compliantServiceType;
+    }
+
+    public void addCompliantServiceType(String serviceType, Entitlement compliantServiceEntitlement) {
+        if (!compliantServiceType.containsKey(serviceType)) {
+            compliantServiceType.put(serviceType, new HashSet<>());
+        }
+
+        compliantServiceType.get(serviceType).add(compliantServiceEntitlement);
+    }
+
     /*
      * The status is 'Matched' if at least one syspurpose attribute (SLA, role, addons, usage) is specified,
      * and all of those that are specified are satisfied by the consumer's entitlements.
@@ -262,7 +298,9 @@ public class SystemPurposeComplianceStatus {
                 compliantRole.isEmpty() &&
                 compliantAddOns.isEmpty() &&
                 compliantSLA.isEmpty() &&
-                compliantUsage.isEmpty();
+                compliantUsage.isEmpty() &&
+                StringUtils.isEmpty(nonCompliantServiceType) &&
+                compliantServiceType.isEmpty();
     }
 
     public Set<String> getReasons() {

@@ -1,4 +1,4 @@
-// Version: 5.42
+// Version: 5.43
 
 /*
  * Default Candlepin rule set.
@@ -310,7 +310,7 @@ function createPool(pool, consumer) {
             if (attribute === 'addons' || attribute === 'roles') {
                 poolSet = this.getProductAttribute(attribute).trim().split(/\s*,[\s,]*/);
             }
-            else if (attribute === 'support_level' || attribute === 'usage') {
+            else if (attribute === 'support_level' || attribute === 'usage' || attribute === 'support_type') {
                 poolSet = [this.getProductAttribute(attribute)];
             }
         }
@@ -387,6 +387,10 @@ function createConsumer(consumer, compliance) {
         consumer.usage = null;
     }
 
+    if (!consumer.serviceType) {
+        consumer.serviceType = null;
+    }
+
     consumer.contextCompliance = compliance;
 
     /*
@@ -429,6 +433,12 @@ function createConsumer(consumer, compliance) {
                 return [];
             }
             consumer_specified = [this.serviceLevel];
+        }
+        else if (attribute === 'support_type') {
+            if (!this.serviceType) {
+                return [];
+            }
+            consumer_specified = [this.serviceType];
         }
 
         if (attribute !== 'products') {
@@ -504,20 +514,21 @@ function get_mock_ent_for_pool(pool, consumer) {
 function get_pool_priority(pool, consumer) {
     log.debug("Calculating pool priority for pool " + pool.id + "...");
     // start with a default large enough to make sure that if all the highest syspurpose mismatch rules get
-    // applied (5600 * -0.05 +...+ 350 * -0.05 = -280 -140 -70 -35 -17.5 = -542.5), the total score will not go below zero.
-    var priority = 545;
+    // applied (11200 * -0.05 +...+ 350 * -0.05 = -560 -280 -140 -70 -35 -17.5 = -1102.5), the total score will not go below zero.
+    var priority = 1105;
     log.debug("Starting with default initial score of {}", priority);
 
     // List of syspurpose attributes and their corresponding weights: the relationship between them,
     // and the ones of less important attributes, is such that each one of them
     // is larger than all the other attributes below it combined
-    // (e.g. usage: 350 > requires_host+virt_only+sockets+ram+cores+vcpu: 330).
+    // (e.g. support_type: 350 > requires_host+virt_only+sockets+ram+cores+vcpu: 330).
     var attrs = {
-        'products': 5600,
-        'roles': 2800,
-        'addons': 1400,
-        'support_level': 700,
-        'usage': 350
+        'products': 11200,
+        'roles': 5600,
+        'addons': 2800,
+        'support_level': 1400,
+        'usage': 700,
+        'support_type': 350
     };
 
     Object.keys(attrs).forEach(function(attr) {
@@ -534,7 +545,7 @@ function get_pool_priority(pool, consumer) {
 
         log.debug("Evaluating attribute {} with weight {}", attr, attrs[attr]);
         if (unsatisfiedSet.length === 0 && poolSet.length === 0) {
-            null_rule_score = 0.01;
+            null_rule_score = 0.005;
             log.debug("NULL rule score for attribute {} and pool {}, which is: {}", [attr, pool.id, null_rule_score]);
         }
 
@@ -544,7 +555,7 @@ function get_pool_priority(pool, consumer) {
         }
 
         if (specifiedSet.length > 0 && poolSet.length > 0) {
-            mismatch_rule_score = (Utils.difference(specifiedSet, poolSet).length / specifiedSet.length) * -0.05;
+            mismatch_rule_score = (Utils.difference(specifiedSet, poolSet).length / specifiedSet.length) * -0.025;
             log.debug("MISMATCH rule score for attribute {} and pool {}, which is: {}", [attr, pool.id, mismatch_rule_score]);
         }
 

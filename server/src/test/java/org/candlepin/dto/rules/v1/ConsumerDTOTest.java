@@ -81,6 +81,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
 
         this.values.put("addInstalledProduct", "product-id-to-add");
         this.values.put("removeInstalledProduct", "product-id-to-remove");
+        this.values.put("ServiceType", "test-service-type");
     }
 
     /**

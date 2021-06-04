@@ -442,7 +442,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(c4);
         consumerCurator.flush();
 
-        List<String> result = consumerCurator.getDistinctSyspurposeRolesByOwner(owner);
+        List<String> result = consumerCurator.getDistinctSyspurposeValuesByOwner(owner,
+            SystemPurposeAttributeType.ROLES);
 
         // Make sure 'common_role' is not duplicated in the result
         assertEquals(3, result.size());
@@ -465,7 +466,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(c3);
         consumerCurator.flush();
 
-        List<String> result = consumerCurator.getDistinctSyspurposeRolesByOwner(owner);
+        List<String> result = consumerCurator.getDistinctSyspurposeValuesByOwner(owner,
+            SystemPurposeAttributeType.ROLES);
 
         // Make sure the result does not contain null or empty roles.
         assertEquals(1, result.size());
@@ -491,7 +493,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(c4);
         consumerCurator.flush();
 
-        List<String> result = consumerCurator.getDistinctSyspurposeUsageByOwner(owner);
+        List<String> result = consumerCurator.getDistinctSyspurposeValuesByOwner(owner,
+            SystemPurposeAttributeType.USAGE);
 
         // Make sure 'common_usage' is not duplicated in the result
         assertEquals(3, result.size());
@@ -514,7 +517,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(c3);
         consumerCurator.flush();
 
-        List<String> result = consumerCurator.getDistinctSyspurposeUsageByOwner(owner);
+        List<String> result = consumerCurator.getDistinctSyspurposeValuesByOwner(owner,
+            SystemPurposeAttributeType.USAGE);
 
         // Make sure the result does not contain null or empty usages.
         assertEquals(1, result.size());
@@ -540,7 +544,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(c4);
         consumerCurator.flush();
 
-        List<String> result = consumerCurator.getDistinctSyspurposeServicelevelByOwner(owner);
+        List<String> result = consumerCurator.getDistinctSyspurposeValuesByOwner(owner,
+            SystemPurposeAttributeType.SERVICE_LEVEL);
 
         // Make sure 'common_sla' is not duplicated in the result
         assertEquals(3, result.size());
@@ -563,7 +568,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumerCurator.create(c3);
         consumerCurator.flush();
 
-        List<String> result = consumerCurator.getDistinctSyspurposeServicelevelByOwner(owner);
+        List<String> result = consumerCurator.getDistinctSyspurposeValuesByOwner(owner,
+            SystemPurposeAttributeType.SERVICE_LEVEL);
 
         // Make sure the result does not contain null or empty SLAs.
         assertEquals(1, result.size());

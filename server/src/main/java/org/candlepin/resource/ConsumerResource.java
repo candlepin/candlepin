@@ -755,6 +755,10 @@ public class ConsumerResource implements ConsumersApi {
             entity.setUsage(dto.getUsage());
         }
 
+        if (dto.getServiceType() != null) {
+            entity.setServiceType(dto.getServiceType());
+        }
+
         if (dto.getAddOns() != null) {
             entity.setAddOns(dto.getAddOns());
         }
@@ -1681,6 +1685,14 @@ public class ConsumerResource implements ConsumersApi {
                 toUpdate.getAddOns(), updated.getAddOns());
 
             toUpdate.setAddOns(updated.getAddOns());
+            changesMade = true;
+        }
+
+        String serviceType = updated.getServiceType();
+        if (serviceType != null && !serviceType.equals(toUpdate.getServiceType())) {
+            log.info("   Updating consumer service type setting: \"{}\" => \"{}\"",
+                toUpdate.getServiceType(), serviceType);
+            toUpdate.setServiceType(serviceType);
             changesMade = true;
         }
 

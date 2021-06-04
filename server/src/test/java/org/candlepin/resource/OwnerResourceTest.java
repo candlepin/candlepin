@@ -2436,14 +2436,21 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         mockAddons.add("addon2");
         mockAddons.add("addon3");
 
-        when(this.mockConsumerCurator.getDistinctSyspurposeRolesByOwner(eq(owner)))
-            .thenReturn(mockRoles);
-        when(this.mockConsumerCurator.getDistinctSyspurposeServicelevelByOwner(eq(owner)))
-            .thenReturn(mockSLAs);
-        when(this.mockConsumerCurator.getDistinctSyspurposeUsageByOwner(eq(owner)))
-            .thenReturn(mockUsages);
+        List<String> mockServiceType = new ArrayList<>();
+        mockServiceType.add("serviceType1");
+        mockServiceType.add("serviceType2");
+        mockServiceType.add("serviceType3");
+
+        when(this.mockConsumerCurator.getDistinctSyspurposeValuesByOwner(eq(owner),
+            eq(SystemPurposeAttributeType.ROLES))).thenReturn(mockRoles);
+        when(this.mockConsumerCurator.getDistinctSyspurposeValuesByOwner(eq(owner),
+            eq(SystemPurposeAttributeType.SERVICE_LEVEL))).thenReturn(mockSLAs);
+        when(this.mockConsumerCurator.getDistinctSyspurposeValuesByOwner(eq(owner),
+            eq(SystemPurposeAttributeType.USAGE))).thenReturn(mockUsages);
         when(this.mockConsumerCurator.getDistinctSyspurposeAddonsByOwner(eq(owner)))
             .thenReturn(mockAddons);
+        when(this.mockConsumerCurator.getDistinctSyspurposeValuesByOwner(eq(owner),
+            eq(SystemPurposeAttributeType.SERVICE_TYPE))).thenReturn(mockServiceType);
 
         OwnerResource resource = this.buildOwnerResource();
 
@@ -2470,6 +2477,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .get(SystemPurposeAttributeType.SERVICE_LEVEL.toString());
         Set<String> expectedSLAs = new HashSet<>(Arrays.asList("sla1", "sla2", "sla3"));
         assertEquals(expectedSLAs, serviceLevelAgreements);
+
+        Set<String> serviceType = result.getSystemPurposeAttributes()
+            .get(SystemPurposeAttributeType.SERVICE_TYPE.toString());
+
+        Set<String> expectedServiceType = Util.asSet("serviceType1",
+            "serviceType2", "serviceType3");
+        assertEquals(expectedServiceType, serviceType);
     }
 
     @Test

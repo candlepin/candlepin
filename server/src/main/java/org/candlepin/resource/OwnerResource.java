@@ -1735,9 +1735,15 @@ public class OwnerResource implements OwnersApi {
     public SystemPurposeAttributesDTO getConsumersSyspurpose(
         @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
-        List<String> consumerRoles = this.consumerCurator.getDistinctSyspurposeRolesByOwner(owner);
-        List<String> consumerUsages = this.consumerCurator.getDistinctSyspurposeUsageByOwner(owner);
-        List<String> consumerSLAs = this.consumerCurator.getDistinctSyspurposeServicelevelByOwner(owner);
+        SystemPurposeAttributesDTO dto = new SystemPurposeAttributesDTO();
+        List<String> consumerRoles = this.consumerCurator.getDistinctSyspurposeValuesByOwner(owner,
+            SystemPurposeAttributeType.ROLES);
+        List<String> consumerUsages = this.consumerCurator.getDistinctSyspurposeValuesByOwner(owner,
+            SystemPurposeAttributeType.USAGE);
+        List<String> consumerSLAs = this.consumerCurator.getDistinctSyspurposeValuesByOwner(owner,
+            SystemPurposeAttributeType.SERVICE_LEVEL);
+        List<String> consumerServiceTypes = this.consumerCurator.getDistinctSyspurposeValuesByOwner(owner,
+            SystemPurposeAttributeType.SERVICE_TYPE);
         List<String> consumerAddons = this.consumerCurator.getDistinctSyspurposeAddonsByOwner(owner);
 
         Map<String, Set<String>> dtoMap = new HashMap<>();
@@ -1748,8 +1754,8 @@ public class OwnerResource implements OwnersApi {
         dtoMap.get(SystemPurposeAttributeType.USAGE.toString()).addAll(consumerUsages);
         dtoMap.get(SystemPurposeAttributeType.SERVICE_LEVEL.toString()).addAll(consumerSLAs);
         dtoMap.get(SystemPurposeAttributeType.ADDONS.toString()).addAll(consumerAddons);
+        dtoMap.get(SystemPurposeAttributeType.SERVICE_TYPE.toString()).addAll(consumerServiceTypes);
 
-        SystemPurposeAttributesDTO dto = new SystemPurposeAttributesDTO();
         dto.setOwner(translator.translate(owner, NestedOwnerDTO.class));
         dto.setSystemPurposeAttributes(dtoMap);
         return dto;
