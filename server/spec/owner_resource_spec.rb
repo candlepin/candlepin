@@ -626,7 +626,8 @@ describe 'Owner Resource' do
     product = create_product(random_string("p1"), random_string("Product1"),
       {
         :owner => owner_key,
-        :attributes => {:usage => "Development", :roles => "Server1,Server2", :addons => "addon1,addon2", :support_level => "mysla"}
+        :attributes => {:usage => "Development", :roles => "Server1,Server2", :addons => "addon1,addon2", :support_level => "mysla",
+                        :support_type => "test_support1"}
       }
     )
     product2 = create_product(random_string("p1"), random_string("Product1"),
@@ -637,7 +638,8 @@ describe 'Owner Resource' do
             :roles => "Server1,Server2",
             :addons => "addon1,addon2",
             :support_level_exempt => "true",
-            :support_level => "Layered"}
+            :support_level => "Layered",
+            :support_type => "test_support2"}
       }
     )
     create_pool_and_subscription(owner_key, product.id, 10, [], '', '', '', nil, nil, true)
@@ -651,6 +653,8 @@ describe 'Owner Resource' do
     expect(res["systemPurposeAttributes"]["addons"]).to include("addon2")
     expect(res["systemPurposeAttributes"]["support_level"]).to include("mysla")
     expect(res["systemPurposeAttributes"]["support_level"]).to_not include("Layered")
+    expect(res["systemPurposeAttributes"]["support_type"]).to include("test_support1")
+    expect(res["systemPurposeAttributes"]["support_type"]).to include("test_support2")
   end
 
   it 'user with owner pools permission can see system purpose of the owner products' do
@@ -685,13 +689,17 @@ describe 'Owner Resource' do
     user1 = user_client(owner1, username1)
 
     consumer1 = user1.register(random_string('consumer1'), :system, nil, {}, random_string('consumer1'), owner1_key,
-      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, 'sla1', 'common_role', 'usage1', ['addon1'])
+      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, 'sla1', 'common_role', 'usage1', ['addon1'],
+      nil, nil, nil, nil, 'test_service-type1')
     consumer2 = user1.register(random_string('consumer2'), :system, nil, {}, random_string('consumer2'), owner1_key,
-      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, 'sla2', 'common_role', 'usage2', ['addon2'])
+      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, 'sla2', 'common_role', 'usage2', ['addon2'],
+      nil, nil, nil, nil, 'test_service-type2')
     consumer3 = user1.register(random_string('consumer3'), :system, nil, {}, random_string('consumer3'), owner1_key,
-      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, nil, nil, 'usage3', [''])
+      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, nil, nil, 'usage3', [''],
+      nil, nil, nil, nil, 'test_service-type3')
     consumer4 = user1.register(random_string('consumer4'), :system, nil, {}, random_string('consumer4'), owner1_key,
-      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, nil, '', 'usage4', nil)
+      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, nil, '', 'usage4', nil,
+      nil, nil, nil, nil, 'test_service-type4')
 
     user1.list_owner_consumers(owner1_key).length.should == 4
 
@@ -720,6 +728,11 @@ describe 'Owner Resource' do
     # Even though 2 consumers have both specified the 'common_role', output should be deduplicated
     # and only include one instance of each unique value.
     res["systemPurposeAttributes"]["roles"].length.should == 1
+
+    expect(res["systemPurposeAttributes"]["support_type"]).to include("test_service-type1")
+    expect(res["systemPurposeAttributes"]["support_type"]).to include("test_service-type2")
+    expect(res["systemPurposeAttributes"]["support_type"]).to include("test_service-type3")
+    expect(res["systemPurposeAttributes"]["support_type"]).to include("test_service-type4")
   end
 end
 

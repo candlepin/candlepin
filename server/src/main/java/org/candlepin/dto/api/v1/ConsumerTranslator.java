@@ -112,6 +112,7 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
             .usage(source.getUsage())
             .systemPurposeStatus(source.getSystemPurposeStatus())
             .addOns(source.getAddOns())
+            .serviceType(source.getServiceType())
             .entitlementCount(source.getEntitlementCount())
             .facts(source.getFacts())
             .lastCheckin(Util.toDateTime(source.getLastCheckin()))

@@ -272,6 +272,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @OneToMany(mappedBy = "consumer", orphanRemoval = true, cascade = { CascadeType.ALL })
     private Set<ConsumerActivationKey> activationKeys;
 
+    @Column(name = "sp_service_type")
+    @Type(type = "org.candlepin.hibernate.EmptyStringUserType")
+    @Size(max = 255)
+    private String serviceType;
+
     public Consumer(String name, String userName, Owner owner, ConsumerType type) {
         this();
 
@@ -1009,5 +1014,14 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     public Set<ConsumerActivationKey> getActivationKeys() {
         return this.activationKeys;
+    }
+
+    public String getServiceType() {
+        return serviceType;
+    }
+
+    public Consumer setServiceType(String serviceType) {
+        this.serviceType = serviceType;
+        return this;
     }
 }

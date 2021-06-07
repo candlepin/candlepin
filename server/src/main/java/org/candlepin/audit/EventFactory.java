@@ -234,11 +234,13 @@ public class EventFactory {
         eventData.put("nonCompliantSLA", dto.getNonCompliantSLA());
         eventData.put("nonCompliantRole", dto.getNonCompliantRole());
         eventData.put("nonCompliantUsage", dto.getNonCompliantUsage());
+        eventData.put("nonCompliantServiceType", dto.getNonCompliantServiceType());
         eventData.put("nonCompliantAddOns", dto.getNonCompliantAddOns());
         eventData.put("compliantSLA", dto.getCompliantSLA());
         eventData.put("compliantRole", dto.getCompliantRole());
         eventData.put("compliantUsage", dto.getCompliantUsage());
         eventData.put("compliantAddOns", dto.getCompliantAddOns());
+        eventData.put("compliantServiceType", dto.getCompliantServiceType());
 
         try {
             String eventDataJson = mapper.writeValueAsString(eventData);

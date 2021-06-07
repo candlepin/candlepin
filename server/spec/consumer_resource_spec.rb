@@ -1591,4 +1591,22 @@ describe 'Consumer Resource Consumer Fact Filter Tests' do
     consumers[0]['uuid'].should == odd_consumer['uuid']
   end
 
+  it 'should let a consumer register and set system purpose service type' do
+    owner = create_owner(random_string('owner'))
+    user_name = random_string('user')
+    client = user_client(owner, user_name)
+
+    service_type = 'test_service_type'
+
+    consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
+                               owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil,
+                               nil, nil, nil, nil, nil, nil, nil, service_type)
+
+    expect(consumer['serviceType']).to eq(service_type)
+
+    #reload to be sure it was persisted
+    consumer = client.get_consumer(consumer['uuid'])
+    expect(consumer['serviceType']).to eq(service_type)
+  end
+
 end

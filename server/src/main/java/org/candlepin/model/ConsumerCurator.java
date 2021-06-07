@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Provider;
 import javax.inject.Singleton;
+import javax.persistence.EntityManager;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 import javax.persistence.TypedQuery;
@@ -69,6 +70,7 @@ import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.MapJoin;
 import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -467,66 +469,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         return Collections.emptyList();
-    }
-
-    /**
-     * Fetches all unique role attribute values set by all the consumers of the specified owner.
-     *
-     * @param owner
-     *  The owner the consumers belong to.
-     * @return
-     *  A list of the all the distinct values of the role attribute that the consumers belonging to the
-     *  specified owner have set.
-     */
-    @SuppressWarnings("unchecked")
-    @Transactional
-    public List<String> getDistinctSyspurposeRolesByOwner(Owner owner) {
-        return this.createSecureCriteria()
-            .add(Restrictions.eq("ownerId", owner.getId()))
-            .add(Restrictions.neOrIsNotNull("role", ""))
-            .setProjection(Projections.property("role"))
-            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            .list();
-    }
-
-    /**
-     * Fetches all unique usage attribute values set by all the consumers of the specified owner.
-     *
-     * @param owner
-     *  The owner the consumers belong to.
-     * @return
-     *  A list of the all the distinct values of the usage attribute that the consumers belonging to the
-     *  specified owner have set.
-     */
-    @SuppressWarnings("unchecked")
-    @Transactional
-    public List<String> getDistinctSyspurposeUsageByOwner(Owner owner) {
-        return this.createSecureCriteria()
-            .add(Restrictions.eq("ownerId", owner.getId()))
-            .add(Restrictions.neOrIsNotNull("usage", ""))
-            .setProjection(Projections.property("usage"))
-            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            .list();
-    }
-
-    /**
-     * Fetches all unique serviceLevel attribute values set by all the consumers of the specified owner.
-     *
-     * @param owner
-     *  The owner the consumers belong to.
-     * @return
-     *  A list of the all the distinct values of the serviceLevel attribute that the consumers belonging
-     *  to the specified owner have set.
-     */
-    @SuppressWarnings("unchecked")
-    @Transactional
-    public List<String> getDistinctSyspurposeServicelevelByOwner(Owner owner) {
-        return this.createSecureCriteria()
-            .add(Restrictions.eq("ownerId", owner.getId()))
-            .add(Restrictions.neOrIsNotNull("serviceLevel", ""))
-            .setProjection(Projections.property("serviceLevel"))
-            .setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY)
-            .list();
     }
 
     /**
@@ -1280,7 +1222,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * Builds a collection of predicates to be used for querying consumers using the JPA criteria
      * query API.
      *
-     * @param critBuilder
+     * @param criteriaBuilder
      *  the CriteriaBuilder instance to use to create predicates
 
      * @param root
@@ -1559,6 +1501,55 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         return updated;
+    }
+
+    /**
+     * Fetches all unique system purpose attribute values set by all the consumers
+     * of the specified owner.
+     *
+     * @param owner
+     *  The owner the consumers belong to
+     * @param sysPurposeAttribute
+     *  The type of system purpose attribute needs to be fetched
+     * @return
+     *  A list of the all the distinct values of the system purpose attributes that the consumers
+     *  belonging to the specified owner have set
+     */
+    public List<String> getDistinctSyspurposeValuesByOwner(Owner owner,
+        SystemPurposeAttributeType sysPurposeAttribute) throws RuntimeException {
+
+        EntityManager entityManager = this.getEntityManager();
+        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<String> query = builder.createQuery(String.class);
+        Root<Consumer> root = query.from(Consumer.class);
+        Path sysPurposePath;
+
+        switch (sysPurposeAttribute) {
+            case USAGE:
+                sysPurposePath = root.get(Consumer_.usage);
+                break;
+            case ROLES:
+                sysPurposePath = root.get(Consumer_.role);
+                break;
+            case SERVICE_LEVEL:
+                sysPurposePath = root.get(Consumer_.serviceLevel);
+                break;
+            case SERVICE_TYPE:
+                sysPurposePath = root.get(Consumer_.serviceType);
+                break;
+            default:
+                throw new RuntimeException("Unrecognized system purpose attribute: " + sysPurposeAttribute);
+        }
+
+        Predicate notNullPredicate = builder.isNotNull(sysPurposePath);
+        Predicate notEmptyPredicate = builder.notEqual(sysPurposePath, "");
+
+        query.select(sysPurposePath)
+            .where(builder.and(builder.equal(root.get(Consumer_.ownerId), owner.getId()),
+                notNullPredicate, notEmptyPredicate))
+            .distinct(true);
+
+        return entityManager.createQuery(query).getResultList();
     }
 
 }

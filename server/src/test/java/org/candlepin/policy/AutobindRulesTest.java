@@ -647,7 +647,7 @@ public class AutobindRulesTest {
     }
 
     private Product createSysPurposeProduct(String id, String roles, String addons, String supportLevel,
-        String usage) {
+        String usage, String serviceType) {
 
         Product prod = new Product();
 
@@ -671,6 +671,10 @@ public class AutobindRulesTest {
             prod.setAttribute(Product.Attributes.ADDONS, addons);
         }
 
+        if (serviceType != null) {
+            prod.setAttribute(Product.Attributes.SUPPORT_TYPE, serviceType);
+        }
+
         return prod;
     }
 
@@ -689,7 +693,7 @@ public class AutobindRulesTest {
 
         // Consumer satisfied syspurpose attributes:
         Product productWithRoleSatisfied = createSysPurposeProduct("compliant-product1", "RHEL Server",
-            null, null, null);
+            null, null, null, null);
         Pool poolThatSatisfiesRole = new Pool();
         poolThatSatisfiesRole.setProduct(productWithRoleSatisfied);
         Entitlement entitlementThatSatisfiesRole = new Entitlement();
@@ -697,17 +701,17 @@ public class AutobindRulesTest {
         compliance.addCompliantProduct("compliant-product1", entitlementThatSatisfiesRole);
 
         // Candidate pools:
-        Product prod1 = createSysPurposeProduct(null, "RHEL Server", "RHEL EUS", null, "Production");
+        Product prod1 = createSysPurposeProduct(null, "RHEL Server", "RHEL EUS", null, "Production", null);
         prod1.addProvidedProduct(product69);
 
         Pool p1 = TestUtil.createPool(owner, prod1)
             .setId("p1");
 
-        Product prod2 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Product prod2 = createSysPurposeProduct(null, null, "RHEL EUS", null, null, null);
         Pool p2 = TestUtil.createPool(owner, prod2)
             .setId("p2");
 
-        Product prod3 = createSysPurposeProduct(null, "JBoss", "RHEL EUS", null, null);
+        Product prod3 = createSysPurposeProduct(null, "JBoss", "RHEL EUS", null, null, null);
         prod3.addProvidedProduct(product82);
 
         Pool p3 = TestUtil.createPool(owner, prod3)
@@ -751,18 +755,18 @@ public class AutobindRulesTest {
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
-        Product prod1 = createSysPurposeProduct(
-            null, " RHEL Server , RHEL Server2 ", "RHEL EUS", null, "Production");
+        Product prod1 = createSysPurposeProduct(null, " RHEL Server , RHEL Server2 ",
+            "RHEL EUS", null, "Production", null);
         prod1.addProvidedProduct(product69);
 
         Pool p1 = TestUtil.createPool(owner, prod1)
             .setId("p1");
 
-        Product prod2 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Product prod2 = createSysPurposeProduct(null, null, "RHEL EUS", null, null, null);
         Pool p2 = TestUtil.createPool(owner, prod2)
             .setId("p2");
 
-        Product prod3 = createSysPurposeProduct(null, "JBoss", "RHEL EUS", null, null);
+        Product prod3 = createSysPurposeProduct(null, "JBoss", "RHEL EUS", null, null, null);
         prod3.addProvidedProduct(product82);
 
         Pool p3 = TestUtil.createPool(owner, prod3)
@@ -807,13 +811,14 @@ public class AutobindRulesTest {
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
-        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management", null, null);
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            null, null, null);
         prodRH00009.addProvidedProduct(product69);
 
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009)
             .setId("RH00009");
 
-        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
+        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null, null);
         prodMCT1650.addProvidedProduct(product69);
         prodMCT1650.addProvidedProduct(product89);
         prodMCT1650.addProvidedProduct(product100);
@@ -853,13 +858,14 @@ public class AutobindRulesTest {
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
-        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management", null, null);
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            null, null, null);
         prodRH00009.addProvidedProduct(product69);
 
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009)
             .setId("RH00009");
 
-        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
+        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null, null);
         prodMCT1650.addProvidedProduct(product69);
         prodMCT1650.addProvidedProduct(product89);
         prodMCT1650.addProvidedProduct(product100);
@@ -906,13 +912,14 @@ public class AutobindRulesTest {
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
-        Product prodRH00009 = createSysPurposeProduct(null, null, "Smart Management", null, "good-usage");
+        Product prodRH00009 = createSysPurposeProduct(null, null, "Smart Management",
+            null, "good-usage", null);
         prodRH00009.addProvidedProduct(product69);
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
         RH00009.setId("RH00009");
         RH00009.setQuantity(0L); // No quantity available
 
-        Product prodMCT1650 = createSysPurposeProduct(null, null, null, null, "bad-usage");
+        Product prodMCT1650 = createSysPurposeProduct(null, null, null, null, "bad-usage", null);
         prodMCT1650.addProvidedProduct(product69);
         prodMCT1650.addProvidedProduct(product89);
         prodMCT1650.addProvidedProduct(product100);
@@ -948,13 +955,13 @@ public class AutobindRulesTest {
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
-        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null, null, null);
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null, null, null, null);
         prodRH00009.addProvidedProduct(product69);
 
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009)
             .setId("RH00009");
 
-        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
+        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null, null);
         prodMCT1650.addProvidedProduct(product69);
         prodMCT1650.addProvidedProduct(product89);
         prodMCT1650.addProvidedProduct(product100);
@@ -962,7 +969,7 @@ public class AutobindRulesTest {
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650)
             .setId("MCT1650");
 
-        Product prodMCT0352 = createSysPurposeProduct(null, "RHEL Workstation", null, null, null);
+        Product prodMCT0352 = createSysPurposeProduct(null, "RHEL Workstation", null, null, null, null);
         prodMCT0352.addProvidedProduct(product69);
 
         Pool MCT0352 = TestUtil.createPool(owner, prodMCT0352)
@@ -1001,7 +1008,7 @@ public class AutobindRulesTest {
 
         // Consumer satisfied role attribute:
         Product productWithRoleSatisfied = createSysPurposeProduct("compliant-product1", "RHEL Server",
-            null, null, null);
+            null, null, null, null);
         Pool poolThatSatisfiesRole = new Pool();
         poolThatSatisfiesRole.setProduct(productWithRoleSatisfied);
         Entitlement entitlementThatSatisfiesRole = new Entitlement();
@@ -1009,15 +1016,15 @@ public class AutobindRulesTest {
         compliance.addCompliantProduct("compliant-product1", entitlementThatSatisfiesRole);
 
         // Candidate pools:
-        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "RHEL EUS", null, null);
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "RHEL EUS", null, null, null);
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
         RH00009.setId("RH00009");
 
-        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
+        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null, null);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
 
-        Product prodRH00030 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Product prodRH00030 = createSysPurposeProduct(null, null, "RHEL EUS", null, null, null);
         Pool RH00030 = TestUtil.createPool(owner, prodRH00030);
         RH00030.setId("RH00030");
 
@@ -1055,7 +1062,7 @@ public class AutobindRulesTest {
 
         // Consumer satisfied role attribute:
         Product productWithRoleSatisfied = createSysPurposeProduct("compliant-product1", "RHEL Server",
-            null, null, null);
+            null, null, null, null);
         Pool poolThatSatisfiesRole = new Pool();
         poolThatSatisfiesRole.setProduct(productWithRoleSatisfied);
         Entitlement entitlementThatSatisfiesRole = new Entitlement();
@@ -1063,15 +1070,16 @@ public class AutobindRulesTest {
         compliance.addCompliantProduct("compliant-product1", entitlementThatSatisfiesRole);
 
         // Candidate pools:
-        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management", null, null);
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            null, null, null);
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
         RH00009.setId("RH00009");
 
-        Product prodMCT1963 = createSysPurposeProduct(null, null, "RHEL ELS", null, null);
+        Product prodMCT1963 = createSysPurposeProduct(null, null, "RHEL ELS", null, null, null);
         Pool MCT1963 = TestUtil.createPool(owner, prodMCT1963);
         MCT1963.setId("MCT1963");
 
-        Product prodRH00030 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Product prodRH00030 = createSysPurposeProduct(null, null, "RHEL EUS", null, null, null);
         Pool RH00030 = TestUtil.createPool(owner, prodRH00030);
         RH00030.setId("RH00030");
 
@@ -1112,7 +1120,7 @@ public class AutobindRulesTest {
 
         // Consumer satisfied role attribute:
         Product productWithRoleSatisfied = createSysPurposeProduct("compliant-product1", "RHEL Server",
-            null, null, null);
+            null, null, null, null);
         Pool poolThatSatisfiesRole = new Pool();
         poolThatSatisfiesRole.setProduct(productWithRoleSatisfied);
         Entitlement entitlementThatSatisfiesRole = new Entitlement();
@@ -1120,16 +1128,17 @@ public class AutobindRulesTest {
         compliance.addCompliantProduct("compliant-product1", entitlementThatSatisfiesRole);
 
         // Candidate pools:
-        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management", null, null);
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            null, null, null);
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
         RH00009.setId("RH00009");
 
         Product prodRH00741 = createSysPurposeProduct(null, "RHEL for HPC Compute Node", "RHEL EUS",
-            null, null);
+            null, null, null);
         Pool RH00741 = TestUtil.createPool(owner, prodRH00741);
         RH00741.setId("RH00741");
 
-        Product prodRH00030 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Product prodRH00030 = createSysPurposeProduct(null, null, "RHEL EUS", null, null, null);
         Pool RH00030 = TestUtil.createPool(owner, prodRH00030);
         RH00030.setId("RH00030");
 
@@ -1166,7 +1175,7 @@ public class AutobindRulesTest {
 
         // Consumer satisfied role attribute:
         Product productWithRoleSatisfied = createSysPurposeProduct("compliant-product1", "RHEL Workstation",
-            null, null, null);
+            null, null, null, null);
         Pool poolThatSatisfiesRole = new Pool();
         poolThatSatisfiesRole.setProduct(productWithRoleSatisfied);
         Entitlement entitlementThatSatisfiesRole = new Entitlement();
@@ -1174,15 +1183,16 @@ public class AutobindRulesTest {
         compliance.addCompliantProduct("compliant-product1", entitlementThatSatisfiesRole);
 
         // Candidate pools:
-        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management", null, null);
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            null, null, null);
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
         RH00009.setId("RH00009");
 
-        Product prodMCT0352 = createSysPurposeProduct(null, "RHEL Workstation", null, null, null);
+        Product prodMCT0352 = createSysPurposeProduct(null, "RHEL Workstation", null, null, null, null);
         Pool MCT0352 = TestUtil.createPool(owner, prodMCT0352);
         MCT0352.setId("MCT0352");
 
-        Product prodRH00030 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Product prodRH00030 = createSysPurposeProduct(null, null, "RHEL EUS", null, null, null);
         Pool RH00030 = TestUtil.createPool(owner, prodRH00030);
         RH00030.setId("RH00030");
 
@@ -1220,12 +1230,12 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
-            "Standard", "Production");
+            "Standard", "Production", null);
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
         RH00009.setId("RH00009");
 
         Product prodRH00008 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
-            "Premium", "Production");
+            "Premium", "Production", null);
         Pool RH00008 = TestUtil.createPool(owner, prodRH00008);
         RH00008.setId("RH00008");
 
@@ -1256,12 +1266,12 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
-            "Standard", "Production");
+            "Standard", "Production", null);
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
         RH00009.setId("RH00009");
 
         Product prodRH00008 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
-            "Premium", "Production");
+            "Premium", "Production", null);
         Pool RH00008 = TestUtil.createPool(owner, prodRH00008);
         RH00008.setId("RH00008");
 
@@ -1299,12 +1309,12 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
-            "Standard", "Production");
+            "Standard", "Production", null);
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
         RH00009.setId("RH00009");
 
         Product prodI_RH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
-            null, "Production");
+            null, "Production", null);
         Pool I_RH00009 = TestUtil.createPool(owner, prodI_RH00009);
         I_RH00009.setId("I_RH00009");
 
@@ -1339,16 +1349,16 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
-            "Standard", "Development");
+            "Standard", "Development", null);
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
         RH00009.setId("RH00009");
 
         Product prodRH00008 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
-            "Premium", null);
+            "Premium", null, null);
         Pool RH00008 = TestUtil.createPool(owner, prodRH00008);
         RH00008.setId("RH00008");
 
-        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, "Premium", null);
+        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, "Premium", null, null);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
 
@@ -1387,16 +1397,16 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
-            "Standard", "Development");
+            "Standard", "Development", null);
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
         RH00009.setId("RH00009");
 
         Product prodI_RH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
-            "Premium", "Production");
+            "Premium", "Production", null);
         Pool I_RH00009 = TestUtil.createPool(owner, prodI_RH00009);
         I_RH00009.setId("I_RH00009");
 
-        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null);
+        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, null, null, null);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
 
@@ -1440,14 +1450,14 @@ public class AutobindRulesTest {
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
-        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null, null, null);
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null, null, null, null);
         prodRH00009.addProvidedProduct(product69);
 
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009)
             .setId("RH00009");
 
         Product prodMCT_HA = createSysPurposeProduct(null, "RHEL High Availability", null,
-            "Premium", "Production");
+            "Premium", "Production", null);
         prodMCT_HA.addProvidedProduct(product69);
 
         Pool MCT_HA = TestUtil.createPool(owner, prodMCT_HA)
@@ -1490,13 +1500,13 @@ public class AutobindRulesTest {
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
-        Product prodRH0000W = createSysPurposeProduct(null, "RHEL Workstation", null, "Standard", null);
+        Product prodRH0000W = createSysPurposeProduct(null, "RHEL Workstation", null, "Standard", null, null);
         prodRH0000W.addProvidedProduct(product69);
 
         Pool RH0000W = TestUtil.createPool(owner, prodRH0000W)
             .setId("RH0000W");
 
-        Product prodRH0000D = createSysPurposeProduct(null, "RHEL Desktop", null, null, "Development");
+        Product prodRH0000D = createSysPurposeProduct(null, "RHEL Desktop", null, null, "Development", null);
         prodRH0000D.addProvidedProduct(product69);
 
         Pool RH0000D = TestUtil.createPool(owner, prodRH0000D)
@@ -1543,14 +1553,15 @@ public class AutobindRulesTest {
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
-        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null, "Standard", "Development");
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null,
+            "Standard", "Development", null);
         prodRH00009.addProvidedProduct(product69);
 
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009)
             .setId("RH00009");
 
         Product prodRH00008 = createSysPurposeProduct(null, "RHEL for HPC Compute Node", "Smart Management",
-            "Premium", "Production");
+            "Premium", "Production", null);
         prodRH00008.addProvidedProduct(product69);
 
         Pool RH00008 = TestUtil.createPool(owner, prodRH00008)
@@ -1590,6 +1601,7 @@ public class AutobindRulesTest {
         consumer.setRole("RHEL Server");
         consumer.setServiceLevel("Premium");
         consumer.setUsage("Production");
+        consumer.setServiceType("L1-L3");
         Set<String> addons = new HashSet<>();
         addons.add("Smart Management");
         consumer.setAddOns(addons);
@@ -1600,7 +1612,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prod = createSysPurposeProduct(null, "mismatched_role", "mismatched_addon",
-            "mismatched_sla", "mismatched_usage");
+            "mismatched_sla", "mismatched_usage", "mismatched_service_type");
         prod.addProvidedProduct(mismatched_product);
 
         Pool pool = TestUtil.createPool(owner, prod)
@@ -1637,14 +1649,14 @@ public class AutobindRulesTest {
         // --- No satisfied syspurpose attributes on the consumer ---
 
         // Candidate pools:
-        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null, null, null);
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null, null, null, null);
         prodRH00009.addProvidedProduct(product69);
 
         Pool RH00009 = TestUtil.createPool(owner, prodRH00009)
             .setId("RH00009");
 
         Product prodMCT_HA = createSysPurposeProduct(null, "RHEL High Availability", null,
-            "Premium", "Production");
+            "Premium", "Production", null);
         prodMCT_HA.addProvidedProduct(product69);
 
         Pool MCT_HA = TestUtil.createPool(owner, prodMCT_HA)
@@ -1682,7 +1694,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "provided_role", null,
-            null, null);
+            null, null, null);
         prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
@@ -1720,7 +1732,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, " Smart Management , Other Management ",
-            null, null);
+            null, null, null);
         prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
@@ -1755,7 +1767,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "Random Role,RHEL Server", null,
-            null, null);
+            null, null, null);
         prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
@@ -1794,7 +1806,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, "Smart Management,Other Management",
-            null, null);
+            null, null, null);
         prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
@@ -1834,7 +1846,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, null,
-            null, null);
+            null, null, null);
         prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
@@ -1871,7 +1883,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, null,
-            null, null);
+            null, null, null);
         prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
@@ -1908,7 +1920,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, "Smart Management,Other Management",
-            null, null);
+            null, null, null);
         prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
@@ -1945,7 +1957,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "Smart Role,Other Role", null,
-            null, null);
+            null, null, null);
         prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
@@ -1984,7 +1996,7 @@ public class AutobindRulesTest {
         // Create a stackable pool with a product which provides the role the consumer has,
         // but not the installed product the consumer has.
         Product prodMCT1650 = createSysPurposeProduct(null, "RHEL Server,Other Role", null,
-            null, null);
+            null, null, null);
         prodMCT1650.setAttribute(Product.Attributes.STACKING_ID, "bob");
         prodMCT1650.setAttribute("multi-entitlement", "yes");
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
@@ -1995,7 +2007,7 @@ public class AutobindRulesTest {
         // with a product which provides the installed product the consumer has,
         // but not the role the consumer has.
         Product prodMCT80 = createSysPurposeProduct(null, null, null,
-            null, null);
+            null, null, null);
         prodMCT80.addProvidedProduct(product69);
         prodMCT80.setAttribute(Product.Attributes.STACKING_ID, "bob");
         prodMCT80.setAttribute("multi-entitlement", "yes");
@@ -2039,7 +2051,7 @@ public class AutobindRulesTest {
         // Create a stackable pool with a product which provides the addon the consumer has,
         // but not the installed product the consumer has.
         Product prodMCT1650 = createSysPurposeProduct(null, null, "One Addon,Other Addon",
-            null, null);
+            null, null, null);
         prodMCT1650.setAttribute(Product.Attributes.STACKING_ID, "bob");
         prodMCT1650.setAttribute("multi-entitlement", "yes");
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
@@ -2050,7 +2062,7 @@ public class AutobindRulesTest {
         // with a product which provides the installed product the consumer has,
         // but not the addon the consumer has.
         Product prodMCT80 = createSysPurposeProduct(null, null, null,
-            null, null);
+            null, null, null);
         prodMCT80.setAttribute(Product.Attributes.STACKING_ID, "bob");
         prodMCT80.setAttribute("multi-entitlement", "yes");
         prodMCT80.addProvidedProduct(product69);
@@ -2089,7 +2101,7 @@ public class AutobindRulesTest {
         // Create a stackable pool with a product which provides the addon the consumer has,
         // but not the installed product the consumer has.
         Product prodMCT1650 = createSysPurposeProduct(null, null, "First Addon,random_addon",
-            null, null);
+            null, null, null);
         prodMCT1650.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prodMCT1650.setAttribute("multi-entitlement", "yes");
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
@@ -2100,7 +2112,7 @@ public class AutobindRulesTest {
         // with a product which provides the installed product the consumer has,
         // but not the addon the consumer has.
         Product prodMCT80 = createSysPurposeProduct(null, null, "Second Addon",
-            null, null);
+            null, null, null);
         prodMCT80.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prodMCT80.setAttribute("multi-entitlement", "yes");
         Pool MCT80 = TestUtil.createPool(owner, prodMCT80);
@@ -2137,7 +2149,7 @@ public class AutobindRulesTest {
 
         // Create a stackable pool which provides only the addon the consumer has specified.
         Product prodMCT1650 = createSysPurposeProduct(null, null, "My Addon",
-            null, null);
+            null, null, null);
         prodMCT1650.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prodMCT1650.setAttribute("multi-entitlement", "yes");
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
@@ -2146,7 +2158,7 @@ public class AutobindRulesTest {
 
         // Create a stackable pool which provides only the role the consumer has specified.
         Product prodMCT80 = createSysPurposeProduct(null, "My Role", null,
-            null, null);
+            null, null, null);
         prodMCT80.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prodMCT80.setAttribute("multi-entitlement", "yes");
         Pool MCT80 = TestUtil.createPool(owner, prodMCT80);
@@ -2186,7 +2198,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "Smart Role,Other Role", null,
-            null, null);
+            null, null, null);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
         MCT1650.setQuantity(1L);
@@ -2225,7 +2237,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, null, "Smart Addon,Other Addon",
-            null, null);
+            null, null, null);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
         MCT1650.setQuantity(1L);
@@ -2261,7 +2273,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "Smart Usage,Other Usage", null,
-            null, null);
+            null, null, null);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
         MCT1650.setQuantity(1L);
@@ -2296,7 +2308,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "Smart SLA,Other SLA", null,
-            null, null);
+            null, null, null);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
         MCT1650.setQuantity(1L);
@@ -2313,8 +2325,8 @@ public class AutobindRulesTest {
     /*
      * This test demonstrates that from a series of non-stacked pools, all those (and ONLY those) that
      * provide either a) an installed product, b) an addon, or c) a role that the consumer has specified
-     * will be selected. Pools that provide only an SLA or a Usage (and no installed product), will
-     * not be selected.
+     * will be selected. Pools that provide only an SLA, a Usage or service type (and no installed product),
+     * will not be selected.
      */
     @SuppressWarnings("checkstyle:localvariablename")
     @Test
@@ -2332,6 +2344,7 @@ public class AutobindRulesTest {
         consumer.setAddOns(addons);
         consumer.setUsage("Other Usage");
         consumer.setServiceLevel("Other SLA");
+        consumer.setServiceType("Other Service Type");
 
         // --- No satisfied syspurpose attributes on the consumer ---
 
@@ -2339,7 +2352,7 @@ public class AutobindRulesTest {
 
         // This pool provides the consumer's installed product, but does not provide his specified role.
         Product prodWithInstalledProductOnly = createSysPurposeProduct(null, null, null,
-            null, null);
+            null, null, null);
         prodWithInstalledProductOnly.addProvidedProduct(product69); // <--- consumer's installed product
         Pool poolWithInstalledProductOnly = TestUtil.createPool(owner, prodWithInstalledProductOnly);
         poolWithInstalledProductOnly.setId("poolWithInstalledProductOnly");
@@ -2347,31 +2360,39 @@ public class AutobindRulesTest {
 
         // This pool does not provide the consumer's installed product, but provides his specified role.
         Product prodWithRoleOnly = createSysPurposeProduct(null, "Smart Role,Other Role", null,
-            null, null);
+            null, null, null);
         Pool poolWithRoleOnly = TestUtil.createPool(owner, prodWithRoleOnly);
         poolWithRoleOnly.setId("poolWithRoleOnly");
         poolWithRoleOnly.setQuantity(1L);
 
         // This pool does not provide the consumer's installed product, but provides his specified addon.
         Product prodWithAddonOnly = createSysPurposeProduct(null, null, "Smart Addon,Other Addon",
-            null, null);
+            null, null, null);
         Pool poolWithAddonOnly = TestUtil.createPool(owner, prodWithAddonOnly);
         poolWithAddonOnly.setId("poolWithAddonOnly");
         poolWithAddonOnly.setQuantity(1L);
 
         // This pool does not provide the consumer's installed product, but provides his specified usage.
         Product prodWithUsageOnly = createSysPurposeProduct(null, null, null,
-            null, "Other Usage");
+            null, "Other Usage", null);
         Pool poolWithUsageOnly = TestUtil.createPool(owner, prodWithUsageOnly);
         poolWithUsageOnly.setId("poolWithUsageOnly");
         poolWithUsageOnly.setQuantity(1L);
 
         // This pool does not provide the consumer's installed product, but provides his specified usage.
         Product prodWithSLAOnly = createSysPurposeProduct(null, null, null,
-            "Other SLA", null);
+            "Other SLA", null, null);
         Pool poolWithSLAOnly = TestUtil.createPool(owner, prodWithSLAOnly);
         poolWithSLAOnly.setId("poolWithSLAOnly");
         poolWithSLAOnly.setQuantity(1L);
+
+        // This pool does not provide the consumer's installed product, but provides his specified
+        // service type.
+        Product prodWithServiceTypeOnly = createSysPurposeProduct(null, null, null,
+            null, null, "Other Service Type");
+        Pool poolWithServiceTypeOnly = TestUtil.createPool(owner, prodWithServiceTypeOnly);
+        poolWithServiceTypeOnly.setId("poolWithServiceTypeOnly");
+        poolWithServiceTypeOnly.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(poolWithInstalledProductOnly);
@@ -2379,6 +2400,7 @@ public class AutobindRulesTest {
         pools.add(poolWithAddonOnly);
         pools.add(poolWithUsageOnly);
         pools.add(poolWithSLAOnly);
+        pools.add(poolWithServiceTypeOnly);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
@@ -2392,8 +2414,9 @@ public class AutobindRulesTest {
     /*
      * This test demonstrates that from a series of non-stacked pools, all those (and ONLY those) that
      * provide either a) an installed product, b) an addon, or c) a role that the consumer has specified
-     * will be selected. Pools that provide only an SLA or a Usage that the consumer specified,
-     * and an installed product that the consumer has not specified, will not be selected.
+     * will be selected. Pools that provide only an SLA, a Usage or a service type that
+     * the consumer specified, and an installed product that the consumer has not specified,
+     * will not be selected.
      */
     @SuppressWarnings("checkstyle:localvariablename")
     @Test
@@ -2413,6 +2436,7 @@ public class AutobindRulesTest {
         consumer.setAddOns(addons);
         consumer.setUsage("Other Usage");
         consumer.setServiceLevel("Other SLA");
+        consumer.setServiceType("Other Service Type");
 
         // --- No satisfied syspurpose attributes on the consumer ---
 
@@ -2420,7 +2444,7 @@ public class AutobindRulesTest {
 
         // This pool provides the consumer's installed product, but does not provide his specified role.
         Product prodWithInstalledProductOnly = createSysPurposeProduct(null, null, null,
-            null, null);
+            null, null, null);
         prodWithInstalledProductOnly.addProvidedProduct(product69); // <--- consumer's installed product
         Pool poolWithInstalledProductOnly = TestUtil.createPool(owner, prodWithInstalledProductOnly);
         poolWithInstalledProductOnly.setId("poolWithInstalledProductOnly");
@@ -2429,7 +2453,7 @@ public class AutobindRulesTest {
         // This pool does not provide the consumer's installed product, but provides his specified role
         // and another non-specified installed product.
         Product prodWithRoleOnly = createSysPurposeProduct(null, "Smart Role,Other Role", null,
-            null, null);
+            null, null, null);
         prodWithRoleOnly.addProvidedProduct(product100);
         Pool poolWithRoleOnly = TestUtil.createPool(owner, prodWithRoleOnly);
         poolWithRoleOnly.setId("poolWithRoleOnly");
@@ -2438,7 +2462,7 @@ public class AutobindRulesTest {
         // This pool does not provide the consumer's installed product, but provides his specified addon
         // and another non-specified installed product.
         Product prodWithAddonOnly = createSysPurposeProduct(null, null, "Smart Addon,Other Addon",
-            null, null);
+            null, null, null);
         prodWithAddonOnly.addProvidedProduct(product100);
         Pool poolWithAddonOnly = TestUtil.createPool(owner, prodWithAddonOnly);
         poolWithAddonOnly.setId("poolWithAddonOnly");
@@ -2447,7 +2471,7 @@ public class AutobindRulesTest {
         // This pool does not provide the consumer's installed product, but provides his specified usage
         // and another non-specified installed product.
         Product prodWithUsageOnly = createSysPurposeProduct(null, null, null,
-            null, "Other Usage");
+            null, "Other Usage", null);
         prodWithUsageOnly.addProvidedProduct(product100);
         Pool poolWithUsageOnly = TestUtil.createPool(owner, prodWithUsageOnly);
         poolWithUsageOnly.setId("poolWithUsageOnly");
@@ -2456,11 +2480,20 @@ public class AutobindRulesTest {
         // This pool does not provide the consumer's installed product, but provides his specified usage
         // and another non-specified installed product.
         Product prodWithSLAOnly = createSysPurposeProduct(null, null, null,
-            "Other SLA", null);
+            "Other SLA", null, null);
         prodWithSLAOnly.addProvidedProduct(product100);
         Pool poolWithSLAOnly = TestUtil.createPool(owner, prodWithSLAOnly);
         poolWithSLAOnly.setId("poolWithSLAOnly");
         poolWithSLAOnly.setQuantity(1L);
+
+        // This pool does not provide the consumer's installed product, but provides
+        // his specified service type and another non-specified installed product.
+        Product prodWithServiceTypeOnly = createSysPurposeProduct(null, null, null,
+            null, null, "Other Service Type");
+        prodWithSLAOnly.addProvidedProduct(product100);
+        Pool poolWithServiceTypeOnly = TestUtil.createPool(owner, prodWithServiceTypeOnly);
+        poolWithServiceTypeOnly.setId("poolWithServiceTypeOnly");
+        poolWithServiceTypeOnly.setQuantity(1L);
 
         List<Pool> pools = new ArrayList<>();
         pools.add(poolWithInstalledProductOnly);
@@ -2468,6 +2501,7 @@ public class AutobindRulesTest {
         pools.add(poolWithAddonOnly);
         pools.add(poolWithUsageOnly);
         pools.add(poolWithSLAOnly);
+        pools.add(poolWithServiceTypeOnly);
 
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
@@ -2502,7 +2536,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "random_role", "random_addon",
-            "mysla", "random_usage");
+            "mysla", "random_usage", "random_service_type");
         prodMCT1650.setAttribute(Product.Attributes.SOCKETS, "32");
         prodMCT1650.setAttribute(Product.Attributes.CORES, "32");
         prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
@@ -2511,7 +2545,7 @@ public class AutobindRulesTest {
         MCT1650.setId("MCT1650");
         MCT1650.setQuantity(1L);
 
-        Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        Product genericProduct = createSysPurposeProduct(null, null, null, null, null, null);
         genericProduct.addProvidedProduct(product69);
         Pool genericPool = TestUtil.createPool(owner, genericProduct);
         genericPool.setId("genericPool");
@@ -2552,7 +2586,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "myrole", "random_addon",
-            "random_sla", "random_usage");
+            "random_sla", "random_usage", "random_service_type");
         prodMCT1650.setAttribute(Product.Attributes.SOCKETS, "32");
         prodMCT1650.setAttribute(Product.Attributes.CORES, "32");
         prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
@@ -2561,7 +2595,7 @@ public class AutobindRulesTest {
         MCT1650.setId("MCT1650");
         MCT1650.setQuantity(1L);
 
-        Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        Product genericProduct = createSysPurposeProduct(null, null, null, null, null, null);
         Pool genericPool = TestUtil.createPool(owner, genericProduct);
         genericPool.setId("genericPool");
         genericPool.setQuantity(1L);
@@ -2602,7 +2636,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "random_role", "myaddon",
-            "random_sla", "random_usage");
+            "random_sla", "random_usage", "random_service_type");
         prodMCT1650.addProvidedProduct(product69);
         prodMCT1650.setAttribute(Product.Attributes.SOCKETS, "32");
         prodMCT1650.setAttribute(Product.Attributes.CORES, "32");
@@ -2611,7 +2645,7 @@ public class AutobindRulesTest {
         MCT1650.setId("MCT1650");
         MCT1650.setQuantity(1L);
 
-        Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        Product genericProduct = createSysPurposeProduct(null, null, null, null, null, null);
         genericProduct.addProvidedProduct(product69);
         Pool genericPool = TestUtil.createPool(owner, genericProduct);
         genericPool.setId("genericPool");
@@ -2650,7 +2684,7 @@ public class AutobindRulesTest {
 
         // Candidate pools:
         Product prodMCT1650 = createSysPurposeProduct(null, "random_role", "random_addon",
-            "mysla", "random_usage");
+            "mysla", "random_usage", "random_service_type");
         prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
         prodMCT1650.setAttribute(Product.Attributes.VCPU, "32");
         prodMCT1650.addProvidedProduct(product69);
@@ -2659,7 +2693,7 @@ public class AutobindRulesTest {
             .setId("MCT1650")
             .setQuantity(1L);
 
-        Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        Product genericProduct = createSysPurposeProduct(null, null, null, null, null, null);
         genericProduct.addProvidedProduct(product69);
 
         Pool genericPool = TestUtil.createPool(owner, genericProduct)
@@ -2702,7 +2736,7 @@ public class AutobindRulesTest {
         // This pool will get 0 score for having a role, since the consumer did not specify one at all,
         // but it will get a 'match score' for having the usage that the consumer has specified.
         Product prodMCT1650 = createSysPurposeProduct(null, "another_role", null,
-            null, "myusage");
+            null, "myusage", null);
         prodMCT1650.addProvidedProduct(product69);
         Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
         MCT1650.setId("MCT1650");
@@ -2710,7 +2744,7 @@ public class AutobindRulesTest {
 
         // This pool will get a 'null rule' score for not having a role specified, just as the consumer
         // does not have a role specified.
-        Product genericProduct = createSysPurposeProduct(null, null, null, null, null);
+        Product genericProduct = createSysPurposeProduct(null, null, null, null, null, null);
         genericProduct.addProvidedProduct(product69);
         Pool genericPool = TestUtil.createPool(owner, genericProduct);
         genericPool.setId("genericPool");
@@ -2746,7 +2780,7 @@ public class AutobindRulesTest {
 
         // Create two identical candidate stackable pools that both provide
         // the product and role that the consumer has set.
-        Product prod1 = createSysPurposeProduct(null, "RHEL Server,random_role", null, null, null);
+        Product prod1 = createSysPurposeProduct(null, "RHEL Server,random_role", null, null, null, null);
         prod1.addProvidedProduct(product69);
         prod1.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod1.setAttribute("multi-entitlement", "yes");
@@ -2755,7 +2789,7 @@ public class AutobindRulesTest {
             .setId("pool1")
             .setQuantity(100L);
 
-        Product prod2 = createSysPurposeProduct(null, "RHEL Server,random_role", null, null, null);
+        Product prod2 = createSysPurposeProduct(null, "RHEL Server,random_role", null, null, null, null);
         prod2.addProvidedProduct(product69);
         prod2.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod2.setAttribute("multi-entitlement", "yes");
@@ -2797,7 +2831,8 @@ public class AutobindRulesTest {
 
         // Create two identical candidate stackable pools that both provide
         // the product and addons that the consumer has set.
-        Product prod1 = createSysPurposeProduct(null, null, "my_addon1,my_addon2,random_role", null, null);
+        Product prod1 = createSysPurposeProduct(null, null, "my_addon1,my_addon2,random_role",
+            null, null, null);
         prod1.addProvidedProduct(product69);
         prod1.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod1.setAttribute("multi-entitlement", "yes");
@@ -2806,7 +2841,8 @@ public class AutobindRulesTest {
             .setId("pool1")
             .setQuantity(100L);
 
-        Product prod2 = createSysPurposeProduct(null, null, "my_addon1,my_addon2,random_role", null, null);
+        Product prod2 = createSysPurposeProduct(null, null, "my_addon1,my_addon2,random_role",
+            null, null, null);
         prod2.addProvidedProduct(product69);
         prod2.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod2.setAttribute("multi-entitlement", "yes");
@@ -2845,7 +2881,7 @@ public class AutobindRulesTest {
         // Create two identical candidate stackable pools that both provide
         // the product and addons that the consumer has set.
         Product prod1 = createSysPurposeProduct(null, null, "random_addon",
-            null, null);
+            null, null, null);
         prod1.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod1.setAttribute("multi-entitlement", "yes");
         Pool pool1 = TestUtil.createPool(owner, prod1);
@@ -2853,7 +2889,7 @@ public class AutobindRulesTest {
         pool1.setQuantity(100L);
 
         Product prod2 = createSysPurposeProduct(null, null, "my_addon1",
-            null, null);
+            null, null, null);
         prod2.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod2.setAttribute("multi-entitlement", "yes");
         Pool pool2 = TestUtil.createPool(owner, prod2);
@@ -2887,7 +2923,7 @@ public class AutobindRulesTest {
         // Create two identical candidate stackable pools that both provide
         // the product and addons that the consumer has set.
         Product prod1 = createSysPurposeProduct(null, "random_role", null,
-            null, null);
+            null, null, null);
         prod1.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod1.setAttribute("multi-entitlement", "yes");
         Pool pool1 = TestUtil.createPool(owner, prod1);
@@ -2895,7 +2931,7 @@ public class AutobindRulesTest {
         pool1.setQuantity(100L);
 
         Product prod2 = createSysPurposeProduct(null, "my_role", null,
-            null, null);
+            null, null, null);
         prod2.setAttribute(Product.Attributes.STACKING_ID, "my_stack");
         prod2.setAttribute("multi-entitlement", "yes");
         Pool pool2 = TestUtil.createPool(owner, prod2);
@@ -2933,17 +2969,18 @@ public class AutobindRulesTest {
         ConsumerInstalledProduct consumerInstalledProduct =
             new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
+        consumer.setServiceType("L1-L3");
 
         // --- No satisfied syspurpose attributes on the consumer ---
 
         Product prod1 = createSysPurposeProduct(null, "mismatched_role", "mismatched_addon",
-            "mismatched_sla", "Production");
+            "mismatched_sla", "Production", "random_service_type");
         prod1.addProvidedProduct(product69);
         Pool pool1 = TestUtil.createPool(owner, prod1);
         pool1.setId("pool1");
         pool1.setQuantity(1L);
 
-        Product prod2 = createSysPurposeProduct(null, null, null, null, null);
+        Product prod2 = createSysPurposeProduct(null, null, null, null, null, null);
         prod2.addProvidedProduct(product69);
         Pool pool2 = TestUtil.createPool(owner, prod2);
         pool2.setId("pool2");
@@ -2977,6 +3014,7 @@ public class AutobindRulesTest {
         consumer.setRole("RHEL Workstation");
         consumer.setServiceLevel("Premium");
         consumer.setUsage("Production");
+        consumer.setServiceType("L1");
         ConsumerInstalledProduct consumerInstalledProduct =
             new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
@@ -2984,13 +3022,13 @@ public class AutobindRulesTest {
         // --- No satisfied syspurpose attributes on the consumer ---
 
         Product prod1 = createSysPurposeProduct(null, "mismatched_role", "mismatched_addon",
-            "Premium", "mismatched_usage");
+            "Premium", "mismatched_usage", "mismatch_service_type");
         prod1.addProvidedProduct(product69);
         Pool pool1 = TestUtil.createPool(owner, prod1);
         pool1.setId("pool1");
         pool1.setQuantity(1L);
 
-        Product prod2 = createSysPurposeProduct(null, null, null, null, null);
+        Product prod2 = createSysPurposeProduct(null, null, null, null, null, null);
         prod2.addProvidedProduct(product69);
         Pool pool2 = TestUtil.createPool(owner, prod2);
         pool2.setId("pool2");
@@ -3027,17 +3065,18 @@ public class AutobindRulesTest {
         ConsumerInstalledProduct consumerInstalledProduct =
             new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
+        consumer.setServiceType("L1-L3");
 
         // --- No satisfied syspurpose attributes on the consumer ---
 
         Product prod1 = createSysPurposeProduct(null, "mismatched_role", "my_addon",
-            "mismatched_sla", "mismatched_usage");
+            "mismatched_sla", "mismatched_usage", "random_service_type");
         prod1.addProvidedProduct(product69);
         Pool pool1 = TestUtil.createPool(owner, prod1);
         pool1.setId("pool1");
         pool1.setQuantity(1L);
 
-        Product prod2 = createSysPurposeProduct(null, null, null, null, null);
+        Product prod2 = createSysPurposeProduct(null, null, null, null, null, null);
         prod2.addProvidedProduct(product69);
         Pool pool2 = TestUtil.createPool(owner, prod2);
         pool2.setId("pool2");
@@ -3074,17 +3113,18 @@ public class AutobindRulesTest {
         ConsumerInstalledProduct consumerInstalledProduct =
             new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
+        consumer.setServiceType("L1-L3");
 
         // --- No satisfied syspurpose attributes on the consumer ---
 
         Product prod1 = createSysPurposeProduct(null, "RHEL Workstation", "mismatched_addon",
-            "mismatched_sla", "mismatched_usage");
+            "mismatched_sla", "mismatched_usage", "random_service_type");
         prod1.addProvidedProduct(product69);
         Pool pool1 = TestUtil.createPool(owner, prod1);
         pool1.setId("pool1");
         pool1.setQuantity(1L);
 
-        Product prod2 = createSysPurposeProduct(null, null, null, null, null);
+        Product prod2 = createSysPurposeProduct(null, null, null, null, null, null);
         prod2.addProvidedProduct(product69);
         Pool pool2 = TestUtil.createPool(owner, prod2);
         pool2.setId("pool2");
@@ -3150,7 +3190,7 @@ public class AutobindRulesTest {
         // No consumer satisfied syspurpose attributes
 
         // Candidate pools:
-        Product prod1 = createSysPurposeProduct(null, "RHEL Server", null, null, null);
+        Product prod1 = createSysPurposeProduct(null, "RHEL Server", null, null, null, null);
         Pool p1 = TestUtil.createPool(owner, prod1);
         p1.setId("p1");
         List<Pool> pools = new ArrayList<>();
@@ -3177,7 +3217,7 @@ public class AutobindRulesTest {
         // No consumer satisfied syspurpose attributes
 
         // Candidate pools:
-        Product prod1 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Product prod1 = createSysPurposeProduct(null, null, "RHEL EUS", null, null, null);
         Pool p1 = TestUtil.createPool(owner, prod1);
         p1.setId("p1");
         List<Pool> pools = new ArrayList<>();
@@ -3208,12 +3248,12 @@ public class AutobindRulesTest {
         // No consumer satisfied syspurpose attributes
 
         // Candidate pools:
-        Product prod1 = createSysPurposeProduct(null, null, null, null, "RandomUsage");
+        Product prod1 = createSysPurposeProduct(null, null, null, null, "RandomUsage", null);
         prod1.addProvidedProduct(product69);
         Pool p1 = TestUtil.createPool(owner, prod1);
         p1.setId("p1");
 
-        Product prod2 = createSysPurposeProduct(null, null, null, "RandomSLA", "Development");
+        Product prod2 = createSysPurposeProduct(null, null, null, "RandomSLA", "Development", null);
         prod2.addProvidedProduct(product69);
         Pool p2 = TestUtil.createPool(owner, prod2);
         p2.setId("p2");
@@ -3250,12 +3290,12 @@ public class AutobindRulesTest {
         // No consumer satisfied syspurpose attributes
 
         // Candidate pools:
-        Product prod1 = createSysPurposeProduct(null, null, null, "RandomSLA", null);
+        Product prod1 = createSysPurposeProduct(null, null, null, "RandomSLA", null, null);
         prod1.addProvidedProduct(product69);
         Pool p1 = TestUtil.createPool(owner, prod1);
         p1.setId("p1");
 
-        Product prod2 = createSysPurposeProduct(null, null, null, "Premium", "RandomUsage");
+        Product prod2 = createSysPurposeProduct(null, null, null, "Premium", "RandomUsage", null);
         prod2.addProvidedProduct(product69);
         Pool p2 = TestUtil.createPool(owner, prod2);
         p2.setId("p2");
@@ -3285,7 +3325,7 @@ public class AutobindRulesTest {
 
         // Consumer satisfied syspurpose attributes:
         Product productWithRoleSatisfied = createSysPurposeProduct("compliant-product1", "RheL ServeR",
-            null, null, null);
+            null, null, null, null);
         Pool poolThatSatisfiesRole = new Pool();
         poolThatSatisfiesRole.setProduct(productWithRoleSatisfied);
         Entitlement entitlementThatSatisfiesRole = new Entitlement();
@@ -3293,7 +3333,7 @@ public class AutobindRulesTest {
         compliance.addCompliantProduct("compliant-product1", entitlementThatSatisfiesRole);
 
         // Candidate pools:
-        Product prod1 = createSysPurposeProduct(null, "RHEL SERVER", null, null, null);
+        Product prod1 = createSysPurposeProduct(null, "RHEL SERVER", null, null, null, null);
         Pool p1 = TestUtil.createPool(owner, prod1);
         p1.setId("p1");
 
@@ -3321,7 +3361,7 @@ public class AutobindRulesTest {
 
         // Consumer satisfied syspurpose attributes:
         Product productWithAddonSatisfied = createSysPurposeProduct("compliant-product1", null,
-            "RheL eUs", null, null);
+            "RheL eUs", null, null, null);
         Pool poolThatSatisfiesAddon = new Pool();
         poolThatSatisfiesAddon.setProduct(productWithAddonSatisfied);
         Entitlement entitlementThatSatisfiesAddon = new Entitlement();
@@ -3329,7 +3369,7 @@ public class AutobindRulesTest {
         compliance.addCompliantProduct("compliant-product1", entitlementThatSatisfiesAddon);
 
         // Candidate pools:
-        Product prod1 = createSysPurposeProduct(null, null, "RHEL EUS", null, null);
+        Product prod1 = createSysPurposeProduct(null, null, "RHEL EUS", null, null, null);
         Pool p1 = TestUtil.createPool(owner, prod1);
         p1.setId("p1");
 
@@ -4018,7 +4058,8 @@ public class AutobindRulesTest {
         consumer.setRole("JBoss");
 
         // Product with multiple roles:
-        Product prod1 = createSysPurposeProduct(null, " RHEL Server ,  JBoss,  Satellite", null, null, null);
+        Product prod1 = createSysPurposeProduct(null, " RHEL Server ,  JBoss,  Satellite", null,
+            null, null, null);
         Pool p1 = TestUtil.createPool(owner, prod1);
         p1.setId("p1");
         List<Pool> pools = new ArrayList<>();
@@ -4043,7 +4084,7 @@ public class AutobindRulesTest {
         consumer.setAddOns(addons);
 
         // Product with multiple addons:
-        Product prod1 = createSysPurposeProduct(null, null, " RHEL EUS ,,   RHEL ELS ", null, null);
+        Product prod1 = createSysPurposeProduct(null, null, " RHEL EUS ,,   RHEL ELS ", null, null, null);
         Pool p1 = TestUtil.createPool(owner, prod1);
         p1.setId("p1");
         List<Pool> pools = new ArrayList<>();
@@ -4054,5 +4095,444 @@ public class AutobindRulesTest {
 
         assertEquals(1, bestPools.size());
         assertTrue(bestPools.contains(new PoolQuantity(p1, 1)));
+    }
+
+    /*
+     * The customer has made a typo in the service type. Since the pool that has a
+     * defined service type is a mismatch, we favor the pool that has service type undefined.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCaseServiceTypeMismatch() throws NoSuchMethodException {
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        consumer.setServiceType("typo");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", null,
+            null, null, "L1-L3");
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+
+        Product prodRH00008 = createSysPurposeProduct(null, "RHEL Server", null,
+            null, null, null);
+        Pool RH00008 = TestUtil.createPool(owner, prodRH00008);
+        RH00008.setId("RH00008");
+
+        Product prodMCT1650 = createSysPurposeProduct(null, "Satellite", null, "Premium", null, "L1-L3");
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
+
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+        System.out.println("RH00009Priority Priority : " + RH00009Priority);
+
+        args.put("pool", this.translator.translate(RH00008, PoolDTO.class));
+        Double RH00008Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+        System.out.println("RH00008Priority Priority : " + RH00008Priority);
+
+        args.put("pool", this.translator.translate(MCT1650, PoolDTO.class));
+        Double MCT1650Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+        System.out.println("MCT1650Priority Priority : " + MCT1650Priority);
+
+        // Pool RH00008 should have a higher priority than pool RH00009
+        assertTrue(RH00008Priority > RH00009Priority);
+
+        // Pool RH00009 should have a higher priority than pool MCT1650
+        assertTrue(RH00009Priority > MCT1650Priority);
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCaseSLABeatsServiceType() throws NoSuchMethodException {
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        consumer.setServiceLevel("Premium");
+        consumer.setServiceType("L1");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            "Standard", null, "L1");
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+
+        Product prodRH00008 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            "Premium", null, null);
+        Pool RH00008 = TestUtil.createPool(owner, prodRH00008);
+        RH00008.setId("RH00008");
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
+
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", this.translator.translate(RH00008, PoolDTO.class));
+        Double RH00008Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        // Pool RH00008 should have a higher priority than pool RH00009
+        assertTrue(RH00008Priority > RH00009Priority);
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCaseUsageBeatsServiceType() throws NoSuchMethodException {
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        consumer.setUsage("Development");
+        consumer.setServiceType("L1");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            null, null, "L1");
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+
+        Product prodRH00008 = createSysPurposeProduct(null, "RHEL Server", "Smart Management",
+            null, "Development", null);
+        Pool RH00008 = TestUtil.createPool(owner, prodRH00008);
+        RH00008.setId("RH00008");
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
+
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", this.translator.translate(RH00008, PoolDTO.class));
+        Double RH00008Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        // Pool RH00008 should have a higher priority than pool RH00009
+        assertTrue(RH00008Priority > RH00009Priority);
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCaseRoleBeatsServiceType() throws NoSuchMethodException {
+        // Consumer specified syspurpose attributes:
+        consumer.setRole("RHEL Server");
+        consumer.setServiceType("L1");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, null, null,
+            null, null, "L1");
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+
+        Product prodRH00008 = createSysPurposeProduct(null, "RHEL Server", null,
+            null, null, null);
+        Pool RH00008 = TestUtil.createPool(owner, prodRH00008);
+        RH00008.setId("RH00008");
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
+
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", this.translator.translate(RH00008, PoolDTO.class));
+        Double RH00008Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        // Pool RH00008 should have a higher priority than pool RH00009
+        assertTrue(RH00008Priority > RH00009Priority);
+    }
+
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSysPurposePoolPriorityUseCaseAddonsBeatsServiceType() throws NoSuchMethodException {
+        // Consumer specified syspurpose attributes:
+        Set<String> addons = new HashSet<>();
+        addons.add("Smart Management");
+        consumer.setAddOns(addons);
+        consumer.setServiceType("L1");
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+        Product prodRH00009 = createSysPurposeProduct(null, null, null,
+            null, null, "L1");
+        Pool RH00009 = TestUtil.createPool(owner, prodRH00009);
+        RH00009.setId("RH00009");
+
+        Product prodRH00008 = createSysPurposeProduct(null, null, "Smart Management",
+            null, null, null);
+        Pool RH00008 = TestUtil.createPool(owner, prodRH00008);
+        RH00008.setId("RH00008");
+
+        jsRules.reinitTo("test_name_space");
+        JsonJsContext args = new JsonJsContext(mapper);
+        args.put("log", log, false);
+        args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
+        args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
+
+        args.put("pool", this.translator.translate(RH00009, PoolDTO.class));
+        Double RH00009Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        args.put("pool", this.translator.translate(RH00008, PoolDTO.class));
+        Double RH00008Priority = jsRules.invokeMethod("get_pool_priority_test", args);
+
+        // Pool RH00008 should have a higher priority than pool RH00009
+        assertTrue(RH00008Priority > RH00009Priority);
+    }
+
+    /*
+     * Tests that during auto-attach, Usage values between what the consumer specified and pool attributes
+     * are compared case insensitively.
+     */
+    @Test
+    public void selectBestPoolsMatchesServiceTypeValueCaseInsensitively() {
+        Product product69 = new Product();
+        product69.setId("prod-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setServiceType("SerVIcE-TyPe");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // No consumer satisfied syspurpose attributes
+
+        // Candidate pools:
+        Product prod1 = createSysPurposeProduct(null, null, null, null, null, null);
+        prod1.addProvidedProduct(product69);
+        Pool p1 = TestUtil.createPool(owner, prod1);
+        p1.setId("p1");
+
+        Product prod2 = createSysPurposeProduct(null, null, null, null, null, "Service-Type");
+        prod2.addProvidedProduct(product69);
+        Pool p2 = TestUtil.createPool(owner, prod2);
+        p2.setId("p2");
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(p1);
+        pools.add(p2);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{ "prod-69" }, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+
+        // We expect p2 to be attached because of the service type match (even if case-insensitive).
+        assertTrue(bestPools.contains(new PoolQuantity(p2, 1)));
+    }
+
+    /*
+     * This test demonstrates that a pool that satisfies the consumer's service type will be selected
+     * during autoattach even if it provides a role, and the consumer did not specify a role,
+     * and even if another pool benefits from not having a role specified but does not provide
+     * the service type the consumer requires.
+     *
+     * (Alternatively: The 'null rule' score on a pool, should not overpower the 'match rule' of another
+     * pool in a different syspurpose attribute.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsRoleNullRuleShouldNotOverpowerServiceTypeMatch() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        consumer.setServiceType("my-service-type");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // Candidate pools:
+        // This pool will get 0 score for having a role, since the consumer did not specify one at all,
+        // but it will get a 'match score' for having the service type that the consumer has specified.
+        Product prodMCT1650 = createSysPurposeProduct(null, "another_role", null,
+            null, null, "my-service-type");
+        prodMCT1650.addProvidedProduct(product69);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.setQuantity(1L);
+
+        // This pool will get a 'null rule' score for not having a role specified, just as the consumer
+        // does not have a role specified.
+        Product genericProduct = createSysPurposeProduct(null, null, null, null, null, null);
+        genericProduct.addProvidedProduct(product69);
+        Pool genericPool = TestUtil.createPool(owner, genericProduct);
+        genericPool.setId("genericPool");
+        genericPool.setQuantity(1L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+        pools.add(genericPool);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
+    }
+
+    /*
+     * This tests that a pool with a service type match and all other syspurpose attributes mismatched,
+     * will still be chosen by auto-attach against a pool that does not provide any of
+     * the syspurpose attributes.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsServiceTypeMatchShouldOverrideAllOtherSyspurposeMismatchesCombined() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        Set<String> addons = new HashSet<>();
+        addons.add("my_addon");
+        consumer.setAddOns(addons);
+        consumer.setRole("RHEL Workstation");
+        consumer.setServiceLevel("Premium");
+        consumer.setUsage("Production");
+        consumer.setServiceType("L1-l3");
+
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        Product prod1 = createSysPurposeProduct(null, "mismatched_role", "mismatched_addon",
+            "mismatched_sla", "mismatch-usage", "L1-L3");
+        prod1.addProvidedProduct(product69);
+        Pool pool1 = TestUtil.createPool(owner, prod1);
+        pool1.setId("pool1");
+        pool1.setQuantity(1L);
+
+        Product prod2 = createSysPurposeProduct(null, null, null, null, null, null);
+        prod2.addProvidedProduct(product69);
+        Pool pool2 = TestUtil.createPool(owner, prod2);
+        pool2.setId("pool2");
+        pool2.setQuantity(1L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(pool1);
+        pools.add(pool2);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        assertTrue(bestPools.contains(new PoolQuantity(pool1, 1)));
+    }
+
+    /*
+     * This test demonstrates that a pool that provides a certain service type, will NOT be selected
+     * during autoattach if that service type matches the one the consumer specified, when
+     * no installed product is covered by that pool.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testSelectBestPoolsShouldNOTSelectPoolWithMatchingServiceTypeWhenItCoversNoProducts() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified syspurpose attributes:
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+        consumer.setServiceType("Other ServiceType");
+
+        // Candidate pools:
+        Product prodMCT1650 = createSysPurposeProduct(null, null, null,
+            null, null, "Other ServiceType");
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.setQuantity(1L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(0, bestPools.size());
+    }
+
+    /*
+     * This test demonstrates that a pool that satisfies the consumer's Usage should be selected
+     * during autoattach even if all other attributes below it (service_type, sockets,
+     * cores & ram, etc.) mismatch, instead of a pool that has a matching service_type,
+     * but no other mismatches.
+     */
+    @SuppressWarnings("checkstyle:localvariablename")
+    @Test
+    public void testShouldSelectPoolWhenUsageMatchesButServiceTypeSocketsRamCoresMismatch() {
+        Product product69 = new Product();
+        product69.setId("compliant-69");
+
+        // Consumer specified attributes:
+        consumer.setUsage("myusage");
+        consumer.setServiceType("myservicetype");
+        consumer.setFact("cpu.cpu_socket(s)", "1");
+        consumer.setFact("cpu.core(s)_per_socket", "1");
+        consumer.setFact("memory.memtotal", "9980456");
+        ConsumerInstalledProduct consumerInstalledProduct =
+            new ConsumerInstalledProduct(product69);
+        consumer.addInstalledProduct(consumerInstalledProduct);
+
+        // --- No satisfied syspurpose attributes on the consumer ---
+
+        // Candidate pools:
+
+        // This pool covers the system's usage attribute, but most other attributes below usage (service_type,
+        // cores, ram, etc.) are mismatched.
+        Product prodMCT1650 = createSysPurposeProduct(null, null, null,
+            null, "myusage", "random_service_type");
+        // Set large sockets/cores/ram values to this SKU, to make sure it's priority is reduced compared to
+        // the other pool that uses the default priorities for these attributes (prioritization points for
+        // cores/sockets/ram works this way because we do not want to to attach a pool that wastes extra
+        // resource attributes if we can).
+        prodMCT1650.setAttribute(Product.Attributes.SOCKETS, "32");
+        prodMCT1650.setAttribute(Product.Attributes.CORES, "32");
+        prodMCT1650.setAttribute(Product.Attributes.RAM, "19960912");
+        prodMCT1650.addProvidedProduct(product69);
+        Pool MCT1650 = TestUtil.createPool(owner, prodMCT1650);
+        MCT1650.setId("MCT1650");
+        MCT1650.setQuantity(1L);
+
+        // This pool only covers the service_type of the system (and not the usage attribute), but has no
+        // other mismatches compared to the previous pool.
+        Product genericProduct = createSysPurposeProduct(null, null, null, null, null, "myservicetype");
+        genericProduct.addProvidedProduct(product69);
+        Pool genericPool = TestUtil.createPool(owner, genericProduct);
+        genericPool.setId("genericPool");
+        genericPool.setQuantity(1L);
+
+        List<Pool> pools = new ArrayList<>();
+        pools.add(MCT1650);
+        pools.add(genericPool);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
+            new String[]{"compliant-69"}, pools, compliance, null, new HashSet<>(), false);
+
+        assertEquals(1, bestPools.size());
+        // We expect MCT1650 to be attached, because the fact that it covers the usage attribute, which is
+        // more important than the service_type attribute, should be enough to prioritize it over
+        // genericPool, even if other mismatches of attributes of lower importance are in play.
+        assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
     }
 }

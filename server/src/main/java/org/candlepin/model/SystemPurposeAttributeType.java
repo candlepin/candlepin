@@ -26,7 +26,8 @@ public enum SystemPurposeAttributeType {
     ROLES(Product.Attributes.ROLES),
     ADDONS(Product.Attributes.ADDONS),
     SERVICE_LEVEL(Product.Attributes.SUPPORT_LEVEL),
-    USAGE(Product.Attributes.USAGE);
+    USAGE(Product.Attributes.USAGE),
+    SERVICE_TYPE(Product.Attributes.SUPPORT_TYPE);
 
     private String name;
     private static final Map<String, SystemPurposeAttributeType> ENUM_MAP;

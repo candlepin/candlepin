@@ -642,7 +642,8 @@ describe 'Autobind On Owner' do
                                   :providedProducts => [eng_product.id]})
     mkt_product2 = create_product(random_string('product'),
                                   random_string('product'),
-                                 {:attributes => {:virt_only => 'True', :roles => "random_role", :support_level => "random_sla", :usage => "random_usage"},
+                                 {:attributes => {:virt_only => 'True', :roles => "random_role", :support_level => "random_sla",
+                                  :usage => "random_usage", :support_type => "test_support"},
                                   :owner => owner_key,
                                   :providedProducts => [eng_product.id]})
     p1 = @cp.create_pool(owner_key, mkt_product1.id, { :quantity => 10 })
@@ -653,7 +654,7 @@ describe 'Autobind On Owner' do
     consumer = @cp.register(
         random_string('systempurpose'), :system, nil, {"virt.is_guest" => "True"}, nil, owner_key, [],
         installed, nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil,
-        "unsatisfied_sla", "unsatisfied_role", "unsatisfied_usage", [])
+        "unsatisfied_sla", "unsatisfied_role", "unsatisfied_usage", [], nil, nil, nil, nil, "unsatisfied_support")
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
     entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
@@ -781,7 +782,7 @@ describe 'Autobind On Owner' do
     mkt_product2 = create_product(random_string('product'),
                                   random_string('product'),
                                   {:attributes => {:virt_only => "true", :support_level => "provided_sla",:usage => "Production",
-                                  :roles => "SP Server", :addons => "provided_addon"},
+                                  :roles => "SP Server", :addons => "provided_addon", :support_type => "test_support"},
                                   :owner => owner_key,
                                   :providedProducts => [eng_product.id]})
 
@@ -891,6 +892,106 @@ describe 'Autobind On Owner' do
 
     status = @cp.get_purpose_compliance(consumer['uuid'])
     expect(status['status']).to eq('not specified')
+  end
+
+
+  it 'pool with service type should have priority over pool without' do
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+    mkt_product1 = create_product(random_string('product'),
+                                  random_string('product'),
+                                  {:attributes => {:support_type => "test_support"},
+                                   :owner => owner_key,
+                                   :providedProducts => [eng_product.id]})
+    mkt_product2 = create_product(random_string('product'),
+                                  random_string('product'),
+                                  {:owner => owner_key,
+                                   :providedProducts => [eng_product.id]})
+    p1 = @cp.create_pool(owner_key, mkt_product1.id, { :quantity => 10 })
+    p2 = @cp.create_pool(owner_key, mkt_product2.id, { :quantity => 10 })
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil, nil, nil, "test_support")
+
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    expect(status['status']).to eq('mismatched')
+    expect(status['nonCompliantServiceType'].include?('test_support')).to eq(true)
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+
+    entitlements.size.should == 1
+    status = @cp.get_purpose_compliance(consumer.uuid)
+
+    expect(status['status']).to eq('matched')
+    expect(status['nonCompliantServiceType']).to eq(nil)
+    expect(status['compliantServiceType']['test_support'][0]['pool']['id']).to eq(p1.id)
+  end
+
+  it 'pool with matching service type should not be attached when it covers no products' do
+    mkt_product1 = create_product(random_string('product'),
+                                  random_string('product'),
+                                  {:attributes => {:support_type => "test_support"},
+                                   :owner => owner_key})
+    p1 = create_pool_and_subscription(owner_key, mkt_product1.id, 10, [])
+
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, [], nil, nil, nil, nil, "provided_service_type");
+
+    status = @cp.get_purpose_compliance(consumer['uuid'])
+    expect(status['status']).to eq('mismatched')
+    expect(status['nonCompliantServiceType'].include?('provided_service_type')).to eq(true)
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    expect(entitlements.size).to eq(0)
+
+    status = @cp.get_purpose_compliance(consumer.uuid)
+    expect(status['status']).to eq('mismatched')
+    expect(status['nonCompliantServiceType'].include?('provided_service_type')).to eq(true)
+  end
+
+  it 'pool with virt_only match should not overpower pool with service type match' do
+    eng_product = create_product(random_string('product'),
+                                 random_string('product'),
+                                 {:owner => owner_key})
+    mkt_product1 = create_product(random_string('product'),
+                                  random_string('product'),
+                                  {:attributes => {:support_type => "test_support"},
+                                   :owner => owner_key,
+                                   :providedProducts => [eng_product.id]})
+    mkt_product2 = create_product(random_string('product'),
+                                  random_string('product'),
+                                  {:attributes => {:virt_only => 'True'},
+                                   :owner => owner_key,
+                                   :providedProducts => [eng_product.id]})
+    p1 = @cp.create_pool(owner_key, mkt_product1.id, { :quantity => 10 })
+    p2 = @cp.create_pool(owner_key, mkt_product2.id, { :quantity => 10 })
+
+    installed = [
+        {'productId' => eng_product.id, 'productName' => eng_product['name']}]
+    consumer = @cp.register(
+        random_string('systempurpose'), :system, nil, {"virt.is_guest" => "True"}, nil, owner_key, [],
+        installed, nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil,
+        nil, nil, nil, [], nil, nil, nil, nil, "test_support")
+
+    @cp.consume_product(nil, {:uuid => consumer.uuid})
+    entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
+    expect(entitlements.size).to eq(1)
+    expect(entitlements[0].pool.id).to eq(p1.id)
   end
 
 end

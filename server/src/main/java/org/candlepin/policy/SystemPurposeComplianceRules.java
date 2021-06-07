@@ -157,6 +157,7 @@ public class SystemPurposeComplianceRules {
             Set<String> unsatisfiedAddons = new HashSet<>(consumer.getAddOns());
             String preferredSla = consumer.getServiceLevel();
             String preferredUsage = consumer.getUsage();
+            String preferedServiceType = consumer.getServiceType();
             Pool entitlementPool = entitlement.getPool();
 
             Set<Product> entitlementProducts = new HashSet<>();
@@ -210,21 +211,23 @@ public class SystemPurposeComplianceRules {
                 }
                 unsatisfiedAddons.removeAll(addonsFound);
 
+                String productSLA = product.getAttributeValue(Product.Attributes.SUPPORT_LEVEL);
                 if (!slaExempted &&
                     StringUtils.isNotEmpty(preferredSla) &&
-                    product.hasAttribute(Product.Attributes.SUPPORT_LEVEL)) {
-                    String sla = product.getAttributeValue(Product.Attributes.SUPPORT_LEVEL);
-                    if (sla.equalsIgnoreCase(preferredSla)) {
-                        status.addCompliantSLA(sla, entitlement);
-                    }
+                    preferredSla.equalsIgnoreCase(productSLA)) {
+                    status.addCompliantSLA(productSLA, entitlement);
                 }
 
+                String productUsage = product.getAttributeValue(Product.Attributes.USAGE);
                 if (StringUtils.isNotEmpty(preferredUsage) &&
-                    product.hasAttribute(Product.Attributes.USAGE)) {
-                    String usage = product.getAttributeValue(Product.Attributes.USAGE);
-                    if (usage.equalsIgnoreCase(preferredUsage)) {
-                        status.addCompliantUsage(usage, entitlement);
-                    }
+                    preferredUsage.equalsIgnoreCase(productUsage)) {
+                    status.addCompliantUsage(productUsage, entitlement);
+                }
+
+                String productServiceType = product.getAttributeValue(Product.Attributes.SUPPORT_TYPE);
+                if (StringUtils.isNotEmpty(preferedServiceType) &&
+                    preferedServiceType.equalsIgnoreCase(productServiceType)) {
+                    status.addCompliantServiceType(productServiceType, entitlement);
                 }
             }
         }
@@ -244,12 +247,19 @@ public class SystemPurposeComplianceRules {
         }
 
         if (!slaExempted &&
-            StringUtils.isNotEmpty(consumer.getServiceLevel()) && status.getCompliantSLA().isEmpty()) {
+            StringUtils.isNotEmpty(consumer.getServiceLevel()) &&
+            status.getCompliantSLA() != null && status.getCompliantSLA().isEmpty()) {
             status.setNonCompliantSLA(consumer.getServiceLevel());
         }
 
-        if (StringUtils.isNotEmpty(consumer.getUsage()) && status.getCompliantUsage().isEmpty()) {
+        if (StringUtils.isNotEmpty(consumer.getUsage()) &&
+            status.getCompliantUsage() != null && status.getCompliantUsage().isEmpty()) {
             status.setNonCompliantUsage(consumer.getUsage());
+        }
+
+        if (StringUtils.isNotEmpty(consumer.getServiceType()) &&
+            status.getCompliantServiceType() != null && status.getCompliantServiceType().isEmpty()) {
+            status.setNonCompliantServiceType(consumer.getServiceType());
         }
 
         if (currentCompliance) {

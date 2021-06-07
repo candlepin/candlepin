@@ -113,6 +113,7 @@ public class ConsumerArrayElementTranslatorTest extends
         consumer.setRole("consumer_role");
         consumer.setUsage("consumer_usage");
         consumer.setSystemPurposeStatus("consumer_system_purpose_status");
+        consumer.setServiceType("consumer_service_type");
         consumer.setReleaseVer(new Release("releaseVer"));
         consumer.setOwner(owner);
         consumer.setEnvironment(environment);
@@ -124,6 +125,7 @@ public class ConsumerArrayElementTranslatorTest extends
         consumer.setAnnotations("test_annotations");
         consumer.setContentAccessMode("test_content_access_mode");
         consumer.setType(ctype);
+
 
         Set<String> addOns = new HashSet<>();
         for (int i = 0; i < 5; i++) {
@@ -190,6 +192,7 @@ public class ConsumerArrayElementTranslatorTest extends
             assertEquals(source.getUsage(), dest.getUsage());
             assertEquals(source.getAddOns(), dest.getAddOns());
             assertEquals(source.getSystemPurposeStatus(), dest.getSystemPurposeStatus());
+            assertEquals(source.getServiceType(), dest.getServiceType());
             assertEquals(source.getEntitlementCount(), (long) dest.getEntitlementCount());
             assertEquals(source.getLastCheckin(), Util.toDate(dest.getLastCheckin()));
             assertEquals(source.isCanActivate(), dest.getCanActivate());

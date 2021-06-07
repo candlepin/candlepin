@@ -449,11 +449,11 @@ describe 'System purpose compliance' do
       # Create a product and pool so the service level is available.
       product1 = create_product(random_string('product'),
                              random_string('product'),
-                             {:attributes => {:support_level => 'basic'},
+                             {:attributes => {:support_level => 'basic', :support_type => 'basic_support'},
                               :owner => @owner2['key']})
       product2 = create_product(random_string('product'),
                                 random_string('product'),
-                                {:attributes => {:support_level => 'premium'},
+                                {:attributes => {:support_level => 'premium', :support_type => 'premium_support'},
                                  :owner => @owner2['key']})
       create_pool_and_subscription(@owner2['key'], product1.id)
       create_pool_and_subscription(@owner2['key'], product2.id)
@@ -480,13 +480,20 @@ describe 'System purpose compliance' do
           'basic',
           'role',
           'u-sage',
-          ['add-on 1', 'add-on 2'])
+          ['add-on 1', 'add-on 2'],
+          nil,
+          nil,
+          nil,
+          nil,
+          'basic_support')
+
         consumer['serviceLevel'] == 'basic'
-        consumer['role'].should == 'role'
-        consumer['usage'].should == 'u-sage'
+        expect(consumer['role']).to eq('role')
+        expect(consumer['usage']).to eq('u-sage')
+        expect(consumer['serviceType']).to eq('basic_support')
 
         add_ons = consumer['addOns']
-        add_ons.size.should == 2
+        expect(add_ons.size).to eq(2)
         add_ons.should include('add-on 1')
         add_ons.should include('add-on 2')
 
@@ -495,19 +502,21 @@ describe 'System purpose compliance' do
             :serviceLevel => 'premium',
             :role => 'updatedrole',
             :usage => 'updatedusage',
-            :addOns => ['add-on 2', 'add-on 4']
+            :addOns => ['add-on 2', 'add-on 4'],
+            :serviceType => 'updatedsupport'
         }
 
         @user2.update_consumer(update_args)
         consumer = @user2.get_consumer(consumer['uuid'])
-        consumer['serviceLevel'].should == 'premium'
-        consumer['usage'].should == 'updatedusage'
-        consumer['role'].should == 'updatedrole'
+      expect(consumer['serviceLevel']).to eq('premium')
+      expect(consumer['usage']).to eq('updatedusage')
+      expect(consumer['role']).to eq('updatedrole')
+      expect(consumer['serviceType']).to eq('updatedsupport')
 
-        add_ons = consumer['addOns']
-        add_ons.size.should == 2
-        add_ons.should include('add-on 2')
-        add_ons.should include('add-on 4')
+      add_ons = consumer['addOns']
+      expect(add_ons.size).to eq(2)
+      add_ons.should include('add-on 2')
+      add_ons.should include('add-on 4')
   end
 
   it 'should allow clearing system purpose properties on a consumer' do
@@ -541,10 +550,17 @@ describe 'System purpose compliance' do
           'basic',
           'role',
           'u-sage',
-          ['add-on 1', 'add-on 2'])
+          ['add-on 1', 'add-on 2'],
+          nil,
+          nil,
+          nil,
+          nil,
+          'basic_support')
+
       consumer['serviceLevel'] == 'basic'
-      consumer['role'].should == 'role'
-      consumer['usage'].should == 'u-sage'
+      expect(consumer['role']).to eq('role')
+      expect(consumer['usage']).to eq('u-sage')
+      expect(consumer['serviceType']).to eq('basic_support')
 
       add_ons = consumer['addOns']
       add_ons.size.should == 2
@@ -556,7 +572,8 @@ describe 'System purpose compliance' do
           :serviceLevel => '',
           :role => '',
           :usage => '',
-          :addOns => []
+          :addOns => [],
+          :serviceType => ''
       }
 
       @user2.update_consumer(update_args)
@@ -564,9 +581,88 @@ describe 'System purpose compliance' do
       consumer['serviceLevel'].should == ''
       expect(consumer['usage']).to eq('')
       expect(consumer['role']).to eq('')
+      expect(consumer['serviceType']).to eq('')
 
       add_ons = consumer['addOns']
       add_ons.size.should == 0
+  end
+
+  it 'should be not specified for any service type when consumer has null service type' do
+    product = create_product(random_string('product'),
+                             random_string('product'),
+                             {:attributes => {:support_type => 'test_support'},
+                              :owner => @owner2['key']})
+
+    p = create_pool_and_subscription(@owner2['key'], product.id)
+
+    consumer = @user2.register(
+        random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
+
+    @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
+
+    status = @user2.get_purpose_compliance(consumer['uuid'])
+    expect(status['status']).to eq('not specified')
+    expect(status['compliantServiceType']).to be_empty
+  end
+
+  it 'should be mismatched for unsatisfied service type' do
+    consumer = @user2.register(
+        random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil, nil, nil, "test_service_type")
+    status = @user2.get_purpose_compliance(consumer['uuid'])
+    expect(status['status']).to eq('mismatched')
+    expect(status['nonCompliantServiceType']).to eq('test_service_type')
+    expect(status.reasons.size).to eq(1)
+    expect(status.reasons.include?(
+        'The requested service type preference "test_service_type" is not provided by a currently consumed subscription.'
+    )).to eq(true)
+  end
+
+  it 'should change to matched after satisfying service type' do
+    product = create_product(random_string('product'),
+                             random_string('product'),
+                             {:attributes => {:support_type => 'test_service_type'},
+                              :owner => @owner2['key']})
+    p = create_pool_and_subscription(@owner2['key'], product.id)
+    consumer = @user2.register(
+        random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil, nil, nil, 'test_service_type')
+
+    status = @user2.get_purpose_compliance(consumer['uuid'])
+    expect( status['status']).to eq('mismatched')
+    expect( status['nonCompliantServiceType'].include?('test_service_type')).to eq(true)
+
+    @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
+    status = @user2.get_purpose_compliance(consumer['uuid'])
+    expect( status['status']).to eq('matched')
+    expect( status['compliantServiceType']['test_service_type'][0]['pool']['id']).to eq(p.id)
+  end
+
+  it 'should be matched for mixed service type' do
+    product = create_product(random_string('product'),
+                             random_string('product'),
+                             {:attributes => {:support_type => 'L1'},
+                              :owner => @owner2['key']})
+    p = create_pool_and_subscription(@owner2['key'], product.id)
+    another_product = create_product(random_string('product'),
+                                     random_string('product'),
+                                     {:attributes => {:support_type => 'L2'},
+                                      :owner => @owner2['key']})
+    another_p = create_pool_and_subscription(@owner2['key'], another_product.id)
+
+    consumer = @user2.register(
+        random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+        nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil, nil, nil, "L1")
+
+    @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
+    @user2.consume_pool(another_p.id, params={:uuid=>consumer.uuid})
+
+    status = @user2.get_purpose_compliance(consumer['uuid'])
+
+    expect(status['status']).to eq('matched')
+    expect(status['compliantServiceType']['L1'][0]['pool']['id']).to eq(p.id)
+    expect(status['reasons'].size).to eq(0)
   end
 
 end

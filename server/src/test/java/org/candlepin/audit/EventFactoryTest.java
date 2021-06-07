@@ -144,17 +144,21 @@ public class EventFactoryTest {
         String reason1 = "unsatisfied usage: Production";
         String reason2 = "unsatisfied sla: Premium";
         String reason3 = "unsatisfied role: Red Hat Enterprise Linux Server";
+        String reason4 = "unsatisfied service type: L1-L3";
 
-        when(status.getReasons()).thenReturn(ImmutableSet.of(reason1, reason2, reason3));
+        when(status.getReasons()).thenReturn(ImmutableSet.of(reason1, reason2, reason3, reason4));
         when(status.getNonCompliantRole()).thenReturn("Red Hat Enterprise Linux Server");
         when(status.getNonCompliantAddOns()).thenReturn(new HashSet<>());
         when(status.getNonCompliantSLA()).thenReturn("Premium");
         when(status.getNonCompliantUsage()).thenReturn("Production");
+        when(status.getNonCompliantServiceType()).thenReturn("L1-L3");
+
         Map<String, Set<Entitlement>> entitlements = new HashMap<>();
         when(status.getCompliantRole()).thenReturn(entitlements);
         when(status.getCompliantAddOns()).thenReturn(entitlements);
         when(status.getCompliantSLA()).thenReturn(entitlements);
         when(status.getCompliantUsage()).thenReturn(entitlements);
+        when(status.getCompliantServiceType()).thenReturn(entitlements);
 
         String expectedEventData = "{" +
             "\"nonCompliantUsage\":\"Production\"," +
@@ -163,14 +167,17 @@ public class EventFactoryTest {
             "\"reasons\":[" +
             "\"unsatisfied usage: Production\"," +
             "\"unsatisfied sla: Premium\"," +
-            "\"unsatisfied role: Red Hat Enterprise Linux Server\"" +
+            "\"unsatisfied role: Red Hat Enterprise Linux Server\"," +
+            "\"unsatisfied service type: L1-L3\"" +
             "]," +
+            "\"nonCompliantServiceType\":\"L1-L3\"," +
             "\"compliantSLA\":{}," +
             "\"nonCompliantAddOns\":[]," +
             "\"compliantRole\":{}," +
             "\"nonCompliantSLA\":\"Premium\"," +
             "\"compliantUsage\":{}," +
-            "\"status\":\"mismatched\"" +
+            "\"status\":\"mismatched\"," +
+            "\"compliantServiceType\":{}" +
             "}";
         Event event = eventFactory.complianceCreated(consumer, status);
         assertEquals(expectedEventData, event.getEventData());

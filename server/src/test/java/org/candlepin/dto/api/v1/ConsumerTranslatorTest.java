@@ -120,6 +120,7 @@ public class ConsumerTranslatorTest extends
         consumer.setRole("consumer_role");
         consumer.setUsage("consumer_usage");
         consumer.setSystemPurposeStatus("consumer_system_purpose_status");
+        consumer.setServiceType("consumer_service_type");
         consumer.setReleaseVer(new Release("releaseVer"));
         consumer.setOwner(owner);
         consumer.setEnvironment(environment);
@@ -211,6 +212,7 @@ public class ConsumerTranslatorTest extends
             assertEquals(source.getUsage(), dest.getUsage());
             assertEquals(source.getAddOns(), dest.getAddOns());
             assertEquals(source.getSystemPurposeStatus(), dest.getSystemPurposeStatus());
+            assertEquals(source.getServiceType(), dest.getServiceType());
             assertEquals(source.getEntitlementCount(), (long) dest.getEntitlementCount());
             assertEquals(source.getFacts(), dest.getFacts());
             assertEquals(source.getLastCheckin(), Util.toDate(dest.getLastCheckin()));

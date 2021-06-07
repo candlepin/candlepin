@@ -85,6 +85,7 @@ public class SystemPurposeComplianceStatusTranslator implements
         destination.setNonCompliantAddOns(source.getNonCompliantAddOns());
         destination.setNonCompliantUsage(source.getNonCompliantUsage());
         destination.setNonCompliantSLA(source.getNonCompliantSLA());
+        destination.setNonCompliantServiceType(source.getNonCompliantServiceType());
         destination.setReasons(source.getReasons());
 
         if (translator != null) {
@@ -96,6 +97,7 @@ public class SystemPurposeComplianceStatusTranslator implements
             Map<String, Set<Entitlement>> compliantAddOns = source.getCompliantAddOns();
             Map<String, Set<Entitlement>> compliantUsage = source.getCompliantUsage();
             Map<String, Set<Entitlement>> compliantSLA = source.getCompliantSLA();
+            Map<String, Set<Entitlement>> compliantServiceType = source.getCompliantServiceType();
 
             if (compliantRole != null) {
                 compliantRole.values().forEach(entitlements::addAll);
@@ -113,6 +115,10 @@ public class SystemPurposeComplianceStatusTranslator implements
                 compliantSLA.values().forEach(entitlements::addAll);
             }
 
+            if (compliantServiceType != null) {
+                compliantServiceType.values().forEach(entitlements::addAll);
+            }
+
             // TODO: Use the bulk translation once available
             for (Entitlement entitlement : entitlements) {
                 EntitlementDTO dto = translator.translate(entitlement, EntitlementDTO.class);
@@ -127,12 +133,15 @@ public class SystemPurposeComplianceStatusTranslator implements
             destination.setCompliantAddOns(this.translateEntitlementMap(compliantAddOns, translated));
             destination.setCompliantUsage(this.translateEntitlementMap(compliantUsage, translated));
             destination.setCompliantSLA(this.translateEntitlementMap(compliantSLA, translated));
+            destination.setCompliantServiceType(
+                this.translateEntitlementMap(compliantServiceType, translated));
         }
         else {
             destination.setCompliantRole(null);
             destination.setCompliantAddOns(null);
             destination.setCompliantUsage(null);
             destination.setCompliantSLA(null);
+            destination.setCompliantServiceType(null);
         }
 
         return destination;

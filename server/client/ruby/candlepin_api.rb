@@ -111,7 +111,7 @@ class Candlepin
               annotations=nil, recipient_owner_key=nil, user_agent=nil,
               entitlement_count=0, id_cert=nil, serviceLevel=nil, role=nil, usage=nil,
               addOns=nil, reporter_id=nil, autoheal=nil, content_access_mode=nil,
-              cloud_registration_token=nil)
+              cloud_registration_token=nil, service_type=nil)
 
     consumer = {
       :type => {:label => type},
@@ -139,7 +139,7 @@ class Candlepin
     consumer[:usage] = usage if usage
     consumer[:addOns] = addOns if addOns
     consumer[:contentAccessMode] = content_access_mode if content_access_mode
-
+    consumer[:serviceType] = service_type if service_type
     params = {}
 
     if environment.nil?
@@ -242,6 +242,7 @@ class Candlepin
     consumer[:hypervisorId] = {:hypervisorId => params[:hypervisorId]} if params[:hypervisorId]
     consumer['contentAccessMode'] = params['contentAccessMode'] if params.key?('contentAccessMode')
     consumer[:environment] = params[:environment] if params.key?(:environment)
+    consumer[:serviceType] = params[:serviceType] if params.has_key?(:serviceType)
 
     path = get_path("consumers")
     put("#{path}/#{uuid}", {}, consumer)
