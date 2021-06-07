@@ -32,16 +32,12 @@ import org.candlepin.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 
@@ -63,24 +59,6 @@ public class ProductNodeBuilderTest {
 
     private ProductNodeBuilder buildNodeBuilder() {
         return new ProductNodeBuilder();
-    }
-
-    private Set<Product> createCandidateEntitiesSet(String id) {
-        Set<Product> candidates = new HashSet<>();
-
-        for (int i = 0; i < 3; ++i) {
-            Product candidate = TestUtil.createProduct(id, TestUtil.randomString());
-            candidates.add(candidate);
-        }
-
-        return candidates;
-    }
-
-    private void addDummyCandidateEntitiesToMap(Map<String, Set<Product>> candidateEntitiesMap) {
-        for (int i = 0; i < 5; ++i) {
-            String id = TestUtil.randomString();
-            candidateEntitiesMap.put(id, this.createCandidateEntitiesSet(id));
-        }
     }
 
     private EntityNode mockEntityNode(Owner owner, Class cls, String id,
@@ -110,27 +88,15 @@ public class ProductNodeBuilderTest {
         assertEquals(Product.class, output);
     }
 
-    @ParameterizedTest(name = "{displayName} [{index}]: {1}")
-    @ValueSource(strings = { "true", "false" })
-    public void testBuildNodeForCreation(boolean includeCandidates) {
+    @Test
+    public void testBuildNodeForCreation() {
         String id = "test_id";
 
         Owner owner = TestUtil.createOwner();
         Product existing = TestUtil.createProduct(id, "existing");
         ProductInfo imported = TestUtil.createProduct(id, "imported");
 
-        Map<String, Set<Product>> candidateEntitiesMap = new HashMap<>();
-        this.addDummyCandidateEntitiesToMap(candidateEntitiesMap);
-
-        Set<Product> candidateEntities = null;
-
-        if (includeCandidates) {
-            candidateEntities = this.createCandidateEntitiesSet(id);
-            candidateEntitiesMap.put(id, candidateEntities);
-        }
-
         this.productMapper.addImportedEntity(imported);
-        this.productMapper.setCandidateEntitiesMap(candidateEntitiesMap);
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
         EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
@@ -150,53 +116,31 @@ public class ProductNodeBuilderTest {
         assertEquals(imported, output.getImportedEntity());
         assertNull(output.getMergedEntity());
 
-        if (includeCandidates) {
-            // We should have a set of candidate entities in this test
-            assertNotNull(output.getCandidateEntities());
-            assertEquals(candidateEntities, output.getCandidateEntities());
-        }
-        else {
-            // In this test, we did not provide candidate entities, so the collection should be null
-            assertNull(output.getCandidateEntities());
-        }
-
         // The node should not have any flags set
         assertNull(output.getNodeState());
 
         // Product does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());
-        assertThat(output.getParentNodes(), empty());
+        assertEquals(0, output.getParentNodes().count());
 
         assertNotNull(output.getChildrenNodes());
-        assertThat(output.getChildrenNodes(), empty());
+        assertEquals(0, output.getChildrenNodes().count());
 
         // Its pseudo-state getters should match our expectations
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
     }
 
-    @ParameterizedTest(name = "{displayName} [{index}]: {1}")
-    @ValueSource(strings = { "true", "false" })
-    public void testBuildNodeForUpdate(boolean includeCandidates) {
+    @Test
+    public void testBuildNodeForUpdate() {
         String id = "test_id";
 
         Owner owner = TestUtil.createOwner();
         Product existing = TestUtil.createProduct(id, "existing");
         ProductInfo imported = TestUtil.createProduct(id, "imported");
 
-        Map<String, Set<Product>> candidateEntitiesMap = new HashMap<>();
-        this.addDummyCandidateEntitiesToMap(candidateEntitiesMap);
-
-        Set<Product> candidateEntities = null;
-
-        if (includeCandidates) {
-            candidateEntities = this.createCandidateEntitiesSet(id);
-            candidateEntitiesMap.put(id, candidateEntities);
-        }
-
         this.productMapper.addExistingEntity(existing);
         this.productMapper.addImportedEntity(imported);
-        this.productMapper.setCandidateEntitiesMap(candidateEntitiesMap);
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
         EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
@@ -216,52 +160,30 @@ public class ProductNodeBuilderTest {
         assertEquals(imported, output.getImportedEntity());
         assertNull(output.getMergedEntity());
 
-        if (includeCandidates) {
-            // We should have a set of candidate entities in this test
-            assertNotNull(output.getCandidateEntities());
-            assertEquals(candidateEntities, output.getCandidateEntities());
-        }
-        else {
-            // In this test, we did not provide candidate entities, so the collection should be null
-            assertNull(output.getCandidateEntities());
-        }
-
         // The node should not have any flags set
         assertNull(output.getNodeState());
 
         // Product does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());
-        assertThat(output.getParentNodes(), empty());
+        assertEquals(0, output.getParentNodes().count());
 
         assertNotNull(output.getChildrenNodes());
-        assertThat(output.getChildrenNodes(), empty());
+        assertEquals(0, output.getChildrenNodes().count());
 
         // Its pseudo-state getters should match our expectations
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
     }
 
-    @ParameterizedTest(name = "{displayName} [{index}]: {1}")
-    @ValueSource(strings = { "true", "false" })
-    public void testBuildNodeWithNoImport(boolean includeCandidates) {
+    @Test
+    public void testBuildNodeWithNoImport() {
         String id = "test_id";
 
         Owner owner = TestUtil.createOwner();
         Product existing = TestUtil.createProduct(id, "existing");
         ProductInfo imported = TestUtil.createProduct(id, "imported");
 
-        Map<String, Set<Product>> candidateEntitiesMap = new HashMap<>();
-        this.addDummyCandidateEntitiesToMap(candidateEntitiesMap);
-
-        Set<Product> candidateEntities = null;
-
-        if (includeCandidates) {
-            candidateEntities = this.createCandidateEntitiesSet(id);
-            candidateEntitiesMap.put(id, candidateEntities);
-        }
-
         this.productMapper.addExistingEntity(existing);
-        this.productMapper.setCandidateEntitiesMap(candidateEntitiesMap);
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
         EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
@@ -281,25 +203,15 @@ public class ProductNodeBuilderTest {
         assertNull(output.getImportedEntity());
         assertNull(output.getMergedEntity());
 
-        if (includeCandidates) {
-            // We should have a set of candidate entities in this test
-            assertNotNull(output.getCandidateEntities());
-            assertEquals(candidateEntities, output.getCandidateEntities());
-        }
-        else {
-            // In this test, we did not provide candidate entities, so the collection should be null
-            assertNull(output.getCandidateEntities());
-        }
-
         // The node should not have any flags set
         assertNull(output.getNodeState());
 
         // Product does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());
-        assertThat(output.getParentNodes(), empty());
+        assertEquals(0, output.getParentNodes().count());
 
         assertNotNull(output.getChildrenNodes());
-        assertThat(output.getChildrenNodes(), empty());
+        assertEquals(0, output.getChildrenNodes().count());
 
         // Its pseudo-state getters should match our expectations
         assertTrue(output.isRootNode());
@@ -340,9 +252,12 @@ public class ProductNodeBuilderTest {
         assertEquals(builder.getEntityClass(), output.getEntityClass());
 
         // Check that our children content nodes were created
-        assertThat(output.getParentNodes(), empty());
-        assertEquals(3, output.getChildrenNodes().size());
-        assertThat(output.getChildrenNodes(), hasItems(cnode1, cnode2, cnode3));
+        List<EntityNode<?, ?>> childrenNodes = output.getChildrenNodes()
+            .collect(Collectors.toList());
+
+        assertEquals(0, output.getParentNodes().count());
+        assertEquals(3, childrenNodes.size());
+        assertThat(childrenNodes, hasItems(cnode1, cnode2, cnode3));
 
         // Ensure that the children were created using the node factory and not an internal method
         verify(this.mockNodeFactory, times(3)).buildNode(eq(owner), eq(Content.class), anyString());
@@ -382,9 +297,12 @@ public class ProductNodeBuilderTest {
         assertEquals(builder.getEntityClass(), output.getEntityClass());
 
         // Check that our children content nodes were created
-        assertThat(output.getParentNodes(), empty());
-        assertEquals(3, output.getChildrenNodes().size());
-        assertThat(output.getChildrenNodes(), hasItems(pnode1, pnode2, pnode3));
+        List<EntityNode<?, ?>> childrenNodes = output.getChildrenNodes()
+            .collect(Collectors.toList());
+
+        assertEquals(0, output.getParentNodes().count());
+        assertEquals(3, childrenNodes.size());
+        assertThat(childrenNodes, hasItems(pnode1, pnode2, pnode3));
 
         // Ensure that the children were created using the node factory and not an internal method
         verify(this.mockNodeFactory, times(3)).buildNode(eq(owner), eq(Product.class), anyString());
@@ -433,9 +351,12 @@ public class ProductNodeBuilderTest {
         assertEquals(builder.getEntityClass(), output.getEntityClass());
 
         // Check that our children content nodes were created
-        assertThat(output.getParentNodes(), empty());
-        assertEquals(6, output.getChildrenNodes().size());
-        assertThat(output.getChildrenNodes(), hasItems(pnode1, pnode2, pnode3, cnode1, cnode2, cnode3));
+        List<EntityNode<?, ?>> childrenNodes = output.getChildrenNodes()
+            .collect(Collectors.toList());
+
+        assertEquals(0, output.getParentNodes().count());
+        assertEquals(6, childrenNodes.size());
+        assertThat(childrenNodes, hasItems(pnode1, pnode2, pnode3, cnode1, cnode2, cnode3));
 
         // Ensure that the children were created using the node factory and not an internal method
         verify(this.mockNodeFactory, times(3)).buildNode(eq(owner), eq(Product.class), anyString());
@@ -476,9 +397,12 @@ public class ProductNodeBuilderTest {
         assertEquals(builder.getEntityClass(), output.getEntityClass());
 
         // Check that our children content nodes were created
-        assertThat(output.getParentNodes(), empty());
-        assertEquals(3, output.getChildrenNodes().size());
-        assertThat(output.getChildrenNodes(), hasItems(cnode1, cnode2, cnode3));
+        List<EntityNode<?, ?>> childrenNodes = output.getChildrenNodes()
+            .collect(Collectors.toList());
+
+        assertEquals(0, output.getParentNodes().count());
+        assertEquals(3, childrenNodes.size());
+        assertThat(childrenNodes, hasItems(cnode1, cnode2, cnode3));
 
         // Ensure that the children were created using the node factory and not an internal method
         verify(this.mockNodeFactory, times(3)).buildNode(eq(owner), eq(Content.class), anyString());
@@ -518,9 +442,12 @@ public class ProductNodeBuilderTest {
         assertEquals(builder.getEntityClass(), output.getEntityClass());
 
         // Check that our children content nodes were created
-        assertThat(output.getParentNodes(), empty());
-        assertEquals(3, output.getChildrenNodes().size());
-        assertThat(output.getChildrenNodes(), hasItems(pnode1, pnode2, pnode3));
+        List<EntityNode<?, ?>> childrenNodes = output.getChildrenNodes()
+            .collect(Collectors.toList());
+
+        assertEquals(0, output.getParentNodes().count());
+        assertEquals(3, childrenNodes.size());
+        assertThat(childrenNodes, hasItems(pnode1, pnode2, pnode3));
 
         // Ensure that the children were created using the node factory and not an internal method
         verify(this.mockNodeFactory, times(3)).buildNode(eq(owner), eq(Product.class), anyString());
@@ -569,9 +496,12 @@ public class ProductNodeBuilderTest {
         assertEquals(builder.getEntityClass(), output.getEntityClass());
 
         // Check that our children content nodes were created
-        assertThat(output.getParentNodes(), empty());
-        assertEquals(6, output.getChildrenNodes().size());
-        assertThat(output.getChildrenNodes(), hasItems(pnode1, pnode2, pnode3, cnode1, cnode2, cnode3));
+        List<EntityNode<?, ?>> childrenNodes = output.getChildrenNodes()
+            .collect(Collectors.toList());
+
+        assertEquals(0, output.getParentNodes().count());
+        assertEquals(6, childrenNodes.size());
+        assertThat(childrenNodes, hasItems(pnode1, pnode2, pnode3, cnode1, cnode2, cnode3));
 
         // Ensure that the children were created using the node factory and not an internal method
         verify(this.mockNodeFactory, times(3)).buildNode(eq(owner), eq(Product.class), anyString());
@@ -614,12 +544,15 @@ public class ProductNodeBuilderTest {
         assertEquals(builder.getEntityClass(), output.getEntityClass());
 
         // Check that our children content nodes were created
-        assertThat(output.getParentNodes(), empty());
+        assertEquals(0, output.getParentNodes().count());
 
         // With both an existing and imported entity, we expect the children on the imported entity
         // to take priority over those on the existing entity
-        assertEquals(2, output.getChildrenNodes().size());
-        assertThat(output.getChildrenNodes(), hasItems(cnode2, cnode3));
+        List<EntityNode<?, ?>> childrenNodes = output.getChildrenNodes()
+            .collect(Collectors.toList());
+
+        assertEquals(2, childrenNodes.size());
+        assertThat(childrenNodes, hasItems(cnode2, cnode3));
 
         // Ensure that the children were created using the node factory and not an internal method
         verify(this.mockNodeFactory, times(2)).buildNode(eq(owner), eq(Content.class), anyString());
@@ -661,12 +594,15 @@ public class ProductNodeBuilderTest {
         assertEquals(builder.getEntityClass(), output.getEntityClass());
 
         // Check that our children content nodes were created
-        assertThat(output.getParentNodes(), empty());
+        assertEquals(0, output.getParentNodes().count());
 
         // With both an existing and imported entity, we expect the children on the imported entity
         // to take priority over those on the existing entity
-        assertEquals(2, output.getChildrenNodes().size());
-        assertThat(output.getChildrenNodes(), hasItems(pnode2, pnode3));
+        List<EntityNode<?, ?>> childrenNodes = output.getChildrenNodes()
+            .collect(Collectors.toList());
+
+        assertEquals(2, childrenNodes.size());
+        assertThat(childrenNodes, hasItems(pnode2, pnode3));
 
         // Ensure that the children were created using the node factory and not an internal method
         verify(this.mockNodeFactory, times(2)).buildNode(eq(owner), eq(Product.class), anyString());
@@ -717,12 +653,15 @@ public class ProductNodeBuilderTest {
         assertEquals(builder.getEntityClass(), output.getEntityClass());
 
         // Check that our children content nodes were created
-        assertThat(output.getParentNodes(), empty());
+        List<EntityNode<?, ?>> childrenNodes = output.getChildrenNodes()
+            .collect(Collectors.toList());
+
+        assertEquals(0, output.getParentNodes().count());
 
         // With both an existing and imported entity, we expect the children on the imported entity
         // to take priority over those on the existing entity
-        assertEquals(4, output.getChildrenNodes().size());
-        assertThat(output.getChildrenNodes(), hasItems(pnode2, pnode3, cnode2, cnode3));
+        assertEquals(4, childrenNodes.size());
+        assertThat(childrenNodes, hasItems(pnode2, pnode3, cnode2, cnode3));
 
         // Ensure that the children were created using the node factory and not an internal method
         verify(this.mockNodeFactory, times(2)).buildNode(eq(owner), eq(Product.class), anyString());
@@ -737,12 +676,8 @@ public class ProductNodeBuilderTest {
         Product existing = TestUtil.createProduct(id, "existing");
         ProductInfo imported = TestUtil.createProduct(id, "imported");
 
-        Map<String, Set<Product>> candidateEntitiesMap = new HashMap<>();
-        this.addDummyCandidateEntitiesToMap(candidateEntitiesMap);
-
         this.productMapper.addExistingEntity(existing);
         this.productMapper.addImportedEntity(imported);
-        this.productMapper.setCandidateEntitiesMap(candidateEntitiesMap);
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
@@ -758,12 +693,8 @@ public class ProductNodeBuilderTest {
         Product existing = TestUtil.createProduct(id, "existing");
         ProductInfo imported = TestUtil.createProduct(id, "imported");
 
-        Map<String, Set<Product>> candidateEntitiesMap = new HashMap<>();
-        this.addDummyCandidateEntitiesToMap(candidateEntitiesMap);
-
         this.productMapper.addExistingEntity(existing);
         this.productMapper.addImportedEntity(imported);
-        this.productMapper.setCandidateEntitiesMap(candidateEntitiesMap);
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
@@ -779,12 +710,8 @@ public class ProductNodeBuilderTest {
         Product existing = TestUtil.createProduct(id, "existing");
         ProductInfo imported = TestUtil.createProduct(id, "imported");
 
-        Map<String, Set<Product>> candidateEntitiesMap = new HashMap<>();
-        this.addDummyCandidateEntitiesToMap(candidateEntitiesMap);
-
         this.productMapper.addExistingEntity(existing);
         this.productMapper.addImportedEntity(imported);
-        this.productMapper.setCandidateEntitiesMap(candidateEntitiesMap);
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 
@@ -800,12 +727,8 @@ public class ProductNodeBuilderTest {
         Product existing = TestUtil.createProduct(id, "existing");
         ProductInfo imported = TestUtil.createProduct(id, "imported");
 
-        Map<String, Set<Product>> candidateEntitiesMap = new HashMap<>();
-        this.addDummyCandidateEntitiesToMap(candidateEntitiesMap);
-
         this.productMapper.addExistingEntity(existing);
         this.productMapper.addImportedEntity(imported);
-        this.productMapper.setCandidateEntitiesMap(candidateEntitiesMap);
 
         ProductNodeBuilder builder = this.buildNodeBuilder();
 

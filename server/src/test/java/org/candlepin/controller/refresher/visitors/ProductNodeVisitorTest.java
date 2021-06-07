@@ -14,12 +14,12 @@
  */
 package org.candlepin.controller.refresher.visitors;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasEntry;
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.controller.ProductManager;
-import org.candlepin.controller.refresher.mappers.NodeMapper;
 import org.candlepin.controller.refresher.nodes.ContentNode;
 import org.candlepin.controller.refresher.nodes.EntityNode;
 import org.candlepin.controller.refresher.nodes.EntityNode.NodeState;
@@ -27,267 +27,117 @@ import org.candlepin.controller.refresher.nodes.ProductNode;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerProduct;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductCurator;
-import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.ContentInfo;
-import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
-import org.candlepin.test.TestUtil;
+import org.candlepin.test.DatabaseTestFixture;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 
 
 /**
  * Test suite for the ProductNodeVisitor class
- *
- * TODO: Rewrite these tests. They kinda suck, are hard to follow, and hard to update without
- * breaking other tests in the process.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class ProductNodeVisitorTest {
+public class ProductNodeVisitorTest extends DatabaseTestFixture {
 
-    private Map<String, Mutator<Product>> productMutators;
-    private Map<String, Mutator<ProductInfo>> pinfoMutators;
-    private Map<String, MergeValidator<ProductInfo>> validators;
-
-    private ProductCurator mockProductCurator;
-    private OwnerProductCurator mockOwnerProductCurator;
-    private NodeProcessor mockNodeProcessor;
-    private NodeMapper mockNodeMapper;
-
-    @BeforeEach
-    public void init() {
-        this.productMutators = new HashMap<>();
-        this.productMutators.put("name", (c, v) -> c.setName((String) v));
-        this.productMutators.put("multiplier", (c, v) -> c.setMultiplier((Long) v));
-        this.productMutators.put("dependent_product_ids", (c, v) -> c.setDependentProductIds((Collection) v));
-        this.productMutators.put("attributes", (c, v) -> c.setAttributes((Map) v));
-        this.productMutators.put("product_content", (c, v) -> c.setProductContent((Collection) v));
-        this.productMutators.put("branding", (c, v) -> c.setBranding((Collection) v));
-        this.productMutators.put("provided_products", (c, v) -> c.setProvidedProducts((Collection) v));
-
-        this.pinfoMutators = new HashMap<>();
-        this.pinfoMutators.put("name", (c, v) -> doReturn(v).when(c).getName());
-        this.pinfoMutators.put("multiplier", (c, v) -> doReturn(v).when(c).getMultiplier());
-        this.pinfoMutators.put("dependent_product_ids",
-            (c, v) -> doReturn(v).when(c).getDependentProductIds());
-        this.pinfoMutators.put("attributes", (c, v) -> doReturn(v).when(c).getAttributes());
-        this.pinfoMutators.put("product_content", (c, v) -> doReturn(v).when(c).getProductContent());
-        this.pinfoMutators.put("branding", (c, v) -> doReturn(v).when(c).getBranding());
-        this.pinfoMutators.put("provided_products", (c, v) -> doReturn(v).when(c).getProvidedProducts());
-
-        this.validators = new HashMap<>();
-        this.validators.put("name", c -> c.getName());
-        this.validators.put("multiplier", c -> c.getMultiplier());
-        this.validators.put("dependent_product_ids", (CollectionMergeValidator<ProductInfo, String>)
-            c -> c.getDependentProductIds());
-        this.validators.put("attributes", (MapMergeValidator<ProductInfo, String, String>)
-            c -> c.getAttributes());
-        this.validators.put("product_content", (CollectionMergeValidator<ProductInfo, ProductContentInfo>)
-            c -> (Collection<ProductContentInfo>) c.getProductContent());
-        this.validators.put("branding", (CollectionMergeValidator<ProductInfo, BrandingInfo>)
-            c -> (Collection<BrandingInfo>) c.getBranding());
-        this.validators.put("provided_products", (CollectionMergeValidator<ProductInfo, ProductInfo>)
-            c -> (Collection<ProductInfo>) c.getProvidedProducts());
-
-        this.mockProductCurator = mock(ProductCurator.class);
-        this.mockOwnerProductCurator = mock(OwnerProductCurator.class);
-        this.mockNodeProcessor = mock(NodeProcessor.class);
-        this.mockNodeMapper = mock(NodeMapper.class);
-
-        doAnswer(returnsFirstArg())
-            .when(this.mockProductCurator)
-            .saveOrUpdate(Mockito.any(Product.class));
-
-        doAnswer(returnsFirstArg())
-            .when(this.mockOwnerProductCurator)
-            .saveOrUpdate(Mockito.any(OwnerProduct.class));
+    public ProductNodeVisitor buildNodeVisitor() {
+        return new ProductNodeVisitor(this.productCurator, this.ownerProductCurator);
     }
 
-    private static Branding buildBranding(String id, String name) {
-        Branding branding = new Branding();
-        branding.setId(id);
-        branding.setName(name);
-
-        return branding;
+    @Test
+    public void testGetEntityClassReturnsProperClass() {
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        assertEquals(Product.class, visitor.getEntityClass());
     }
 
-    private void mockNodeMappings(Collection<EntityNode> nodes) {
-        if (nodes != null) {
-            for (EntityNode node : nodes) {
-                doReturn(node).when(this.mockNodeMapper)
-                    .getNode(eq(node.getEntityClass()), eq(node.getEntityId()));
-            }
-        }
+    @Test
+    public void testProcessNodeFlagsUnchangedNodesCorrectly() {
+        Owner owner = this.createOwner();
+        Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner);
+        ProductInfo importedEntity = (ProductInfo) existingEntity.clone();
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
+            .setExistingEntity(existingEntity)
+            .setImportedEntity(importedEntity);
+
+        assertNull(pnode.getNodeState());
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
     }
 
-    private static EntityNode buildContentNode(Owner owner, String id, Content existing, Content imported) {
-        EntityNode<Content, ContentInfo> node = new ContentNode(owner, id)
-            .setExistingEntity(existing)
-            .setImportedEntity(imported);
+    @Test
+    public void testProcessNodeFlagsUnchangedNodeAsUpdatedWithUpdatedChildren() {
+        Owner owner = this.createOwner();
+        Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner);
+        ProductInfo importedEntity = (ProductInfo) existingEntity.clone();
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
+            .setExistingEntity(existingEntity)
+            .setImportedEntity(importedEntity);
 
-        if (existing != null) {
-            if (imported != null) {
-                node.setNodeState(NodeState.UPDATED);
-                node.setMergedEntity(imported);
-            }
-            else {
-                node.setNodeState(NodeState.UNCHANGED);
-            }
-        }
-        else if (imported != null) {
-            node.setNodeState(NodeState.CREATED);
-            node.setMergedEntity(imported);
+        Product existingChild = this.createProduct("test_prod-2", "Test Product", owner);
+        EntityNode<Product, ProductInfo> child = new ProductNode(owner, existingChild.getId())
+            .setExistingEntity(existingChild)
+            .setNodeState(NodeState.UPDATED);
+
+        pnode.addChildNode(child);
+
+        assertNull(pnode.getNodeState());
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
+    }
+
+    public static Stream<Arguments> simpleProductDataProvider() {
+
+        List<String> depProductIds = Arrays.asList("a", "b", "c");
+
+        Map<String, String> attributes = Map.of(
+            "attrib-1", "value-1",
+            "attrib-2", "value-2",
+            "attrib-3", "value-3");
+
+        List<Branding> branding = new ArrayList<>();
+        for (int i = 1; i <= 3; ++i) {
+            Branding elem = new Branding();
+            elem.setId("branding-" + i);
+            elem.setName("Branding " + i);
+
+            branding.add(elem);
         }
 
-        return node;
+        return Stream.of(
+            Arguments.of("name", "updated_name"),
+            Arguments.of("multiplier", 12345L),
+            Arguments.of("dependent_product_ids", depProductIds),
+            Arguments.of("attributes", attributes),
+            Arguments.of("branding", branding));
     }
 
-    private static ProductContent buildProductContent(String contentId, boolean enabled) {
-        Content content = new Content(contentId);
-        return new ProductContent(null, content, enabled);
-    }
-
-    private static EntityNode buildProductNode(Owner owner, String id, Product existing, Product imported) {
-        EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
-            .setExistingEntity(existing)
-            .setImportedEntity(imported);
-
-        if (existing != null) {
-            if (imported != null && ProductManager.isChangedBy(existing, imported)) {
-                node.setNodeState(NodeState.UPDATED);
-                node.setMergedEntity(imported);
-            }
-            else {
-                node.setNodeState(NodeState.UNCHANGED);
-            }
-        }
-        else if (imported != null) {
-            node.setNodeState(NodeState.CREATED);
-            node.setMergedEntity(imported);
-        }
-
-        return node;
-    }
-
-    private static Product buildProvidedProduct(String productId, String productName) {
-        return new Product()
-            .setId(productId)
-            .setName(productName);
-    }
-
-    public static List<Arguments> productDataProvider() {
-        Owner owner = TestUtil.createOwner();
-
-        Map<String, String> baseAttribs = new HashMap<>();
-        baseAttribs.put("A", "1");
-        baseAttribs.put("B", "2");
-        baseAttribs.put("C", "3");
-
-        Map<String, String> updatedAttribs = new HashMap<>();
-        baseAttribs.put("C", "3");
-        baseAttribs.put("D", "4");
-        baseAttribs.put("E", "5");
-
-        List<Branding> baseBranding = Arrays.asList(
-            buildBranding("bid-1", "branding-1"),
-            buildBranding("bid-2", "branding-2"),
-            buildBranding("bid-3", "branding-3"));
-
-        List<Branding> updatedBranding = Arrays.asList(
-            buildBranding("bid-3", "branding-3"),
-            buildBranding("bid-4", "branding-4"),
-            buildBranding("bid-5", "branding-5"));
-
-        List<ProductContent> baseProductContent = Arrays.asList(
-            buildProductContent("cid-1", true),
-            buildProductContent("cid-2", false),
-            buildProductContent("cid-3", true));
-
-        List<ProductContent> updatedProductContent = Arrays.asList(
-            buildProductContent("cid-3", false),
-            buildProductContent("cid-4", true),
-            buildProductContent("cid-5", false));
-
-        List<Product> baseProvidedProducts = Arrays.asList(
-            buildProvidedProduct("pid-1", "provided-1"),
-            buildProvidedProduct("pid-2", "provided-2"),
-            buildProvidedProduct("pid-3", "provided-3"));
-
-        List<Product> updatedProvidedProducts = Arrays.asList(
-            buildProvidedProduct("pid-3", "provided-3"),
-            buildProvidedProduct("pid-4", "provided-4"),
-            buildProvidedProduct("pid-5", "provided-5"));
-
-        EntityNode cnode1 = buildContentNode(owner, "cid-1", baseProductContent.get(0).getContent(), null);
-        EntityNode cnode2 = buildContentNode(owner, "cid-2", baseProductContent.get(1).getContent(), null);
-        EntityNode cnode3 = buildContentNode(owner, "cid-3", baseProductContent.get(2).getContent(), null);
-        EntityNode cnode4 = buildContentNode(owner, "cid-3", baseProductContent.get(2).getContent(),
-            updatedProductContent.get(0).getContent());
-        EntityNode cnode5 = buildContentNode(owner, "cid-4", null, updatedProductContent.get(1).getContent());
-        EntityNode cnode6 = buildContentNode(owner, "cid-5", null, updatedProductContent.get(2).getContent());
-
-        EntityNode pnode1 = buildProductNode(owner, "pid-1", baseProvidedProducts.get(0), null);
-        EntityNode pnode2 = buildProductNode(owner, "pid-2", baseProvidedProducts.get(1), null);
-        EntityNode pnode3 = buildProductNode(owner, "pid-3", baseProvidedProducts.get(2), null);
-        EntityNode pnode4 = buildProductNode(owner, "pid-3", baseProvidedProducts.get(2),
-            updatedProvidedProducts.get(0));
-        EntityNode pnode5 = buildProductNode(owner, "pid-4", null, updatedProvidedProducts.get(1));
-        EntityNode pnode6 = buildProductNode(owner, "pid-5", null, updatedProvidedProducts.get(2));
-
-        return Arrays.asList(
-            Arguments.of("name", "base_name", null, "updated_name", null),
-            Arguments.of("multiplier", 12345L, null, 67890L, null),
-            Arguments.of("dependent_product_ids", Arrays.asList("1", "2", "3"), null,
-                Arrays.asList("A", "B", "C"), null),
-            Arguments.of("attributes", baseAttribs, null, updatedAttribs, null),
-            Arguments.of("product_content", baseProductContent, Arrays.asList(cnode1, cnode2, cnode3),
-                updatedProductContent, Arrays.asList(cnode4, cnode5, cnode6)),
-            Arguments.of("branding", baseBranding, null, updatedBranding, null),
-            Arguments.of("provided_products", baseProvidedProducts, Arrays.asList(pnode1, pnode2, pnode3),
-                updatedProvidedProducts, Arrays.asList(pnode4, pnode5, pnode6)));
-    }
-
-    private ProductNodeVisitor buildProductNodeVisitor() {
-        return new ProductNodeVisitor(this.mockProductCurator, this.mockOwnerProductCurator);
-    }
-
-    private Product createPopulatedExistingEntity(String id, String key, Object value) {
-        Product entity = new Product();
-        entity.setId(id);
-
-        Mutator mutator = this.productMutators.get(key);
-        if (mutator == null) {
-            throw new IllegalStateException("No mutator for key: " + key);
-        }
-
-        mutator.mutate(entity, value);
-
-        return entity;
-    }
-
-    private ProductInfo createPopulatedImportedEntity(String id, String key, Object value) {
+    private ProductInfo buildProductInfoMock(String id, String field, Object value) {
         ProductInfo entity = mock(ProductInfo.class);
         doReturn(id).when(entity).getId();
 
@@ -297,257 +147,573 @@ public class ProductNodeVisitorTest {
         // expect.
         doReturn(null).when(entity).getMultiplier();
 
-        Mutator mutator = this.pinfoMutators.get(key);
-        if (mutator == null) {
-            throw new IllegalStateException("No mutator for key: " + key);
+        Map<String, Mutator<ProductInfo>> mutators = Map.of(
+            "name", (p, v) -> doReturn(v).when(p).getName(),
+            "multiplier", (p, v) -> doReturn(v).when(p).getMultiplier(),
+            "dependent_product_ids", (p, v) -> doReturn(v).when(p).getDependentProductIds(),
+            "attributes", (p, v) -> doReturn(v).when(p).getAttributes(),
+            "branding", (p, v) -> doReturn(v).when(p).getBranding());
+
+        if (!mutators.containsKey(field)) {
+            throw new IllegalStateException("no mutator for key: " + field);
         }
 
-        mutator.mutate(entity, value);
+        mutators.get(field)
+            .mutate(entity, value);
 
         return entity;
     }
 
-    private void validateMergedEntity(Product existing, ProductInfo imported, Product merged) {
-        // Assert that we actually have a merged entity
-        assertNotNull(merged);
+    private void updateProductField(Product entity, String field, Object value) {
+        Map<String, Mutator<Product>> mutators = Map.of(
+            "name", (p, v) -> p.setName((String) v),
+            "multiplier", (p, v) -> p.setMultiplier((Long) v),
+            "dependent_product_ids", (p, v) -> p.setDependentProductIds((Collection) v),
+            "attributes", (p, v) -> p.setAttributes((Map) v),
+            "branding", (p, v) -> p.setBranding((Collection) v));
 
-        // Ensure the ID is set properly
-        assertNotNull(merged.getId());
-
-        if (existing != null) {
-            assertNotNull(existing.getId());
-            assertEquals(existing.getId(), merged.getId());
+        if (!mutators.containsKey(field)) {
+            throw new IllegalStateException("no mutator for key: " + field);
         }
 
-        if (imported != null) {
-            assertNotNull(imported.getId());
-            assertEquals(imported.getId(), merged.getId());
+        mutators.get(field)
+            .mutate(entity, value);
+    }
+
+    private void validateMergedField(Product mergedEntity, String field, Object expected) {
+        Map<String, Accessor<ProductInfo>> accessors = Map.of(
+            "name", ProductInfo::getName,
+            "multiplier", ProductInfo::getMultiplier,
+            "dependent_product_ids", ProductInfo::getDependentProductIds,
+            "attributes", ProductInfo::getAttributes,
+            "branding", ProductInfo::getBranding);
+
+        if (!accessors.containsKey(field)) {
+            throw new IllegalStateException("no accessor for key: " + field);
         }
 
-        // Check that the product is locked properly
-        if (existing != null) {
-            assertEquals(existing.isLocked(), merged.isLocked());
+        Object actual = accessors.get(field)
+            .access(mergedEntity);
+
+        if (actual instanceof Collection) {
+            Collection<Object> expCollection = (Collection<Object>) expected;
+            Collection<Object> actCollection = (Collection<Object>) actual;
+
+            assertNotNull(expCollection);
+            assertEquals(expCollection.size(), actCollection.size());
+
+            for (Object item : expCollection) {
+                assertThat(actCollection, hasItem(item));
+            }
+        }
+        else if (actual instanceof Map) {
+            Map<Object, Object> expMap = (Map<Object, Object>) expected;
+            Map<Object, Object> actMap = (Map<Object, Object>) actual;
+
+            assertNotNull(expMap);
+            assertEquals(expMap.size(), actMap.size());
+
+            for (Map.Entry<Object, Object> entry : expMap.entrySet()) {
+                assertThat(actMap, hasEntry(entry.getKey(), entry.getValue()));
+            }
         }
         else {
-            assertNotNull(imported);
-            assertTrue(merged.isLocked());
+            assertEquals(expected, actual);
         }
+    }
 
-        // Check other attributes
-        for (MergeValidator validator : this.validators.values()) {
-            validator.validate(existing, imported, merged);
-        }
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("simpleProductDataProvider")
+    public void testProcessNodeFlagsUpdatedNodeCorrectly(String field, Object value) {
+        String id = "test_product-1";
+
+        Owner owner = this.createOwner();
+        Product existingEntity = new Product()
+            .setId(id);
+
+        ProductInfo importedEntity = this.buildProductInfoMock(id, field, value);
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
+            .setExistingEntity(existingEntity)
+            .setImportedEntity(importedEntity);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
+        assertNotNull(pnode.getMergedEntity());
+        this.validateMergedField(pnode.getMergedEntity(), field, value);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("simpleProductDataProvider")
+    public void testProcessNodeDoesNotFlagUnchangedNodeForUpdate(String field, Object value) {
+        String id = "test_product-1";
+
+        Owner owner = this.createOwner();
+        Product existingEntity = new Product()
+            .setId(id);
+
+        this.updateProductField(existingEntity, field, value);
+
+        ProductInfo importedEntity = this.buildProductInfoMock(id, field, value);
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
+            .setExistingEntity(existingEntity)
+            .setImportedEntity(importedEntity);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
     }
 
     @Test
-    public void testGetEntityClass() {
-        ProductNodeVisitor visitor = this.buildProductNodeVisitor();
+    public void testProcessNodeResolvesContentProperly() {
+        String id = "test_product-1";
+        Owner owner = this.createOwner();
+        Product existingEntity = this.createProduct(id, "test product", owner);
 
-        assertEquals(Product.class, visitor.getEntityClass());
+        Content content = new Content()
+            .setId("test_content-1")
+            .setName("test content");
+
+        Product importedEntity = new Product()
+            .setId(id);
+        importedEntity.addContent(content, true);
+
+        EntityNode<Content, ContentInfo> cnode = new ContentNode(owner, content.getId())
+            .setImportedEntity(content)
+            .setMergedEntity(content)
+            .setNodeState(NodeState.CREATED);
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
+            .setExistingEntity(existingEntity)
+            .setImportedEntity(importedEntity);
+
+        pnode.addChildNode(cnode);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
+
+        assertNotNull(pnode.getMergedEntity());
+        assertFalse(existingEntity.hasContent(content.getId()));
+        assertTrue(pnode.getMergedEntity().hasContent(content.getId()));
     }
 
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @MethodSource("productDataProvider")
-    public void testProcessNodeForAbsentUpstreamEntity(String key, Object base,
-        Collection<EntityNode> baseChildren, Object update, Collection<EntityNode> updatedChildren) {
+    @Test
+    public void testProcessNodeResolvesDerivedProductProperly() {
+        String id = "test_product-1";
+        Owner owner = this.createOwner();
+        Product existingEntity = this.createProduct(id, "test product", owner);
 
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
+        Product derived = new Product()
+            .setId("derived_product-1")
+            .setName("derived product");
 
-        Product existing = this.createPopulatedExistingEntity(id, key, base);
+        ProductInfo importedEntity = new Product()
+            .setId(id)
+            .setDerivedProduct(derived);
 
-        EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
+        EntityNode<Product, ProductInfo> cnode = new ProductNode(owner, derived.getId())
+            .setImportedEntity(derived)
+            .setMergedEntity(derived)
+            .setNodeState(NodeState.CREATED);
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
+            .setExistingEntity(existingEntity)
+            .setImportedEntity(importedEntity);
+
+        pnode.addChildNode(cnode);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
+
+        assertNull(existingEntity.getDerivedProduct());
+        assertNotNull(pnode.getMergedEntity());
+        assertNotNull(pnode.getMergedEntity().getDerivedProduct());
+        assertEquals(derived.getId(), pnode.getMergedEntity().getDerivedProduct().getId());
+    }
+
+    @Test
+    public void testProcessNodeResolvesProvidedProductProperly() {
+        String id = "test_product-1";
+        Owner owner = this.createOwner();
+        Product existingEntity = this.createProduct(id, "test product", owner);
+
+        Product provided = new Product()
+            .setId("provided_product-1")
+            .setName("provided product");
+
+        Product importedEntity = new Product()
+            .setId(id);
+        importedEntity.addProvidedProduct(provided);
+
+        EntityNode<Product, ProductInfo> cnode = new ProductNode(owner, provided.getId())
+            .setImportedEntity(provided)
+            .setMergedEntity(provided)
+            .setNodeState(NodeState.CREATED);
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
+            .setExistingEntity(existingEntity)
+            .setImportedEntity(importedEntity);
+
+        pnode.addChildNode(cnode);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
+
+        assertNotNull(pnode.getMergedEntity());
+        Collection<Product> providedProducts = pnode.getMergedEntity().getProvidedProducts();
+
+        assertNotNull(providedProducts);
+        assertEquals(1, providedProducts.size());
+        assertEquals(provided.getId(), providedProducts.iterator().next().getId());
+    }
+
+    @Test
+    public void testProcessNodeFlagsCreatedNodeCorrectly() {
+        Owner owner = this.createOwner();
+        ProductInfo importedEntity = this.createProduct("test_prod-1", "Test Product", owner);
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, importedEntity.getId())
+            .setImportedEntity(importedEntity);
+
+        assertNull(pnode.getNodeState());
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.CREATED, pnode.getNodeState());
+        assertNotNull(pnode.getMergedEntity());
+        assertEquals(importedEntity.getName(), pnode.getMergedEntity().getName());
+    }
+
+    @Test
+    public void testPruneNodeMarksUnusedRootForDeletion() {
+        Owner owner = this.createOwner();
+        Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner)
+            .setLocked(true);
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
+            .setExistingEntity(existingEntity);
+
+        assertNull(pnode.getNodeState());
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.pruneNode(pnode);
+
+        assertEquals(NodeState.DELETED, pnode.getNodeState());
+    }
+
+    @Test
+    public void testPruneNodeOmitsActiveRoot() {
+        Owner owner = this.createOwner();
+        Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner)
+            .setLocked(true);
+        ProductInfo importedEntity = (ProductInfo) existingEntity.clone();
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
+            .setExistingEntity(existingEntity)
+            .setImportedEntity(importedEntity);
+
+        assertNull(pnode.getNodeState());
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.pruneNode(pnode);
+
+        assertNull(pnode.getNodeState());
+    }
+
+    @Test
+    public void testPruneNodeNeverDeletesCustomProducts() {
+        Owner owner = this.createOwner();
+        Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner)
+            .setLocked(false);
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
+            .setExistingEntity(existingEntity);
+
+        assertNull(pnode.getNodeState());
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.pruneNode(pnode);
+
+        assertNull(pnode.getNodeState());
+    }
+
+    @Test
+    public void testPruneNodeMarksLeafWithDeletedParentsForDeletion() {
+        Owner owner = this.createOwner();
+        Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner)
+            .setLocked(true);
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
+            .setExistingEntity(existingEntity);
+
+        Product existingParent = this.createProduct("test_prod-2", "Test Product", owner);
+        EntityNode<Product, ProductInfo> parentNode = new ProductNode(owner, existingParent.getId())
+            .setExistingEntity(existingParent)
+            .setNodeState(NodeState.DELETED);
+
+        pnode.addParentNode(parentNode);
+
+        assertNull(pnode.getNodeState());
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.pruneNode(pnode);
+
+        assertEquals(NodeState.DELETED, pnode.getNodeState());
+    }
+
+    @Test
+    public void testPruneNodeOmitsLeafWithUndeletedParents() {
+        Owner owner = this.createOwner();
+        Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner)
+            .setLocked(true);
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
+            .setExistingEntity(existingEntity);
+
+        Product existingParent = this.createProduct("test_prod-2", "Test Product", owner);
+        EntityNode<Product, ProductInfo> parentNode = new ProductNode(owner, existingParent.getId())
+            .setExistingEntity(existingParent)
+            .setNodeState(NodeState.UPDATED);
+
+        pnode.addParentNode(parentNode);
+
+        assertNull(pnode.getNodeState());
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.pruneNode(pnode);
+
+        assertNull(pnode.getNodeState());
+    }
+
+    @Test
+    public void testPruneNodeOmitsLeafWithMixedParents() {
+        Owner owner = this.createOwner();
+        Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner)
+            .setLocked(true);
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
+            .setExistingEntity(existingEntity);
+
+        Product existingParent1 = this.createProduct("test_prod-2", "Test Product", owner);
+        EntityNode<Product, ProductInfo> parentNode1 = new ProductNode(owner, existingParent1.getId())
+            .setExistingEntity(existingParent1)
+            .setNodeState(NodeState.UPDATED);
+
+        Product existingParent2 = this.createProduct("test_prod-3", "Test Product", owner);
+        EntityNode<Product, ProductInfo> parentNode2 = new ProductNode(owner, existingParent2.getId())
+            .setExistingEntity(existingParent2)
+            .setNodeState(NodeState.DELETED);
+
+        pnode.addParentNode(parentNode1);
+        pnode.addParentNode(parentNode2);
+
+        assertNull(pnode.getNodeState());
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.pruneNode(pnode);
+
+        assertNull(pnode.getNodeState());
+    }
+
+    @Test
+    public void testApplyChangesPerformsVersionResolution() {
+        String id = "test_product-1";
+        String name = "test product 1";
+
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product existing1 = this.createProduct(id, "old name", owner1);
+        Product existing2 = this.createProduct(id, name, owner2);
+
+        Product importedEntity = new Product()
+            .setId(id)
+            .setName(name);
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner1, existing1.getId())
+            .setExistingEntity(existing1)
+            .setImportedEntity(importedEntity);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
+
+        visitor.applyChanges(pnode);
+
+        Product mergedEntity = pnode.getMergedEntity();
+        assertNotNull(mergedEntity);
+        assertEquals(existing2.getUuid(), mergedEntity.getUuid());
+    }
+
+    @Test
+    public void testApplyChangesPerformsChildResolution() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product existingProduct1 = this.createProduct("derived_product", "old name", owner1);
+        Product existingProduct2 = this.createProduct("derived_product", "derived product", owner2);
+        Product importedProduct = new Product()
+            .setId(existingProduct2.getId())
+            .setName(existingProduct2.getName());
+
+        Product product = new Product()
+            .setId("test_product")
+            .setName("test product")
+            .setDerivedProduct(existingProduct1);
+        product = this.createProduct(product, owner1);
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner1, product.getId())
+            .setExistingEntity(product)
+            .setImportedEntity(product);
+
+        EntityNode<Product, ProductInfo> cnode = new ProductNode(owner1, existingProduct1.getId())
+            .setExistingEntity(existingProduct1)
+            .setImportedEntity(importedProduct);
+
+        pnode.addChildNode(cnode);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(cnode);
+        visitor.processNode(pnode);
+        assertEquals(NodeState.UPDATED, cnode.getNodeState());
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
+
+        visitor.applyChanges(cnode);
+        visitor.applyChanges(pnode);
+
+        Product mergedEntity = pnode.getMergedEntity();
+        assertNotNull(mergedEntity);
+        assertNotNull(mergedEntity.getDerivedProduct());
+        assertEquals(existingProduct2.getUuid(), mergedEntity.getDerivedProduct().getUuid());
+    }
+
+    @Test
+    public void testCompleteDoesNotActTwice() {
+        Owner owner = this.createOwner();
+
+        Product product = new Product()
+            .setId("test_product")
+            .setName("test product");
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, product.getId())
+            .setImportedEntity(product);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+        visitor.applyChanges(pnode);
+        visitor.complete();
+
+        assertEquals(NodeState.CREATED, pnode.getNodeState());
+        assertNotNull(pnode.getMergedEntity());
+        assertNotNull(pnode.getMergedEntity().getUuid());
+
+        // If this executes twice, a cached creation op would try to run twice, which would fail
+        // with a persistence exception of some kind
+        visitor.complete();
+    }
+
+    @Test
+    public void testFullCyclePersistsNewEntity() {
+        Owner owner = this.createOwner();
+
+        Product product = new Product()
+            .setId("test_product")
+            .setName("test product");
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, product.getId())
+            .setImportedEntity(product);
+
+        assertNull(this.ownerProductCurator.getProductById(owner, product.getId()));
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+        visitor.pruneNode(pnode);
+        visitor.applyChanges(pnode);
+        visitor.complete();
+
+        assertEquals(NodeState.CREATED, pnode.getNodeState());
+
+        Product merged = pnode.getMergedEntity();
+        assertNotNull(merged);
+        assertNotNull(merged.getUuid());
+
+        this.productCurator.flush();
+        this.productCurator.clear();
+
+        Product created = this.ownerProductCurator.getProductById(owner, product.getId());
+        assertNotNull(created);
+        assertEquals(merged.getUuid(), created.getUuid());
+    }
+
+    @Test
+    public void testFullCyclePersistsUpdatedEntity() {
+        Owner owner = this.createOwner();
+
+        Product existing = this.createProduct("test_product", "product name", owner);
+        existing.setLocked(true);
+
+        Product product = new Product()
+            .setId(existing.getId())
+            .setName("updated product");
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, product.getId())
+            .setExistingEntity(existing)
+            .setImportedEntity(product);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+        visitor.pruneNode(pnode);
+        visitor.applyChanges(pnode);
+        visitor.complete();
+
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
+
+        Product merged = pnode.getMergedEntity();
+        assertNotNull(merged);
+        assertNotNull(merged.getUuid());
+        assertNotEquals(existing.getUuid(), merged.getUuid());
+        assertNotEquals(existing.getName(), merged.getName());
+
+        this.productCurator.flush();
+        this.productCurator.clear();
+
+        Product updated = this.ownerProductCurator.getProductById(owner, product.getId());
+        assertNotNull(updated);
+        assertEquals(merged.getUuid(), updated.getUuid());
+        assertEquals(product.getName(), updated.getName());
+    }
+
+    @Test
+    public void testFullCycleDeletesUnusedEntity() {
+        Owner owner = this.createOwner();
+
+        Product existing = this.createProduct("test_product", "product name", owner);
+        existing.setLocked(true);
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existing.getId())
             .setExistingEntity(existing);
 
-        if (baseChildren != null) {
-            this.mockNodeMappings(baseChildren);
-
-            for (EntityNode child : baseChildren) {
-                node.addChildNode(child);
-                child.addParentNode(node);
-            }
-        }
-
-        ProductNodeVisitor visitor = this.buildProductNodeVisitor();
-
-        // Ensure initial node state
-        assertNull(node.getNodeState());
-        assertNull(node.getMergedEntity());
-
-        // Visit/process the node
-        visitor.processNode(this.mockNodeProcessor, this.mockNodeMapper, node);
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+        visitor.pruneNode(pnode);
+        visitor.applyChanges(pnode);
         visitor.complete();
 
-        // Validate node state
-        assertEquals(NodeState.UNCHANGED, node.getNodeState());
-        assertFalse(node.changed());
-        assertNull(node.getMergedEntity());
+        assertEquals(NodeState.DELETED, pnode.getNodeState());
+        assertNull(pnode.getMergedEntity());
 
-        verify(this.mockProductCurator, never()).saveOrUpdate(any(Product.class));
+        this.productCurator.flush();
+        this.productCurator.clear();
+
+        Product deleted = this.ownerProductCurator.getProductById(owner, existing.getId());
+        assertNull(deleted);
     }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @MethodSource("productDataProvider")
-    public void testProcessNodeForUnmodifiedEntity(String key, Object base,
-        Collection<EntityNode> baseChildren, Object update, Collection<EntityNode> updatedChildren) {
-
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
-
-        Product existing = this.createPopulatedExistingEntity(id, key, base);
-        ProductInfo imported = this.createPopulatedImportedEntity(id, key, null);
-
-        EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
-            .setExistingEntity(existing)
-            .setImportedEntity(imported);
-
-        if (baseChildren != null) {
-            this.mockNodeMappings(baseChildren);
-
-            for (EntityNode child : baseChildren) {
-                node.addChildNode(child);
-                child.addParentNode(node);
-            }
-        }
-
-        ProductNodeVisitor visitor = this.buildProductNodeVisitor();
-
-        // Ensure initial node state
-        assertNull(node.getNodeState());
-        assertNull(node.getMergedEntity());
-
-        // Visit/process the node
-        visitor.processNode(this.mockNodeProcessor, this.mockNodeMapper, node);
-        visitor.complete();
-
-        // Validate node state
-        assertEquals(NodeState.UNCHANGED, node.getNodeState());
-        assertNull(node.getMergedEntity());
-
-        verify(this.mockProductCurator, never()).saveOrUpdate(any(Product.class));
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @MethodSource("productDataProvider")
-    public void testProcessNodeForUnchangedEntity(String key, Object base,
-        Collection<EntityNode> baseChildren, Object update, Collection<EntityNode> updatedChildren) {
-
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
-
-        Product existing = this.createPopulatedExistingEntity(id, key, base);
-        ProductInfo imported = this.createPopulatedImportedEntity(id, key, base);
-
-        EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
-            .setExistingEntity(existing)
-            .setImportedEntity(imported);
-
-        if (baseChildren != null) {
-            this.mockNodeMappings(baseChildren);
-
-            for (EntityNode child : baseChildren) {
-                node.addChildNode(child);
-                child.addParentNode(node);
-            }
-        }
-
-        ProductNodeVisitor visitor = this.buildProductNodeVisitor();
-
-        // Ensure initial node state
-        assertNull(node.getNodeState());
-        assertNull(node.getMergedEntity());
-
-        // Visit/process the node
-        visitor.processNode(this.mockNodeProcessor, this.mockNodeMapper, node);
-        visitor.complete();
-
-        // Validate node state
-        assertEquals(NodeState.UNCHANGED, node.getNodeState());
-        assertNull(node.getMergedEntity());
-
-        verify(this.mockProductCurator, never()).saveOrUpdate(any(Product.class));
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @MethodSource("productDataProvider")
-    public void testProcessNodeForNewEntity(String key, Object base, Collection<EntityNode> baseChildren,
-        Object update, Collection<EntityNode> updatedChildren) {
-
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
-
-        ProductInfo imported = this.createPopulatedImportedEntity(id, key, update);
-
-        EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
-            .setImportedEntity(imported);
-
-        if (updatedChildren != null) {
-            this.mockNodeMappings(updatedChildren);
-
-            for (EntityNode child : updatedChildren) {
-                node.addChildNode(child);
-                child.addParentNode(node);
-            }
-        }
-
-        ProductNodeVisitor visitor = this.buildProductNodeVisitor();
-
-        // Ensure initial node state
-        assertNull(node.getNodeState());
-        assertNull(node.getMergedEntity());
-
-        // Visit/process the node
-        visitor.processNode(this.mockNodeProcessor, this.mockNodeMapper, node);
-        visitor.complete();
-
-        // Validate node state
-        assertEquals(NodeState.CREATED, node.getNodeState());
-        assertNotNull(node.getMergedEntity());
-        this.validateMergedEntity(null, imported, node.getMergedEntity());
-
-        verify(this.mockProductCurator, times(1)).saveOrUpdate(any(Product.class));
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @MethodSource("productDataProvider")
-    public void testProcessNodeForUpdatedEntity(String key, Object base, Collection<EntityNode> baseChildren,
-        Object update, Collection<EntityNode> updatedChildren) {
-
-        Owner owner = TestUtil.createOwner();
-        String id = TestUtil.randomString("test_id");
-
-        Product existing = this.createPopulatedExistingEntity(id, key, base);
-        ProductInfo imported = this.createPopulatedImportedEntity(id, key, update);
-
-        EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
-            .setExistingEntity(existing)
-            .setImportedEntity(imported);
-
-        if (updatedChildren != null) {
-            this.mockNodeMappings(updatedChildren);
-
-            for (EntityNode child : updatedChildren) {
-                node.addChildNode(child);
-                child.addParentNode(node);
-            }
-        }
-
-        ProductNodeVisitor visitor = this.buildProductNodeVisitor();
-
-        // Ensure initial node state
-        assertNull(node.getNodeState());
-        assertNull(node.getMergedEntity());
-
-        // Visit/process the node
-        visitor.processNode(this.mockNodeProcessor, this.mockNodeMapper, node);
-        visitor.complete();
-
-        // Validate node state
-        assertEquals(NodeState.UPDATED, node.getNodeState());
-        assertNotNull(node.getMergedEntity());
-        this.validateMergedEntity(existing, imported, node.getMergedEntity());
-
-        verify(this.mockProductCurator, times(1)).saveOrUpdate(any(Product.class));
-    }
-
 }

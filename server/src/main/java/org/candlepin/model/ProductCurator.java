@@ -60,9 +60,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * default ctor
      */
     @Inject
-    public ProductCurator(Configuration config,
-        AttributeValidator attributeValidator) {
-
+    public ProductCurator(Configuration config, AttributeValidator attributeValidator) {
         super(Product.class);
 
         this.config = config;

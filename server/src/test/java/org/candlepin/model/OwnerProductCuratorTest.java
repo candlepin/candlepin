@@ -14,13 +14,9 @@
  */
 package org.candlepin.model;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.test.DatabaseTestFixture;
@@ -33,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -585,10 +582,10 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Product product3 = this.createProduct("p1", "p1", owner3);
         Product product4 = this.createProduct("p2", "p2", owner2);
 
-        Map<String, List<Product>> productMap1 = this.ownerProductCurator.getProductsByVersions(owner1,
-            Collections.singletonMap(product1.getId(), product1.getEntityVersion()));
-        Map<String, List<Product>> productMap2 = this.ownerProductCurator.getProductsByVersions(owner2,
-            Collections.singletonMap(product2.getId(), product2.getEntityVersion()));
+        Map<String, List<Product>> productMap1 = this.ownerProductCurator
+            .getProductsByVersions(owner1, Collections.singleton(product1.getEntityVersion()));
+        Map<String, List<Product>> productMap2 = this.ownerProductCurator
+            .getProductsByVersions(owner2, Collections.singleton(product2.getEntityVersion()));
 
         // productMap1 should contain only product2 and product3
         // productMap2 should contain only product1 and product3
@@ -610,8 +607,11 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
             .map(Product::getUuid)
             .collect(Collectors.toList());
 
-        assertEquals(Arrays.asList(product2.getUuid(), product3.getUuid()), uuidList1);
-        assertEquals(Arrays.asList(product1.getUuid(), product3.getUuid()), uuidList2);
+        assertEquals(2, uuidList1.size());
+        assertThat(uuidList1, hasItems(product2.getUuid(), product3.getUuid()));
+
+        assertEquals(2, uuidList2.size());
+        assertThat(uuidList2, hasItems(product1.getUuid(), product3.getUuid()));
     }
 
     @Test
@@ -625,10 +625,10 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Product product3 = this.createProduct("p1", "p1", owner3);
         Product product4 = this.createProduct("p2", "p2", owner2);
 
-        Map<String, List<Product>> productMap1 = this.ownerProductCurator.getProductsByVersions(null,
-            Collections.singletonMap(product1.getId(), product1.getEntityVersion()));
-        Map<String, List<Product>> productMap2 = this.ownerProductCurator.getProductsByVersions(null,
-            Collections.singletonMap(product2.getId(), product2.getEntityVersion()));
+        Map<String, List<Product>> productMap1 = this.ownerProductCurator
+            .getProductsByVersions(null, Collections.singleton(product1.getEntityVersion()));
+        Map<String, List<Product>> productMap2 = this.ownerProductCurator
+            .getProductsByVersions(null, Collections.singleton(product2.getEntityVersion()));
 
         // Both maps should contain both products 1, 2 and 3
 
@@ -649,9 +649,11 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
             .map(Product::getUuid)
             .collect(Collectors.toList());
 
-        // We're counting on .equals not caring about order here
-        assertEquals(Arrays.asList(product1.getUuid(), product2.getUuid(), product3.getUuid()), uuidList1);
-        assertEquals(Arrays.asList(product1.getUuid(), product2.getUuid(), product3.getUuid()), uuidList2);
+        assertEquals(3, uuidList1.size());
+        assertThat(uuidList1, hasItems(product1.getUuid(), product2.getUuid(), product3.getUuid()));
+
+        assertEquals(3, uuidList2.size());
+        assertThat(uuidList2, hasItems(product1.getUuid(), product2.getUuid(), product3.getUuid()));
     }
 
     @Test
@@ -660,20 +662,19 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
         Owner owner3 = this.createOwner();
 
-        Product p1 = this.createProduct("p1", "p1", owner1);
-        Product p2 = this.createProduct("p1", "p1", owner2);
-        Product p3 = this.createProduct("p1", "p1", owner3);
-        Product p4 = this.createProduct("p2", "p2", owner1);
-        Product p5 = this.createProduct("p2", "p2", owner2);
-        Product p6 = this.createProduct("p2", "p2", owner3);
-        Product p7 = this.createProduct("p3", "p3", owner1);
-        Product p8 = this.createProduct("p3", "p3", owner2);
-        Product p9 = this.createProduct("p3", "p3", owner3);
+        Product p1a = this.createProduct("p1", "p1", owner1);
+        Product p2a = this.createProduct("p2", "p2", owner1);
+        Product p3a = this.createProduct("p3", "p3", owner1);
 
-        Map<String, Integer> versions = new HashMap<>();
-        versions.put(p1.getId(), p1.getEntityVersion());
-        versions.put(p4.getId(), p4.getEntityVersion());
-        versions.put("bad_id", p7.getEntityVersion());
+        Product p1b = this.createProduct("p1", "p1", owner2);
+        Product p2b = this.createProduct("p2", "p2", owner2);
+        Product p3b = this.createProduct("p3", "p3", owner2);
+
+        Product p1c = this.createProduct("p1", "p1", owner3);
+        Product p2c = this.createProduct("p2", "p2", owner3);
+        Product p3c = this.createProduct("p3", "p3", owner3);
+
+        List<Integer> versions = Arrays.asList(p1a.getEntityVersion(), p2a.getEntityVersion());
 
         Map<String, List<Product>> productMap1 = this.ownerProductCurator
             .getProductsByVersions(owner1, versions);
@@ -682,9 +683,9 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Map<String, List<Product>> productMap3 = this.ownerProductCurator
             .getProductsByVersions(null, versions);
 
-        // Map 1 should contain products with ids "p1" or "p2" not owned by owner 1: (p2, p3, p5, p6)
-        // Map 2 should contain products with ids "p1" or "p2" not owned by owner 2: (p1, p3, p4, p6)
-        // Map 3 should contain all products with ids "p1" or "p2": (p1, p2, p3, p4, p5, p6)
+        // Map 1 should contain products like p1 and p2 not owned by owner1: (p1b, p1c, p2b, p2c)
+        // Map 2 should contain products like p1 and p2 not owned by owner2: (p1a, p1c, p2a, p2c)
+        // Map 3 should contain all products like p1 and p2: (p1a, p1b, p1c, p2a, p2b, p2c)
 
         assertEquals(2, productMap1.size());
         assertEquals(2, productMap2.size());
@@ -723,13 +724,15 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
             .map(Product::getUuid)
             .collect(Collectors.toList());
 
-        // We're counting on .equals not caring about order here
-        assertEquals(Arrays.asList(p2.getUuid(), p3.getUuid(), p5.getUuid(), p6.getUuid()), uuidList1);
-        assertEquals(Arrays.asList(p1.getUuid(), p3.getUuid(), p4.getUuid(), p6.getUuid()), uuidList2);
-        assertEquals(
-            Arrays.asList(p1.getUuid(), p2.getUuid(), p3.getUuid(), p4.getUuid(), p5.getUuid(), p6.getUuid()),
-            uuidList3
-        );
+        assertEquals(4, uuidList1.size());
+        assertThat(uuidList1, hasItems(p1b.getUuid(), p1c.getUuid(), p2b.getUuid(), p2c.getUuid()));
+
+        assertEquals(4, uuidList2.size());
+        assertThat(uuidList2, hasItems(p1a.getUuid(), p1c.getUuid(), p2a.getUuid(), p2c.getUuid()));
+
+        assertEquals(6, uuidList3.size());
+        assertThat(uuidList3, hasItems(p1a.getUuid(), p1b.getUuid(), p1c.getUuid(), p2a.getUuid(),
+            p2b.getUuid(), p2c.getUuid()));
     }
 
     @Test
@@ -741,14 +744,15 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertEquals(0, productMap1.size());
 
         Map<String, List<Product>> productMap2 = this.ownerProductCurator
-            .getProductsByVersions(owner1, Collections.emptyMap());
+            .getProductsByVersions(owner1, Collections.emptyList());
         assertEquals(0, productMap2.size());
 
-        Map<String, List<Product>> productMap3 = this.ownerProductCurator.getProductsByVersions(null, null);
+        Map<String, List<Product>> productMap3 = this.ownerProductCurator
+            .getProductsByVersions(null, null);
         assertEquals(0, productMap3.size());
 
         Map<String, List<Product>> productMap4 = this.ownerProductCurator
-            .getProductsByVersions(null, Collections.emptyMap());
+            .getProductsByVersions(null, Collections.emptyList());
         assertEquals(0, productMap4.size());
     }
 
@@ -758,11 +762,11 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
 
         int versionCount = 10000;
 
-        Map<String, Integer> versionMap = new HashMap<>();
+        List<Integer> versions = new LinkedList<>();
         for (int i = 0; i < versionCount; ++i) {
-            versionMap.put("entity-" + i, i);
+            versions.add(i);
         }
 
-        this.ownerProductCurator.getProductsByVersions(owner, versionMap);
+        this.ownerProductCurator.getProductsByVersions(owner, versions);
     }
 }

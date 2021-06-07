@@ -39,11 +39,7 @@ import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+
 
 
 /**
@@ -597,91 +593,49 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     }
 
     /**
-     * Retrieves a criteria which can be used to fetch a list of products with the specified Red Hat
-     * product ID and entity version belonging to owners other than the owner provided. If no
-     * products were found matching the given criteria, this method returns an empty list.
+     * Fetches all products belonging to organizations other than the one provided having an entity
+     * version equal to one of the versions provided.
      *
-     * @param owner
-     *  The owner whose products should be excluded from the results. If an owner is not provided,
-     *  no additional filtering will be performed.
+     * @param exclude
+     *  The owner/organization to exclude from the search. If null, no organizations will be
+     *  excluded
      *
-     * @param productVersions
-     *  A mapping of Red Hat product IDs to product versions to fetch
+     * @param versions
+     *  A collection of entity versions to use to select products
      *
      * @return
-     *  a mapping of Red Hat product IDs to candidate alternate versions
+     *  a map containing the products found, keyed by product ID
      */
-    @SuppressWarnings("checkstyle:indentation")
-    public Map<String, List<Product>> getProductsByVersions(Owner owner,
-        Map<String, Integer> productVersions) {
+    public Map<String, List<Product>> getProductsByVersions(Owner exclude, Collection<Integer> versions) {
+        Map<String, List<Product>> result = new HashMap<>();
 
-        Map<String, List<Product>> productMap = new HashMap<>();
+        if (versions != null && !versions.isEmpty()) {
+            TypedQuery<Product> query;
 
-        if (productVersions == null || productVersions.isEmpty()) {
-            return productMap;
-        }
+            if (exclude != null) {
+                String jpql = "SELECT p FROM OwnerProduct op JOIN op.product p " +
+                    "WHERE op.owner.id != :owner_id AND p.entityVersion IN (:vblock)";
 
-        // Impl note:
-        // We perform this operation with two queries here to optimize out some unnecessary queries
-        // when pulling product information. Even when pulling products in a batch, Hibernate will
-        // pull the product collections (attributes, content and dependent product IDs) as separate
-        // query for each product (ugh). By breaking this into two queries -- one for getting the
-        // product UUIDs and one for pulling the actual products -- we will save upwards of two DB
-        // hits per product filtered. We will lose time in the cases where we don't filter any
-        // products, or the products we filter don't have any data in their collections; but we're
-        // only using one additional query in those cases, versus (0-2)n in the normal case.
+                query = this.getEntityManager()
+                    .createQuery(jpql, Product.class)
+                    .setParameter("owner_id", exclude.getId());
+            }
+            else {
+                String jpql = "SELECT p FROM Product p WHERE p.entityVersion IN (:vblock)";
 
-        Set<String> uuids = new HashSet<>();
-
-        EntityManager entityManager = this.getEntityManager();
-        CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-        CriteriaQuery<String> query = builder.createQuery(String.class);
-
-        Root<OwnerProduct> root = query.from(OwnerProduct.class);
-        Join<OwnerProduct, Product> product = root.join(OwnerProduct_.product);
-
-        query.select(product.get(Product_.uuid))
-            .distinct(true);
-
-        // Impl note:
-        // We have room to go higher with the block size here, but building this query is so slow that
-        // as the block size goes up, it's actually slower than issuing smaller queries more often.
-        // Also, around a block size of around 2.5k, Hibernate's query builder starts hitting stack
-        // overflows.
-        int blockSize = 1000;
-        for (List<Map.Entry<String, Integer>> block : this.partition(productVersions.entrySet(), blockSize)) {
-            Predicate[] predicates = new Predicate[block.size()];
-            int index = 0;
-
-            for (Map.Entry<String, Integer> entry : block) {
-                predicates[index++] = builder.and(
-                    builder.equal(product.get(Product_.id), entry.getKey()),
-                    builder.equal(product.get(Product_.entityVersion), entry.getValue()));
+                query = this.getEntityManager()
+                    .createQuery(jpql, Product.class);
             }
 
-            Predicate predicate = builder.or(predicates);
-
-            query.where(owner != null ?
-                builder.and(builder.notEqual(root.get(OwnerProduct_.ownerId), owner.getId()), predicate) :
-                predicate);
-
-            uuids.addAll(entityManager.createQuery(query)
-                .getResultList());
-        }
-
-        if (uuids != null && !uuids.isEmpty()) {
-            String jpql = "SELECT p FROM Product p WHERE p.uuid IN (:product_uuids)";
-            TypedQuery<Product> pquery = entityManager.createQuery(jpql, Product.class);
-
-            for (List<String> block : this.partition(uuids)) {
-                for (Product element : pquery.setParameter("product_uuids", block).getResultList()) {
-                    productMap.computeIfAbsent(element.getId(), k -> new LinkedList<>())
+            for (Collection<Integer> block : this.partition(versions)) {
+                for (Product element : query.setParameter("vblock", block).getResultList()) {
+                    result.computeIfAbsent(element.getId(), k -> new LinkedList<>())
                         .add(element);
                 }
             }
         }
 
-        return productMap;
+        return result;
     }
 
     /**

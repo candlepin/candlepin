@@ -70,9 +70,7 @@ public class PoolNodeBuilder implements NodeBuilder<Pool, SubscriptionInfo> {
         ProductInfo product = sourceEntity.getProduct();
         if (product != null) {
             EntityNode child = factory.buildNode(owner, Product.class, product.getId());
-
             node.addChildNode(child);
-            child.addParentNode(node);
         }
 
         return node;

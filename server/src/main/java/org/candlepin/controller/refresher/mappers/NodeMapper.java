@@ -18,9 +18,10 @@ import org.candlepin.controller.refresher.nodes.EntityNode;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.service.model.ServiceAdapterModel;
 
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Stream;
 
 
 
@@ -55,8 +56,8 @@ public class NodeMapper {
     public <E extends AbstractHibernateObject, I extends ServiceAdapterModel>
         EntityNode<E, I> getNode(Class<E> cls, String id) {
 
-        Map<String, EntityNode<?, ?>> idMap = this.nodeMap.get(cls);
-        return (EntityNode<E, I>) (idMap != null ? idMap.get(id) : null);
+        return (EntityNode<E, I>) this.nodeMap.getOrDefault(cls, Collections.emptyMap())
+            .get(id);
     }
 
     /**
@@ -84,46 +85,38 @@ public class NodeMapper {
     }
 
     /**
-     * Retrieves an iterator that steps through all known entity nodes. This method never returns
-     * null.
+     * Retrieves a stream of all known entity nodes. This method never returns null.
      *
      * @return
-     *  an iterator to step through all known entity nodes
+     *  a stream of all known entity nodes
      */
-    public Iterator<EntityNode<?, ?>> getNodeIterator() {
+    public Stream<EntityNode<?, ?>> getNodeStream() {
         return this.nodeMap.values()
             .stream()
-            .flatMap(map -> map.values().stream())
-            .iterator();
+            .flatMap(map -> map.values().stream());
     }
 
     /**
-     * Retreives an iterator that steps through all known root entity nodes, where a root node is
-     * defined as any entity node that has no parent nodes. This method never returns null.
+     * Retreives a stream of all known root entity nodes, where a root node is defined as any entity
+     * node that has no parent nodes. This method never returns null.
      *
      * @return
-     *  an iterator to step through all known root entity nodes
+     *  a stream of all known root entity nodes
      */
-    public Iterator<EntityNode<?, ?>> getRootIterator() {
-        return this.nodeMap.values()
-            .stream()
-            .flatMap(map -> map.values().stream())
-            .filter(node -> node.isRootNode())
-            .iterator();
+    public Stream<EntityNode<?, ?>> getRootNodeStream() {
+        return this.getNodeStream()
+            .filter(EntityNode::isRootNode);
     }
 
     /**
-     * Retreives an iterator that steps through all known leaf entity nodes, where a leaf node is
-     * defined as any entity node that has no children nodes. This method never returns null.
+     * Retreives a stream of all known leaf entity nodes, where a leaf node is defined as any entity
+     * node that has no children nodes. This method never returns null.
      *
      * @return
-     *  an iterator to step through all known leaf entity nodes
+     *  a stream of all known leaf entity nodes
      */
-    public Iterator<EntityNode<?, ?>> getLeafIterator() {
-        return this.nodeMap.values()
-            .stream()
-            .flatMap(map -> map.values().stream())
-            .filter(node -> node.isLeafNode())
-            .iterator();
+    public Stream<EntityNode<?, ?>> getLeafNodeStream() {
+        return this.getNodeStream()
+            .filter(EntityNode::isLeafNode);
     }
 }
