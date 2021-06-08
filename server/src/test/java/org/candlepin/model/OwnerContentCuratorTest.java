@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.test.DatabaseTestFixture;
@@ -26,6 +28,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -598,10 +601,10 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         Content content3 = this.createContent("c1", "c1", owner3);
         Content content4 = this.createContent("c2", "c2", owner2);
 
-        Map<String, List<Content>> contentMap1 = this.ownerContentCurator.getContentByVersions(owner1,
-            Collections.<String, Integer>singletonMap(content1.getId(), content1.getEntityVersion()));
-        Map<String, List<Content>> contentMap2 = this.ownerContentCurator.getContentByVersions(owner2,
-            Collections.<String, Integer>singletonMap(content2.getId(), content2.getEntityVersion()));
+        Map<String, List<Content>> contentMap1 = this.ownerContentCurator
+            .getContentByVersions(owner1, Collections.singleton(content1.getEntityVersion()));
+        Map<String, List<Content>> contentMap2 = this.ownerContentCurator
+            .getContentByVersions(owner2, Collections.singleton(content2.getEntityVersion()));
 
         // contentMap1 should contain only content2 and content3
         // contentMap2 should contain only content1 and content3
@@ -638,10 +641,10 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         Content content3 = this.createContent("c1", "c1", owner3);
         Content content4 = this.createContent("c2", "c2", owner2);
 
-        Map<String, List<Content>> contentMap1 = this.ownerContentCurator.getContentByVersions(null,
-            Collections.<String, Integer>singletonMap(content1.getId(), content1.getEntityVersion()));
-        Map<String, List<Content>> contentMap2 = this.ownerContentCurator.getContentByVersions(null,
-            Collections.<String, Integer>singletonMap(content2.getId(), content2.getEntityVersion()));
+        Map<String, List<Content>> contentMap1 = this.ownerContentCurator
+            .getContentByVersions(null, Collections.singleton(content1.getEntityVersion()));
+        Map<String, List<Content>> contentMap2 = this.ownerContentCurator
+            .getContentByVersions(null, Collections.singleton(content2.getEntityVersion()));
 
         // Both maps should contain both contents 1, 2 and 3
 
@@ -673,76 +676,77 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
         Owner owner3 = this.createOwner();
 
-        Content c1 = this.createContent("c1", "c1", owner1);
-        Content c2 = this.createContent("c1", "c1", owner2);
-        Content c3 = this.createContent("c1", "c1", owner3);
-        Content c4 = this.createContent("c2", "c2", owner1);
-        Content c5 = this.createContent("c2", "c2", owner2);
-        Content c6 = this.createContent("c2", "c2", owner3);
-        Content c7 = this.createContent("c3", "c3", owner1);
-        Content c8 = this.createContent("c3", "c3", owner2);
-        Content c9 = this.createContent("c3", "c3", owner3);
+        Content c1a = this.createContent("c1", "c1", owner1);
+        Content c2a = this.createContent("c2", "c2", owner1);
+        Content c3a = this.createContent("c3", "c3", owner1);
 
-        Map<String, Integer> versions = new HashMap<>();
-        versions.put(c1.getId(), c1.getEntityVersion());
-        versions.put(c4.getId(), c4.getEntityVersion());
-        versions.put("bad_id", c7.getEntityVersion());
+        Content c1b = this.createContent("c1", "c1", owner2);
+        Content c2b = this.createContent("c2", "c2", owner2);
+        Content c3b = this.createContent("c3", "c3", owner2);
 
-        Map<String, List<Content>> contentMap1 = this.ownerContentCurator
+        Content c1c = this.createContent("c1", "c1", owner3);
+        Content c2c = this.createContent("c2", "c2", owner3);
+        Content c3c = this.createContent("c3", "c3", owner3);
+
+        List<Integer> versions = Arrays.asList(c1a.getEntityVersion(), c2a.getEntityVersion());
+
+        Map<String, List<Content>> contentMac1 = this.ownerContentCurator
             .getContentByVersions(owner1, versions);
-        Map<String, List<Content>> contentMap2 = this.ownerContentCurator
+        Map<String, List<Content>> contentMac2 = this.ownerContentCurator
             .getContentByVersions(owner2, versions);
-        Map<String, List<Content>> contentMap3 = this.ownerContentCurator
+        Map<String, List<Content>> contentMac3 = this.ownerContentCurator
             .getContentByVersions(null, versions);
 
-        // Map 1 should contain contents with ids "c1" or "c2" not owned by owner 1: (c2, c3, c5, c6)
-        // Map 2 should contain contents with ids "c1" or "c2" not owned by owner 2: (c1, c3, c4, c6)
-        // Map 3 should contain all contents with ids "c1" or "c2": (c1, c2, c3, c4, c5, c6)
+        // Map 1 should contain contents like c1 and c2 not owned by owner1: (c1b, c1c, c2b, c2c)
+        // Map 2 should contain contents like c1 and c2 not owned by owner2: (c1a, c1c, c2a, c2c)
+        // Map 3 should contain all contents like c1 and c2: (c1a, c1b, c1c, c2a, c2b, c2c)
 
-        assertEquals(2, contentMap1.size());
-        assertEquals(2, contentMap2.size());
-        assertEquals(2, contentMap3.size());
+        assertEquals(2, contentMac1.size());
+        assertEquals(2, contentMac2.size());
+        assertEquals(2, contentMac3.size());
 
-        assertNotNull(contentMap1.get("c1"));
-        assertEquals(2, contentMap1.get("c1").size());
-        assertNotNull(contentMap1.get("c2"));
-        assertEquals(2, contentMap1.get("c2").size());
+        assertNotNull(contentMac1.get("c1"));
+        assertEquals(2, contentMac1.get("c1").size());
+        assertNotNull(contentMac1.get("c2"));
+        assertEquals(2, contentMac1.get("c2").size());
 
-        assertNotNull(contentMap2.get("c1"));
-        assertEquals(2, contentMap2.get("c1").size());
-        assertNotNull(contentMap2.get("c2"));
-        assertEquals(2, contentMap2.get("c2").size());
+        assertNotNull(contentMac2.get("c1"));
+        assertEquals(2, contentMac2.get("c1").size());
+        assertNotNull(contentMac2.get("c2"));
+        assertEquals(2, contentMac2.get("c2").size());
 
-        assertNotNull(contentMap3.get("c1"));
-        assertEquals(3, contentMap3.get("c1").size());
-        assertNotNull(contentMap3.get("c2"));
-        assertEquals(3, contentMap3.get("c2").size());
+        assertNotNull(contentMac3.get("c1"));
+        assertEquals(3, contentMac3.get("c1").size());
+        assertNotNull(contentMac3.get("c2"));
+        assertEquals(3, contentMac3.get("c2").size());
 
-        List<String> uuidList1 = contentMap1.values()
+        List<String> uuidList1 = contentMac1.values()
             .stream()
             .flatMap(List::stream)
             .map(Content::getUuid)
             .collect(Collectors.toList());
 
-        List<String> uuidList2 = contentMap2.values()
+        List<String> uuidList2 = contentMac2.values()
             .stream()
             .flatMap(List::stream)
             .map(Content::getUuid)
             .collect(Collectors.toList());
 
-        List<String> uuidList3 = contentMap3.values()
+        List<String> uuidList3 = contentMac3.values()
             .stream()
             .flatMap(List::stream)
             .map(Content::getUuid)
             .collect(Collectors.toList());
 
-        // We're counting on .equals not caring about order here
-        assertEquals(Arrays.asList(c2.getUuid(), c3.getUuid(), c5.getUuid(), c6.getUuid()), uuidList1);
-        assertEquals(Arrays.asList(c1.getUuid(), c3.getUuid(), c4.getUuid(), c6.getUuid()), uuidList2);
-        assertEquals(
-            Arrays.asList(c1.getUuid(), c2.getUuid(), c3.getUuid(), c4.getUuid(), c5.getUuid(), c6.getUuid()),
-            uuidList3
-        );
+        assertEquals(4, uuidList1.size());
+        assertThat(uuidList1, hasItems(c1b.getUuid(), c1c.getUuid(), c2b.getUuid(), c2c.getUuid()));
+
+        assertEquals(4, uuidList2.size());
+        assertThat(uuidList2, hasItems(c1a.getUuid(), c1c.getUuid(), c2a.getUuid(), c2c.getUuid()));
+
+        assertEquals(6, uuidList3.size());
+        assertThat(uuidList3, hasItems(c1a.getUuid(), c1b.getUuid(), c1c.getUuid(), c2a.getUuid(),
+            c2b.getUuid(), c2c.getUuid()));
     }
 
     @Test
@@ -754,14 +758,15 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         assertEquals(0, contentMap1.size());
 
         Map<String, List<Content>> contentMap2 = this.ownerContentCurator
-            .getContentByVersions(owner1, Collections.<String, Integer>emptyMap());
+            .getContentByVersions(owner1, Collections.emptyList());
         assertEquals(0, contentMap2.size());
 
-        Map<String, List<Content>> contentMap3 = this.ownerContentCurator.getContentByVersions(null, null);
+        Map<String, List<Content>> contentMap3 = this.ownerContentCurator
+            .getContentByVersions(null, null);
         assertEquals(0, contentMap3.size());
 
         Map<String, List<Content>> contentMap4 = this.ownerContentCurator
-            .getContentByVersions(null, Collections.<String, Integer>emptyMap());
+            .getContentByVersions(null, Collections.emptyList());
         assertEquals(0, contentMap4.size());
     }
 
@@ -771,12 +776,12 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
         int versionCount = 10000;
 
-        Map<String, Integer> versionMap = new HashMap<>();
+        List<Integer> versions = new LinkedList<>();
         for (int i = 0; i < versionCount; ++i) {
-            versionMap.put("entity-" + i, i);
+            versions.add(i);
         }
 
-        this.ownerContentCurator.getContentByVersions(owner, versionMap);
+        this.ownerContentCurator.getContentByVersions(owner, versions);
     }
 
     @Test

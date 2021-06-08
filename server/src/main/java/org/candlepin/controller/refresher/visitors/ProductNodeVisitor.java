@@ -15,7 +15,6 @@
 package org.candlepin.controller.refresher.visitors;
 
 import org.candlepin.controller.ProductManager;
-import org.candlepin.controller.refresher.mappers.NodeMapper;
 import org.candlepin.controller.refresher.nodes.EntityNode;
 import org.candlepin.controller.refresher.nodes.EntityNode.NodeState;
 import org.candlepin.model.Branding;
@@ -37,6 +36,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -51,9 +51,13 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
     private final ProductCurator productCurator;
     private final OwnerProductCurator ownerProductCurator;
 
+    // Various cross-stage cache collections
     private Set<OwnerProduct> ownerProductEntities;
     private Map<Owner, Map<String, String>> ownerProductUuidMap;
     private Map<Owner, Set<String>> deletedProductUuids;
+    private Map<Owner, Set<Integer>> ownerEntityVersions;
+    private Map<Owner, Map<String, List<Product>>> ownerVersionedEntityMap;
+
 
     /**
      * Creates a new ProductNodeVisitor that uses the provided curators for performing database
@@ -83,6 +87,8 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
         this.ownerProductEntities = new HashSet<>();
         this.ownerProductUuidMap = new HashMap<>();
         this.deletedProductUuids = new HashMap<>();
+        this.ownerEntityVersions = new HashMap<>();
+        this.ownerVersionedEntityMap = new HashMap<>();
     }
 
     /**
@@ -97,24 +103,17 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
      * {@inheritDoc}
      */
     @Override
-    public void processNode(NodeProcessor processor, NodeMapper mapper,
-        EntityNode<Product, ProductInfo> node) {
-
+    public void processNode(EntityNode<Product, ProductInfo> node) {
         // If this node already has a state, we don't need to reprocess it (probably)
         if (node.getNodeState() != null) {
             return;
         }
 
-        boolean childrenUpdated = false;
         boolean nodeChanged = false;
 
-        // Check if we need to make reference updates on this entity.
-        for (EntityNode<?, ?> child : node.getChildrenNodes()) {
-            if (child.changed()) {
-                childrenUpdated = true;
-                break;
-            }
-        }
+        // Check if we need to make reference updates on this entity due to children updates
+        boolean childrenUpdated = node.getChildrenNodes()
+            .anyMatch(EntityNode::changed);
 
         Product existingEntity = node.getExistingEntity();
         ProductInfo importedEntity = node.getImportedEntity();
@@ -128,24 +127,16 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
             }
 
             if (nodeChanged || childrenUpdated) {
-                Product mergedEntity = this.createEntity(mapper, node);
+                Product mergedEntity = this.createEntity(node);
                 node.setMergedEntity(mergedEntity);
-
-                // Store the mapping to be updated later
-                this.ownerProductUuidMap.computeIfAbsent(node.getOwner(), key -> new HashMap<>())
-                    .put(existingEntity.getUuid(), mergedEntity.getUuid());
 
                 node.setNodeState(NodeState.UPDATED);
             }
         }
         else if (importedEntity != null) {
             // Node is new
-            Product mergedEntity = this.createEntity(mapper, node);
+            Product mergedEntity = this.createEntity(node);
             node.setMergedEntity(mergedEntity);
-
-            // Create a new owner-product mapping for this entity. This will get persisted
-            // later during completion
-            this.ownerProductEntities.add(new OwnerProduct(node.getOwner(), mergedEntity));
 
             node.setNodeState(NodeState.CREATED);
         }
@@ -189,13 +180,78 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
 
         // Otherwise, if the node is referenced by one or more parent nodes that are not being
         // deleted themselves, we should keep it.
-        for (EntityNode parent : node.getParentNodes()) {
-            if (parent.getNodeState() != NodeState.DELETED) {
-                return false;
+        return !node.getParentNodes()
+            .anyMatch(elem -> elem.getNodeState() != NodeState.DELETED);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void applyChanges(EntityNode<Product, ProductInfo> node) {
+        // If we don't have a state, bad things have happened...
+        if (node.getNodeState() == null) {
+            throw new IllegalStateException("Attempting to apply changes to a node without a state: " + node);
+        }
+
+        // We only need to do work in the UPDATED or CREATED cases; all other states are no-ops here
+        if (node.getNodeState() == NodeState.UPDATED) {
+            node.setMergedEntity(this.resolveEntityVersion(node));
+
+            // Store the mapping to be updated later
+            Product existingEntity = node.getExistingEntity();
+            Product mergedEntity = node.getMergedEntity();
+
+            this.ownerProductUuidMap.computeIfAbsent(node.getOwner(), key -> new HashMap<>())
+                .put(existingEntity.getUuid(), mergedEntity.getUuid());
+        }
+        else if (node.getNodeState() == NodeState.CREATED) {
+            node.setMergedEntity(this.resolveEntityVersion(node));
+
+            // Create a new owner-product mapping for this entity. This will get persisted later
+            // during the completion step
+            this.ownerProductEntities.add(new OwnerProduct(node.getOwner(), node.getMergedEntity()));
+        }
+    }
+
+    /**
+     * Performs version resolution for the specified entity node. If a local version of the entity
+     * already exists, this method returns the existing entity; otherwise, the new entity stored in
+     * the provided node is persisted and returned.
+     *
+     * @param node
+     *  the entity node on which to perform version resolution
+     *
+     * @return
+     *  the existing version of the entity if such a version exists, or the persisted version of
+     *  the newly created entity
+     */
+    private Product resolveEntityVersion(EntityNode<Product, ProductInfo> node) {
+        Owner owner = node.getOwner();
+        Product entity = node.getMergedEntity();
+        int entityVersion = entity.getEntityVersion(false);
+
+        Map<String, List<Product>> entityMap = this.ownerVersionedEntityMap.computeIfAbsent(owner, key -> {
+            Set<Integer> versions = this.ownerEntityVersions.remove(key);
+
+            return versions != null ?
+                this.ownerProductCurator.getProductsByVersions(key, versions) :
+                Collections.emptyMap();
+        });
+
+        for (Product candidate : entityMap.getOrDefault(entity.getId(), Collections.emptyList())) {
+            if (entityVersion == candidate.getEntityVersion(true) && entity.equals(candidate)) {
+                return candidate;
             }
         }
 
-        return true;
+        // If the entity has no existing version, we need to re-resolve children references (as one
+        // or more children may have been resolved to an existing entity in the interim), and then
+        // persist the new entity. However, we need to avoid flushing here, as flushing after each
+        // entity would kneecap performance. We'll, instead, flush everything later in the
+        // "completion" step.
+        this.resolveChildren(entity, node);
+        return this.productCurator.create(entity, false);
     }
 
     /**
@@ -209,7 +265,8 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
         }
 
         // Save new owner-product entities
-        this.ownerProductCurator.saveAll(this.ownerProductEntities, false, false);
+        this.ownerProductEntities.stream()
+            .forEach(elem -> this.ownerProductCurator.create(elem, false));
         this.ownerProductCurator.flush();
 
         // Update owner product references
@@ -217,16 +274,18 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
             this.ownerProductCurator.updateOwnerProductReferences(entry.getKey(), entry.getValue());
         }
 
-        // Clear our cache
+        // Clear our various caches
         this.ownerProductUuidMap.clear();
         this.ownerProductEntities.clear();
         this.deletedProductUuids.clear();
+        this.ownerEntityVersions.clear();
+        this.ownerVersionedEntityMap.clear();
     }
 
-    private EntityNode<Product, ProductInfo> lookupProductNode(NodeMapper mapper,
-        EntityNode<Product, ProductInfo> parentNode, String productId) {
+    private EntityNode<Product, ProductInfo> lookupProductNode(EntityNode<Product, ProductInfo> parentNode,
+        String productId) {
 
-        EntityNode<Product, ProductInfo> childNode = mapper.getNode(Product.class, productId);
+        EntityNode<Product, ProductInfo> childNode = parentNode.getChildNode(Product.class, productId);
 
         if (childNode == null) {
             String errmsg = String.format("Product references a child product which does not exist: %s",
@@ -245,10 +304,10 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
         return childNode;
     }
 
-    private EntityNode<Content, ContentInfo> lookupContentNode(NodeMapper mapper,
-        EntityNode<Product, ProductInfo> parentNode, String contentId) {
+    private EntityNode<Content, ContentInfo> lookupContentNode(EntityNode<Product, ProductInfo> parentNode,
+        String contentId) {
 
-        EntityNode<Content, ContentInfo> childNode = mapper.getNode(Content.class, contentId);
+        EntityNode<Content, ContentInfo> childNode = parentNode.getChildNode(Content.class, contentId);
 
         if (childNode == null) {
             String errmsg = String.format("Product references a child content which does not exist: %s",
@@ -268,9 +327,16 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
     }
 
     /**
-     * Creates a new entity for the given node, potentially remapping to an existing node
+     * Ensures children references on the provided entity are configured correctly according to the
+     * structure defined by the provided entity node.
+     *
+     * @param entity
+     *  the entity on which to perform children resolution
+     *
+     * @param node
+     *  the entity node to use for resolving children entity references
      */
-    private Product createEntity(NodeMapper mapper, EntityNode<Product, ProductInfo> node) {
+    private void resolveChildren(Product entity, EntityNode<Product, ProductInfo> node) {
         Product existingEntity = node.getExistingEntity();
         ProductInfo importedEntity = node.getImportedEntity();
         ProductInfo sourceEntity = importedEntity != null ? importedEntity : existingEntity;
@@ -278,6 +344,57 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
         if (sourceEntity == null) {
             throw new IllegalArgumentException("No source entity provided"); // Sanity check
         }
+
+        // Derived product
+        ProductInfo derivedProduct = sourceEntity.getDerivedProduct();
+        if (derivedProduct != null) {
+            EntityNode<Product, ProductInfo> childNode = this.lookupProductNode(node, derivedProduct.getId());
+
+            entity.setDerivedProduct((Product) (childNode.changed() ?
+                childNode.getMergedEntity() :
+                childNode.getExistingEntity()));
+        }
+        else {
+            entity.setDerivedProduct(null);
+        }
+
+        // Provided products
+        Collection<? extends ProductInfo> providedProducts = sourceEntity.getProvidedProducts();
+        if (providedProducts != null) {
+            entity.setProvidedProducts(null);
+
+            for (ProductInfo product : providedProducts) {
+                EntityNode<Product, ProductInfo> childNode = this.lookupProductNode(node, product.getId());
+
+                entity.addProvidedProduct((Product) (childNode.changed() ?
+                    childNode.getMergedEntity() :
+                    childNode.getExistingEntity()));
+            }
+        }
+
+        // Update content
+        Collection<? extends ProductContentInfo> productContent = sourceEntity.getProductContent();
+        if (productContent != null) {
+            entity.setProductContent(null);
+
+            for (ProductContentInfo pc : productContent) {
+                ContentInfo content = pc.getContent();
+                EntityNode<Content, ContentInfo> childNode = this.lookupContentNode(node, content.getId());
+
+                entity.addContent((Content) (childNode.changed() ?
+                    childNode.getMergedEntity() :
+                    childNode.getExistingEntity()),
+                    pc.isEnabled());
+            }
+        }
+    }
+
+    /**
+     * Creates a new entity for the given node, potentially remapping to an existing node
+     */
+    private Product createEntity(EntityNode<Product, ProductInfo> node) {
+        Product existingEntity = node.getExistingEntity();
+        ProductInfo importedEntity = node.getImportedEntity();
 
         Product updatedEntity = existingEntity != null ?
             (Product) existingEntity.clone() :
@@ -330,73 +447,14 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
             }
         }
 
-        // FIXME: Stop using the collections on the source entity and use the children on the node
-        // directly.
-
         // Perform child resolution
+        this.resolveChildren(updatedEntity, node);
 
-        // Derived product
-        ProductInfo derivedProduct = sourceEntity.getDerivedProduct();
-        if (derivedProduct != null) {
-            EntityNode<Product, ProductInfo> childNode = this.lookupProductNode(mapper, node,
-                derivedProduct.getId());
+        // Save entity version for later version resolution
+        this.ownerEntityVersions.computeIfAbsent(node.getOwner(), key -> new HashSet<>())
+            .add(updatedEntity.getEntityVersion());
 
-            updatedEntity.setDerivedProduct((Product) (childNode.changed() ?
-                childNode.getMergedEntity() :
-                childNode.getExistingEntity()));
-        }
-        else {
-            updatedEntity.setDerivedProduct(null);
-        }
-
-        // Provided products
-        Collection<? extends ProductInfo> providedProducts = sourceEntity.getProvidedProducts();
-        if (providedProducts != null) {
-            updatedEntity.setProvidedProducts(null);
-
-            for (ProductInfo product : providedProducts) {
-                EntityNode<Product, ProductInfo> childNode = this.lookupProductNode(mapper, node,
-                    product.getId());
-
-                updatedEntity.addProvidedProduct((Product) (childNode.changed() ?
-                    childNode.getMergedEntity() :
-                    childNode.getExistingEntity()));
-            }
-        }
-
-        // Update content
-        Collection<? extends ProductContentInfo> productContent = sourceEntity.getProductContent();
-        if (productContent != null) {
-            updatedEntity.setProductContent(null);
-
-            for (ProductContentInfo pc : productContent) {
-                ContentInfo content = pc.getContent();
-                EntityNode<Content, ContentInfo> childNode = this.lookupContentNode(mapper, node,
-                    content.getId());
-
-                updatedEntity.addContent((Content) (childNode.changed() ?
-                    childNode.getMergedEntity() :
-                    childNode.getExistingEntity()),
-                    pc.isEnabled());
-            }
-        }
-
-        // Do version resolution
-        int version = updatedEntity.getEntityVersion();
-        Set<Product> candidates = node.getCandidateEntities();
-
-        if (candidates != null) {
-            for (Product candidate : candidates) {
-                if (candidate.getEntityVersion(true) == version && updatedEntity.equals(candidate)) {
-                    // We've a pre-existing version; use it rather than our updatedEntity
-                    return candidate;
-                }
-            }
-        }
-
-        // No matching versions. Persist and return our updated entity.
-        return this.productCurator.saveOrUpdate(updatedEntity);
+        return updatedEntity;
     }
 
 }
-

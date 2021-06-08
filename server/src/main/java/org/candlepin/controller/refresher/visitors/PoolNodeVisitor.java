@@ -14,7 +14,6 @@
  */
 package org.candlepin.controller.refresher.visitors;
 
-import org.candlepin.controller.refresher.mappers.NodeMapper;
 import org.candlepin.controller.refresher.nodes.EntityNode;
 import org.candlepin.controller.refresher.nodes.EntityNode.NodeState;
 import org.candlepin.model.Pool;
@@ -47,8 +46,7 @@ public class PoolNodeVisitor implements NodeVisitor<Pool, SubscriptionInfo> {
      * {@inheritDoc}
      */
     @Override
-    public void processNode(NodeProcessor processor, NodeMapper mapper,
-        EntityNode<Pool, SubscriptionInfo> node) {
+    public void processNode(EntityNode<Pool, SubscriptionInfo> node) {
 
         // Impl note:
         // We're doing nothing here at the moment since merging pools has a ton of code scattered
@@ -65,6 +63,14 @@ public class PoolNodeVisitor implements NodeVisitor<Pool, SubscriptionInfo> {
      */
     @Override
     public void pruneNode(EntityNode<Pool, SubscriptionInfo> node) {
+        // Intentionally left empty; see above for details
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void applyChanges(EntityNode<Pool, SubscriptionInfo> node) {
         // Intentionally left empty; see above for details
     }
 

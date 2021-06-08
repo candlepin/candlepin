@@ -22,12 +22,15 @@ import static org.mockito.Mockito.*;
 import org.candlepin.controller.refresher.RefreshResult;
 import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.mappers.NodeMapper;
+import org.candlepin.controller.refresher.nodes.AbstractNode;
 import org.candlepin.controller.refresher.nodes.EntityNode;
 import org.candlepin.controller.refresher.nodes.EntityNode.NodeState;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
+import org.candlepin.service.model.ContentInfo;
+import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.ServiceAdapterModel;
 import org.candlepin.test.TestUtil;
 
@@ -37,9 +40,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -61,46 +63,26 @@ public class NodeProcessorTest {
         return visitor;
     }
 
-    private EntityNode mockEntityNode(Owner owner, Class<? extends AbstractHibernateObject> cls, String id) {
-        EntityNode node = mock(EntityNode.class);
+    private <E extends AbstractHibernateObject, I extends ServiceAdapterModel> EntityNode<E, I>
+        buildEntityNode(Owner owner, String id, Class<E> entityCls, Class<I> importCls) {
 
-        AbstractHibernateObject existing = mock(cls);
-        ServiceAdapterModel imported = mock(ServiceAdapterModel.class);
-        AbstractHibernateObject merged = mock(cls);
+        EntityNode<E, I> node = new AbstractNode<E, I>(owner, id) {
+            @Override
+            public Class<E> getEntityClass() {
+                return entityCls;
+            }
+        };
 
-        doReturn(owner).when(node).getOwner();
-        doReturn(cls).when(node).getEntityClass();
-        doReturn(id).when(node).getEntityId();
+        E existing = mock(entityCls);
+        I imported = mock(importCls);
+        E merged = mock(entityCls);
 
         doReturn(id).when(existing).getId();
         doReturn(id).when(merged).getId();
 
-        doReturn(existing).when(node).getExistingEntity();
-        doReturn(imported).when(node).getImportedEntity();
-        doReturn(merged).when(node).getMergedEntity();
-
-        return node;
-    }
-    private EntityNode mockNodeHierarchy(EntityNode node, Collection<EntityNode> parentNodes,
-        Collection<EntityNode> childrenNodes) {
-
-        if (parentNodes != null && !parentNodes.isEmpty()) {
-            doReturn(parentNodes).when(node).getParentNodes();
-            doReturn(false).when(node).isRootNode();
-        }
-        else {
-            doReturn(Collections.emptyList()).when(node).getParentNodes();
-            doReturn(true).when(node).isRootNode();
-        }
-
-        if (childrenNodes != null && !childrenNodes.isEmpty()) {
-            doReturn(childrenNodes).when(node).getChildrenNodes();
-            doReturn(false).when(node).isLeafNode();
-        }
-        else {
-            doReturn(Collections.emptyList()).when(node).getChildrenNodes();
-            doReturn(true).when(node).isLeafNode();
-        }
+        node.setExistingEntity(existing);
+        node.setImportedEntity(imported);
+        node.setMergedEntity(merged);
 
         return node;
     }
@@ -123,43 +105,41 @@ public class NodeProcessorTest {
     private Collection<EntityNode> buildNodeTrees(NodeMapper mapper, Class cls) {
         Owner owner = TestUtil.createOwner();
 
-        EntityNode tier1a = this.mockEntityNode(owner, cls, "tier1a");
-        EntityNode tier1b = this.mockEntityNode(owner, cls, "tier1b");
-        EntityNode tier1c = this.mockEntityNode(owner, cls, "tier1c");
-        EntityNode tier1d = this.mockEntityNode(owner, cls, "tier1d");
+        EntityNode tier1a = this.buildEntityNode(owner, "tier1a", Product.class, ProductInfo.class);
+        EntityNode tier1b = this.buildEntityNode(owner, "tier1b", Product.class, ProductInfo.class);
+        EntityNode tier1c = this.buildEntityNode(owner, "tier1c", Product.class, ProductInfo.class);
+        EntityNode tier1d = this.buildEntityNode(owner, "tier1d", Product.class, ProductInfo.class);
 
-        EntityNode tier2a = this.mockEntityNode(owner, cls, "tier2a");
-        EntityNode tier2b = this.mockEntityNode(owner, cls, "tier2b");
-        EntityNode tier2c = this.mockEntityNode(owner, cls, "tier2c");
-        EntityNode tier2d = this.mockEntityNode(owner, cls, "tier2d");
+        EntityNode tier2a = this.buildEntityNode(owner, "tier2a", Product.class, ProductInfo.class);
+        EntityNode tier2b = this.buildEntityNode(owner, "tier2b", Product.class, ProductInfo.class);
+        EntityNode tier2c = this.buildEntityNode(owner, "tier2c", Product.class, ProductInfo.class);
+        EntityNode tier2d = this.buildEntityNode(owner, "tier2d", Product.class, ProductInfo.class);
 
-        EntityNode tier3a = this.mockEntityNode(owner, cls, "tier3a");
-        EntityNode tier3b = this.mockEntityNode(owner, cls, "tier3b");
-        EntityNode tier3c = this.mockEntityNode(owner, cls, "tier3c");
+        EntityNode tier3a = this.buildEntityNode(owner, "tier3a", Product.class, ProductInfo.class);
+        EntityNode tier3b = this.buildEntityNode(owner, "tier3b", Product.class, ProductInfo.class);
+        EntityNode tier3c = this.buildEntityNode(owner, "tier3c", Product.class, ProductInfo.class);
 
-        this.mockNodeHierarchy(tier1a, null, Arrays.asList(tier2a, tier2b));
-        this.mockNodeHierarchy(tier2a, Arrays.asList(tier1a), Arrays.asList(tier3a, tier3b));
-        this.mockNodeHierarchy(tier2b, Arrays.asList(tier1a), null);
-        this.mockNodeHierarchy(tier3a, Arrays.asList(tier2a), null);
-        this.mockNodeHierarchy(tier3b, Arrays.asList(tier2a), null);
+        tier1a.addChildNode(tier2a)
+            .addChildNode(tier2b);
 
-        this.mockNodeHierarchy(tier1b, null, null);
+        tier1c.addChildNode(tier2c);
 
-        this.mockNodeHierarchy(tier1c, null, Arrays.asList(tier2c));
-        this.mockNodeHierarchy(tier2c, Arrays.asList(tier1c, tier1d), Arrays.asList(tier3c));
-        this.mockNodeHierarchy(tier3c, Arrays.asList(tier2c), null);
+        tier1d.addChildNode(tier2c)
+            .addChildNode(tier2d);
 
-        this.mockNodeHierarchy(tier1d, null, Arrays.asList(tier2c, tier2d));
-        this.mockNodeHierarchy(tier2d, Arrays.asList(tier1d), null);
+        tier2a.addChildNode(tier3a)
+            .addChildNode(tier3b);
 
-        Collection<EntityNode> nodes = Arrays.asList(tier1a, tier1b, tier1c, tier1d, tier2a, tier2b, tier2c,
-            tier2d, tier3a, tier3b, tier3c);
+        tier2c.addChildNode(tier3c);
+
+        List<EntityNode> nodes = List.of(tier1a, tier1b, tier1c, tier1d, tier2a, tier2b, tier2c, tier2d,
+            tier3a, tier3b, tier3c);
 
         for (EntityNode node : nodes) {
             assertTrue(mapper.addNode(node));
         }
 
-        return Arrays.asList(tier1a, tier1b, tier1c, tier1d);
+        return List.of(tier1a, tier1b, tier1c, tier1d);
     }
 
     @Test
@@ -209,10 +189,7 @@ public class NodeProcessorTest {
         NodeProcessor processor = new NodeProcessor();
         NodeMapper mapper = new NodeMapper();
 
-        EntityNode node = this.mockEntityNode(owner, Product.class, "node-1");
-        doReturn(true).when(node).isRootNode();
-        doReturn(Collections.emptyList()).when(node).getChildrenNodes();
-
+        EntityNode node = this.buildEntityNode(owner, "node-1", Product.class, ProductInfo.class);
         mapper.addNode(node);
 
         processor.setNodeMapper(mapper);
@@ -230,19 +207,17 @@ public class NodeProcessorTest {
         NodeVisitor visitor1 = this.mockNodeVisitor(Product.class);
         NodeVisitor visitor2 = this.mockNodeVisitor(Content.class);
 
-        EntityNode node = this.mockEntityNode(owner, Product.class, "node-1");
-        doReturn(true).when(node).isRootNode();
-        doReturn(Collections.emptyList()).when(node).getChildrenNodes();
+        EntityNode node = this.buildEntityNode(owner, "node-1", Product.class, ProductInfo.class);
 
         doAnswer(iom -> {
-            EntityNode receivedNode = (EntityNode) iom.getArguments()[2];
+            EntityNode receivedNode = (EntityNode) iom.getArguments()[0];
 
             if (receivedNode != null) {
-                doReturn(NodeState.UNCHANGED).when(receivedNode).getNodeState();
+                receivedNode.setNodeState(NodeState.UNCHANGED);
             }
 
             return null;
-        }).when(visitor1).processNode(any(NodeProcessor.class), any(NodeMapper.class), any(EntityNode.class));
+        }).when(visitor1).processNode(any(EntityNode.class));
 
         mapper.addNode(node);
 
@@ -252,9 +227,8 @@ public class NodeProcessorTest {
 
         processor.processNodes();
 
-        verify(visitor1, times(1)).processNode(eq(processor), eq(mapper), eq(node));
-        verify(visitor2, never())
-            .processNode(any(NodeProcessor.class), any(NodeMapper.class), any(EntityNode.class));
+        verify(visitor1, times(1)).processNode(eq(node));
+        verify(visitor2, never()).processNode(any(EntityNode.class));
     }
 
     private int validateNodeProcessingOrder(List<EntityNode> processOrder, EntityNode node) {
@@ -265,9 +239,12 @@ public class NodeProcessorTest {
         assertNotEquals(-1, nodeIndex);
         assertEquals(nodeIndex, lastIndex);
 
-        for (EntityNode child : (Collection<EntityNode>) node.getChildrenNodes()) {
+        Iterator<EntityNode<?, ?>> children = node.getChildrenNodes()
+            .iterator();
+
+        while (children.hasNext()) {
             // Ensure the child was processed properly
-            int childIndex = this.validateNodeProcessingOrder(processOrder, child);
+            int childIndex = this.validateNodeProcessingOrder(processOrder, children.next());
 
             // Ensure the child was processed before the node
             assertThat(childIndex, lessThan(nodeIndex));
@@ -304,15 +281,15 @@ public class NodeProcessorTest {
 
         // Have our mock visitor store the order in which the nodes are processed.
         doAnswer(iom -> {
-            EntityNode node = (EntityNode) iom.getArguments()[2];
+            EntityNode node = (EntityNode) iom.getArguments()[0];
 
             if (node != null) {
-                doReturn(NodeState.UNCHANGED).when(node).getNodeState();
+                node.setNodeState(NodeState.UNCHANGED);
                 processOrder.add(node);
             }
 
             return null;
-        }).when(visitor).processNode(any(NodeProcessor.class), any(NodeMapper.class), any(EntityNode.class));
+        }).when(visitor).processNode(any(EntityNode.class));
 
         Collection<EntityNode> trees = this.buildNodeTrees(mapper, cls);
 
@@ -337,9 +314,12 @@ public class NodeProcessorTest {
         assertNotEquals(-1, nodeIndex);
         assertEquals(nodeIndex, lastIndex);
 
-        for (EntityNode parent : (Collection<EntityNode>) node.getParentNodes()) {
+        Iterator<EntityNode<?, ?>> parents = node.getParentNodes()
+            .iterator();
+
+        while (parents.hasNext()) {
             // Ensure the parent was processed properly
-            int parentIndex = this.validateNodeProcessingOrder(pruneOrder, parent);
+            int parentIndex = this.validateNodePruningOrder(pruneOrder, parents.next());
 
             // Ensure the parent was processed before the node
             assertThat(parentIndex, lessThan(nodeIndex));
@@ -379,7 +359,7 @@ public class NodeProcessorTest {
             EntityNode node = (EntityNode) iom.getArguments()[0];
 
             if (node != null) {
-                doReturn(NodeState.DELETED).when(node).getNodeState();
+                node.setNodeState(NodeState.DELETED);
                 pruneOrder.add(node);
             }
 
@@ -402,6 +382,58 @@ public class NodeProcessorTest {
     }
 
     @Test
+    public void testProcessNodesAppliesChangesAsTrees() {
+        // This test verifies the order of change application. We're expecting that it starts
+        // at a root node, and then processes all of the children of that root before continuing
+        // to the next root node
+
+        // Challenges here:
+        // - We don't care about the order in which trees themselves are processed, so long
+        //   as for a given tree it is processed in its entirety before moving to the next
+        //   tree
+        // - This restriction applies also to subtrees within a given tree. That is, we don't
+        //   care about the order in which children are processed, so long as a given child is
+        //   fully processed before moving on to other children.
+        // - Subtrees can be shared!
+        // - Because of this style of expected processing order, we have to be careful as to
+        //   how the test validation is setup to ensure we don't have periodic failures if the
+        //   order of the nodes on a given tier happens to change
+
+        Class cls = Product.class;
+
+        NodeProcessor processor = new NodeProcessor();
+        NodeMapper mapper = new NodeMapper();
+        NodeVisitor visitor = this.mockNodeVisitor(cls);
+
+        List<EntityNode> processOrder = new LinkedList<>();
+
+        // Have our mock visitor store the order in which the nodes are processed.
+        doAnswer(iom -> {
+            EntityNode node = (EntityNode) iom.getArguments()[0];
+
+            if (node != null) {
+                node.setNodeState(NodeState.UNCHANGED);
+                processOrder.add(node);
+            }
+
+            return null;
+        }).when(visitor).applyChanges(any(EntityNode.class));
+
+        Collection<EntityNode> trees = this.buildNodeTrees(mapper, cls);
+
+        processor.setNodeMapper(mapper)
+            .addVisitor(visitor);
+
+        processor.processNodes();
+
+        // Step through our trees and verify that the children are processed before the parents, and
+        // that the processing doesn't happen out of order
+        for (EntityNode root : trees) {
+            this.validateNodeProcessingOrder(processOrder, root);
+        }
+    }
+
+    @Test
     public void testProcessNodesReturnsAccurateRefreshResult() {
         Owner owner = TestUtil.createOwner();
 
@@ -410,18 +442,21 @@ public class NodeProcessorTest {
         NodeVisitor productVisitor = this.mockNodeVisitor(Product.class);
         NodeVisitor contentVisitor = this.mockNodeVisitor(Content.class);
 
-        List<Class> nodeClasses = Arrays.asList(Product.class, Content.class);
-        int nodesPerCombo = 3;
+        int nodesPerState = 3;
         int nodeCount = 0;
 
-        for (Class cls : nodeClasses) {
-            for (NodeState state : NodeState.values()) {
-                for (int i = 0; i < nodesPerCombo; ++i) {
-                    EntityNode node = this.mockEntityNode(owner, cls, "node-" + ++nodeCount);
-                    doReturn(state).when(node).getNodeState();
+        for (NodeState state : NodeState.values()) {
+            for (int i = 0; i < nodesPerState; ++i) {
+                EntityNode pnode = this.buildEntityNode(owner, "node-" + ++nodeCount,
+                    Product.class, ProductInfo.class);
+                pnode.setNodeState(state);
 
-                    assertTrue(mapper.addNode(node));
-                }
+                EntityNode cnode = this.buildEntityNode(owner, "node-" + ++nodeCount,
+                    Content.class, ContentInfo.class);
+                cnode.setNodeState(state);
+
+                assertTrue(mapper.addNode(pnode));
+                assertTrue(mapper.addNode(cnode));
             }
         }
 
@@ -430,10 +465,9 @@ public class NodeProcessorTest {
             .addVisitor(contentVisitor);
 
         RefreshResult result = processor.processNodes();
-
         assertNotNull(result);
 
-        for (Class cls : nodeClasses) {
+        for (Class cls : List.of(Product.class, Content.class)) {
             for (NodeState state : NodeState.values()) {
                 Map entities;
 
@@ -441,25 +475,25 @@ public class NodeProcessorTest {
                     case CREATED:
                         entities = result.getEntities(cls, EntityState.CREATED);
                         assertNotNull(entities);
-                        assertEquals(nodesPerCombo, entities.size());
+                        assertEquals(nodesPerState, entities.size());
                         break;
 
                     case UPDATED:
                         entities = result.getEntities(cls, EntityState.UPDATED);
                         assertNotNull(entities);
-                        assertEquals(nodesPerCombo, entities.size());
+                        assertEquals(nodesPerState, entities.size());
                         break;
 
                     case UNCHANGED:
                         entities = result.getEntities(cls, EntityState.UNCHANGED);
                         assertNotNull(entities);
-                        assertEquals(nodesPerCombo, entities.size());
+                        assertEquals(nodesPerState, entities.size());
                         break;
 
                     case DELETED:
                         entities = result.getEntities(cls, EntityState.DELETED);
                         assertNotNull(entities);
-                        assertEquals(nodesPerCombo, entities.size());
+                        assertEquals(nodesPerState, entities.size());
                         break;
 
                     case SKIPPED:

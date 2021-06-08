@@ -40,7 +40,6 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
 
     private Map<String, E> existingEntities;
     private Map<String, I> importedEntities;
-    private Map<String, Set<E>> versionedEntitiesMap;
 
     /**
      * Creates a new AbstractEntityMapper instance
@@ -101,14 +100,6 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
         ids.addAll(this.importedEntities.keySet());
 
         return ids;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Set<E> getCandidateEntities(String id) {
-        return this.versionedEntitiesMap != null ? this.versionedEntitiesMap.get(id) : null;
     }
 
     /**
@@ -183,21 +174,8 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
      * {@inheritDoc}
      */
     @Override
-    public boolean setCandidateEntitiesMap(Map<String, Set<E>> versionedEntitiesMap) {
-        // We should probably encapsulate this better, but this is fine for now.
-        boolean output = this.versionedEntitiesMap != versionedEntitiesMap;
-        this.versionedEntitiesMap = versionedEntitiesMap;
-
-        return output;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void clear() {
         this.existingEntities.clear();
         this.importedEntities.clear();
-        this.versionedEntitiesMap = null;
     }
 }

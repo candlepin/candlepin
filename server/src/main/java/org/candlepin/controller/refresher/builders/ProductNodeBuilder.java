@@ -64,8 +64,7 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
 
         EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
             .setExistingEntity(existingEntity)
-            .setImportedEntity(importedEntity)
-            .setCandidateEntities(mapper.getCandidateEntities(id));
+            .setImportedEntity(importedEntity);
 
         // Figure out our source entity from which we'll derive children nodes
         ProductInfo sourceEntity = importedEntity != null ? importedEntity : existingEntity;
@@ -78,7 +77,6 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
                     <Product, ProductInfo>buildNode(owner, Product.class, provided.getId());
 
                 node.addChildNode(child);
-                child.addParentNode(node);
             }
         }
 
@@ -86,9 +84,7 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
         ProductInfo derived = sourceEntity.getDerivedProduct();
         if (derived != null) {
             EntityNode<Product, ProductInfo> child = factory.buildNode(owner, Product.class, derived.getId());
-
             node.addChildNode(child);
-            child.addParentNode(node);
         }
 
         // Add content nodes
@@ -119,7 +115,6 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
                     <Content, ContentInfo>buildNode(owner, Content.class, content.getId());
 
                 node.addChildNode(child);
-                child.addParentNode(node);
             }
         }
 

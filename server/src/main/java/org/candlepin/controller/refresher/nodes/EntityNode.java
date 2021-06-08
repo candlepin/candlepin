@@ -18,8 +18,7 @@ import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Owner;
 import org.candlepin.service.model.ServiceAdapterModel;
 
-import java.util.Collection;
-import java.util.Set;
+import java.util.stream.Stream;
 
 
 
@@ -111,13 +110,29 @@ public interface EntityNode<E extends AbstractHibernateObject, I extends Service
     EntityNode<E, I> addParentNode(EntityNode<?, ?> parent);
 
     /**
-     * Fetches a collection containing the known parent nodes of this node. If this node has no
-     * parents, this method returns an empty collection.
+     * Fetches the parent node with the specified entity class and ID. If no such node exists, this
+     * method returns null.
+     *
+     * @param entityClass
+     *  the entity class of the parent node to fetch
+     *
+     * @param entityId
+     *  the entity ID of the parent node to fetch
      *
      * @return
-     *  a collection of the known parent nodes of this entity node
+     *  the parent node with the specified entity class and ID, or null if no such node exists
      */
-    Collection<EntityNode<?, ?>> getParentNodes();
+    <T extends AbstractHibernateObject, D extends ServiceAdapterModel> EntityNode<T, D> getParentNode(
+        Class<T> entityClass, String entityId);
+
+    /**
+     * Fetches a stream over all known parent nodes of this node. If this node has no parents,
+     * this method returns an empty stream.
+     *
+     * @return
+     *  a stream over the known parent nodes of this entity node
+     */
+    Stream<EntityNode<?, ?>> getParentNodes();
 
     /**
      * Adds the specified entity node as a child of this node. If the provided parent node is null
@@ -135,13 +150,29 @@ public interface EntityNode<E extends AbstractHibernateObject, I extends Service
     EntityNode<E, I> addChildNode(EntityNode<?, ?> child);
 
     /**
-     * Fetches a collection containing the known children nodes of this node. If this node has no
-     * children, this method returns an empty collection.
+     * Fetches the child node with the specified entity class and ID. If no such node exists, this
+     * method returns null.
+     *
+     * @param entityClass
+     *  the entity class of the child node to fetch
+     *
+     * @param entityId
+     *  the entity ID of the child node to fetch
      *
      * @return
-     *  a collection of the known children nodes of this entity node
+     *  the child node with the specified entity class and ID, or null if no such node exists
      */
-    Collection<EntityNode<?, ?>> getChildrenNodes();
+    <T extends AbstractHibernateObject, D extends ServiceAdapterModel> EntityNode<T, D>  getChildNode(
+        Class<T> entityClass, String entityId);
+
+    /**
+     * Fetches a stream over all known children nodes of this node. If this node has no children,
+     * this method returns an empty stream.
+     *
+     * @return
+     *  a stream over the known children nodes of this entity node
+     */
+    Stream<EntityNode<?, ?>> getChildrenNodes();
 
     /**
      * Checks if this entity node is a root node, indicating that it has no parent nodes.
@@ -252,25 +283,4 @@ public interface EntityNode<E extends AbstractHibernateObject, I extends Service
      *  change
      */
     E getMergedEntity();
-
-    /**
-     * Sets the collection of candidate entities for the updated entity of this node. If the
-     * provided collection of entities is null, any existing candidate entity set will be cleared.
-     *
-     * @param entities
-     *  the candidate entities to set for this entity node, or null to clear the candidate entities
-     *
-     * @return
-     *  a reference to this entity node
-     */
-    EntityNode<E, I> setCandidateEntities(Set<E> entities);
-
-    /**
-     * Fetches the set of candidate entities for the updated entity for this node. If there are no
-     * available candidate entities, this method returns null.
-     *
-     * @return
-     *  the candidate entities for the updated node, or null if no candidate entities are available
-     */
-    Set<E> getCandidateEntities();
 }
