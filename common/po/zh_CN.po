@@ -1,13 +1,14 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021.
 # Sundeep Anand <suanand@redhat.com>, 2021.
+# Charles Lee <lchopn@gmail.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-05-20 03:00-0400\n"
-"PO-Revision-Date: 2021-02-09 09:40+0000\n"
-"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
+"PO-Revision-Date: 2021-06-04 11:03+0000\n"
+"Last-Translator: Charles Lee <lchopn@gmail.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
 "projects/candlepin/master/zh_CN/>\n"
 "Language: zh_CN\n"
@@ -15,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.4.2\n"
+"X-Generator: Weblate 4.6.2\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -441,7 +442,7 @@ msgstr "所有者 \"{0}\"{1} 的自动附件功能已被禁用。"
 #: server/src/main/java/org/candlepin/controller/Entitler.java:241
 #, java-format
 msgid "Auto-attach is disabled for owner \"{0}\"."
-msgstr ""
+msgstr "所有者 \"{0}\" 的自动附件功能已被禁用。"
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:304
 #: server/src/main/java/org/candlepin/controller/Entitler.java:509
@@ -838,10 +839,9 @@ msgstr "该 Candlepin 实例不支持云注册"
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:331
-#, fuzzy, java-format
-#| msgid "Organization {0} does not exist."
+#, java-format
 msgid "Organization {0} does not exist"
-msgstr "机构 {0} 不存在。"
+msgstr "机构 {0} 不存在"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:559
 msgid "Must specify at least one search criteria."
@@ -854,7 +854,7 @@ msgstr "必须指定至少一个搜索标准。"
 msgid ""
 "This endpoint does not support returning more than {0} results at a time, "
 "please use paging."
-msgstr "此端点不支持一次返回多于 {0} 个结果，请使用分页。"
+msgstr "此端点不支持一次返回超过 {0} 个的结果，请使用分页。"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:623
 #, java-format
