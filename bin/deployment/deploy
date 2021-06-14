@@ -1,0 +1,416 @@
+#!/bin/bash
+
+APP_DB_NAME="candlepin"
+MAX_STARTUP_WAIT_TIME=30
+CP_EXTRACT_DIR=/var/tmp/candlepin
+
+prepare_classpath() {
+    mkdir -p ${CP_EXTRACT_DIR}
+    rm -rf ${CP_EXTRACT_DIR}/*
+    cd ${CP_EXTRACT_DIR}
+    # Workspace might not be cleaned up
+    jar xf $(find ${PROJECT_DIR}/build -name 'candlepin*.war' | head -n 1)
+    chmod -R 744 ${CP_EXTRACT_DIR}
+    cd -
+    export CP_LIQUIBASE_CLASSPATH="${CP_EXTRACT_DIR}/WEB-INF/lib"
+}
+
+gendb() {
+    if [ "$USE_MYSQL" == "1" ]; then
+        init_mysql_jdbc $APP_DB_NAME
+    else
+        init_postgresql_jdbc $APP_DB_NAME
+    fi
+
+    if [ "$GENDB" == "1" ]; then
+        MESSAGE="Generating New Database"
+        CHANGELOG="changelog-create.xml"
+        if [ "$USE_MYSQL" == "1" ]; then
+            recreate_mysql $APP_DB_NAME $DBUSER
+        else
+            recreate_postgresql $APP_DB_NAME $DBUSER
+        fi
+
+        # New database implies we probably don't want any events left laying around in the
+        # queue to fire:
+        info_msg "Cleaning hornetq journal"
+        $SUDO rm -rf /var/lib/candlepin/hornetq/*
+        $SUDO rm -rf /var/lib/candlepin/activemq-artemis/*
+    else
+        MESSAGE="Updating Database"
+        CHANGELOG="changelog-update.xml"
+    fi
+
+    prepare_classpath
+
+    info_msg "$MESSAGE"
+    LQCOMMAND="${PROJECT_DIR}/bin/deployment/liquibase.sh --driver=${JDBC_DRIVER} --classpath=$PROJECT_DIR/src/main/resources/:build/classes/java/main/:${JDBC_JAR} --changeLogFile=db/changelog/$CHANGELOG --url=${JDBC_URL} --username=candlepin"
+    if [ -n "$DBPASSWORD" ] ; then
+        LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
+    fi
+
+    if [ "$VERBOSE" == "1" ]; then
+        LQCOMMAND="$LQCOMMAND --logLevel=debug "
+    fi
+
+    LQCOMMAND="$LQCOMMAND update -Dcommunity=True"
+    (cd $PROJECT_DIR && $LQCOMMAND)
+    evalrc $? "Liquibase command failed"
+}
+
+deploy() {
+  printf "\nDeploying Candlepin War File\n"
+  VERSION="$(grep Version: $PROJECT_DIR/candlepin.spec.tmpl | cut --delim=' ' -f2)"
+    if [ -z $DEPLOY_DIR ] ; then
+        $SUDO rm -rf $DEPLOY
+    else
+        $SUDO rm -rf $DEPLOY_DIR
+    fi
+    echo cp $PROJECT_DIR/build/libs/candlepin-$VERSION.war $DEPLOY
+    $SUDO cp $PROJECT_DIR/build/libs/candlepin-$VERSION.war $DEPLOY
+}
+
+stopappserver() {
+    # tc rpm /sbin/service tomcat6 stop
+    # tc opt $TC_HOME/bin/catalina.sh stop
+    # jboss opt $JBOSS_HOME/bin/shutdown.sh
+    $STOP
+}
+
+isrpm() {
+    echo $1 | grep "var/lib" > /dev/null
+    return $?
+}
+
+
+update_keystore() {
+    if [ ! -f $CONTAINER_CONF_DIR/keystore ]; then
+        info_msg "Symlinking keystore for tomcat"
+        $SUDO ln -s /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
+    else
+        if [ ! -L "$CONTAINER_CONF_DIR/keystore" -a "$(readlink $CONTAINER_CONF_DIR/keystore)" != "/etc/candlepin/certs/keystore" ]; then
+          warn_msg "Using existing keystore"
+        fi
+
+        local candlepin_fp="$(fp_pkcs12 "/etc/candlepin/certs/keystore" "tomcat" "password")"
+        local tomcat_fp="$(fp_pkcs12 "$CONTAINER_CONF_DIR/keystore" "tomcat" "password")"
+        if [ "$candlepin_fp" != "$tomcat_fp" ]; then
+          err_msg "The keys in the Tomcat keystore don't match Candlepin's!"
+        fi
+    fi
+}
+
+upload_products() {
+  if [ "$TESTDATA" = "1" ]; then
+      $SELF_DIR/test_data_importer.py $SELF_DIR/test_data.json
+  elif [ "$TESTDATA" = "MIN" ]; then
+      $SELF_DIR/test_data_importer.py $SELF_DIR/min_test_data.json
+  fi
+}
+
+create_test_repos() {
+    if [ "$TESTREPO" = "1" ]; then
+        if [ ! -d "${REPOS}" ]; then
+            $SUDO mkdir "${REPOS}"
+        fi
+
+        # Run Python script and generate all repos and testing rpms
+        $SUDO $SELF_DIR/create_test_repos.py $SELF_DIR/test_data.json
+
+        # Tomcat has to own all of that
+        $SUDO chown -R tomcat:tomcat "${REPOS}"
+
+        echo ""
+        echo "Run following commands on registered system to use created repositories:"
+        echo ""
+        echo "    subscription-manager config --rhsm.baseurl=http://<ip_of_this_server>:8080"
+        echo "    curl http://<ip_of_this_server>:8080/RPM-GPG-KEY-candlepin > /etc/pki/rpm-gpg/RPM-GPG-KEY-candlepin"
+        echo ""
+    fi
+}
+
+configure_tomcat_root_dir() {
+    # Create configuration file for tomcat to be able to use symbolic links
+    if [ "$TESTREPO" = "1" ]; then
+        if [ ! -d "${REPOS}/META-INF" ]; then
+            $SUDO mkdir -p "${REPOS}/META-INF"
+        fi
+
+        if [ ! -f "${REPOS}/META-INF/context.xml" ]; then
+            $SUDO cp "$PROJECT_DIR/src/main/root/META-INF/context.xml" "${REPOS}/META-INF/context.xml"
+        fi
+    fi
+}
+
+create_var_lib_candlepin() {
+    $SUDO mkdir -p /var/lib/candlepin
+    $SUDO chown tomcat:tomcat /var/lib/candlepin
+}
+
+create_var_log_candlepin() {
+    $SUDO mkdir -p /var/log/candlepin
+    $SUDO chown tomcat:tomcat /var/log/candlepin
+}
+
+create_var_cache_candlepin() {
+    $SUDO mkdir -p /var/cache/candlepin
+    $SUDO chown tomcat:tomcat /var/cache/candlepin
+}
+
+autoconf() {
+  printf "\nGenerating candlepin.conf\n"
+  echo $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $EXTERNAL_BROKER -Pdb_host=${DBHOSTNAME:-localhost}
+  $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $EXTERNAL_BROKER  -Pdb_host=${DBHOSTNAME:-localhost}
+
+  if [ "$?" -ne "0" ]; then
+    err_msg "ERROR: candlepin.conf generation failed!"
+    return 1
+  fi
+
+  CANDLEPIN_CONF="/etc/candlepin/candlepin.conf"
+
+  if [ ! -e $CANDLEPIN_CONF ] || $($SUDO head -n 1 $CANDLEPIN_CONF | grep -q "AUTOGENERATED"); then
+    $SUDO cp $PROJECT_DIR/build/candlepin.conf $CANDLEPIN_CONF
+  else
+    warn_msg "Your candlepin.conf does not appear to be autogenerated.  Cowardly refusing to overwrite."
+  fi
+}
+
+usage() {
+    cat <<HELP
+usage: deploy [options]
+
+OPTIONS:
+  -f          force cert regeneration
+  -g          generate database
+  -r          generate test repositories
+  -t          import test data
+  -T          import minimal test data, some owners, users, and roles
+  -H          include test resources for hosted mode
+  -l          use Logdriver
+  -m          use MySQL
+  -a          auto-deploy a generated candlepin.conf
+  -v          verbose output
+  -d <name>   specify a database name to use when creating or updating the Candlepin database
+  -b          deploy candlepin with an external Artemis message broker
+
+HELP
+}
+
+notify() {
+    if [ -z "$QUIET" ]; then
+        if type notify-send &> /dev/null; then
+            notify-send -i info -t 2000 "Deployment complete!"
+        fi
+        echo
+        success_msg "Deployment complete!"
+    fi
+}
+
+initialize_cp() {
+    info_msg "Initializing Candlepin..."
+    wget --no-check-certificate -qO- https://localhost:8443/candlepin/admin/init
+    printf "\nDone initializing CP\n"
+}
+
+init() {
+    # Source useful bash functions
+    source "$(git rev-parse --show-toplevel)/bin/deployment/bash_functions"
+
+    # Read in user defined variables
+    if [ -f $HOME/.candlepinrc ] ; then
+        source $HOME/.candlepinrc
+    fi
+
+    PROJECT_DIR="$(project_directory)"
+
+    # Get the directory this script is in. See http://mywiki.wooledge.org/BashFAQ/028
+    SELF_DIR="${BASH_SOURCE%/*}"
+}
+
+### Main
+
+# Abort on errors
+set -e
+
+init
+
+DBUSER="candlepin"
+
+while getopts ":fgtTrHolmavbd:" opt; do
+    case $opt in
+        f  ) FORCECERT="1" ;;
+        g  ) GENDB="1";;
+        H  ) HOSTEDTEST="hostedtest";;
+        t  ) TESTDATA="1";;
+        T  ) TESTDATA="MIN";;
+        r  ) TESTREPO="1";;
+        l  ) LOGDRIVER="logdriver";;
+        m  ) USE_MYSQL="1";;
+        a  ) AUTOCONF="1";;
+        v  ) VERBOSE="1";;
+        d  ) APP_DB_NAME="${OPTARG}";;
+        b  ) EXTERNAL_BROKER="1";;
+        ?  ) usage; exit;;
+    esac
+done
+
+shift $(($OPTIND - 1))
+
+if [ $(id -u) -ne 0 ]; then
+    if ( command -v sudo >/dev/null 2>&1 ) then
+        SUDO="sudo"
+    else
+        echo "WARNING: sudo is not available. This command may need to be re-run with root access to complete successfully." >&2
+    fi
+fi
+
+# use tomcat 6, unless it doesnt exist and tomcat does
+TC=tomcat6
+TC_VERSION=6
+
+if ( [ -f /usr/sbin/tomcat ] && (! [ -f /usr/sbin/tomcat6 ] ) );
+then
+    TC=tomcat
+
+    # Determine which Tomcat version we're using
+    TC_VERSION=$(rpm -q tomcat | grep -oP "(?<=^tomcat-)[0-9]+\.[0-9]+")
+fi
+
+if [ -z $TC_HOME ]; then
+    TC_HOME=/var/lib/$TC
+fi
+
+info_msg "Configuring Tomcat $TC_VERSION found at $TC_HOME"
+
+isrpm $TC_HOME
+if [ "$?" -ne 0 ]; then
+    START="$TC_HOME/bin/catalina.sh jpda start"
+    STOP="$TC_HOME/bin/catalina.sh stop"
+    CONTAINER_CONF_DIR="$TC_HOME/conf"
+else
+    START="$SUDO /sbin/service $TC start"
+    STOP="$SUDO /sbin/service $TC stop"
+    CONTAINER_CONF_DIR="/etc/$TC"
+fi
+
+# Check if we're in a container using supervisord instead:
+if [ "$SUPERVISOR" == "1" ]; then
+    START="supervisorctl start tomcat"
+    STOP="supervisorctl stop tomcat"
+fi
+
+DEPLOY="$TC_HOME/webapps/candlepin.war"
+DEPLOY_DIR="$TC_HOME/webapps/candlepin/"
+
+REPOS="$TC_HOME/webapps/ROOT"
+
+
+
+# stop the appserver
+eval $STOP
+
+if [ "$EXTERNAL_BROKER" == "1" ]; then
+    # Set up an external Artemis server
+    $SUDO $PROJECT_DIR/bin/deployment/artemis/configure-artemis.py --start
+    EXTERNAL_BROKER="-Pexternal_broker=true"
+else
+    EXTERNAL_BROKER=""
+fi
+
+# generate the postgresql DB
+if [ "$LOGDRIVER" == "logdriver" ]; then
+    info_msg "Using logdriver"
+    LOGDRIVER="-Plogdriver=true"
+else
+    LOGDRIVER=""
+fi
+
+if [ "$HOSTEDTEST" == "hostedtest" ]; then
+    info_msg "Including hostedtest resources"
+    info_msg "WARNING: DO NOT SPEC TEST IN PARALLEL MODE"
+    HOSTEDTEST="-Phostedtest=true"
+else
+    HOSTEDTEST=""
+fi
+
+if [ "$USE_MYSQL" == "1" ]; then
+    DATABASE_SERVER="-Pdatabase_server=mysql"
+else
+    # "development" is the default buildr environment.  It has been aliased to the postgresql environment
+    # in profiles.yaml
+    DATABASE_SERVER="-Pdatabase_server=postgres"
+fi
+
+printf "\nBuilding Candlepin\n"
+echo $(checkout_directory)/gradlew war $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST
+$(checkout_directory)/gradlew war $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST
+
+if [ "$?" -ne "0" ]; then
+  err_msg "ERROR: Compile failed."
+  exit 1
+fi
+
+gendb
+
+if [ "$FORCECERT" == "1" ]; then
+    GEN_CERTS_ARGS="-f"
+fi
+
+# generate SSL certs if they are needed
+bash $SELF_DIR/gen-certs $GEN_CERTS_ARGS
+
+# update keystore file and put it into tomcat's conf directory
+update_keystore
+
+# update server.xml
+$SUDO python $PROJECT_DIR/bin/deployment/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR
+
+create_var_lib_candlepin
+configure_tomcat_root_dir
+create_var_log_candlepin
+create_var_cache_candlepin
+
+if [ "$AUTOCONF" == "1" ]; then
+  autoconf
+fi
+
+# deploy the webapp
+deploy
+
+# Need to use newer APIs in context.xml for Tomcat 8+
+MAJOR_TC_VERSION=${TC_VERSION%.*}
+if (( MAJOR_TC_VERSION >= 8 )); then
+    printf "\nTomcat version is 8 or newer. Updating context.xml...\n\n"
+    $SUDO unzip -q $DEPLOY -d $DEPLOY_DIR
+    $SUDO mv $DEPLOY_DIR/META-INF/context_tomcat8.xml $DEPLOY_DIR/META-INF/context.xml
+    $SUDO chown -R tomcat:tomcat $DEPLOY_DIR
+fi
+
+eval $START
+
+START_TIME=$(date +%s)
+
+printf "\nWaiting for Candlepin to start...\n"
+until curl -k -s "https://localhost:8443/candlepin/status" > /dev/null
+do
+    CURRENT_TIME=$(date +%s)
+    ELAPSED_TIME=$((CURRENT_TIME - START_TIME))
+
+    if [ "$ELAPSED_TIME" -gt "$MAX_STARTUP_WAIT_TIME" ]; then
+        echo
+        err_msg "Candlepin failed to start within $MAX_STARTUP_WAIT_TIME seconds. Aborting..."
+        exit 1
+    fi
+
+    printf "."
+    sleep 1
+done
+echo
+
+initialize_cp
+
+upload_products
+create_test_repos
+
+notify

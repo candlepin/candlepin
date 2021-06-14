@@ -55,7 +55,7 @@ class Rspec extends DefaultTask {
         def rspec_args = [
                 "--format", "documentation",
                 "--force-color",
-                "--require", "${project.rootDir}/server/spec/failure_formatter",
+                "--require", "${project.rootDir}/spec/failure_formatter",
                 "--format", "ModifiedRSpec::FailuresFormatter",
                 "-I", "${project.getProjectDir()}/client/ruby"
         ]

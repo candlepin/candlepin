@@ -28,9 +28,9 @@ public class SpecVersion implements Plugin<Project> {
         String versionFromSpec = null;
         String releaseFromSpec = null;
 
-        // Read the spec file from (projectRoot)/server/candlepin.spec.tmpl
+        // Read the spec file from (projectRoot)/candlepin.spec.tmpl
         String absPath = project.getRootProject().getProjectDir().getAbsolutePath();
-        Path specFilePath = Paths.get(absPath, "server", "candlepin.spec.tmpl");
+        Path specFilePath = Paths.get(absPath, "candlepin.spec.tmpl");
 
         try {
 
