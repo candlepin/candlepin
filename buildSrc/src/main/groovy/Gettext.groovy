@@ -50,10 +50,7 @@ class Gettext implements Plugin<Project> {
                 List gettext_args = ["-k", "-F", "-ktrc:1c,2", "-ktrnc:1c,2,3","-ktr",
                                      "-kmarktr", "-ktrn:1,2", "--from-code=utf-8", "-o", "${keys_file}"
                 ]
-                // Only append to the existing keys file if we are adding to one in a different project.
-                if ("${extension.keys_project_dir}" != "${project.projectDir}") {
-                    gettext_args.add("-j")
-                }
+
                 gettext_args.add("-f")
                 gettext_args.add("${source_files}")
                 println(gettext_args.join(" "))
@@ -115,7 +112,7 @@ class Gettext implements Plugin<Project> {
             doLast {
                 def po_files = new FileNameFinder().getFileNames("${extension.keys_project_dir}/po/", '*.po')
                 po_files.each {
-                    def msgattrib_args = ['--set-obsolete', '--ignore-file=common/po/keys.pot','-o', it, it]
+                    def msgattrib_args = ['--set-obsolete', '--ignore-file=po/keys.pot','-o', it, it]
                     project.exec {
                         executable "msgattrib"
                         args msgattrib_args
