@@ -16,9 +16,7 @@
 
     <changeSet id="20210412145432-3" author="ojanus">
         <addColumn tableName="cp_cont_access_cert">
-            <column name="content" type="LONGTEXT">
-                <constraints nullable="false"/>
-            </column>
+            <column name="content" type="LONGTEXT"/>
         </addColumn>
         <dropTable tableName="cp_owner_env_content_access"/>
     </changeSet>
