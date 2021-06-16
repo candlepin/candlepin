@@ -17,8 +17,8 @@ package org.candlepin.guice;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.config.PropertiesFileConfiguration;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.PropertiesFileConfiguration;
 
 import com.google.inject.Module;
 

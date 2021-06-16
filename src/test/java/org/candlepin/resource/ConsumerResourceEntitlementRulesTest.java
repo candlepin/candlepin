@@ -17,7 +17,7 @@ package org.candlepin.resource;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.candlepin.async.JobException;
-import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;

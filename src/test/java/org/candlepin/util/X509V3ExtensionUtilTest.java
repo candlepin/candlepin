@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.TestingModules;
-import org.candlepin.common.config.Configuration;
+import org.candlepin.config.Configuration;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;

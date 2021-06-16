@@ -19,8 +19,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.ActiveMQStatus;
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 
 import org.junit.Before;
 import org.junit.Test;

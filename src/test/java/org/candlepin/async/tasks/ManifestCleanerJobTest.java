@@ -19,9 +19,9 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.controller.ManifestManager;
 
 import org.junit.jupiter.api.BeforeEach;

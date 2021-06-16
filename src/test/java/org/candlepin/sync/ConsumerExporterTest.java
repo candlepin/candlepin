@@ -17,8 +17,8 @@ package org.candlepin.sync;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.MapConfiguration;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;

@@ -14,8 +14,8 @@
  */
 package org.candlepin.util;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.EntitlementCurator;

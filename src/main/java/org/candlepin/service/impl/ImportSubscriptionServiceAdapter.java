@@ -14,9 +14,9 @@
  */
 package org.candlepin.service.impl;
 
-import org.candlepin.common.exceptions.ServiceUnavailableException;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
+import org.candlepin.exceptions.ServiceUnavailableException;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.ConsumerInfo;
 

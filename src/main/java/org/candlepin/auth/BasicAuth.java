@@ -15,10 +15,10 @@
 package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.PermissionFactory;
-import org.candlepin.common.exceptions.CandlepinException;
-import org.candlepin.common.exceptions.NotAuthorizedException;
-import org.candlepin.common.exceptions.ServiceUnavailableException;
-import org.candlepin.common.resteasy.auth.AuthUtil;
+import org.candlepin.exceptions.CandlepinException;
+import org.candlepin.exceptions.NotAuthorizedException;
+import org.candlepin.exceptions.ServiceUnavailableException;
+import org.candlepin.resteasy.filter.AuthUtil;
 import org.candlepin.service.UserServiceAdapter;
 
 import com.google.inject.Inject;

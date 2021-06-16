@@ -15,8 +15,8 @@
 package org.candlepin.audit;
 
 import org.candlepin.auth.PrincipalData;
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 
 import com.google.inject.Inject;
 

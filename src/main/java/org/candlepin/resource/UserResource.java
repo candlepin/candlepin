@@ -15,13 +15,13 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.Verify;
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.ConflictException;
-import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.RoleDTO;
 import org.candlepin.dto.api.v1.UserDTO;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.ConflictException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.User;

@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.activationkey;
 
-import org.candlepin.common.config.PropertyConverter;
+import org.candlepin.config.PropertyConverter;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Pool;
 import org.candlepin.model.activationkeys.ActivationKey;

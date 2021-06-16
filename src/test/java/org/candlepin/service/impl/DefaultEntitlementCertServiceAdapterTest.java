@@ -33,7 +33,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.TestingModules;
-import org.candlepin.common.config.Configuration;
+import org.candlepin.config.Configuration;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;

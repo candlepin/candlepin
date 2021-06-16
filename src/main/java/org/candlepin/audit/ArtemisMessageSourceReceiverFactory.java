@@ -15,7 +15,7 @@
 package org.candlepin.audit;
 
 import org.candlepin.async.impl.ActiveMQSessionFactory;
-import org.candlepin.common.config.Configuration;
+import org.candlepin.config.Configuration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;

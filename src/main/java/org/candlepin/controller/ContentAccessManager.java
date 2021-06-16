@@ -15,8 +15,8 @@
 package org.candlepin.controller;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;

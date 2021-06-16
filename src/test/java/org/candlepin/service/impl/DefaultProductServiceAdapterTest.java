@@ -31,8 +31,8 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;

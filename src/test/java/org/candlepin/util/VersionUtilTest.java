@@ -17,8 +17,8 @@ package org.candlepin.util;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import org.candlepin.common.util.VersionUtil;
 import org.candlepin.model.Rules;
+import org.candlepin.version.VersionUtil;
 
 import org.junit.After;
 import org.junit.Test;

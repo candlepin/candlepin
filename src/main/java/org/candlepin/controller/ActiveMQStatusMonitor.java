@@ -15,8 +15,8 @@
 package org.candlepin.controller;
 
 import org.candlepin.audit.ActiveMQStatus;
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

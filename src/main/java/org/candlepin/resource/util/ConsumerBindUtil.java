@@ -14,12 +14,12 @@
  */
 package org.candlepin.resource.util;
 
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.ForbiddenException;
 import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.Entitler;
 import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerContentOverrideCurator;

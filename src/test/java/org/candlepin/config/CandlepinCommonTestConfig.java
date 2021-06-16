@@ -14,8 +14,6 @@
  */
 package org.candlepin.config;
 
-import org.candlepin.common.config.MapConfiguration;
-
 import java.net.URISyntaxException;
 
 /**

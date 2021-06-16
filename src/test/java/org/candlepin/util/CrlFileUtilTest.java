@@ -19,7 +19,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.candlepin.TestingModules;
-import org.candlepin.common.config.Configuration;
+import org.candlepin.config.Configuration;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;

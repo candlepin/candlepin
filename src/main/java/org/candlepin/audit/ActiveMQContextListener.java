@@ -14,8 +14,8 @@
  */
 package org.candlepin.audit;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.controller.ActiveMQStatusMonitor;
 import org.candlepin.controller.SuspendModeTransitioner;
 

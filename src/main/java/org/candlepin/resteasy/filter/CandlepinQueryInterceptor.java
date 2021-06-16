@@ -14,11 +14,11 @@
  */
 package org.candlepin.resteasy.filter;
 
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ResultIterator;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.resteasy.JsonProvider;
 
 import com.fasterxml.jackson.core.JsonGenerator;

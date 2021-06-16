@@ -16,9 +16,9 @@ package org.candlepin.pki.impl;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;

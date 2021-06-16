@@ -14,7 +14,7 @@
  */
 package org.candlepin.sync;
 
-import org.candlepin.common.exceptions.CandlepinException;
+import org.candlepin.exceptions.CandlepinException;
 
 import java.util.HashSet;
 import java.util.List;

@@ -25,9 +25,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.messaging.CPMConsumer;
 import org.candlepin.messaging.CPMConsumerConfig;
 import org.candlepin.messaging.CPMException;

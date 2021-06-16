@@ -19,8 +19,8 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.auth.SecurityHole;
 import org.candlepin.auth.Verify;
-import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.model.Consumer;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;

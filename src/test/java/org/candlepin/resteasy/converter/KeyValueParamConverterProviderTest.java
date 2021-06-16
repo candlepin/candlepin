@@ -17,8 +17,8 @@ package org.candlepin.resteasy.converter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.candlepin.common.exceptions.CandlepinParameterParseException;
 import org.candlepin.dto.api.v1.KeyValueParamDTO;
+import org.candlepin.exceptions.CandlepinParameterParseException;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

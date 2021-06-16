@@ -16,8 +16,8 @@ package org.candlepin.messaging.impl.artemis;
 
 import static org.candlepin.config.ConfigProperties.ASYNC_JOBS_THREAD_SHUTDOWN_TIMEOUT;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.messaging.CPMException;
 

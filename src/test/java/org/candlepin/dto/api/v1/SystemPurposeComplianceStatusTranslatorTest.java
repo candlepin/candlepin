@@ -21,7 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.TestingModules;
-import org.candlepin.common.config.Configuration;
+import org.candlepin.config.Configuration;
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.model.Entitlement;

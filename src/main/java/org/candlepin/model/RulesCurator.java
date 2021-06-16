@@ -15,9 +15,9 @@
 package org.candlepin.model;
 
 import org.candlepin.cache.CandlepinCacheRegions;
-import org.candlepin.common.exceptions.NotFoundException;
-import org.candlepin.common.util.VersionUtil;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.util.Util;
+import org.candlepin.version.VersionUtil;
 
 import com.google.inject.persist.Transactional;
 

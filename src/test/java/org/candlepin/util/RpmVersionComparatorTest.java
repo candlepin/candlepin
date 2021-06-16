@@ -16,7 +16,7 @@ package org.candlepin.util;
 
 import static org.junit.Assert.assertEquals;
 
-import org.candlepin.common.util.RpmVersionComparator;
+import org.candlepin.version.RpmVersionComparator;
 
 import org.junit.After;
 import org.junit.Before;

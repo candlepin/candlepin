@@ -14,9 +14,9 @@
  */
 package org.candlepin.dto.rules.v1;
 
-import org.candlepin.common.jackson.HateoasArrayExclude;
-import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.jackson.HateoasArrayExclude;
+import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.jackson.SingleValueWrapDeserializer;
 import org.candlepin.jackson.SingleValueWrapSerializer;
 import org.candlepin.util.MapView;

@@ -14,13 +14,13 @@
  */
 package org.candlepin.guice;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.filter.LoggingFilter;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.servlet.filter.CandlepinContentTypeFilter;
 import org.candlepin.servlet.filter.CandlepinPersistFilter;
 import org.candlepin.servlet.filter.CandlepinScopeFilter;
 import org.candlepin.servlet.filter.EventFilter;
+import org.candlepin.servlet.filter.logging.LoggingFilter;
 
 import com.google.inject.servlet.ServletModule;
 

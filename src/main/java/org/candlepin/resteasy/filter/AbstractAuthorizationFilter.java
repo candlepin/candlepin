@@ -15,10 +15,10 @@
 package org.candlepin.resteasy.filter;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.common.exceptions.ForbiddenException;
-import org.candlepin.common.filter.LoggingFilter;
-import org.candlepin.common.filter.ServletLogger;
-import org.candlepin.common.filter.TeeHttpServletRequest;
+import org.candlepin.exceptions.ForbiddenException;
+import org.candlepin.servlet.filter.logging.LoggingFilter;
+import org.candlepin.servlet.filter.logging.ServletLogger;
+import org.candlepin.servlet.filter.logging.TeeHttpServletRequest;
 
 import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;

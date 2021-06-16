@@ -19,10 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.jackson.DynamicFilterData;
+import org.candlepin.config.Configuration;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
+import org.candlepin.jackson.DynamicFilterData;
 import org.candlepin.model.ProductCurator;
 
 import com.fasterxml.jackson.core.JsonProcessingException;

@@ -16,7 +16,7 @@
 package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.PermissionFactory;
-import org.candlepin.common.resteasy.auth.AuthUtil;
+import org.candlepin.resteasy.filter.AuthUtil;
 import org.candlepin.service.UserServiceAdapter;
 
 import org.jboss.resteasy.spi.HttpRequest;

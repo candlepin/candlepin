@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.util.DateSource;
 

@@ -14,8 +14,8 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.common.jackson.HateoasArrayExclude;
-import org.candlepin.common.jackson.HateoasInclude;
+import org.candlepin.jackson.HateoasArrayExclude;
+import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.jackson.StringTrimmingConverter;
 import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.util.Util;

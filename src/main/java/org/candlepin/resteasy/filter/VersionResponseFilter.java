@@ -14,7 +14,7 @@
  */
 package org.candlepin.resteasy.filter;
 
-import org.candlepin.common.util.VersionUtil;
+import org.candlepin.version.VersionUtil;
 
 import java.util.Map;
 

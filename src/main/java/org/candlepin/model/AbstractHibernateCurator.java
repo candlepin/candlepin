@@ -16,12 +16,12 @@ package org.candlepin.model;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.ConcurrentModificationException;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
+import org.candlepin.config.Configuration;
 import org.candlepin.config.DatabaseConfigFactory;
+import org.candlepin.exceptions.ConcurrentModificationException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
