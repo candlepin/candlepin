@@ -14,12 +14,8 @@
  */
 package org.candlepin.resteasy;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.jackson.DynamicPropertyFilter;
-import org.candlepin.common.jackson.DynamicPropertyFilterMixIn;
-import org.candlepin.common.jackson.HateoasBeanPropertyFilter;
-import org.candlepin.common.jackson.MultiFilter;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.dto.api.v1.AbstractCertificateDTO;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ActivationKeyPoolDTO;
@@ -76,6 +72,10 @@ import org.candlepin.dto.api.v1.UserDTO;
 import org.candlepin.jackson.AsyncJobStatusAnnotationMixin;
 import org.candlepin.jackson.ConsumerTypeDeserializer;
 import org.candlepin.jackson.DateSerializer;
+import org.candlepin.jackson.DynamicPropertyFilter;
+import org.candlepin.jackson.DynamicPropertyFilterMixIn;
+import org.candlepin.jackson.HateoasBeanPropertyFilter;
+import org.candlepin.jackson.MultiFilter;
 import org.candlepin.jackson.OffsetDateTimeDeserializer;
 import org.candlepin.jackson.OffsetDateTimeSerializer;
 import org.candlepin.jackson.PoolAnnotationMixIn;

@@ -14,7 +14,7 @@
  */
 package org.candlepin.jackson;
 
-import org.candlepin.common.exceptions.CandlepinJsonProcessingException;
+import org.candlepin.exceptions.CandlepinJsonProcessingException;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;

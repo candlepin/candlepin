@@ -16,8 +16,8 @@ package org.candlepin.resource;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
+import org.candlepin.auth.SecurityHole;
 import org.candlepin.auth.SystemPrincipal;
-import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.dto.api.v1.QueueStatus;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;

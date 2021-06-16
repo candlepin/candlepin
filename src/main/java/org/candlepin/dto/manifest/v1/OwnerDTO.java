@@ -14,8 +14,8 @@
  */
 package org.candlepin.dto.manifest.v1;
 
-import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.dto.TimestampedCandlepinDTO;
+import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.service.model.OwnerInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;

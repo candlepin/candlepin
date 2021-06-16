@@ -17,7 +17,7 @@ package org.candlepin.audit;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.async.impl.ActiveMQSessionFactory;
-import org.candlepin.common.config.Configuration;
+import org.candlepin.config.Configuration;
 
 import org.apache.activemq.artemis.api.core.client.ClientSession;
 import org.apache.activemq.artemis.api.core.client.ClientSessionFactory;

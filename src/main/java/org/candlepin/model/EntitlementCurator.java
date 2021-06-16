@@ -14,9 +14,9 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;

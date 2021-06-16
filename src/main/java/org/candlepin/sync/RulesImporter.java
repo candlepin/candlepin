@@ -15,10 +15,10 @@
 package org.candlepin.sync;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.common.util.VersionUtil;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.version.VersionUtil;
 
 import com.google.inject.Inject;
 

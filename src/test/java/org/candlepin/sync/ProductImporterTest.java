@@ -16,8 +16,8 @@ package org.candlepin.sync;
 
 import static org.junit.Assert.assertEquals;
 
-import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.MapConfiguration;
 import org.candlepin.dto.manifest.v1.ContentDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.model.Content;

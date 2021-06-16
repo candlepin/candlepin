@@ -14,13 +14,13 @@
  */
 package org.candlepin.hostedtest;
 
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.ConflictException;
-import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.SubscriptionDTO;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.ConflictException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ProductContent;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.service.UniqueIdGenerator;

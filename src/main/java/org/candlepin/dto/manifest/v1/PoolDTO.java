@@ -14,10 +14,10 @@
  */
 package org.candlepin.dto.manifest.v1;
 
-import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.jackson.CandlepinAttributeDeserializer;
 import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
+import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 

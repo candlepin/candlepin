@@ -14,7 +14,7 @@
  */
 package org.candlepin.guice;
 
-import org.candlepin.common.config.Configuration;
+import org.candlepin.config.Configuration;
 
 import com.google.inject.Module;
 

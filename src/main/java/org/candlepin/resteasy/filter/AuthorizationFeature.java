@@ -14,8 +14,8 @@
  */
 package org.candlepin.resteasy.filter;
 
+import org.candlepin.auth.SecurityHole;
 import org.candlepin.auth.Verify;
-import org.candlepin.common.auth.SecurityHole;
 import org.candlepin.resteasy.AnnotationLocator;
 
 import org.slf4j.Logger;

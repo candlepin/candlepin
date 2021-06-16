@@ -15,12 +15,11 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.KeycloakConfiguration;
+import org.candlepin.auth.SecurityHole;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.StatusCache;
-import org.candlepin.common.auth.SecurityHole;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.controller.mode.ModeChangeReason;
@@ -30,6 +29,7 @@ import org.candlepin.model.Rules.RulesSourceEnum;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.util.Util;
+import org.candlepin.version.VersionUtil;
 
 import com.google.inject.Inject;
 

@@ -14,7 +14,6 @@
  */
 package org.candlepin.jackson;
 
-import org.candlepin.common.jackson.DynamicPropertyFilterMixIn;
 import org.candlepin.dto.api.v1.AttributeDTO;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

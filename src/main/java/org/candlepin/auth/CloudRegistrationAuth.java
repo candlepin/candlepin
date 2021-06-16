@@ -17,13 +17,13 @@ package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.config.ConversionException;
-import org.candlepin.common.resteasy.auth.AuthUtil;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.ConversionException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.pki.CertificateReader;
+import org.candlepin.resteasy.filter.AuthUtil;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
 import org.candlepin.service.exception.MalformedCloudRegistrationException;

@@ -17,7 +17,7 @@ package org.candlepin.model;
 import static org.junit.Assert.assertEquals;
 
 import org.candlepin.TestingModules;
-import org.candlepin.common.config.Configuration;
+import org.candlepin.config.Configuration;
 import org.candlepin.config.DatabaseConfigFactory;
 
 import com.google.inject.Guice;

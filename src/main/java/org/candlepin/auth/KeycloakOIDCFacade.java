@@ -15,7 +15,7 @@
 
 package org.candlepin.auth;
 
-import org.candlepin.common.exceptions.CandlepinException;
+import org.candlepin.exceptions.CandlepinException;
 
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.HttpRequest;

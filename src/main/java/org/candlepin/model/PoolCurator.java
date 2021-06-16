@@ -14,11 +14,11 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.common.paging.Page;
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
+import org.candlepin.paging.Page;
+import org.candlepin.paging.PageRequest;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.Inject;

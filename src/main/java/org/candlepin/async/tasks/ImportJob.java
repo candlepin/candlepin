@@ -22,8 +22,8 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.common.exceptions.NotFoundException;
 import org.candlepin.controller.ManifestManager;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -165,7 +165,7 @@ public class ImportJob implements AsyncJob {
 
     /**
      * The equivalent of {@link ImportConflictException}, but for asynchronous imports.
-     * It is used by transforming an {@link org.candlepin.common.exceptions.CandlepinException} to a
+     * It is used by transforming an {@link org.candlepin.exceptions.CandlepinException} to a
      * {@link JobExecutionException}, fit for propagating to the job management system, without keeping the
      * redundant fields the former has (such as requestUuid & REST return code), while retaining the useful
      * information (list of conflicts, display message) accessible through its toString method.

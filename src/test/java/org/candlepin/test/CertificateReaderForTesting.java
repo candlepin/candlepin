@@ -14,8 +14,8 @@
  */
 package org.candlepin.test;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.config.MapConfiguration;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.MapConfiguration;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;

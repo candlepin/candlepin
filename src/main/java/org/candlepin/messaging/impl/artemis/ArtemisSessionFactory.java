@@ -14,8 +14,8 @@
  */
 package org.candlepin.messaging.impl.artemis;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.messaging.CPMException;
 import org.candlepin.messaging.CPMSessionConfig;
 import org.candlepin.messaging.CPMSessionFactory;

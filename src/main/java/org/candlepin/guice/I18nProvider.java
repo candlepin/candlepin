@@ -14,8 +14,6 @@
  */
 package org.candlepin.guice;
 
-import org.candlepin.common.guice.CommonI18nProvider;
-
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.ProvisionException;

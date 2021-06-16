@@ -14,8 +14,8 @@
  */
 package org.candlepin.dto.rules.v1;
 
-import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.dto.CandlepinDTO;
+import org.candlepin.jackson.HateoasInclude;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

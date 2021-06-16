@@ -14,9 +14,9 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.common.jackson.HateoasInclude;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.resteasy.InfoProperty;
 import org.candlepin.service.model.OwnerInfo;

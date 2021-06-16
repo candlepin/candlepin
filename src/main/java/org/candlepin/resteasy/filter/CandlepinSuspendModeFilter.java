@@ -14,10 +14,10 @@
  */
 package org.candlepin.resteasy.filter;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.SuspendedException;
+import org.candlepin.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
+import org.candlepin.exceptions.SuspendedException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

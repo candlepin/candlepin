@@ -15,7 +15,7 @@
 package org.candlepin.servlet.filter;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.common.filter.TeeHttpServletResponse;
+import org.candlepin.servlet.filter.logging.TeeHttpServletResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;

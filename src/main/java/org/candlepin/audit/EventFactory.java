@@ -16,10 +16,10 @@ package org.candlepin.audit;
 
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
-import org.candlepin.common.exceptions.IseException;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
+import org.candlepin.exceptions.IseException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;

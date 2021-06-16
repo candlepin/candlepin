@@ -15,8 +15,6 @@
 
 package org.candlepin.jackson;
 
-import org.candlepin.common.jackson.DynamicPropertyFilterMixIn;
-
 import com.fasterxml.jackson.annotation.JsonRawValue;
 
 public abstract class AsyncJobStatusAnnotationMixin extends DynamicPropertyFilterMixIn {

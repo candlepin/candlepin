@@ -14,13 +14,13 @@
  */
 package org.candlepin.auth;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.exceptions.BadRequestException;
-import org.candlepin.common.exceptions.CandlepinException;
-import org.candlepin.common.exceptions.IseException;
-import org.candlepin.common.exceptions.NotAuthorizedException;
-import org.candlepin.common.resteasy.auth.AuthUtil;
-import org.candlepin.common.resteasy.auth.RestEasyOAuthMessage;
+import org.candlepin.config.Configuration;
+import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.CandlepinException;
+import org.candlepin.exceptions.IseException;
+import org.candlepin.exceptions.NotAuthorizedException;
+import org.candlepin.resteasy.filter.AuthUtil;
+import org.candlepin.resteasy.filter.RestEasyOAuthMessage;
 
 import com.google.inject.Inject;
 

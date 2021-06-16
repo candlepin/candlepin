@@ -21,7 +21,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.SSLAuth;
 import org.candlepin.auth.Verify;
 import org.candlepin.auth.permissions.PermissionFactory;
-import org.candlepin.common.exceptions.ForbiddenException;
+import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
 import org.candlepin.test.DatabaseTestFixture;
 

@@ -17,7 +17,7 @@ package org.candlepin.resource.util;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.exceptions.BadRequestException;
 
 import org.junit.Test;
 

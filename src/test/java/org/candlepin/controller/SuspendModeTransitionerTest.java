@@ -17,9 +17,9 @@ package org.candlepin.controller;
 import static org.junit.Assert.assertEquals;
 
 import org.candlepin.audit.ActiveMQStatus;
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.controller.mode.ModeChangeReason;

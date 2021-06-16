@@ -14,8 +14,8 @@
  */
 package org.candlepin.async.impl;
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

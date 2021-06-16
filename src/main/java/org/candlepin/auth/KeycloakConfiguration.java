@@ -16,8 +16,8 @@
 package org.candlepin.auth;
 
 
-import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 
 import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.adapters.KeycloakDeployment;

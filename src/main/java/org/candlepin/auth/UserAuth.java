@@ -15,7 +15,7 @@
 package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.PermissionFactory;
-import org.candlepin.common.exceptions.BadRequestException;
+import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.model.UserInfo;
 

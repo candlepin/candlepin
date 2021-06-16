@@ -14,9 +14,8 @@
  */
 package org.candlepin.sync;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.manifest.v1.CertificateDTO;
@@ -43,6 +42,7 @@ import org.candlepin.policy.js.export.ExportRules;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.CertificateInfo;
+import org.candlepin.version.VersionUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;

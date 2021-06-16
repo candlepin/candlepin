@@ -29,11 +29,11 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.TestingModules;
 import org.candlepin.audit.ActiveMQContextListener;
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.config.ConfigurationException;
-import org.candlepin.common.config.ConfigurationPrefixes;
-import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.ConfigurationException;
+import org.candlepin.config.ConfigurationPrefixes;
+import org.candlepin.config.MapConfiguration;
 import org.candlepin.junit.LiquibaseExtension;
 
 import com.google.inject.AbstractModule;

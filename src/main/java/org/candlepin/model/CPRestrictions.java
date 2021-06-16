@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.common.config.Configuration;
+import org.candlepin.config.Configuration;
 import org.candlepin.config.DatabaseConfigFactory;
 
 import com.google.common.collect.Iterables;

@@ -25,10 +25,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.common.config.MapConfiguration;
-import org.candlepin.common.util.VersionUtil;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.MapConfiguration;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
@@ -64,6 +63,7 @@ import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
+import org.candlepin.version.VersionUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

@@ -17,8 +17,8 @@ package org.candlepin.resteasy.filter;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.common.paging.PageRequest;
 import org.candlepin.model.Owner;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.SessionWrapper;

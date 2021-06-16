@@ -21,8 +21,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.candlepin.TestingModules;
 import org.candlepin.auth.PrincipalData;
-import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.MapConfiguration;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;

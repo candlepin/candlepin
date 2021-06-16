@@ -16,9 +16,9 @@ package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import org.candlepin.common.config.Configuration;
-import org.candlepin.common.config.MapConfiguration;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.MapConfiguration;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
