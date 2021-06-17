@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-06-16 05:05-0400\n"
+"POT-Creation-Date: 2021-06-17 03:01-0400\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -235,124 +235,6 @@ msgstr ""
 msgid "Subscription pool(s) {0} do not exist."
 msgstr ""
 
-#: src/main/java/org/candlepin/common/exceptions/mappers/BadRequestExceptionMapper.java:72
-#: src/main/java/org/candlepin/guice/I18nProvider.java:84
-msgid "Bad Request"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/exceptions/mappers/CandlepinExceptionMapper.java:106
-#, java-format
-msgid "Runtime Error {0} at {1}.{2}:{3}"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/exceptions/mappers/CandlepinExceptionMapper.java:111
-#, java-format
-msgid "Runtime Error {0}"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/resteasy/filter/PageRequestFilter.java:91
-msgid "offset and limit parameters must be positive integers"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/resteasy/filter/PageRequestFilter.java:108
-msgid "the order parameter must be either \"ascending\" or \"descending\""
-msgstr ""
-
-#: src/main/java/org/candlepin/common/resteasy/filter/PageRequestFilter.java:118
-msgid "Expected a positive integer."
-msgstr ""
-
-#: src/main/java/org/candlepin/common/util/JaxRsExceptionResponseBuilder.java:126
-#, java-format
-msgid "Invalid format for query parameter. Expected format: {0}"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/util/JaxRsExceptionResponseBuilder.java:137
-#, java-format
-msgid "{0} is not a valid value for {1}"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:45
-msgid "must be false"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:47
-msgid "must be true"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:49
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:59
-#, java-format
-msgid "must be less than or equal to {0}"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:51
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:61
-#, java-format
-msgid "must be greater than or equal to {0}"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:54
-msgid ""
-"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:57
-msgid "must be in the future"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:63
-msgid "may not be null"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:65
-msgid "must be null"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:67
-msgid "must be in the past"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:69
-msgid "must match \"{regexp}\""
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:71
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:77
-#, java-format
-msgid "size must be between {0} and {1}"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:73
-msgid "invalid credit card number"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:75
-msgid "not a well-formed email address"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:79
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:81
-msgid "may not be empty"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:83
-msgid "must be between {min} and {max}"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:85
-msgid "may have unsafe HTML content"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:87
-#, java-format
-msgid "script expression \"{0}\" didn't evaluate to true"
-msgstr ""
-
-#: src/main/java/org/candlepin/common/validation/CandlepinMessageInterpolator.java:90
-msgid "must be a valid URL"
-msgstr ""
-
 #: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:366
 #: src/main/java/org/candlepin/resource/util/ResolverUtil.java:55
 msgid "No owner specified, or owner lacks identifying information"
@@ -427,6 +309,31 @@ msgstr ""
 #: src/main/java/org/candlepin/controller/ManifestManager.java:322
 #, java-format
 msgid "A CDN with label {0} does not exist on this system."
+msgstr ""
+
+#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:72
+#: src/main/java/org/candlepin/guice/I18nProvider.java:82
+msgid "Bad Request"
+msgstr ""
+
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:106
+#, java-format
+msgid "Runtime Error {0} at {1}.{2}:{3}"
+msgstr ""
+
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:111
+#, java-format
+msgid "Runtime Error {0}"
+msgstr ""
+
+#: src/main/java/org/candlepin/exceptions/util/JaxRsExceptionResponseBuilder.java:127
+#, java-format
+msgid "Invalid format for query parameter. Expected format: {0}"
+msgstr ""
+
+#: src/main/java/org/candlepin/exceptions/util/JaxRsExceptionResponseBuilder.java:138
+#, java-format
+msgid "{0} is not a valid value for {1}"
 msgstr ""
 
 #: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1038
@@ -1616,6 +1523,18 @@ msgid ""
 "details"
 msgstr ""
 
+#: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:91
+msgid "offset and limit parameters must be positive integers"
+msgstr ""
+
+#: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:108
+msgid "the order parameter must be either \"ascending\" or \"descending\""
+msgstr ""
+
+#: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:118
+msgid "Expected a positive integer."
+msgstr ""
+
 #: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:271
 msgid "Organization"
 msgstr ""
@@ -1806,4 +1725,85 @@ msgstr ""
 #: src/main/java/org/candlepin/util/ServiceLevelValidator.java:72
 #, java-format
 msgid "Service level \"{0}\" is not available to units of organization {1}."
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:45
+msgid "must be false"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:47
+msgid "must be true"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:49
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:59
+#, java-format
+msgid "must be less than or equal to {0}"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:51
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:61
+#, java-format
+msgid "must be greater than or equal to {0}"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:54
+msgid ""
+"numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:57
+msgid "must be in the future"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:63
+msgid "may not be null"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:65
+msgid "must be null"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:67
+msgid "must be in the past"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:69
+msgid "must match \"{regexp}\""
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:71
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:77
+#, java-format
+msgid "size must be between {0} and {1}"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:73
+msgid "invalid credit card number"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:75
+msgid "not a well-formed email address"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:79
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:81
+msgid "may not be empty"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:83
+msgid "must be between {min} and {max}"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:85
+msgid "may have unsafe HTML content"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:87
+#, java-format
+msgid "script expression \"{0}\" didn't evaluate to true"
+msgstr ""
+
+#: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:90
+msgid "must be a valid URL"
 msgstr ""
