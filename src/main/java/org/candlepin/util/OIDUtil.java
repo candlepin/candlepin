@@ -171,6 +171,4 @@ public final class OIDUtil {
         CF_REPO_TYPE.put(CF_REPO_TYPE_KICKSTART_KEY, "3");
     }
 
-    // Maybe not the best place for this, but better than relying on bouncycastle for it.
-    public static final String CRL_NUMBER = "2.5.29.20";
 }

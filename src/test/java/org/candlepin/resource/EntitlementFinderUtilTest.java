@@ -14,7 +14,8 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.resource.util.EntitlementFinderUtil;
@@ -27,12 +28,12 @@ public class EntitlementFinderUtilTest {
     @Test
     public void nullFilterTest() {
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(null, null);
-        assertEquals(false, filters.hasMatchFilters());
+        assertFalse(filters.hasMatchFilters());
     }
 
     @Test
     public void matchesFilterTest() {
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter("matchesFilterTest", null);
-        assertEquals(true, filters.hasMatchFilters());
+        assertTrue(filters.hasMatchFilters());
     }
 }

@@ -18,7 +18,7 @@ import org.candlepin.async.JobManager;
 import org.candlepin.async.JobMessageDispatcher;
 import org.candlepin.async.JobMessageReceiver;
 import org.candlepin.async.tasks.ActiveEntitlementJob;
-import org.candlepin.async.tasks.CRLUpdateJob;
+import org.candlepin.async.tasks.CertificateCleanupJob;
 import org.candlepin.async.tasks.EntitleByProductsJob;
 import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
@@ -414,7 +414,7 @@ public class CandlepinModule extends AbstractModule {
         bind(JobMessageReceiver.class);
 
         JobManager.registerJob(ActiveEntitlementJob.JOB_KEY, ActiveEntitlementJob.class);
-        JobManager.registerJob(CRLUpdateJob.JOB_KEY, CRLUpdateJob.class);
+        JobManager.registerJob(CertificateCleanupJob.JOB_KEY, CertificateCleanupJob.class);
         JobManager.registerJob(EntitlerJob.JOB_KEY, EntitlerJob.class);
         JobManager.registerJob(EntitleByProductsJob.JOB_KEY, EntitleByProductsJob.class);
         JobManager.registerJob(ExpiredPoolsCleanupJob.JOB_KEY, ExpiredPoolsCleanupJob.class);
