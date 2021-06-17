@@ -236,7 +236,7 @@ public class OwnerContentResource {
         Owner owner = this.getOwnerByKey(ownerKey);
         Content entity = this.createContentImpl(owner, content);
 
-        this.contentAccessManager.refreshOwnerForContentAccess(owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
         return this.translator.translate(entity, ContentDTO.class);
     }
@@ -258,7 +258,7 @@ public class OwnerContentResource {
             result.add(this.translator.translate(entity, ContentDTO.class));
         }
 
-        this.contentAccessManager.refreshOwnerForContentAccess(owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
         return result;
     }
 
@@ -279,7 +279,7 @@ public class OwnerContentResource {
         }
 
         existing = this.contentManager.updateContent(content, owner, true);
-        this.contentAccessManager.refreshOwnerForContentAccess(owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
         return this.translator.translate(existing, ContentDTO.class);
     }
@@ -299,6 +299,6 @@ public class OwnerContentResource {
         }
 
         this.contentManager.removeContent(owner, content, true);
-        this.contentAccessManager.refreshOwnerForContentAccess(owner);
+        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
     }
 }

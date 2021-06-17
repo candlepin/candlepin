@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20210412145432-1" author="ojanus" dbms="postgresql">
+        <sql>UPDATE cp_cert_serial SET expiration = NOW() FROM cp_cont_access_cert WHERE cp_cert_serial.id = cp_cont_access_cert.serial_id</sql>
+    </changeSet>
+
+    <changeSet id="20210412145432-2" author="ojanus" dbms="mysql,mariadb">
+        <sql>UPDATE cp_cert_serial s RIGHT JOIN cp_cont_access_cert c ON c.serial_id = s.id SET expiration = NOW()</sql>
+    </changeSet>
+
+    <changeSet id="20210412145432-3" author="ojanus">
+        <addColumn tableName="cp_cont_access_cert">
+            <column name="content" type="LONGTEXT"/>
+        </addColumn>
+        <dropTable tableName="cp_owner_env_content_access"/>
+    </changeSet>
+
+</databaseChangeLog>
