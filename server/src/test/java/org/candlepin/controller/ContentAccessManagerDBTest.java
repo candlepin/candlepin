@@ -26,7 +26,6 @@ import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerEnvContentAccessCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.PrivateKeyReader;
@@ -63,7 +62,6 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
 
     @Inject private ContentAccessCertificateCurator caCertCurator;
     @Inject private KeyPairCurator keyPairCurator;
-    @Inject private OwnerEnvContentAccessCurator ownerEnvContentAccessCurator;
 
     private PKIUtility pkiUtility;
     private ObjectMapper objMapper;
@@ -89,8 +87,8 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
     private ContentAccessManager createManager() {
         return new ContentAccessManager(this.config, this.pkiUtility, this.x509V3ExtensionUtil,
             this.caCertCurator, this.keyPairCurator, this.certSerialCurator, this.ownerCurator,
-            this.ownerContentCurator, this.ownerEnvContentAccessCurator, this.consumerCurator,
-            this.consumerTypeCurator, this.environmentCurator, this.mockEventSink);
+            this.ownerContentCurator, this.consumerCurator, this.consumerTypeCurator,
+            this.environmentCurator, this.caCertCurator, this.mockEventSink);
     }
 
     private Owner createSCAOwner() {
@@ -142,27 +140,27 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
         ContentAccessManager manager = this.createManager();
 
         ContentAccessCertificate cert = manager.getCertificate(consumer);
+        String oldCert = cert.getCert();
 
         assertNotNull(cert);
         assertNotNull(consumer.getContentAccessCert());
 
         // Expire the cert, then run through the cycle again.
         ContentAccessCertificate consumerCert = consumer.getContentAccessCert();
-        CertificateSerial serial = consumerCert.getSerial();
+        CertificateSerial oldSerial = consumerCert.getSerial();
 
-        serial.setExpiration(Util.yesterday());
-        serial = this.certSerialCurator.merge(serial);
+        oldSerial.setExpiration(Util.yesterday());
+        oldSerial = this.certSerialCurator.merge(oldSerial);
 
         // This should trigger a new cert to be generated which should end up with
         // a different serial than the one we have above.
-        cert = manager.getCertificate(consumer);
+        ContentAccessCertificate newCert = manager.getCertificate(consumer);
 
-        assertNotNull(cert);
+        assertNotNull(newCert);
         assertNotNull(consumer.getContentAccessCert());
 
-        ContentAccessCertificate consumerCertUpdate = consumer.getContentAccessCert();
-        assertNotSame(consumerCertUpdate, consumerCert);
-        assertNotEquals(consumerCertUpdate.getId(), consumerCert.getId());
+        assertNotEquals(newCert.getCert(), oldCert);
+        assertNotEquals(newCert.getSerial().getId(), oldSerial.getId());
     }
 
     @Test

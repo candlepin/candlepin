@@ -2326,6 +2326,6 @@ public class OwnerResource {
         public String getUploadedFilename() {
             return uploadedFilename;
         }
-
     }
+
 }
