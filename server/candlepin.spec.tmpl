@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.1
+Version: 4.1.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,150 @@ fi
 
 #raw
 %changelog
+* Thu Apr 15 2021 Nikos Moumoulidis <nmoumoul@redhat.com> 4.1.0-1
+- Fix spec tests in hosted mode (nmoumoul@redhat.com)
+- copy API spec file into the war (nmoumoul@redhat.com)
+- Remove obsolete swagger deps & annotations (nmoumoul@redhat.com)
+- ENT-2315: Changes to fix Candlepin API docs (prakgupt@redhat.com)
+- ENT-2252: Upgrade openapi-generator to latest version  - Update gradle to 6.8
+  - Update junit5 to 5.7.0  - Update openapi to 5.0.0  - Update overriden
+  openapi templates  - Update AbstractJavaJAXRSServerCodegen to generate
+  default responses with HTTP response code 500 (ojanus@redhat.com)
+- Fix cloud auth URL from /cloud to /cloud/authorize (nmoumoul@redhat.com)
+- ENT-3297: Port Cloud VM autoregistration endpoints & DTOs to OpenApi
+  (ojanus@redhat.com)
+- ENT-1867: Port ConsumerResource to spec-first (prakgupt@redhat.com)
+- ENT-2816: Second rebase for spec first branch  Additional Changes:  - Ported
+  ContentAccessDTO to OpenAPI  - Ported Owner content access API
+  (prakgupt@redhat.com)
+- ENT-2788: Port AdminResource to spec-first  - Added specifications for
+  QueueStatus DTO and admin resource APIs (sdhome@redhat.com)
+- ENT-1848: Port OwnerResource to spec-first  - Added endpoints definitions  -
+  Added specifications for following DTOs    1. AbstractCertificateDTO    2.
+  ConsumptionTypeCountsDTO    3. ImportRecordDTO    4.
+  ImportUpstreamConsumerDTO    5. OwnerInfoDTO    6. SystemPurposeAttributesDTO
+  7. UeberCertificateDTO    8. UpstreamConsumerArrayElement  - Created/updated
+  translators for DTOs  - Subscription Translator and OwnerInfoBuilder changes
+  (sdhome@redhat.com)
+- ENT-2790: Port CrlResource to spec-first (ojanus@redhat.com)
+- ENT-2792: Port ConsumerContentOverrideResource to spec-first
+  (ojanus@redhat.com)
+- ENT-2791: Port ActivationKeyContentOverrideResource to spec-first
+  (ojanus@redhat.com)
+- ENT-2789: Port RulesResource to spec-first (prakgupt@redhat.com)
+- Minor fix on environment API documentation (nmoumoul@redhat.com)
+- Remove redundant JAX-RS & Swagger annotations (nmoumoul@redhat.com)
+- ENT-1876: Port EnvironmentResource to spec-first (ojanus@redhat.com)
+- ENT-2534: Rebase spec-first branch against master  - Fixes related to changes
+  between branches  - Fix related to PR #2724. Updated the result as string
+  type. Added AsyncJobStatusAnnotationMixin    to support @JsonRawValue
+  annotation  - Updated CertificateSerialDTO serial field to Long. Openapi does
+  not support datatype as BigInteger  - Added PublicJobState enum in yaml
+  specifications  - Updated the DefaultCodegen to import the schema reference
+  mentioned in addtional properties  - checkstyle changes (sdhome@redhat.com)
+- ENT-1882: Port PoolResource to spec-first  - Added Pool reseaource
+  specification  - Upated related files (sdhome@redhat.com)
+- ENT-1856: Port ConsumerDTO to openapi spec  - Udpated specifications for
+  CapabilityDTO, ConsumerDTO,    ConsumerInstalledProductDTO, HypervisorIdDTO
+  - Added ConsumerDTOArrayElement to exclude the properties    mentioned as
+  HateoasArrayExclude  - Updated the ConsumerTypeDeserializer to get
+  appropriate    consumer type based on incoming object/string
+  (sonalidhome@gmail.com)
+- Ent-1873: Port EntitlementResource to spec-first - Add endpoint definitions -
+  Add definition for the KeyValueParamDto - Add KeyValueParamConverted
+  (ojanus@redhat.com)
+- Remove redundant EntitlementDTO fields (nmoumoul@redhat.com)
+- ENT-1880: Port OwnerProductResource to spec-first (prakgupt@redhat.com)
+- ENT-1883: Port ProductResource to spec-first (ojanus@redhat.com)
+- ENT-1887: Port UserResource to spec-first (ojanus@redhat.com)
+- ENT-1858: Port EntitlementDTO to openapi spec  - Added EntitlementDTO and
+  NestedConsumerDTO specification  - Translator changes (sonalidhome@gmail.com)
+- Added ContentDTO validations (amandliy@redhat.com)
+- Ported OwnerContentResource to spec-first (amandliy@redhat.com)
+- ENT-1847: Port ActivationKeyResource to spec-first (prakgupt@redhat.com)
+- ENT-1863: Port ProductCertificateDTO to openapi spec  - Added specification
+  in yaml file  - Translator and test changes (sonalidhome@gmail.com)
+- ENT-1876: Port HypervisorResource to spec-first  - Added API specifications
+  in yaml file  - Ported HypervisorUpdateResultDTO and HypervisorConsumerDTO  -
+  Update the resource and test classes (sonalidhome@gmail.com)
+- ENT-1885: Port RoleResource to spec-first (prakgupt@redhat.com)
+- ENT-1862: Port PoolDTO to spec-first (ojanus@redhat.com)
+- ENT-1870: Port ContentResource to spec-first. (ojanus@redhat.com)
+- ENT-1886: Port SubscriptionResource to spec-first - Add SubscriptionResource
+  definition - Add missing DTO definitions - Add translators - Add
+  AttributesDeserializer (ojanus@redhat.com)
+- ENT-1875: Port GuestIdResource to spec-first  - Added GuestIdResource
+  defination in yaml file  - changes related to newly generated API interface
+  (sonalidhome@gmail.com)
+- ENT-2291: Create adapter methods for DTOs implementing *Info Interfaces  -
+  Added a class InfoAdapter to provide implementation    of info interfaces.  -
+  Removed the translators and its test suites.    1. UserDTOTranslator    2.
+  RoleDTOTranslator    3. PermissionBluePrintDTOTranslator
+  (sonalidhome@gmail.com)
+- ENT-1859: Port EnvironmentDTO to openapi spec (prakgupt@redhat.com)
+- ENT-1879:Port ContentDTO to openapi spec  - Added specifications of
+  ContentDTO in yaml file  - Added methods to adapt *DTOs into *Info objects
+  in HostedTestSubscriptionResource.java file.  - Passed these adapted object
+  to hosted create/update    methods. (sonalidhome@gmail.com)
+- ENT-1877: port JobResource to spec-first  - Remove exiting SchedulerStatusDTO
+  and generated using spec-first  - Added api specification in candlepin-api-
+  spec  - Updated existing junit (abhiskum@redhat.com)
+- ENT-1852: Port CdnResource to spec-first (prakgupt@redhat.com)
+- ENT-2177: Use concrete method to locate ResourceLocator   - The problem is
+  current code tries to locate the interface method from ResourceLocatorMap
+  class instead of concrete method and finally return 'Method XXX not
+  registered as RESTful' exception.   - Easily fix this issue by using the
+  interface method vs concrete method mapping in the ResourceLocatorMap class.
+  - Added new class MethodLocator to hold interface method and concrete method
+  mapping   - Updated ResourceLocatorMap class to use MethodLocator   - Update
+  AnnotationLocator class to use MethodLocator instead of internal
+  (abhiskum@redhat.com)
+- ENT-1861: Port OwnerDTO to openapi spec (FIX) (prakgupt@redhat.com)
+- ENT-1861: Port OwnerDTO to openapi spec (prakgupt@redhat.com)
+- Add back user id that was accidentally removed (nmoumoul@redhat.com)
+- ENT-1872: Port DistributorVersionResource to spec-first  - Add yaml
+  definitions of resource and DTOs  - Update Translator  - Fix broken tests
+  (ojanus@redhat.com)
+- ENT-1866: Port CertificateSerialResource to spec-first (ojanus@redhat.com)
+- ENT-1851: Port CdnDTO to openapi spec (prakgupt@redhat.com)
+- ENT-2105: Apply dynamic property filtering to openapi DTOs
+  (nmoumoul@redhat.com)
+- ENT-1865: Port RoleDTO, PermissionBlueprintDTO, UserDTO to openapi spec
+  (sonalidhome@gmail.com)
+- ENT-1846: Port ActivationKeyDTO to openapi spec (nmoumoul@redhat.com)
+- Port CertificateDTO to  openapi spec   - Added CertificateDTO schema in spec
+  file   - Updated code to use generated CertificateDTO   - Removed existing
+  CertificateDTO and CertificateDTOTest   - Removed CertificateDTO.clone method
+  calls from CdnDTO, UpstreamConsumerDTO, ConsumerDTO and poolDTO
+  (abhiskum@redhat.com)
+- Convert StatusResource to the OpenAPI specification    - Created new
+  specifications for the status resource and status DTO    - Updated
+  StatusResource to implement the generated API specification    - Deleted
+  existing StatusDTO and KeycloakStatusDTO    - Deleted existing StatusDTOTest
+  test    - Updated StatusCache to use new DTO (abhiskum@redhat.com)
+- ENT-1860 - Port GuestIdDTO to openapi spec - Added specifications in yaml
+  file - Removed existing GuestIdDTO and GuestIdDTOTest - Updated the populate
+  method of translator - Fixed JUnit tests. Added workaround of GuestIdDTOTest
+  in ConsumerDTOTest to pass JUnits. - Updated hypervisorUpdate() method of
+  HyperVisorResource.java to accept   List<string> GuestIds instead of
+  List<GuestIdDTO>. Because of MismatchedInputException: Cannot   construct
+  instance of GuestIdDTO: no String-argument constructor. This is raised due to
+  the auto-generated DTO class does not have constructors.
+  (sonalidhome@gmail.com)
+- Convert DeletedConsumerResource to the OpenAPI specification  - Created new
+  specifications for the deleted consumer resource and deleted consumer DTO  -
+  Updated DeletedConsumerResource to implement the generated API specification
+  - Deleted the existing API DeletedConsumerDTO  - Deleted
+  DeletedConsumerDTOTest test  - Updated DeletedConsumerTranslator as per
+  generated DTO (abhiskum@redhat.com)
+- ENT-1857: Port ContentOverrideDTO to openapi spec (nmoumoul@redhat.com)
+- ENT-1855: Port CertificateSerialDTO to openapi spec (nmoumoul@redhat.com)
+- ENT-1849: Port AsyncJobStatusDTO to openapi spec - Added specifications in
+  yaml file - Removed existing AsyncJobstatusDTO and AsyncJobstatusDTOTest -
+  Updated the populate method of translator - Updated JUnit tests
+  (sonalidhome@gmail.com)
+- Converted ConsumerTypeResource to the OpenAPI specification (crog@redhat.com)
+
 * Mon Apr 12 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.1-1
 - update to add default content access mode list (jharriso@redhat.com)
 - 1932662: Fixed candlepin test data for dev-sku (prakgupt@redhat.com)
