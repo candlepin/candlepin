@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-06-17 03:01-0400\n"
-"PO-Revision-Date: 2021-06-04 11:03+0000\n"
+"PO-Revision-Date: 2021-06-18 12:04+0000\n"
 "Last-Translator: Charles Lee <lchopn@gmail.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
 "projects/candlepin/master/zh_CN/>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.6.2\n"
+"X-Generator: Weblate 4.7\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -438,35 +438,35 @@ msgstr "为所有者 {0} 生成 ueber 证书出现问题"
 msgid ""
 "The requested role \"{0}\" is not provided by a currently consumed "
 "subscription."
-msgstr ""
+msgstr "请求的角色 \"{0}\" 并未由当前的订阅所提供。"
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:133
 #, java-format
 msgid ""
 "The requested add-on \"{0}\" is not provided by a currently consumed "
 "subscription."
-msgstr ""
+msgstr "请求的扩展 \"{0}\" 并未由当前的订阅所提供。"
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:187
 #, java-format
 msgid ""
 "The service level preference \"{0}\" is not provided by a currently consumed "
 "subscription."
-msgstr ""
+msgstr "服务等级偏好 \"{0}\" 并未由当前的订阅所提供。"
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:204
 #, java-format
 msgid ""
 "The requested usage preference \"{0}\" is not provided by a currently "
 "consumed subscription."
-msgstr ""
+msgstr "请求的使用偏好 \"{0}\" 并未由当前的订阅所提供。"
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:241
 #, java-format
 msgid ""
 "The requested service type preference \"{0}\" is not provided by a currently "
 "consumed subscription."
-msgstr ""
+msgstr "请求的服务类别偏好 \"{0}\" 并未由当前的订阅所提供。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
 msgid "Not supported by a valid subscription."
@@ -647,7 +647,7 @@ msgstr "这个系统已附加了一个产品 ''{1}'' 的订阅。"
 #, java-format
 msgid ""
 "There are not enough free subscriptions available for the product \"{1}\""
-msgstr "没有足够的可用订阅供产品 ''{1}'' 使用。"
+msgstr "没有足够的可用订阅供产品 ''{1}'' 使用"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:197
 #, java-format
@@ -1416,13 +1416,13 @@ msgstr "产品 \"{0}\" 已被锁定"
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more "
 "subscriptions"
-msgstr ""
+msgstr "产品 \"{0}\" 不能被删除，因为其被一个或多个订阅所引用"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:2150
 #, java-format
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more products"
-msgstr ""
+msgstr "产品 \"{0}\" 不能被删除，因为其被一个或多个产品所引用"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:2204
 #, java-format
@@ -1548,7 +1548,7 @@ msgstr "不支持访问类型 NONE。"
 
 #: src/main/java/org/candlepin/resource/RulesResource.java:60
 msgid "Rules file is empty"
-msgstr ""
+msgstr "规则文件为空"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1657,7 +1657,7 @@ msgstr "机构"
 #: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:273
 #, java-format
 msgid "{0} with id {1} could not be found."
-msgstr "没有找到 id 为 {1} 的 {0}"
+msgstr "没有找到 id 为 {1} 的 {0}。"
 
 #: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:374
 #, java-format
@@ -1678,7 +1678,7 @@ msgstr "独立的 candlepin 不支持兑换订阅。"
 #: src/main/java/org/candlepin/servlet/filter/CandlepinContentTypeFilter.java:63
 #, java-format
 msgid "Invalid Content-Type {0}"
-msgstr ""
+msgstr "无效的 Content-Type {0}"
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:68
 msgid "No ID for upstream subscription management application."
