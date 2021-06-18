@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-06-10 03:01-0400\n"
-"PO-Revision-Date: 2021-04-18 22:02+0000\n"
+"PO-Revision-Date: 2021-06-14 22:04+0000\n"
 "Last-Translator: Igor Gorbounov <igor.gorbounov@gmail.com>\n"
 "Language-Team: Russian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ru/>\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.5.3\n"
+"X-Generator: Weblate 4.6.2\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -546,14 +546,14 @@ msgstr "Не удалось создать сертификат для влад�
 msgid ""
 "The requested role \"{0}\" is not provided by a currently consumed "
 "subscription."
-msgstr ""
+msgstr "Запрошенная роль «{0}» не предоставляется действующей подпиской."
 
 #: server/src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:133
 #, java-format
 msgid ""
 "The requested add-on \"{0}\" is not provided by a currently consumed "
 "subscription."
-msgstr ""
+msgstr "Запрошенное дополнение «{0}» не предоставляется действующей подпиской."
 
 #: server/src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:187
 #, java-format
@@ -561,6 +561,8 @@ msgid ""
 "The service level preference \"{0}\" is not provided by a currently consumed "
 "subscription."
 msgstr ""
+"Предпочтительный уровень обслуживания «{0}» не предоставляется действующей "
+"подпиской."
 
 #: server/src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:204
 #, java-format
@@ -568,6 +570,8 @@ msgid ""
 "The requested usage preference \"{0}\" is not provided by a currently "
 "consumed subscription."
 msgstr ""
+"Запрошенные привилегии использования «{0}» не предоставляются текущей "
+"подпиской."
 
 #: server/src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:241
 #, java-format
@@ -575,6 +579,8 @@ msgid ""
 "The requested service type preference \"{0}\" is not provided by a currently "
 "consumed subscription."
 msgstr ""
+"Запрошенный предпочтительный тип службы «{0}» не предоставляется действующей "
+"подпиской."
 
 #: server/src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
 msgid "Not supported by a valid subscription."
@@ -884,10 +890,9 @@ msgstr "Регистрация в облаке не поддерживается
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:331
-#, fuzzy, java-format
-#| msgid "Organization {0} does not exist."
+#, java-format
 msgid "Organization {0} does not exist"
-msgstr "Организация {0} не существует."
+msgstr "Организация {0} не существует"
 
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:559
 msgid "Must specify at least one search criteria."
