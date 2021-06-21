@@ -350,8 +350,8 @@ fi
 - ENT-1852: Port CdnResource to spec-first (prakgupt@redhat.com)
 - ENT-2177: Use concrete method to locate ResourceLocator   - The problem is
   current code tries to locate the interface method from ResourceLocatorMap
-  class instead of concrete method and finally return ‘Method XXX not
-  registered as RESTful’ exception.   - Easily fix this issue by using the
+  class instead of concrete method and finally return 'Method XXX not
+  registered as RESTful' exception.   - Easily fix this issue by using the
   interface method vs concrete method mapping in the ResourceLocatorMap class.
   - Added new class MethodLocator to hold interface method and concrete method
   mapping   - Updated ResourceLocatorMap class to use MethodLocator   - Update
@@ -367,15 +367,8 @@ fi
 - ENT-1851: Port CdnDTO to openapi spec (prakgupt@redhat.com)
 - ENT-2105: Apply dynamic property filtering to openapi DTOs
   (nmoumoul@redhat.com)
-- ENT-1865: Port RoleDTO to openapi spec  - Added
-  specifications of PermissionBlueprintDTO, RoleDTO     and UserDTO in yaml
-  file.  - Added Translator to convert DTOs into Model Entities
-  because newly generated DTOs do not implement Info interfaces.
-  1. NestedOwnerDTOTranslator    2. PermissionBlueprintDTOTranslator
-  3. RoleDTOTranslator    4. UserDTOTranslator  - Added test suites for above
-  translators  - Updated the default constructor of PermissionBlueprint to the
-  public    because it is used to create an empty object
-  in PermissionBlueprintDTOTranslator. (sonalidhome@gmail.com)
+- ENT-1865: Port RoleDTO, PermissionBlueprintDTO, UserDTO to openapi spec
+  (sonalidhome@gmail.com)
 - ENT-1846: Port ActivationKeyDTO to openapi spec (nmoumoul@redhat.com)
 - Port CertificateDTO to  openapi spec   - Added CertificateDTO schema in spec
   file   - Updated code to use generated CertificateDTO   - Removed existing
