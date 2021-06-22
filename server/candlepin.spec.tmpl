@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.4
+Version: 4.0.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,13 @@ fi
 
 #raw
 %changelog
+* Tue Jun 22 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.5-1
+- Removed non-nullable restriction from the SCA cert cache table
+  (crog@redhat.com)
+- Client unregistration now removes SCA certificates for that client
+  (crog@redhat.com)
+- 1949980: Update SCA to cache certs by consumer (ojanus@redhat.com)
+
 * Tue Jun 08 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.4-1
 - Updated refresher to avoid fetching unnecessary versioned entities
   (crog@redhat.com)
