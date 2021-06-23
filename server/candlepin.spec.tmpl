@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.0
+Version: 4.1.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,34 @@ fi
 
 #raw
 %changelog
+* Tue Jun 08 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.1-1
+- [RFE] Add service_type system purpose attribute (sdhome@redhat.com)
+- Removed semi-extraneous cleanup task from the purge orphan pools db task
+  (crog@redhat.com)
+- ENT-3832: Improve error logging (ojanus@redhat.com)
+- Updated refresher to avoid fetching unnecessary versioned entities
+  (crog@redhat.com)
+- 1965208: derivedProvidedProducts is now null where it was previously []
+  (sdhome@redhat.com)
+- Refactored logging and cursor handling in the org migrator (crog@redhat.com)
+- 1935500: Update SCA to cache certs by consumer (ojanus@redhat.com)
+- ENT-3811: Trim whitespace in addons and roles (ojanus@redhat.com)
+- Added pagination to consumer fetching endpoints (crog@redhat.com)
+- 1959122: Fixed NPE when listing future pools with entitlements
+  (crog@redhat.com)
+- Fix to revoke SCA cert upon client unregistration (prakgupt@redhat.com)
+- Use logger in create_test_repo.py script (jhnidek@redhat.com)
+- Add test to check SCA cert is updated after org refresh (nmoumoul@redhat.com)
+- Removed eager certificate regeneration during API-triggered refresh
+  (crog@redhat.com)
+- Bumped version of commons-io and ruby oauth (crog@redhat.com)
+- 1949125: Changed how content access mode is validated for new consumers
+  (crog@redhat.com)
+- 1947354: Missing Compliance/SyspurposeCompliance translations
+  (sdhome@redhat.com)
+- Add spec test for removal of SCA capability (nmoumoul@redhat.com)
+- Upgrade jackson to 2.12.3 (nmoumoul@redhat.com)
+
 * Thu Apr 15 2021 Nikos Moumoulidis <nmoumoul@redhat.com> 4.1.0-1
 - Fix spec tests in hosted mode (nmoumoul@redhat.com)
 - copy API spec file into the war (nmoumoul@redhat.com)
@@ -322,8 +350,8 @@ fi
 - ENT-1852: Port CdnResource to spec-first (prakgupt@redhat.com)
 - ENT-2177: Use concrete method to locate ResourceLocator   - The problem is
   current code tries to locate the interface method from ResourceLocatorMap
-  class instead of concrete method and finally return ‘Method XXX not
-  registered as RESTful’ exception.   - Easily fix this issue by using the
+  class instead of concrete method and finally return 'Method XXX not
+  registered as RESTful' exception.   - Easily fix this issue by using the
   interface method vs concrete method mapping in the ResourceLocatorMap class.
   - Added new class MethodLocator to hold interface method and concrete method
   mapping   - Updated ResourceLocatorMap class to use MethodLocator   - Update
@@ -339,15 +367,8 @@ fi
 - ENT-1851: Port CdnDTO to openapi spec (prakgupt@redhat.com)
 - ENT-2105: Apply dynamic property filtering to openapi DTOs
   (nmoumoul@redhat.com)
-- ENT-1865: Port RoleDTO to openapi spec  - Added
-  specifications of PermissionBlueprintDTO, RoleDTO     and UserDTO in yaml
-  file.  - Added Translator to convert DTOs into Model Entities
-  because newly generated DTOs do not implement Info interfaces.
-  1. NestedOwnerDTOTranslator    2. PermissionBlueprintDTOTranslator
-  3. RoleDTOTranslator    4. UserDTOTranslator  - Added test suites for above
-  translators  - Updated the default constructor of PermissionBlueprint to the
-  public    because it is used to create an empty object
-  in PermissionBlueprintDTOTranslator. (sonalidhome@gmail.com)
+- ENT-1865: Port RoleDTO, PermissionBlueprintDTO, UserDTO to openapi spec
+  (sonalidhome@gmail.com)
 - ENT-1846: Port ActivationKeyDTO to openapi spec (nmoumoul@redhat.com)
 - Port CertificateDTO to  openapi spec   - Added CertificateDTO schema in spec
   file   - Updated code to use generated CertificateDTO   - Removed existing
