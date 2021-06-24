@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.2
+Version: 4.1.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,9 @@ fi
 
 #raw
 %changelog
+* Thu Jun 24 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.3-1
+- Fix for maven dependency plugin (prakgupt@redhat.com)
+
 * Thu Jun 24 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.2-1
 - Stop docker logout in Jenkins pipeline stages (nmoumoul@redhat.com)
 - Translated using Weblate (Chinese (Simplified) (zh_CN)) (lchopn@gmail.com)
