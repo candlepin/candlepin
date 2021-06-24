@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.1
+Version: 4.1.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,30 @@ fi
 
 #raw
 %changelog
+* Thu Jun 24 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.2-1
+- Stop docker logout in Jenkins pipeline stages (nmoumoul@redhat.com)
+- Translated using Weblate (Chinese (Simplified) (zh_CN)) (lchopn@gmail.com)
+- Update translation files (noreply@weblate.org)
+- Translated using Weblate (Russian) (igor.gorbounov@gmail.com)
+- Translated using Weblate (Ukrainian) (yurchor@ukr.net)
+- Translated using Weblate (Korean) (simmon@nplob.com)
+- Update translation files (noreply@weblate.org)
+- Remove non-ascii chars that break rpm build (nmoumoul@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Removed non-nullable restriction from the SCA cert cache table
+  (crog@redhat.com)
+- Moved classes of common subpackages to appropriate places
+  (nmoumoul@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Fix for gettext plugin extension (prakgupt@redhat.com)
+- Candlepin project restructuring (prakgupt@redhat.com)
+- i18n: common/po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Automatic commit of package [candlepin] release [4.1.1-1].
+  (3229038+candlepin-bot@users.noreply.github.com)
+
 * Tue Jun 08 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.1-1
 - [RFE] Add service_type system purpose attribute (sdhome@redhat.com)
 - Removed semi-extraneous cleanup task from the purge orphan pools db task
