@@ -586,6 +586,7 @@
         <configuration>
           <skipProvidedScope>true</skipProvidedScope>
           <format>html</format>
+          <failOnError>false</failOnError>
         </configuration>
       </plugin>
       <plugin>

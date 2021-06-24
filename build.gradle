@@ -861,6 +861,7 @@ task pom {
                             configuration {
                                 skipProvidedScope 'true'
                                 format 'html'
+                                failOnError 'false'
                             }
                         }
                         plugin {
