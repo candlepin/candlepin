@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.18
+Version: 3.2.19
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,11 @@ fi
 
 #raw
 %changelog
+* Fri Jun 25 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.19-1
+- 1960150: Fixed NPE when listing future pools with entitlements
+  (crog@redhat.com)
+- Fix to revoke SCA cert upon client unregistration (prakgupt@redhat.com)
+
 * Fri May 07 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.18-1
 - 1957779: Fix SCA cert regeneration for consumers in environments
   (crog@redhat.com)
