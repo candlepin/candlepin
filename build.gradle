@@ -11,6 +11,7 @@ buildscript {
     dependencies {
         classpath group: 'org.yaml', name: 'snakeyaml', version: '1.19'
         classpath "org.openapitools:openapi-generator-gradle-plugin:${openapi_version}"
+        classpath 'org.owasp:dependency-check-gradle:6.2.2'
     }
 }
 
@@ -29,6 +30,7 @@ apply plugin: "war"
 apply plugin: "checkstyle"
 apply plugin: Gettext
 apply plugin: Msgfmt
+apply plugin: 'org.owasp.dependencycheck'
 
 ext {
     logdriver_class = "net.rkbloom.logdriver.LogDriver"
@@ -845,23 +847,6 @@ task pom {
                                         }
                                     }
                                 }
-                            }
-                        }
-                        plugin {
-                            groupId 'org.owasp'
-                            artifactId 'dependency-check-maven'
-                            version '6.1.6'
-                            executions {
-                                execution {
-                                    goals {
-                                        goal 'check'
-                                    }
-                                }
-                            }
-                            configuration {
-                                skipProvidedScope 'true'
-                                format 'html'
-                                failOnError 'false'
                             }
                         }
                         plugin {

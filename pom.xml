@@ -573,23 +573,6 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>org.owasp</groupId>
-        <artifactId>dependency-check-maven</artifactId>
-        <version>6.1.6</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>check</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <skipProvidedScope>true</skipProvidedScope>
-          <format>html</format>
-          <failOnError>false</failOnError>
-        </configuration>
-      </plugin>
-      <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.8.0</version>
         <configuration>
