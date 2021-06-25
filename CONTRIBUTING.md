@@ -87,13 +87,13 @@ certain features. The available flags are as follows:
   compilation is done.
 
 ### Check for Dependencies with CVEs
-* `buildr dependency:check`
+* `./gradlew dependencyCheckAnalyze`
 
-The `dependency:check` task will check a project (and all sub-projects) using  
-the [OWASP Dependency  
-Check](https://www.owasp.org/index.php/OWASP_Dependency_Check) to see if any  dependencies have CVEs reported against them.  The maximum allowable CVSS  score can be modified by setting the `max_allowed_cvss` to a float value  
-between 1.0 and 10.0.  Any CVEs above the maximum allowed CVSS score will  
-cause the build to fail.
+The `dependencyCheckAnalyze` task will check a project using the [OWASP Dependency Check](https://www.owasp.org/index.php/OWASP_Dependency_Check) 
+to see if any dependencies have CVEs reported against them.
+The maximum allowable CVSS  score can be modified by setting the `max_allowed_cvss` to a float value 
+between 1.0 and 10.0.  Any CVEs above the maximum allowed CVSS score will cause the build to fail. 
+The reports will be generated automatically under build/reports folder.
 
 ### Checkstyle
 * `./gradlew checkstyleMain`
