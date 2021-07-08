@@ -93,7 +93,7 @@ public class HibernateValidationAnnotationTest {
     public void certificateSerialTest() throws Exception {
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<>();
         fm.put(CertificateSerial.class.getDeclaredField("id"), notNull);
-        fm.put(CertificateSerial.class.getDeclaredField("collected"), notNull);
+        fm.put(CertificateSerial.class.getDeclaredField("revoked"), notNull);
         runMap(fm);
     }
 

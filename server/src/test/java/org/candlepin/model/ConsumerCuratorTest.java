@@ -65,9 +65,12 @@ import javax.persistence.EntityManager;
  */
 public class ConsumerCuratorTest extends DatabaseTestFixture {
 
-    @Inject private Configuration config;
-    @Inject private DeletedConsumerCurator dcc;
-    @Inject private EntityManager em;
+    @Inject
+    private Configuration config;
+    @Inject
+    private DeletedConsumerCurator dcc;
+    @Inject
+    private EntityManager em;
 
     private Owner owner;
     private ConsumerType ct;
@@ -1956,6 +1959,95 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
                 subscriptionIds, contracts);
             assertEquals(expectedCount, count);
         }
+    }
+
+    @Test
+    public void unlinksIdCerts() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
+        IdentityCertificate idCert1 = createIdCert();
+        IdentityCertificate idCert2 = createIdCert();
+        consumer.setIdCert(idCert1);
+        consumer2.setIdCert(idCert2);
+        consumerCurator.create(consumer);
+        consumerCurator.create(consumer2);
+
+        int unlinkedConsumers = consumerCurator.unlinkIdCertificates(List.of(
+            idCert1.getId(),
+            idCert2.getId()
+        ));
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        assertEquals(2, unlinkedConsumers);
+        for (Consumer c : this.consumerCurator.listAll()) {
+            assertNull(c.getIdCert());
+        }
+    }
+
+    @Test
+    public void noIdCertsToUnlink() {
+        assertEquals(0, consumerCurator.unlinkIdCertificates(null));
+        assertEquals(0, consumerCurator.unlinkIdCertificates(List.of()));
+        assertEquals(0, consumerCurator.unlinkIdCertificates(List.of("UnknownId")));
+    }
+
+    @Test
+    public void unlinksContentAccessCerts() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
+        ContentAccessCertificate caCert1 = createExpiredContentAccessCert(consumer);
+        ContentAccessCertificate caCert2 = createExpiredContentAccessCert(consumer2);
+        consumer.setContentAccessCert(caCert1);
+        consumer2.setContentAccessCert(caCert2);
+        consumerCurator.create(consumer);
+        consumerCurator.create(consumer2);
+
+        int unlinkedConsumers = consumerCurator.unlinkCaCertificates(List.of(
+            caCert1.getId(),
+            caCert2.getId()
+        ));
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        assertEquals(2, unlinkedConsumers);
+        for (Consumer c : this.consumerCurator.listAll()) {
+            assertNull(c.getContentAccessCert());
+        }
+    }
+
+    @Test
+    public void noContentAccessCertsToUnlink() {
+        assertEquals(0, consumerCurator.unlinkCaCertificates(null));
+        assertEquals(0, consumerCurator.unlinkCaCertificates(List.of()));
+        assertEquals(0, consumerCurator.unlinkCaCertificates(List.of("UnknownId")));
+    }
+
+    private IdentityCertificate createIdCert() {
+        IdentityCertificate idCert = TestUtil.createIdCert(TestUtil.createDateOffset(2, 0, 0));
+        return saveCert(idCert);
+    }
+
+    private ContentAccessCertificate createExpiredContentAccessCert(Consumer consumer) {
+        ContentAccessCertificate certificate = new ContentAccessCertificate();
+        certificate.setKey("crt_key");
+        certificate.setSerial(new CertificateSerial(Util.yesterday()));
+        certificate.setCert("cert_1");
+        certificate.setContent("content_1");
+        consumer.setContentAccessCert(certificate);
+        return saveCert(certificate);
+    }
+
+    private IdentityCertificate saveCert(IdentityCertificate cert) {
+        cert.setId(null);
+        certSerialCurator.create(cert.getSerial());
+        return identityCertificateCurator.create(cert);
+    }
+
+    private ContentAccessCertificate saveCert(ContentAccessCertificate cert) {
+        cert.setId(null);
+        certSerialCurator.create(cert.getSerial());
+        return caCertCurator.create(cert);
     }
 
 }

@@ -2163,24 +2163,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
     }
 
-    static class ListContainsContentTypeYum extends OidMatcher {
-        public ListContainsContentTypeYum(String value, String contentID) {
-            super(value, "1.3.6.1.4.1.2312.9.2." + contentID + ".1");
-        }
-    }
-
-    static class ListContainsContentTypeFile extends OidMatcher {
-        public ListContainsContentTypeFile(String value, String contentID) {
-            super(value, "1.3.6.1.4.1.2312.9.2." + contentID + ".2");
-        }
-    }
-
-    static class ListContainsContentTypeKickstart extends OidMatcher {
-        public ListContainsContentTypeKickstart(String value, String contentID) {
-            super(value, "1.3.6.1.4.1.2312.9.2." + contentID + ".3");
-        }
-    }
-
     static class OidAbsentMatcher implements ArgumentMatcher<Set<X509ExtensionWrapper>> {
         protected String oid;
 

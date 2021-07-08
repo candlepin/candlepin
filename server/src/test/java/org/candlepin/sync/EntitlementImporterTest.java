@@ -195,7 +195,6 @@ public class EntitlementImporterTest {
 
         assertNotNull(sub.getCertificate());
         CertificateSerialDTO serial = sub.getCertificate().getSerial();
-        assertEquals(cert.getSerial().isCollected(), serial.isCollected());
         assertEquals(cert.getSerial().getExpiration(), serial.getExpiration());
         assertEquals(cert.getSerial().getCreated(), serial.getCreated());
         assertEquals(cert.getSerial().getUpdated(), serial.getUpdated());
@@ -217,7 +216,6 @@ public class EntitlementImporterTest {
     protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
         EntitlementCertificate toReturn = new EntitlementCertificate();
         CertificateSerial certSerial = new CertificateSerial(new Date());
-        certSerial.setCollected(true);
         certSerial.setUpdated(new Date());
         certSerial.setCreated(new Date());
         toReturn.setKeyAsBytes(key.getBytes());

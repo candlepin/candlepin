@@ -175,10 +175,6 @@ public class CdnResource {
                         certSerial.setSerial(certSerialDTO.getSerial().longValue());
                     }
 
-                    if (certSerialDTO.isCollected() != null) {
-                        certSerial.setCollected(certSerialDTO.isCollected());
-                    }
-
                     if (certSerialDTO.isRevoked() != null) {
                         certSerial.setRevoked(certSerialDTO.isRevoked());
                     }

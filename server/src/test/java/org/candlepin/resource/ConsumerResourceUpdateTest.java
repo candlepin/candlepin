@@ -143,6 +143,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private ConsumerEnricher consumerEnricher;
     @Mock private Principal principal;
     @Mock private JobManager jobManager;
+
     private ModelTranslator translator;
 
     private I18n i18n;

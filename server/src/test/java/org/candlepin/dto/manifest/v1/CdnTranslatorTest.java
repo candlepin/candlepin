@@ -59,7 +59,6 @@ public class CdnTranslatorTest extends AbstractTranslatorTest<Cdn, CdnDTO, CdnTr
         cdnCert.setCert("cdn-cert-cert");
         CertificateSerial serial = new CertificateSerial();
         serial.setRevoked(false);
-        serial.setCollected(false);
         serial.setExpiration(new Date());
         serial.setSerial(5L);
         serial.setId(1L);

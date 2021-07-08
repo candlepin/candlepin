@@ -70,41 +70,6 @@ describe 'Certificate Revocation List', :serial => true do
     revoked_serials.should_not include(serials)
   end
 
-  it 'should regenerate the on-disk crl and revoke' do
-    crl = OpenSSL::X509::CRL.new File.read "/var/lib/candlepin/candlepin-crl.crl"
-    old_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
-    #consume an entitlement, revoke it and check that CRL contains the new serial.
-    @system.consume_product(@monitoring_prod.id)
-    serial = filter_serial(@monitoring_prod)
-
-    @system.revoke_all_entitlements()
-    revoked_serials.should include(serial)
-
-    # ensure that the on-disk crl got updated
-    new_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
-    new_time.should_not == old_time
-    crl = OpenSSL::X509::CRL.new File.read "/var/lib/candlepin/candlepin-crl.crl"
-    expect(crl.revoked.map { |i| i.serial }).to include(serial)
-  end
-
-  it 'should regenerate the on-disk crl' do
-    old_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
-    # do some stuff
-    @system.consume_product @monitoring_prod.id
-    @system.consume_product @virt_prod.id
-
-    serials = [filter_serial(@monitoring_prod),
-               filter_serial(@virt_prod)]
-
-    # Delete owner without revoking certs
-    delete_owner(@owner, false)
-
-    revoked_serials.should_not include(serials)
-    # ensure that the on-disk crl got updated
-    new_time = File.mtime("/var/lib/candlepin/candlepin-crl.crl")
-    new_time.should_not == old_time
-  end
-
   it 'should put revoked CDN cert on CRL' do
     cdn_label = random_string("test-cdn")
 
@@ -171,7 +136,7 @@ end
   end
 
   def revoked_serials
-    return @cp.get_crl.revoked.map {|entry| entry.serial.to_i }
+    return @cp.get_crl
   end
 
 end

@@ -64,7 +64,7 @@ import java.util.zip.InflaterOutputStream;
  */
 public class X509V3ExtensionUtil extends X509Util {
 
-    private static Logger log = LoggerFactory.getLogger(X509V3ExtensionUtil.class);
+    private static final Logger log = LoggerFactory.getLogger(X509V3ExtensionUtil.class);
     private ObjectMapper mapper;
     private Configuration config;
     private EntitlementCurator entCurator;
@@ -100,8 +100,7 @@ public class X509V3ExtensionUtil extends X509Util {
         String contentPrefix, Map<String, EnvironmentContent> promotedContent) throws IOException {
         Set<X509ByteExtensionWrapper> toReturn = new LinkedHashSet<>();
 
-        EntitlementBody eb = createEntitlementBodyContent(sku, productModels,
-            contentPrefix, promotedContent);
+        EntitlementBody eb = createEntitlementBodyContent(productModels);
 
         X509ByteExtensionWrapper bodyExtension = new X509ByteExtensionWrapper(OIDUtil.REDHAT_OID + "." +
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY), false, retrieveContentValue(eb));
@@ -154,9 +153,8 @@ public class X509V3ExtensionUtil extends X509Util {
         return toReturn;
     }
 
-    public EntitlementBody createEntitlementBodyContent(Product sku,
-        List<org.candlepin.model.dto.Product> productModels,
-        String contentPrefix, Map<String, EnvironmentContent> promotedContent) {
+    public EntitlementBody createEntitlementBodyContent(
+        List<org.candlepin.model.dto.Product> productModels) {
 
         EntitlementBody toReturn = new EntitlementBody();
         toReturn.setProducts(productModels);
@@ -1093,10 +1091,6 @@ public class X509V3ExtensionUtil extends X509Util {
         return baos.toByteArray();
     }
 
-    /**
-     *
-     * HuffNode
-     */
     public class HuffNode {
         private long id = 0;
         private Object value = null;
@@ -1145,11 +1139,6 @@ public class X509V3ExtensionUtil extends X509Util {
                    ", Right: " + right;
         }
     }
-
-    /**
-     *
-     * PathNode
-     */
 
     public class PathNode {
         private long id = 0;
@@ -1232,11 +1221,6 @@ public class X509V3ExtensionUtil extends X509Util {
             return parentList.append(", Children: ").append(children).toString();
         }
     }
-
-    /**
-     *
-     * NodePair
-     */
 
     public static class NodePair implements Comparable{
         private String name;

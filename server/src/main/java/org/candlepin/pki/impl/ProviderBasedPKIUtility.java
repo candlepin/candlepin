@@ -19,7 +19,6 @@ import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
-import org.candlepin.pki.X509CRLEntryWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 
 import org.slf4j.Logger;
@@ -30,28 +29,20 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -62,7 +53,7 @@ import java.util.Set;
  * bindings.
  */
 public abstract class ProviderBasedPKIUtility implements PKIUtility {
-    private static Logger log = LoggerFactory.getLogger(ProviderBasedPKIUtility.class);
+    private static final Logger log = LoggerFactory.getLogger(ProviderBasedPKIUtility.class);
 
     public static final int RSA_KEY_SIZE = 4096;
 
@@ -82,31 +73,6 @@ public abstract class ProviderBasedPKIUtility implements PKIUtility {
         Set<X509ExtensionWrapper> extensions, Set<X509ByteExtensionWrapper> byteExtensions,
         Date startDate, Date endDate, KeyPair clientKeyPair, BigInteger serialNumber, String alternateName)
         throws GeneralSecurityException, IOException;
-
-    /**
-     * Generate an X.509 CRL.  This method is used to initially bootstrap a CRL when none exists already.
-     * Subsequent modifications are performed by the X509CRLStreamWriter class which is much faster but
-     * works by modifying an existing CRL.
-     *
-     * @param entries the entries
-     * @return the x509 CRL
-     */
-    @Override
-    public abstract X509CRL createX509CRL(List<X509CRLEntryWrapper> entries, BigInteger crlNumber);
-
-    public KeyPair decodeKeys(byte[] privKeyBits, byte[] pubKeyBits)
-        throws InvalidKeySpecException, NoSuchAlgorithmException {
-
-        KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-        // build the private key
-        PrivateKey privKey = keyFactory
-            .generatePrivate(new PKCS8EncodedKeySpec(privKeyBits));
-        // build the public key
-        PublicKey pubKey = keyFactory.generatePublic(new X509EncodedKeySpec(
-            pubKeyBits));
-        // make them a key pair
-        return new KeyPair(pubKey, privKey);
-    }
 
     @Override
     public KeyPair generateNewKeyPair() throws NoSuchAlgorithmException {
@@ -128,9 +94,6 @@ public abstract class ProviderBasedPKIUtility implements PKIUtility {
     public abstract byte[] getPemEncoded(RSAPrivateKey key) throws IOException;
 
     @Override
-    public abstract byte[] getPemEncoded(X509CRL crl) throws IOException;
-
-    @Override
     public byte[] getPemEncoded(PrivateKey key) throws IOException {
         if (RSAPrivateKey.class.isAssignableFrom(key.getClass())) {
             return getPemEncoded((RSAPrivateKey) key);
@@ -139,51 +102,6 @@ public abstract class ProviderBasedPKIUtility implements PKIUtility {
             throw new RuntimeException("Only RSA keys are supported");
         }
     }
-
-    /**
-     * Writes the specified certificate to the given output stream in PEM encoding.
-     *
-     * @param cert
-     *  The certificate to encode
-     *
-     * @param out
-     *  The output stream to which the certificate should be written
-     *
-     * @throws IOException
-     *  If an IOException occurs while writing the certificate
-     */
-    @Override
-    public abstract void writePemEncoded(X509Certificate cert, OutputStream out) throws IOException;
-
-    /**
-     * Writes the specified RSA private key to the given output stream in PEM encoding.
-     *
-     * @param key
-     *  The key to encode
-     *
-     * @param out
-     *  The output stream to which the key should be written
-     *
-     * @throws IOException
-     *  If an IOException occurs while writing the key
-     */
-    @Override
-    public abstract void writePemEncoded(RSAPrivateKey key, OutputStream out) throws IOException;
-
-    /**
-     * Writes the specified certificate revocation list to the given output stream in PEM encoding.
-     *
-     * @param crl
-     *  The certificate revocation list to encode
-     *
-     * @param out
-     *  The output stream to which the certificate revocation list should be written
-     *
-     * @throws IOException
-     *  If an IOException occurs while writing the certificate revocation list
-     */
-    @Override
-    public abstract void writePemEncoded(X509CRL crl, OutputStream out) throws IOException;
 
     public static X509Certificate createCert(byte[] certData) {
         try {
