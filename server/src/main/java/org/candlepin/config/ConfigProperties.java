@@ -18,7 +18,7 @@ package org.candlepin.config;
 import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
 
 import org.candlepin.async.tasks.ActiveEntitlementJob;
-import org.candlepin.async.tasks.CRLUpdateJob;
+import org.candlepin.async.tasks.CertificateCleanupJob;
 import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
 import org.candlepin.async.tasks.ImportRecordCleanerJob;
 import org.candlepin.async.tasks.JobCleaner;
@@ -302,7 +302,7 @@ public class ConfigProperties {
     public static final String ASYNC_JOBS_TRIGGERABLE_JOBS = "candlepin.async.triggerable_jobs";
     public static final String[] ASYNC_JOBS_TRIGGERABLE_JOBS_LIST = new String[] {
         ActiveEntitlementJob.JOB_KEY,
-        CRLUpdateJob.JOB_KEY,
+        CertificateCleanupJob.JOB_KEY,
         ExpiredPoolsCleanupJob.JOB_KEY,
         ImportRecordCleanerJob.JOB_KEY,
         JobCleaner.JOB_KEY,
@@ -503,8 +503,8 @@ public class ConfigProperties {
 
             this.put(jobConfig(ActiveEntitlementJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ActiveEntitlementJob.DEFAULT_SCHEDULE);
-            this.put(jobConfig(CRLUpdateJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
-                CRLUpdateJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(CertificateCleanupJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                CertificateCleanupJob.DEFAULT_SCHEDULE);
             this.put(jobConfig(ExpiredPoolsCleanupJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ExpiredPoolsCleanupJob.DEFAULT_SCHEDULE);
             this.put(jobConfig(ImportRecordCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),

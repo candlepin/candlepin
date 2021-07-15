@@ -37,7 +37,6 @@ public class UeberCertificateDTOTest extends AbstractDTOTest<UeberCertificateDTO
         serial.setId(123L);
         serial.setSerial(BigInteger.TEN);
         serial.setExpiration(new Date());
-        serial.setCollected(true);
         serial.setRevoked(true);
 
         OwnerDTO owner = new OwnerDTO();

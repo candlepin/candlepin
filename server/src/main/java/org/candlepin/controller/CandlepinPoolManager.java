@@ -893,7 +893,6 @@ public class CandlepinPoolManager implements PoolManager {
                         // and the serial is currently implemented as an alias for the ID.
 
                         serial.setRevoked(serialInfo.isRevoked());
-                        serial.setCollected(serialInfo.isCollected());
                         serial.setExpiration(serialInfo.getExpiration());
 
                         cert.setSerial(serial);
@@ -927,7 +926,6 @@ public class CandlepinPoolManager implements PoolManager {
                 // serial is currently implemented as an alias for the ID.
 
                 serial.setRevoked(serialInfo.isRevoked());
-                serial.setCollected(serialInfo.isCollected());
                 serial.setExpiration(serialInfo.getExpiration());
 
                 cert.setSerial(serial);

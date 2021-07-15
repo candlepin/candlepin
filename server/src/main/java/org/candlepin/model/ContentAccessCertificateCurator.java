@@ -22,6 +22,8 @@ import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -127,6 +129,49 @@ public class ContentAccessCertificateCurator extends AbstractHibernateCurator<Co
             removed += query.setParameter("certsToDelete", block).executeUpdate();
         }
         return removed;
+    }
+
+    /**
+     * Lists all expired content access certificates that are not revoked.
+     *
+     * @return a list of expired certificates
+     */
+    @SuppressWarnings("unchecked")
+    public List<ExpiredCertificate> listAllExpired() {
+        String hql = "SELECT new org.candlepin.model.ExpiredCertificate(c.id, s.id)" +
+            " FROM ContentAccessCertificate c" +
+            " INNER JOIN c.serial s " +
+            " WHERE s.expiration < :nowDate";
+
+        Query query = this.getEntityManager().createQuery(hql, ExpiredCertificate.class);
+
+        return (List<ExpiredCertificate>) query
+            .setParameter("nowDate", new Date())
+            .getResultList();
+    }
+
+    /**
+     * Deletes content access certificates with the given ids
+     *
+     * @param idsToDelete ids to be deleted
+     * @return a number of deleted certificates
+     */
+    @Transactional
+    public int deleteByIds(Collection<String> idsToDelete) {
+        if (idsToDelete == null || idsToDelete.isEmpty()) {
+            return 0;
+        }
+
+        String query = "DELETE FROM ContentAccessCertificate c WHERE c.id IN (:idsToDelete)";
+
+        int deleted = 0;
+        for (Collection<String> idsToDeleteBlock : this.partition(idsToDelete)) {
+            deleted += this.currentSession().createQuery(query)
+                .setParameter("idsToDelete", idsToDeleteBlock)
+                .executeUpdate();
+        }
+
+        return deleted;
     }
 
 }

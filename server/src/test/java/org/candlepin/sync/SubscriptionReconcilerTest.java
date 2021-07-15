@@ -449,7 +449,6 @@ public class SubscriptionReconcilerTest {
     protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
         EntitlementCertificate toReturn = new EntitlementCertificate();
         CertificateSerial certSerial = new CertificateSerial(new Date());
-        certSerial.setCollected(true);
         certSerial.setUpdated(new Date());
         certSerial.setCreated(new Date());
         toReturn.setKeyAsBytes(key.getBytes());

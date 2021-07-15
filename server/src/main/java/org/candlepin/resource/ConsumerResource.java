@@ -265,7 +265,8 @@ public class ConsumerResource {
         ConsumerEnricher consumerEnricher,
         Provider<GuestMigration> migrationProvider,
         ModelTranslator translator,
-        JobManager jobManager) {
+        JobManager jobManager
+    ) {
 
         this.consumerCurator = consumerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
