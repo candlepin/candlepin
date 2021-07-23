@@ -166,10 +166,9 @@ init_mysql_jdbc() {
     # JDBC_DRIVER="org.mariadb.jdbc.Driver"
     # JDBC_JAR="/usr/lib/java/mariadb-java-client.jar"
     # JDBC_URL="jdbc:mariadb://$db_host/$db_name"
-
-    local isolation_level=$(mysql -h $db_host $db_name  --user=$db_user --password="$password"  -e 'select @@global.tx_isolation')
-    local READ_COMMITTED="READ-COMMITTED"
-    if [[ $isolation_level != *$READ_COMMITTED* ]]; then
+    local isolation_level=$(mysql -h $db_host $db_name  --user=$db_user --password="$password" -s -N -e 'select @@global.tx_isolation')
+    echo "isolation_level : $isolation_level"
+    if [[ $isolation_level != "READ-COMMITTED" ]]; then
         err_msg "WARNING: candlepin requires READ-COMMITTED isolation level"
     fi
 }
