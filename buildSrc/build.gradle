@@ -1,8 +1,16 @@
 apply plugin: "java"
 apply plugin: "java-gradle-plugin"
 
+repositories {
+    mavenCentral()
+}
+
 dependencies {
     implementation gradleApi()
+
+    // Spock 2.0-groovy-2.5 can only be executed with Groovy 2.5.x (Gradle 2.5.6)
+    // This dependency is specifically introduced to work with appropriate Groovy/Gradle variant.
+    compile('org.spockframework:spock-core:2.0-groovy-2.5')
 }
 
 gradlePlugin {
