@@ -51,6 +51,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 
@@ -215,6 +216,28 @@ public class X509V3ExtensionUtilTest {
             new HashSet<>(product.getProductContent()), consumer, product);
 
         assertEquals(0, filteredContent.size());
+    }
+
+    @Test
+    public void shouldNOTFilterContentWithNoSpecifiedArches() {
+        String expectedArch = "ppc64";
+        Owner owner = new Owner("Test Corporation");
+        owner.setId("test-id");
+        Product product = new Product("mkt", "MKT SKU");
+        addContent(product); // add a content without arches specified
+        Consumer consumer = new Consumer();
+        consumer.setOwner(owner);
+        consumer.setFact(ARCH_FACT, expectedArch);
+
+        Set<ProductContent> filteredContent = util.filterContentByContentArch(
+            new HashSet<>(product.getProductContent()), consumer, product);
+
+        assertEquals(1, filteredContent.size());
+        boolean archesMatch = filteredContent.stream()
+            .map(ProductContent::getContent)
+            .map(Content::getArches)
+            .allMatch(Objects::isNull);
+        assertTrue(archesMatch);
     }
 
     private void addContent(Product product) {
