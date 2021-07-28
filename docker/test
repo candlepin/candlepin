@@ -22,7 +22,8 @@ while getopts ":bc:dmn:op" opt; do
   case $opt in
     c) TEST_CMD="$OPTARG";;
     m) COMPOSE_ARGS="-f $DIR/docker-compose-mysql.yml";
-       chcon -Rt svirt_sandbox_file_t $DIR/mysql.cnf;;
+       chcon -Rt svirt_sandbox_file_t $DIR/mysql.cnf;
+       sudo chown 999:999 $DIR/mysql.cnf;;
     n) PROJ_NAME="-p $OPTARG";;
     p) COMPOSE_ARGS="-f $DIR/docker-compose-postgres.yml";;
     \?)

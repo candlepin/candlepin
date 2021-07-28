@@ -4,7 +4,7 @@ library identifier: 'fh-pipeline-library@master', retriever: modernSCM(
    credentialsId: 'github-api-token-as-username-password'])
 
 pipeline {
-    agent { label 'docker' }
+    agent { label 'candlepin' }
     options {
         skipDefaultCheckout true
         timeout(time: 16, unit: 'HOURS')
@@ -22,7 +22,7 @@ pipeline {
             parallel {
                 stage('unit') {
                     // ensures that this stage will get assigned its own workspace
-                    agent { label 'docker' }
+                    agent { label 'candlepin' }
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
@@ -32,7 +32,7 @@ pipeline {
                     }
                 }
                 stage('checkstyle') {
-                    agent { label 'docker' }
+                    agent { label 'candlepin' }
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
@@ -42,7 +42,7 @@ pipeline {
                     }
                 }
                 stage('rspec-postgresql') {
-                    agent { label 'docker' }
+                    agent { label 'candlepin' }
                     environment {
                         CANDLEPIN_DATABASE = 'postgresql'
                         CP_TEST_ARGS = '-r'
@@ -56,7 +56,7 @@ pipeline {
                     }
                 }
                 stage('rspec-mysql') {
-                    agent { label 'docker' }
+                    agent { label 'candlepin' }
                     environment {
                         CANDLEPIN_DATABASE = 'mysql'
                         CP_TEST_ARGS = '-r'
@@ -70,7 +70,7 @@ pipeline {
                     }
                 }
                 stage('rspec-postgres-hosted') {
-                    agent { label 'docker' }
+                    agent { label 'candlepin' }
                     environment {
                         CANDLEPIN_DATABASE = 'postgresql'
                         CP_TEST_ARGS = '-H'
@@ -84,7 +84,7 @@ pipeline {
                     }
                 }
                 stage('rspec-mysql-hosted') {
-                    agent { label 'docker' }
+                    agent { label 'candlepin' }
                     environment {
                         CANDLEPIN_DATABASE = 'mysql'
                         CP_TEST_ARGS = '-H'
@@ -124,7 +124,7 @@ pipeline {
                     }
                 }
                 stage('validate-translation') {
-                    agent { label 'docker' }
+                    agent { label 'candlepin' }
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
