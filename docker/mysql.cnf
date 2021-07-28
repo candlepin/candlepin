@@ -6,7 +6,6 @@ default-character-set=utf8mb4
 
 [mysqld]
 symbolic-links=0
-transaction-isolation=READ-COMMITTED
 # MySQL/MariaDB "utf8" charset only supports characters up to three bytes wide
 # (i.e. no emojis).  To get full unicode support, we need to use "utf8mb4"
 # See https://mathiasbynens.be/notes/mysql-utf8mb4
@@ -14,3 +13,4 @@ init-connect='SET NAMES utf8mb4'
 collation-server=utf8mb4_unicode_ci
 character-set-server=utf8mb4
 character-set-client-handshake=FALSE
+transaction-isolation=READ-COMMITTED
