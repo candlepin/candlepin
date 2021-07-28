@@ -22,7 +22,7 @@ OPTIONS:
 USAGE
 }
 
-while getopts ":c:mn:pldw" opt; do
+while getopts ":c:mn:pld" opt; do
   case $opt in
     c) TEST_CMD="$OPTARG";;
     m) COMPOSE_ARGS="-f $DIR/docker-compose-mysql.yml";
@@ -32,7 +32,6 @@ while getopts ":c:mn:pldw" opt; do
     p) COMPOSE_ARGS="-f $DIR/docker-compose-postgres.yml";;
     l) USE_CACHE="1";;
     d) DETACHED="1";;
-    w) DOWN="1";;
     \?)
       echo "Invalid option: -$OPTARG" >&2
       usage
@@ -47,17 +46,8 @@ while getopts ":c:mn:pldw" opt; do
 done
 
 # PROJ_NAME should be set in a jenkins environment. It allows multiple
-#  instaces of the compose to run without clobbering eachother.
+#  instances of the compose to run without clobbering each other.
 cd $DIR
-
-if [ "$DOWN" == "1" ]; then
-    docker-compose $PROJ_NAME down
-
-    echo "return value: $RETVAL"
-    cd -
-    exit $RETVAL
-fi
-
 docker-compose $PROJ_NAME stop
 docker-compose $PROJ_NAME rm -f
 
