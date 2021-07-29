@@ -230,7 +230,21 @@ public abstract class X509Util {
         return contentArches;
     }
 
+    /**
+     * Returns true/false depending on whether or not there is a match/mismatch between the consumer's
+     * supported architectures and the content's supported architectures.
+     *
+     * @param consumerArches The architectures that the consumer supports
+     * @param contentArches The architectures that the content supports
+     * @return False if none of the content's architectures match to any of the consumer architectures,
+     * and True if at least one of the content's architectures match to at least one of the consumer
+     * architectures, or if the content architectures are empty.
+     */
     private boolean hasCompatibleArchitecture(Set<String> consumerArches, Set<String> contentArches) {
+        if (contentArches.isEmpty()) {
+            return true;
+        }
+
         for (String contentArch : contentArches) {
             for (String consumerArch : consumerArches) {
                 if (Arch.contentForConsumer(contentArch, consumerArch)) {
