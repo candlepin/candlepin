@@ -103,43 +103,71 @@ describe 'Content Access' do
     wait_for_job(job['id'], 15)
   end
 
-  it "should filter content with incorrect architecture" do
-    content2 = @cp.create_content(
-      @owner['key'], "cname2", 'test-content2', random_string("clabel2"), "ctype", "cvendor",
-      {:content_url=> '/this/is/the/path',  :modified_products => [@modified_product["id"]], :arches => "ppc64"}, true)
-    if is_standalone?
-      expected_content_url = '/' + @owner['key'] + content2.contentUrl
-      expected_urls = ['/' + @owner['key']]
-    else
-      expected_content_url = content2.contentUrl
-      expected_urls = ['/sca/' + @owner['key']]
-    end
-    content_id2 = content2['id']
-    product2 = create_product('test-product2', 'some product2', :attributes => {:arch => 'ppc64'})
-    @cp.add_content_to_product(@owner['key'], product2['id'], content_id2)
-    @cp.create_pool(@owner['key'], product2['id'], {:quantity => 10})
+  it "should filter content with mismatched architecture" do
+    # We expect this content to NOT be filtered out due to a match with the system's architecture
+    content1 = @cp.create_content(
+      @owner['key'], "cname1", 'test-content1', random_string("clabel1"), "ctype1", "cvendor1",
+      {:content_url=> '/this/is/the/path', :arches => "ppc64"}, true)
 
-    @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts={'system.certificate_version' => '3.3', "uname.machine" => "ppc64"}, owner_key=@owner['key'])
-    certs = @consumer.list_certificates
+    # We expect this content to be filtered out due to a mismatch with the system's architecture
+    content2 = @cp.create_content(
+      @owner['key'], "cname2", 'test-content2', random_string("clabel2"), "ctype2", "cvendor2",
+      {:content_url=> '/this/is/the/path/2', :arches => "x86_64"}, true)
+
+    # We expect this content to NOT be filtered out due it not specifying an architecture
+    content3 = @cp.create_content(
+      @owner['key'], "cname3", 'test-content3', random_string("clabel3"), "ctype3", "cvendor3",
+      {:content_url=> '/this/is/the/path/3' }, true)
+
+    product = create_product(nil, random_string('some product'))
+
+    @cp.add_content_to_product(@owner['key'], product['id'], content1['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content2['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content3['id'])
+
+    @cp.create_pool(@owner['key'], product['id'], {:quantity => 10})
+
+    consumer = consumer_client(@user, random_string('consumer-name'), type=:system, username=nil,
+      facts={'system.certificate_version' => '3.3', "uname.machine" => "ppc64"}, owner_key=@owner['key'])
+
+    certs = consumer.list_certificates
     certs.length.should == 1
 
     json_body = extract_payload(certs[0]['cert'])
     json_body['products'].length.should == 1
-    json_body['products'][0]['content'].length.should == 1
+    json_body['products'][0]['content'].length.should == 2
 
-    content = json_body['products'][0]['content'][0]
-    expect(content['type']).to eq('ctype')
-    expect(content['name']).to eq(content2.name)
-    expect(content['label']).to eq(content2.label)
-    expect(content['vendor']).to eq(content2.vendor)
-    expect(content['path']).to eq(expected_content_url)
-    expect(content['arches'][0]).to eq(content2.arches)
+    # figure out the order of content in the cert, so we can assert properly
+    first_content_name = json_body['products'][0]['content'][0].name
+    if first_content_name == content1.name
+      content1_output = json_body['products'][0]['content'][0]
+      content3_output = json_body['products'][0]['content'][1]
+    else
+      content1_output = json_body['products'][0]['content'][1]
+      content3_output = json_body['products'][0]['content'][0]
+    end
 
-    value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
-    expect(are_content_urls_present(value, expected_urls)).to eq(true)
+    if is_standalone?
+      expected_content1_url = '/' + @owner['key'] + content1.contentUrl
+      expected_content3_url = '/' + @owner['key'] + content3.contentUrl
+    else
+      expected_content1_url = content1.contentUrl
+      expected_content3_url = content3.contentUrl
+    end
 
-    type = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.8")
-    type.should == 'OrgLevel'
+    expect(content1_output['type']).to eq(content1.type)
+    expect(content1_output['name']).to eq(content1.name)
+    expect(content1_output['label']).to eq(content1.label)
+    expect(content1_output['vendor']).to eq(content1.vendor)
+    expect(content1_output['path']).to eq(expected_content1_url)
+    expect(content1_output['arches'][0]).to eq(content1.arches)
+
+    expect(content3_output['type']).to eq(content3.type)
+    expect(content3_output['name']).to eq(content3.name)
+    expect(content3_output['label']).to eq(content3.label)
+    expect(content3_output['vendor']).to eq(content3.vendor)
+    expect(content3_output['path']).to eq(expected_content3_url)
+    expect(content3_output['arches'][0]).to eq(content3.arches)
   end
 
   it "does allow changing the content access mode and mode list in hosted mode" do
