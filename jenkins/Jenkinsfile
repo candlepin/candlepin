@@ -29,6 +29,11 @@ pipeline {
                         sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/unit-tests.sh'
                     }
+                    post {
+                        always {
+                            sh 'sh jenkins/cleanup.sh'
+                        }
+                    }
                 }
                 stage('checkstyle') {
                     agent { label 'candlepin' }
@@ -37,6 +42,11 @@ pipeline {
                         checkout scm
                         sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/lint.sh'
+                    }
+                    post {
+                        always {
+                            sh 'sh jenkins/cleanup.sh'
+                        }
                     }
                 }
                 stage('rspec-postgresql') {
@@ -51,6 +61,11 @@ pipeline {
                         sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/rspec-tests.sh'
                     }
+                    post {
+                        always {
+                            sh 'sh jenkins/cleanup.sh'
+                        }
+                    }
                 }
                 stage('rspec-mysql') {
                     agent { label 'candlepin' }
@@ -63,6 +78,11 @@ pipeline {
                         checkout scm
                         sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/rspec-tests.sh'
+                    }
+                    post {
+                        always {
+                            sh 'sh jenkins/cleanup.sh'
+                        }
                     }
                 }
                 stage('rspec-postgres-hosted') {
@@ -77,6 +97,11 @@ pipeline {
                         sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/rspec-tests.sh'
                     }
+                    post {
+                        always {
+                            sh 'sh jenkins/cleanup.sh'
+                        }
+                    }
                 }
                 stage('rspec-mysql-hosted') {
                     agent { label 'candlepin' }
@@ -89,6 +114,11 @@ pipeline {
                         checkout scm
                         sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/rspec-tests.sh'
+                    }
+                    post {
+                        always {
+                            sh 'sh jenkins/cleanup.sh'
+                        }
                     }
                 }
                 stage('bugzilla-reference') {
@@ -109,6 +139,11 @@ pipeline {
                         checkout scm
                         sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/candlepin-validate-text.sh'
+                    }
+                    post {
+                        always {
+                            sh 'sh jenkins/cleanup.sh'
+                        }
                     }
                 }
             }
