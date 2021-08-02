@@ -1019,9 +1019,12 @@ public class OwnerResource {
             owner = this.contentAccessManager
                 .updateOwnerContentAccess(owner, contentAccessModeList, contentAccessMode);
         }
-
-        owner = ownerCurator.merge(owner);
-        ownerCurator.flush();
+        else {
+            // ContentAccessManager does its own merge on owner,
+            // if updates are NOT related to content access we need to take care of it.
+            owner = ownerCurator.merge(owner);
+            ownerCurator.flush();
+        }
 
         // Build and queue the owner modified event
         Event event = this.eventFactory.getEventBuilder(Target.OWNER, Type.MODIFIED)

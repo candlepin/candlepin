@@ -765,6 +765,9 @@ public class ContentAccessManager {
                 this.contentAccessCertCurator.deleteForOwner(owner);
             }
             this.eventSink.emitOwnerContentAccessModeChanged(owner);
+
+            log.info("Content access mode changed from {} to {} for owner {}", currentMode,
+                updatedMode, owner.getKey());
         }
         else if (listUpdated) {
             owner = ownerCurator.merge(owner);
