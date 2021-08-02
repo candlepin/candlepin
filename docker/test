@@ -62,6 +62,7 @@ if [ "$DETACHED" == "1" ]; then
 else
     docker-compose $PROJ_NAME $COMPOSE_ARGS run --rm candlepin $TEST_CMD
     RETVAL=$?
+    docker-compose $PROJ_NAME down
 fi
 
 echo "return value: $RETVAL"
