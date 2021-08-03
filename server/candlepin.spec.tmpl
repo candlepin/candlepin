@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.5
+Version: 4.0.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,14 @@ fi
 
 #raw
 %changelog
+* Tue Aug 03 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.6-1
+- 1989474: Fix for pool quantity calculation   - All unlimited pool quantities
+  are restricted to -1   - Modified bonus pool & unmapped guest pool quantity
+  calculations (prakgupt@redhat.com)
+- Log changes to content access mode for owner (prakgupt@redhat.com)
+- 1985359: Don't filter out content with no arch specified
+  (nmoumoul@redhat.com)
+
 * Tue Jun 22 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.5-1
 - Removed non-nullable restriction from the SCA cert cache table
   (crog@redhat.com)
