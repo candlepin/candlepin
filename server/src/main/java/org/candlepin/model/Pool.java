@@ -1160,7 +1160,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @JsonIgnore
     public boolean isOverflowing() {
         // Unlimited pools can't be overflowing:
-        if (this.quantity == -1) {
+        if (this.quantity < 0) {
             return false;
         }
         return getConsumed() > this.quantity;
