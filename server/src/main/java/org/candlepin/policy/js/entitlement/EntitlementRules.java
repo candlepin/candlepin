@@ -94,6 +94,7 @@ public class EntitlementRules implements Enforcer {
     private ModelTranslator translator;
 
     private static final String POST_PREFIX = "post_";
+    private static final long UNLIMITED_QUANTITY = -1L;
 
     @Inject
     public EntitlementRules(DateSource dateSource,
@@ -520,17 +521,41 @@ public class EntitlementRules implements Enforcer {
             String virtLimit = attributes.get(Product.Attributes.VIRT_LIMIT);
 
             if (!"unlimited".equals(virtLimit)) {
-                // As we have unbound an entitlement from a physical pool that was previously
-                // exported, we need to add back the reduced bonus pool quantity.
+                /*
+                 * Case I
+                 * As we have unbound an entitlement from a physical pool that was previously
+                 * exported, we need to add back the reduced bonus pool quantity.
+                 *
+                 * Case II
+                 * If Master pool quantity is unlimited, with non-zero virt_limit & pool under
+                 * consideration is of type Unmapped guest or Bonus pool, set its quantity to be
+                 * unlimited.
+                 */
                 int virtQuantity = Integer.parseInt(virtLimit) * entitlement.getQuantity();
                 if (virtQuantity > 0) {
                     List<Pool> pools = poolManager.getBySubscriptionId(pool.getOwner(),
                         pool.getSubscriptionId());
+                    boolean isMasterPoolUnlimited = false;
+
+                    for (Pool poolToCheck : pools) {
+                        if (poolToCheck.getQuantity() == UNLIMITED_QUANTITY) {
+                            isMasterPoolUnlimited = true;
+                        }
+                    }
+
                     for (int idex = 0; idex < pools.size(); idex++) {
                         Pool derivedPool = pools.get(idex);
+
                         if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
-                            poolManager.setPoolQuantity(derivedPool,
-                                derivedPool.adjustQuantity(virtQuantity));
+                            if (isMasterPoolUnlimited && (derivedPool.getType() == Pool.PoolType.BONUS ||
+                                derivedPool.getType() == Pool.PoolType.UNMAPPED_GUEST)) {
+                                // Set pool quantity to be unlimited.
+                                poolManager.setPoolQuantity(derivedPool, UNLIMITED_QUANTITY);
+                            }
+                            else {
+                                poolManager.setPoolQuantity(derivedPool,
+                                    derivedPool.adjustQuantity(virtQuantity));
+                            }
                         }
                     }
                 }
@@ -676,23 +701,47 @@ public class EntitlementRules implements Enforcer {
             if (!hostLimited) {
                 String virtLimit = attributes.get(Product.Attributes.VIRT_LIMIT);
                 if (!"unlimited".equals(virtLimit)) {
-                    /* if the bonus pool is not unlimited, then the bonus pool
+                    /*
+                     * Case I
+                     * if the bonus pool is not unlimited, then the bonus pool
                      * quantity needs to be adjusted based on the virt limit
                      *
-                     * poolQuantity map contains the quantity change requested in the entitlement.
+                     * NOTE : poolQuantity map contains the quantity change requested in the entitlement.
                      * If this is a bind, then change = entitlement quantity, as change is always > 0.
                      * But if this is an entitlement update, change can be positive or negative, hence
                      * we may need to increment or decrement the bonus pool quantity based on the change
+                     *
+                     * Case II
+                     * Master pool quantity is unlimited, with non-zero virt_limit & pool under
+                     * consideration is of type Unmapped guest or Bonus pool, set its quantity to be
+                     * unlimited.
                      */
                     int virtQuantity = Integer.parseInt(virtLimit) *
                         poolQuantityMap.get(pool.getId()).getQuantity();
                     if (virtQuantity != 0) {
                         List<Pool> pools = subscriptionPoolMap.get(pool.getSubscriptionId());
+
+                        boolean isMasterPoolUnlimited = false;
+
+                        for (Pool poolToCheck : pools) {
+                            if (poolToCheck.getQuantity() == UNLIMITED_QUANTITY) {
+                                isMasterPoolUnlimited = true;
+                            }
+                        }
+
                         for (int idex = 0; idex < pools.size(); idex++) {
                             Pool derivedPool = pools.get(idex);
                             if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
-                                long adjust = derivedPool.adjustQuantity(-1L * virtQuantity);
-                                poolOperationCallback.setQuantityToPool(derivedPool, adjust);
+                                // If master pool is of unlimited quantity, set pool quantity as unlimited
+                                // if pool type is bonus or unmapped_guest pool.
+                                if (isMasterPoolUnlimited && (derivedPool.getType() == Pool.PoolType.BONUS ||
+                                    derivedPool.getType() == Pool.PoolType.UNMAPPED_GUEST)) {
+                                    poolOperationCallback.setQuantityToPool(derivedPool, UNLIMITED_QUANTITY);
+                                }
+                                else {
+                                    long adjust = derivedPool.adjustQuantity(-1L * virtQuantity);
+                                    poolOperationCallback.setQuantityToPool(derivedPool, adjust);
+                                }
                             }
                         }
                     }
