@@ -22,6 +22,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
@@ -56,6 +57,8 @@ public class PoolRules {
 
     private static final Logger log = LoggerFactory.getLogger(PoolRules.class);
 
+    private static final long UNLIMITED_QUANTITY = -1L;
+
     private final PoolManager poolManager;
     private final Configuration config;
     private final EntitlementCurator entCurator;
@@ -74,6 +77,13 @@ public class PoolRules {
     }
 
     private long calculateQuantity(long quantity, Product product, String upstreamPoolId) {
+        // Pool quantities that are less than -1:
+        // a) are not considered valid and will be treated as 'unlimited' quantity (-1) and
+        // b) should never be multiplied with product multiplier or instance_multiplier
+        if (quantity < 0) {
+            return UNLIMITED_QUANTITY;
+        }
+
         long result = quantity * (product.getMultiplier() != null ? product.getMultiplier() : 1);
 
         // In hosted, we increase the quantity on the subscription. However in standalone,
@@ -185,7 +195,6 @@ public class PoolRules {
         // for a source subscription should be removed.
         if (poolManager.isManaged(masterPool) && virtQuantity != null &&
             !hasBonusPool(existingPools)) {
-
             boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
             HashMap<String, String> virtAttributes = new HashMap<>();
             virtAttributes.put(Pool.Attributes.VIRT_ONLY, "true");
@@ -245,15 +254,18 @@ public class PoolRules {
     /*
      * Returns null if invalid
      */
-    private String getVirtQuantity(String virtLimit, long quantity) {
-        if ("unlimited".equals(virtLimit)) {
-            return virtLimit;
+    private String getVirtQuantity(String virtLimit, long masterPoolQuantity) {
+        if (virtLimit != null &&
+            ("unlimited".equals(virtLimit) || masterPoolQuantity == UNLIMITED_QUANTITY)) {
+            return String.valueOf(UNLIMITED_QUANTITY);
         }
 
         try {
             int virtLimitInt = Integer.parseInt(virtLimit);
+
             if (virtLimitInt > 0) {
-                return String.valueOf(virtLimitInt * quantity);
+                long quantity = virtLimitInt * masterPoolQuantity;
+                return String.valueOf(quantity);
             }
         }
         catch (NumberFormatException nfe) {
@@ -334,7 +346,6 @@ public class PoolRules {
 
             update.setQuantityChanged(checkForQuantityChange(masterPool, existingPool, originalQuantity,
                 existingPools, attributes));
-
             if (!existingPool.isMarkedForDelete()) {
                 boolean useDerived = derived != null &&
                     BooleanUtils.toBoolean(existingPool.getAttributeValue(Pool.Attributes.DERIVED_POOL));
@@ -707,20 +718,36 @@ public class PoolRules {
                             // adjustment for exported quantities if there are multiple
                             // pools in play.
                             long adjust = 0L;
+                            boolean isMasterUnlimited = false;
+
                             for (Pool derivedPool : existingPools) {
                                 String isDerived =
                                     derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL);
 
                                 if (isDerived == null) {
                                     adjust = derivedPool.getExported();
+
+                                    if (derivedPool.getQuantity() == UNLIMITED_QUANTITY) {
+                                        isMasterUnlimited = true;
+                                    }
                                 }
                             }
-                            expectedQuantity = (expectedQuantity - adjust) * virtLimit;
+
+                            // If master pool quantity is unlimited & existingPool is of type
+                            // virt bonus or unmapped guest pool, set its quantity as unlimited.
+                            if (isMasterUnlimited && (existingPool.getType() == PoolType.BONUS ||
+                                existingPool.getType() == PoolType.UNMAPPED_GUEST)) {
+                                expectedQuantity = UNLIMITED_QUANTITY;
+                            }
+                            else {
+                                expectedQuantity = (expectedQuantity - adjust) * virtLimit;
+                            }
+
                         }
                     }
                     catch (NumberFormatException nfe) {
                         // Nothing to update if we get here.
-//                            continue;
+                        // continue;
                     }
                 }
             }
