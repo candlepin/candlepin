@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.4
+Version: 4.1.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,22 @@ fi
 
 #raw
 %changelog
+* Tue Aug 03 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.5-1
+- 1800811: Fix for pool quantity calculation   - All unlimited pool quantities
+  are restricted to -1   - Modified bonus pool & unmapped guest pool quantity
+  calculations (prakgupt@redhat.com)
+- Log changes to content access mode for owner (prakgupt@redhat.com)
+- Add back 'docker-compose down' to docker/test script (nmoumoul@redhat.com)
+- ENT-4018: Cleanup docker containers & networks on Jenkins pipeline abort
+  (ojanus@redhat.com)
+- 1984984: Don't filter out content with no arch specified
+  (nmoumoul@redhat.com)
+- This is to investigate/fix the misbehaviour of the spec test in the
+  environment created for #3001 (sdhome@redhat.com)
+- Changed the keyserver URL to import the keys (prakgupt@redhat.com)
+- Fixed an error when deleting products associated with activation keys
+  (crog@redhat.com)
+
 * Fri Jun 25 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.4-1
 - Removed the dependency check plugin from Maven build & added it to gradle
   (prakgupt@redhat.com)
