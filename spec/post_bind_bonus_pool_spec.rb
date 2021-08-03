@@ -22,6 +22,13 @@ describe 'Post bind bonus pool updates' do
      :attributes => {
        "virt_limit" => "unlimited",
        "multi-entitlement" => "yes"}})
+  unlimited_prod = create_product('Unlimited_prod_with_virt_limit', 'unlimited_product_id',
+    {:owner => @owner_key,
+     :version => "6.1",
+     :attributes => {
+     "virt_limit" => "4",
+     "multi-entitlement" => "yes",
+     "unlimited_product"=>"true"}})
   host_limited_prod = create_product('taylor_host_limited', 'taylor swift host limited',
     {:owner => @owner_key,
      :version => "6.1",
@@ -44,6 +51,22 @@ describe 'Post bind bonus pool updates' do
        "multi-entitlement" => "yes",
        "stacking_id" => "badBlood",
        "host_limited" => "true"}})
+
+  host_limited_unlimited_virt_prod = create_product('taylor_host_limited_product', 'host limited with unlimited virt',
+    {:owner => @owner_key,
+     :version => "6.1",
+     :attributes => {
+        "virt_limit" => "unlimited",
+        "multi-entitlement" => "yes",
+        "host_limited" => "true"}})
+
+  host_and_virt_limited_prod = create_product('host_and_virt_limited_product', 'host limited with limited virt',
+    {:owner => @owner_key,
+     :version => "6.1",
+     :attributes => {
+        "virt_limit" => "4",
+        "multi-entitlement" => "yes",
+        "host_limited" => "true"}})
 
   @limited_master_pool = create_pool_and_subscription(owner['key'], limited_virt_limit_prod['id'], 10)
   pools = @cp.list_owner_pools(@owner_key)
@@ -99,6 +122,41 @@ describe 'Post bind bonus pool updates' do
   sub_pools.length.should == 1
   @hostlimited_bonus_stacked_pool = sub_pools[0]
   @hostlimited_bonus_stacked_pool['quantity'].should == 90
+
+  @unlimited_product_master_pool = create_pool_and_subscription(owner['key'], unlimited_prod['id'], -1)
+  # Limit master pool quantity to -1 (Unlimited Quantity)
+  @cp.get_pool(@unlimited_product_master_pool['id'])['quantity'].should == -1
+  pools = @cp.list_owner_pools(@owner_key)
+  pools.length.should == 12
+  sub_pools = pools.select do |pool|
+    pool['subscriptionId'] == @unlimited_product_master_pool['subscriptionId'] &&
+      pool['type'] != 'NORMAL'
+  end
+  sub_pools.length.should == 1
+  @unlimited_product_bonus_pool = sub_pools[0]
+  @cp.get_pool(@unlimited_product_bonus_pool['id'])['quantity'].should == -1
+
+  @host_limited_unlimited_virt_master_pool = create_pool_and_subscription(owner['key'], host_limited_unlimited_virt_prod['id'], 10)
+  pools = @cp.list_owner_pools(@owner_key)
+  pools.length.should == 14
+  sub_pools = pools.select do |pool|
+    pool['subscriptionId'] == @host_limited_unlimited_virt_master_pool['subscriptionId'] &&
+      pool['type'] != 'NORMAL'
+  end
+  sub_pools.length.should == 1
+  @host_limited_unlimited_virt_bonus_pool = sub_pools[0]
+  @cp.get_pool(@host_limited_unlimited_virt_bonus_pool['id'])['quantity'].should == -1
+
+  @host_and_virt_limited_prod_master_pool = create_pool_and_subscription(owner['key'], host_and_virt_limited_prod['id'], -1)
+  pools = @cp.list_owner_pools(@owner_key)
+  pools.length.should == 16
+  sub_pools = pools.select do |pool|
+    pool['subscriptionId'] == @host_and_virt_limited_prod_master_pool['subscriptionId'] &&
+      pool['type'] != 'NORMAL'
+  end
+  sub_pools.length.should == 1
+  @host_and_virt_limited_prod_bonus_pool = sub_pools[0]
+  @cp.get_pool(@host_and_virt_limited_prod_bonus_pool['id'])['quantity'].should == -1
 
   guest_uuid =  random_string('guest')
   guest_facts = {
@@ -409,4 +467,118 @@ describe 'Post bind bonus pool updates' do
     @cp.get_entitlement(ent.id)['quantity'].should == 10
   end
 
+  it 'should allow unlimited consumption of Bonus pools for unlimited quantity master pool' do
+    guest_uuid =  random_string('guest')
+    guest_facts = {
+      "virt.is_guest"=>"true",
+      "virt.uuid"=>guest_uuid
+    }
+    guest = @cp.register('guest.bind.com',:system, guest_uuid, guest_facts, 'admin', @owner_key, [], [])
+    guest_cp = Candlepin.new(nil, nil, guest['idCert']['cert'], guest['idCert']['key'])
+
+    # Consume bonus pool
+    ent = guest_cp.consume_pool(@unlimited_product_bonus_pool['id'], {:quantity => 1})
+    @cp.refresh_pools(@owner_key)
+    bonus_pool = @cp.get_pool(@unlimited_product_bonus_pool['id'])
+    expect(bonus_pool['quantity']).to eq(-1)
+
+    # master pool quantity remains unchanged
+    master_pool = @cp.get_pool(@unlimited_product_master_pool['id'])
+    expect(master_pool['quantity']).to eq(-1)
+
+    # unbind & refresh
+    guest_cp.unbind_entitlement(ent[0].id)
+    @cp.refresh_pools(@owner_key)
+    pool = @cp.get_pool(@unlimited_product_bonus_pool['id'])
+
+    expect(pool['quantity']).to eq(-1)
+
+    # master pool quantity remains unchanged
+    master_pool = @cp.get_pool(@unlimited_product_master_pool['id'])
+    expect(master_pool['quantity']).to eq(-1)
+  end
+
+  it 'should allow unlimited consumption of master pool when master pool quantity is unlimited regardless of virt_limit' do
+    # unlimited_prod is created with -1 quantity & virt_limit of 4
+    master_pool = @cp.get_pool(@unlimited_product_master_pool['id'])
+    expect(master_pool['quantity']).to eq(-1)
+
+    bonus_pool = @cp.get_pool(@unlimited_product_bonus_pool['id'])
+    expect(bonus_pool['quantity']).to eq(-1)
+
+    # consume master pool in any quantity
+    ent = @satellite_cp.consume_pool(@unlimited_product_master_pool['id'], {:quantity => 1000})
+    master_pool = @cp.get_pool(@unlimited_product_master_pool['id'])
+    expect(master_pool['quantity']).to eq(-1)
+
+    bonus_pool = @cp.get_pool(@unlimited_product_bonus_pool['id'])
+    expect(bonus_pool['quantity']).to eq(-1)
+
+    # refresh will not revoke the entitlement as unlimited pools can't be overflowing
+    @cp.refresh_pools(@owner_key)
+    master_pool = @cp.get_pool(@unlimited_product_master_pool['id'])
+    expect(master_pool['quantity']).to eq(-1)
+    bonus_pool = @cp.get_pool(@unlimited_product_bonus_pool['id'])
+    expect(bonus_pool['quantity']).to eq(-1)
+
+    # entitlement unbind
+    @satellite_cp.unbind_entitlement(ent[0].id)
+
+    master_pool = @cp.get_pool(@unlimited_product_master_pool['id'])
+    expect(master_pool['quantity']).to eq(-1)
+
+    bonus_pool = @cp.get_pool(@unlimited_product_bonus_pool['id'])
+    expect(bonus_pool['quantity']).to eq(-1)
+  end
+
+  it 'should allow unlimited consumption of unmapped guest pool for unlimited virt limit' do
+    guest_uuid =  random_string('guest')
+    guest_facts = {
+      "virt.is_guest"=>"true",
+      "virt.uuid"=>guest_uuid
+    }
+    guest = @cp.register('guest.bind.com',:system, guest_uuid, guest_facts, 'admin', @owner_key, [], [])
+    guest_cp = Candlepin.new(nil, nil, guest['idCert']['cert'], guest['idCert']['key'])
+
+    # master pool quantity is expected to be 10
+    master_pool = @cp.get_pool(@host_limited_unlimited_virt_master_pool['id'])
+    expect(master_pool['quantity']).to eq(10)
+
+    # unmapped_guest pool quantity is expected to be unlimited
+    bonus_pool = @cp.get_pool(@host_limited_unlimited_virt_bonus_pool['id'])
+    expect(bonus_pool['quantity']).to eq(-1)
+
+    guest_cp.consume_pool(@host_limited_unlimited_virt_bonus_pool['id'], {:quantity => 500})
+    @cp.refresh_pools(@owner_key)
+
+    expect(@cp.get_pool(@host_limited_unlimited_virt_bonus_pool['id'])['quantity']).to eq(-1)
+  end
+
+  it 'should allow unlimited consumption of unmapped guest pool for unlimited master pool quantity' do
+    guest_uuid =  random_string('guest')
+    guest_facts = {
+      "virt.is_guest"=>"true",
+      "virt.uuid"=>guest_uuid
+    }
+    guest = @cp.register('guest.bind.com',:system, guest_uuid, guest_facts, 'admin', @owner_key, [], [])
+    guest_cp = Candlepin.new(nil, nil, guest['idCert']['cert'], guest['idCert']['key'])
+
+    # master pool quantity is expected to be -1
+    master_pool = @cp.get_pool(@host_and_virt_limited_prod_master_pool['id'])
+    expect(master_pool['quantity']).to eq(-1)
+
+    # consume master pool in any quantity
+    ent = @satellite_cp.consume_pool(@unlimited_product_master_pool['id'], {:quantity => 1000})
+    master_pool = @cp.get_pool(@unlimited_product_master_pool['id'])
+    expect(master_pool['quantity']).to eq(-1)
+
+    # unmapped_guest pool quantity is expected to be unlimited
+    bonus_pool = @cp.get_pool(@host_limited_unlimited_virt_bonus_pool['id'])
+    expect(bonus_pool['quantity']).to eq(-1)
+
+    guest_cp.consume_pool(@host_limited_unlimited_virt_bonus_pool['id'], {:quantity => 500})
+    @cp.refresh_pools(@owner_key)
+
+    expect(@cp.get_pool(@host_limited_unlimited_virt_bonus_pool['id'])['quantity']).to eq(-1)
+  end
 end
