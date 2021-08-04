@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.19
+Version: 3.2.20
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,11 @@ fi
 
 #raw
 %changelog
+* Wed Aug 04 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.20-1
+- 1989541: Fix for pool quantity calculation   - All unlimited pool quantities
+  are restricted to -1   - Modified bonus pool & unmapped guest pool quantity
+  calculations (prakgupt@redhat.com)
+
 * Fri Jun 25 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.19-1
 - 1960150: Fixed NPE when listing future pools with entitlements
   (crog@redhat.com)
