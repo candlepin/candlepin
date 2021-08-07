@@ -24,6 +24,13 @@ class Msgfmt implements Plugin<Project> {
     void apply(Project project) {
         def extension = project.extensions.create('msgfmt', MsgfmtExtension)
 
+        // Add the generated sources for all the i18n files to the main java source dirs so that they will be compiled
+        // during the normal compileJava step
+        def msgfmt_target_directory = project.file("${project.buildDir}/msgfmt/generated_source")
+        project.sourceSets {
+            main.java.srcDir msgfmt_target_directory
+        }
+
         def msgfmt_task = project.task('msgfmt') {
             doLast {
                 def po_dir = project.file("po")
@@ -36,7 +43,6 @@ class Msgfmt implements Plugin<Project> {
                 if (!msgfmt_directory.exists()) {
                     msgfmt_directory.mkdirs()
                 }
-                def msgfmt_target_directory = new File("${project.buildDir}/msgfmt/generated_source")
                 if (!msgfmt_target_directory.exists()) {
                     msgfmt_target_directory.mkdirs()
                 }
