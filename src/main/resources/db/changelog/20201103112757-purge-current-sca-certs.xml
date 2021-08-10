@@ -6,7 +6,8 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <changeSet id="20201103112757-1" author="crog, sdhome">
+    <changeSet id="20201103112757-1" author="crog">
+        <validCheckSum>7:b060e85fd3270acbb9778b17c6d0a447</validCheckSum>
         <comment>
             Removes any existing SCA certs to address a problem with cert generation in some organizations
         </comment>
@@ -20,6 +21,7 @@
             <column name="cont_acc_cert_id"/> <!-- this sets the column value to null -->
         </update>
 
+        <!-- Below changes are made to fix the bug #1980370. -->
         <dropForeignKeyConstraint baseTableName="cp_consumer" constraintName="fk_cont_acc_cert" />
 
         <sql>
