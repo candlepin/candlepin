@@ -146,6 +146,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         }
         else {
             for (AuthProvider provider : providers) {
+                log.debug("Attempting authentication with provider: {}", provider.getClass().getName());
                 principal = provider.getPrincipal(httpRequest);
 
                 if (principal != null) {

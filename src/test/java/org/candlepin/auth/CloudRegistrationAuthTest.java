@@ -59,7 +59,6 @@ import javax.inject.Provider;
 
 
 
-
 /**
  * Test suite for the CloudRegistrationAuth class
  */
@@ -199,6 +198,22 @@ public class CloudRegistrationAuthTest {
     }
 
     @Test
+    public void testGenerateRegistrationTokenFailsWhenDisabled() {
+        // Should pass when enabled and throw an exception when disabled
+        this.config.setProperty(ConfigProperties.CLOUD_AUTHENTICATION, "true");
+
+        CloudRegistrationInfo cloudRegInfo = this.buildCloudRegistrationInfo("test_type", "metadata", "sig");
+        CloudRegistrationAuth provider = this.buildAuthProvider();
+        String token = provider.generateRegistrationToken(mock(Principal.class), cloudRegInfo);
+
+        this.config.setProperty(ConfigProperties.CLOUD_AUTHENTICATION, "false");
+        CloudRegistrationAuth disabledProvider = this.buildAuthProvider();
+
+        assertThrows(UnsupportedOperationException.class, () ->
+            disabledProvider.generateRegistrationToken(mock(Principal.class), cloudRegInfo));
+    }
+
+    @Test
     public void testGenerateRegistrationTokenFailsOnResolutionFailure() {
         Principal principal = mock(Principal.class);
         CloudRegistrationInfo cloudRegInfo = this.buildCloudRegistrationInfo("test_type", "metadata", "sig");
@@ -262,11 +277,17 @@ public class CloudRegistrationAuthTest {
 
     @Test
     public void testGetPrincipalAbortsWhenDisabled() {
-        this.config.setProperty(ConfigProperties.CLOUD_AUTHENTICATION, "false");
+        // Enable cloud registration to get a valid token, so we can ensure the reason it aborts is due to
+        // cloud registration being disabled
+        this.config.setProperty(ConfigProperties.CLOUD_AUTHENTICATION, "true");
 
         CloudRegistrationInfo cloudRegInfo = this.buildCloudRegistrationInfo("test_type", "metadata", "sig");
         CloudRegistrationAuth provider = this.buildAuthProvider();
         String token = provider.generateRegistrationToken(mock(Principal.class), cloudRegInfo);
+
+        // Disable it again
+        this.config.setProperty(ConfigProperties.CLOUD_AUTHENTICATION, "false");
+        provider = this.buildAuthProvider();
 
         MockHttpRequest request = this.buildHttpRequest();
         request.header("Authorization", "Bearer " + token);

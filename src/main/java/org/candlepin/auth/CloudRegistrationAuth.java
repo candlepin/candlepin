@@ -244,6 +244,11 @@ public class CloudRegistrationAuth implements AuthProvider {
     public String generateRegistrationToken(Principal principal, CloudRegistrationInfo cloudRegistrationInfo)
         throws CloudRegistrationAuthorizationException, MalformedCloudRegistrationException {
 
+        if (!this.enabled) {
+            throw new UnsupportedOperationException(
+                "Cloud registration is not enabled on this Candlepin instance");
+        }
+
         if (principal == null) {
             throw new IllegalArgumentException("principal is null");
         }

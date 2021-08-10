@@ -54,7 +54,6 @@ public class CloudRegistrationResource implements CloudApi {
     @Override
     @SecurityHole(noAuth = true)
     public String cloudAuthorize(CloudRegistrationDTO cloudRegistrationDTO) {
-
         if (cloudRegistrationDTO == null) {
             throw new BadRequestException(this.i18n.tr("No cloud registration information provided"));
         }
