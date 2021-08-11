@@ -897,6 +897,7 @@ public class ConsumerResource implements ConsumersApi {
         this.validator.validateCollectionElementsNotNull(dto::getInstalledProducts,
             dto::getGuestIds, dto::getCapabilities);
         Principal principal = this.principalProvider.get();
+
         // Resolve or create owner if needed
         Owner owner = setupOwner(principal, ownerKey);
 
@@ -1333,9 +1334,17 @@ public class ConsumerResource implements ConsumersApi {
      * if the user does not have permission to register on this owner.
      */
     private Owner setupOwner(Principal principal, String ownerKey) {
-        // If no owner was specified, try to assume based on which owners the
-        // principal
-        // has admin rights for. If more than one, we have to error out.
+        // If no owner was specified, try to assume based on which owners the principal has admin rights for.
+        // If more than one, we have to error out.
+
+        if (ownerKey == null && !(principal instanceof UserPrincipal)) {
+            // There's no resolution we can perform here.
+            log.warn("Cannot determine organization with which to register client: {}", principal);
+            String errmsg = i18n.tr("Client is not authorized to register with any organization");
+
+            throw new BadRequestException(errmsg);
+        }
+
         if (ownerKey == null && (principal instanceof UserPrincipal)) {
             // check for this cast?
             List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
