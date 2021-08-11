@@ -17,8 +17,13 @@ gradlePlugin {
             implementationClass = "org.candlepin.gradle.SpecVersion"
         }
         gettextPlugin {
-            id = "gettext"
+            id = "org.candlepin.gradle.gettext"
             implementationClass = "Gettext"
         }
+        msgfmtPlugin {
+            id = "org.candlepin.gradle.msgfmt"
+            implementationClass = "Msgfmt"
+        }
+
     }
 }

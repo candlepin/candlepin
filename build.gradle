@@ -4,14 +4,14 @@ import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.yaml.snakeyaml.Yaml
 
 buildscript {
-    ext.openapi_version = '5.1.0'
+    //openapi version has to be set manually in the plugins block as well.
+    ext.openapi_version = '5.2.0'
+
     repositories {
         mavenCentral()
     }
     dependencies {
         classpath group: 'org.yaml', name: 'snakeyaml', version: '1.19'
-        classpath "org.openapitools:openapi-generator-gradle-plugin:${openapi_version}"
-        classpath 'org.owasp:dependency-check-gradle:6.2.2'
     }
 }
 
@@ -23,16 +23,26 @@ plugins {
     to look for libraries that have newer versions available.
      */
     id "com.github.ben-manes.versions" version "0.28.0"
+    // Openapi version is set in the buildscript block for use in the pom generation as well
+    id "org.openapi.generator" version '5.2.0'
+    id "java"
+    id "maven"
+    id "war"
+    id "checkstyle"
+    id 'org.owasp.dependencycheck' version '6.2.2'
+
+    // The following are plugins are plugins we wrote in the buildSrc folder
+    id 'org.candlepin.gradle.gettext'
+    id 'org.candlepin.gradle.msgfmt'
     id "org.candlepin.gradle.SpecVersion"
 }
 
-apply plugin: "war"
-apply plugin: "checkstyle"
-apply plugin: Gettext
-apply plugin: Msgfmt
-apply plugin: 'org.owasp.dependencycheck'
+group = "org.candlepin"
 
 ext {
+    api_spec_path = "${projectDir}/api/candlepin-api-spec.yaml"
+    config_file = "${projectDir}/api/candlepin-api-config.json"
+
     logdriver_class = "net.rkbloom.logdriver.LogDriver"
     use_logdriver = "true".equals(project.findProperty("logdriver"))
 
@@ -183,7 +193,10 @@ ext.libraries = [
         "org.hibernate.validator:hibernate-validator",
         "org.hibernate.validator:hibernate-validator-annotation-processor",
     ],
-    keycloak: "org.keycloak:keycloak-servlet-filter-adapter",
+    keycloak: [
+            "org.keycloak:keycloak-servlet-filter-adapter",
+            "org.keycloak:keycloak-core",
+        ],
     hibernate: "org.hibernate:hibernate-c3p0",
     ehcache: [
         "org.hibernate:hibernate-jcache",
@@ -196,186 +209,156 @@ ext.libraries = [
     ],
 ]
 
-allprojects {
-    apply plugin: "java"
-    apply plugin: "maven"
-    apply plugin: "nebula.lint"
-    apply plugin: "io.spring.dependency-management"
-    apply plugin: com.github.benmanes.gradle.versions.VersionsPlugin
+dependencyManagement {
+    dependencies {
+        dependency group: 'aopalliance', name: 'aopalliance', version: '1.0'
+        dependency group: 'javax.inject', name: 'javax.inject', version: '1'
+        dependency group: 'javax.transaction', name: 'jta', version: '1.1'
+        dependency group: 'javax.persistence', name: 'javax.persistence-api', version: '2.2'
+        dependency group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
+        dependency group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
+        dependency group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.1'
+        dependency group: 'javax.servlet', name: 'servlet-api', version: '2.5'
+        dependency group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
+        dependency group: 'org.ehcache', name: 'ehcache', version: '3.8.0'
+        dependency group: 'javax.cache', name: 'cache-api', version: '1.0.0'
+        dependency group: 'org.mozilla', name: 'jss', version: '4.4.6'
+        dependency group: 'ldapjdk', name: 'ldapjdk', version: '4.19'
+        dependency group: 'org.quartz-scheduler', name: 'quartz', version: '2.3.2'
+        dependency group: 'geronimo-spec', name: 'geronimo-spec-jms', version: '1.1-rc4'
+        dependency group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.7'
+        dependency group: 'org.slf4j', name: 'log4j-over-slf4j', version: '1.7.5'
+        dependency group: 'logdriver', name: 'logdriver', version: '1.0'
+        // Javascript engine
+        dependency group: 'org.mozilla', name: 'rhino', version: '1.7R3'
+        dependency group: 'org.hibernate.javax.persistence', name: 'hibernate-jpa-2.1-api', version: '1.0.2.Final'
+        dependency group: 'org.hibernate.validator', name: 'hibernate-validator-annotation-processor', version: '6.1.5.Final'
+        dependency group: 'org.hibernate', name: 'hibernate-jcache', version: '5.4.6.Final'
+        dependency group: 'commons-codec', name: 'commons-codec', version: '1.11'
+        dependency group: 'commons-collections', name: 'commons-collections', version: '3.2.2'
+        dependency group: 'commons-io', name: 'commons-io', version: '2.7'
+        dependency group: 'commons-lang', name: 'commons-lang', version: '2.5'
+        dependency group: 'org.apache.commons', name: 'commons-lang3', version: '3.2.1'
+        dependency group: 'com.googlecode.gettext-commons', name: 'gettext-commons', version: '0.9.8'
+        dependency group: 'com.puppycrawl.tools', name: 'checkstyle', version: "$versions.checkstyle"
+        dependency group: 'com.github.sevntu-checkstyle', name: 'sevntu-checks', version: '1.36.0'
+        dependency group: 'com.google.inject', name: 'guice', version: "$versions.guice"
+        // DB Drivers
+        dependency group: 'org.postgresql', name: 'postgresql', version: '42.2.2'
+        dependency group: 'mysql', name: 'mysql-connector-java', version: '8.0.20'
+        dependency group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.3.0'
+        dependency group: 'org.junit.vintage', name: 'junit-vintage-engine', version: "$versions.junit5"
+        dependency group: 'junit', name: 'junit', version: '4.13.1'
+        // Testing DB Drivers
+        dependency group: 'org.hsqldb', name: 'hsqldb', version: '2.3.3'
+        dependency group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+        dependency group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '5.3'
+        dependency group: 'org.liquibase', name: 'liquibase-core', version: '3.1.0'
+        dependency group: 'com.mattbertolini', name: 'liquibase-slf4j', version: '1.2.1'
+        dependency group: 'org.eclipse.microprofile.config', name: 'microprofile-config-api', version:'1.3'
+        dependency group: 'com.mchange', name: 'c3p0', version: '0.9.5.4'
+        dependencySet(group: 'org.keycloak',  version: '7.0.0') {
+            entry "keycloak-core"
+            entry "keycloak-servlet-filter-adapter"
+        }
 
-    dependencyManagement {
-        dependencies {
-            dependency group: 'aopalliance', name: 'aopalliance', version: '1.0'
-            dependency group: 'javax.inject', name: 'javax.inject', version: '1'
-            dependency group: 'javax.transaction', name: 'jta', version: '1.1'
-            dependency group: 'javax.persistence', name: 'javax.persistence-api', version: '2.2'
-            dependency group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
-            dependency group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
-            dependency group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.1'
-            dependency group: 'javax.servlet', name: 'servlet-api', version: '2.5'
-            dependency group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
-            dependency group: 'org.ehcache', name: 'ehcache', version: '3.8.0'
-            dependency group: 'javax.cache', name: 'cache-api', version: '1.0.0'
-            dependency group: 'org.mozilla', name: 'jss', version: '4.4.6'
-            dependency group: 'ldapjdk', name: 'ldapjdk', version: '4.19'
-            dependency group: 'org.quartz-scheduler', name: 'quartz', version: '2.3.2'
-            dependency group: 'geronimo-spec', name: 'geronimo-spec-jms', version: '1.1-rc4'
-            dependency group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.7'
-            dependency group: 'org.slf4j', name: 'log4j-over-slf4j', version: '1.7.5'
-            dependency group: 'logdriver', name: 'logdriver', version: '1.0'
-            // Javascript engine
-            dependency group: 'org.mozilla', name: 'rhino', version: '1.7R3'
-            dependency group: 'org.hibernate.javax.persistence', name: 'hibernate-jpa-2.1-api', version: '1.0.2.Final'
-            dependency group: 'org.hibernate.validator', name: 'hibernate-validator-annotation-processor', version: '6.1.5.Final'
-            dependency group: 'org.hibernate', name: 'hibernate-jcache', version: '5.4.6.Final'
-            dependency group: 'commons-codec', name: 'commons-codec', version: '1.11'
-            dependency group: 'commons-collections', name: 'commons-collections', version: '3.2.2'
-            dependency group: 'commons-io', name: 'commons-io', version: '2.7'
-            dependency group: 'commons-lang', name: 'commons-lang', version: '2.5'
-            dependency group: 'org.apache.commons', name: 'commons-lang3', version: '3.2.1'
-            dependency group: 'com.googlecode.gettext-commons', name: 'gettext-commons', version: '0.9.8'
-            dependency group: 'com.puppycrawl.tools', name: 'checkstyle', version: "$versions.checkstyle"
-            dependency group: 'com.github.sevntu-checkstyle', name: 'sevntu-checks', version: '1.36.0'
-            dependency group: 'com.google.inject', name: 'guice', version: "$versions.guice"
-            // DB Drivers
-            dependency group: 'org.postgresql', name: 'postgresql', version: '42.2.2'
-            dependency group: 'mysql', name: 'mysql-connector-java', version: '8.0.20'
-            dependency group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.3.0'
-            dependency group: 'org.junit.vintage', name: 'junit-vintage-engine', version: "$versions.junit5"
-            dependency group: 'junit', name: 'junit', version: '4.13.1'
-            // Testing DB Drivers
-            dependency group: 'org.hsqldb', name: 'hsqldb', version: '2.3.3'
-            dependency group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
-            dependency group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '5.3'
-            dependency group: 'org.liquibase', name: 'liquibase-core', version: '3.1.0'
-            dependency group: 'com.mattbertolini', name: 'liquibase-slf4j', version: '1.2.1'
-            dependency group: 'org.eclipse.microprofile.config', name: 'microprofile-config-api', version:'1.3'
-            dependency group: 'com.mchange', name: 'c3p0', version: '0.9.5.4'
-            dependency group: 'org.keycloak', name: 'keycloak-servlet-filter-adapter', version: '7.0.0'
-
-            dependencySet(group: "org.jboss.resteasy", version: "4.4.3.Final") {
-                entry "resteasy-core"
-                entry "resteasy-multipart-provider"
-                entry "resteasy-jaxb-provider"
-                entry "resteasy-guice"
-                entry "resteasy-atom-provider"
-            }
-            dependencySet(group: "org.hibernate", version: "5.4.9.Final") {
-                entry "hibernate-c3p0"
-            }
-            dependencySet(group: "org.hibernate.validator", version: "6.1.5.Final") {
-                entry "hibernate-validator"
-                entry "hibernate-validator-annotation-processor"
-            }
-            dependencySet(group: "org.apache.activemq", version: "2.12.0") {
-                entry "artemis-server"
-                entry "artemis-stomp-protocol"
-            }
-            dependencySet(group: "io.swagger", version: "1.5.7") {
-                entry "swagger-annotations"
-            }
-            dependencySet(group: "com.fasterxml.jackson.core", version: "$versions.jackson") {
-                entry "jackson-databind"
-                entry "jackson-core"
-                entry "jackson-annotations"
-            }
-            dependencySet(group: "com.fasterxml.jackson.dataformat", version: "$versions.jackson") {
-                entry "jackson-dataformat-yaml"
-                entry "jackson-dataformat-xml"
-            }
-            dependencySet(group: "com.fasterxml.jackson.datatype", version: "$versions.jackson") {
-                entry "jackson-datatype-hibernate5"
-                entry "jackson-datatype-jdk8"
-                entry "jackson-datatype-jsr310"
-            }
-            dependencySet(group: "com.fasterxml.jackson.jaxrs", version: "$versions.jackson") {
-                entry "jackson-jaxrs-base"
-                entry "jackson-jaxrs-json-provider"
-            }
-            dependencySet(group: "com.fasterxml.jackson.module", version: "$versions.jackson") {
-                entry "jackson-module-jsonSchema"
-                entry "jackson-module-jaxb-annotations"
-            }
-            dependencySet(group: "com.google.inject.extensions", version: "$versions.guice") {
-                entry "guice-assistedinject"
-                entry "guice-multibindings"
-                entry "guice-servlet"
-                entry "guice-throwingproviders"
-                entry "guice-persist"
-            }
-            dependencySet(group: "com.sun.xml.bind", version: "2.3.0") {
-                entry "jaxb-impl"
-                entry "jaxb-core"
-            }
-            dependencySet(group: "net.oauth.core", version: "20100527") {
-                entry "oauth"
-                entry "oauth-provider"
-            }
-            //logging
-            dependencySet(group: "ch.qos.logback", version: "1.2.3") {
-                entry "logback-core"
-                entry "logback-classic"
-            }
-            dependencySet(group: "org.slf4j", version: "1.7.12") {
-                entry "jcl-over-slf4j"
-                entry "log4j-over-slf4j"
-            }
-            dependencySet(group: "org.jmock", version: "2.5.1") {
-                entry "jmock"
-                entry "jmock-junit4"
-            }
-            dependencySet(group: "org.mockito", version: "2.23.4") {
-                entry "mockito-junit-jupiter"
-                entry "mockito-core"
-            }
-            dependencySet(group: "org.junit.jupiter", version: "$versions.junit5") {
-                entry "junit-jupiter-api"
-                entry "junit-jupiter-params"
-                entry "junit-jupiter-engine"
-            }
-            dependencySet(group: "org.hamcrest", version: "1.3") {
-                entry "hamcrest-library"
-                entry "hamcrest-core"
-            }
+        dependencySet(group: "org.jboss.resteasy", version: "4.4.3.Final") {
+            entry "resteasy-core"
+            entry "resteasy-multipart-provider"
+            entry "resteasy-jaxb-provider"
+            entry "resteasy-guice"
+            entry "resteasy-atom-provider"
+        }
+        dependencySet(group: "org.hibernate", version: "5.4.9.Final") {
+            entry "hibernate-c3p0"
+        }
+        dependencySet(group: "org.hibernate.validator", version: "6.1.5.Final") {
+            entry "hibernate-validator"
+            entry "hibernate-validator-annotation-processor"
+        }
+        dependencySet(group: "org.apache.activemq", version: "2.12.0") {
+            entry "artemis-server"
+            entry "artemis-stomp-protocol"
+        }
+        dependencySet(group: "io.swagger", version: "1.5.7") {
+            entry "swagger-annotations"
+        }
+        dependencySet(group: "com.fasterxml.jackson.core", version: "$versions.jackson") {
+            entry "jackson-databind"
+            entry "jackson-core"
+            entry "jackson-annotations"
+        }
+        dependencySet(group: "com.fasterxml.jackson.dataformat", version: "$versions.jackson") {
+            entry "jackson-dataformat-yaml"
+            entry "jackson-dataformat-xml"
+        }
+        dependencySet(group: "com.fasterxml.jackson.datatype", version: "$versions.jackson") {
+            entry "jackson-datatype-hibernate5"
+            entry "jackson-datatype-jdk8"
+            entry "jackson-datatype-jsr310"
+        }
+        dependencySet(group: "com.fasterxml.jackson.jaxrs", version: "$versions.jackson") {
+            entry "jackson-jaxrs-base"
+            entry "jackson-jaxrs-json-provider"
+        }
+        dependencySet(group: "com.fasterxml.jackson.module", version: "$versions.jackson") {
+            entry "jackson-module-jsonSchema"
+            entry "jackson-module-jaxb-annotations"
+        }
+        dependencySet(group: "com.google.inject.extensions", version: "$versions.guice") {
+            entry "guice-assistedinject"
+            entry "guice-multibindings"
+            entry "guice-servlet"
+            entry "guice-throwingproviders"
+            entry "guice-persist"
+        }
+        dependencySet(group: "com.sun.xml.bind", version: "2.3.0") {
+            entry "jaxb-impl"
+            entry "jaxb-core"
+        }
+        dependencySet(group: "net.oauth.core", version: "20100527") {
+            entry "oauth"
+            entry "oauth-provider"
+        }
+        //logging
+        dependencySet(group: "ch.qos.logback", version: "1.2.3") {
+            entry "logback-core"
+            entry "logback-classic"
+        }
+        dependencySet(group: "org.slf4j", version: "1.7.12") {
+            entry "jcl-over-slf4j"
+            entry "log4j-over-slf4j"
+        }
+        dependencySet(group: "org.jmock", version: "2.5.1") {
+            entry "jmock"
+            entry "jmock-junit4"
+        }
+        dependencySet(group: "org.mockito", version: "2.23.4") {
+            entry "mockito-junit-jupiter"
+            entry "mockito-core"
+        }
+        dependencySet(group: "org.junit.jupiter", version: "$versions.junit5") {
+            entry "junit-jupiter-api"
+            entry "junit-jupiter-params"
+            entry "junit-jupiter-engine"
+        }
+        dependencySet(group: "org.hamcrest", version: "1.3") {
+            entry "hamcrest-library"
+            entry "hamcrest-core"
         }
     }
-
-    sourceCompatibility = 11
-    targetCompatibility = 11
-
-    gradleLint {
-        rules = ["dependency-parentheses"]
-        // Turn these on selectively.  They are a little too sensitive to leave on all the time,
-        // but they provide useful information when run occasionally.
-        // rules = ["dependency-parentheses", "unused-exclude-by-dep"]
-        // criticalRules = ["unused-dependency"]
-    }
-
-    tasks.withType(JavaCompile) {
-        options.encoding = "UTF-8"
-        // options.compilerArgs << "-Xlint:deprecation"
-        // options.compilerArgs.addAll(['--release', '8'])
-    }
-
-    repositories {
-        mavenLocal()
-        mavenCentral()
-
-        maven { url "https://repo.jenkins-ci.org/public/" }
-        maven { url "https://repository.jboss.org/nexus/content/groups/public/" }
-        maven { url "https://oauth.googlecode.com/svn/code/maven/" }
-        // For LogDriver
-        maven { url "https://awood.fedorapeople.org/ivy/candlepin/" }
-        // Temporary repo, which stores jss 4.4.6
-        maven { url "https://barnabycourt.fedorapeople.org/repo/candlepin/" }
-    }
-
-    group = "org.candlepin"
 }
 
 dependencies {
-    compile project(":api")
+    //Libraries for openapi generate
+    compile 'com.fasterxml.jackson.core:jackson-annotations'
+    compile 'javax.validation:validation-api'
+    compile 'javax.ws.rs:javax.ws.rs-api'
+    compile 'io.swagger:swagger-annotations'
+    compile 'javax.annotation:javax.annotation-api'
+    compile 'org.jboss.resteasy:resteasy-multipart-provider'
 
+    // other stuff
     implementation libraries.commons
     implementation libraries.collections
     implementation libraries.gettext
@@ -437,83 +420,102 @@ sourceSets.main.output.resourcesDir = new File(buildDir, "classes/java/main")
 
 compileJava.dependsOn(processResources)
 
+// Add the openapi generated classes to the main java source sets to compile in the generated interfaces
 sourceSets {
     main.java.srcDir generatedMetamodels
 }
 
-compileJava {
-    options.annotationProcessorGeneratedSourcesDirectory = file(generatedMetamodels)
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
 }
 
-project(":api") {
-    apply plugin: "org.openapi.generator"
-    apply plugin: "org.candlepin.gradle.SpecVersion"
-
-    ext {
-        api_spec_path = "${projectDir}/candlepin-api-spec.yaml"
-        config_file = "${projectDir}/candlepin-api-config.json"
-    }
-
-    openApiGenerate {
-      generatorName = "jaxrs-spec"
-      inputSpec = api_spec_path
-      configFile = config_file
-      outputDir = "$buildDir/generated"
-      configOptions = [
-          interfaceOnly: 'true',
-          generatePom: 'false',
-          dateLibrary: "java8"
-      ]
-      templateDir = "$rootDir/buildSrc/src/main/resources/templates"
-    }
-
-    openApiValidate {
-        inputSpec = api_spec_path
-    }
-
-    task generateApiDocs(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
-        generatorName = "html"
-        inputSpec = api_spec_path
-        outputDir = "$buildDir/docs"
-        generateApiDocumentation = true
-        generateModelDocumentation = true
-        generateModelTests = false
-        generateApiTests = false
-        withXml = false
-    }
-
-    task generateOpenApiJson(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
-        generatorName = "openapi"
-        inputSpec = api_spec_path
-        outputDir = "$buildDir/generated"
-        generateApiDocumentation = true
-        generateModelDocumentation = true
-        generateModelTests = false
-        generateApiTests = false
-        withXml = false
-    }
-
-    processResources {
-        from "$buildDir/generated/openapi.json"
-        from api_spec_path
-        rename { String fileName ->
-            api_spec_path.endsWith(fileName) ? 'openapi.yaml' : fileName  // rename yaml to openapi.yaml
-        }
-    }
-
-    dependencies {
-        compile 'com.fasterxml.jackson.core:jackson-annotations'
-        compile 'javax.validation:validation-api'
-        compile 'javax.ws.rs:javax.ws.rs-api'
-        compile 'io.swagger:swagger-annotations'
-        compile 'javax.annotation:javax.annotation-api'
-        compile 'org.jboss.resteasy:resteasy-multipart-provider'
-    }
-
-    sourceSets.main.java.srcDirs = ["${buildDir}/generated/src/gen/java"]
-    compileJava.dependsOn tasks.openApiGenerate
-    processResources.dependsOn tasks.generateOpenApiJson
+gradleLint {
+    rules = ["dependency-parentheses"]
+    // Turn these on selectively.  They are a little too sensitive to leave on all the time,
+    // but they provide useful information when run occasionally.
+    // rules = ["dependency-parentheses", "unused-exclude-by-dep"]
+    // criticalRules = ["unused-dependency"]
 }
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+    // options.compilerArgs << "-Xlint:deprecation"
+    // options.compilerArgs.addAll(['--release', '8'])
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+
+    maven { url "https://repo.jenkins-ci.org/public/" }
+    maven { url "https://repository.jboss.org/nexus/content/groups/public/" }
+    maven { url "https://oauth.googlecode.com/svn/code/maven/" }
+    // For LogDriver
+    maven { url "https://awood.fedorapeople.org/ivy/candlepin/" }
+    // Temporary repo, which stores jss 4.4.6
+    maven { url "https://barnabycourt.fedorapeople.org/repo/candlepin/" }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+    // options.compilerArgs << "-Xlint:deprecation"
+    // options.compilerArgs.addAll(['--release', '8'])
+}
+
+
+openApiGenerate {
+    generatorName = "jaxrs-spec"
+    inputSpec = api_spec_path
+    configFile = config_file
+    outputDir = "$buildDir/generated"
+    skipValidateSpec = true
+    configOptions = [
+            interfaceOnly: 'true',
+            generatePom: 'false',
+            dateLibrary: "java8"
+    ]
+    templateDir = "$rootDir/buildSrc/src/main/resources/templates"
+}
+
+openApiValidate {
+    inputSpec = api_spec_path
+}
+
+task generateApiDocs(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+    generatorName = "html"
+    inputSpec = api_spec_path
+    outputDir = "$buildDir/docs"
+    generateApiDocumentation = true
+    generateModelDocumentation = true
+    generateModelTests = false
+    generateApiTests = false
+    withXml = false
+}
+
+task generateOpenApiJson(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+    generatorName = "openapi"
+    inputSpec = api_spec_path
+    outputDir = "$buildDir/generated"
+    generateApiDocumentation = true
+    generateModelDocumentation = true
+    generateModelTests = false
+    generateApiTests = false
+    withXml = false
+}
+
+processResources {
+    from "$buildDir/generated/openapi.json"
+    from api_spec_path
+    rename { String fileName ->
+        api_spec_path.endsWith(fileName) ? 'openapi.yaml' : fileName  // rename yaml to openapi.yaml
+    }
+}
+
+//Update the compileJava & processResourcesTasks depend on the openapi generation so that the generated classes
+//can be used during compilation.
+compileJava.dependsOn tasks.openApiGenerate
+processResources.dependsOn tasks.generateOpenApiJson
 
 gettext {
     keys_project_dir = "${project.rootDir}/"
@@ -521,12 +523,6 @@ gettext {
 
 msgfmt {
     resource "org.candlepin.common.i18n.Messages"
-}
-
-// Add the source files generated by the msgfmt plugin
-// TODO make the msgfmt plugin add this sourceset to the project directly
-sourceSets {
-    main.java.srcDir "${project.buildDir}/msgfmt/generated_source"
 }
 
 checkstyle {
