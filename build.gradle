@@ -85,7 +85,7 @@ ext {
     async_scheduler_enabled = !project.findProperty("async_scheduler_enabled") ||
             "true".equals(project.findProperty("async_scheduler_enabled"))
 
-    generatedMetamodels = "${buildDir}/generated/src/gen/java"
+    generatedMetamodels = "${buildDir}/generated/api/src/gen/java"
 }
 
 ext.versions = [
@@ -457,19 +457,11 @@ repositories {
     maven { url "https://barnabycourt.fedorapeople.org/repo/candlepin/" }
 }
 
-tasks.withType(JavaCompile) {
-    options.encoding = "UTF-8"
-    // options.compilerArgs << "-Xlint:deprecation"
-    // options.compilerArgs.addAll(['--release', '8'])
-}
-
-
 openApiGenerate {
     generatorName = "jaxrs-spec"
     inputSpec = api_spec_path
     configFile = config_file
-    outputDir = "$buildDir/generated"
-    skipValidateSpec = true
+    outputDir = "$buildDir/generated/api"
     configOptions = [
             interfaceOnly: 'true',
             generatePom: 'false',
@@ -496,20 +488,12 @@ task generateApiDocs(type: org.openapitools.generator.gradle.plugin.tasks.Genera
 task generateOpenApiJson(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
     generatorName = "openapi"
     inputSpec = api_spec_path
-    outputDir = "$buildDir/generated"
+    outputDir = "$buildDir/generated/json"
     generateApiDocumentation = true
     generateModelDocumentation = true
     generateModelTests = false
     generateApiTests = false
     withXml = false
-}
-
-processResources {
-    from "$buildDir/generated/openapi.json"
-    from api_spec_path
-    rename { String fileName ->
-        api_spec_path.endsWith(fileName) ? 'openapi.yaml' : fileName  // rename yaml to openapi.yaml
-    }
 }
 
 //Update the compileJava & processResourcesTasks depend on the openapi generation so that the generated classes
@@ -662,6 +646,14 @@ war {
     from("./api") {
         include "candlepin-api-spec.yaml"
         into("docs")
+    }
+    from("$buildDir/generated/api/src/main/openapi") {
+        include "openapi.yaml"
+        into("WEB-INF/classes")
+    }
+    from("$buildDir/generated/json") {
+        include "openapi.json"
+        into("WEB-INF/classes")
     }
 }
 
