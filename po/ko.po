@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-08-12 03:01-0400\n"
-"PO-Revision-Date: 2021-06-10 14:04+0000\n"
+"PO-Revision-Date: 2021-08-12 19:04+0000\n"
 "Last-Translator: simmon <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.6.2\n"
+"X-Generator: Weblate 4.7.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -880,10 +880,8 @@ msgid "User \"{0}\" has already registered a personal consumer"
 msgstr "사용자 {0}은/는 개별 고객으로 이미 등록되어 있습니다"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1343
-#, fuzzy
-#| msgid "{0} is not authorized to register with organization {1}"
 msgid "Client is not authorized to register with any organization"
-msgstr "{0}은/는 조직 {1}에 등록을 승인하지 않습니다"
+msgstr "클라이언트는 조직에 등록 할 권한이 없습니다"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1353
 msgid "You must specify an organization for new units."
