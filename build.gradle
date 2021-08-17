@@ -5,7 +5,7 @@ import org.yaml.snakeyaml.Yaml
 
 buildscript {
     //openapi version has to be set manually in the plugins block as well.
-    ext.openapi_version = '5.2.0'
+    ext.openapi_version = '5.2.1'
 
     repositories {
         mavenCentral()
@@ -16,7 +16,6 @@ buildscript {
 }
 
 plugins {
-    id "io.spring.dependency-management" version "1.0.8.RELEASE"
     id "nebula.lint" version "16.2.3"
     /*
     The Versions plugin is used to provide the dependencyUpdates task which is used
@@ -24,7 +23,7 @@ plugins {
      */
     id "com.github.ben-manes.versions" version "0.28.0"
     // Openapi version is set in the buildscript block for use in the pom generation as well
-    id "org.openapi.generator" version '5.2.0'
+    id "org.openapi.generator" version '5.2.1'
     id "java"
     id "maven"
     id "war"
@@ -88,329 +87,147 @@ ext {
     generatedMetamodels = "${buildDir}/generated/api/src/gen/java"
 }
 
-ext.versions = [
-    jackson: "2.12.3",
-    guice     : "4.2.3",
-    checkstyle: "8.29",
-    junit5    : "5.7.0"
-]
-
-ext.libraries = [
-    resteasy: [
-        "org.jboss.resteasy:resteasy-jaxb-provider",
-        "org.jboss.resteasy:resteasy-guice",
-        "org.jboss.resteasy:resteasy-atom-provider",
-        "org.jboss.resteasy:resteasy-multipart-provider",
-        "javax.ws.rs:javax.ws.rs-api",
-        "org.eclipse.microprofile.config:microprofile-config-api",
-    ],
-    jackson: [
-        "com.fasterxml.jackson.core:jackson-annotations",
-        "com.fasterxml.jackson.core:jackson-core",
-        "com.fasterxml.jackson.core:jackson-databind",
-        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base",
-        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider",
-        "com.fasterxml.jackson.module:jackson-module-jsonSchema",
-        "com.fasterxml.jackson.module:jackson-module-jaxb-annotations",
-        "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5",
-        "com.fasterxml.jackson.datatype:jackson-datatype-jdk8",
-        "com.fasterxml.jackson.datatype:jackson-datatype-jsr310",
-        "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
-        "com.fasterxml.jackson.dataformat:jackson-dataformat-xml",
-    ],
-    swagger: [
-        "io.swagger:swagger-annotations",
-
-        "org.reflections:reflections:0.9.10",
-        "org.apache.commons:commons-lang3",
-    ],
-    sun_jaxb: [
-        "com.sun.xml.bind:jaxb-impl",
-        "com.sun.xml.bind:jaxb-core",
-    ],
-    core_testing: [
-        "org.junit.jupiter:junit-jupiter-api",
-        "org.junit.jupiter:junit-jupiter-params",
-        "org.junit.jupiter:junit-jupiter-engine",
-        "org.junit.vintage:junit-vintage-engine",
-        "org.hamcrest:hamcrest-library",
-        "org.hamcrest:hamcrest-core",
-        "org.mockito:mockito-junit-jupiter",
-        "org.mockito:mockito-core",
-        "junit:junit",
-    ],
-    logging_deps: [
-        "ch.qos.logback:logback-classic",
-        // Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
-        // JCL for example.
-        "org.slf4j:jcl-over-slf4j",
-        "org.slf4j:log4j-over-slf4j",
-        "net.logstash.logback:logstash-logback-encoder",
-    ],
-    javax: [
-        "org.hibernate.javax.persistence:hibernate-jpa-2.1-api",
-        "javax.transaction:jta",
-        "javax.persistence:javax.persistence-api",
-        "javax.xml.bind:jaxb-api",
-        "javax.annotation:javax.annotation-api",
-    ],
-    commons: [
-        "commons-codec:commons-codec",
-        "commons-collections:commons-collections",
-        "commons-io:commons-io",
-        "commons-lang:commons-lang",
-    ],
-    guice: [
-        "com.google.inject.extensions:guice-assistedinject",
-        "com.google.inject.extensions:guice-multibindings",
-        "com.google.inject.extensions:guice-servlet",
-        "com.google.inject.extensions:guice-throwingproviders",
-        "com.google.inject.extensions:guice-persist",
-        "com.google.inject:guice",
-        "aopalliance:aopalliance",
-        "javax.inject:javax.inject",
-    ],
-    liquibase: "org.liquibase:liquibase-core",
-    liquibase_slf4j: "com.mattbertolini:liquibase-slf4j",
-    oauth: [
-        "net.oauth.core:oauth",
-        "net.oauth.core:oauth-provider",
-    ],
-    collections: "com.google.guava:guava:30.1-jre",
-    hibernate_validator_ap: "org.hibernate.validator:hibernate-validator-annotation-processor",
-    checkstyle: [
-        "com.puppycrawl.tools:checkstyle",
-        "com.github.sevntu-checkstyle:sevntu-checks"
-    ],
-    gettext: "com.googlecode.gettext-commons:gettext-commons",
-    javax_servlet: "javax.servlet:servlet-api",
-    javax_validation: "javax.validation:validation-api",
-    jmock: [
-        "org.jmock:jmock",
-        "org.jmock:jmock-junit4",
-    ],
-    validator: [
-        "org.hibernate.validator:hibernate-validator",
-        "org.hibernate.validator:hibernate-validator-annotation-processor",
-    ],
-    keycloak: [
-            "org.keycloak:keycloak-servlet-filter-adapter",
-            "org.keycloak:keycloak-core",
-        ],
-    hibernate: "org.hibernate:hibernate-c3p0",
-    ehcache: [
-        "org.hibernate:hibernate-jcache",
-        "org.ehcache:ehcache",
-        "javax.cache:cache-api",
-    ],
-    artemis: [
-        "org.apache.activemq:artemis-server",
-        "org.apache.activemq:artemis-stomp-protocol",
-    ],
-]
-
-dependencyManagement {
-    dependencies {
-        dependency group: 'aopalliance', name: 'aopalliance', version: '1.0'
-        dependency group: 'javax.inject', name: 'javax.inject', version: '1'
-        dependency group: 'javax.transaction', name: 'jta', version: '1.1'
-        dependency group: 'javax.persistence', name: 'javax.persistence-api', version: '2.2'
-        dependency group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
-        dependency group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
-        dependency group: 'javax.ws.rs', name: 'javax.ws.rs-api', version: '2.1'
-        dependency group: 'javax.servlet', name: 'servlet-api', version: '2.5'
-        dependency group: 'javax.annotation', name: 'javax.annotation-api', version: '1.3.2'
-        dependency group: 'org.ehcache', name: 'ehcache', version: '3.8.0'
-        dependency group: 'javax.cache', name: 'cache-api', version: '1.0.0'
-        dependency group: 'org.mozilla', name: 'jss', version: '4.4.6'
-        dependency group: 'ldapjdk', name: 'ldapjdk', version: '4.19'
-        dependency group: 'org.quartz-scheduler', name: 'quartz', version: '2.3.2'
-        dependency group: 'geronimo-spec', name: 'geronimo-spec-jms', version: '1.1-rc4'
-        dependency group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.7'
-        dependency group: 'org.slf4j', name: 'log4j-over-slf4j', version: '1.7.5'
-        dependency group: 'logdriver', name: 'logdriver', version: '1.0'
-        // Javascript engine
-        dependency group: 'org.mozilla', name: 'rhino', version: '1.7R3'
-        dependency group: 'org.hibernate.javax.persistence', name: 'hibernate-jpa-2.1-api', version: '1.0.2.Final'
-        dependency group: 'org.hibernate.validator', name: 'hibernate-validator-annotation-processor', version: '6.1.5.Final'
-        dependency group: 'org.hibernate', name: 'hibernate-jcache', version: '5.4.6.Final'
-        dependency group: 'commons-codec', name: 'commons-codec', version: '1.11'
-        dependency group: 'commons-collections', name: 'commons-collections', version: '3.2.2'
-        dependency group: 'commons-io', name: 'commons-io', version: '2.7'
-        dependency group: 'commons-lang', name: 'commons-lang', version: '2.5'
-        dependency group: 'org.apache.commons', name: 'commons-lang3', version: '3.2.1'
-        dependency group: 'com.googlecode.gettext-commons', name: 'gettext-commons', version: '0.9.8'
-        dependency group: 'com.puppycrawl.tools', name: 'checkstyle', version: "$versions.checkstyle"
-        dependency group: 'com.github.sevntu-checkstyle', name: 'sevntu-checks', version: '1.36.0'
-        dependency group: 'com.google.inject', name: 'guice', version: "$versions.guice"
-        // DB Drivers
-        dependency group: 'org.postgresql', name: 'postgresql', version: '42.2.2'
-        dependency group: 'mysql', name: 'mysql-connector-java', version: '8.0.20'
-        dependency group: 'org.mariadb.jdbc', name: 'mariadb-java-client', version: '2.3.0'
-        dependency group: 'org.junit.vintage', name: 'junit-vintage-engine', version: "$versions.junit5"
-        dependency group: 'junit', name: 'junit', version: '4.13.1'
-        // Testing DB Drivers
-        dependency group: 'org.hsqldb', name: 'hsqldb', version: '2.3.3'
-        dependency group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
-        dependency group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '5.3'
-        dependency group: 'org.liquibase', name: 'liquibase-core', version: '3.1.0'
-        dependency group: 'com.mattbertolini', name: 'liquibase-slf4j', version: '1.2.1'
-        dependency group: 'org.eclipse.microprofile.config', name: 'microprofile-config-api', version:'1.3'
-        dependency group: 'com.mchange', name: 'c3p0', version: '0.9.5.4'
-        dependencySet(group: 'org.keycloak',  version: '7.0.0') {
-            entry "keycloak-core"
-            entry "keycloak-servlet-filter-adapter"
-        }
-
-        dependencySet(group: "org.jboss.resteasy", version: "4.4.3.Final") {
-            entry "resteasy-core"
-            entry "resteasy-multipart-provider"
-            entry "resteasy-jaxb-provider"
-            entry "resteasy-guice"
-            entry "resteasy-atom-provider"
-        }
-        dependencySet(group: "org.hibernate", version: "5.4.9.Final") {
-            entry "hibernate-c3p0"
-        }
-        dependencySet(group: "org.hibernate.validator", version: "6.1.5.Final") {
-            entry "hibernate-validator"
-            entry "hibernate-validator-annotation-processor"
-        }
-        dependencySet(group: "org.apache.activemq", version: "2.12.0") {
-            entry "artemis-server"
-            entry "artemis-stomp-protocol"
-        }
-        dependencySet(group: "io.swagger", version: "1.5.7") {
-            entry "swagger-annotations"
-        }
-        dependencySet(group: "com.fasterxml.jackson.core", version: "$versions.jackson") {
-            entry "jackson-databind"
-            entry "jackson-core"
-            entry "jackson-annotations"
-        }
-        dependencySet(group: "com.fasterxml.jackson.dataformat", version: "$versions.jackson") {
-            entry "jackson-dataformat-yaml"
-            entry "jackson-dataformat-xml"
-        }
-        dependencySet(group: "com.fasterxml.jackson.datatype", version: "$versions.jackson") {
-            entry "jackson-datatype-hibernate5"
-            entry "jackson-datatype-jdk8"
-            entry "jackson-datatype-jsr310"
-        }
-        dependencySet(group: "com.fasterxml.jackson.jaxrs", version: "$versions.jackson") {
-            entry "jackson-jaxrs-base"
-            entry "jackson-jaxrs-json-provider"
-        }
-        dependencySet(group: "com.fasterxml.jackson.module", version: "$versions.jackson") {
-            entry "jackson-module-jsonSchema"
-            entry "jackson-module-jaxb-annotations"
-        }
-        dependencySet(group: "com.google.inject.extensions", version: "$versions.guice") {
-            entry "guice-assistedinject"
-            entry "guice-multibindings"
-            entry "guice-servlet"
-            entry "guice-throwingproviders"
-            entry "guice-persist"
-        }
-        dependencySet(group: "com.sun.xml.bind", version: "2.3.0") {
-            entry "jaxb-impl"
-            entry "jaxb-core"
-        }
-        dependencySet(group: "net.oauth.core", version: "20100527") {
-            entry "oauth"
-            entry "oauth-provider"
-        }
-        //logging
-        dependencySet(group: "ch.qos.logback", version: "1.2.3") {
-            entry "logback-core"
-            entry "logback-classic"
-        }
-        dependencySet(group: "org.slf4j", version: "1.7.12") {
-            entry "jcl-over-slf4j"
-            entry "log4j-over-slf4j"
-        }
-        dependencySet(group: "org.jmock", version: "2.5.1") {
-            entry "jmock"
-            entry "jmock-junit4"
-        }
-        dependencySet(group: "org.mockito", version: "2.23.4") {
-            entry "mockito-junit-jupiter"
-            entry "mockito-core"
-        }
-        dependencySet(group: "org.junit.jupiter", version: "$versions.junit5") {
-            entry "junit-jupiter-api"
-            entry "junit-jupiter-params"
-            entry "junit-jupiter-engine"
-        }
-        dependencySet(group: "org.hamcrest", version: "1.3") {
-            entry "hamcrest-library"
-            entry "hamcrest-core"
-        }
-    }
-}
-
 dependencies {
-    //Libraries for openapi generate
-    compile 'com.fasterxml.jackson.core:jackson-annotations'
-    compile 'javax.validation:validation-api'
-    compile 'javax.ws.rs:javax.ws.rs-api'
-    compile 'io.swagger:swagger-annotations'
-    compile 'javax.annotation:javax.annotation-api'
-    compile 'org.jboss.resteasy:resteasy-multipart-provider'
+    //Specify BOMs that are used for specifying versions of libraries
+    implementation platform('org.jboss.resteasy:resteasy-bom:4.4.3.Final')
+    implementation platform('com.fasterxml.jackson:jackson-bom:2.12.3')
+    implementation platform('com.google.inject:guice-bom:4.2.3')
+    implementation platform('org.junit:junit-bom:5.7.0')
 
-    // other stuff
-    implementation libraries.commons
-    implementation libraries.collections
-    implementation libraries.gettext
-    implementation libraries.guice
-    implementation libraries.jackson
-    implementation libraries.javax
-    implementation libraries.liquibase
-    implementation libraries.logging_deps
-    implementation libraries.oauth
-    implementation libraries.resteasy
-    implementation libraries.sun_jaxb
-    implementation libraries.swagger
-    implementation libraries.validator
-    implementation libraries.javax_validation
-    implementation libraries.hibernate
-    implementation libraries.ehcache
-    implementation libraries.artemis
+    // Commons
+    implementation "commons-codec:commons-codec:1.11"
+    implementation "commons-collections:commons-collections:3.2.2"
+    implementation "commons-io:commons-io:2.7"
+    implementation "commons-lang:commons-lang:2.5"
 
-    implementation "org.mozilla:rhino"
-    implementation "ldapjdk:ldapjdk"
-    implementation "org.quartz-scheduler:quartz"
+    //collections
+    implementation "com.google.guava:guava:30.1-jre"
+
+    // Gettext libraries used for internationalization & translation
+    implementation "com.googlecode.gettext-commons:gettext-commons:0.9.8"
+
+    //Guice Libraries - Version from BOM
+    implementation "com.google.inject.extensions:guice-assistedinject"
+    implementation "com.google.inject.extensions:guice-servlet"
+    implementation "com.google.inject.extensions:guice-throwingproviders"
+    implementation "com.google.inject.extensions:guice-persist"
+    implementation "com.google.inject:guice"
+
+    //Jackson - Version from BOM
+    implementation "com.fasterxml.jackson.core:jackson-annotations"
+    implementation "com.fasterxml.jackson.core:jackson-core"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
+    implementation "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
+    implementation "com.fasterxml.jackson.module:jackson-module-jsonSchema"
+    implementation "com.fasterxml.jackson.module:jackson-module-jaxb-annotations"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml"
+
+    //Javax
+    implementation "org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.2.Final"
+    implementation "javax.transaction:jta:1.1"
+    implementation "javax.persistence:javax.persistence-api:2.2"
+    implementation "javax.xml.bind:jaxb-api:2.3.1"
+    implementation "javax.annotation:javax.annotation-api:1.3.2"
+
+    //Liqubase
+    implementation "org.liquibase:liquibase-core:3.1.0"
+
+    //Logging
+    implementation "ch.qos.logback:logback-classic:1.2.3"
+    // Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
+    // JCL for example.
+    implementation "org.slf4j:jcl-over-slf4j:1.7.12"
+    implementation "org.slf4j:log4j-over-slf4j:1.7.12"
+    implementation "net.logstash.logback:logstash-logback-encoder:5.3"
+
+    //Oauth
+    implementation "net.oauth.core:oauth:20100527"
+    implementation "net.oauth.core:oauth-provider:20100527"
+
+    //resteasy - version from BOM
+    implementation "org.jboss.resteasy:resteasy-guice"
+    implementation "org.jboss.resteasy:resteasy-atom-provider"
+    implementation "org.jboss.resteasy:resteasy-multipart-provider"
+    implementation "javax.ws.rs:javax.ws.rs-api:2.1"
+
+    //Sun jaxb
+    implementation "com.sun.xml.bind:jaxb-impl:2.3.0"
+    implementation "com.sun.xml.bind:jaxb-core:2.3.0"
+
+    //Swagger
+    implementation "io.swagger:swagger-annotations:1.5.7"
+    implementation "org.reflections:reflections:0.9.10"
+    implementation "org.apache.commons:commons-lang3:3.2.1"
+
+    //Validator
+    implementation "org.hibernate.validator:hibernate-validator:6.1.5.Final"
+    implementation "org.hibernate.validator:hibernate-validator-annotation-processor:6.1.5.Final"
+
+    //javax validation
+    implementation "javax.validation:validation-api:2.0.1.Final"
+    //Hibernate
+    implementation 'org.hibernate:hibernate-c3p0:5.4.9.Final'
+    //Ehcache (for use with hibernate primarily)
+    implementation "org.hibernate:hibernate-jcache:5.4.6.Final"
+    implementation "org.ehcache:ehcache:3.8.0"
+    implementation "javax.cache:cache-api:1.0.0"
+
+    //Artemis server & client
+    implementation "org.apache.activemq:artemis-server:2.12.0"
+    implementation "org.apache.activemq:artemis-stomp-protocol:2.12.0"
+
+    //Javascript Engine
+    implementation "org.mozilla:rhino:1.7R3"
+
+    implementation "ldapjdk:ldapjdk:4.19"
+    implementation "org.quartz-scheduler:quartz:2.3.2"
+
+    //keycloak
+    implementation "org.keycloak:keycloak-servlet-filter-adapter:7.0.0"
+    implementation "org.keycloak:keycloak-core:7.0.0"
+
+    implementation "org.hibernate:hibernate-jpamodelgen:5.4.18.Final"
 
     if (use_logdriver) {
-        implementation "org.slf4j:log4j-over-slf4j"
-        implementation "logdriver:logdriver"
+        implementation "logdriver:logdriver:1.0"
     }
 
-    annotationProcessor libraries.hibernate_validator_ap
     annotationProcessor 'org.hibernate:hibernate-jpamodelgen:5.4.18.Final'
 
-    checkstyle libraries.checkstyle
+    checkstyle "com.puppycrawl.tools:checkstyle:8.29"
+    checkstyle "com.github.sevntu-checkstyle:sevntu-checks:1.36.0"
 
-    compile libraries.keycloak
-    compile "org.hibernate:hibernate-jpamodelgen:5.4.18.Final"
-    compileOnly "org.mozilla:jss"
-    // Listed twice due to design decision by the Gradle team: https://discuss.gradle.org/t/compileonly-dependencies-are-not-available-in-tests/15366/3
-    compileOnly libraries.javax_servlet
+    providedCompile "org.mozilla:jss:4.4.6"
+    providedCompile "javax.servlet:servlet-api:2.5"
 
     // DB Drivers
-    runtimeOnly "org.postgresql:postgresql"
-    runtimeOnly "mysql:mysql-connector-java"
-    runtimeOnly "org.mariadb.jdbc:mariadb-java-client"
+    runtimeOnly "org.postgresql:postgresql:42.2.2"
+    runtimeOnly "mysql:mysql-connector-java:8.0.20"
+    runtimeOnly "org.mariadb.jdbc:mariadb-java-client:2.3.0"
 
-    testCompile libraries.javax_servlet
-
-    testRuntime "org.hsqldb:hsqldb"
+    testRuntime "org.hsqldb:hsqldb:2.3.3"
     testRuntimeOnly "org.glassfish:javax.el:3.0.0"
 
-    testImplementation libraries.core_testing
-    testImplementation libraries.liquibase_slf4j
-    testImplementation libraries.jmock
-    testImplementation "org.mozilla:jss"
+    // Core testing libraries
+    testImplementation "org.junit.jupiter:junit-jupiter-api"
+    testImplementation "org.junit.jupiter:junit-jupiter-params"
+    testImplementation "org.junit.jupiter:junit-jupiter-engine"
+    testImplementation "org.junit.vintage:junit-vintage-engine"
+    testImplementation "org.hamcrest:hamcrest-library:1.3"
+    testImplementation "org.hamcrest:hamcrest-core:1.3"
+    testImplementation "org.mockito:mockito-junit-jupiter:2.23.4"
+    testImplementation "org.mockito:mockito-core:2.23.4"
+    testImplementation "junit:junit:4.13.1"
+    testImplementation "com.mattbertolini:liquibase-slf4j:1.2.1"
+
+    // For JMock
+    testImplementation "org.jmock:jmock:2.5.1"
+    testImplementation "org.jmock:jmock-junit4:2.5.1"
 }
 
 // Copy the resources to the main classes directory so that the
@@ -507,10 +324,6 @@ gettext {
 
 msgfmt {
     resource "org.candlepin.common.i18n.Messages"
-}
-
-checkstyle {
-    toolVersion = "$versions.checkstyle"
 }
 
 test {
