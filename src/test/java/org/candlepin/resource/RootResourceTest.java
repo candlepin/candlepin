@@ -14,13 +14,13 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.dto.api.v1.Link;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 
@@ -46,11 +46,16 @@ public class RootResourceTest {
         @Path("trailingslash/")
         public void methodWithTrailingSlash() {
         }
+
+        @Path("/linked")
+        @RootResource.LinkedResource
+        public void methodWithLinkedAnnotation() {
+        }
     }
 
     private RootResource rootResource;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         rootResource = new RootResource(new CandlepinCommonTestConfig());
     }
@@ -84,5 +89,12 @@ public class RootResourceTest {
         Link result = rootResource.resourceLink(FooResource.class, null);
         assertEquals("foo", result.getRel());
         assertEquals("/foo", result.getHref());
+    }
+
+    @Test void testLinkedAnnotation() throws NoSuchMethodException {
+        Method m = FooResource.class.getMethod("methodWithLinkedAnnotation");
+        Link result = rootResource.methodLink("annotated_method", m);
+        assertEquals("annotated_method", result.getRel());
+        assertEquals("/foo/linked", result.getHref());
     }
 }

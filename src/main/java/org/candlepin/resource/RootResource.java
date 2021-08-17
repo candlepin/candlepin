@@ -28,6 +28,11 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.annotation.Annotation;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,6 +40,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import javax.ws.rs.Path;
 
@@ -45,13 +51,21 @@ import javax.ws.rs.Path;
  */
 public class RootResource implements DefaultApi {
 
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    public @interface LinkedResource {
+        // Intentionally left empty
+    }
+
+
     private static final Logger log = LoggerFactory.getLogger(RootResource.class);
     public static final Map<Object, String> RESOURCE_CLASSES;
     private Configuration config;
-    private static List<Link> links = null;
+    private static Iterable<Link> links = null;
 
     static {
         RESOURCE_CLASSES = new HashMap<>();
+
         addResource(AdminResource.class);
         addResource(UserResource.class);
         addResource(CertificateSerialResource.class);
@@ -77,23 +91,43 @@ public class RootResource implements DefaultApi {
         addResource(DeletedConsumerResource.class);
     }
 
+    private static void addResource(Class resource) {
+        if (resource == null) {
+            throw new IllegalArgumentException("resource is null");
+        }
+
+        RESOURCE_CLASSES.put(resource, null);
+
+        for (Method method : resource.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(LinkedResource.class)) {
+                RESOURCE_CLASSES.put(method, null);
+            }
+        }
+    }
+
     @Inject
     public RootResource(Configuration config) {
         this.config = config;
     }
 
-    protected List<Link> createLinks() {
+    protected Iterable<Link> createLinks() {
         // Hidden resources will be omitted from the supported list we send to
         // the clients:
-        List<String> hideResources = Arrays.asList(
-            config.getString(ConfigProperties.HIDDEN_RESOURCES).split(" "));
+        Set<String> hideResources = Set.of(config.getString(ConfigProperties.HIDDEN_RESOURCES).split(" "));
+        Map<String, Link> links = new HashMap<>();
 
-        List<Link> newLinks = new LinkedList<>();
         for (Map.Entry<Object, String> entry : RESOURCE_CLASSES.entrySet()) {
-            add(resourceLink(entry.getKey(), entry.getValue()), hideResources,
-                newLinks);
+            Link link = this.resourceLink(entry.getKey(), entry.getValue());
+
+            if (hideResources.contains(link.getRel())) {
+                log.debug("Hiding supported resource: {}", link.getRel());
+                continue;
+            }
+
+            links.put(link.getRel(), link);
         }
-        return newLinks;
+
+        return links.values();
     }
 
     protected String generateRel(String href) {
@@ -104,9 +138,63 @@ public class RootResource implements DefaultApi {
         return href.substring(index + 1);
     }
 
+    private <T extends Annotation> T findClassAnnotation(Class<?> cls, Class<T> annotation) {
+        T result = cls.getAnnotation(annotation);
+
+        if (result == null) {
+            List<Class> parents = new LinkedList<>(List.of(cls.getInterfaces()));
+            parents.add(cls.getSuperclass());
+
+            // Note: this doesn't traverse the tree in order of closest declaration. With a sufficiently
+            // complex graph, we could end up finding the annotation on a parent declaration before finding
+            // it on a closer declaration. For our purposes, this is still likely acceptable, but if we have
+            // wonky class/interface graphs later, this could become a problem.
+
+            for (Class parent : parents) {
+                result = this.findClassAnnotation(parent, annotation);
+
+                if (result != null) {
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    private <T extends Annotation> T findMethodAnnotation(Class<?> cls, Method method, Class<T> annotation) {
+        T result = method.getAnnotation(annotation);
+
+        if (result == null) {
+            List<Class> parents = new LinkedList<>(List.of(cls.getInterfaces()));
+            parents.add(cls.getSuperclass());
+
+            // Note: this doesn't traverse the tree in order of closest declaration. With a sufficiently
+            // complex graph, we could end up finding the annotation on a parent declaration before finding
+            // it on a closer declaration. For our purposes, this is still likely acceptable, but if we have
+            // wonky class/interface graphs later, this could become a problem.
+
+            for (Class parent : parents) {
+                try {
+                    method = parent.getDeclaredMethod(method.getName(), method.getParameterTypes());
+                    result = this.findMethodAnnotation(parent, method, annotation);
+                }
+                catch (NoSuchMethodException e) {
+                    // Class/interface doesn't declare this method; skip it
+                }
+
+                if (result != null) {
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
     protected Link methodLink(String rel, Method m) {
-        Path resource = m.getDeclaringClass().getAnnotation(Path.class);
-        Path method = m.getAnnotation(Path.class);
+        Path resource = this.findClassAnnotation(m.getDeclaringClass(), Path.class);
+        Path method = this.findMethodAnnotation(m.getDeclaringClass(), m, Path.class);
 
         String href = resource.value() + "/" + method.value();
         // Remove doubled slashes and trailing slash
@@ -115,22 +203,27 @@ public class RootResource implements DefaultApi {
         if (rel == null) {
             rel = generateRel(href);
         }
+
         return new Link().rel(rel).href(href);
     }
 
     protected Link classLink(String rel, Class clazz) {
-        Path a = (Path) clazz.getAnnotation(Path.class);
-        if (a == null) {
-            a = (Path) Arrays.stream(clazz.getInterfaces())
+        Path path = (Path) clazz.getAnnotation(Path.class);
+
+        if (path == null) {
+            path = (Path) Arrays.stream(clazz.getInterfaces())
                 .map(c -> c.getAnnotation(Path.class))
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
         }
-        String href = a.value();
+
+        String href = path.value();
+
         if (rel == null) {
             rel = generateRel(href);
         }
+
         return new Link().rel(rel).href(href);
     }
 
@@ -141,19 +234,8 @@ public class RootResource implements DefaultApi {
         return classLink(rel, (Class) resource);
     }
 
-    private void add(Link link, List<String> hideResources,
-        List<Link> newLinks) {
-        String rel = link.getRel();
-        if (!hideResources.contains(rel)) {
-            newLinks.add(link);
-        }
-        else {
-            log.debug("Hiding supported resource: " + rel);
-        }
-    }
-
     @SecurityHole(noAuth = true, anon = true)
-    public List<Link> getRootResources() {
+    public Iterable<Link> getRootResources() {
         // Create the links when requested. Although
         // this is not thread safe, doing this 2 or 3 times
         // will not hurt anything as it will result in a little
@@ -161,10 +243,7 @@ public class RootResource implements DefaultApi {
         if (links == null) {
             links = createLinks();
         }
-        return links;
-    }
 
-    private static void addResource(Object resource) {
-        RESOURCE_CLASSES.put(resource, null);
+        return links;
     }
 }
