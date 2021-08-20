@@ -179,7 +179,7 @@ dependencies {
     implementation "org.quartz-scheduler:quartz:2.3.2"
 
     //keycloak
-    implementation "org.keycloak:keycloak-servlet-filter-adapter:7.0.0"
+    implementation "org.keycloak:keycloak-servlet-filter-adapter:15.0.1"
 
     // Hibernate JPA integration
     implementation "org.hibernate:hibernate-jpamodelgen:5.4.18.Final"
