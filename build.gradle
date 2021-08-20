@@ -176,7 +176,6 @@ dependencies {
     //Javascript Engine
     implementation "org.mozilla:rhino:1.7R3"
 
-    implementation "ldapjdk:ldapjdk:4.19"
     implementation "org.quartz-scheduler:quartz:2.3.2"
 
     //keycloak
