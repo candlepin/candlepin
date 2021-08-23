@@ -14,8 +14,9 @@
  */
 package org.candlepin.auth;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -27,15 +28,19 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.pki.CertificateReader;
 import org.candlepin.test.TestUtil;
 
 import org.jboss.resteasy.spi.HttpRequest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
 
+import java.io.IOException;
+import java.security.PublicKey;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 
 import javax.inject.Provider;
@@ -48,35 +53,38 @@ public class SSLAuthTest {
     @Mock private OwnerCurator ownerCurator;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
     @Mock private Provider<I18n> i18nProvider;
+    @Mock private CertificateReader certificateReader;
+    @Mock private X509Certificate certificate;
+    @Mock private PublicKey publicKey;
 
     private SSLAuth auth;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    public void setUp() throws CertificateException, IOException {
         MockitoAnnotations.initMocks(this);
+
+        when(this.certificateReader.getCACert()).thenReturn(this.certificate);
+        when(this.certificate.getPublicKey()).thenReturn(this.publicKey);
+
         this.auth = new SSLAuth(this.consumerCurator,
             this.ownerCurator,
             this.deletedConsumerCurator,
-            this.i18nProvider);
+            this.i18nProvider, this.certificateReader);
     }
 
     /**
      * No cert
-     *
-     * @throws Exception
      */
     @Test
-    public void noCert() throws Exception {
+    public void noCert() {
         assertNull(this.auth.getPrincipal(httpRequest));
     }
 
     /**
      * Happy path - parses the username from the cert's DN correctly.
-     *
-     * @throws Exception
      */
     @Test
-    public void correctUserName() throws Exception {
+    public void correctUserName() {
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ctype.setId("test-ctype");
 
@@ -95,11 +103,9 @@ public class SSLAuthTest {
 
     /**
      * DN is set but does not contain UID
-     *
-     * @throws Exception
      */
     @Test
-    public void noUuidOnCert() throws Exception {
+    public void noUuidOnCert() {
         mockCert("OU=something");
         when(this.consumerCurator.findByUuid(anyString())).thenReturn(
             new Consumer("machine_name", "test user", null, null));
@@ -108,18 +114,24 @@ public class SSLAuthTest {
 
     /**
      * Uuid in the cert is not found by the curator.
-     *
-     * @throws Exception
      */
     @Test
-    public void noValidConsumerEntity() throws Exception {
+    public void noValidConsumerEntity() {
         mockCert("CN=235-8");
         when(this.consumerCurator.findByUuid("235-8")).thenReturn(null);
         assertNull(this.auth.getPrincipal(httpRequest));
     }
 
+    @Test
+    public void publicKeyNotReadable() throws CertificateException, IOException {
+        mockCert("CN=235-8");
+        when(this.certificateReader.getCACert()).thenThrow(CertificateException.class);
+
+        assertThrows(RuntimeException.class, () -> this.auth.getPrincipal(httpRequest));
+    }
+
     private void mockCert(String dn) {
-        X509Certificate idCert =  mock(X509Certificate.class);
+        X509Certificate idCert = mock(X509Certificate.class);
         X500Principal principal = new X500Principal(dn);
 
         when(idCert.getSubjectX500Principal()).thenReturn(principal);
