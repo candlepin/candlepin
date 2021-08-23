@@ -17,6 +17,7 @@ package org.candlepin.auth;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.pki.CertificateReader;
 
 import com.google.inject.Inject;
 
@@ -25,9 +26,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.PublicKey;
+import java.security.SignatureException;
+import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.inject.Provider;
 import javax.security.auth.x500.X500Principal;
@@ -37,16 +45,20 @@ import javax.security.auth.x500.X500Principal;
  * Remember, certs are easy.
  */
 public class SSLAuth extends ConsumerAuth {
+    private static final Logger log = LoggerFactory.getLogger(SSLAuth.class);
     private static final String CERTIFICATES_ATTR = "javax.servlet.request.X509Certificate";
     private static final String UUID_DN_ATTRIBUTE = "CN";
 
-    private static Logger log = LoggerFactory.getLogger(SSLAuth.class);
+    private final CertificateReader certificateReader;
+    private PublicKey publicKey;
 
     @Inject
     SSLAuth(ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         DeletedConsumerCurator deletedConsumerCurator,
-        Provider<I18n> i18nProvider) {
+        Provider<I18n> i18nProvider, CertificateReader certificateReader) {
         super(consumerCurator, ownerCurator, deletedConsumerCurator, i18nProvider);
+
+        this.certificateReader = Objects.requireNonNull(certificateReader);
     }
 
     @Override
@@ -66,7 +78,37 @@ public class SSLAuth extends ConsumerAuth {
         // itself.
         X509Certificate identityCert = certs[0];
 
-        return createPrincipal(parseUuid(identityCert));
+        if (isValid(identityCert)) {
+            return createPrincipal(parseUuid(identityCert));
+        }
+        else {
+            return null;
+        }
+    }
+
+    private boolean isValid(X509Certificate identityCert) {
+        try {
+            identityCert.verify(getPublicKey());
+            return true;
+        }
+        catch (CertificateException | NoSuchAlgorithmException | InvalidKeyException |
+            NoSuchProviderException | SignatureException e) {
+            log.error("Failed to verify the incoming identity certificate.", e);
+            return false;
+        }
+    }
+
+    private PublicKey getPublicKey() {
+        if (this.publicKey == null) {
+            try {
+                X509Certificate certificate = certificateReader.getCACert();
+                this.publicKey = certificate.getPublicKey();
+            }
+            catch (Exception e) {
+                throw new RuntimeException("Unable to load public key.", e);
+            }
+        }
+        return this.publicKey;
     }
 
     // Pulls the consumer uuid off of the x509 cert.
