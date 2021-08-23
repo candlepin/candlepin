@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.Test;
@@ -42,6 +43,9 @@ import java.util.stream.Stream;
  * CertificateSerialCuratorTest
  */
 public class CertificateSerialCuratorTest extends DatabaseTestFixture {
+
+    private static final Date EXPIRED = TestUtil.createDate(2010, 10, 3);
+    private static final Date NOT_EXPIRED = TestUtil.createFutureDate(2);
 
     /**
      * Utility class for building and fetching CertificateSerial instances
@@ -370,6 +374,24 @@ public class CertificateSerialCuratorTest extends DatabaseTestFixture {
         assertTrue(fetched.contains(serial2));
         assertFalse(fetched.contains(serial3));
         assertTrue(fetched.contains(serial4));
+    }
+
+    @Test
+    public void revokesSpecifiedSerials() {
+        CertSerialBuilder builder = new CertSerialBuilder(this.certSerialCurator);
+
+        CertificateSerial serial1 = builder.withExpDate(EXPIRED).revoked(false).build();
+        CertificateSerial serial2 = builder.withExpDate(NOT_EXPIRED).revoked(false).build();
+
+        certSerialCurator.revokeById(serial1.getId());
+        certSerialCurator.revokeById(serial2.getId());
+
+        certSerialCurator.flush();
+        certSerialCurator.clear();
+
+        for (CertificateSerial serial : certSerialCurator.listAll().list()) {
+            assertTrue(serial.isRevoked());
+        }
     }
 
 }
