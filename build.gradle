@@ -87,53 +87,57 @@ ext {
     generatedMetamodels = "${buildDir}/generated/api/src/gen/java"
 }
 
-dependencies {
-    //Specify BOMs that are used for specifying versions of libraries
-    implementation platform('org.jboss.resteasy:resteasy-bom:4.4.3.Final')
-    implementation platform('com.fasterxml.jackson:jackson-bom:2.12.3')
-    implementation platform('com.google.inject:guice-bom:4.2.3')
-    implementation platform('org.junit:junit-bom:5.7.0')
+ext {
+    // Denotes BOM versions
+    resteasy_version = "4.4.3.Final"
+    jackson_version = "2.12.3"
+    guice_version = "4.2.3"
+    junit_version = "5.7.0"
+}
 
+dependencies {
     // Commons
     implementation "commons-codec:commons-codec:1.11"
     implementation "commons-collections:commons-collections:3.2.2"
     implementation "commons-io:commons-io:2.7"
     implementation "commons-lang:commons-lang:2.5"
 
-    //collections
+    // Collections
     implementation "com.google.guava:guava:30.1-jre"
 
     // Gettext libraries used for internationalization & translation
     implementation "com.googlecode.gettext-commons:gettext-commons:0.9.8"
 
-    //Guice Libraries - Version from BOM
-    implementation "com.google.inject.extensions:guice-assistedinject"
-    implementation "com.google.inject.extensions:guice-servlet"
-    implementation "com.google.inject.extensions:guice-throwingproviders"
-    implementation "com.google.inject.extensions:guice-persist"
+    // Guice Libraries
+    implementation "com.google.inject.extensions:guice-assistedinject:$guice_version"
+    implementation "com.google.inject.extensions:guice-servlet:$guice_version"
+    implementation "com.google.inject.extensions:guice-throwingproviders:$guice_version"
+    implementation "com.google.inject.extensions:guice-persist:$guice_version"
 
-    //Jackson - Version from BOM
-    implementation "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider"
-    implementation "com.fasterxml.jackson.module:jackson-module-jsonSchema"
-    constraints {
-        implementation "javax.validation:validation-api:2.0.1.Final"
-    }
+    // Jackson
+    implementation "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:$jackson_version"
+    implementation "com.fasterxml.jackson.module:jackson-module-jsonSchema:$jackson_version"
 
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
-    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
-    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml"
+    // Bean validation API is explicitly added to this version
+    // This is a transitive dependency of
+    // com.fasterxml.jackson.module:jackson-module-jsonSchema
+    implementation "javax.validation:validation-api:2.0.1.Final"
 
-    //Javax
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5:$jackson_version"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jackson_version"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version"
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jackson_version"
+    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jackson_version"
+
+    // Javax
     implementation "org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.2.Final"
     implementation "javax.transaction:jta:1.1"
     implementation "javax.annotation:javax.annotation-api:1.3.2"
 
-    //Liqubase
+    // Liqubase
     implementation "org.liquibase:liquibase-core:3.1.0"
 
-    //Logging
+    // Logging
     implementation "ch.qos.logback:logback-classic:1.2.3"
     // Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
     // JCL for example.
@@ -141,45 +145,46 @@ dependencies {
     implementation "org.slf4j:log4j-over-slf4j:1.7.12"
     implementation "net.logstash.logback:logstash-logback-encoder:5.3"
 
-    //Oauth
+    // Oauth
     implementation "net.oauth.core:oauth-provider:20100527"
 
-    //resteasy - version from BOM
-    implementation "org.jboss.resteasy:resteasy-guice"
-    implementation "org.jboss.resteasy:resteasy-atom-provider"
-    implementation "org.jboss.resteasy:resteasy-multipart-provider"
+    // Resteasy
+    implementation "org.jboss.resteasy:resteasy-guice:$resteasy_version"
+    implementation "org.jboss.resteasy:resteasy-atom-provider:$resteasy_version"
+    implementation "org.jboss.resteasy:resteasy-multipart-provider:$resteasy_version"
+
     implementation "javax.ws.rs:javax.ws.rs-api:2.1"
 
-    //Sun jaxb
+    // Sun jaxb
     implementation "com.sun.xml.bind:jaxb-impl:2.3.0"
     implementation "com.sun.xml.bind:jaxb-core:2.3.0"
 
-    //Swagger
+    // Swagger
     implementation "io.swagger:swagger-annotations:1.5.7"
     implementation "org.reflections:reflections:0.9.10"
 
-    //Validator
+    // Validator
     implementation "org.hibernate.validator:hibernate-validator:6.1.5.Final"
     implementation "org.hibernate.validator:hibernate-validator-annotation-processor:6.1.5.Final"
 
-    //Hibernate
+    // Hibernate
     implementation 'org.hibernate:hibernate-c3p0:5.4.9.Final'
-    //Ehcache (for use with hibernate primarily)
+    // Ehcache (for use with hibernate primarily)
     implementation "org.hibernate:hibernate-jcache:5.4.6.Final"
     implementation "org.ehcache:ehcache:3.8.0"
     implementation "javax.cache:cache-api:1.0.0"
 
-    //Artemis server & client
-    implementation "org.apache.activemq:artemis-server:2.12.0"
-    implementation "org.apache.activemq:artemis-stomp-protocol:2.12.0"
+    // Artemis server & client
+    implementation "org.apache.activemq:artemis-server:2.18.0"
+    implementation "org.apache.activemq:artemis-stomp-protocol:2.18.0"
 
-    //Javascript Engine
+    // Javascript Engine
     implementation "org.mozilla:rhino:1.7R3"
 
     implementation "org.quartz-scheduler:quartz:2.3.2"
 
-    //keycloak
-    implementation "org.keycloak:keycloak-servlet-filter-adapter:7.0.0"
+    // Keycloak
+    implementation "org.keycloak:keycloak-servlet-filter-adapter:15.0.1"
 
     // Hibernate JPA integration
     implementation "org.hibernate:hibernate-jpamodelgen:5.4.18.Final"
@@ -205,9 +210,11 @@ dependencies {
     testRuntimeOnly "org.glassfish:javax.el:3.0.0"
 
     // Core testing libraries
-    testImplementation "org.junit.jupiter:junit-jupiter-params"
-    testImplementation "org.junit.jupiter:junit-jupiter-engine"
-    testImplementation "org.junit.vintage:junit-vintage-engine"
+    // Junit 5
+    testImplementation "org.junit.jupiter:junit-jupiter-params:$junit_version"
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:$junit_version"
+    testImplementation "org.junit.vintage:junit-vintage-engine:$junit_version"
+
     testImplementation "org.hamcrest:hamcrest-library:1.3"
     testImplementation "org.mockito:mockito-junit-jupiter:2.23.4"
     testImplementation "junit:junit:4.13.1"
@@ -692,17 +699,6 @@ task pom {
                         }
                     }
                 }
-            }
-        }.withXml {
-            dependencyManagement.pomConfigurer.configurePom(asNode())
-            // In order to auto-generate classes via openapi-generator before hand,
-            // we have to included project(":api") as dependency in build.gradle file.
-            // This pom task pick the "api" as dependency & add that to POM.xml file.
-            // We need to remove this dependency from auto-generated pom file.
-            asNode().dependencies.'*'.findAll() {
-                 it.artifactId.text() == 'api'
-            }.each() {
-                it.parent().remove(it)
             }
         }.writeTo("pom.xml")
     }
