@@ -14,6 +14,9 @@
  */
 package org.candlepin.async;
 
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.ConfigurationException;
 import org.candlepin.messaging.CPMException;
 import org.candlepin.messaging.CPMMessage;
 import org.candlepin.messaging.CPMProducer;
@@ -46,7 +49,6 @@ public class JobMessageDispatcher {
     private static Logger log = LoggerFactory.getLogger(JobMessageDispatcher.class);
 
     private static final String JOB_KEY_MESSAGE_PROPERTY = "job_key";
-    private static final String JOB_MESSAGE_ADDRESS = "job";
 
     /**
      * The ThreadSessionStore is used to store session information per thread.
@@ -191,16 +193,21 @@ public class JobMessageDispatcher {
     }
 
 
-
+    private final Configuration config;
     private final CPMSessionFactory cpmSessionFactory;
     private final ObjectMapper objMapper;
 
     private final ReferenceQueue<Thread> referenceQueue;
-    private Map<ThreadReference, ThreadSessionStore> sessions;
+    private final Map<ThreadReference, ThreadSessionStore> sessions;
+
+    private String dispatchAddress;
 
     /**
      * Creates a new JobMessageDispatcher instance for sending job messages to the backing
      * message bus.
+     *
+     * @param config
+     *  the system configuration to use
      *
      * @param cpmSessionFactory
      *  A CPMSessionFactory instance for creating messaging sessions
@@ -208,18 +215,42 @@ public class JobMessageDispatcher {
      * @param objMapper
      *  An ObjectMapper instance for serializing job messages prior to sending them to the
      *  message bus
+     *
+     * @throws ConfigurationException
+     *  if the necessary configuration cannot be read or is invalid
      */
     @Inject
-    public JobMessageDispatcher(CPMSessionFactory cpmSessionFactory, ObjectMapper objMapper) {
+    public JobMessageDispatcher(Configuration config, CPMSessionFactory cpmSessionFactory,
+        ObjectMapper objMapper) throws ConfigurationException {
+
+        this.config = Objects.requireNonNull(config);
         this.cpmSessionFactory = Objects.requireNonNull(cpmSessionFactory);
         this.objMapper = Objects.requireNonNull(objMapper);
 
         this.referenceQueue = new ReferenceQueue<>();
         this.sessions = new HashMap<>();
+
+        this.configure(this.config);
     }
 
     /**
-     * Shuts down this job message receiver, closing any sessions it may have opened
+     * Configures this object using the configuration provided.
+     *
+     * @param config
+     *  the configuration to use to configure this message dispatcher
+     *
+     * @throws ConfigurationException
+     *  if the necessary configuration cannot be read or is invalid
+     */
+    private void configure(Configuration config) throws ConfigurationException {
+        this.dispatchAddress = config.getString(ConfigProperties.ASYNC_JOBS_DISPATCH_ADDRESS, null);
+        if (this.dispatchAddress == null || this.dispatchAddress.isEmpty()) {
+            throw new ConfigurationException("Invalid job dispatch address: address cannot be null or empty");
+        }
+    }
+
+    /**
+     * Shuts down this job message dispatcher, closing any sessions it may have opened
      */
     public synchronized void shutdown() throws JobException {
         try {
@@ -293,9 +324,8 @@ public class JobMessageDispatcher {
             String serializedJobMessage = this.objMapper.writeValueAsString(jobMessage);
             message.setBody(serializedJobMessage);
 
-            log.debug("Sending job message to queue \"{}\": {}", JOB_MESSAGE_ADDRESS, serializedJobMessage);
-
-            store.getProducer().send(JOB_MESSAGE_ADDRESS, message);
+            log.debug("Sending job message to queue \"{}\": {}", this.dispatchAddress, serializedJobMessage);
+            store.getProducer().send(this.dispatchAddress, message);
         }
         catch (Exception e) {
             throw new JobMessageDispatchException(e);

@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -29,11 +28,10 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.TestingModules;
 import org.candlepin.audit.ActiveMQContextListener;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.ConfigurationException;
-import org.candlepin.config.ConfigurationPrefixes;
-import org.candlepin.config.MapConfiguration;
 import org.candlepin.junit.LiquibaseExtension;
 
 import com.google.inject.AbstractModule;
@@ -53,7 +51,6 @@ import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -80,14 +77,12 @@ public class CandlepinContextListenerTest {
 
     @BeforeEach
     public void init() {
-        config = mock(Configuration.class);
+        this.config = new CandlepinCommonTestConfig();
+        this.config.setProperty(ConfigProperties.CRL_FILE_PATH, "/tmp/tmp.cfl");
 
-        when(config.subset(eq("org.quartz"))).thenReturn(
-            new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES));
-        when(config.strippedSubset(eq(ConfigurationPrefixes.LOGGING_CONFIG_PREFIX)))
-            .thenReturn(new MapConfiguration());
-        when(config.getString(ConfigProperties.CRL_FILE_PATH))
-            .thenReturn("/tmp/tmp.crl");
+        // TODO: This shouldn't be necessary for testing to complete. Fix this eventually.
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_THREADS, "0");
+
         hqlistener = mock(ActiveMQContextListener.class);
         executorService = mock(ScheduledExecutorService.class);
         configRead = mock(VerifyConfigRead.class);
@@ -122,7 +117,8 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void contextInitialized() {
-        when(config.getBoolean(eq(ConfigProperties.ACTIVEMQ_ENABLED))).thenReturn(true);
+        this.config.setProperty(ConfigProperties.ACTIVEMQ_ENABLED, "true");
+
         prepareForInitialization();
         listener.contextInitialized(evt);
         verify(hqlistener).contextInitialized(any(Injector.class));
@@ -136,17 +132,15 @@ public class CandlepinContextListenerTest {
     }
 
     @Test
-    public void blackListsCapabilities() {
-        Set<String> testSet = new HashSet<>();
-        testSet.add("cores");
-        testSet.add("ram");
+    public void hidesHiddenCapabilities() {
+        Set<String> hiddenSet = Set.of("cores", "ram");
+        this.config.setProperty(ConfigProperties.HIDDEN_CAPABILITIES, String.join(",", hiddenSet));
 
-        when(config.getSet(eq(ConfigProperties.HIDDEN_CAPABILITIES), isNull())).thenReturn(testSet);
         prepareForInitialization();
         listener.contextInitialized(evt);
 
         CandlepinCapabilities expected = new CandlepinCapabilities();
-        expected.removeAll(testSet);
+        expected.removeAll(hiddenSet);
 
         CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
 
@@ -155,12 +149,14 @@ public class CandlepinContextListenerTest {
 
     @Test
     void keycloakCapabilityPresentWhenKeycloakEnabled() {
-        when(config.getBoolean(eq(ConfigProperties.KEYCLOAK_AUTHENTICATION))).thenReturn(true);
+        this.config.setProperty(ConfigProperties.KEYCLOAK_AUTHENTICATION, "true");
+
         prepareForInitialization();
         listener.contextInitialized(evt);
 
         CandlepinCapabilities expected = new CandlepinCapabilities();
-        expected.add("keycloak_auth");
+        expected.add(CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY);
+
         CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
 
         assertEquals(expected, actual);
@@ -168,20 +164,52 @@ public class CandlepinContextListenerTest {
 
     @Test
     void keycloakCapabilityAbsentWhenKeycloakDisabled() {
-        when(config.getBoolean(eq(ConfigProperties.KEYCLOAK_AUTHENTICATION))).thenReturn(false);
+        this.config.setProperty(ConfigProperties.KEYCLOAK_AUTHENTICATION, "false");
+
         prepareForInitialization();
         listener.contextInitialized(evt);
 
         CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
 
-        assertFalse(actual.contains("keycloak_auth"), "keycloak_auth present but not expected");
+        assertFalse(actual.contains(CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY),
+            "keycloak_auth present but not expected");
+    }
+
+    @Test
+    void cloudregCapabilityPresentWhenCloudRegistrationEnabled() {
+        this.config.setProperty(ConfigProperties.CLOUD_AUTHENTICATION, "true");
+
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+
+        CandlepinCapabilities expected = new CandlepinCapabilities();
+        expected.add(CandlepinCapabilities.CLOUD_REGISTRATION_CAPABILITY);
+
+        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void cloudregCapabilityAbsentWhenCloudRegistrationDisabled() {
+        this.config.setProperty(ConfigProperties.CLOUD_AUTHENTICATION, "false");
+
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+
+        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
+
+        assertFalse(actual.contains(CandlepinCapabilities.CLOUD_REGISTRATION_CAPABILITY),
+            "keycloak_auth present but not expected");
     }
 
     @Test
     public void activeMQDisabled() {
-        when(config.getBoolean(eq(ConfigProperties.ACTIVEMQ_ENABLED))).thenReturn(false);
+        this.config.setProperty(ConfigProperties.ACTIVEMQ_ENABLED, "false");
+
         prepareForInitialization();
         listener.contextInitialized(evt);
+
         verifyNoMoreInteractions(hqlistener);
     }
 
@@ -190,7 +218,7 @@ public class CandlepinContextListenerTest {
         // backup jdbc drivers before calling contextDestroyed method
         Enumeration<Driver> drivers = DriverManager.getDrivers();
 
-        when(config.getBoolean(eq(ConfigProperties.ACTIVEMQ_ENABLED))).thenReturn(true);
+        this.config.setProperty(ConfigProperties.ACTIVEMQ_ENABLED, "true");
         prepareForInitialization();
 
         // we actually have to call contextInitialized before we
@@ -212,11 +240,11 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void ensureAMQPClosedProperly() {
-
         // backup jdbc drivers before calling contextDestroyed method
         Enumeration<Driver> drivers = DriverManager.getDrivers();
 
-        when(config.getBoolean(eq(ConfigProperties.SUSPEND_MODE_ENABLED))).thenReturn(true);
+        this.config.setProperty(ConfigProperties.SUSPEND_MODE_ENABLED, "true");
+
         prepareForInitialization();
         // we actually have to call contextInitialized before we
         // can call contextDestroyed, otherwise the listener's
@@ -255,10 +283,9 @@ public class CandlepinContextListenerTest {
     @Test
     void initializesCrlFile() {
         prepareForInitialization();
-        when(config.getString(ConfigProperties.CRL_FILE_PATH))
-            .thenReturn("/tmp/crlfile.crl");
 
-        File crlFile = new File(config.getString(ConfigProperties.CRL_FILE_PATH));
+        this.config.setProperty(ConfigProperties.CRL_FILE_PATH, "/tmp/crlfile.crl");
+        File crlFile = new File(this.config.getString(ConfigProperties.CRL_FILE_PATH));
 
         // Delete the file if it exists
         if (crlFile.exists()) {

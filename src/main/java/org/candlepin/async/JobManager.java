@@ -345,8 +345,6 @@ public class JobManager implements ModeChangeListener {
     private Set<Object> suspendKeys;
 
     private boolean clustered;
-    private Set<String> whitelist;
-    private Set<String> blacklist;
     private Map<String, Configuration> jobConfig;
 
 
@@ -396,13 +394,6 @@ public class JobManager implements ModeChangeListener {
     private void readJobConfiguration(Configuration config) {
         // Check if our scheduler is running in "clustered" mode
         this.clustered = config.getBoolean(ConfigProperties.QUARTZ_CLUSTERED_MODE, false);
-
-        // Get the job whitelist and blacklist
-        List<String> list = config.getList(ConfigProperties.ASYNC_JOBS_WHITELIST, null);
-        this.whitelist = list != null ? new HashSet<>(list) : null;
-
-        list = config.getList(ConfigProperties.ASYNC_JOBS_BLACKLIST, null);
-        this.blacklist = list != null ? new HashSet<>(list) : null;
 
         // Read the per-job configuration
         this.jobConfig = new HashMap<>();
@@ -769,59 +760,6 @@ public class JobManager implements ModeChangeListener {
     }
 
     /**
-     * Checks if the specified job is enabled. Jobs default to enabled, but can be enabled or
-     * disabled based on a handful of configurations. The general processing of these configs is in
-     * order of most to least explicit, leading to the following algorithm:
-     *
-     * - If the job-specific configuration option is specified, that value is used in all
-     *   situations.
-     * - If no job-specific configuration option is provided, the blacklist is checked. If the job
-     *   appears on the blacklist, it is disabled.
-     * - If no job-specific configuration option is provided and the job does not appear on the
-     *   blacklist, the whitelist is checked. If no whitelist is provided, or the job appears on
-     *   the whitelist, it is enabled. If the whitelist is specified and the job is not present, it
-     *   is disabled.
-     * - If all of the above checks fail or are otherwise inconclusive, the job is assumed to be
-     *   enabled.
-     *
-     * @param jobKey
-     *  The key of the job to check, or the job's fully qualified class name if the job does not have
-     *  a job key
-     *
-     * @return
-     *  true if the job is enabled, false otherwise
-     */
-    public boolean isJobEnabled(String jobKey) {
-        if (jobKey == null) {
-            throw new IllegalArgumentException("jobKey is null");
-        }
-
-        // Check per-job config
-        Configuration config = this.jobConfig.get(jobKey);
-
-        if (config != null) {
-            if (config.containsKey(ConfigProperties.ASYNC_JOBS_JOB_ENABLED)) {
-                return config.getBoolean(ConfigProperties.ASYNC_JOBS_JOB_ENABLED);
-            }
-
-            // Property is not defined for this job; check other fields
-        }
-
-        // Check blacklist
-        if (this.blacklist != null && this.blacklist.contains(jobKey)) {
-            return false;
-        }
-
-        // Check whitelist
-        if (this.whitelist != null && !this.whitelist.contains(jobKey)) {
-            return false;
-        }
-
-        // Job is enabled!
-        return true;
-    }
-
-    /**
      * Checks if the job scheduler is enabled.
      * <p></p>
      * The scheduler controls whether or jobs will be automatically fired at their scheduled times.
@@ -851,8 +789,6 @@ public class JobManager implements ModeChangeListener {
         Set<String> existing = new HashSet<>();
         Set<JobKey> unschedule = new HashSet<>();
 
-        // TODO: Improve this! There isn't a scenario where this works in the way it should.
-
         if (qrtzJobKeys != null && qrtzJobKeys.size() > 0) {
             log.debug("Checking {} existing scheduled jobs...", qrtzJobKeys.size());
 
@@ -862,7 +798,7 @@ public class JobManager implements ModeChangeListener {
                     this.scheduler.getJobDetail(key);
                 }
                 catch (JobPersistenceException e) {
-                    log.warn("Unable to load job detail for job, removing it from the scheduler: {}",
+                    log.error("Unable to load job detail for job, removing it from the scheduler: {}",
                         key.getName(), e);
 
                     unschedule.add(key);
@@ -884,10 +820,11 @@ public class JobManager implements ModeChangeListener {
                     }
 
                     String schedule = config.getString(ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE, null);
-                    boolean enabled = this.isJobEnabled(key.getName());
+                    boolean manual = ConfigProperties.ASYNC_JOBS_MANUAL_SCHEDULE.equalsIgnoreCase(schedule);
 
-                    // Check that the job is enabled and is still scheduled
-                    if (!enabled || schedule == null) {
+                    // If the job is no longer configured for scheduled execution, remove it from the
+                    // scheduler
+                    if (schedule == null || manual) {
                         unschedule.add(key);
                         continue;
                     }
@@ -934,10 +871,10 @@ public class JobManager implements ModeChangeListener {
                 Configuration config = entry.getValue();
 
                 String schedule = config.getString(ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE, null);
-                boolean enabled = this.isJobEnabled(jobName);
+                boolean manual = ConfigProperties.ASYNC_JOBS_MANUAL_SCHEDULE.equalsIgnoreCase(schedule);
 
-                // If the job is not enabled, already scheduled or has no schedule, skip it.
-                if (!enabled || existing.contains(jobName) || schedule == null) {
+                // If the job is not configured for scheduled execution, or is already scheduled, skip it.
+                if (schedule == null || manual || existing.contains(jobName)) {
                     continue;
                 }
 
@@ -959,6 +896,7 @@ public class JobManager implements ModeChangeListener {
             }
             catch (Exception e) {
                 log.error("Unable to schedule job \"{}\":", jobName, e);
+                throw new RuntimeException(e);
             }
         }
     }
@@ -1503,7 +1441,6 @@ public class JobManager implements ModeChangeListener {
      *  the AsyncJobStatus instance associated with the given message
      */
     private AsyncJobStatus fetchJobStatus(JobMessage message) throws JobInitializationException {
-
         AsyncJobStatus status;
 
         try {
@@ -1526,15 +1463,11 @@ public class JobManager implements ModeChangeListener {
             throw new JobInitializationException(errmsg, true);
         }
 
-        // Sanity check: make sure we don't try to execute a job that's disabled on this node
-        // This shouldn't happen, as we should be properly filtering which messages we pull off the
-        // message queue, but if that fails, we'll fall back to failing non-terminally.
-        if (status.getJobKey() == null || !this.isJobEnabled(status.getJobKey())) {
-            String errmsg = String.format("Job \"%s\" (%s) is not enabled on this node",
-                status.getId(), status.getJobKey());
+        if (status.getJobKey() == null || status.getJobKey().isEmpty()) {
+            String errmsg = String.format("Incomplete job persisted for message: %s", message);
 
             log.error(errmsg);
-            throw new JobInitializationException(errmsg, false);
+            throw new JobInitializationException(errmsg, true);
         }
 
         JobState jobState = status.getState();

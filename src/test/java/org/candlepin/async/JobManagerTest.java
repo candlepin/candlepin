@@ -981,112 +981,6 @@ public class JobManagerTest {
     }
 
     @Test
-    public void testJobIsEnabledDefaultsEnabledWithNoConfiguration() {
-        JobManager manager = this.createJobManager();
-
-        boolean result = manager.isJobEnabled(TestJob.JOB_KEY);
-        assertTrue(result);
-    }
-
-    @Test
-    public void testJobIsEnabledProperlyWhitelistsJobs() {
-        List<String> jobs = Arrays.asList("a", "b", "c", "d", "e");
-        List<String> whitelist = jobs.subList(1, 3);
-
-        this.config.setProperty(ConfigProperties.ASYNC_JOBS_WHITELIST, String.join(",", whitelist));
-
-        JobManager manager = this.createJobManager();
-
-        for (String jobKey : jobs) {
-            boolean expected = whitelist.contains(jobKey);
-            boolean result = manager.isJobEnabled(jobKey);
-
-            assertEquals(expected, result);
-        }
-    }
-
-    @Test
-    public void testJobIsEnabledProperlyBlacklistsJobs() {
-        List<String> jobs = Arrays.asList("a", "b", "c", "d", "e");
-        List<String> blacklist = jobs.subList(1, 3);
-
-        this.config.setProperty(ConfigProperties.ASYNC_JOBS_BLACKLIST, String.join(",", blacklist));
-
-        JobManager manager = this.createJobManager();
-
-        for (String jobKey : jobs) {
-            boolean expected = !blacklist.contains(jobKey);
-            boolean result = manager.isJobEnabled(jobKey);
-
-            assertEquals(expected, result);
-        }
-    }
-
-    @Test
-    public void testJobIsEnabledAllowsJobsToBeDisabled() {
-        List<String> jobs = Arrays.asList("a", "b", "c", "d", "e");
-        List<String> disabled = jobs.subList(1, 3);
-
-        for (String jobKey : disabled) {
-            this.config.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + jobKey + '.' +
-                ConfigProperties.ASYNC_JOBS_JOB_ENABLED, "false");
-        }
-
-        JobManager manager = this.createJobManager();
-
-        for (String jobKey : jobs) {
-            boolean expected = !disabled.contains(jobKey);
-            boolean result = manager.isJobEnabled(jobKey);
-
-            assertEquals(expected, result);
-        }
-    }
-
-    @Test
-    public void testJobIsEnabledProperlyCombinesWhitelistAndBlacklist() {
-        List<String> jobs = Arrays.asList("a", "b", "c", "d", "e");
-        List<String> whitelist = jobs.subList(1, 2);
-        List<String> blacklist = jobs.subList(2, 4);
-
-        this.config.setProperty(ConfigProperties.ASYNC_JOBS_WHITELIST, String.join(",", whitelist));
-        this.config.setProperty(ConfigProperties.ASYNC_JOBS_BLACKLIST, String.join(",", blacklist));
-
-        JobManager manager = this.createJobManager();
-
-        for (String jobKey : jobs) {
-            boolean expected = whitelist.contains(jobKey) && !blacklist.contains(jobKey);
-            boolean result = manager.isJobEnabled(jobKey);
-
-            assertEquals(expected, result);
-        }
-    }
-
-    @Test
-    public void testJobIsEnabledProperlyCombinesWhitelistAndBlacklistAndPerJobConfig() {
-        List<String> jobs = Arrays.asList("a", "b", "c", "d", "e");
-        List<String> whitelist = jobs.subList(1, 3);
-        List<String> blacklist = jobs.subList(2, 4);
-        List<String> disabled = jobs.subList(3, 5);
-
-        this.config.setProperty(ConfigProperties.ASYNC_JOBS_WHITELIST, String.join(",", whitelist));
-        this.config.setProperty(ConfigProperties.ASYNC_JOBS_BLACKLIST, String.join(",", blacklist));
-        for (String jobKey : disabled) {
-            this.config.setProperty(ConfigProperties.ASYNC_JOBS_PREFIX + jobKey + '.' +
-                ConfigProperties.ASYNC_JOBS_JOB_ENABLED, "false");
-        }
-
-        JobManager manager = this.createJobManager();
-
-        for (String jobKey : jobs) {
-            boolean expected = whitelist.contains(jobKey) && !blacklist.contains(jobKey) &&
-                !disabled.contains(jobKey);
-            boolean result = manager.isJobEnabled(jobKey);
-
-            assertEquals(expected, result);
-        }
-    }
-
-    @Test
     public void testJobScheduling() {
         String schedule = "%d * * * * ?";
         int jobs = 3;
@@ -1107,44 +1001,10 @@ public class JobManagerTest {
     }
 
     @Test
-    public void testJobSchedulingDoesNotScheduleDisabledJobs() {
+    public void testJobSchedulingDoesNotScheduleManualJobs() {
         this.config.setProperty(
             ConfigProperties.jobConfig(TestJob.JOB_KEY, ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE),
-            "5 * * * * ?");
-
-        this.config.setProperty(
-            ConfigProperties.jobConfig(TestJob.JOB_KEY, ConfigProperties.ASYNC_JOBS_JOB_ENABLED),
-            "false");
-
-        JobManager manager = this.createJobManager();
-        manager.initialize();
-
-        // Verify the job is not scheduled
-        this.verifyNotScheduled(TestJob.JOB_KEY);
-    }
-
-    @Test
-    public void testJobSchedulingDoesNotScheduleBlacklistedJobs() {
-        this.config.setProperty(
-            ConfigProperties.jobConfig(TestJob.JOB_KEY, ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE),
-            "5 * * * * ?");
-
-        this.config.setProperty(ConfigProperties.ASYNC_JOBS_BLACKLIST, "a,b," + TestJob.JOB_KEY + ",d,e");
-
-        JobManager manager = this.createJobManager();
-        manager.initialize();
-
-        // Verify the job is not scheduled
-        this.verifyNotScheduled(TestJob.JOB_KEY);
-    }
-
-    @Test
-    public void testJobSchedulingDoesNotScheduleJobsNotOnWhitelist() {
-        this.config.setProperty(
-            ConfigProperties.jobConfig(TestJob.JOB_KEY, ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE),
-            "5 * * * * ?");
-
-        this.config.setProperty(ConfigProperties.ASYNC_JOBS_WHITELIST, "a,b,c,d,e");
+            ConfigProperties.ASYNC_JOBS_MANUAL_SCHEDULE);
 
         JobManager manager = this.createJobManager();
         manager.initialize();

@@ -264,9 +264,11 @@ public class ConfigProperties {
 
     // Async Job Properties and utilities
     public static final String ASYNC_JOBS_THREADS = "candlepin.async.threads";
-    public static final String ASYNC_JOBS_WHITELIST = "candlepin.async.whitelist";
-    public static final String ASYNC_JOBS_BLACKLIST = "candlepin.async.blacklist";
     public static final String ASYNC_JOBS_SCHEDULER_ENABLED = "candlepin.async.scheduler.enabled";
+
+    public static final String ASYNC_JOBS_DISPATCH_ADDRESS = "candlepin.async.dispatch_address";
+    public static final String ASYNC_JOBS_RECEIVE_ADDRESS = "candlepin.async.receive_address";
+    public static final String ASYNC_JOBS_RECEIVE_FILTER = "candlepin.async.receive_filter";
 
     // Whether or not we should allow queuing new jobs on this node while the job manager is suspended/paused
     public static final String ASYNC_JOBS_QUEUE_WHILE_SUSPENDED = "candlepin.async.queue_while_suspended";
@@ -275,8 +277,10 @@ public class ConfigProperties {
     // to configure the schedule flag for the job TestJob1, the full configuration would be:
     // candlepin.async.jobs.TestJob1.schedule=0 0 0/3 * * ?
     public static final String ASYNC_JOBS_PREFIX = "candlepin.async.jobs.";
-    public static final String ASYNC_JOBS_JOB_ENABLED = "enabled";
     public static final String ASYNC_JOBS_JOB_SCHEDULE = "schedule";
+
+    // Special value used to denote a job's schedule should be manual rather than automatic.
+    public static final String ASYNC_JOBS_MANUAL_SCHEDULE = "manual";
 
     // "Temporary" configuration to limit the scope of the jobs/schedule endpoint. Only job keys
     // specified in this property will be allowed to be triggered via the schedule endpoint.
@@ -472,6 +476,10 @@ public class ConfigProperties {
             this.put(ASYNC_JOBS_QUEUE_WHILE_SUSPENDED, "true");
             this.put(ASYNC_JOBS_SCHEDULER_ENABLED, "true");
             this.put(ASYNC_JOBS_THREAD_SHUTDOWN_TIMEOUT, "600"); // 10 minutes
+
+            this.put(ASYNC_JOBS_DISPATCH_ADDRESS, "job");
+            this.put(ASYNC_JOBS_RECEIVE_ADDRESS, "jobs");
+            this.put(ASYNC_JOBS_RECEIVE_FILTER, "");
 
             this.put(jobConfig(ActiveEntitlementJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ActiveEntitlementJob.DEFAULT_SCHEDULE);

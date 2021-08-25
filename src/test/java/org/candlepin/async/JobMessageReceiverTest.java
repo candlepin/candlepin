@@ -14,7 +14,9 @@
  */
 package org.candlepin.async;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -28,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.ConfigurationException;
 import org.candlepin.messaging.CPMConsumer;
 import org.candlepin.messaging.CPMConsumerConfig;
 import org.candlepin.messaging.CPMException;
@@ -38,12 +41,14 @@ import org.candlepin.messaging.CPMSessionConfig;
 import org.candlepin.messaging.CPMSessionFactory;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
+import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.persist.UnitOfWork;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 
 
@@ -78,8 +83,6 @@ public class JobMessageReceiverTest {
         this.listenerContainer = new ThreadLocal<>();
         this.consumer = this.createMockCPMConsumer(this.listenerContainer);
         this.session = this.createMockCPMSession(this.consumer);
-        doReturn(this.session).when(this.consumer).getSession();
-
         this.cpmSessionFactory = this.createMockCPMSessionFactory(this.session);
     }
 
@@ -103,11 +106,11 @@ public class JobMessageReceiverTest {
 
     private CPMSession createMockCPMSession(CPMConsumer consumer) throws CPMException {
         CPMSession session = mock(CPMSession.class);
-        CPMConsumerConfig cconfig = new CPMConsumerConfig();
 
-        doReturn(cconfig).when(session).createConsumerConfig();
+        doAnswer(iom -> new CPMConsumerConfig()).when(session).createConsumerConfig();
         doReturn(consumer).when(session).createConsumer();
         doReturn(consumer).when(session).createConsumer(any(CPMConsumerConfig.class));
+        doReturn(session).when(consumer).getSession();
 
         return session;
     }
@@ -140,20 +143,60 @@ public class JobMessageReceiverTest {
         return message;
     }
 
-    private JobMessageReceiver buildJobMessageReceiver() {
-        try {
-            JobMessageReceiver receiver = new JobMessageReceiver(this.config, this.cpmSessionFactory,
-                this.mapper, this.unitOfWork);
+    private JobMessageReceiver buildJobMessageReceiver() throws Exception {
+        JobMessageReceiver receiver = new JobMessageReceiver(this.config, this.cpmSessionFactory,
+            this.mapper, this.unitOfWork);
 
-            receiver.initialize(this.jobManager);
+        receiver.initialize(this.jobManager);
 
-            return receiver;
-        }
-        catch (Exception e) {
-            throw new RuntimeException("Unexpected exception occurred while building JobMessageReceiver", e);
-        }
+        return receiver;
     }
 
+    @Test
+    public void testReceiveAddressCannotBeNull() throws Exception {
+        this.config.clearProperty(ConfigProperties.ASYNC_JOBS_RECEIVE_ADDRESS);
+
+        assertThrows(ConfigurationException.class, () -> this.buildJobMessageReceiver());
+    }
+
+    @Test
+    public void testReceiveAddressCannotBeEmpty() throws Exception {
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_RECEIVE_ADDRESS, "");
+
+        assertThrows(ConfigurationException.class, () -> this.buildJobMessageReceiver());
+    }
+
+    @Test
+    public void testCreatesConsumersListeningOnConfiguredQueue() throws Exception {
+        String queue = TestUtil.randomString("test_queue");
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_RECEIVE_ADDRESS, queue);
+
+        ArgumentCaptor<CPMConsumerConfig> captor = ArgumentCaptor.forClass(CPMConsumerConfig.class);
+
+        this.buildJobMessageReceiver();
+
+        verify(this.session).createConsumer(captor.capture());
+
+        CPMConsumerConfig config = captor.getValue();
+        assertNotNull(config);
+        assertEquals(queue, config.getQueue());
+    }
+
+    @Test
+    public void testCreatesConsumersUsingConfiguredFilter() throws Exception {
+        String filter = TestUtil.randomString("test_filter");
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_RECEIVE_FILTER, filter);
+
+        ArgumentCaptor<CPMConsumerConfig> captor = ArgumentCaptor.forClass(CPMConsumerConfig.class);
+
+        this.buildJobMessageReceiver();
+
+        verify(this.session).createConsumer(captor.capture());
+
+        CPMConsumerConfig config = captor.getValue();
+        assertNotNull(config);
+        assertEquals(filter, config.getMessageFilter());
+    }
 
     @Test
     public void testMessageAckAndSessionCommitOnSuccess() throws Exception {
