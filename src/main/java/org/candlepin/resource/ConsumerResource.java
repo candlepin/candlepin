@@ -336,6 +336,7 @@ public class ConsumerResource implements ConsumersApi {
 
     @Override
     @SecurityHole
+    @RootResource.LinkedResource
     public Iterable<ContentOverrideDTO> listConsumerContentOverrides(String consumerUuid) {
         Principal principal = ResteasyContext.getContextData(Principal.class);
         Consumer parent = this.verifyAndGetParent(consumerUuid, principal, Access.READ_ONLY);
@@ -2875,6 +2876,7 @@ public class ConsumerResource implements ConsumersApi {
     }
 
     @Override
+    @RootResource.LinkedResource
     public CandlepinQuery<GuestIdDTOArrayElement> getGuestIds(@Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         return  translator.translateQuery(guestIdCurator.listByConsumer(consumer),

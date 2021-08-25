@@ -18,6 +18,9 @@ paths:
         - Root
       operationId: getRootResources
       security: []  # this resource doesn't require auth
+      x-java-response:
+        type: Iterable
+        isContainer: true
       responses:
         200:
           description: OK
