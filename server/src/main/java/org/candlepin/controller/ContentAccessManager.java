@@ -304,6 +304,7 @@ public class ContentAccessManager {
         if (isX509CertExpired) {
             Validity oneYearValidity = Validity.oneYear();
             KeyPair keyPair = this.keyPairCurator.getConsumerKeyPair(consumer);
+            this.serialCurator.revokeById(existing.getSerial().getId());
             CertificateSerial serial = createSerial(oneYearValidity);
             existing.setSerial(serial);
             existing.setCert(createX509Cert(consumer, owner, serial, keyPair, oneYearValidity));
