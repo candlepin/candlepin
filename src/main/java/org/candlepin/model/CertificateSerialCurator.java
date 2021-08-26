@@ -216,4 +216,22 @@ public class CertificateSerialCurator extends AbstractHibernateCurator<Certifica
             .setParameter("nowDate", new Date())
             .getResultList();
     }
+
+    /**
+     * Revokes serial specified by the given serial id
+     *
+     * @param serialToRevoke id of the serial to be revoked
+     */
+    @Transactional
+    public void revokeById(Long serialToRevoke) {
+        String query = "UPDATE CertificateSerial s" +
+            " SET s.revoked = true, s.updated = :updated" +
+            " WHERE s.revoked = false AND s.id = :serial_id";
+
+        this.currentSession().createQuery(query)
+            .setParameter("updated", new Date())
+            .setParameter("serial_id", serialToRevoke)
+            .executeUpdate();
+    }
+
 }
