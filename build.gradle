@@ -196,7 +196,7 @@ allprojects {
             dependency group: 'com.mattbertolini', name: 'liquibase-slf4j', version: '1.2.1'
             dependency group: 'org.eclipse.microprofile.config', name: 'microprofile-config-api', version:'1.3'
             dependency group: 'com.mchange', name: 'c3p0', version: '0.9.5.4'
-            dependency group: 'org.keycloak', name: 'keycloak-servlet-filter-adapter', version: '7.0.0'
+            dependency group: 'org.keycloak', name: 'keycloak-servlet-filter-adapter', version: '15.0.1'
 
             dependencySet(group: "org.jboss.resteasy", version: "4.4.3.Final") {
                 entry "resteasy-core"
@@ -212,7 +212,7 @@ allprojects {
                 entry "hibernate-validator"
                 entry "hibernate-validator-annotation-processor"
             }
-            dependencySet(group: "org.apache.activemq", version: "2.12.0") {
+            dependencySet(group: "org.apache.activemq", version: "2.18.0") {
                 entry "artemis-server"
                 entry "artemis-stomp-protocol"
             }
