@@ -16,6 +16,7 @@ package org.candlepin.async;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.ConfigurationException;
 import org.candlepin.messaging.CPMConsumer;
 import org.candlepin.messaging.CPMConsumerConfig;
 import org.candlepin.messaging.CPMException;
@@ -35,25 +36,21 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.inject.Inject;
 
 
 
 /**
- *
- *
+ * The JobMessageReceiver class manages the various receivers for handling messages received from
+ * the backing message queues, and passes the messages back to the job manager
  */
 public class JobMessageReceiver {
     private static Logger log = LoggerFactory.getLogger(JobMessageReceiver.class);
 
     private static final String JOB_KEY_MESSAGE_PROPERTY = "job_key";
-    private static final String JOB_MESSAGE_QUEUE = "jobs";
 
     private final Configuration config;
     private final CPMSessionFactory cpmSessionFactory;
@@ -63,7 +60,8 @@ public class JobMessageReceiver {
     private boolean suspended;
 
     private MessageListener listener;
-    private String filter;
+    private String receiveAddress;
+    private String receiveFilter;
     private Set<CPMSession> sessions;
     private UnitOfWork unitOfWork;
 
@@ -82,7 +80,7 @@ public class JobMessageReceiver {
      */
     @Inject
     public JobMessageReceiver(Configuration config, CPMSessionFactory cpmSessionFactory,
-        ObjectMapper mapper, UnitOfWork unitOfWork) {
+        ObjectMapper mapper, UnitOfWork unitOfWork) throws ConfigurationException {
 
         this.config = Objects.requireNonNull(config);
         this.cpmSessionFactory = Objects.requireNonNull(cpmSessionFactory);
@@ -92,68 +90,26 @@ public class JobMessageReceiver {
         this.initialized = false;
         this.suspended = false;
         this.sessions = new HashSet<>();
+
+        this.configure(this.config);
     }
 
     /**
-     * Builds a filter expression to apply to the client consumers used by the message receivers
-     * this factory generates. The expression returned will allow AMQP consumers to filter messages
-     * based on the jobs enabled or disabled in the configuration.
+     * Configures this object using the configuration provided.
      *
-     * @return
-     *  an AMQP filter expression for filtering jobs
+     * @param config
+     *  the configuration to use to configure this message receiver
+     *
+     * @throws ConfigurationException
+     *  if the necessary configuration cannot be read or is invalid
      */
-    private String buildAMQPFilterExpression() {
-        // Default to no filtering
-        String filter = null;
-
-        Set<String> blacklist = new HashSet<>();
-
-        // Add blacklisted jobs
-        List<String> list = this.config.getList(ConfigProperties.ASYNC_JOBS_BLACKLIST, null);
-        if (list != null) {
-            blacklist.addAll(list);
+    private void configure(Configuration config) throws ConfigurationException {
+        this.receiveAddress = config.getString(ConfigProperties.ASYNC_JOBS_RECEIVE_ADDRESS, null);
+        if (this.receiveAddress == null || this.receiveAddress.isEmpty()) {
+            throw new ConfigurationException("Invalid job receive address: address cannot be null or empty");
         }
 
-        // Add jobs explicitly disabled
-        String prefix = Pattern.quote(ConfigProperties.ASYNC_JOBS_PREFIX);
-        String suffix = Pattern.quote(ConfigProperties.ASYNC_JOBS_JOB_ENABLED);
-        Pattern regex = Pattern.compile("\\A" + prefix + "(.+)\\." + suffix + "\\z");
-
-        for (String key : this.config.getKeys()) {
-            Matcher matcher = regex.matcher(key);
-
-            if (matcher.matches()) {
-                boolean enabled = this.config.getBoolean(key, true);
-
-                if (!enabled) {
-                    blacklist.add(matcher.group(1));
-                }
-            }
-        }
-
-        list = this.config.getList(ConfigProperties.ASYNC_JOBS_WHITELIST, null);
-        if (list != null) {
-            // Whitelist mode (inclusion!)
-            list.removeAll(blacklist);
-
-            if (list.size() > 0) {
-                filter = String.format("%s IN ('%s')", JOB_KEY_MESSAGE_PROPERTY,
-                    String.join("', '", list));
-            }
-            else {
-                // This is a bit of a hack, as we should simply not have a listener/session if the
-                // node will not be processing jobs.
-                filter = String.format("%s = ''", JOB_KEY_MESSAGE_PROPERTY);
-            }
-        }
-        else if (blacklist.size() > 0) {
-            // Blacklist mode (exclusion)
-            filter = String.format("%s NOT IN ('%s')", JOB_KEY_MESSAGE_PROPERTY,
-                String.join("', '", blacklist));
-        }
-
-        log.debug("Built AMQP filter expression: {}", filter);
-        return filter;
+        this.receiveFilter = config.getString(ConfigProperties.ASYNC_JOBS_RECEIVE_FILTER, null);
     }
 
     /**
@@ -171,8 +127,8 @@ public class JobMessageReceiver {
         CPMSession session = this.cpmSessionFactory.createSession(sconfig);
 
         CPMConsumerConfig cconfig = session.createConsumerConfig()
-            .setQueue(JOB_MESSAGE_QUEUE)
-            .setMessageFilter(this.filter);
+            .setQueue(this.receiveAddress)
+            .setMessageFilter(this.receiveFilter);
 
         session.createConsumer(cconfig)
             .setMessageListener(this.listener);
@@ -246,10 +202,10 @@ public class JobMessageReceiver {
 
         try {
             this.listener = new MessageListener(manager, this.mapper, this.unitOfWork);
-            this.filter = this.buildAMQPFilterExpression();
-
             int listenerThreads = this.config.getInt(ConfigProperties.ASYNC_JOBS_THREADS);
-            log.info("Creating {} job receiver threads with filter: {}", listenerThreads, this.filter);
+
+            log.info("Creating {} threads receiving job messages from address: \"{}\", with filter: \"{}\"",
+                listenerThreads, this.receiveAddress, this.receiveFilter);
 
             for (int i = 0; i < listenerThreads; ++i) {
                 // Each session+consumer gives us an implicit thread for async job processing, so

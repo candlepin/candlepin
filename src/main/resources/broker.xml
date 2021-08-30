@@ -133,9 +133,9 @@
                 </multicast>
             </address>
             <address name="job">
-                <multicast>
-                    <queue name="jobs" />
-                </multicast>
+                <anycast>
+                    <queue name="jobs"/>
+                </anycast>
             </address>
         </addresses>
 
@@ -161,7 +161,6 @@
             </address-setting>
 
             <address-setting match="job">
-                <auto-create-queues>true</auto-create-queues>
                 <max-size-bytes>10485760</max-size-bytes>
 
                 <!-- By default, Artemis will page messages when the queue address is full. -->

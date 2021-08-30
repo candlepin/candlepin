@@ -176,7 +176,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
                 cacheManager.enableManagement(cacheName, true);
                 cacheManager.enableStatistics(cacheName, true);
             });
-
         }
 
         // Setup the job manager
@@ -185,17 +184,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         this.jobManager.start();
 
         loggerListener = injector.getInstance(LoggerContextListener.class);
-
-        // Update our capabilities with configurable features
-        CandlepinCapabilities capabilities = CandlepinCapabilities.getCapabilities();
-
-        if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
-            capabilities.add(CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY);
-        }
-
-        if (config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION)) {
-            capabilities.add(CandlepinCapabilities.CLOUD_REGISTRATION_CAPABILITY);
-        }
 
         // Init CRL file
         this.crlFileUtil = injector.getInstance(CrlFileUtil.class);
@@ -261,13 +249,23 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     protected void setCapabilities(Configuration config) {
         CandlepinCapabilities capabilities = new CandlepinCapabilities();
 
-        Set<String> blacklistedSet = config.getSet(ConfigProperties.HIDDEN_CAPABILITIES, null);
-        if (blacklistedSet != null) {
-            capabilities.removeAll(blacklistedSet);
+        // Update our capabilities with configurable features
+        if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION, false)) {
+            capabilities.add(CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY);
         }
 
-        CandlepinCapabilities.setCapabilities(capabilities);
+        if (config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION, false)) {
+            capabilities.add(CandlepinCapabilities.CLOUD_REGISTRATION_CAPABILITY);
+        }
+
+        // Remove hidden capabilities
+        Set<String> hidden = config.getSet(ConfigProperties.HIDDEN_CAPABILITIES, null);
+        if (hidden != null) {
+            capabilities.removeAll(hidden);
+        }
+
         log.info("Candlepin will show support for the following capabilities: {}", capabilities);
+        CandlepinCapabilities.setCapabilities(capabilities);
     }
 
     protected Configuration readConfiguration(ServletContext context)
@@ -284,7 +282,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
             log.debug("Loading system configuration");
             // First, read the system configuration
             systemConfig.load(configFile);
-            log.debug("System configuration: " + systemConfig);
+            log.debug("System configuration: {}", systemConfig);
         }
 
         systemConfig.use(PASSPHRASE_SECRET_FILE).toDecrypt(ENCRYPTED_PROPERTIES);

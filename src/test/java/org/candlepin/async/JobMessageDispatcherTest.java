@@ -14,21 +14,28 @@
  */
 package org.candlepin.async;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.ConfigurationException;
 import org.candlepin.messaging.CPMMessage;
 import org.candlepin.messaging.CPMProducer;
 import org.candlepin.messaging.CPMProducerConfig;
 import org.candlepin.messaging.CPMSession;
 import org.candlepin.messaging.CPMSessionConfig;
 import org.candlepin.messaging.CPMSessionFactory;
+import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -123,6 +130,7 @@ public class JobMessageDispatcherTest {
     }
 
 
+    private Configuration config;
     private ObjectMapper mapper;
 
     private CPMSessionFactory sessionFactory;
@@ -132,6 +140,7 @@ public class JobMessageDispatcherTest {
 
     @BeforeEach
     public void init() {
+        this.config = new CandlepinCommonTestConfig();
         this.mapper = new ObjectMapper();
 
         this.sessionFactory = mock(CPMSessionFactory.class);
@@ -141,8 +150,8 @@ public class JobMessageDispatcherTest {
         doReturn(this.sessionConfig).when(this.sessionFactory).createSessionConfig();
     }
 
-    private JobMessageDispatcher buildJobMessageDispatcher() {
-        return new JobMessageDispatcher(this.sessionFactory, this.mapper);
+    private JobMessageDispatcher buildJobMessageDispatcher() throws ConfigurationException {
+        return new JobMessageDispatcher(this.config, this.sessionFactory, this.mapper);
     }
 
     private CPMSession mockCPMSession() throws Exception {
@@ -164,6 +173,38 @@ public class JobMessageDispatcherTest {
         doReturn(message).when(message).setProperty(anyString(), anyString());
 
         return message;
+    }
+
+    @Test
+    public void testDispatchAddressCannotBeNull() throws Exception {
+        this.config.clearProperty(ConfigProperties.ASYNC_JOBS_DISPATCH_ADDRESS);
+
+        assertThrows(ConfigurationException.class, () -> this.buildJobMessageDispatcher());
+    }
+
+    @Test
+    public void testDispatchAddressCannotBeEmpty() throws Exception {
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_DISPATCH_ADDRESS, "");
+
+        assertThrows(ConfigurationException.class, () -> this.buildJobMessageDispatcher());
+    }
+
+    @Test
+    public void testDispatchesMessagesToConfiguredAddress() throws Exception {
+        String address = TestUtil.randomString("test_address");
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_DISPATCH_ADDRESS, address);
+
+        JobMessageDispatcher dispatcher = this.buildJobMessageDispatcher();
+
+        CPMSession session = this.mockCPMSession();
+        CPMProducer producer = mock(CPMProducer.class);
+
+        doReturn(session).when(this.sessionFactory).createSession(any(CPMSessionConfig.class));
+        doReturn(producer).when(session).createProducer(any(CPMProducerConfig.class));
+
+        dispatcher.postJobMessage(new JobMessage("job_id-1", "job_key-1"));
+
+        verify(producer, times(1)).send(eq(address), any(CPMMessage.class));
     }
 
     @Test
