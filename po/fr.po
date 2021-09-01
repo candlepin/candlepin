@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-08-12 03:01-0400\n"
-"PO-Revision-Date: 2021-02-10 09:17+0000\n"
+"PO-Revision-Date: 2021-09-01 13:04+0000\n"
 "Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
 "candlepin/master/fr/>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.4.2\n"
+"X-Generator: Weblate 4.8\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -324,7 +324,7 @@ msgstr "Auto-attach désactivé pour le propriétaire \"{0}\"{1}."
 #: src/main/java/org/candlepin/controller/Entitler.java:241
 #, java-format
 msgid "Auto-attach is disabled for owner \"{0}\"."
-msgstr ""
+msgstr "Auto-attach désactivé pour le propriétaire \"{0}\"."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:304
 #: src/main/java/org/candlepin/controller/Entitler.java:508
@@ -457,6 +457,8 @@ msgid ""
 "The requested role \"{0}\" is not provided by a currently consumed "
 "subscription."
 msgstr ""
+"Le rôle demandé \"{0}\" n'est pas fourni par un abonnement actuellement "
+"consommé."
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:133
 #, java-format
@@ -464,6 +466,8 @@ msgid ""
 "The requested add-on \"{0}\" is not provided by a currently consumed "
 "subscription."
 msgstr ""
+"L'extension demandée \"{0}\" n'est pas fournie par un abonnement "
+"actuellement consommé."
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:187
 #, java-format
@@ -471,6 +475,8 @@ msgid ""
 "The service level preference \"{0}\" is not provided by a currently consumed "
 "subscription."
 msgstr ""
+"La préférence de niveau de service \"{0}\" n'est pas fournie par un "
+"abonnement actuellement consommé."
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:204
 #, java-format
@@ -478,6 +484,8 @@ msgid ""
 "The requested usage preference \"{0}\" is not provided by a currently "
 "consumed subscription."
 msgstr ""
+"La préférence d'utilisation demandée \"{0}\" n'est pas fournie par un "
+"abonnement actuellement consommé."
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:241
 #, java-format
@@ -485,6 +493,8 @@ msgid ""
 "The requested service type preference \"{0}\" is not provided by a currently "
 "consumed subscription."
 msgstr ""
+"La préférence de type de service demandée \"{0}\" n'est pas fournie par un "
+"abonnement actuellement consommé."
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
 msgid "Not supported by a valid subscription."
@@ -805,8 +815,7 @@ msgstr ""
 # translation auto-copied from project Candlepin, version master, document
 # keys, author samfreemanz
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:331
-#, fuzzy, java-format
-#| msgid "Organization {0} does not exist."
+#, java-format
 msgid "Organization {0} does not exist"
 msgstr "L’organisation {0} n’existe pas."
 
@@ -922,11 +931,10 @@ msgid "User \"{0}\" has already registered a personal consumer"
 msgstr "L’utilisateur {0} est déjà enregistré comme consommateur personnel"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1343
-#, fuzzy
-#| msgid "{0} is not authorized to register with organization {1}"
 msgid "Client is not authorized to register with any organization"
 msgstr ""
-"{0} n'est pas autorisé à s'enregistrer auprès de notre organisation {1}"
+"Le client n'est pas autorisé à s'inscrire auprès d'une quelconque "
+"organisation"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1353
 msgid "You must specify an organization for new units."
@@ -1542,12 +1550,16 @@ msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more "
 "subscriptions"
 msgstr ""
+"Le produit \"{0}\" ne peut être supprimé alors qu'il est référencé par un ou "
+"plusieurs abonnements"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:2153
 #, java-format
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more products"
 msgstr ""
+"Le produit \"{0}\" ne peut être supprimé alors qu'il est référencé par un ou "
+"plusieurs produits"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:2207
 #, java-format
@@ -1676,7 +1688,7 @@ msgstr "Le type d’accès NONE n’est pas pris en charge."
 
 #: src/main/java/org/candlepin/resource/RulesResource.java:60
 msgid "Rules file is empty"
-msgstr ""
+msgstr "Le fichier de règles est vide"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1819,7 +1831,7 @@ msgstr ""
 #: src/main/java/org/candlepin/servlet/filter/CandlepinContentTypeFilter.java:63
 #, java-format
 msgid "Invalid Content-Type {0}"
-msgstr ""
+msgstr "Type de contenu non valide {0}"
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:68
 msgid "No ID for upstream subscription management application."
