@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.6
+Version: 4.0.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,11 @@ fi
 
 #raw
 %changelog
+* Thu Sep 02 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.7-1
+- Upgrade Artemis & Keycloak library versions (nmoumoul@redhat.com)
+- Serials left unrevoked after update (ojanus@redhat.com)
+- 1980678: Replace DELETE with TRUNCATE were possible (sdhome@redhat.com)
+
 * Tue Aug 03 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.6-1
 - 1989474: Fix for pool quantity calculation   - All unlimited pool quantities
   are restricted to -1   - Modified bonus pool & unmapped guest pool quantity
