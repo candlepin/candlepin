@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2021-08-12 03:01-0400\n"
-"PO-Revision-Date: 2021-02-09 09:40+0000\n"
-"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
+"PO-Revision-Date: 2021-09-01 13:04+0000\n"
+"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
 "Language-Team: Japanese <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ja/>\n"
 "Language: ja\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.4.2\n"
+"X-Generator: Weblate 4.8\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -320,7 +320,7 @@ msgstr "所有者 \"{0}\"{1} の自動アタッチは無効です。"
 #: src/main/java/org/candlepin/controller/Entitler.java:241
 #, java-format
 msgid "Auto-attach is disabled for owner \"{0}\"."
-msgstr ""
+msgstr "所有者 \"{0}\" の自動アタッチは無効です。"
 
 #: src/main/java/org/candlepin/controller/Entitler.java:304
 #: src/main/java/org/candlepin/controller/Entitler.java:508
@@ -444,35 +444,35 @@ msgstr "所有者 {0} の ueber 証明書の生成時の問題"
 msgid ""
 "The requested role \"{0}\" is not provided by a currently consumed "
 "subscription."
-msgstr ""
+msgstr "要求されたロール \"{0}\" は、現在使用中のサブスクリプションにより提供されていません。"
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:133
 #, java-format
 msgid ""
 "The requested add-on \"{0}\" is not provided by a currently consumed "
 "subscription."
-msgstr ""
+msgstr "要求されたアドオン \"{0}\" は、現在使用中のサブスクリプションにより提供されていません。"
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:187
 #, java-format
 msgid ""
 "The service level preference \"{0}\" is not provided by a currently consumed "
 "subscription."
-msgstr ""
+msgstr "サービスレベル設定 \"{0}\" は、現在使用中のサブスクリプションにより提供されていません。"
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:204
 #, java-format
 msgid ""
 "The requested usage preference \"{0}\" is not provided by a currently "
 "consumed subscription."
-msgstr ""
+msgstr "要求された使用設定 \"{0}\" は、現在使用中のサブスクリプションにより提供されていません。"
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:241
 #, java-format
 msgid ""
 "The requested service type preference \"{0}\" is not provided by a currently "
 "consumed subscription."
-msgstr ""
+msgstr "要求されたサービスタイプ設定 \"{0}\" は、現在使用中のサブスクリプションにより提供されていません。"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:53
 msgid "Not supported by a valid subscription."
@@ -773,10 +773,9 @@ msgstr "この Candlepin インスタンスでは、クラウド登録はサポ�
 # translation auto-copied from project Candlepin, version master, document
 # keys, author khasida
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:331
-#, fuzzy, java-format
-#| msgid "Organization {0} does not exist."
+#, java-format
 msgid "Organization {0} does not exist"
-msgstr "組織 {0} は存在しません。"
+msgstr "組織 {0} は存在しません"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:559
 msgid "Must specify at least one search criteria."
@@ -882,10 +881,8 @@ msgid "User \"{0}\" has already registered a personal consumer"
 msgstr "ユーザー \"{0}\" はすでにパーソナルコンシューマーを登録済みです"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1343
-#, fuzzy
-#| msgid "{0} is not authorized to register with organization {1}"
 msgid "Client is not authorized to register with any organization"
-msgstr "{0} は、組織 {1} への登録を承認されていません"
+msgstr "クライアントには、どの組織にも登録する権限がありません"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1353
 msgid "You must specify an organization for new units."
@@ -1481,13 +1478,13 @@ msgstr "製品 \"{0}\" がロックされています"
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more "
 "subscriptions"
-msgstr ""
+msgstr "1 つ以上のサブスクリプションによって参照される場合、製品 \"{0}\" を削除できません"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:2153
 #, java-format
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more products"
-msgstr ""
+msgstr "1 つ以上の製品によって参照される場合、製品 \"{0}\" を削除できません"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:2207
 #, java-format
@@ -1613,7 +1610,7 @@ msgstr "アクセスタイプ NONE はサポートされていません。"
 
 #: src/main/java/org/candlepin/resource/RulesResource.java:60
 msgid "Rules file is empty"
-msgstr ""
+msgstr "ルールファイルが空です"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1753,7 +1750,7 @@ msgstr ""
 #: src/main/java/org/candlepin/servlet/filter/CandlepinContentTypeFilter.java:63
 #, java-format
 msgid "Invalid Content-Type {0}"
-msgstr ""
+msgstr "無効なコンテンツタイプ {0}"
 
 #: src/main/java/org/candlepin/sync/ConsumerImporter.java:68
 msgid "No ID for upstream subscription management application."
