@@ -12,9 +12,109 @@
         </comment>
 
         <sql>
-            UPDATE cp2_products prod SET derived_product_uuid = pool.derived_product_uuid
-            FROM cp_pool pool
-            WHERE pool.product_uuid = prod.uuid
+            DROP TABLE IF EXISTS tmp_owner_product_map;
+            CREATE TEMPORARY TABLE tmp_owner_product_map (
+                owner_id VARCHAR(32) NOT NULL,
+                product_uuid VARCHAR(32) NOT NULL,
+                derived_product_uuid VARCHAR(32),
+                new_product_uuid VARCHAR(32) UNIQUE NOT NULL,
+                new_derived_product_uuid VARCHAR(32),
+                PRIMARY KEY (owner_id, product_uuid),
+                UNIQUE (owner_id, product_uuid, derived_product_uuid)
+            ) ON COMMIT DROP;
+
+            DROP TABLE IF EXISTS tmp_product_map;
+            CREATE TEMPORARY TABLE tmp_product_map (
+                owner_id VARCHAR(32) NOT NULL,
+                product_uuid VARCHAR(32) NOT NULL,
+                new_product_uuid VARCHAR(32) NOT NULL,
+                PRIMARY KEY (new_product_uuid),
+                UNIQUE (owner_id, product_uuid)
+            ) ON COMMIT DROP;
+
+            INSERT INTO tmp_owner_product_map(owner_id, product_uuid, derived_product_uuid, new_product_uuid, new_derived_product_uuid)
+                SELECT owner_id,
+                    product_uuid,
+                    derived_product_uuid,
+                    MD5(CONCAT(owner_id, product_uuid)) AS new_product_uuid,
+                    CASE WHEN derived_product_uuid IS NOT NULL THEN MD5(CONCAT(owner_id, derived_product_uuid))
+                        ELSE NULL
+                    END AS new_derived_product_uuid
+                    FROM (SELECT DISTINCT pool.owner_id, prod.uuid AS product_uuid, dprod.uuid AS derived_product_uuid
+                        FROM cp_pool pool
+                        JOIN cp2_products prod ON prod.uuid = pool.product_uuid
+                        LEFT JOIN cp2_products dprod ON dprod.uuid = pool.derived_product_uuid
+                        LEFT JOIN (SELECT pool_id, count(product_uuid) AS count FROM cp2_pool_provided_products GROUP BY pool_id) ppcount ON ppcount.pool_id = pool.id
+                        WHERE pool.type = 'NORMAL' AND (dprod.uuid IS NOT NULL OR ppcount.count IS NOT NULL)) deduped;
+
+            INSERT INTO tmp_product_map(owner_id, product_uuid, new_product_uuid)
+                SELECT owner_id, product_uuid, new_product_uuid FROM tmp_owner_product_map
+                UNION
+                SELECT owner_id, derived_product_uuid AS product_uuid, new_derived_product_uuid AS new_product_uuid FROM tmp_owner_product_map WHERE derived_product_uuid IS NOT NULL;
+
+            -- Copy over product details
+            INSERT INTO cp2_products(uuid, created, updated, multiplier, product_id, name, derived_product_uuid, entity_version, locked)
+                SELECT DISTINCT opmap.new_derived_product_uuid, now(), now(), prod.multiplier, prod.product_id, prod.name, null, 0, prod.locked
+                    FROM tmp_owner_product_map opmap
+                    JOIN cp2_products prod ON prod.uuid = opmap.derived_product_uuid;
+
+            INSERT INTO cp2_products(uuid, created, updated, multiplier, product_id, name, derived_product_uuid, entity_version, locked)
+                SELECT opmap.new_product_uuid, now(), now(), prod.multiplier, prod.product_id, prod.name, opmap.new_derived_product_uuid, 0, prod.locked
+                    FROM tmp_owner_product_map opmap
+                    JOIN cp2_products prod ON prod.uuid = opmap.product_uuid;
+
+            INSERT INTO cp2_product_content(id, created, updated, product_uuid, content_uuid, enabled)
+                SELECT MD5(CONCAT(pmap.new_product_uuid, pc.content_uuid)), now(), now(), pmap.new_product_uuid, pc.content_uuid, pc.enabled
+                    FROM tmp_product_map pmap
+                    JOIN cp2_product_content pc ON pc.product_uuid = pmap.product_uuid;
+
+            INSERT INTO cp2_product_attributes(product_uuid, name, value)
+                SELECT pmap.new_product_uuid, attrib.name, attrib.value
+                    FROM tmp_product_map pmap
+                    JOIN cp2_product_attributes attrib ON attrib.product_uuid = pmap.product_uuid;
+
+            INSERT INTO cp2_product_branding(id, created, updated, product_uuid, product_id, type, name)
+                SELECT MD5(CONCAT(pmap.new_product_uuid, pbrand.id)), now(), now(), pmap.new_product_uuid, pbrand.product_id, pbrand.type, pbrand.name
+                    FROM tmp_product_map pmap
+                    JOIN cp2_product_branding pbrand ON pbrand.product_uuid = pmap.product_uuid;
+
+            INSERT INTO cp2_product_dependent_products(product_uuid, element)
+                SELECT pmap.new_product_uuid, pdp.element
+                    FROM tmp_product_map pmap
+                    JOIN cp2_product_dependent_products pdp ON pdp.product_uuid = pmap.product_uuid;
+
+            -- Skip product certificate copying in the event the UUID or any other data we're fudging is part of the cert generation
+
+            INSERT INTO cp2_product_provided_products(product_uuid, provided_product_uuid)
+                SELECT opmap.new_product_uuid, ppp.product_uuid
+                    FROM tmp_owner_product_map opmap
+                    JOIN cp_pool pool ON pool.owner_id = opmap.owner_id AND pool.product_uuid = opmap.product_uuid
+                    JOIN cp2_pool_provided_products ppp ON ppp.pool_id = pool.id
+                UNION
+                SELECT opmap.new_derived_product_uuid, dpp.product_uuid
+                    FROM tmp_owner_product_map opmap
+                    JOIN cp_pool pool ON pool.owner_id = opmap.owner_id AND pool.derived_product_uuid = opmap.derived_product_uuid
+                    JOIN cp2_pool_derprov_products dpp ON dpp.pool_id = pool.id;
+
+            -- Update product references
+            UPDATE cp2_owner_products op
+                SET product_uuid = pmap.new_product_uuid
+                FROM tmp_product_map pmap
+                WHERE pmap.product_uuid = op.product_uuid AND pmap.owner_id = op.owner_id;
+
+            UPDATE cp_pool pool
+                SET product_uuid = pmap.new_product_uuid
+                FROM tmp_product_map pmap
+                WHERE pmap.owner_id = pool.owner_id AND pmap.product_uuid = pool.product_uuid;
+
+            UPDATE cp2_activation_key_products akp
+                SET product_uuid = pmap.new_product_uuid
+                FROM cp_activation_key ak
+                JOIN tmp_product_map pmap ON pmap.owner_id = ak.owner_id
+                WHERE ak.id = akp.key_id AND pmap.product_uuid = akp.product_uuid;
+
+            DROP TABLE IF EXISTS tmp_product_map;
+            DROP TABLE IF EXISTS tmp_owner_product_map;
         </sql>
     </changeSet>
 
@@ -24,25 +124,109 @@
         </comment>
 
         <sql>
-            UPDATE cp2_products prod JOIN cp_pool pool ON pool.product_uuid = prod.uuid
-            SET prod.derived_product_uuid = pool.derived_product_uuid
-        </sql>
-    </changeSet>
+            -- We cannot declare this table as temporary in MySQL/MariaDB due to the restriction on
+            -- using a temporary table multiple times in a single query, which we do a couple times
+            -- below with unions.
+            DROP TABLE IF EXISTS tmp_owner_product_map;
+            CREATE TABLE tmp_owner_product_map (
+                owner_id VARCHAR(32) NOT NULL,
+                product_uuid VARCHAR(32) NOT NULL,
+                derived_product_uuid VARCHAR(32),
+                new_product_uuid VARCHAR(32) UNIQUE NOT NULL,
+                new_derived_product_uuid VARCHAR(32),
+                PRIMARY KEY (owner_id, product_uuid),
+                UNIQUE (owner_id, product_uuid, derived_product_uuid)
+            );
 
-    <changeSet id="20210127105630-2" author="crog">
-        <comment>
-            Migrates provided products and derived provided products from pools to products
-        </comment>
+            DROP TABLE IF EXISTS tmp_product_map;
+            CREATE TEMPORARY TABLE tmp_product_map (
+                owner_id VARCHAR(32) NOT NULL,
+                product_uuid VARCHAR(32) NOT NULL,
+                new_product_uuid VARCHAR(32) NOT NULL,
+                PRIMARY KEY (new_product_uuid),
+                UNIQUE (owner_id, product_uuid)
+            );
 
-        <sql>
-            INSERT INTO cp2_product_provided_products
-                SELECT DISTINCT pool.product_uuid AS product_uuid, ppp.product_uuid AS provided_product_uuid
-                    FROM cp2_pool_provided_products ppp
-                    JOIN cp_pool pool ON pool.id = ppp.pool_id
+            INSERT INTO tmp_owner_product_map(owner_id, product_uuid, derived_product_uuid, new_product_uuid, new_derived_product_uuid)
+                SELECT owner_id,
+                    product_uuid,
+                    derived_product_uuid,
+                    MD5(CONCAT(owner_id, product_uuid)) AS new_product_uuid,
+                    CASE WHEN derived_product_uuid IS NOT NULL THEN MD5(CONCAT(owner_id, derived_product_uuid))
+                        ELSE NULL
+                    END AS new_derived_product_uuid
+                    FROM (SELECT DISTINCT pool.owner_id, prod.uuid AS product_uuid, dprod.uuid AS derived_product_uuid
+                        FROM cp_pool pool
+                        JOIN cp2_products prod ON prod.uuid = pool.product_uuid
+                        LEFT JOIN cp2_products dprod ON dprod.uuid = pool.derived_product_uuid
+                        LEFT JOIN (SELECT pool_id, count(product_uuid) AS count FROM cp2_pool_provided_products GROUP BY pool_id) ppcount ON ppcount.pool_id = pool.id
+                        WHERE pool.type = 'NORMAL' AND (dprod.uuid IS NOT NULL OR ppcount.count IS NOT NULL)) deduped;
+
+            INSERT INTO tmp_product_map(owner_id, product_uuid, new_product_uuid)
+                SELECT owner_id, product_uuid, new_product_uuid FROM tmp_owner_product_map
                 UNION
-                SELECT DISTINCT pool.derived_product_uuid AS product_uuid, dpp.product_uuid AS provided_product_uuid
-                    FROM cp2_pool_derprov_products dpp
-                    JOIN cp_pool pool ON pool.id = dpp.pool_id
+                SELECT owner_id, derived_product_uuid AS product_uuid, new_derived_product_uuid AS new_product_uuid FROM tmp_owner_product_map WHERE derived_product_uuid IS NOT NULL;
+
+            -- Copy over product details
+            INSERT INTO cp2_products(uuid, created, updated, multiplier, product_id, name, derived_product_uuid, entity_version, locked)
+                SELECT DISTINCT opmap.new_derived_product_uuid, now(), now(), prod.multiplier, prod.product_id, prod.name, null, 0, prod.locked
+                    FROM tmp_owner_product_map opmap
+                    JOIN cp2_products prod ON prod.uuid = opmap.derived_product_uuid;
+
+            INSERT INTO cp2_products(uuid, created, updated, multiplier, product_id, name, derived_product_uuid, entity_version, locked)
+                SELECT opmap.new_product_uuid, now(), now(), prod.multiplier, prod.product_id, prod.name, opmap.new_derived_product_uuid, 0, prod.locked
+                    FROM tmp_owner_product_map opmap
+                    JOIN cp2_products prod ON prod.uuid = opmap.product_uuid;
+
+            INSERT INTO cp2_product_content(id, created, updated, product_uuid, content_uuid, enabled)
+                SELECT MD5(CONCAT(pmap.new_product_uuid, pc.content_uuid)), now(), now(), pmap.new_product_uuid, pc.content_uuid, pc.enabled
+                    FROM tmp_product_map pmap
+                    JOIN cp2_product_content pc ON pc.product_uuid = pmap.product_uuid;
+
+            INSERT INTO cp2_product_attributes(product_uuid, name, value)
+                SELECT pmap.new_product_uuid, attrib.name, attrib.value
+                    FROM tmp_product_map pmap
+                    JOIN cp2_product_attributes attrib ON attrib.product_uuid = pmap.product_uuid;
+
+            INSERT INTO cp2_product_branding(id, created, updated, product_uuid, product_id, type, name)
+                SELECT MD5(CONCAT(pmap.new_product_uuid, pbrand.id)), now(), now(), pmap.new_product_uuid, pbrand.product_id, pbrand.type, pbrand.name
+                    FROM tmp_product_map pmap
+                    JOIN cp2_product_branding pbrand ON pbrand.product_uuid = pmap.product_uuid;
+
+            INSERT INTO cp2_product_dependent_products(product_uuid, element)
+                SELECT pmap.new_product_uuid, pdp.element
+                    FROM tmp_product_map pmap
+                    JOIN cp2_product_dependent_products pdp ON pdp.product_uuid = pmap.product_uuid;
+
+            -- Skip product certificate copying in the event the UUID or any other data we're fudging is part of the cert generation
+
+            INSERT INTO cp2_product_provided_products(product_uuid, provided_product_uuid)
+                SELECT opmap.new_product_uuid, ppp.product_uuid
+                    FROM tmp_owner_product_map opmap
+                    JOIN cp_pool pool ON pool.owner_id = opmap.owner_id AND pool.product_uuid = opmap.product_uuid
+                    JOIN cp2_pool_provided_products ppp ON ppp.pool_id = pool.id
+                UNION
+                SELECT opmap.new_derived_product_uuid, dpp.product_uuid
+                    FROM tmp_owner_product_map opmap
+                    JOIN cp_pool pool ON pool.owner_id = opmap.owner_id AND pool.derived_product_uuid = opmap.derived_product_uuid
+                    JOIN cp2_pool_derprov_products dpp ON dpp.pool_id = pool.id;
+
+            -- Update product references
+            UPDATE cp2_owner_products op
+                JOIN tmp_product_map pmap ON pmap.product_uuid = op.product_uuid AND pmap.owner_id = op.owner_id
+                SET op.product_uuid = pmap.new_product_uuid;
+
+            UPDATE cp_pool pool
+                JOIN tmp_product_map pmap ON pmap.owner_id = pool.owner_id AND pmap.product_uuid = pool.product_uuid
+                SET pool.product_uuid = pmap.new_product_uuid;
+
+            UPDATE cp2_activation_key_products akp
+                JOIN cp_activation_key ak ON ak.id = akp.key_id
+                JOIN tmp_product_map pmap ON pmap.owner_id = ak.owner_id AND pmap.product_uuid = akp.product_uuid
+                SET akp.product_uuid = pmap.new_product_uuid;
+
+            DROP TABLE IF EXISTS tmp_product_map;
+            DROP TABLE IF EXISTS tmp_owner_product_map;
         </sql>
     </changeSet>
 </databaseChangeLog>

@@ -255,6 +255,13 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Immutable
     private Set<Product> providedProducts;
 
+    @ElementCollection
+    @CollectionTable(name = "cp2_product_provided_products",
+        joinColumns = @JoinColumn(name = "product_uuid"))
+    @Column(name = "provided_product_uuid")
+    @Immutable
+    private Set<String> providedProductUuids;
+
     @ManyToOne
     @JoinColumn(name = "derived_product_uuid", nullable = true)
     private Product derivedProduct;
@@ -390,6 +397,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         this.setBranding(source.getBranding());
         this.setProvidedProducts(source.getProvidedProducts());
 
+        this.providedProductUuids = null;
+
         return this;
     }
 
@@ -440,6 +449,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         copy.setProvidedProducts(this.providedProducts.stream()
             .map(provProduct -> (Product) provProduct.clone())
             .collect(Collectors.toSet()));
+
+        copy.providedProductUuids = null;
 
         return copy;
     }
@@ -1184,6 +1195,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     @Override
+    @SuppressWarnings("checkstyle:indentation")
     public boolean equals(Object obj) {
         if (this == obj) {
             return true;
@@ -1230,10 +1242,20 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             equals = equals && Util.collectionsAreEqual(this.branding, that.branding,
                 (b1, b2) -> Objects.equals(b1, b2) ? 0 : 1);
 
-            // Compare provided product
-            equals = equals && Util.collectionsAreEqual(this.providedProducts, that.providedProducts,
-                productUuidComparator);
+            // Compare provided products
+            Collection<String> thisProvidedProductUuids = this.providedProductUuids != null ?
+                this.providedProductUuids :
+                this.providedProducts.stream()
+                    .map(Product::getUuid)
+                    .collect(Collectors.toList());
 
+            Collection<String> thatProvidedProductUuids = that.providedProductUuids != null ?
+                that.providedProductUuids :
+                that.providedProducts.stream()
+                    .map(Product::getUuid)
+                    .collect(Collectors.toList());
+
+            equals = equals && Util.collectionsAreEqual(thisProvidedProductUuids, thatProvidedProductUuids);
         }
 
         return equals;
@@ -1282,7 +1304,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             .append(this.attributes);
 
         if (this.derivedProduct != null) {
-            builder.append(this.derivedProduct.getEntityVersion());
+            builder.append(this.derivedProduct.getEntityVersion(useCache));
         }
 
         // Impl note:
@@ -1295,7 +1317,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         if (!this.providedProducts.isEmpty()) {
             accumulator = 0;
             for (Product product : this.providedProducts) {
-                accumulator += (product != null ? product.getEntityVersion() : 0);
+                accumulator += (product != null ? product.getEntityVersion(useCache) : 0);
             }
 
             builder.append(accumulator);
@@ -1348,6 +1370,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public Product setProvidedProducts(Collection<Product> providedProducts) {
         this.providedProducts = providedProducts != null ? new HashSet<>(providedProducts) : new HashSet<>();
+        this.providedProductUuids = null;
+
         return this;
     }
 
@@ -1363,7 +1387,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  boolean value if provided product is added or not.
      */
     public boolean addProvidedProduct(Product providedProduct) {
-        return providedProduct != null && this.providedProducts.add(providedProduct);
+        boolean result = providedProduct != null && this.providedProducts.add(providedProduct);
+        this.providedProductUuids = null;
+
+        return result;
     }
 
     /**
