@@ -62,7 +62,6 @@ public class CertificateSerialTranslator extends
         dest.setId(source.getId());
         dest.setSerial(source.getSerial());
         dest.setExpiration(source.getExpiration());
-        dest.setCollected(source.isCollected());
         dest.setRevoked(source.isRevoked());
 
         return dest;

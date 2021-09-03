@@ -699,11 +699,6 @@ public class InfoAdapter {
             }
 
             @Override
-            public Boolean isCollected() {
-                return source.getCollected();
-            }
-
-            @Override
             public Date getExpiration() {
                 return Util.toDate(source.getExpiration());
             }

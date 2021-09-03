@@ -15,10 +15,14 @@
 package org.candlepin.model;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
 
-import org.hibernate.criterion.Restrictions;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 import javax.inject.Singleton;
+import javax.persistence.Query;
 
 /**
  * IdentityCertificateCurator
@@ -31,9 +35,47 @@ public class IdentityCertificateCurator extends AbstractHibernateCurator<Identit
         super(IdentityCertificate.class);
     }
 
-    public IdentityCertificate getBySerialNumber(Long serialNumber) {
-        return (IdentityCertificate) currentSession().createCriteria(IdentityCertificate.class)
-            .add(Restrictions.eq("serial", serialNumber))
-            .uniqueResult();
+    /**
+     * Lists all expired identity certificates that are not revoked.
+     *
+     * @return a list of expired certificates
+     */
+    @SuppressWarnings("unchecked")
+    public List<ExpiredCertificate> listAllExpired() {
+        String hql = "SELECT new org.candlepin.model.ExpiredCertificate(c.id, s.id)" +
+            " FROM IdentityCertificate c" +
+            " INNER JOIN c.serial s " +
+            " WHERE s.expiration < :nowDate";
+
+        Query query = this.getEntityManager().createQuery(hql, ExpiredCertificate.class);
+
+        return (List<ExpiredCertificate>) query
+            .setParameter("nowDate", new Date())
+            .getResultList();
     }
+
+    /**
+     * Deletes identity certificates belonging to the given ids
+     *
+     * @param idsToDelete ids to be deleted
+     * @return a number of deleted certificates
+     */
+    @Transactional
+    public int deleteByIds(Collection<String> idsToDelete) {
+        if (idsToDelete == null || idsToDelete.isEmpty()) {
+            return 0;
+        }
+
+        String query = "DELETE FROM IdentityCertificate c WHERE c.id IN (:idsToDelete)";
+
+        int deleted = 0;
+        for (Collection<String> idsToDeleteBlock : this.partition(idsToDelete)) {
+            deleted += this.currentSession().createQuery(query)
+                .setParameter("idsToDelete", idsToDeleteBlock)
+                .executeUpdate();
+        }
+
+        return deleted;
+    }
+
 }

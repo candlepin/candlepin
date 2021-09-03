@@ -142,10 +142,6 @@ public class CdnResource implements CdnApi {
                         certSerial.setSerial(Long.valueOf(certSerialDTO.getSerial()));
                     }
 
-                    if (certSerialDTO.getCollected() != null) {
-                        certSerial.setCollected(certSerialDTO.getCollected());
-                    }
-
                     if (certSerialDTO.getRevoked() != null) {
                         certSerial.setRevoked(certSerialDTO.getRevoked());
                     }

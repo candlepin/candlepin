@@ -54,16 +54,6 @@ public interface CertificateSerialInfo extends ServiceAdapterModel {
     Boolean isRevoked();
 
     /**
-     * Checks if the linking certificate(s) has/have been collected. If the collected flag has not
-     * been set, this method returns null.
-     *
-     * @return
-     *  true if the linking certificate(s) has/have been collected, or null if the collected flag
-     *  has not been set
-     */
-    Boolean isCollected();
-
-    /**
      * Fetches the expiration date/time of the linking certificate(s). If the expiration has not
      * been set, this method returns null.
      *

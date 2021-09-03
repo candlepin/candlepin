@@ -66,27 +66,26 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Provider;
 
-/**
- * HypervisorResource
- */
-public class HypervisorResource implements HypervisorsApi {
-    private static Logger log = LoggerFactory.getLogger(HypervisorResource.class);
 
-    private ConsumerCurator consumerCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private ConsumerResource consumerResource;
-    private I18n i18n;
-    private OwnerCurator ownerCurator;
-    private Provider<GuestMigration> migrationProvider;
-    private ModelTranslator translator;
-    private ConsumerType hypervisorType;
-    private JobManager jobManager;
-    private ObjectMapper mapper;
-    private PrincipalProvider principalProvider;
+
+public class HypervisorResource implements HypervisorsApi {
+    private static final Logger log = LoggerFactory.getLogger(HypervisorResource.class);
+
+    private final ConsumerCurator consumerCurator;
+    private final ConsumerResource consumerResource;
+    private final I18n i18n;
+    private final OwnerCurator ownerCurator;
+    private final Provider<GuestMigration> migrationProvider;
+    private final ModelTranslator translator;
+    private final ConsumerType hypervisorType;
+    private final JobManager jobManager;
+    private final ObjectMapper mapper;
+    private final PrincipalProvider principalProvider;
 
     @Inject
     public HypervisorResource(ConsumerResource consumerResource, ConsumerCurator consumerCurator,
@@ -94,18 +93,17 @@ public class HypervisorResource implements HypervisorsApi {
         Provider<GuestMigration> migrationProvider, ModelTranslator translator, JobManager jobManager,
         PrincipalProvider principalProvider,
         @Named("HypervisorUpdateJobObjectMapper") final ObjectMapper mapper) {
-        this.consumerResource = consumerResource;
-        this.consumerCurator = consumerCurator;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.i18n = i18n;
-        this.ownerCurator = ownerCurator;
-        this.migrationProvider = migrationProvider;
-        this.translator = translator;
-        this.jobManager = jobManager;
-        this.mapper = mapper;
+        this.consumerResource = Objects.requireNonNull(consumerResource);
+        this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.migrationProvider = Objects.requireNonNull(migrationProvider);
+        this.translator = Objects.requireNonNull(translator);
+        this.jobManager = Objects.requireNonNull(jobManager);
+        this.mapper = Objects.requireNonNull(mapper);
+        this.principalProvider = Objects.requireNonNull(principalProvider);
 
         this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
-        this.principalProvider = principalProvider;
     }
 
     /**

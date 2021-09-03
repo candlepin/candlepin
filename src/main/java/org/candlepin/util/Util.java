@@ -22,8 +22,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.collections.Closure;
-import org.apache.commons.collections.ClosureUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +37,6 @@ import java.net.InetAddress;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -69,14 +66,9 @@ import java.util.stream.Collectors;
  */
 public class Util {
 
-    public static final String UTC_STR = "UTC";
-    private static Logger log = LoggerFactory.getLogger(Util.class);
-    private static ObjectMapper mapper = new ObjectMapper();
-
-    /**
-     * Invokes the close() method of any given object, if present.
-     */
-    private static Closure closeInvoker = ClosureUtils.invokerClosure("close");
+    private static final Logger log = LoggerFactory.getLogger(Util.class);
+    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final String UTC_STR = "UTC";
 
     private Util() {
         // default ctor
@@ -144,16 +136,6 @@ public class Util {
         return calendar.getTime();
     }
 
-    public static Date toDate(String dt) {
-        SimpleDateFormat fmt = new SimpleDateFormat("MM/dd/yyyy");
-        try {
-            return fmt.parse(dt);
-        }
-        catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     public static Date toDate(OffsetDateTime dt) {
         if (dt == null) {
             return null;
@@ -171,36 +153,6 @@ public class Util {
         }
 
         return str.equals(str1);
-    }
-
-    /**
-     * Invokes the close() method on the given closable object, and logs that
-     * it is closing "msg". If closable is null, the function simply returns.
-     *
-     * For example, if msg = AMQPSession, the logs will show something like
-     * this:  INFO Going to close: AMQPSession
-     *
-     * @param closable Object with a close() method.
-     * @param msg indicates what the closable is and used to log informational
-     * messages.
-     */
-    public static void closeSafely(Object closable, String msg) {
-        if (closable == null) {
-            return;
-        }
-        try {
-            log.info("Going to close: " + msg);
-            closeInvoker.execute(closable);
-        }
-        catch (Exception e) {
-            log.warn(msg + ".close() was not successful!", e);
-        }
-    }
-
-    public static String capitalize(String str) {
-        char[] chars = str.toCharArray();
-        chars[0] = Character.toUpperCase(chars[0]);
-        return new String(chars);
     }
 
     public static long generateUniqueLong() {
@@ -326,13 +278,13 @@ public class Util {
 
 
     public static String toJson(Object anObject) throws JsonProcessingException {
-        return mapper.writeValueAsString(anObject);
+        return MAPPER.writeValueAsString(anObject);
     }
 
     public static <T> T fromJson(String json, Class<T> clazz) {
         T output = null;
         try {
-            output = mapper.readValue(json, clazz);
+            output = MAPPER.readValue(json, clazz);
         }
         catch (Exception e) {
             log.error("Could no de-serialize the following json " + json, e);

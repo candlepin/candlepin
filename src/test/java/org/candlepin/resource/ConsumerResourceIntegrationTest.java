@@ -729,7 +729,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         CertificateSerial serial = new CertificateSerial(serialDTO.getId(),
             Util.toDate(serialDTO.getExpiration()));
         serial.setSerial(serialDTO.getSerial());
-        serial.setCollected(serialDTO.getCollected());
         serial.setRevoked(serialDTO.getRevoked());
 
         Calendar cal = Calendar.getInstance();

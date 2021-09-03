@@ -69,7 +69,6 @@ public class CertificateSerialTranslator implements ObjectTranslator<Certificate
             .created(Util.toDateTime(source.getCreated()))
             .updated(Util.toDateTime(source.getUpdated()))
             .expiration(Util.toDateTime(source.getExpiration()))
-            .collected(source.isCollected())
             .revoked(source.isRevoked());
 
         return dest;

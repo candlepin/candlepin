@@ -15,7 +15,6 @@
 package org.candlepin.model;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.config.Configuration;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
@@ -181,9 +180,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
-    @Inject private Configuration config;
     @Inject private FactValidator factValidator;
-    @Inject private OwnerCurator ownerCurator;
     @Inject private Provider<HostCache> cachedHostsProvider;
     @Inject private PrincipalProvider principalProvider;
 
@@ -655,10 +652,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .setParameter("reporter", reporterId)
             .setParameter("ownerKey", ownerKey)
             .executeUpdate();
-    }
-
-    private boolean factsChanged(Map<String, String> updatedFacts, Map<String, String> existingFacts) {
-        return !existingFacts.equals(updatedFacts);
     }
 
     /**
@@ -1515,6 +1508,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      *  A list of the all the distinct values of the system purpose attributes that the consumers
      *  belonging to the specified owner have set
      */
+    @SuppressWarnings("unchecked")
     public List<String> getDistinctSyspurposeValuesByOwner(Owner owner,
         SystemPurposeAttributeType sysPurposeAttribute) throws RuntimeException {
 
@@ -1550,6 +1544,62 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .distinct(true);
 
         return entityManager.createQuery(query).getResultList();
+    }
+
+    /**
+     * Takes a list of identity certificate ids and unlinks them from consumers.
+     *
+     * @param certIds certificate ids to be unlinked
+     * @return a number of unlinked consumers
+     */
+    @Transactional
+    public int unlinkIdCertificates(Collection<String> certIds) {
+        if (certIds == null || certIds.isEmpty()) {
+            return 0;
+        }
+
+        String query = "UPDATE Consumer c" +
+            " SET c.idCert = NULL, c.updated = :date" +
+            " WHERE c.idCert.id IN (:cert_ids)";
+
+        int updated = 0;
+        Date updateTime = new Date();
+        for (Collection<String> certIdBlock : this.partition(certIds)) {
+            updated += this.currentSession().createQuery(query)
+                .setParameter("date", updateTime)
+                .setParameter("cert_ids", certIdBlock)
+                .executeUpdate();
+        }
+
+        return updated;
+    }
+
+    /**
+     * Takes a list of content access certificate ids and unlinks them from consumers.
+     *
+     * @param certIds certificate ids to be unlinked
+     * @return a number of unlinked consumers
+     */
+    @Transactional
+    public int unlinkCaCertificates(Collection<String> certIds) {
+        if (certIds == null || certIds.isEmpty()) {
+            return 0;
+        }
+
+        String query = "UPDATE Consumer c" +
+            " SET c.contentAccessCert = NULL, c.updated = :date" +
+            " WHERE c.contentAccessCert.id IN (:cert_ids)";
+
+        int updated = 0;
+        Date updateTime = new Date();
+        for (Collection<String> certIdBlock : this.partition(certIds)) {
+            updated += this.currentSession().createQuery(query)
+                .setParameter("date", updateTime)
+                .setParameter("cert_ids", certIdBlock)
+                .executeUpdate();
+        }
+
+        return updated;
     }
 
 }

@@ -29,7 +29,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.model.Product.Attributes;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -63,17 +62,16 @@ import javax.persistence.EntityManager;
  */
 public class ConsumerCuratorTest extends DatabaseTestFixture {
 
-    @Inject private Configuration config;
-    @Inject private DeletedConsumerCurator dcc;
-    @Inject private EntityManager em;
+    @Inject
+    private Configuration config;
+    @Inject
+    private DeletedConsumerCurator dcc;
+    @Inject
+    private EntityManager em;
 
     private Owner owner;
     private ConsumerType ct;
     private Consumer factConsumer;
-    private Set<String> typeLabels;
-    private List<String> skus;
-    private List<String> subscriptionIds;
-    private List<String> contracts;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -91,147 +89,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         field.set(this.consumerCurator, new FactValidator(this.config, this.i18nProvider));
 
         factConsumer = new Consumer("a consumer", "username", owner, ct);
-
-        typeLabels = null;
-        skus = null;
-        subscriptionIds = null;
-        contracts = null;
-    }
-
-    private Pool createPool(Owner owner, Product product, long quantity, Date startDate, Date endDate,
-        String contractNumber, String subscriptionId, String subscriptionSubKey) {
-
-        Pool pool = new Pool()
-            .setOwner(owner)
-            .setProduct(product)
-            .setQuantity(quantity)
-            .setStartDate(startDate)
-            .setEndDate(endDate)
-            .setContractNumber(contractNumber)
-            .setSourceSubscription(new SourceSubscription(subscriptionId, subscriptionSubKey));
-
-        return this.poolCurator.create(pool);
-    }
-
-    private Product createConsumerWithBindingToMKTProduct(Owner owner) {
-        Consumer c = createConsumer(owner);
-        return createMktProductAndBindItToConsumer(owner, c);
-    }
-
-    private Product createMktProductAndBindItToConsumer(Owner owner, Consumer c) {
-        String id = String.valueOf(TestUtil.randomInt());
-        Product product = createTransientMarketingProduct(id);
-        product = createProduct(product, owner);
-        Pool pool = createPool(owner, product);
-        createEntitlement(owner, c, pool, null);
-        return product;
-    }
-
-    private Product createTransientMarketingProduct(String productId) {
-        Product p = new Product(productId, "test-product-" + productId);
-        p.setAttribute(Attributes.TYPE, "MKT");
-
-        return p;
-    }
-
-    private Product createProductAndBindItToConsumer(Owner owner, Consumer c) {
-        Product product = createProduct(owner);
-        Pool pool = createPool(owner, product);
-        createEntitlement(owner, c, pool, null);
-        return product;
-    }
-
-    private void createProductAndBindItToConsumer(Owner owner, Consumer consumer, String contractName) {
-        Product product = createProduct(owner);
-
-        Pool pool = new Pool()
-            .setOwner(owner)
-            .setProduct(product)
-            .setQuantity(1L)
-            .setStartDate(Util.yesterday())
-            .setEndDate(Util.tomorrow())
-            .setContractNumber(contractName);
-
-        pool = this.poolCurator.create(pool);
-
-        this.createEntitlement(owner, consumer, pool, null);
-    }
-
-    private Pool createPoolAndBindItToConsumer(Owner owner, Consumer c) {
-        Product product = createProduct(owner);
-        Pool pool = createPool(owner, product);
-        createEntitlement(owner, c, pool, null);
-        return pool;
-    }
-
-    private Pool createConsumerWithBindingToProduct(Owner owner, Product product) {
-        Pool pool = createPool(owner, product);
-        createConsumerAndEntitlement(owner, pool);
-        return pool;
-    }
-
-    private Pool createConsumerWithBindingToProduct(Owner owner, Product product, String contract) {
-        Pool pool = new Pool()
-            .setOwner(owner)
-            .setProduct(product)
-            .setQuantity(1L)
-            .setStartDate(Util.yesterday())
-            .setEndDate(Util.tomorrow())
-            .setContractNumber(contract);
-
-        pool = this.poolCurator.create(pool);
-
-        createConsumerAndEntitlement(owner, pool);
-        return pool;
-    }
-
-    private void createConsumerAndEntitlement(Owner owner, Pool pool) {
-        Consumer c = createConsumer(owner);
-        createEntitlement(owner, c, pool, null);
-    }
-
-    private Consumer createConsumerAndBindItToProduct(Owner owner, Product p) {
-        Consumer c = createConsumer(owner);
-        Pool pool1 = createPool(owner, p);
-        createEntitlement(owner, c, pool1, null);
-        return c;
-    }
-
-    private Consumer createConsumerAndBindItToProduct(Owner owner, Product product, String subId) {
-        Consumer consumer = createConsumer(owner);
-
-        Pool pool = new Pool()
-            .setOwner(owner)
-            .setProduct(product)
-            .setQuantity(1L)
-            .setStartDate(Util.yesterday())
-            .setEndDate(Util.tomorrow())
-            .setSourceSubscription(new SourceSubscription(subId, "subsSubKey"));
-
-        pool = this.poolCurator.create(pool);
-
-        createEntitlement(owner, consumer, pool, null);
-        return consumer;
-    }
-
-    private Consumer createConsumerAndBindItToProduct(Owner owner, Product product, String subId,
-        String contract) {
-
-        Consumer consumer = createConsumer(owner);
-
-        Pool pool = new Pool()
-            .setOwner(owner)
-            .setProduct(product)
-            .setQuantity(1L)
-            .setStartDate(Util.yesterday())
-            .setEndDate(Util.tomorrow())
-            .setContractNumber(contract)
-            .setSourceSubscription(new SourceSubscription(subId, "master"));
-
-        pool = this.poolCurator.create(pool);
-
-        createEntitlement(owner, consumer, pool, null);
-        return consumer;
     }
 
     private List<Consumer> getConsumersDirect() {
@@ -361,7 +218,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetConsumerInputPartioning() {
+    public void testGetConsumerInputPartitioning() {
         int partitionBlockSize = 5;
 
         ConsumerCurator curator = Mockito.spy(consumerCurator);
@@ -1584,7 +1441,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void testConsumerDeleteCascadesToContentTag() {
         Consumer c = new Consumer("testConsumer", "testUser", owner, ct);
-        c.setContentTags(new HashSet<>(Arrays.asList(new String[] { "t1", "t2" })));
+        c.setContentTags(new HashSet<>(Arrays.asList(new String[]{"t1", "t2"})));
 
         String countQuery = "SELECT COUNT(*) FROM cp_consumer_content_tags";
 
@@ -1597,4 +1454,92 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(new BigInteger("0"), i);
     }
 
+    @Test
+    public void unlinksIdCerts() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
+        IdentityCertificate idCert1 = createIdCert();
+        IdentityCertificate idCert2 = createIdCert();
+        consumer.setIdCert(idCert1);
+        consumer2.setIdCert(idCert2);
+        consumerCurator.create(consumer);
+        consumerCurator.create(consumer2);
+
+        int unlinkedConsumers = consumerCurator.unlinkIdCertificates(List.of(
+            idCert1.getId(),
+            idCert2.getId()
+        ));
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        assertEquals(2, unlinkedConsumers);
+        for (Consumer c : this.consumerCurator.listAll()) {
+            assertNull(c.getIdCert());
+        }
+    }
+
+    @Test
+    public void noIdCertsToUnlink() {
+        assertEquals(0, consumerCurator.unlinkIdCertificates(null));
+        assertEquals(0, consumerCurator.unlinkIdCertificates(List.of()));
+        assertEquals(0, consumerCurator.unlinkIdCertificates(List.of("UnknownId")));
+    }
+
+    @Test
+    public void unlinksContentAccessCerts() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
+        ContentAccessCertificate caCert1 = createExpiredContentAccessCert(consumer);
+        ContentAccessCertificate caCert2 = createExpiredContentAccessCert(consumer2);
+        consumer.setContentAccessCert(caCert1);
+        consumer2.setContentAccessCert(caCert2);
+        consumerCurator.create(consumer);
+        consumerCurator.create(consumer2);
+
+        int unlinkedConsumers = consumerCurator.unlinkCaCertificates(List.of(
+            caCert1.getId(),
+            caCert2.getId()
+        ));
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        assertEquals(2, unlinkedConsumers);
+        for (Consumer c : this.consumerCurator.listAll()) {
+            assertNull(c.getContentAccessCert());
+        }
+    }
+
+    @Test
+    public void noContentAccessCertsToUnlink() {
+        assertEquals(0, consumerCurator.unlinkCaCertificates(null));
+        assertEquals(0, consumerCurator.unlinkCaCertificates(List.of()));
+        assertEquals(0, consumerCurator.unlinkCaCertificates(List.of("UnknownId")));
+    }
+
+    private IdentityCertificate createIdCert() {
+        IdentityCertificate idCert = TestUtil.createIdCert(TestUtil.createDateOffset(2, 0, 0));
+        return saveCert(idCert);
+    }
+
+    private ContentAccessCertificate createExpiredContentAccessCert(Consumer consumer) {
+        ContentAccessCertificate certificate = new ContentAccessCertificate();
+        certificate.setKey("crt_key");
+        certificate.setSerial(new CertificateSerial(Util.yesterday()));
+        certificate.setCert("cert_1");
+        certificate.setContent("content_1");
+        consumer.setContentAccessCert(certificate);
+        return saveCert(certificate);
+    }
+
+    private IdentityCertificate saveCert(IdentityCertificate cert) {
+        cert.setId(null);
+        certSerialCurator.create(cert.getSerial());
+        return identityCertificateCurator.create(cert);
+    }
+
+    private ContentAccessCertificate saveCert(ContentAccessCertificate cert) {
+        cert.setId(null);
+        certSerialCurator.create(cert.getSerial());
+        return caCertCurator.create(cert);
+    }
 }
