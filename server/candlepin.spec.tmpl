@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.1.30
+Version: 3.1.31
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,12 @@ fi
 
 #raw
 %changelog
+* Mon Sep 06 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.31-1
+- 1958127: Large CRL file operation causes OOM error in Candlepin
+  (ojanus@redhat.com)
+- Serials left unrevoked after update (ojanus@redhat.com)
+- 1980681: Replace DELETE with TRUNCATE were possible (sdhome@redhat.com)
+
 * Wed Jul 28 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.30-1
 - 1985360: Don't filter out content with no arch specified
   (nmoumoul@redhat.com)
