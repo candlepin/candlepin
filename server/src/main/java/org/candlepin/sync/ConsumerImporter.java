@@ -104,7 +104,6 @@ public class ConsumerImporter {
          */
         if (idcert != null) {
             CertificateSerial cs = new CertificateSerial();
-            cs.setCollected(idcert.getSerial().isCollected());
             cs.setExpiration(idcert.getSerial().getExpiration());
             cs.setUpdated(idcert.getSerial().getUpdated());
             cs.setCreated(idcert.getSerial().getCreated());

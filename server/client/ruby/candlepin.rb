@@ -340,8 +340,7 @@ module Candlepin
 
     module CrlResource
       def get_crl
-        res = get_text('/crl')
-        OpenSSL::X509::CRL.new(res.content)
+        get('/crl')
       end
     end
 

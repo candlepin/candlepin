@@ -52,7 +52,6 @@ public class ImporterUtilsTest {
         serialDTO.setUpdated(new Date());
         serialDTO.setCreated(new Date());
         serialDTO.setRevoked(false);
-        serialDTO.setCollected(true);
         serialDTO.setExpiration(new Date());
         certDTO.setSerial(serialDTO);
 
@@ -67,7 +66,6 @@ public class ImporterUtilsTest {
         assertNotNull(certSerialEntity);
         // No need to assert on CertificateSerial's id or serial fields since they aren't populated.
         assertEquals(serialDTO.getExpiration(), certSerialEntity.getExpiration());
-        assertEquals(serialDTO.isCollected(), certSerialEntity.isCollected());
         assertEquals(serialDTO.isRevoked(), certSerialEntity.isRevoked());
         assertEquals(serialDTO.getCreated(), certSerialEntity.getCreated());
         assertEquals(serialDTO.getUpdated(), certSerialEntity.getUpdated());

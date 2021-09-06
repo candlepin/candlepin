@@ -851,7 +851,6 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
 
                 serial.setSerial(serialInfo.getSerial());
                 serial.setRevoked(serialInfo.isRevoked());
-                serial.setCollected(serialInfo.isCollected());
                 serial.setExpiration(serialInfo.getExpiration());
 
                 cert.setSerial(serial);
@@ -876,7 +875,6 @@ public class HostedTestSubscriptionServiceAdapter implements SubscriptionService
 
                 serial.setSerial(serialInfo.getSerial());
                 serial.setRevoked(serialInfo.isRevoked());
-                serial.setCollected(serialInfo.isCollected());
                 serial.setExpiration(serialInfo.getExpiration());
 
                 cert.setSerial(serial);

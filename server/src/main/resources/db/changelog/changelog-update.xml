@@ -156,4 +156,5 @@
     <include file="db/changelog/20201103112757-purge-current-sca-certs.xml"/>
     <include file="db/changelog/20210211154615-add-owner-last-content-updated-column.xml"/>
     <include file="db/changelog/20210412145432-drop_content_cache.xml"/>
+    <include file="db/changelog/20210622100950-cert_serials_drop_collected_column.xml"/>
 </databaseChangeLog>

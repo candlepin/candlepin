@@ -14,10 +14,11 @@
  */
 package org.candlepin.resource;
 
-import static org.candlepin.test.TestUtil.createIdCert;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -235,7 +236,8 @@ public class ConsumerResourceTest {
             consumerEnricher,
             migrationProvider,
             translator,
-            mockJobManager);
+            mockJobManager
+        );
 
         mockedConsumerResource = Mockito.spy(consumerResource);
     }
@@ -449,9 +451,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testIdCertGetsRegenerated() throws Exception {
-        // using lconsumer simply to avoid hiding consumer. This should
-        // get renamed once we refactor this test suite.
+    public void expiredIdCertGetsRegenerated() throws Exception {
         Consumer consumer = createConsumer(createOwner());
         ComplianceStatus status = new ComplianceStatus();
         when(mockComplianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))
@@ -465,21 +465,34 @@ public class ConsumerResourceTest {
 
         ConsumerDTO c = consumerResource.getConsumer(consumer.getUuid());
 
-        assertFalse(origserial.equals(c.getIdCertificate().getSerial().getSerial()));
+        assertNotEquals(origserial, c.getIdCertificate().getSerial().getSerial());
     }
 
     @Test
-    public void testIdCertDoesNotRegenerate() throws Exception {
+    public void validIdCertDoesNotRegenerate() {
         Consumer consumer = createConsumer(createOwner());
         ComplianceStatus status = new ComplianceStatus();
         when(mockComplianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))
             .thenReturn(status);
         consumer.setIdCert(createIdCert(TestUtil.createDate(2025, 6, 9)));
-        BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
+        BigInteger origSerial = consumer.getIdCert().getSerial().getSerial();
 
         ConsumerDTO c = consumerResource.getConsumer(consumer.getUuid());
 
-        assertEquals(origserial, c.getIdCertificate().getSerial().getSerial());
+        assertEquals(origSerial, c.getIdCertificate().getSerial().getSerial());
+    }
+
+    @Test
+    public void doesNotGenerateMissingIdCert() throws GeneralSecurityException, IOException {
+        Consumer consumer = createConsumer(createOwner());
+        ComplianceStatus status = new ComplianceStatus();
+        when(mockComplianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))
+            .thenReturn(status);
+        when(mockIdentityCertServiceAdapter.regenerateIdentityCert(consumer)).thenReturn(createIdCert());
+
+        ConsumerDTO c = consumerResource.getConsumer(consumer.getUuid());
+
+        assertNull(c.getIdCertificate());
     }
 
     @Test
@@ -514,7 +527,7 @@ public class ConsumerResourceTest {
 
         Response r = consumerResource.bind("fakeConsumer", null, prodIds,
             null, null, null, false, null, null);
-        assertEquals(null, r.getEntity());
+        assertNull(r.getEntity());
     }
 
     @Test
@@ -861,6 +874,20 @@ public class ConsumerResourceTest {
         assertThrows(OptimisticLockException.class, () ->
             consumerResource.deleteConsumer(consumer.getUuid(), uap)
         );
+    }
+
+    private IdentityCertificate createIdCert() {
+        IdentityCertificate idCert = TestUtil.createIdCert();
+        CertificateSerial serial = idCert.getSerial();
+        serial.setId(Util.generateUniqueLong());
+        return idCert;
+    }
+
+    private IdentityCertificate createIdCert(Date expiration) {
+        IdentityCertificate idCert = TestUtil.createIdCert(expiration);
+        CertificateSerial serial = idCert.getSerial();
+        serial.setId(Util.generateUniqueLong());
+        return idCert;
     }
 
 }

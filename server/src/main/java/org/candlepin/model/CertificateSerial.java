@@ -54,11 +54,6 @@ public class CertificateSerial extends AbstractHibernateObject<CertificateSerial
     @Column(nullable = false)
     private boolean revoked;
 
-    // Set to true if this serial is already a part of the CRL
-    @NotNull
-    @Column(nullable = false)
-    private boolean collected;
-
     // The expiration.
     private Date expiration;
 
@@ -109,21 +104,6 @@ public class CertificateSerial extends AbstractHibernateObject<CertificateSerial
      * {@inheritDoc}
      */
     @Override
-    public Boolean isCollected() {
-        return collected;
-    }
-
-    /**
-     * @param collected the collected to set
-     */
-    public void setCollected(Boolean collected) {
-        this.collected = collected != null ? collected : false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Date getExpiration() {
         return expiration;
     }
@@ -140,8 +120,8 @@ public class CertificateSerial extends AbstractHibernateObject<CertificateSerial
         String date = expiration != null ? String.format("%1$tF %1$tT%1$tz", expiration) : null;
 
         return String.format(
-            "CertificateSerial [id: %s, serial: %s, expiration: %s, collected: %b, revoked: %b]",
-            this.getId(), this.getSerial(), date, this.isCollected(), this.isRevoked());
+            "CertificateSerial [id: %s, serial: %s, expiration: %s, revoked: %b]",
+            this.getId(), this.getSerial(), date, this.isRevoked());
     }
 
     /**
