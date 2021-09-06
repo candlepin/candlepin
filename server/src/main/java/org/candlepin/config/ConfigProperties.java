@@ -18,7 +18,7 @@ package org.candlepin.config;
 import static org.candlepin.common.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
 
 import org.candlepin.async.tasks.ActiveEntitlementJob;
-import org.candlepin.async.tasks.CRLUpdateJob;
+import org.candlepin.async.tasks.CertificateCleanupJob;
 import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
 import org.candlepin.async.tasks.ImportRecordCleanerJob;
 import org.candlepin.async.tasks.JobCleaner;
@@ -234,21 +234,6 @@ public class ConfigProperties {
         "management_enabled," +
         "virt_only";
 
-    /**
-     * The number of days from today to set the nextUpdate date when generating the CRL.
-     * See http://security.stackexchange.com/a/55784
-     */
-    public static final String CRL_NEXT_UPDATE_DELTA = "candlepin.crl.nextupdate.delta_days";
-    public static final String CRL_FILE_PATH = "candlepin.crl.file";
-
-    /**
-     * The number of uncollected and expired cert serials will be processed at a time while updating
-     * the CRL file. It is important to note that both uncollected and expired serials will be batched
-     * at the specified amount.
-     *
-     */
-    public static final String CRL_SERIAL_BATCH_SIZE = "candlepin.crl.update_serial_batch_size";
-
     public static final String IDENTITY_CERT_YEAR_ADDENDUM = "candlepin.identityCert.yr.addendum";
     /**
      * Identity certificate expiry threshold in days
@@ -284,7 +269,7 @@ public class ConfigProperties {
     public static final String ASYNC_JOBS_TRIGGERABLE_JOBS = "candlepin.async.triggerable_jobs";
     public static final String[] ASYNC_JOBS_TRIGGERABLE_JOBS_LIST = new String[] {
         ActiveEntitlementJob.JOB_KEY,
-        CRLUpdateJob.JOB_KEY,
+        CertificateCleanupJob.JOB_KEY,
         ExpiredPoolsCleanupJob.JOB_KEY,
         ImportRecordCleanerJob.JOB_KEY,
         JobCleaner.JOB_KEY,
@@ -395,9 +380,6 @@ public class ConfigProperties {
             this.put(AUDIT_FILTER_DEFAULT_POLICY, "DO_FILTER");
 
             this.put(PRETTY_PRINT, "false");
-            this.put(CRL_FILE_PATH, "/var/lib/candlepin/candlepin-crl.crl");
-            this.put(CRL_NEXT_UPDATE_DELTA, "1");
-            this.put(CRL_SERIAL_BATCH_SIZE, "1000000");
 
             this.put(SYNC_WORK_DIR, "/var/cache/candlepin/sync");
             this.put(CONSUMER_FACTS_MATCHER, ".*");
@@ -476,8 +458,8 @@ public class ConfigProperties {
 
             this.put(jobConfig(ActiveEntitlementJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ActiveEntitlementJob.DEFAULT_SCHEDULE);
-            this.put(jobConfig(CRLUpdateJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
-                CRLUpdateJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(CertificateCleanupJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                CertificateCleanupJob.DEFAULT_SCHEDULE);
             this.put(jobConfig(ExpiredPoolsCleanupJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ExpiredPoolsCleanupJob.DEFAULT_SCHEDULE);
             this.put(jobConfig(ImportRecordCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),

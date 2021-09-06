@@ -37,7 +37,6 @@ public class CertificateDTOTest extends AbstractDTOTest<CertificateDTO> {
         serial.setId(123L);
         serial.setSerial(BigInteger.TEN);
         serial.setExpiration(new Date());
-        serial.setCollected(true);
         serial.setRevoked(true);
 
         this.values = new HashMap<>();

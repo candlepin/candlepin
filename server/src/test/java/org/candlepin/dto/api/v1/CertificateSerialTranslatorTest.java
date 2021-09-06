@@ -51,7 +51,6 @@ public class CertificateSerialTranslatorTest extends
         // ID is automatically generated for this object
         // ID is also used as the serial here
         source.setExpiration(new Date());
-        source.setCollected(true);
         source.setRevoked(true);
 
         return source;
@@ -74,7 +73,6 @@ public class CertificateSerialTranslatorTest extends
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getSerial(), dest.getSerial());
             assertEquals(source.getExpiration(), dest.getExpiration());
-            assertEquals(source.isCollected(), dest.isCollected());
             assertEquals(source.isRevoked(), dest.isRevoked());
         }
         else {

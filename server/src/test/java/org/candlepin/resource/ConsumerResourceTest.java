@@ -14,10 +14,10 @@
  */
 package org.candlepin.resource;
 
-import static org.candlepin.test.TestUtil.createIdCert;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -83,7 +83,6 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.SystemPurposeComplianceRules;
-import org.candlepin.policy.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.resource.dto.AutobindData;
@@ -100,7 +99,6 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.FactValidator;
-import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.util.Util;
 
 import com.google.inject.util.Providers;
@@ -162,8 +160,6 @@ public class ConsumerResourceTest {
     @Mock private EntitlementCurator mockEntitlementCurator;
     @Mock private ComplianceRules mockComplianceRules;
     @Mock private SystemPurposeComplianceRules mockSystemPurposeComplianceRules;
-    @Mock private ServiceLevelValidator mockServiceLevelValidator;
-    @Mock private ActivationKeyRules mockActivationKeyRules;
     @Mock private EventFactory eventFactory;
     @Mock private EventBuilder eventBuilder;
     @Mock private ConsumerBindUtil consumerBindUtil;
@@ -238,7 +234,8 @@ public class ConsumerResourceTest {
             consumerEnricher,
             migrationProvider,
             translator,
-            mockJobManager);
+            mockJobManager
+        );
 
         mockedConsumerResource = Mockito.spy(consumerResource);
     }
@@ -445,16 +442,13 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testIdCertGetsRegenerated() throws Exception {
-        // using lconsumer simply to avoid hiding consumer. This should
-        // get renamed once we refactor this test suite.
+    public void expiredIdCertGetsRegenerated() throws Exception {
         Consumer consumer = createConsumer(createOwner());
         ComplianceStatus status = new ComplianceStatus();
         when(mockComplianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))
             .thenReturn(status);
         // cert expires today which will trigger regen
         IdentityCertificate idCert = createIdCert();
-        idCert.getSerial().setId(Util.generateUniqueLong());
         consumer.setIdCert(idCert);
         BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
         when(mockIdentityCertServiceAdapter.regenerateIdentityCert(consumer)).thenReturn(createIdCert());
@@ -465,17 +459,30 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testIdCertDoesNotRegenerate() throws Exception {
+    public void validIdCertDoesNotRegenerate() {
         Consumer consumer = createConsumer(createOwner());
         ComplianceStatus status = new ComplianceStatus();
         when(mockComplianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))
             .thenReturn(status);
         consumer.setIdCert(createIdCert(TestUtil.createDate(2025, 6, 9)));
-        BigInteger origserial = consumer.getIdCert().getSerial().getSerial();
+        BigInteger origSerial = consumer.getIdCert().getSerial().getSerial();
 
         ConsumerDTO c = consumerResource.getConsumer(consumer.getUuid());
 
-        assertEquals(origserial, c.getIdCertificate().getSerial().getSerial());
+        assertEquals(origSerial, c.getIdCertificate().getSerial().getSerial());
+    }
+
+    @Test
+    public void doesNotGenerateMissingIdCert() throws GeneralSecurityException, IOException {
+        Consumer consumer = createConsumer(createOwner());
+        ComplianceStatus status = new ComplianceStatus();
+        when(mockComplianceRules.getStatus(any(Consumer.class), any(Date.class), anyBoolean()))
+            .thenReturn(status);
+        when(mockIdentityCertServiceAdapter.regenerateIdentityCert(consumer)).thenReturn(createIdCert());
+
+        ConsumerDTO c = consumerResource.getConsumer(consumer.getUuid());
+
+        assertNull(c.getIdCertificate());
     }
 
     @Test
@@ -510,7 +517,7 @@ public class ConsumerResourceTest {
 
         Response r = consumerResource.bind("fakeConsumer", null, prodIds,
             null, null, null, false, null, null);
-        assertEquals(null, r.getEntity());
+        assertNull(r.getEntity());
     }
 
     @Test
@@ -927,6 +934,20 @@ public class ConsumerResourceTest {
             .getContentAccessForConsumer("test-uuid");
 
         assertEquals(expectedModeList, contentAccess.getContentAccessModeList());
+    }
+
+    private IdentityCertificate createIdCert() {
+        IdentityCertificate idCert = TestUtil.createIdCert();
+        CertificateSerial serial = idCert.getSerial();
+        serial.setId(Util.generateUniqueLong());
+        return idCert;
+    }
+
+    private IdentityCertificate createIdCert(Date expiration) {
+        IdentityCertificate idCert = TestUtil.createIdCert(expiration);
+        CertificateSerial serial = idCert.getSerial();
+        serial.setId(Util.generateUniqueLong());
+        return idCert;
     }
 
 }

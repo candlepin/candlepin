@@ -42,7 +42,7 @@ import java.util.Set;
  */
 public class X509ExtensionUtil  extends X509Util{
 
-    private static Logger log = LoggerFactory.getLogger(X509ExtensionUtil.class);
+    private static final Logger log = LoggerFactory.getLogger(X509ExtensionUtil.class);
     private Configuration config;
 
     // If we're generating a cert with more content sets than this limit, we will error

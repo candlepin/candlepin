@@ -1338,4 +1338,60 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return updated;
     }
 
+    /**
+     * Takes a list of identity certificate ids and unlinks them from consumers.
+     *
+     * @param certIds certificate ids to be unlinked
+     * @return a number of unlinked consumers
+     */
+    @Transactional
+    public int unlinkIdCertificates(Collection<String> certIds) {
+        if (certIds == null || certIds.isEmpty()) {
+            return 0;
+        }
+
+        String query = "UPDATE Consumer c" +
+            " SET c.idCert = NULL, c.updated = :date" +
+            " WHERE c.idCert.id IN (:cert_ids)";
+
+        int updated = 0;
+        Date updateTime = new Date();
+        for (Collection<String> certIdBlock : this.partition(certIds)) {
+            updated += this.currentSession().createQuery(query)
+                .setParameter("date", updateTime)
+                .setParameter("cert_ids", certIdBlock)
+                .executeUpdate();
+        }
+
+        return updated;
+    }
+
+    /**
+     * Takes a list of content access certificate ids and unlinks them from consumers.
+     *
+     * @param certIds certificate ids to be unlinked
+     * @return a number of unlinked consumers
+     */
+    @Transactional
+    public int unlinkCaCertificates(Collection<String> certIds) {
+        if (certIds == null || certIds.isEmpty()) {
+            return 0;
+        }
+
+        String query = "UPDATE Consumer c" +
+            " SET c.contentAccessCert = NULL, c.updated = :date" +
+            " WHERE c.contentAccessCert.id IN (:cert_ids)";
+
+        int updated = 0;
+        Date updateTime = new Date();
+        for (Collection<String> certIdBlock : this.partition(certIds)) {
+            updated += this.currentSession().createQuery(query)
+                .setParameter("date", updateTime)
+                .setParameter("cert_ids", certIdBlock)
+                .executeUpdate();
+        }
+
+        return updated;
+    }
+
 }

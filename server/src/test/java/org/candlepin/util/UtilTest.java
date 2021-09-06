@@ -20,16 +20,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
-import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,7 +32,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.codec.binary.Base64;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
@@ -155,41 +149,6 @@ public class UtilTest {
     }
 
     @Test
-    public void toDate() {
-        Calendar c = Calendar.getInstance();
-        c.setTime(Util.toDate("03/17/2011"));
-        // apparently March is month 2 (since it's 0 based)
-        assertEquals(2, c.get(Calendar.MONTH));
-        assertEquals(17, c.get(Calendar.DAY_OF_MONTH));
-        assertEquals(2011, c.get(Calendar.YEAR));
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void toDateNull() {
-        Util.toDate(null);
-    }
-
-    @Test
-    public void toDateShortForm() {
-        Calendar c = Calendar.getInstance();
-        c.setTime(Util.toDate("3/1/11"));
-        // apparently March is month 2 (since it's 0 based)
-        assertEquals(2, c.get(Calendar.MONTH));
-        assertEquals(1, c.get(Calendar.DAY_OF_MONTH));
-        assertEquals(11, c.get(Calendar.YEAR));
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void toDateMilitaryForm() {
-        Util.toDate("17 March 2011");
-    }
-
-    @Test(expected = RuntimeException.class)
-    public void toDateStdLongForm() {
-        Util.toDate("March 17, 2011");
-    }
-
-    @Test
     public void testAssertNotNullException() {
         try {
             Util.assertNotNull(null, "message text");
@@ -213,44 +172,6 @@ public class UtilTest {
         assertTrue(Util.equals("foo", "foo"));
         assertFalse(Util.equals("foo", "bar"));
         assertFalse(Util.equals(null, "foo"));
-    }
-
-    @Test
-    public void closeSafelyShouldAcceptNull() {
-        // nothing to assert, if it doesn't throw an
-        // exception we're good.
-        TestClosable closable = mock(TestClosable.class);
-        Util.closeSafely(null, "passing in null");
-        verify(closable, never()).close();
-        verify(mockapp, never()).doAppend(null);
-    }
-
-    @Test
-    public void closeSafely() {
-        ArgumentCaptor<LoggingEvent> message = ArgumentCaptor.forClass(LoggingEvent.class);
-        TestClosable closable = mock(TestClosable.class);
-        Util.closeSafely(closable, "objectname");
-        verify(closable, atLeastOnce()).close();
-        verify(mockapp, atLeastOnce()).doAppend(message.capture());
-        assertEquals("Going to close: objectname", message.getValue().getMessage());
-    }
-
-    @Test
-    public void closeSafelyWithException() {
-        ArgumentCaptor<LoggingEvent> message = ArgumentCaptor.forClass(LoggingEvent.class);
-        TestClosable closable = mock(TestClosable.class);
-        doThrow(new RuntimeException("booyah")).when(closable).close();
-        Util.closeSafely(closable, "objectname");
-        verify(closable, atLeastOnce()).close();
-        verify(mockapp, atLeastOnce()).doAppend(message.capture());
-        assertEquals("objectname.close() was not successful!",
-            message.getValue().getMessage());
-    }
-
-    @Test
-    public void capitalize() {
-        assertEquals("Abcde", Util.capitalize("abcde"));
-        assertEquals("Abcde", Util.capitalize("Abcde"));
     }
 
     @Test

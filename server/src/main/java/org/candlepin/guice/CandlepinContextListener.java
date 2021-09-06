@@ -14,7 +14,9 @@
  */
 package org.candlepin.guice;
 
-import static org.candlepin.config.ConfigProperties.*;
+import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
+import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
+import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.ActiveMQContextListener;
@@ -30,7 +32,6 @@ import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.swagger.CandlepinSwaggerModelConverter;
-import org.candlepin.util.CrlFileUtil;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
@@ -54,12 +55,10 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
@@ -89,7 +88,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     private ActiveMQContextListener activeMQContextListener;
     private JobManager jobManager;
     private LoggerContextListener loggerListener;
-    private CrlFileUtil crlFileUtil;
 
     // a bit of application-initialization code. Not sure if this is the
     // best spot for it.
@@ -199,21 +197,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
         if (config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION)) {
             capabilities.add(CandlepinCapabilities.CLOUD_REGISTRATION_CAPABILITY);
-        }
-
-        // Init CRL file
-        this.crlFileUtil = injector.getInstance(CrlFileUtil.class);
-        String filePath = getCrlFilePath();
-        File crlFile = new File(filePath);
-        if (!crlFile.exists() || crlFile.length() == 0) {
-            try {
-                this.crlFileUtil.initializeCRLFile(crlFile, Collections.emptyList());
-            }
-            catch (IOException e) {
-                log.error("Error occurred during initialization of CRL file!", e);
-                throw e;
-            }
-            return;
         }
 
         this.injector = injector;
@@ -373,14 +356,4 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
-
-    private String getCrlFilePath() throws ConfigurationException {
-        String filePath = config.getString(ConfigProperties.CRL_FILE_PATH);
-
-        if (filePath == null) {
-            throw new ConfigurationException("CRL file path not defined in config file");
-        }
-
-        return filePath;
-    }
 }

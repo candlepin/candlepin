@@ -15,13 +15,10 @@
 package org.candlepin.pki.impl;
 
 import org.candlepin.common.config.Configuration;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
-import org.candlepin.pki.X509CRLEntryWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
-import org.candlepin.util.Util;
 
 import com.google.common.base.Charsets;
 
@@ -42,9 +39,6 @@ import org.mozilla.jss.netscape.security.util.ObjectIdentifier;
 import org.mozilla.jss.netscape.security.x509.AlgorithmId;
 import org.mozilla.jss.netscape.security.x509.AuthorityKeyIdentifierExtension;
 import org.mozilla.jss.netscape.security.x509.BasicConstraintsExtension;
-import org.mozilla.jss.netscape.security.x509.CRLExtensions;
-import org.mozilla.jss.netscape.security.x509.CRLNumberExtension;
-import org.mozilla.jss.netscape.security.x509.CRLReasonExtension;
 import org.mozilla.jss.netscape.security.x509.CertificateAlgorithmId;
 import org.mozilla.jss.netscape.security.x509.CertificateExtensions;
 import org.mozilla.jss.netscape.security.x509.CertificateIssuerName;
@@ -60,12 +54,9 @@ import org.mozilla.jss.netscape.security.x509.GeneralNamesException;
 import org.mozilla.jss.netscape.security.x509.KeyIdentifier;
 import org.mozilla.jss.netscape.security.x509.KeyUsageExtension;
 import org.mozilla.jss.netscape.security.x509.PKIXExtensions;
-import org.mozilla.jss.netscape.security.x509.RevokedCertImpl;
-import org.mozilla.jss.netscape.security.x509.RevokedCertificate;
 import org.mozilla.jss.netscape.security.x509.SubjectAlternativeNameExtension;
 import org.mozilla.jss.netscape.security.x509.SubjectKeyIdentifierExtension;
 import org.mozilla.jss.netscape.security.x509.X500Name;
-import org.mozilla.jss.netscape.security.x509.X509CRLImpl;
 import org.mozilla.jss.netscape.security.x509.X509CertImpl;
 import org.mozilla.jss.netscape.security.x509.X509CertInfo;
 import org.mozilla.jss.netscape.security.x509.X509Key;
@@ -80,21 +71,16 @@ import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CRLException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.X509CRL;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateCrtKeySpec;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -102,15 +88,13 @@ import javax.inject.Inject;
  * PKI utility that uses the JSS crypto provider
  */
 public class JSSPKIUtility extends ProviderBasedPKIUtility {
-    public static final byte[] LINE_SEPARATOR = String.format("%n").getBytes();
-    public static final String SIGNING_ALG_ID = "SHA256withRSA";
-
-    public static final String CRL_PEM_NAME = "X509 CRL";
-    public static final String CERTIFICATE_PEM_NAME = "CERTIFICATE";
+    private static final byte[] LINE_SEPARATOR = String.format("%n").getBytes();
+    private static final String SIGNING_ALG_ID = "SHA256withRSA";
+    private static final String CERTIFICATE_PEM_NAME = "CERTIFICATE";
 
     // Note that using RSA PRIVATE KEY instead of PRIVATE KEY will indicate this is
     // a PKCS1 format instead of a PKCS8.
-    public static final String PRIVATE_KEY_PEM_NAME = "RSA PRIVATE KEY";
+    private static final String PRIVATE_KEY_PEM_NAME = "RSA PRIVATE KEY";
 
     @Inject
     public JSSPKIUtility(CertificateReader reader, SubjectKeyIdentifierWriter writer, Configuration config) {
@@ -278,42 +262,6 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
         return certExtensions;
     }
 
-    @Override
-    public X509CRL createX509CRL(List<X509CRLEntryWrapper> entries, BigInteger crlNumber) {
-        try {
-            X509Certificate caCert = reader.getCACert();
-
-            CRLExtensions entryExtensions = new CRLExtensions();
-            entryExtensions.add(CRLReasonExtension.PRIVILEGE_WITHDRAWN);
-
-            List<RevokedCertificate> revokedCerts = entries.stream()
-                .map(e -> new RevokedCertImpl(e.getSerialNumber(), e.getRevocationDate(), entryExtensions))
-                .collect(Collectors.toCollection(ArrayList::new));
-
-            CRLExtensions crlExtensions = new CRLExtensions();
-            crlExtensions.add(new CRLNumberExtension(crlNumber));
-            crlExtensions.add(buildAuthorityKeyIdentifier(caCert));
-
-            X500Name issuer = new X500Name(caCert.getIssuerX500Principal().getEncoded());
-            Date until = Util.addDaysToDt(config.getInt(ConfigProperties.CRL_NEXT_UPDATE_DELTA));
-            X509CRLImpl crlImpl = new X509CRLImpl(
-                issuer,
-                new Date(),
-                until,
-                revokedCerts.toArray(new RevokedCertificate[] {}),
-                crlExtensions
-            );
-
-            crlImpl.sign(reader.getCaKey(), SIGNING_ALG_ID);
-
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            return (X509CRL) cf.generateCRL(new ByteArrayInputStream(crlImpl.getEncoded()));
-        }
-        catch (GeneralSecurityException | IOException | InvalidBERException e) {
-            throw new RuntimeException("Error creating CRL", e);
-        }
-    }
-
     /**
      * Calculate the KeyIdentifier for an RSAPublicKey and place it in an AuthorityKeyIdentifier extension.
      *
@@ -418,16 +366,6 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
         }
     }
 
-    @Override
-    public byte[] getPemEncoded(X509CRL crl) throws IOException {
-        try {
-            return getPemEncoded(crl.getEncoded(), CRL_PEM_NAME);
-        }
-        catch (CRLException e) {
-            throw new IOException("Could not encode CRL", e);
-        }
-    }
-
     private void writePemEncoded(byte[] der, OutputStream out, String type) throws IOException {
         out.write(("-----BEGIN " + type + "-----\n").getBytes(Charsets.UTF_8));
 
@@ -437,36 +375,6 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
         b64Out.eof();
         b64Out.flush();
         out.write(("-----END " + type + "-----\n").getBytes(Charsets.UTF_8));
-    }
-
-    @Override
-    public void writePemEncoded(X509Certificate cert, OutputStream out) throws IOException {
-        try {
-            writePemEncoded(cert.getEncoded(), out, CERTIFICATE_PEM_NAME);
-        }
-        catch (CertificateEncodingException e) {
-            throw new IOException("Could not encode certificate", e);
-        }
-    }
-
-    @Override
-    public void writePemEncoded(RSAPrivateKey key, OutputStream out) throws IOException {
-        try {
-            writePemEncoded(toPKCS1(key), out, PRIVATE_KEY_PEM_NAME);
-        }
-        catch (NoSuchAlgorithmException e) {
-            throw new IOException("Could not encode key", e);
-        }
-    }
-
-    @Override
-    public void writePemEncoded(X509CRL crl, OutputStream out) throws IOException {
-        try {
-            writePemEncoded(crl.getEncoded(), out, CRL_PEM_NAME);
-        }
-        catch (CRLException e) {
-            throw new IOException("Could not encode CRL", e);
-        }
     }
 
     /**

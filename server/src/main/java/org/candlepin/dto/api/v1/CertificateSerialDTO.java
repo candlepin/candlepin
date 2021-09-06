@@ -36,7 +36,6 @@ public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSer
     protected Long id;
     protected BigInteger serial;
     protected Date expiration;
-    protected Boolean collected;
     protected Boolean revoked;
 
 
@@ -85,15 +84,6 @@ public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSer
         return this;
     }
 
-    public Boolean isCollected() {
-        return this.collected;
-    }
-
-    public CertificateSerialDTO setCollected(Boolean collected) {
-        this.collected = collected;
-        return this;
-    }
-
     public Boolean isRevoked() {
         return this.revoked;
     }
@@ -112,8 +102,8 @@ public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSer
         String date = expiration != null ? String.format("%1$tF %1$tT%1$tz", expiration) : null;
 
         return String.format(
-            "CertificateSerialDTO [id: %s, serial: %s, expiration: %s, collected: %s, revoked: %s]",
-            this.getId(), this.getSerial(), date, this.isCollected(), this.isRevoked());
+            "CertificateSerialDTO [id: %s, serial: %s, expiration: %s, revoked: %s]",
+            this.getId(), this.getSerial(), date, this.isRevoked());
     }
 
     /**
@@ -132,7 +122,6 @@ public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSer
                 .append(this.getId(), that.getId())
                 .append(this.getSerial(), that.getSerial())
                 .append(this.getExpiration(), that.getExpiration())
-                .append(this.isCollected(), that.isCollected())
                 .append(this.isRevoked(), that.isRevoked());
 
             return builder.isEquals();
@@ -151,7 +140,6 @@ public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSer
             .append(this.getId())
             .append(this.getSerial())
             .append(this.getExpiration())
-            .append(this.isCollected())
             .append(this.isRevoked());
 
         return builder.toHashCode();
@@ -180,7 +168,6 @@ public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSer
         this.setId(source.getId());
         this.setSerial(source.getSerial());
         this.setExpiration(source.getExpiration());
-        this.setCollected(source.isCollected());
         this.setRevoked(source.isRevoked());
 
         return this;
