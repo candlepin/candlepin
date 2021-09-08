@@ -7125,7 +7125,7 @@ paths:
             items:
               type: string
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       responses:

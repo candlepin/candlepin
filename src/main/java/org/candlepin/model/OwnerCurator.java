@@ -16,32 +16,41 @@ package org.candlepin.model;
 
 import org.candlepin.controller.OwnerContentAccess;
 
+import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.Criteria;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ReplicationMode;
-import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
-import org.hibernate.sql.JoinType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 
 import javax.inject.Singleton;
+import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
-
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
 
 /**
  * OwnerCurator
@@ -189,55 +198,53 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
     }
 
     /**
-     * Retrieves a list of owners which have pools referencing one or more of the specified product
+     * Retrieves list of owners which have pools referencing one or more of the specified product
      * IDs. If no owners are associated with the given products, this method returns an empty list.
      *
      * @param productIds
      *  The product IDs for which to retrieve owners
      *
      * @return
-     *  a list of owners associated with the specified products
+     *  list of owners associated with the specified products
      */
     @SuppressWarnings("checkstyle:indentation")
-    public CandlepinQuery<Owner> getOwnersWithProducts(Collection<String> productIds) {
-        if (productIds != null && !productIds.isEmpty()) {
-            Session session = this.currentSession();
-
-            // Impl note:
-            // We have to break this up into two queries for proper cursor and pagination support.
-            // Hibernate currently has two nasty "features" which break these in their own special
-            // way:
-            // - Distinct, when applied in any way outside of direct SQL, happens in Hibernate
-            //   *after* the results are pulled down, if and only if the results are fetched as a
-            //   list. The filtering does not happen when the results are fetched with a cursor.
-            // - Because result limiting (first+last result specifications) happens at the query
-            //   level and distinct filtering does not, cursor-based pagination breaks due to
-            //   potential results being removed after a page of results is fetched.
-            Criteria idCriteria = session.createCriteria(Owner.class, "Owner")
-                .setProjection(Projections.distinct(Projections.id()))
-                .createAlias("Owner.pools", "Pool")
-                .createAlias("Pool.product", "Prod", JoinType.LEFT_OUTER_JOIN)
-                .createAlias("Prod.derivedProduct", "DProd", JoinType.LEFT_OUTER_JOIN)
-                .createAlias("Prod.providedProducts", "PProd", JoinType.LEFT_OUTER_JOIN)
-                .createAlias("DProd.providedProducts", "DPProd", JoinType.LEFT_OUTER_JOIN)
-                .add(Restrictions.or(
-                    CPRestrictions.in("Prod.id", productIds),
-                    CPRestrictions.in("DProd.id", productIds),
-                    CPRestrictions.in("PProd.id", productIds),
-                    CPRestrictions.in("DPProd.id", productIds)
-                ));
-
-            List<String> ownerIds = idCriteria.list();
-
-            if (ownerIds != null && !ownerIds.isEmpty()) {
-                DetachedCriteria criteria = DetachedCriteria.forClass(Owner.class)
-                    .add(CPRestrictions.in("id", ownerIds));
-
-                return this.cpQueryFactory.buildQuery(session, criteria);
-            }
+    public Set<Owner> getOwnersWithProducts(Collection<String> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            return Collections.emptySet();
         }
 
-        return this.cpQueryFactory.<Owner>buildQuery();
+        CriteriaBuilder criteriaBuilder = this.entityManager.get().getCriteriaBuilder();
+        CriteriaQuery<Owner> query = criteriaBuilder.createQuery(Owner.class);
+        Root<Owner> owner = query.from(Owner.class);
+        query.distinct(true);
+        query.select(owner);
+
+        Join<Owner, Pool> pool = owner.join(Owner_.pools);
+        Join<Pool, Product> product = pool.join(Pool_.product, JoinType.LEFT);
+        Join<Product, Product> providedProducts = product.join(Product_.providedProducts, JoinType.LEFT);
+        Join<Product, Product> derivedProducts = product.join(Product_.derivedProduct, JoinType.LEFT);
+        Join<Product, Product> derivedProvidedProducts =
+            derivedProducts.join(Product_.providedProducts, JoinType.LEFT);
+
+        Expression<String> productExpr = product.get(Product_.id);
+        Expression<String> providedProductsExpr = providedProducts.get(Product_.id);
+        Expression<String> derivedProductsExpr = derivedProducts.get(Product_.id);
+        Expression<String> derivedPPExpr = derivedProvidedProducts.get(Product_.id);
+
+        // Block size reduced by 4 times to avoid exceeding the parameters limit as there
+        // are multiple IN clauses in the query below.
+        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() / 4);
+        Set<Owner> owners = new HashSet<>();
+        EntityManager entityManager = this.entityManager.get();
+
+        for (List<String> block : Iterables.partition(productIds, blockSize)) {
+            Predicate predicate = criteriaBuilder.or(productExpr.in(block), providedProductsExpr.in(block),
+                derivedProductsExpr.in(block), derivedPPExpr.in(block));
+            query.where(predicate);
+            owners.addAll(entityManager.createQuery(query).getResultList());
+        }
+
+        return owners;
     }
 
     public CandlepinQuery<String> getConsumerIds(Owner owner) {

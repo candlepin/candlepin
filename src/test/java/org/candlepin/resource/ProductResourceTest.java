@@ -17,6 +17,7 @@ package org.candlepin.resource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
@@ -46,6 +47,7 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
@@ -172,16 +174,21 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
         List<OwnerDTO> ownersReturned;
 
-        ownersReturned = productResource.getProductOwners(Collections.singletonList("p1")).list();
-        assertEquals(Arrays.asList(ownerDTO1, ownerDTO2), ownersReturned);
+        ownersReturned = productResource.getProductOwners(Collections.singletonList("p1"))
+            .collect(Collectors.toList());
+        assertTrue(CollectionUtils.isEqualCollection(Arrays.asList(ownerDTO1, ownerDTO2), ownersReturned));
 
-        ownersReturned = productResource.getProductOwners(Arrays.asList("p1", "p2")).list();
-        assertEquals(Arrays.asList(ownerDTO1, ownerDTO2, ownerDTO3), ownersReturned);
+        ownersReturned = productResource.getProductOwners(Arrays.asList("p1", "p2"))
+            .collect(Collectors.toList());
+        assertTrue(CollectionUtils
+            .isEqualCollection(Arrays.asList(ownerDTO1, ownerDTO2, ownerDTO3), ownersReturned));
 
-        ownersReturned = productResource.getProductOwners(Collections.singletonList("p3")).list();
+        ownersReturned = productResource.getProductOwners(Collections.singletonList("p3"))
+            .collect(Collectors.toList());
         assertEquals(Collections.singletonList(ownerDTO3), ownersReturned);
 
-        ownersReturned = productResource.getProductOwners(Collections.singletonList("nope")).list();
+        ownersReturned = productResource.getProductOwners(Collections.singletonList("nope"))
+            .collect(Collectors.toList());
         assertEquals(0, ownersReturned.size());
     }
 
