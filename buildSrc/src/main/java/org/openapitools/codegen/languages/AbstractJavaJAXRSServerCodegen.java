@@ -105,6 +105,8 @@ public abstract class AbstractJavaJAXRSServerCodegen extends AbstractJavaCodegen
             setUseTags(convertPropertyToBoolean(USE_TAGS));
         }
 
+        importMapping.put("JsonDeserialize", "com.fasterxml.jackson.databind.annotation.JsonDeserialize");
+
         writePropertyBack(USE_BEANVALIDATION, useBeanValidation);
     }
 
@@ -312,5 +314,17 @@ public abstract class AbstractJavaJAXRSServerCodegen extends AbstractJavaCodegen
     @VisibleForTesting
     public void setUseTags(boolean useTags) {
         this.useTags = useTags;
+    }
+
+    @Override
+    public void postProcessModelProperty(CodegenModel model, CodegenProperty property) {
+       super.postProcessModelProperty(model, property);
+       if (!fullJavaUtil) {
+           if ("set".equals(property.containerType)) {
+               model.imports.add("LinkedHashSet");
+               model.imports.add("JsonDeserialize");
+               property.vendorExtensions.put("x-setter-extra-annotation", "@JsonDeserialize(as = LinkedHashSet.class)");
+           }
+        }
     }
 }
