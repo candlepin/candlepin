@@ -31,16 +31,19 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
-import org.candlepin.model.CandlepinQuery;
+import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
+import org.candlepin.model.ContentAccessCertificate;
+import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.util.RdbmsExceptionTranslator;
@@ -64,7 +67,6 @@ import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 
 
-
 /**
  * REST API for managing Environments.
  */
@@ -82,16 +84,20 @@ public class EnvironmentResource implements EnvironmentsApi {
     private final ModelTranslator translator;
     private final JobManager jobManager;
     private final DTOValidator validator;
-    private final PrincipalProvider principalProvider;
     private final ContentAccessManager contentAccessManager;
+    private final CertificateSerialCurator certificateSerialCurator;
+    private final IdentityCertificateCurator identityCertificateCurator;
+    private final ContentAccessCertificateCurator contentAccessCertificateCurator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
         PoolManager poolManager, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator,
         RdbmsExceptionTranslator rdbmsExceptionTranslator, ModelTranslator translator,
-        JobManager jobManager, DTOValidator validator, PrincipalProvider principalProvider,
-        ContentAccessManager contentAccessManager) {
+        JobManager jobManager, DTOValidator validator, ContentAccessManager contentAccessManager,
+        CertificateSerialCurator certificateSerialCurator,
+        IdentityCertificateCurator identityCertificateCurator,
+        ContentAccessCertificateCurator contentAccessCertificateCurator) {
 
         this.envCurator = Objects.requireNonNull(envCurator);
         this.i18n = Objects.requireNonNull(i18n);
@@ -104,8 +110,10 @@ public class EnvironmentResource implements EnvironmentsApi {
         this.translator = Objects.requireNonNull(translator);
         this.jobManager = Objects.requireNonNull(jobManager);
         this.validator = Objects.requireNonNull(validator);
-        this.principalProvider = Objects.requireNonNull(principalProvider);
         this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
+        this.certificateSerialCurator = Objects.requireNonNull(certificateSerialCurator);
+        this.identityCertificateCurator = Objects.requireNonNull(identityCertificateCurator);
+        this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
     }
 
     /**
@@ -145,12 +153,38 @@ public class EnvironmentResource implements EnvironmentsApi {
             throw new NotFoundException(i18n.tr("No such environment: {0}", envId));
         }
 
-        CandlepinQuery<Consumer> consumers = this.envCurator.getEnvironmentConsumers(environment);
+        List<Consumer> consumers = this.envCurator.getEnvironmentConsumers(environment).list();
+        deleteConsumers(environment, consumers);
 
+        log.info("Deleting environment: {}", environment);
+        this.envCurator.delete(environment);
+    }
+
+    private void deleteConsumers(Environment environment, List<Consumer> consumers) {
+        if (consumers.isEmpty()) {
+            log.info("No consumers found in environment: {}", environment);
+            return;
+        }
         // Cleanup all consumers and their entitlements:
         log.info("Deleting consumers in environment {}", environment);
-        for (Consumer c : consumers.list()) {
+
+        List<Long> serialsToRevoke = new ArrayList<>(consumers.size());
+        List<String> idCertsToDelete = new ArrayList<>(consumers.size());
+        List<String> caCertsToDelete = new ArrayList<>(consumers.size());
+
+        for (Consumer c : consumers) {
             log.info("Deleting consumer: {}", c);
+
+            IdentityCertificate idCert = c.getIdCert();
+            if (idCert != null) {
+                idCertsToDelete.add(idCert.getId());
+                serialsToRevoke.add(idCert.getSerial().getId());
+            }
+            ContentAccessCertificate contentAccessCert = c.getContentAccessCert();
+            if (contentAccessCert != null) {
+                caCertsToDelete.add(contentAccessCert.getId());
+                serialsToRevoke.add(contentAccessCert.getSerial().getId());
+            }
 
             // We're about to delete these consumers; no need to regen/dirty their dependent
             // entitlements or recalculate status.
@@ -158,8 +192,14 @@ public class EnvironmentResource implements EnvironmentsApi {
             this.consumerCurator.delete(c);
         }
 
-        log.info("Deleting environment: {}", environment);
-        this.envCurator.delete(environment);
+        int deletedCerts = this.identityCertificateCurator.deleteByIds(idCertsToDelete);
+        log.debug("Deleted {} identity certificates", deletedCerts);
+
+        int deletedCerts1 = this.contentAccessCertificateCurator.deleteByIds(caCertsToDelete);
+        log.debug("Deleted {} content access certificates", deletedCerts1);
+
+        int revokedSerials = this.certificateSerialCurator.revokeByIds(serialsToRevoke);
+        log.debug("Revoked {} certificate serials", revokedSerials);
     }
 
     @Override

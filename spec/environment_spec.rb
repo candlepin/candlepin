@@ -18,13 +18,23 @@ describe 'Environments' do
   end
 
   it 'can be deleted by owner admin' do
+    @org_admin.delete_environment(@env['id'])
+
+    @org_admin.list_environments(@owner['key']).length.should == 0
+  end
+
+  it 'should cleanup consumers of deleted environment' do
     consumer = @org_admin.register(random_string('testsystem'), :system, nil, {},
         nil, nil, [], [], @env['id'])
+    id_cert_serial = consumer['idCert']['serial']['serial']
+
     @org_admin.delete_environment(@env['id'])
+
+    @org_admin.list_environments(@owner['key']).length.should == 0
     lambda {
       @org_admin.get_consumer(consumer['uuid'])
     }.should raise_exception(RestClient::Gone)
-    @org_admin.list_environments(@owner['key']).length.should == 0
+    @cp.get_crl.should include(id_cert_serial)
   end
 
   it 'cannot be created by foreign owner admin' do
