@@ -69,20 +69,18 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
     private final CandlepinQueryFactory cpQueryFactory;
     private final OwnerProductCurator ownerProductCurator;
-    private final ProductCurator productCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
 
     /**
      * default ctor
      */
     @Inject
-    public EntitlementCurator(OwnerProductCurator ownerProductCurator, ProductCurator productCurator,
+    public EntitlementCurator(OwnerProductCurator ownerProductCurator,
         ConsumerTypeCurator consumerTypeCurator, CandlepinQueryFactory cpQueryFactory) {
         super(Entitlement.class);
 
         this.cpQueryFactory = Objects.requireNonNull(cpQueryFactory);
         this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
-        this.productCurator = Objects.requireNonNull(productCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
     }
 
@@ -435,6 +433,27 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         query.where(toArray(criteria));
 
         return listByCriteria(query);
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<Entitlement> listByConsumerUuids(Collection<String> uuids) {
+        if (uuids == null || uuids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String hql = "SELECT e FROM Entitlement e" +
+            " JOIN e.pool p" +
+            " WHERE p.endDate >= :nowDate AND e.consumer.uuid IN (:uuids)";
+        Query query = this.currentSession().createQuery(hql)
+            .setParameter("nowDate", new Date());
+
+        List<Entitlement> foundEntitlements = new ArrayList<>();
+        for (Collection<String> consumerBlock : this.partition(uuids)) {
+            List<Entitlement> result = query.setParameter("uuids", consumerBlock).getResultList();
+            foundEntitlements.addAll(result);
+        }
+
+        return foundEntitlements;
     }
 
     public List<Entitlement> listByConsumerAndPoolId(Consumer consumer, String poolId) {

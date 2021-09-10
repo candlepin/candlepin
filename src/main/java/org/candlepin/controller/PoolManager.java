@@ -146,6 +146,7 @@ public interface PoolManager {
     int revokeAllEntitlements(Consumer consumer, boolean regenCertsAndStatuses);
 
     Set<Pool> revokeEntitlements(List<Entitlement> ents);
+    void revokeEntitlements(List<Entitlement> ents, boolean regenCertsAndStatuses);
     void revokeEntitlement(Entitlement entitlement);
 
     Pool setPoolQuantity(Pool pool, long set);

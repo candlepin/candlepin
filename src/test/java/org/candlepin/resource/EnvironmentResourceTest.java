@@ -46,6 +46,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
@@ -99,8 +100,8 @@ class EnvironmentResourceTest {
     private IdentityCertificateCurator identityCertificateCurator;
     @Mock
     private ContentAccessCertificateCurator contentAccessCertificateCurator;
-    private I18n i18n;
-    private ModelTranslator translator;
+    @Mock
+    private EntitlementCurator entitlementCurator;
 
     private EnvironmentResource environmentResource;
 
@@ -109,29 +110,30 @@ class EnvironmentResourceTest {
 
     @BeforeEach
     void setUp() {
-        this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        this.translator = new SimpleModelTranslator();
-        this.translator.registerTranslator(new EnvironmentTranslator(),
+        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        ModelTranslator translator = new SimpleModelTranslator();
+        translator.registerTranslator(new EnvironmentTranslator(),
             Environment.class, EnvironmentDTO.class);
-        this.translator.registerTranslator(new ContentTranslator(), Content.class, ContentDTO.class);
-        this.translator.registerTranslator(new NestedOwnerTranslator(), Owner.class, NestedOwnerDTO.class);
+        translator.registerTranslator(new ContentTranslator(), Content.class, ContentDTO.class);
+        translator.registerTranslator(new NestedOwnerTranslator(), Owner.class, NestedOwnerDTO.class);
 
         this.environmentResource = new EnvironmentResource(
             this.envCurator,
-            this.i18n,
+            i18n,
             this.envContentCurator,
             this.consumerResource,
             this.poolManager,
             this.consumerCurator,
             this.ownerContentCurator,
             this.rdbmsExceptionTranslator,
-            this.translator,
+            translator,
             this.jobManager,
             this.validator,
             this.contentAccessManager,
             this.certificateSerialCurator,
             this.identityCertificateCurator,
-            this.contentAccessCertificateCurator
+            this.contentAccessCertificateCurator,
+            this.entitlementCurator
         );
 
         this.owner = new Owner("owner1", "Owner 1");

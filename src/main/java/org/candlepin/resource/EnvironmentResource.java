@@ -38,6 +38,8 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.Entitlement;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
@@ -88,6 +90,7 @@ public class EnvironmentResource implements EnvironmentsApi {
     private final CertificateSerialCurator certificateSerialCurator;
     private final IdentityCertificateCurator identityCertificateCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
+    private final EntitlementCurator entitlementCurator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
@@ -97,7 +100,8 @@ public class EnvironmentResource implements EnvironmentsApi {
         JobManager jobManager, DTOValidator validator, ContentAccessManager contentAccessManager,
         CertificateSerialCurator certificateSerialCurator,
         IdentityCertificateCurator identityCertificateCurator,
-        ContentAccessCertificateCurator contentAccessCertificateCurator) {
+        ContentAccessCertificateCurator contentAccessCertificateCurator,
+        EntitlementCurator entitlementCurator) {
 
         this.envCurator = Objects.requireNonNull(envCurator);
         this.i18n = Objects.requireNonNull(i18n);
@@ -114,6 +118,7 @@ public class EnvironmentResource implements EnvironmentsApi {
         this.certificateSerialCurator = Objects.requireNonNull(certificateSerialCurator);
         this.identityCertificateCurator = Objects.requireNonNull(identityCertificateCurator);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
+        this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
     }
 
     /**
@@ -168,6 +173,7 @@ public class EnvironmentResource implements EnvironmentsApi {
         // Cleanup all consumers and their entitlements:
         log.info("Deleting consumers in environment {}", environment);
 
+        List<String> uuidsToDelete = new ArrayList<>(consumers.size());
         List<Long> serialsToRevoke = new ArrayList<>(consumers.size());
         List<String> idCertsToDelete = new ArrayList<>(consumers.size());
         List<String> caCertsToDelete = new ArrayList<>(consumers.size());
@@ -175,28 +181,33 @@ public class EnvironmentResource implements EnvironmentsApi {
         for (Consumer c : consumers) {
             log.info("Deleting consumer: {}", c);
 
+            uuidsToDelete.add(c.getUuid());
+
             IdentityCertificate idCert = c.getIdCert();
             if (idCert != null) {
                 idCertsToDelete.add(idCert.getId());
                 serialsToRevoke.add(idCert.getSerial().getId());
             }
+
             ContentAccessCertificate contentAccessCert = c.getContentAccessCert();
             if (contentAccessCert != null) {
                 caCertsToDelete.add(contentAccessCert.getId());
                 serialsToRevoke.add(contentAccessCert.getSerial().getId());
             }
-
-            // We're about to delete these consumers; no need to regen/dirty their dependent
-            // entitlements or recalculate status.
-            this.poolManager.revokeAllEntitlements(c, false);
-            this.consumerCurator.delete(c);
         }
 
-        int deletedCerts = this.identityCertificateCurator.deleteByIds(idCertsToDelete);
-        log.debug("Deleted {} identity certificates", deletedCerts);
+        List<Entitlement> entsToRevoke = this.entitlementCurator.listByConsumerUuids(uuidsToDelete);
+        // We're about to delete these consumers; no need to regen/dirty their dependent
+        // entitlements or recalculate status.
+        this.poolManager.revokeEntitlements(entsToRevoke, false);
 
-        int deletedCerts1 = this.contentAccessCertificateCurator.deleteByIds(caCertsToDelete);
-        log.debug("Deleted {} content access certificates", deletedCerts1);
+        this.consumerCurator.bulkDelete(consumers);
+
+        int deletedIdCerts = this.identityCertificateCurator.deleteByIds(idCertsToDelete);
+        log.debug("Deleted {} identity certificates", deletedIdCerts);
+
+        int deletedCaCerts = this.contentAccessCertificateCurator.deleteByIds(caCertsToDelete);
+        log.debug("Deleted {} content access certificates", deletedCaCerts);
 
         int revokedSerials = this.certificateSerialCurator.revokeByIds(serialsToRevoke);
         log.debug("Revoked {} certificate serials", revokedSerials);

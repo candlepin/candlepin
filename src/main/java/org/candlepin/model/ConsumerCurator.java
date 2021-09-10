@@ -53,6 +53,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -198,32 +199,73 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @Override
     @Transactional
-    public void delete(Consumer entity) {
-        log.debug("Deleting consumer: {}", entity);
+    public void delete(Consumer consumer) {
+        log.debug("Deleting consumer: {}", consumer);
+        this.bulkDelete(Collections.singleton(consumer));
+    }
 
-        // Fetch the principal that's triggering this
-        Principal principal = this.principalProvider.get();
-
-        Owner owner = entity.getOwner();
-
-        // Check if we've already got a record for this consumer (???), creating one if necessary
-        DeletedConsumer deletedConsumer = this.deletedConsumerCurator.findByConsumerUuid(entity.getUuid());
-        if (deletedConsumer == null) {
-            deletedConsumer = new DeletedConsumer();
+    @Override
+    @Transactional
+    public void bulkDelete(Collection<Consumer> consumers) {
+        if (consumers == null || consumers.isEmpty()) {
+            return;
         }
 
-        // Set/update the properties on our deleted consumer record
-        deletedConsumer.setConsumerUuid(entity.getUuid())
-            .setOwnerId(entity.getOwnerId())
-            .setOwnerKey(owner.getKey())
-            .setOwnerDisplayName(owner.getDisplayName())
-            .setPrincipalName(principal != null ? principal.getName() : null);
+        log.debug("Deleting {} consumer(s)", consumers.size());
 
-        // Actually delete the consumer
-        super.delete(entity);
+        Map<String, Consumer> consumerMap = consumers.stream()
+            .collect(Collectors.toMap(Consumer::getUuid, Function.identity()));
 
-        // Save our deletion record
-        this.deletedConsumerCurator.saveOrUpdate(deletedConsumer);
+        int deleted = this.deleteByUuids(consumerMap.keySet());
+        log.debug("Deleted {} consumer(s)", deleted);
+
+        Collection<DeletedConsumer> dcRecords = this.buildDeletedConsumerRecords(consumerMap);
+        this.deletedConsumerCurator.saveOrUpdateAll(dcRecords, false, false);
+    }
+
+    private int deleteByUuids(Collection<String> uuids) {
+        if (uuids == null || uuids.isEmpty()) {
+            return 0;
+        }
+
+        String hql = "DELETE Consumer c WHERE c.uuid IN (:uuids)";
+        Query query = this.currentSession().createQuery(hql);
+
+        int deleted = 0;
+        for (Collection<String> certIdBlock : this.partition(uuids)) {
+            deleted += query.setParameter("uuids", certIdBlock).executeUpdate();
+        }
+
+        return deleted;
+    }
+
+    private List<DeletedConsumer> buildDeletedConsumerRecords(Map<String, Consumer> consumerMap) {
+        Principal principal = this.principalProvider.get();
+        String principalName = principal != null ? principal.getName() : null;
+
+        Map<String, DeletedConsumer> dcs = this.deletedConsumerCurator
+            .findByConsumerUuids(consumerMap.keySet()).stream()
+            .collect(Collectors.toMap(DeletedConsumer::getConsumerUuid, Function.identity()));
+
+        Function<Consumer, DeletedConsumer> mapper = (consumer) -> {
+            DeletedConsumer dc = dcs.get(consumer.getUuid());
+            if (dc == null) {
+                dc = new DeletedConsumer();
+            }
+
+            Owner owner = consumer.getOwner();
+
+            return dc.setConsumerUuid(consumer.getUuid())
+                .setOwnerId(owner.getOwnerId())
+                .setOwnerKey(owner.getKey())
+                .setOwnerDisplayName(owner.getDisplayName())
+                .setPrincipalName(principalName);
+        };
+
+        return consumerMap.values()
+            .stream()
+            .map(mapper)
+            .collect(Collectors.toList());
     }
 
     @Transactional
@@ -1558,17 +1600,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return 0;
         }
 
-        String query = "UPDATE Consumer c" +
+        String hql = "UPDATE Consumer c" +
             " SET c.idCert = NULL, c.updated = :date" +
             " WHERE c.idCert.id IN (:cert_ids)";
+        Query query = this.currentSession().createQuery(hql)
+            .setParameter("date", new Date());
 
         int updated = 0;
-        Date updateTime = new Date();
         for (Collection<String> certIdBlock : this.partition(certIds)) {
-            updated += this.currentSession().createQuery(query)
-                .setParameter("date", updateTime)
-                .setParameter("cert_ids", certIdBlock)
-                .executeUpdate();
+            updated += query.setParameter("cert_ids", certIdBlock).executeUpdate();
         }
 
         return updated;
@@ -1586,17 +1626,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return 0;
         }
 
-        String query = "UPDATE Consumer c" +
+        String hql = "UPDATE Consumer c" +
             " SET c.contentAccessCert = NULL, c.updated = :date" +
             " WHERE c.contentAccessCert.id IN (:cert_ids)";
+        Query query = this.currentSession().createQuery(hql)
+            .setParameter("date", new Date());
 
         int updated = 0;
-        Date updateTime = new Date();
         for (Collection<String> certIdBlock : this.partition(certIds)) {
-            updated += this.currentSession().createQuery(query)
-                .setParameter("date", updateTime)
-                .setParameter("cert_ids", certIdBlock)
-                .executeUpdate();
+            updated += query.setParameter("cert_ids", certIdBlock).executeUpdate();
         }
 
         return updated;

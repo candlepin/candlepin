@@ -44,20 +44,19 @@ import java.util.Set;
 import javax.inject.Inject;
 
 
-/**
- * EntitlementCuratorTest
- */
+
 public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Inject private ModifierTestDataGenerator modifierData;
 
-    private Entitlement secondEntitlement;
     private Entitlement firstEntitlement;
+    private Entitlement secondEntitlement;
     private EntitlementCertificate firstCertificate;
     private EntitlementCertificate secondCertificate;
     //Owner for modifying tests
     private Owner modifyOwner;
     private Owner owner;
     private Consumer consumer;
+    private Consumer consumer2;
     private Environment environment;
     private Date futureDate;
     private Date pastDate;
@@ -83,6 +82,9 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         consumer = createConsumer(owner);
         consumer.setEnvironment(environment);
         consumerCurator.create(consumer);
+        consumer2 = createConsumer(owner);
+        consumer2.setEnvironment(environment);
+        consumerCurator.create(consumer2);
 
         testProduct = TestUtil.createProduct();
         testProduct.setAttribute(Product.Attributes.VARIANT, "Starter Pack");
@@ -106,9 +108,12 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         poolCurator.create(secondPool);
 
         secondCertificate = createEntitlementCertificate("key", "certificate");
-
         secondEntitlement = createEntitlement(owner, consumer, secondPool, secondCertificate);
         entitlementCurator.create(secondEntitlement);
+
+        EntitlementCertificate thirdCertificate = createEntitlementCertificate("key", "certificate");
+        Entitlement thirdEntitlement = createEntitlement(owner, consumer2, secondPool, thirdCertificate);
+        entitlementCurator.create(thirdEntitlement);
 
         futureDate = createDate(2050, 1, 1);
         pastDate = createDate(1998, 1, 1);
@@ -294,7 +299,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void listByEnvironment() {
         List<Entitlement> ents = entitlementCurator.listByEnvironment(environment).list();
-        assertEquals(2, ents.size());
+        assertEquals(3, ents.size());
     }
 
     private PageRequest createPageRequest() {
@@ -365,13 +370,35 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void listByConsumers() {
+        EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
+        filters.addAttributeFilter("pool_attr_1", "attr1");
+
+        List<Entitlement> ents = entitlementCurator
+            .listByConsumerUuids(List.of(consumer.getUuid(), consumer2.getUuid()));
+
+        assertEquals(3, ents.size(), "should match only one out of two entitlements:");
+    }
+
+    @Test
+    public void noEntitlementsToList() {
+        Consumer consumer = createConsumer(owner);
+        consumer.setEnvironment(environment);
+        consumerCurator.create(consumer);
+
+        assertEquals(0, entitlementCurator.listByConsumerUuids(null).size());
+        assertEquals(0, entitlementCurator.listByConsumerUuids(List.of()).size());
+        assertEquals(0, entitlementCurator.listByConsumerUuids(List.of(consumer.getUuid())).size());
+    }
+
+    @Test
     public void listAllByOwner() {
         PageRequest req = createPageRequest();
 
         EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
         Page<List<Entitlement>> entitlementPages = entitlementCurator.listByOwner(owner, null, filters, req);
         List<Entitlement> entitlements = entitlementPages.getPageData();
-        assertEquals(2, entitlements.size(), "should return all the entitlements:");
+        assertEquals(3, entitlements.size(), "should return all the entitlements:");
     }
 
     @Test

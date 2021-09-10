@@ -820,7 +820,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void updatelastCheckin() throws Exception {
+    public void updateLastCheckin() throws Exception {
         Date date = new Date();
         Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
         consumer.setLastCheckin(date);
@@ -852,17 +852,16 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         altOwner = ownerCurator.create(altOwner);
 
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setUuid("Doppelganger");
+        Consumer consumer = createConsumer("Doppelganger");
         consumer = consumerCurator.create(consumer);
 
         consumerCurator.delete(consumer);
         DeletedConsumer dc = dcc.findByConsumerUuid("Doppelganger");
         Date deletionDate1 = dc.getUpdated();
 
-        consumer = new Consumer("testConsumer", "testUser", altOwner, ct);
-        consumer.setUuid("Doppelganger");
+        consumer = createConsumer("Doppelganger", altOwner);
         consumer = consumerCurator.create(consumer);
+
         consumerCurator.delete(consumer);
         dc = dcc.findByConsumerUuid("Doppelganger");
         Date deletionDate2 = dc.getUpdated();
@@ -875,8 +874,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         String principalName = "test_principal_name";
         this.setupAdminPrincipal(principalName);
 
-        Consumer consumer = new Consumer("test_consumer", "test_user", this.owner, this.ct);
-        consumer.setUuid("test_consumer_uuid");
+        Consumer consumer = createConsumer("test_consumer_uuid");
         consumer = this.consumerCurator.create(consumer);
 
         this.consumerCurator.delete(consumer);
@@ -887,6 +885,55 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         DeletedConsumer deletionRecord = this.dcc.findByConsumerUuid(consumer.getUuid());
         assertNotNull(deletionRecord);
         assertEquals(principalName, deletionRecord.getPrincipalName());
+    }
+
+    @Test
+    public void deleteConsumersInBulk() {
+        List<Consumer> consumers = List.of(
+            createConsumer("Doppelganger1"),
+            createConsumer("Doppelganger2"),
+            createConsumer("Doppelganger3"));
+        consumers.forEach(consumerCurator::create);
+
+        consumerCurator.bulkDelete(consumers);
+
+        assertNotNull(dcc.findByConsumerUuid("Doppelganger1"));
+        assertNotNull(dcc.findByConsumerUuid("Doppelganger2"));
+        assertNotNull(dcc.findByConsumerUuid("Doppelganger3"));
+    }
+
+    @Test
+    public void repeatedBulkDelete() {
+        List<Consumer> consumers = List.of(
+            createConsumer("Doppelganger1"),
+            createConsumer("Doppelganger2"),
+            createConsumer("Doppelganger3"));
+        consumers.forEach(consumerCurator::create);
+
+        consumerCurator.bulkDelete(consumers);
+
+        for (Consumer consumer : consumers) {
+            assertEquals(1, dcc.countByConsumerUuid(consumer.getUuid()));
+        }
+
+        consumers.forEach(consumerCurator::create);
+
+        consumerCurator.bulkDelete(consumers);
+
+        for (Consumer consumer : consumers) {
+            assertEquals(1, dcc.countByConsumerUuid(consumer.getUuid()));
+        }
+
+    }
+
+    private Consumer createConsumer(String uuid) {
+        return createConsumer(uuid, owner);
+    }
+
+    private Consumer createConsumer(String uuid, Owner owner) {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setUuid(uuid);
+        return consumer;
     }
 
     @Test
@@ -951,8 +998,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testFindByUuids() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setUuid("1");
+        Consumer consumer = createConsumer("1");
         consumer = consumerCurator.create(consumer);
 
         Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
@@ -1011,8 +1057,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testFindByUuidsAndOwner() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setUuid("1");
+        Consumer consumer = createConsumer("1");
         consumer = consumerCurator.create(consumer);
 
         Owner owner2 = new Owner("test-owner2", "Test Owner2");
@@ -1129,8 +1174,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testDoesConsumerExistNo() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setUuid("1");
+        Consumer consumer = createConsumer("1");
         consumerCurator.create(consumer);
         boolean result = consumerCurator.doesConsumerExist("unknown");
         assertFalse(result);
@@ -1138,8 +1182,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testDoesConsumerExistYes() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setUuid("1");
+        Consumer consumer = createConsumer("1");
         consumerCurator.create(consumer);
         boolean result = consumerCurator.doesConsumerExist("1");
         assertTrue(result);
@@ -1147,8 +1190,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testFindByUuid() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setUuid("1");
+        Consumer consumer = createConsumer("1");
         consumer = consumerCurator.create(consumer);
 
         Consumer result = consumerCurator.findByUuid("1");
@@ -1163,8 +1205,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testVerifyAndLookupConsumer() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setUuid("1");
+        Consumer consumer = createConsumer("1");
         consumer = consumerCurator.create(consumer);
 
         Consumer result = consumerCurator.verifyAndLookupConsumer("1");
@@ -1186,8 +1227,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testExistingConsumerUuidsWhenIdsExists() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setUuid("fooBarPlus");
+        Consumer consumer = createConsumer("fooBarPlus");
         consumer = consumerCurator.create(consumer);
         List<String> ids = Arrays.asList("fooBarPlus", "testId1", "testId2");
         Set<String> existingIds = consumerCurator.getExistingConsumerUuids(ids);

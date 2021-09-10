@@ -1845,6 +1845,12 @@ public class CandlepinPoolManager implements PoolManager {
         return revokeEntitlements(entsToRevoke, null, true);
     }
 
+    @Override
+    @Transactional
+    public void revokeEntitlements(List<Entitlement> entsToRevoke, boolean regenCertsAndStatuses) {
+        revokeEntitlements(entsToRevoke, null, regenCertsAndStatuses);
+    }
+
     public void revokeEntitlements(List<Entitlement> entsToRevoke, Set<String> alreadyDeletedPools) {
         revokeEntitlements(entsToRevoke, alreadyDeletedPools, true);
     }
