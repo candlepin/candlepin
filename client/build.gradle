@@ -1,0 +1,41 @@
+plugins {
+    id("org.openapi.generator")
+    id 'java-library'
+}
+
+description = "Candlepin Generated Client Library"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    api platform("org.springframework.boot:spring-boot-dependencies:2.5.3")
+
+    implementation "io.swagger:swagger-annotations:1.5.7"
+    implementation "com.google.code.gson:gson"
+    implementation "com.squareup.okhttp3:okhttp"
+    implementation "com.squareup.okhttp3:logging-interceptor"
+    implementation "javax.annotation:javax.annotation-api"
+    implementation 'com.github.spotbugs:spotbugs-annotations:4.2.0'
+    implementation "io.gsonfire:gson-fire:1.8.5"
+
+}
+
+sourceSets.main.java.srcDirs = ["${buildDir}/generated/src/main/java"]
+compileJava.dependsOn tasks.openApiGenerate
+
+openApiGenerate {
+    inputSpec = "${projectDir}/../api/candlepin-api-spec.yaml"
+    outputDir = "${buildDir}/generated"
+    configFile = "${projectDir}/../api/candlepin-api-config.json"
+//    generatorName = "spring"
+    generatorName = "java"
+    // TODO get a valid spec
+    validateSpec = false
+    skipValidateSpec = true
+    // TODO version = "$version"
+    configOptions = [
+            dateLibrary: "legacy"
+    ]
+}
