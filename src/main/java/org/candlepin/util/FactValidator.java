@@ -16,11 +16,13 @@ package org.candlepin.util;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.model.Consumer;
 
 import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Provider;
@@ -61,4 +63,29 @@ public class FactValidator extends PropertyValidator {
         this.globalValidators.add(new PropertyValidator.LengthValidator(i18nProvider, "fact",
             FACT_MAX_LENGTH));
     }
+
+    /**
+     * Validates the facts associated with the given consumer. If any fact fails validation a
+     * PropertyValidationException will be thrown.
+     *
+     * @param consumer
+     *  The consumer containing the facts to validate
+     */
+    public void validate(Consumer consumer) {
+        // Impl note:
+        // Unlike the previous implementation, we are no longer attempting to "fix" anything here;
+        // if it's broken at this point, we're in trouble, so we're going to throw an exception
+        // instead of waiting for CP to die with a DB exception sometime in the very near future.
+        //
+        // Also, we're no longer using ConfigProperties.CONSUMER_FACTS_MATCHER at this point, as
+        // it's something that belongs with the other input validation and filtering.
+
+        Map<String, String> facts = consumer.getFacts();
+        if (facts != null) {
+            for (Map.Entry<String, String> fact : facts.entrySet()) {
+                this.validate(fact.getKey(), fact.getValue());
+            }
+        }
+    }
+
 }

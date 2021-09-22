@@ -193,7 +193,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     @Override
     public Consumer create(Consumer entity, boolean flush) {
         entity.ensureUUID();
-        this.validateFacts(entity);
+        this.factValidator.validate(entity);
         return super.create(entity, flush);
     }
 
@@ -223,7 +223,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         this.deletedConsumerCurator.saveOrUpdateAll(dcRecords, false, false);
     }
 
-    private int deleteByUuids(Collection<String> uuids) {
+    public int deleteByUuids(Collection<String> uuids) {
         if (uuids == null || uuids.isEmpty()) {
             return 0;
         }
@@ -420,6 +420,17 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return null;
     }
 
+    @Transactional
+    public Consumer findByUsername(String username, ConsumerType type) {
+        if (type != null) {
+            return (Consumer) createSecureCriteria()
+                .add(Restrictions.eq("username", username))
+                .add(Restrictions.eq("typeId", type.getId())).uniqueResult();
+        }
+
+        return null;
+    }
+
     /**
      * Lookup the Consumer by its UUID.
      *
@@ -607,7 +618,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // can and will lead to odd, broken or out-of-order behavior.
 
         // Validate inbound facts before even attempting to apply the update
-        this.validateFacts(updatedConsumer);
+        this.factValidator.validate(updatedConsumer);
 
         Consumer existingConsumer = this.get(updatedConsumer.getId());
 
@@ -694,30 +705,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .setParameter("reporter", reporterId)
             .setParameter("ownerKey", ownerKey)
             .executeUpdate();
-    }
-
-    /**
-     * Validates the facts associated with the given consumer. If any fact fails validation a
-     * PropertyValidationException will be thrown.
-     *
-     * @param consumer
-     *  The consumer containing the facts to validate
-     */
-    private void validateFacts(Consumer consumer) {
-        // Impl note:
-        // Unlike the previous implementation, we are no longer attempting to "fix" anything here;
-        // if it's broken at this point, we're in trouble, so we're going to throw an exception
-        // instead of waiting for CP to die with a DB exception sometime in the very near future.
-        //
-        // Also, we're no longer using ConfigProperties.CONSUMER_FACTS_MATCHER at this point, as
-        // it's something that belongs with the other input validation and filtering.
-
-        Map<String, String> facts = consumer.getFacts();
-        if (facts != null) {
-            for (Entry<String, String> fact : facts.entrySet()) {
-                this.factValidator.validate(fact.getKey(), fact.getValue());
-            }
-        }
     }
 
     /**
