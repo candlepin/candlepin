@@ -1,0 +1,88 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
+plugins {
+    id "java"
+    id "checkstyle"
+}
+
+repositories {
+    mavenCentral()
+}
+
+description = "Candlepin Spec Tests"
+
+dependencies {
+    implementation project(":client")
+
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
+    implementation 'org.slf4j:slf4j-api:1.7.33'
+    implementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    testImplementation 'org.assertj:assertj-core:3.22.0'
+
+    checkstyle "com.puppycrawl.tools:checkstyle:8.29"
+    checkstyle "com.github.sevntu-checkstyle:sevntu-checks:1.36.0"
+}
+
+test {
+    onlyIf {
+        !project.hasProperty("skipSpec")
+    }
+
+    useJUnitPlatform()
+
+    // TODO We have to propagate the -D params if we want them available in tests
+    System.properties.keys().each { key ->
+        def properyKey = key.toString()
+        if (properyKey.startsWith("spec.test.client")) {
+            systemProperty properyKey, System.getProperty(properyKey)
+        }
+    }
+
+    testLogging {
+        // set options for log level LIFECYCLE
+        events TestLogEvent.FAILED,
+                TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED
+//                TestLogEvent.STANDARD_OUT
+        exceptionFormat TestExceptionFormat.FULL
+        showExceptions true
+        showCauses true
+        showStackTraces true
+
+        // set options for log level DEBUG and INFO
+        debug {
+            events TestLogEvent.STARTED,
+                    TestLogEvent.FAILED,
+                    TestLogEvent.PASSED,
+                    TestLogEvent.SKIPPED,
+                    TestLogEvent.STANDARD_ERROR,
+                    TestLogEvent.STANDARD_OUT
+            exceptionFormat TestExceptionFormat.FULL
+        }
+        info.events = debug.events
+        info.exceptionFormat = debug.exceptionFormat
+
+        afterSuite { desc, result ->
+            if (!desc.parent) { // will match the outermost suite
+                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
+                def startItem = "|  ", endItem = "  |"
+                def repeatLength = startItem.length() + output.length() + endItem.length()
+                println("\n" + ("-" * repeatLength) + "\n" + startItem + output + endItem + "\n" + ("-" * repeatLength))
+            }
+        }
+    }
+}
+
+task spec {
+    finalizedBy 'test'
+}
+
+// Create a single checkstyle task to make it easier to run both the checkstyleMain & checkstyleTest targets
+task checkstyleSpec(dependsOn: [tasks.checkstyleMain, tasks.checkstyleTest]) {
+    description = 'Run checkstyle for both the Main & Test targets'
+    group = 'Verification'
+}
