@@ -24,6 +24,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
@@ -37,7 +38,12 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import okhttp3.Authenticator;
+import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.Route;
 
 /**
  * Class to build a Candlpin API instance.
@@ -61,12 +67,13 @@ public class ApiClientFactory extends AbstractFactoryBean<ApiClient> {
         apiClient.setPassword(properties.getPassword());
         apiClient.setBasePath(properties.getUrl());
         apiClient.setDebugging(properties.getDebug());
+        apiClient.setVerifyingSsl(false);
         apiClient.setHttpClient(getUnsafeOkHttpClient());
 
         return apiClient;
     }
 
-    private static OkHttpClient getUnsafeOkHttpClient() {
+    private OkHttpClient getUnsafeOkHttpClient() {
         // Create a trust manager that does not validate certificate chains
         final TrustManager[] trustAllCerts = new TrustManager[]{
             new X509TrustManager() {
@@ -90,11 +97,18 @@ public class ApiClientFactory extends AbstractFactoryBean<ApiClient> {
         // Create an ssl socket factory with our all-trusting manager
         final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
-        OkHttpClient.Builder builder = new OkHttpClient.Builder();
-        builder.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
-        builder.hostnameVerifier((hostname, session) -> true);
+        OkHttpClient.Builder client = new OkHttpClient.Builder();
+        client.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
+        client.hostnameVerifier((hostname, session) -> true);
+        client.authenticator(new Authenticator() {
+            @Override
+            public Request authenticate(Route route, Response response) {
+                String credential = Credentials.basic(properties.getUsername(), properties.getPassword());
+                return response.request().newBuilder().header("Authorization", credential).build();
+            }
+        });
 
-        return builder.build();
+        return client.build();
     }
 
     private static SSLContext getSslContext(TrustManager[] trustAllCerts) {
