@@ -14,10 +14,15 @@ dependencies {
     implementation project(":client")
 
     implementation 'org.springframework.boot:spring-boot-starter'
-    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation "com.squareup.okhttp3:okhttp"
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 bootJar {
     enabled = false
+}
+
+test {
+    useJUnitPlatform()
 }
