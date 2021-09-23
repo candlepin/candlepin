@@ -23,6 +23,7 @@ import org.candlepin.spec.bootstrap.Application;
 import org.candlepin.spec.bootstrap.client.ApiClientFactory;
 import org.candlepin.spec.bootstrap.client.ApiClientProperties;
 
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,9 +52,17 @@ public class StatusResourceTest {
 //    @Qualifier("adminApiClient")
 //    private ApiClient apiClient;
     private ApiClientFactory apiClient;
+//    private ApiClientFactory apiClient = new ApiClientFactory(
+//        new ApiClientProperties(
+//            "https://192.168.122.12:8443/candlepin",
+//            "admin",
+//            "admin",
+//            true
+//        ));
 
 
     @Test
+    @RepeatedTest(999)
     public void retrievesServerStatus() throws Exception {
         StatusApi api = new StatusApi(apiClient.createInstance());
 
