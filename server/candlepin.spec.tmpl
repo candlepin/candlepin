@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.7
+Version: 4.0.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,11 @@ fi
 
 #raw
 %changelog
+* Thu Sep 23 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.8-1
+- Rewrote the migration script for the product model changes (crog@redhat.com)
+- 1958128: Large CRL file operation causes OOM error in Candlepin
+  (ojanus@redhat.com)
+
 * Thu Sep 02 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.7-1
 - Upgrade Artemis & Keycloak library versions (nmoumoul@redhat.com)
 - Serials left unrevoked after update (ojanus@redhat.com)
