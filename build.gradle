@@ -493,6 +493,10 @@ tasks.withType(Checkstyle) {
     exclude "**/i18n/Messages*"
 }
 
+task spec() {
+    dependsOn ":spec-tests:spec"
+}
+
 task pom {
     doLast {
         conf2ScopeMappings.addMapping(MavenPlugin.COMPILE_PRIORITY + 1, configurations.compileOnly, 'provided')

@@ -62,7 +62,6 @@ public class StatusResourceTest {
 
 
     @Test
-    @RepeatedTest(999)
     public void retrievesServerStatus() throws Exception {
         StatusApi api = new StatusApi(apiClient.createInstance());
 
