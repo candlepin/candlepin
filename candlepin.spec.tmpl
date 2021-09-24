@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.5
+Version: 4.1.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,41 @@ fi
 
 #raw
 %changelog
+* Fri Sep 24 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.6-1
+- Added translation using Weblate (Indonesian) (didiksupriadi41@gmail.com)
+- Rewrote the migration script for the product model changes (crog@redhat.com)
+- 1989981: Fix to avoid exceeding the overall query parameter limit
+  (prakgupt@redhat.com)
+- 1980404: No consumer deletion cleanup when deleting Environment
+  (ojanus@redhat.com)
+- Translated using Weblate (Chinese (Simplified) (zh_CN)) (suanand@redhat.com)
+- 1928161: Large CRL file operation causes OOM error in Candlepin
+  (ojanus@redhat.com)
+- 1981887: Updated and separated job scheduling and execution configuration
+  (crog@redhat.com)
+- Serials left unrevoked after update (ojanus@redhat.com)
+- Gradle dependency fix  - Removed gradle platform component, to handle BOM
+  versions manually  - Fixed POM auto-generation task  - Upgraded Keyclock &
+  artemis dependencies (prakgupt@redhat.com)
+- 1986929: Added content_overrides & guestids resources to root resource list
+  (prakgupt@redhat.com)
+- Remove unused library (bourt@gmail.com)
+- Translated using Weblate (Korean) (simmon@nplob.com)
+- Translated using Weblate (Ukrainian) (yurchor@ukr.net)
+- Update translation files (noreply@weblate.org)
+- Clean up & remove libraries that are picked up transitively & don't require
+  direct specification. (bcourt@redhat.com)
+- Remove spring dependency management in favor of gradle bom support
+  (bcourt@redhat.com)
+- Update msgfmt task & openapi generation gradle tasks to support cached
+  input/output (bcourt@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Various minor improvements to the cloud registration flow (crog@redhat.com)
+- 1980370: Replace DELETE with TRUNCATE where possible (sdhome@redhat.com)
+- Collapse the api project into the main gradle project. (bcourt@redhat.com)
+- 1980370: Replace DELETE with TRUNCATE where possible (sdhome@redhat.com)
+
 * Tue Aug 03 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.5-1
 - 1800811: Fix for pool quantity calculation   - All unlimited pool quantities
   are restricted to -1   - Modified bonus pool & unmapped guest pool quantity
