@@ -7,6 +7,9 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <changeSet id="20191218180815-1" author="sdhome">
+        <!-- Checksum of the original changes -->
+        <validCheckSum>7:e462e3022b189b372504d030f1fab135</validCheckSum>
+
         <comment>Create table for product and provided products mappings</comment>
 
         <createTable tableName="cp2_product_provided_products">
