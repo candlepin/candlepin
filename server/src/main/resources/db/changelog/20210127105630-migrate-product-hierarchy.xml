@@ -7,6 +7,9 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <changeSet id="20210127105630-1a" author="crog" dbms="postgresql">
+        <!-- Checksum of the original PostgreSQL migration -->
+        <validCheckSum>7:b2872d72be60b54877a9249695d7a12e</validCheckSum>
+
         <comment>
             Migrates definition of derived product from pool to product
         </comment>
@@ -119,6 +122,9 @@
     </changeSet>
 
     <changeSet id="20210127105630-1b" author="crog" dbms="mysql">
+        <!-- Checksum of the original MySQL/MariaDB migration -->
+        <validCheckSum>7:6dea9ff8765370b0353827538a5832a6</validCheckSum>
+
         <comment>
             Migrates definition of derived product from pool to product
         </comment>
