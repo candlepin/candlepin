@@ -36,18 +36,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-/**
- * Test the /status resource
- */
-//@SpecTest
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(
-    webEnvironment = SpringBootTest.WebEnvironment.NONE,
-    classes = Application.class)
-@AutoConfigureMockMvc
-@EnableConfigurationProperties(value = ApiClientProperties.class)
-//@TestPropertySource(
-//    locations = "classpath:application-integrationtest.properties")
+@SpecTest
 public class OwnerResourceTest {
 
     @Autowired
@@ -85,7 +74,7 @@ public class OwnerResourceTest {
     }
 
     @Test
-    public void retrievesServerStatus() throws Exception {
+    public void failsToCreateOwnerWithInvalidParent() {
         OwnerApi api = new OwnerApi(apiClient.createInstance());
 
         NestedOwnerDTO parentOwner = new NestedOwnerDTO();
