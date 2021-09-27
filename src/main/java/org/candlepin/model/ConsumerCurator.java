@@ -14,10 +14,8 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.auth.Principal;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
 
@@ -50,10 +48,8 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -180,10 +176,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private FactValidator factValidator;
     @Inject private Provider<HostCache> cachedHostsProvider;
-    @Inject private PrincipalProvider principalProvider;
 
     public ConsumerCurator() {
         super(Consumer.class);
@@ -195,32 +189,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         entity.ensureUUID();
         this.factValidator.validate(entity);
         return super.create(entity, flush);
-    }
-
-    @Override
-    @Transactional
-    public void delete(Consumer consumer) {
-        log.debug("Deleting consumer: {}", consumer);
-        this.bulkDelete(Collections.singleton(consumer));
-    }
-
-    @Override
-    @Transactional
-    public void bulkDelete(Collection<Consumer> consumers) {
-        if (consumers == null || consumers.isEmpty()) {
-            return;
-        }
-
-        log.debug("Deleting {} consumer(s)", consumers.size());
-
-        Map<String, Consumer> consumerMap = consumers.stream()
-            .collect(Collectors.toMap(Consumer::getUuid, Function.identity()));
-
-        int deleted = this.deleteByUuids(consumerMap.keySet());
-        log.debug("Deleted {} consumer(s)", deleted);
-
-        Collection<DeletedConsumer> dcRecords = this.buildDeletedConsumerRecords(consumerMap);
-        this.deletedConsumerCurator.saveOrUpdateAll(dcRecords, false, false);
     }
 
     public int deleteByUuids(Collection<String> uuids) {
@@ -237,35 +205,6 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         return deleted;
-    }
-
-    private List<DeletedConsumer> buildDeletedConsumerRecords(Map<String, Consumer> consumerMap) {
-        Principal principal = this.principalProvider.get();
-        String principalName = principal != null ? principal.getName() : null;
-
-        Map<String, DeletedConsumer> dcs = this.deletedConsumerCurator
-            .findByConsumerUuids(consumerMap.keySet()).stream()
-            .collect(Collectors.toMap(DeletedConsumer::getConsumerUuid, Function.identity()));
-
-        Function<Consumer, DeletedConsumer> mapper = (consumer) -> {
-            DeletedConsumer dc = dcs.get(consumer.getUuid());
-            if (dc == null) {
-                dc = new DeletedConsumer();
-            }
-
-            Owner owner = consumer.getOwner();
-
-            return dc.setConsumerUuid(consumer.getUuid())
-                .setOwnerId(owner.getOwnerId())
-                .setOwnerKey(owner.getKey())
-                .setOwnerDisplayName(owner.getDisplayName())
-                .setPrincipalName(principalName);
-        };
-
-        return consumerMap.values()
-            .stream()
-            .map(mapper)
-            .collect(Collectors.toList());
     }
 
     @Transactional
@@ -1625,6 +1564,236 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         return updated;
+    }
+
+    /**
+     * Takes a list of consumer ids and deletes all facts of the associated consumers.
+     *
+     * @param consumerIds ids of consumers whose fact are to be deleted
+     * @return a number of deleted facts
+     */
+    @Transactional
+    public int bulkDeleteFactsOf(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return 0;
+        }
+
+        String hql = "DELETE FROM cp_consumer_facts WHERE cp_consumer_id IN (:idsToDelete)";
+        Query query = this.currentSession().createSQLQuery(hql);
+
+        int deleted = 0;
+        for (Collection<String> consumerIdBlock : this.partition(consumerIds)) {
+            deleted += query.setParameter("idsToDelete", consumerIdBlock).executeUpdate();
+        }
+
+        return deleted;
+    }
+
+    /**
+     * Takes a list of consumer ids and deletes all installed products of the associated consumers.
+     *
+     * @param consumerIds ids of consumers whose installed products are to be deleted
+     * @return a number of deleted installed products
+     */
+    @Transactional
+    public int bulkDeleteInstalledProductsOf(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return 0;
+        }
+
+        String hql = "DELETE FROM ConsumerInstalledProduct p WHERE p.consumer.id IN (:idsToDelete)";
+        Query query = this.currentSession().createQuery(hql);
+
+        int deleted = 0;
+        for (Collection<String> consumerIdBlock : this.partition(consumerIds)) {
+            deleted += query.setParameter("idsToDelete", consumerIdBlock).executeUpdate();
+        }
+
+        return deleted;
+    }
+
+    /**
+     * Takes a list of consumer ids and deletes all guests of the associated consumers.
+     *
+     * @param consumerIds ids of consumers whose guests are to be deleted
+     * @return a number of deleted guests
+     */
+    @Transactional
+    public int bulkDeleteGuestsOf(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return 0;
+        }
+
+        String hql = "DELETE FROM GuestId g WHERE g.consumer.id IN (:idsToDelete)";
+        Query query = this.currentSession().createQuery(hql);
+
+        int deleted = 0;
+        for (Collection<String> consumerIdBlock : this.partition(consumerIds)) {
+            deleted += query.setParameter("idsToDelete", consumerIdBlock).executeUpdate();
+        }
+
+        return deleted;
+    }
+
+    /**
+     * Takes a list of consumer ids and find all guests associated with these consumers.
+     *
+     * @param consumerIds ids of consumers whose guests are to be found
+     * @return a list of found guest ids
+     */
+    @Transactional
+    public List<String> findGuestIdsOf(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String hql = "SELECT g.id FROM GuestId g WHERE g.consumer.id IN (:idsToFind)";
+        Query query = this.currentSession().createQuery(hql);
+
+        List<String> found = new ArrayList<>(consumerIds.size());
+        for (Collection<String> consumerIdBlock : this.partition(consumerIds)) {
+            found.addAll(query.setParameter("idsToFind", consumerIdBlock).getResultList());
+        }
+
+        return found;
+    }
+
+    /**
+     * Takes a list of guest ids and deletes all attributes of the associated guest.
+     *
+     * @param guestIds ids of guests whose attributes are to be deleted
+     * @return a number of deleted attributes
+     */
+    @Transactional
+    public int bulkDeleteGuestAttributesOf(Collection<String> guestIds) {
+        if (guestIds == null || guestIds.isEmpty()) {
+            return 0;
+        }
+
+        String hql = "DELETE FROM cp_consumer_guests_attributes WHERE cp_consumer_guest_id IN (:idsToDelete)";
+        Query query = this.currentSession().createSQLQuery(hql);
+
+        int deleted = 0;
+        for (Collection<String> guestIdBlock : this.partition(guestIds)) {
+            deleted += query.setParameter("idsToDelete", guestIdBlock).executeUpdate();
+        }
+
+        return deleted;
+    }
+
+    /**
+     * Takes a list of consumer ids and deletes all capabilities of the associated consumers.
+     *
+     * @param consumerIds ids of consumers whose capabilities are to be deleted
+     * @return a number of deleted capabilities
+     */
+    @Transactional
+    public int bulkDeleteCapabilitiesOf(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return 0;
+        }
+
+        String hql = "DELETE FROM ConsumerCapability c WHERE c.consumer.id IN (:idsToDelete)";
+        Query query = this.currentSession().createQuery(hql);
+
+        int deleted = 0;
+        for (Collection<String> consumerIdBlock : this.partition(consumerIds)) {
+            deleted += query.setParameter("idsToDelete", consumerIdBlock).executeUpdate();
+        }
+
+        return deleted;
+    }
+
+    /**
+     * Takes a list of consumer ids and deletes all activation keys of the associated consumers.
+     *
+     * @param consumerIds ids of consumers whose capabilities are to be deleted
+     * @return a number of deleted capabilities
+     */
+    @Transactional
+    public int bulkDeleteActivationKeysOf(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return 0;
+        }
+
+        String hql = "DELETE FROM ConsumerActivationKey k WHERE k.consumer.id IN (:idsToDelete)";
+        Query query = this.currentSession().createQuery(hql);
+
+        int deleted = 0;
+        for (Collection<String> consumerIdBlock : this.partition(consumerIds)) {
+            deleted += query.setParameter("idsToDelete", consumerIdBlock).executeUpdate();
+        }
+
+        return deleted;
+    }
+
+    /**
+     * Takes a list of consumer ids and deletes all content tags of the associated consumers.
+     *
+     * @param consumerIds ids of consumers whose content tags are to be deleted
+     * @return a number of deleted content tags
+     */
+    @Transactional
+    public int bulkDeleteContentTagsOf(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return 0;
+        }
+
+        String hql = "DELETE FROM cp_consumer_content_tags WHERE consumer_id IN (:idsToDelete)";
+        Query query = this.currentSession().createSQLQuery(hql);
+
+        int deleted = 0;
+        for (Collection<String> consumerIdBlock : this.partition(consumerIds)) {
+            deleted += query.setParameter("idsToDelete", consumerIdBlock).executeUpdate();
+        }
+
+        return deleted;
+    }
+
+    /**
+     * Takes a list of consumer ids and deletes all addons of the associated consumers.
+     *
+     * @param consumerIds ids of consumers whose addons are to be deleted
+     * @return a number of deleted addons
+     */
+    @Transactional
+    public int bulkDeleteAddonsOf(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return 0;
+        }
+
+        String hql = "DELETE FROM cp_sp_add_on WHERE consumer_id IN (:idsToDelete)";
+        Query query = this.currentSession().createSQLQuery(hql);
+
+        int deleted = 0;
+        for (Collection<String> consumerIdBlock : this.partition(consumerIds)) {
+            deleted += query.setParameter("idsToDelete", consumerIdBlock).executeUpdate();
+        }
+
+        return deleted;
+    }
+
+    /**
+     * Takes a list of consumer ids and deletes all hypervisors of the associated consumers.
+     *
+     * @param consumerIds ids of consumers whose hypervisors are to be deleted
+     * @return a number of deleted hypervisors
+     */
+    @Transactional
+    public int bulkDeleteHypervisorsOf(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return 0;
+        }
+
+        String hql = "DELETE FROM HypervisorId h WHERE h.consumer.id IN (:idsToDelete)";
+        Query query = this.currentSession().createQuery(hql);
+
+        int deleted = 0;
+        for (Collection<String> consumerIdBlock : this.partition(consumerIds)) {
+            deleted += query.setParameter("idsToDelete", consumerIdBlock).executeUpdate();
+        }
+
+        return deleted;
     }
 
 }

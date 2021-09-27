@@ -42,6 +42,7 @@ import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerService;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificate;
@@ -102,6 +103,8 @@ class EnvironmentResourceTest {
     private ContentAccessCertificateCurator contentAccessCertificateCurator;
     @Mock
     private EntitlementCurator entitlementCurator;
+    @Mock
+    private ConsumerService consumerService;
 
     private EnvironmentResource environmentResource;
 
@@ -122,18 +125,13 @@ class EnvironmentResourceTest {
             i18n,
             this.envContentCurator,
             this.consumerResource,
-            this.poolManager,
-            this.consumerCurator,
             this.ownerContentCurator,
             this.rdbmsExceptionTranslator,
             translator,
             this.jobManager,
             this.validator,
             this.contentAccessManager,
-            this.certificateSerialCurator,
-            this.identityCertificateCurator,
-            this.contentAccessCertificateCurator,
-            this.entitlementCurator
+            this.consumerService
         );
 
         this.owner = new Owner("owner1", "Owner 1");

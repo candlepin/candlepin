@@ -82,6 +82,7 @@ import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerService;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -189,6 +190,7 @@ public class ConsumerResource implements ConsumersApi {
     private static final int MAX_CONSUMERS_PER_REQUEST = 1000;
 
     private final ConsumerCurator consumerCurator;
+    private final ConsumerService consumerService;
     private final ConsumerTypeCurator consumerTypeCurator;
     private final SubscriptionServiceAdapter subAdapter;
     private final ProductServiceAdapter prodAdapter;
@@ -231,7 +233,9 @@ public class ConsumerResource implements ConsumersApi {
 
     @Inject
     @SuppressWarnings({ "checkstyle:parameternumber" })
-    public ConsumerResource(ConsumerCurator consumerCurator,
+    public ConsumerResource(
+        ConsumerCurator consumerCurator,
+        ConsumerService consumerService,
         ConsumerTypeCurator consumerTypeCurator,
         SubscriptionServiceAdapter subAdapter,
         ProductServiceAdapter prodAdapter,
@@ -270,6 +274,7 @@ public class ConsumerResource implements ConsumersApi {
         ConsumerContentOverrideCurator ccoCurator) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.consumerService = Objects.requireNonNull(consumerService);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.subAdapter = Objects.requireNonNull(subAdapter);
         this.prodAdapter = Objects.requireNonNull(prodAdapter);
@@ -1978,7 +1983,7 @@ public class ConsumerResource implements ConsumersApi {
         consumerRules.onConsumerDelete(toDelete);
         contentAccessManager.removeContentAccessCert(toDelete);
         Event event = eventFactory.consumerDeleted(toDelete);
-        consumerCurator.delete(toDelete);
+        consumerService.delete(toDelete);
         identityCertService.deleteIdentityCert(toDelete);
         sink.queueEvent(event);
     }

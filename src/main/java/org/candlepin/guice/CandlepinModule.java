@@ -90,6 +90,7 @@ import org.candlepin.messaging.impl.artemis.ArtemisUtil;
 import org.candlepin.messaging.impl.noop.NoopContextListener;
 import org.candlepin.messaging.impl.noop.NoopSessionFactory;
 import org.candlepin.model.CPRestrictions;
+import org.candlepin.model.ConsumerService;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
@@ -239,6 +240,7 @@ public class CandlepinModule extends AbstractModule {
         bind(Enforcer.class).to(EntitlementRules.class);
         bind(EntitlementRulesTranslator.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
+        bind(ConsumerService.class);
         bind(CandlepinModeManager.class).asEagerSingleton();
         bind(SuspendModeTransitioner.class).asEagerSingleton();
         bind(ScheduledExecutorService.class).toProvider(ScheduledExecutorServiceProvider.class);

@@ -72,6 +72,7 @@ import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerService;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -166,6 +167,7 @@ public class ConsumerResourceTest {
     private FactValidator factValidator;
 
     @Mock private ConsumerCurator consumerCurator;
+    @Mock private ConsumerService consumerService;
     @Mock private OwnerCurator ownerCurator;
     @Mock private EntitlementCertServiceAdapter entitlementCertServiceAdapter;
     @Mock private SubscriptionServiceAdapter subscriptionServiceAdapter;
@@ -219,6 +221,7 @@ public class ConsumerResourceTest {
 
         this.consumerResource = new ConsumerResource(
             this.consumerCurator,
+            this.consumerService,
             this.consumerTypeCurator,
             this.subscriptionServiceAdapter,
             this.mockProductServiceAdapter,
@@ -415,6 +418,7 @@ public class ConsumerResourceTest {
 
         ConsumerResource consumerResource = new ConsumerResource(
             this.consumerCurator,
+            this.consumerService,
             this.consumerTypeCurator,
             this.subscriptionServiceAdapter,
             this.mockProductServiceAdapter,

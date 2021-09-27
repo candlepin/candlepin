@@ -49,6 +49,7 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerService;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -110,6 +111,7 @@ public class GuestIdResourceTest {
     private I18n i18n;
 
     @Mock private ConsumerCurator consumerCurator;
+    @Mock private ConsumerService consumerService;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private OwnerCurator ownerCurator;
     @Mock private GuestIdCurator guestIdCurator;
@@ -169,6 +171,7 @@ public class GuestIdResourceTest {
         this.consumer = new Consumer("consumer", "test", owner, ct).setUuid(Util.generateUUID());
         this.resource = new ConsumerResource(
             this.consumerCurator,
+            this.consumerService,
             this.consumerTypeCurator,
             this.subscriptionServiceAdapter,
             this.productService,

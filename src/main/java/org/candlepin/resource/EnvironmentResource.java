@@ -35,16 +35,14 @@ import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerService;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.resource.validation.DTOValidator;
@@ -79,46 +77,33 @@ public class EnvironmentResource implements EnvironmentsApi {
     private final I18n i18n;
     private final EnvironmentContentCurator envContentCurator;
     private final ConsumerResource consumerResource;
-    private final PoolManager poolManager;
-    private final ConsumerCurator consumerCurator;
     private final OwnerContentCurator ownerContentCurator;
     private final RdbmsExceptionTranslator rdbmsExceptionTranslator;
     private final ModelTranslator translator;
     private final JobManager jobManager;
     private final DTOValidator validator;
     private final ContentAccessManager contentAccessManager;
-    private final CertificateSerialCurator certificateSerialCurator;
-    private final IdentityCertificateCurator identityCertificateCurator;
-    private final ContentAccessCertificateCurator contentAccessCertificateCurator;
-    private final EntitlementCurator entitlementCurator;
+    private final ConsumerService consumerService;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
-        PoolManager poolManager, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator,
-        RdbmsExceptionTranslator rdbmsExceptionTranslator, ModelTranslator translator,
-        JobManager jobManager, DTOValidator validator, ContentAccessManager contentAccessManager,
-        CertificateSerialCurator certificateSerialCurator,
-        IdentityCertificateCurator identityCertificateCurator,
-        ContentAccessCertificateCurator contentAccessCertificateCurator,
-        EntitlementCurator entitlementCurator) {
+        OwnerContentCurator ownerContentCurator, RdbmsExceptionTranslator rdbmsExceptionTranslator,
+        ModelTranslator translator, JobManager jobManager, DTOValidator validator,
+        ContentAccessManager contentAccessManager, ConsumerService consumerService
+        ) {
 
         this.envCurator = Objects.requireNonNull(envCurator);
         this.i18n = Objects.requireNonNull(i18n);
         this.envContentCurator = Objects.requireNonNull(envContentCurator);
         this.consumerResource = Objects.requireNonNull(consumerResource);
-        this.poolManager = Objects.requireNonNull(poolManager);
-        this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
         this.rdbmsExceptionTranslator = Objects.requireNonNull(rdbmsExceptionTranslator);
         this.translator = Objects.requireNonNull(translator);
         this.jobManager = Objects.requireNonNull(jobManager);
         this.validator = Objects.requireNonNull(validator);
         this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
-        this.certificateSerialCurator = Objects.requireNonNull(certificateSerialCurator);
-        this.identityCertificateCurator = Objects.requireNonNull(identityCertificateCurator);
-        this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
-        this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
+        this.consumerService = Objects.requireNonNull(consumerService);
     }
 
     /**
@@ -159,58 +144,10 @@ public class EnvironmentResource implements EnvironmentsApi {
         }
 
         List<Consumer> consumers = this.envCurator.getEnvironmentConsumers(environment).list();
-        deleteConsumers(environment, consumers);
+        this.consumerService.bulkDelete(consumers);
 
         log.info("Deleting environment: {}", environment);
         this.envCurator.delete(environment);
-    }
-
-    private void deleteConsumers(Environment environment, List<Consumer> consumers) {
-        if (consumers.isEmpty()) {
-            log.info("No consumers found in environment: {}", environment);
-            return;
-        }
-        // Cleanup all consumers and their entitlements:
-        log.info("Deleting consumers in environment {}", environment);
-
-        List<String> uuidsToDelete = new ArrayList<>(consumers.size());
-        List<Long> serialsToRevoke = new ArrayList<>(consumers.size());
-        List<String> idCertsToDelete = new ArrayList<>(consumers.size());
-        List<String> caCertsToDelete = new ArrayList<>(consumers.size());
-
-        for (Consumer c : consumers) {
-            log.info("Deleting consumer: {}", c);
-
-            uuidsToDelete.add(c.getUuid());
-
-            IdentityCertificate idCert = c.getIdCert();
-            if (idCert != null) {
-                idCertsToDelete.add(idCert.getId());
-                serialsToRevoke.add(idCert.getSerial().getId());
-            }
-
-            ContentAccessCertificate contentAccessCert = c.getContentAccessCert();
-            if (contentAccessCert != null) {
-                caCertsToDelete.add(contentAccessCert.getId());
-                serialsToRevoke.add(contentAccessCert.getSerial().getId());
-            }
-        }
-
-        List<Entitlement> entsToRevoke = this.entitlementCurator.listByConsumerUuids(uuidsToDelete);
-        // We're about to delete these consumers; no need to regen/dirty their dependent
-        // entitlements or recalculate status.
-        this.poolManager.revokeEntitlements(entsToRevoke, false);
-
-        this.consumerCurator.bulkDelete(consumers);
-
-        int deletedIdCerts = this.identityCertificateCurator.deleteByIds(idCertsToDelete);
-        log.debug("Deleted {} identity certificates", deletedIdCerts);
-
-        int deletedCaCerts = this.contentAccessCertificateCurator.deleteByIds(caCertsToDelete);
-        log.debug("Deleted {} content access certificates", deletedCaCerts);
-
-        int revokedSerials = this.certificateSerialCurator.revokeByIds(serialsToRevoke);
-        log.debug("Revoked {} certificate serials", revokedSerials);
     }
 
     @Override

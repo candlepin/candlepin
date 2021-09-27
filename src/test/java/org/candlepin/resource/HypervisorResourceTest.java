@@ -48,6 +48,7 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerService;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -120,6 +121,7 @@ public class HypervisorResourceTest {
     @Mock private ProductServiceAdapter productService;
     @Mock private SubscriptionServiceAdapter subscriptionService;
     @Mock private ConsumerCurator consumerCurator;
+    @Mock private ConsumerService consumerService;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private OwnerCurator ownerCurator;
     @Mock private EventSink sink;
@@ -173,6 +175,7 @@ public class HypervisorResourceTest {
 
         ConsumerResource consumerResource = new ConsumerResource(
             this.consumerCurator,
+            this.consumerService,
             this.consumerTypeCurator,
             this.subscriptionService,
             this.productService,

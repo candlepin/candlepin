@@ -17,17 +17,22 @@ package org.candlepin.model;
 import org.candlepin.pki.PKIUtility;
 
 import com.google.inject.Inject;
+import com.google.inject.persist.Transactional;
+
+import org.hibernate.Query;
 
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import javax.inject.Singleton;
 
-/**
- * KeyPairCurator
- */
+
+
 @Singleton
-public class KeyPairCurator extends
-    AbstractHibernateCurator<KeyPair> {
+public class KeyPairCurator extends AbstractHibernateCurator<KeyPair> {
 
     private PKIUtility pki;
 
@@ -76,6 +81,70 @@ public class KeyPairCurator extends
         catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
+    }
+
+
+    /**
+     * Takes a list of consumer ids and find all key pairs associated with these consumers.
+     *
+     * @param consumerIds ids of consumers whose key pairs are to be found
+     * @return a list of found key pair ids
+     */
+    @Transactional
+    public List<String> findKeyPairIdsOf(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String hql = "SELECT c.keyPair.id FROM Consumer c WHERE c.id IN (:idsToFind)";
+        Query query = this.currentSession().createQuery(hql);
+
+        List<String> found = new ArrayList<>(consumerIds.size());
+        for (Collection<String> consumerIdBlock : this.partition(consumerIds)) {
+            found.addAll(query.setParameter("idsToFind", consumerIdBlock).getResultList());
+        }
+
+        return found;
+    }
+
+    @Transactional
+    public int unlinkKeyPairsFromConsumers(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return 0;
+        }
+
+        String hql = "UPDATE Consumer c SET c.keyPair = null WHERE c.id IN (:idsToFind)";
+        Query query = this.currentSession().createQuery(hql);
+
+        int updated = 0;
+        for (Collection<String> consumerIdBlock : this.partition(consumerIds)) {
+            updated += query.setParameter("idsToFind", consumerIdBlock).executeUpdate();
+        }
+
+        return updated;
+    }
+
+    /**
+     * Takes a list of ids and deletes all associated key pairs.
+     *
+     * @param ids ids of key pairs which are to be deleted
+     * @return a number of deleted key pairs
+     */
+    @Transactional
+    public int bulkDeleteKeyPairs(Collection<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+
+        String hql = "DELETE FROM KeyPair k WHERE k.id IN (:idsToDelete)";
+        Query query = this.currentSession().createQuery(hql);
+
+        int deleted = 0;
+        for (Collection<String> idBlock : this.partition(ids)) {
+            deleted += query.setParameter("idsToDelete", idBlock).executeUpdate();
+        }
+
+        return deleted;
     }
 
 }

@@ -16,72 +16,28 @@ package org.candlepin.model;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.util.FactValidator;
-import org.candlepin.util.Util;
 
-import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.hibernate.Criteria;
-import org.hibernate.FetchMode;
-import org.hibernate.Hibernate;
-import org.hibernate.Query;
-import org.hibernate.ReplicationMode;
-import org.hibernate.criterion.Criterion;
-import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Disjunction;
-import org.hibernate.criterion.Projections;
-import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Set;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import javax.inject.Provider;
-import javax.inject.Singleton;
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import javax.persistence.PersistenceException;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
 
 
-@Singleton
 public class ConsumerService {
     private static final Logger log = LoggerFactory.getLogger(ConsumerService.class);
 
     @Inject private EntitlementCurator entitlementCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
     @Inject private ConsumerCurator consumerCurator;
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private PrincipalProvider principalProvider;
@@ -89,45 +45,77 @@ public class ConsumerService {
     @Inject private IdentityCertificateCurator identityCertificateCurator;
     @Inject private ContentAccessCertificateCurator contentAccessCertificateCurator;
     @Inject private CertificateSerialCurator certificateSerialCurator;
-    @Inject private FactValidator factValidator;
+    @Inject private KeyPairCurator keyPairCurator;
 
+    @Transactional
     public void delete(Consumer consumer) {
         log.debug("Deleting consumer: {}", consumer);
         this.bulkDelete(Collections.singletonList(consumer));
     }
 
+    @Transactional
     public void bulkDelete(List<Consumer> consumers) {
         if (consumers == null || consumers.isEmpty()) {
             return;
         }
 
-        List<String> uuidsToDelete = new ArrayList<>(consumers.size());
-        List<Long> serialsToRevoke = new ArrayList<>(consumers.size());
+        List<String> consumerIdsToDelete = new ArrayList<>(consumers.size());
+        List<String> consumerUuidsToDelete = new ArrayList<>(consumers.size());
         List<String> idCertsToDelete = new ArrayList<>(consumers.size());
         List<String> caCertsToDelete = new ArrayList<>(consumers.size());
+        List<Long> serialsToRevoke = new ArrayList<>(consumers.size());
 
-        for (Consumer c : consumers) {
-            log.info("Deleting consumer: {}", c);
+        for (Consumer consumer : consumers) {
+            log.info("Deleting consumer: {}", consumer);
 
-            uuidsToDelete.add(c.getUuid());
+            consumerIdsToDelete.add(consumer.getId());
+            consumerUuidsToDelete.add(consumer.getUuid());
 
-            IdentityCertificate idCert = c.getIdCert();
+            IdentityCertificate idCert = consumer.getIdCert();
             if (idCert != null) {
                 idCertsToDelete.add(idCert.getId());
                 serialsToRevoke.add(idCert.getSerial().getId());
             }
 
-            ContentAccessCertificate contentAccessCert = c.getContentAccessCert();
+            ContentAccessCertificate contentAccessCert = consumer.getContentAccessCert();
             if (contentAccessCert != null) {
                 caCertsToDelete.add(contentAccessCert.getId());
                 serialsToRevoke.add(contentAccessCert.getSerial().getId());
             }
         }
 
-        List<Entitlement> entsToRevoke = this.entitlementCurator.listByConsumerUuids(uuidsToDelete);
+        List<Entitlement> entsToRevoke = this.entitlementCurator.listByConsumerUuids(consumerUuidsToDelete);
         // We're about to delete these consumers; no need to regen/dirty their dependent
         // entitlements or recalculate status.
         this.poolManager.revokeEntitlements(entsToRevoke, false);
+
+        int deletedFacts = this.consumerCurator.bulkDeleteFactsOf(consumerIdsToDelete);
+        log.debug("Deleted {} facts", deletedFacts);
+
+        List<String> keyPairsToDelete = this.keyPairCurator.findKeyPairIdsOf(consumerIdsToDelete);
+        int unlinkedKeyPairs = this.keyPairCurator.unlinkKeyPairsFromConsumers(consumerIdsToDelete);
+        log.debug("Unlinked {} key pairs from consumers", unlinkedKeyPairs);
+        int deletedKeyPairs = this.keyPairCurator.bulkDeleteKeyPairs(keyPairsToDelete);
+        log.debug("Deleted {} key pairs", deletedKeyPairs);
+        int deletedInstalledProducts = this.consumerCurator.bulkDeleteInstalledProductsOf(consumerIdsToDelete);
+        log.debug("Deleted {} installed products", deletedInstalledProducts);
+
+        List<String> guestIdsToDelete = this.consumerCurator.findGuestIdsOf(consumerIdsToDelete);
+        int deletedAttributes = this.consumerCurator.bulkDeleteGuestAttributesOf(guestIdsToDelete);
+        log.debug("Deleted {} guest attributes", deletedAttributes);
+        int deletedGuests = this.consumerCurator.bulkDeleteGuestsOf(consumerIdsToDelete);
+        log.debug("Deleted {} guests", deletedGuests);
+
+        int deletedCapabilities = this.consumerCurator.bulkDeleteCapabilitiesOf(consumerIdsToDelete);
+        log.debug("Deleted {} capabilities", deletedCapabilities);
+        int deletedHypervisors = this.consumerCurator.bulkDeleteHypervisorsOf(consumerIdsToDelete);
+        log.debug("Deleted {} hypervisors", deletedHypervisors);
+        int deletedActivationKeys = this.consumerCurator.bulkDeleteActivationKeysOf(consumerIdsToDelete);
+        log.debug("Deleted {} activation keys", deletedActivationKeys);
+        int deletedAddons = this.consumerCurator.bulkDeleteAddonsOf(consumerIdsToDelete);
+        log.debug("Deleted {} addons", deletedAddons);
+        int deletedContentTags = this.consumerCurator.bulkDeleteContentTagsOf(consumerIdsToDelete);
+        log.debug("Deleted {} content tags", deletedContentTags);
 
         this.deleteConsumers(consumers);
 
@@ -185,95 +173,6 @@ public class ConsumerService {
             .stream()
             .map(mapper)
             .collect(Collectors.toList());
-    }
-
-    /**
-     * Candlepin supports the notion of a user being a consumer. When in effect
-     * a consumer will exist in the system who is tied to a particular user.
-     *
-     * @param user User
-     * @return Consumer for this user if one exists, null otherwise.
-     */
-    @Transactional
-    public Consumer findByUser(User user) {
-        return user != null ? this.findByUsername(user.getUsername()) : null;
-    }
-
-    /**
-     * Candlepin supports the notion of a user being a consumer. When in effect
-     * a consumer will exist in the system who is tied to a particular user.
-     *
-     * @param username the username to use to find a consumer
-     * @return Consumer for this user if one exists, null otherwise.
-     */
-    @Transactional
-    public Consumer findByUsername(String username) {
-        ConsumerType person = consumerTypeCurator
-            .getByLabel(ConsumerType.ConsumerTypeEnum.PERSON.getLabel());
-
-        // todo
-        return this.consumerCurator.findByUsername(username, person);
-    }
-
-
-    /**
-     * Updates an existing consumer with the state specified by the given Consumer instance. If the
-     * consumer has not yet been created, it will be created.
-     * <p></p>
-     * <strong>Warning:</strong> Using an pre-existing and persisted Consumer entity as the update
-     * to apply may cause issues, as Hibernate may opt to save changes to nested collections
-     * (facts, guestIds, tags, etc.) when any other database operation is performed. To avoid this
-     * issue, it is advised to use only detached or otherwise unmanaged entities for the updated
-     * consumer to pass to this method.
-     *
-     * @param updatedConsumer
-     *  A Consumer instance representing the updated state of a consumer
-     *
-     * @param flush
-     *  Whether or not to flush pending database operations after creating or updating the given
-     *  consumer
-     *
-     * @return
-     *  The persisted, updated consumer
-     */
-    @Transactional
-    public Consumer update(Consumer updatedConsumer, boolean flush) {
-        // TODO: FIXME:
-        // We really need to use a DTO here. Hibernate has so many pitfalls with this approach that
-        // can and will lead to odd, broken or out-of-order behavior.
-
-        // Validate inbound facts before even attempting to apply the update
-        this.factValidator.validate(updatedConsumer);
-
-        Consumer existingConsumer = this.consumerCurator.get(updatedConsumer.getId());
-
-        if (existingConsumer == null) {
-            return this.consumerCurator.create(updatedConsumer, flush);
-        }
-
-        // TODO: Are any of these read-only?
-        existingConsumer.setEntitlements(entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements()));
-
-        // This set of updates is strange. We're ignoring the "null-as-no-change" semantics we use
-        // everywhere else, and just blindly copying everything over.
-        existingConsumer.setFacts(updatedConsumer.getFacts());
-        existingConsumer.setName(updatedConsumer.getName());
-        existingConsumer.setOwner(updatedConsumer.getOwner());
-
-        // Set TypeId only if the existing consumer and update consumer typeId is not equal.
-        // This check has been added for updating Swatch timestamp
-        if (updatedConsumer.getTypeId() != null &&
-            !Util.equals(existingConsumer.getTypeId(), updatedConsumer.getTypeId())) {
-            existingConsumer.setTypeId(updatedConsumer.getTypeId());
-        }
-
-        existingConsumer.setUuid(updatedConsumer.getUuid());
-
-        if (flush) {
-            this.consumerCurator.save(existingConsumer);
-        }
-
-        return existingConsumer;
     }
 
 }

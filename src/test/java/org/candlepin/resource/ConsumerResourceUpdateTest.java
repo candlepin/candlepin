@@ -64,6 +64,7 @@ import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerService;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumerCurator;
@@ -139,6 +140,7 @@ public class ConsumerResourceUpdateTest {
 
     @Mock private IdentityCertServiceAdapter idCertService;
     @Mock private ConsumerCurator consumerCurator;
+    @Mock private ConsumerService consumerService;
     @Mock private OwnerCurator ownerCurator;
     @Mock private ConsumerTypeCurator consumerTypeCurator;
     @Mock private EventSink sink;
@@ -190,6 +192,7 @@ public class ConsumerResourceUpdateTest {
 
         this.resource = new ConsumerResource(
             this.consumerCurator,
+            this.consumerService,
             this.consumerTypeCurator,
             this.subscriptionServiceAdapter,
             this.productService,

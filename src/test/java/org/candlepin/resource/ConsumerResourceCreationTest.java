@@ -54,6 +54,7 @@ import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerService;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -134,6 +135,7 @@ public class ConsumerResourceCreationTest {
     @Mock protected ProductServiceAdapter productService;
     @Mock protected SubscriptionServiceAdapter subscriptionService;
     @Mock protected ConsumerCurator consumerCurator;
+    @Mock protected ConsumerService consumerService;
     @Mock protected ConsumerTypeCurator consumerTypeCurator;
     @Mock protected OwnerCurator ownerCurator;
     @Mock private EntitlementCurator entitlementCurator;
@@ -185,6 +187,7 @@ public class ConsumerResourceCreationTest {
         this.config = initConfig();
         this.resource = new ConsumerResource(
             this.consumerCurator,
+            this.consumerService,
             this.consumerTypeCurator,
             this.subscriptionService,
             this.productService,

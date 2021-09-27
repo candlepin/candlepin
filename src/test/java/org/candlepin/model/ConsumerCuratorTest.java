@@ -52,6 +52,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -1556,6 +1557,236 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(0, consumerCurator.unlinkCaCertificates(List.of("UnknownId")));
     }
 
+    @Test
+    public void shouldDeleteConsumersFacts() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setFacts(Map.ofEntries(
+            Map.entry("fact_key_1", "fact_value_1"),
+            Map.entry("fact_key_2", "fact_value_2")
+        ));
+        consumer = this.consumerCurator.create(consumer);
+
+        int deleted = this.consumerCurator.bulkDeleteFactsOf(List.of(consumer.getId()));
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        assertEquals(2, deleted);
+        assertEquals(0, this.consumerCurator.getConsumer(consumer.getUuid()).getFacts().size());
+    }
+
+    @Test
+    public void noFactsToDelete() {
+        assertEquals(0, consumerCurator.bulkDeleteFactsOf(null));
+        assertEquals(0, consumerCurator.bulkDeleteFactsOf(List.of()));
+        assertEquals(0, consumerCurator.bulkDeleteFactsOf(List.of("unknown")));
+    }
+
+    @Test
+    public void shouldDeleteInstalledProducts() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.addInstalledProduct(new ConsumerInstalledProduct("product_1", "Product 1"));
+        consumer.addInstalledProduct(new ConsumerInstalledProduct("product_2", "Product 2"));
+        consumer = this.consumerCurator.create(consumer);
+
+        int deleted = this.consumerCurator.bulkDeleteInstalledProductsOf(List.of(consumer.getId()));
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        assertEquals(2, deleted);
+        assertEquals(0, this.consumerCurator.getConsumer(consumer.getUuid()).getFacts().size());
+    }
+
+    @Test
+    public void noInstalledProductsToDelete() {
+        assertEquals(0, consumerCurator.bulkDeleteInstalledProductsOf(null));
+        assertEquals(0, consumerCurator.bulkDeleteInstalledProductsOf(List.of()));
+        assertEquals(0, consumerCurator.bulkDeleteInstalledProductsOf(List.of("unknown")));
+    }
+
+    @Test
+    public void shouldListGuests() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.addGuestId(new GuestId("guest_1", consumer));
+        consumer.addGuestId(new GuestId("guest_2", consumer));
+        consumer = this.consumerCurator.create(consumer);
+
+        List<String> found = this.consumerCurator.findGuestIdsOf(List.of(consumer.getId()));
+
+        assertEquals(2, found.size());
+        for (String guestId : guestIdsOf(consumer)) {
+            assertTrue(found.contains(guestId));
+        }
+    }
+
+    @Test
+    public void shouldDeleteGuests() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.addGuestId(new GuestId("guest_1", consumer));
+        consumer.addGuestId(new GuestId("guest_2", consumer));
+        consumer = this.consumerCurator.create(consumer);
+
+        int deleted = this.consumerCurator.bulkDeleteGuestsOf(List.of(consumer.getId()));
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        assertEquals(2, deleted);
+        assertEquals(0, this.consumerCurator.getConsumer(consumer.getUuid()).getGuestIds().size());
+    }
+
+    @Test
+    public void shouldDeleteGuestAttributes() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.addGuestId(new GuestId("guest_1", consumer, Map.ofEntries(
+            Map.entry("attr_1", "val_1"),
+            Map.entry("attr_2", "val_2")
+        )));
+        consumer = this.consumerCurator.create(consumer);
+        List<String> guestIds = guestIdsOf(consumer);
+
+        int deleted = this.consumerCurator.bulkDeleteGuestAttributesOf(guestIds);
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        assertEquals(2, deleted);
+        consumer = this.consumerCurator.getConsumer(consumer.getUuid());
+        assertEquals(0, consumer.getGuestIds().get(0).getAttributes().size());
+    }
+
+    private List<String> guestIdsOf(Consumer consumer) {
+        return consumer.getGuestIds().stream()
+            .map(GuestId::getId).collect(Collectors.toList());
+    }
+
+    @Test
+    public void noGuestsToDelete() {
+        assertEquals(0, consumerCurator.bulkDeleteGuestsOf(null));
+        assertEquals(0, consumerCurator.bulkDeleteGuestsOf(List.of()));
+        assertEquals(0, consumerCurator.bulkDeleteGuestsOf(List.of("unknown")));
+    }
+
+    @Test
+    public void noGuestAttributesToDelete() {
+        assertEquals(0, consumerCurator.bulkDeleteGuestAttributesOf(null));
+        assertEquals(0, consumerCurator.bulkDeleteGuestAttributesOf(List.of()));
+        assertEquals(0, consumerCurator.bulkDeleteGuestAttributesOf(List.of("unknown")));
+    }
+
+    @Test
+    public void shouldDeleteCapabilities() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setCapabilities(Set.of(
+            new ConsumerCapability(consumer, "capability_1"),
+            new ConsumerCapability(consumer, "capability_2")
+        ));
+        consumer = this.consumerCurator.create(consumer);
+
+        int deleted = this.consumerCurator.bulkDeleteCapabilitiesOf(List.of(consumer.getId()));
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        assertEquals(2, deleted);
+        assertEquals(0, this.consumerCurator.getConsumer(consumer.getUuid()).getCapabilities().size());
+    }
+
+    @Test
+    public void noCapabilitiesToDelete() {
+        assertEquals(0, consumerCurator.bulkDeleteCapabilitiesOf(null));
+        assertEquals(0, consumerCurator.bulkDeleteCapabilitiesOf(List.of()));
+        assertEquals(0, consumerCurator.bulkDeleteCapabilitiesOf(List.of("unknown")));
+    }
+
+    @Test
+    public void shouldDeleteActivationKeys() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setActivationKeys(Set.of(
+            new ConsumerActivationKey(consumer, "ak_1", "AK 1"),
+            new ConsumerActivationKey(consumer, "ak_2", "AK 2")
+        ));
+        consumer = this.consumerCurator.create(consumer);
+
+        int deleted = this.consumerCurator.bulkDeleteActivationKeysOf(List.of(consumer.getId()));
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        assertEquals(2, deleted);
+        assertEquals(0, this.consumerCurator.getConsumer(consumer.getUuid()).getActivationKeys().size());
+    }
+
+    @Test
+    public void noActivationKeysToDelete() {
+        assertEquals(0, consumerCurator.bulkDeleteActivationKeysOf(null));
+        assertEquals(0, consumerCurator.bulkDeleteActivationKeysOf(List.of()));
+        assertEquals(0, consumerCurator.bulkDeleteActivationKeysOf(List.of("unknown")));
+    }
+
+    @Test
+    public void shouldDeleteContentTags() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setContentTags(Set.of("tag_1", "tag_2"));
+        consumer = this.consumerCurator.create(consumer);
+
+        int deleted = this.consumerCurator.bulkDeleteContentTagsOf(List.of(consumer.getId()));
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        assertEquals(2, deleted);
+        assertEquals(0, this.consumerCurator.getConsumer(consumer.getUuid()).getContentTags().size());
+    }
+
+    @Test
+    public void noContentTagsToDelete() {
+        assertEquals(0, consumerCurator.bulkDeleteContentTagsOf(null));
+        assertEquals(0, consumerCurator.bulkDeleteContentTagsOf(List.of()));
+        assertEquals(0, consumerCurator.bulkDeleteContentTagsOf(List.of("unknown")));
+    }
+
+    @Test
+    public void shouldDeleteAddons() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setAddOns(Set.of("addon_1", "addon_2"));
+        consumer = this.consumerCurator.create(consumer);
+
+        int deleted = this.consumerCurator.bulkDeleteAddonsOf(List.of(consumer.getId()));
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        assertEquals(2, deleted);
+        assertEquals(0, this.consumerCurator.getConsumer(consumer.getUuid()).getAddOns().size());
+    }
+
+    @Test
+    public void noAddonsToDelete() {
+        assertEquals(0, consumerCurator.bulkDeleteAddonsOf(null));
+        assertEquals(0, consumerCurator.bulkDeleteAddonsOf(List.of()));
+        assertEquals(0, consumerCurator.bulkDeleteAddonsOf(List.of("unknown")));
+    }
+
+    @Test
+    public void shouldDeleteHypervisor() {
+        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer.setHypervisorId(new HypervisorId().setHypervisorId("hid_1").setOwner(owner));
+        consumer = this.consumerCurator.create(consumer);
+        Consumer consumer2 = new Consumer("testConsumer", "testUser", owner, ct);
+        consumer2.setHypervisorId(new HypervisorId().setHypervisorId("hid_2").setOwner(owner));
+        consumer2 = this.consumerCurator.create(consumer2);
+
+        int deleted = this.consumerCurator
+            .bulkDeleteHypervisorsOf(List.of(consumer.getId(), consumer2.getId()));
+        this.consumerCurator.flush();
+        this.consumerCurator.clear();
+
+        assertEquals(2, deleted);
+        assertNull(this.consumerCurator.getConsumer(consumer.getUuid()).getHypervisorId());
+        assertNull(this.consumerCurator.getConsumer(consumer2.getUuid()).getHypervisorId());
+    }
+
+    @Test
+    public void noHypervisorsToDelete() {
+        assertEquals(0, consumerCurator.bulkDeleteHypervisorsOf(null));
+        assertEquals(0, consumerCurator.bulkDeleteHypervisorsOf(List.of()));
+        assertEquals(0, consumerCurator.bulkDeleteHypervisorsOf(List.of("unknown")));
+    }
+
     private IdentityCertificate createIdCert() {
         IdentityCertificate idCert = TestUtil.createIdCert(TestUtil.createDateOffset(2, 0, 0));
         return saveCert(idCert);
@@ -1582,4 +1813,5 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         certSerialCurator.create(cert.getSerial());
         return caCertCurator.create(cert);
     }
+
 }

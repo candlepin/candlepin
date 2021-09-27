@@ -39,6 +39,7 @@ import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.ConsumerService;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.DistributorVersionCurator;
@@ -91,6 +92,7 @@ import javax.inject.Provider;
 public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Mock private ConsumerCurator consumerCurator;
+    @Mock private ConsumerService consumerService;
     @Mock private OwnerCurator ownerCurator;
     @Mock private EntitlementCertServiceAdapter entitlementCertServiceAdapter;
     @Mock private SubscriptionServiceAdapter subscriptionServiceAdapter;
@@ -144,6 +146,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         this.resource = new ConsumerResource(
             this.consumerCurator,
+            this.consumerService,
             this.consumerTypeCurator,
             this.subscriptionServiceAdapter,
             this.mockProductServiceAdapter,
