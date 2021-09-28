@@ -25,7 +25,9 @@ import org.candlepin.controller.OwnerContentAccess;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -279,24 +281,25 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Owner owner1 = owners.get(0);
         Owner owner2 = owners.get(1);
         Owner owner3 = owners.get(2);
+        Set<Owner> uniqueOwners = null;
 
-        owners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p4")).list();
-        assertEquals(Arrays.asList(owner1), owners);
+        uniqueOwners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p4"));
+        assertTrue(CollectionUtils.isEqualCollection(Util.asSet(owner1), uniqueOwners));
 
-        owners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p5d")).list();
-        assertEquals(Arrays.asList(owner2), owners);
+        uniqueOwners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p5d"));
+        assertTrue(CollectionUtils.isEqualCollection(Util.asSet(owner2), uniqueOwners));
 
-        owners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p1")).list();
-        assertEquals(Arrays.asList(owner1, owner2, owner3), owners);
+        uniqueOwners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p1"));
+        assertTrue(CollectionUtils.isEqualCollection(Util.asSet(owner1, owner2, owner3), uniqueOwners));
 
-        owners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p3")).list();
-        assertEquals(Arrays.asList(owner2, owner3), owners);
+        uniqueOwners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p3"));
+        assertTrue(CollectionUtils.isEqualCollection(Util.asSet(owner2, owner3), uniqueOwners));
 
-        owners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p4", "p6")).list();
-        assertEquals(Arrays.asList(owner1, owner3), owners);
+        uniqueOwners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p4", "p6"));
+        assertTrue(CollectionUtils.isEqualCollection(Util.asSet(owner1, owner3), uniqueOwners));
 
-        owners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("nope")).list();
-        assertEquals(0, owners.size());
+        uniqueOwners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("nope"));
+        assertEquals(0, uniqueOwners.size());
     }
 
     @Test

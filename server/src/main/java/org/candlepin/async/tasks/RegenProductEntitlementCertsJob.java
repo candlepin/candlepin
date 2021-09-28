@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.List;
+import java.util.Set;
 
 
 
@@ -153,8 +153,7 @@ public class RegenProductEntitlementCertsJob implements AsyncJob {
         boolean lazyRegen = args.getAsBoolean(ARG_LAZY_REGEN, true);
 
         // Find a set of owners that actually have the product...
-        List<Owner> owners = this.ownerCurator.getOwnersWithProducts(Collections.singleton(productId))
-            .list();
+        Set<Owner> owners = this.ownerCurator.getOwnersWithProducts(Collections.singleton(productId));
 
         // Regenerate if we found any...
         if (owners.size() > 0) {

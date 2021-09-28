@@ -29,14 +29,12 @@ import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.AsyncJobStatus;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.model.ResultIterator;
 
 import com.google.inject.Inject;
 
@@ -51,9 +49,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.ws.rs.Consumes;
@@ -265,7 +264,7 @@ public class ProductResource {
     @GET
     @Path("/owners")
     @Produces(MediaType.APPLICATION_JSON)
-    public CandlepinQuery<OwnerDTO> getProductOwners(
+    public Stream<OwnerDTO> getProductOwners(
         @ApiParam(value = "Multiple product UUIDs", required = true)
         @QueryParam("product") List<String> productUuids) {
 
@@ -273,8 +272,10 @@ public class ProductResource {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
         }
 
-        return this.translator.translateQuery(
-            this.ownerCurator.getOwnersWithProducts(productUuids), OwnerDTO.class);
+        Set<Owner> owners = this.ownerCurator.getOwnersWithProducts(productUuids);
+
+        return owners.stream().map(
+                this.translator.getStreamMapper(Owner.class, OwnerDTO.class));
     }
 
     @ApiOperation(notes = "Refreshes Pools by Product", value = "refreshPoolsForProduct",
@@ -297,30 +298,27 @@ public class ProductResource {
             return null;
         }
 
-        ResultIterator<Owner> iterator = this.ownerCurator.getOwnersWithProducts(productUuids).iterate();
-        List<JobConfig> jobConfigs = new LinkedList<>();
-        while (iterator.hasNext()) {
-            JobConfig config = RefreshPoolsJob.createJobConfig()
-                .setOwner(iterator.next())
-                .setLazyRegeneration(lazyRegen);
-            jobConfigs.add(config);
-        }
-        iterator.close();
+        Function<Owner, JobConfig> jobConfigMapper = (owner) -> RefreshPoolsJob.createJobConfig()
+            .setOwner(owner)
+            .setLazyRegeneration(lazyRegen);
 
-        List<AsyncJobStatus> statuses = new LinkedList<>();
-        for (JobConfig config : jobConfigs) {
+        Function<JobConfig, AsyncJobStatus> jobQueueMapper = (config) -> {
             try {
-                statuses.add(this.jobManager.queueJob(config));
+                return this.jobManager.queueJob(config);
             }
             catch (Exception e) {
-                statuses.add(new AsyncJobStatus()
+                log.debug("Exception occurred while queueing job: {}", config, e);
+                return new AsyncJobStatus()
                     .setName(RefreshPoolsJob.JOB_NAME)
                     .setState(AsyncJobStatus.JobState.FAILED)
-                    .setJobResult(e.toString()));
+                    .setJobResult(e.toString());
             }
-        }
+        };
 
-        return statuses.stream().map(
-            this.translator.getStreamMapper(AsyncJobStatus.class, AsyncJobStatusDTO.class));
+        return this.ownerCurator.getOwnersWithProducts(productUuids)
+            .stream()
+            .map(jobConfigMapper)
+            .map(jobQueueMapper)
+            .map(this.translator.getStreamMapper(AsyncJobStatus.class, AsyncJobStatusDTO.class));
     }
 }
