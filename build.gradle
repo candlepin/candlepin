@@ -307,6 +307,12 @@ task generateOpenApiJson(type: org.openapitools.generator.gradle.plugin.tasks.Ge
     withXml = false
 }
 
+// Create a single checkstyle task to make it easier to run both the checkstyleMain & checkstyleTest targets
+task checkstyle(dependsOn: [tasks.checkstyleMain, tasks.checkstyleTest]) {
+    description = 'Run checkstyle for both the Main & Test targets'
+    group = 'Verification'
+}
+
 //Update the compileJava & processResourcesTasks depend on the openapi generation so that the generated classes
 //can be used during compilation.
 compileJava.dependsOn tasks.openApiGenerate
