@@ -32,9 +32,9 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,8 +43,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
@@ -133,12 +131,8 @@ public class RegenProductEntitlementCertsJobTest {
         Owner owner2 = new Owner("test_owner_key-2", "test_owner_name-2");
         Owner owner3 = new Owner("test_owner_key-3", "test_owner_name-3");
 
-        Collection<Owner> matchingOwners = Arrays.asList(owner1, owner2, owner3);
-
-        CandlepinQuery<Owner> ownerQuery = mock(CandlepinQuery.class);
-        doReturn(matchingOwners).when(ownerQuery).list();
-        doReturn(ownerQuery).when(this.mockOwnerCurator).getOwnersWithProducts(eq(productIds));
-
+        Set<Owner> matchingOwners = Util.asSet(owner1, owner2, owner3);
+        doReturn(matchingOwners).when(this.mockOwnerCurator).getOwnersWithProducts(eq(productIds));
         JobConfig config = RegenProductEntitlementCertsJob.createJobConfig()
             .setProductId(productId)
             .setLazyRegeneration(lazyRegen);
@@ -165,12 +159,8 @@ public class RegenProductEntitlementCertsJobTest {
         boolean lazyRegen = true;
 
         Set<String> productIds = Collections.singleton(productId);
-        Collection<Owner> matchingOwners = Arrays.asList();
-
-        CandlepinQuery<Owner> ownerQuery = mock(CandlepinQuery.class);
-        doReturn(matchingOwners).when(ownerQuery).list();
-        doReturn(ownerQuery).when(this.mockOwnerCurator).getOwnersWithProducts(eq(productIds));
-
+        Set<Owner> matchingOwners = Util.asSet();
+        doReturn(matchingOwners).when(this.mockOwnerCurator).getOwnersWithProducts(eq(productIds));
         JobConfig config = RegenProductEntitlementCertsJob.createJobConfig()
             .setProductId(productId)
             .setLazyRegeneration(lazyRegen);
