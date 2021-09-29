@@ -27,9 +27,10 @@ bootJar {
 }
 
 test {
-    onlyIf {
-        project.hasProperty("runSpec")
-    }
+// TODO find a better way to exclute spec tests from notmal "./gradlew test" run
+//    onlyIf {
+//        project.hasProperty("runSpec")
+//    }
 
     useJUnitPlatform()
 
