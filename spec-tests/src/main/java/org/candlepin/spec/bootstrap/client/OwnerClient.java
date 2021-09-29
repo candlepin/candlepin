@@ -15,6 +15,7 @@
 
 package org.candlepin.spec.bootstrap.client;
 
+import org.candlepin.ApiClient;
 import org.candlepin.ApiException;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.resource.OwnerApi;
@@ -24,7 +25,11 @@ import java.util.Set;
 
 public class OwnerClient extends OwnerApi {
 
-    private Set<String> createdOwners = new HashSet<>();
+    private final Set<String> createdOwners = new HashSet<>();
+
+    public OwnerClient(ApiClient client) {
+        super(client);
+    }
 
     @Override
     public OwnerDTO createOwner(OwnerDTO ownerDTO) throws ApiException {
@@ -42,6 +47,7 @@ public class OwnerClient extends OwnerApi {
         for (String ownerKey : this.createdOwners) {
             this.deleteOwner(ownerKey, true, true);
         }
+        this.createdOwners.clear();
     }
 
 }

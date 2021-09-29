@@ -27,7 +27,10 @@ import org.candlepin.resource.StatusApi;
 import org.candlepin.spec.bootstrap.Application;
 import org.candlepin.spec.bootstrap.client.ApiClientFactory;
 import org.candlepin.spec.bootstrap.client.ApiClientProperties;
+import org.candlepin.spec.bootstrap.client.OwnerClient;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +53,17 @@ public class OwnerResourceTest {
 //            "admin",
 //            true
 //        ));
+    private OwnerClient api;
 
+    @BeforeEach
+    void setUp() {
+        this.api = new OwnerClient(apiClient.createInstance());
+    }
+
+    @AfterEach
+    void tearDown() throws ApiException {
+        this.api.cleanup();
+    }
 
     @Test
     public void shouldCreateOwner() throws Exception {
