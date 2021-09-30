@@ -37,15 +37,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 /**
  * Test the /status resource
  */
-//@SpecTest
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(
-    webEnvironment = SpringBootTest.WebEnvironment.NONE,
-    classes = Application.class)
-@AutoConfigureMockMvc
-@EnableConfigurationProperties(value = ApiClientProperties.class)
-//@TestPropertySource(
-//    locations = "classpath:application-integrationtest.properties")
+@SpecTest
 public class StatusResourceTest {
 
     @Autowired
