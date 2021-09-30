@@ -15,15 +15,7 @@
 
 package org.candlepin.spec;
 
-import org.candlepin.spec.bootstrap.Application;
-import org.candlepin.spec.bootstrap.client.ApiClientProperties;
-
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -32,15 +24,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@ExtendWith(SpringExtension.class)
-@SpringBootTest(
-    webEnvironment = SpringBootTest.WebEnvironment.NONE,
-    classes = Application.class)
-@AutoConfigureMockMvc
-@EnableConfigurationProperties(value = ApiClientProperties.class)
-// TODO do we want the test properties to be overridable by external file?
-//@TestPropertySource(
-//    locations = "classpath:application-integrationtest.properties")
 @Tag("spec")
 public @interface SpecTest {
 }
