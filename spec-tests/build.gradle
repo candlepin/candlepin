@@ -34,6 +34,14 @@ test {
 
     useJUnitPlatform()
 
+    // TODO All properties have to be propagated if we want them overridable via -D params
+    System.properties.keys().each { key ->
+        def properyKey = key.toString()
+        if (properyKey.startsWith("spec.test.client")) {
+            systemProperty properyKey, System.getProperty(properyKey)
+        }
+    }
+
     testLogging {
         // set options for log level LIFECYCLE
         events TestLogEvent.FAILED,

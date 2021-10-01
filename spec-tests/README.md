@@ -6,6 +6,6 @@ To run spec tests use the following commnand.
 ```
 ./gradlew clean spec
 ```
-By default it expects candlepin running on **localhost:8443**. This can be changed in **application.yml**
+By default it expects candlepin running on **localhost:8443**.
 
 > Tests can be run from IDEA or any other IDE as well

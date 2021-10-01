@@ -44,7 +44,7 @@ public class OwnerResourceTest {
 
     private ApiClientFactory apiClient = new ApiClientFactory(
         new ApiClientProperties(
-            "https://192.168.122.12:8443/candlepin",
+            "https://localhost:8443/candlepin",
             "admin",
             "admin",
             true
