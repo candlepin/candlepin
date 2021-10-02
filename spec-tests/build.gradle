@@ -34,7 +34,7 @@ test {
 
     useJUnitPlatform()
 
-    // TODO All properties have to be propagated if we want them overridable via -D params
+    // TODO We have to propagate the -D params if we want them available in tests
     System.properties.keys().each { key ->
         def properyKey = key.toString()
         if (properyKey.startsWith("spec.test.client")) {
