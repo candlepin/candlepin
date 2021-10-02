@@ -12,7 +12,7 @@
  *  granted to use or replicate Red Hat trademarks that are incorporated
  *  in this software or its documentation.
  */
-package org.candlepin.spec;
+package org.candlepin.spec.bootstrap.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,12 +26,12 @@ import org.junit.jupiter.api.Test;
 @Disabled
 public class PropertyPropagationTest {
 
-    private final PropertySource properties = new PropertySource();
+    private final PropertySource properties = new SystemProperties();
 
     @Test
-    public void retrievesServerStatus() {
-        assertThat(this.properties.containsKey("spec.test.client.url")).isTrue();
-        assertThat(this.properties.containsKey("spec.test.client.username")).isTrue();
+    public void canReadPassedArguments() {
+        assertThat(this.properties.get().containsKey("spec.test.client.url")).isTrue();
+        assertThat(this.properties.get().containsKey("spec.test.client.username")).isTrue();
     }
 
 }

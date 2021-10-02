@@ -15,8 +15,27 @@
 
 package org.candlepin.spec.bootstrap.client;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
-public interface PropertySource {
-    Properties get();
+public class DefaultProperties implements PropertySource {
+
+    @Override
+    public Properties get() {
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        InputStream inputStream = loader.getResourceAsStream("settings.properties");
+        Properties properties = new Properties();
+        loadProperties(inputStream, properties);
+        return properties;
+    }
+
+    private void loadProperties(InputStream inputStream, Properties properties) {
+        try {
+            properties.load(inputStream);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 }

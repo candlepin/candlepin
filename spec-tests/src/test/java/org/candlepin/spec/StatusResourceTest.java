@@ -16,23 +16,13 @@ package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.candlepin.ApiClient;
 import org.candlepin.dto.api.v1.StatusDTO;
 import org.candlepin.resource.StatusApi;
-import org.candlepin.spec.bootstrap.Application;
 import org.candlepin.spec.bootstrap.client.ApiClientFactory;
-import org.candlepin.spec.bootstrap.client.ApiClientProperties;
+import org.candlepin.spec.bootstrap.client.ClientBuilders;
+import org.candlepin.spec.bootstrap.client.Config;
 
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
  * Test the /status resource
@@ -40,14 +30,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @SpecTest
 public class StatusResourceTest {
 
-    private ApiClientFactory apiClient = new ApiClientFactory(
-        new ApiClientProperties(
-            "https://localhost:8443/candlepin",
-            "admin",
-            "admin",
-            true
-        ));
-
+    private ApiClientFactory apiClient = ClientBuilders.instance();
 
     @Test
     public void retrievesServerStatus() throws Exception {

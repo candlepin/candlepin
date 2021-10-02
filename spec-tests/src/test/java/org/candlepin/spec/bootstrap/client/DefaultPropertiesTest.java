@@ -12,11 +12,24 @@
  *  granted to use or replicate Red Hat trademarks that are incorporated
  *  in this software or its documentation.
  */
-
 package org.candlepin.spec.bootstrap.client;
 
-import java.util.Properties;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public interface PropertySource {
-    Properties get();
+import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
+
+
+public class DefaultPropertiesTest {
+
+    private final DefaultProperties properties = new DefaultProperties();
+
+    @Test
+    public void canReadDefault() throws IOException {
+        assertThat(this.properties.get().containsKey("spec.test.client.url")).isTrue();
+        assertThat(this.properties.get().containsKey("spec.test.client.username")).isTrue();
+        assertThat(this.properties.get().containsKey("spec.test.client.unknown")).isFalse();
+    }
+
 }

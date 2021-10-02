@@ -17,6 +17,9 @@ package org.candlepin.spec.bootstrap.client;
 
 import java.util.Properties;
 
-public interface PropertySource {
-    Properties get();
+public class SystemProperties implements PropertySource {
+    @Override
+    public Properties get() {
+        return System.getProperties();
+    }
 }

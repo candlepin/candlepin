@@ -48,14 +48,12 @@ import okhttp3.Route;
 /**
  * Class to build a Candlpin API instance.
  **/
-@Component
 public class ApiClientFactory extends AbstractFactoryBean<ApiClient> {
     private static final Logger log = LoggerFactory.getLogger(ApiClientFactory.class);
 
-    private final ApiClientProperties properties;
+    private final Config properties;
 
-    @Autowired
-    public ApiClientFactory(ApiClientProperties properties) {
+    public ApiClientFactory(Config properties) {
         this.properties = Objects.requireNonNull(properties);
     }
 
@@ -63,10 +61,10 @@ public class ApiClientFactory extends AbstractFactoryBean<ApiClient> {
     @NonNull
     public ApiClient createInstance() {
         ApiClient apiClient = new ApiClient();
-        apiClient.setUsername(properties.getUsername());
-        apiClient.setPassword(properties.getPassword());
-        apiClient.setBasePath(properties.getUrl());
-        apiClient.setDebugging(properties.getDebug());
+        apiClient.setUsername(properties.get(ConfigKey.USERNAME));
+        apiClient.setPassword(properties.get(ConfigKey.PASSWORD));
+        apiClient.setBasePath(properties.get(ConfigKey.URL));
+        apiClient.setDebugging(properties.getBool(ConfigKey.DEBUG));
         apiClient.setVerifyingSsl(false);
         apiClient.setHttpClient(getUnsafeOkHttpClient());
 
@@ -103,7 +101,7 @@ public class ApiClientFactory extends AbstractFactoryBean<ApiClient> {
         client.authenticator(new Authenticator() {
             @Override
             public Request authenticate(Route route, Response response) {
-                String credential = Credentials.basic(properties.getUsername(), properties.getPassword());
+                String credential = Credentials.basic(properties.get(ConfigKey.USERNAME), properties.get(ConfigKey.PASSWORD));
                 return response.request().newBuilder().header("Authorization", credential).build();
             }
         });

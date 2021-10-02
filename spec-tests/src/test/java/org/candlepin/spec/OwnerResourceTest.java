@@ -15,40 +15,25 @@
 package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.candlepin.ApiException;
 import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.dto.api.v1.StatusDTO;
 import org.candlepin.resource.OwnerApi;
-import org.candlepin.resource.StatusApi;
-import org.candlepin.spec.bootstrap.Application;
 import org.candlepin.spec.bootstrap.client.ApiClientFactory;
-import org.candlepin.spec.bootstrap.client.ApiClientProperties;
+import org.candlepin.spec.bootstrap.client.ClientBuilders;
+import org.candlepin.spec.bootstrap.client.Config;
 import org.candlepin.spec.bootstrap.client.OwnerClient;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @SpecTest
 public class OwnerResourceTest {
 
-    private ApiClientFactory apiClient = new ApiClientFactory(
-        new ApiClientProperties(
-            "https://localhost:8443/candlepin",
-            "admin",
-            "admin",
-            true
-        ));
+    private ApiClientFactory apiClient = ClientBuilders.instance();
     private OwnerClient api;
 
     @BeforeEach

@@ -15,8 +15,19 @@
 
 package org.candlepin.spec.bootstrap.client;
 
-import java.util.Properties;
+public final class ClientBuilders {
+    private static ApiClientFactory instance;
 
-public interface PropertySource {
-    Properties get();
+    public static ApiClientFactory instance() {
+        if (instance == null) {
+            instance = new ApiClientFactory(
+                Config.fromSources(
+                    new DefaultProperties(),
+                    // TODO add support for external properties
+                    new SystemProperties()
+                )
+            );
+        }
+        return instance;
+    }
 }

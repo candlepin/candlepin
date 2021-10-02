@@ -15,8 +15,20 @@
 
 package org.candlepin.spec.bootstrap.client;
 
-import java.util.Properties;
+public enum ConfigKey {
+    URL("spec.test.client.url"),
+    USERNAME("spec.test.client.username"),
+    PASSWORD("spec.test.client.password"),
+    DEBUG("spec.test.client.debug");
 
-public interface PropertySource {
-    Properties get();
+    private final String key;
+
+    ConfigKey(String key) {
+        this.key = key;
+    }
+
+    public String key() {
+        return key;
+    }
+
 }
