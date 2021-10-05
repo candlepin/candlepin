@@ -648,13 +648,16 @@ public class ContentAccessManager {
         // has any real value.
 
         if (owner.isUsingSimpleContentAccess()) {
-            // Check if the owner's content view has changed since the date
-            if (!date.after(owner.getLastContentUpdate())) {
-                return true;
+            ContentAccessCertificate cert;
+            try {
+                cert = getCertificate(consumer);
             }
-
-            // Check cert properties
-            ContentAccessCertificate cert = consumer.getContentAccessCert();
+            catch (GeneralSecurityException e) {
+                return false;
+            }
+            catch (IOException e) {         
+                return false;
+            }
             return cert == null ||
                 date.before(cert.getUpdated()) ||
                 date.after(cert.getSerial().getExpiration());
