@@ -127,7 +127,9 @@ public class TestUtil {
             .entitlementCount(0L)
             .facts(new HashMap<>())
             .installedProducts(new HashSet<>())
-            .guestIds(new ArrayList<>());
+            .guestIds(new ArrayList<>())
+            .environments(new ArrayList<>());
+
 
         if (owner != null) {
             consumer.setOwner(new NestedOwnerDTO()

@@ -95,7 +95,7 @@ describe 'Autobind On Owner' do
     hypervisor_guests = [{"guestId"=>"myGuestId"}]
     hypervisor_uuid = random_string("hypervisor")
     hypervisor = @cp.register('hypervisor.bind.com',:system, hypervisor_uuid, hypervisor_facts, 'admin',
-      owner_key, [], [], nil, [], random_string('hypervisorid'))
+      owner_key, [], [], [], [], random_string('hypervisorid'))
     hypervisor = @cp.update_consumer({:uuid => hypervisor.uuid, :guestIds => hypervisor_guests})
 
     @cp.list_owner_pools(owner_key).length.should == 7
@@ -143,7 +143,7 @@ describe 'Autobind On Owner' do
         {'productId' => product2.id, 'productName' => product2['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1'])
     status = @cp.get_purpose_compliance(consumer['uuid'])
     status['status'].should == 'mismatched'
@@ -173,7 +173,7 @@ describe 'Autobind On Owner' do
         {:productId => product2.id, :productName => product2['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1'])
 
     entitlements = @cp.list_entitlements(:uuid => consumer.uuid)
@@ -201,7 +201,7 @@ describe 'Autobind On Owner' do
         {'productId' => product2.id, 'productName' => product2['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, 'role1', nil, [])
     status = @cp.get_purpose_compliance(consumer['uuid'])
     status['status'].should == 'mismatched'
@@ -237,7 +237,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, 'role1', nil, [])
     status = @cp.get_purpose_compliance(consumer['uuid'])
     status['status'].should == 'mismatched'
@@ -273,7 +273,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1'])
     status = @cp.get_purpose_compliance(consumer['uuid'])
     status['status'].should == 'mismatched'
@@ -305,7 +305,7 @@ describe 'Autobind On Owner' do
         {'productId' => product2.id, 'productName' => product2['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1','addon2'])
     status = @cp.get_purpose_compliance(consumer['uuid'])
     status['status'].should == 'mismatched'
@@ -342,7 +342,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, "my_usage", [])
     status = @cp.get_purpose_compliance(consumer['uuid'])
     status['status'].should == 'mismatched'
@@ -374,7 +374,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, "provided_role", nil, [])
 
     status = @cp.get_purpose_compliance(consumer['uuid'])
@@ -407,7 +407,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ["provided_addon", "random_addon"])
 
     status = @cp.get_purpose_compliance(consumer['uuid'])
@@ -441,7 +441,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, "provided_usage", [])
 
     status = @cp.get_purpose_compliance(consumer['uuid'])
@@ -472,7 +472,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, "provided_sla", nil, nil, [])
 
     status = @cp.get_purpose_compliance(consumer['uuid'])
@@ -528,7 +528,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
 
     consumer = @cp.register(
-            random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+            random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
             nil, [], nil, nil, nil, nil, nil, 0, nil,
             "provided_sla", "provided_role", "provided_usage", ["provided_addon", "another_addon"])
 
@@ -593,7 +593,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
     consumer = @cp.register(
         random_string('systempurpose'), :system, nil, {"cpu.cpu_socket(s)" => 1}, nil, owner_key, [],
-        installed, nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil,
+        installed, [], [], nil, [], nil, nil, nil, nil, nil, 0, nil,
         "mysla")
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
@@ -623,7 +623,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
     consumer = @cp.register(
         random_string('systempurpose'), :system, nil, {"virt.is_guest" => "True"}, nil, owner_key, [],
-        installed, nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil,
+        installed, [], [], nil, [], nil, nil, nil, nil, nil, 0, nil,
         nil, nil, "my_usage", [])
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
@@ -653,7 +653,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
     consumer = @cp.register(
         random_string('systempurpose'), :system, nil, {"virt.is_guest" => "True"}, nil, owner_key, [],
-        installed, nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil,
+        installed, [], [], nil, [], nil, nil, nil, nil, nil, 0, nil,
         "unsatisfied_sla", "unsatisfied_role", "unsatisfied_usage", [], nil, nil, nil, nil, "unsatisfied_support")
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
@@ -721,7 +721,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
     consumer = @cp.register(
         random_string('systempurpose'), :system, nil, {}, nil, owner_key, [],
-        installed, nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil,
+        installed, [], [], nil, [], nil, nil, nil, nil, nil, 0, nil,
         "my_sla", "my_role", "my_usage", ["my_addon"])
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
@@ -750,7 +750,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
 
     consumer = @cp.register(
-            random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+            random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
             nil, [], nil, nil, nil, nil, nil, 0, nil,
             nil, "PROVIDED_ROLE", nil, ["PROVIDED_ADDON", "ANOTHER_ADDON"])
 
@@ -793,7 +793,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {"virt.is_guest"=>"true"}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {"virt.is_guest"=>"true"}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, [])
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})
@@ -823,7 +823,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil,
         nil, "PROVIDED_ROLE", nil, ["PROVIDED_ADDON", "ANOTHER_ADDON"])
 
@@ -863,7 +863,7 @@ describe 'Autobind On Owner' do
         {'productId' => product2.id, 'productName' => product2['name']}]
 
     consumer = @cp.register(
-        random_string('system'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('system'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, 'Layered')
 
     @cp.consume_product(product2['id'], {:uuid => consumer.uuid})
@@ -915,7 +915,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil, nil, nil, "test_support")
 
     status = @cp.get_purpose_compliance(consumer['uuid'])
@@ -948,7 +948,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
 
     consumer = @cp.register(
-        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, owner_key, [], installed, [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, [], nil, nil, nil, nil, "provided_service_type");
 
     status = @cp.get_purpose_compliance(consumer['uuid'])
@@ -985,7 +985,7 @@ describe 'Autobind On Owner' do
         {'productId' => eng_product.id, 'productName' => eng_product['name']}]
     consumer = @cp.register(
         random_string('systempurpose'), :system, nil, {"virt.is_guest" => "True"}, nil, owner_key, [],
-        installed, nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil,
+        installed, [], [], nil, [], nil, nil, nil, nil, nil, 0, nil,
         nil, nil, nil, [], nil, nil, nil, nil, "test_support")
 
     @cp.consume_product(nil, {:uuid => consumer.uuid})

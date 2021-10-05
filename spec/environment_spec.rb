@@ -25,7 +25,7 @@ describe 'Environments' do
 
   it 'should cleanup consumers of deleted environment' do
     consumer = @org_admin.register(random_string('testsystem'), :system, nil, {},
-        nil, nil, [], [], @env['id'])
+        nil, nil, [], [], [{'id' => @env['id']}])
     id_cert_serial = consumer['idCert']['serial']['serial']
 
     @org_admin.delete_environment(@env['id'])
@@ -214,8 +214,8 @@ describe 'Environments' do
 
   it 'filters content not promoted to environment' do
     consumer = @org_admin.register(random_string('testsystem'), :system, nil, {},
-        nil, nil, [], [], @env['id'])
-    consumer['environment'].should_not be_nil
+        nil, nil, [], [], [{ 'id' => @env['id']}])
+    expect(consumer['environments']).not_to be_nil
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
 
@@ -247,8 +247,8 @@ describe 'Environments' do
   end
 
   it 'regenerates certificates after promoting/demoting content' do
-    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [], @env['id'])
-    consumer['environment'].should_not be_nil
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [], [{ 'id' => @env['id']}])
+    expect(consumer['environments']).not_to be_nil
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
     product = create_product
@@ -317,8 +317,8 @@ describe 'Environments' do
     wait_for_job(job['id'], 15)
     job = @cp.promote_content(env3['id'], [{:contentId => content2['id']}])
     wait_for_job(job['id'], 15)
-    @cp.register(random_string("consumer1"), :system, nil, {}, random_string("consumer1"), @owner['key'], [], [], env3['id'])
-    @cp.register(random_string("consumer2"), :system, nil, {}, random_string("consumer2"), @owner['key'], [], [], env3['id'])
+    @cp.register(random_string("consumer1"), :system, nil, {}, random_string("consumer1"), @owner['key'], [], [], [{ 'id' => env3['id']}])
+    @cp.register(random_string("consumer2"), :system, nil, {}, random_string("consumer2"), @owner['key'], [], [], [{ 'id' => env3['id']}])
 
     environments = @cp.list_environments(@owner['key'])
     expect(environments.length).to be >= 3

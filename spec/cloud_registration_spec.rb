@@ -36,7 +36,7 @@ describe 'Cloud Registration' do
         owner = create_owner("test_org")
         token = generate_token(owner['key'])
 
-        consumer = @cp.register("cloud_consumer", :system, nil, {}, nil, owner['key'], [], [], nil, [],
+        consumer = @cp.register("cloud_consumer", :system, nil, {}, nil, owner['key'], [], [], [], [],
             nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil, nil, token)
 
         expect(consumer).to_not be_nil

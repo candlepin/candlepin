@@ -56,6 +56,7 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -153,7 +154,7 @@ public class EnvironmentResource implements EnvironmentsApi {
             throw new NotFoundException(i18n.tr("No such environment: {0}", envId));
         }
 
-        List<Consumer> consumers = this.envCurator.getEnvironmentConsumers(environment).list();
+        List<Consumer> consumers = this.envCurator.getEnvironmentConsumers(environment);
         deleteConsumers(environment, consumers);
 
         log.info("Deleting environment: {}", environment);
@@ -305,8 +306,10 @@ public class EnvironmentResource implements EnvironmentsApi {
         this.validator.validateCollectionElementsNotNull(consumer::getInstalledProducts,
             consumer::getGuestIds, consumer::getCapabilities);
 
+        //TODO: This needs to support backward compatibility.
+        // Kept as it is to be handled in other task of multi-environment feature.
         Environment e = lookupEnvironment(envId);
-        consumer.setEnvironment(translator.translate(e, EnvironmentDTO.class));
+        consumer.setEnvironments(Arrays.asList(translator.translate(e, EnvironmentDTO.class)));
         return this.consumerResource.createConsumer(consumer, userName,
             e.getOwner().getKey(), activationKeys, true);
     }

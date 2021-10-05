@@ -39,6 +39,7 @@ import org.candlepin.dto.api.v1.DeletedConsumerDTO;
 import org.candlepin.dto.api.v1.DistributorVersionCapabilityDTO;
 import org.candlepin.dto.api.v1.DistributorVersionDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
+import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
 import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
@@ -216,6 +217,7 @@ public class JsonProvider extends JacksonJsonProvider {
         mapper.addMixIn(DistributorVersionCapabilityDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(DistributorVersionDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(EntitlementDTO.class, DynamicPropertyFilterMixIn.class);
+        mapper.addMixIn(EnvironmentDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(GuestIdDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(GuestIdDTOArrayElement.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(HypervisorIdDTO.class, DynamicPropertyFilterMixIn.class);
