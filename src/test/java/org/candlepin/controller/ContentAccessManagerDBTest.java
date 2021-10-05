@@ -106,7 +106,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
         Consumer consumer = this.createConsumer(owner);
 
         consumer.setFact("system.certificate_version", "3.0");
-        consumer.setEnvironment(environment);
+        consumer.addEnvironment(environment);
 
         return this.consumerCurator.merge(consumer);
     }

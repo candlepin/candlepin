@@ -21,7 +21,7 @@ describe 'Instance Based Subscriptions' do
     @uuid = random_string('system.uuid')
 
     @physical_sys = @user.register(random_string('host'), :system, nil,
-      {"cpu.cpu_socket(s)" => 8}, nil, nil, [], installed_prods, nil)
+      {"cpu.cpu_socket(s)" => 8}, nil, nil, [], installed_prods, [])
     @physical_client = Candlepin.new(nil, nil, @physical_sys['idCert']['cert'], @physical_sys['idCert']['key'])
     @physical_client.update_consumer({:guestIds => [{'guestId' => @uuid}]})
 

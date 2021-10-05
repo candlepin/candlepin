@@ -513,11 +513,7 @@ module Candlepin
           end
         end
 
-        if opts[:environment].nil?
-          path = "/consumers"
-        else
-          path = "/environments/#{opts[:environment]}/consumers"
-        end
+        path = "/consumers"
 
         query_args = opts.slice(:username, :owner).compact
         keys = opts[:activation_keys].join(",")

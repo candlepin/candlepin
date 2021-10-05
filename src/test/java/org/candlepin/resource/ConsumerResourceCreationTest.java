@@ -568,4 +568,12 @@ public class ConsumerResourceCreationTest {
         // no compliantUntil, and not update the consumer record
         verify(complianceRules).getStatus(any(Consumer.class), isNull(), eq(false), eq(false));
     }
+
+    @Test
+    public void registerWithNoEnvironments() {
+        Principal p = new TrustedUserPrincipal("anyuser");
+        when(this.principalProvider.get()).thenReturn(p);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
+        resource.createConsumer(consumer, USER, owner.getKey(), null, true);
+    }
 }

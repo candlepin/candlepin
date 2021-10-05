@@ -106,7 +106,7 @@ class Candlepin
   # TODO: need to switch to a params hash, getting to be too many arguments.
   def register(name, type=:system, uuid=nil, facts={}, username=nil,
               owner_key=nil, activation_keys=[], installedProducts=[],
-              environment=nil, capabilities=[], hypervisor_id=nil,
+              environments=[], capabilities=[], hypervisor_id=nil,
               content_tags=[], created_date=nil, last_checkin_date=nil,
               annotations=nil, recipient_owner_key=nil, user_agent=nil,
               entitlement_count=0, id_cert=nil, serviceLevel=nil, role=nil, usage=nil,
@@ -119,6 +119,7 @@ class Candlepin
       :facts => facts,
       :installedProducts => installedProducts,
       :contentTags => content_tags,
+      :environments => environments,
     }
 
     consumer[:capabilities] = capabilities.collect { |name| {'name' => name} } if capabilities
@@ -142,13 +143,8 @@ class Candlepin
     consumer[:serviceType] = service_type if service_type
     params = {}
 
-    if environment.nil?
-      path = get_path("consumers")
-      params[:owner] = owner_key if not owner_key.nil?
-    else
-      path = "/environments/#{environment}/consumers"
-    end
-
+    path = get_path("consumers")
+    params[:owner] = owner_key if not owner_key.nil?
     params[:username] = username if username
     params[:activation_keys] = activation_keys.join(",") if activation_keys.length > 1
     params[:activation_keys] = activation_keys[0] if activation_keys.length == 1
@@ -241,7 +237,7 @@ class Candlepin
     consumer[:capabilities] = params[:capabilities].collect { |name| {'name' => name} } if params[:capabilities]
     consumer[:hypervisorId] = {:hypervisorId => params[:hypervisorId]} if params[:hypervisorId]
     consumer['contentAccessMode'] = params['contentAccessMode'] if params.key?('contentAccessMode')
-    consumer[:environment] = params[:environment] if params.key?(:environment)
+    consumer[:environments] = params[:environments] if params[:environments]
     consumer[:serviceType] = params[:serviceType] if params.has_key?(:serviceType)
 
     path = get_path("consumers")

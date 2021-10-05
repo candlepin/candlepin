@@ -15,8 +15,8 @@ describe 'Environments Certificate V3' do
   it 'filters content not promoted to environment' do
     consumer = @org_admin.register(random_string('testsystem'), :system, nil,
         {'system.certificate_version' => '3.1'},
-        nil, nil, [], [], @env['id'])
-    consumer['environment'].should_not be_nil
+        nil, nil, [], [], [{'id' => @env['id']}])
+    expect(consumer['environments']).not_to be_nil
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
 
@@ -50,8 +50,8 @@ describe 'Environments Certificate V3' do
   it 'regenerates certificates after promoting/demoting content' do
     consumer = @org_admin.register(random_string('testsystem'), :system, nil,
         {'system.certificate_version' => '3.1'},
-        nil, nil, [], [], @env['id'])
-    consumer['environment'].should_not be_nil
+        nil, nil, [], [], [{'id' => @env['id']}])
+    expect(consumer['environments']).not_to be_nil
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
 

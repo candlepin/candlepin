@@ -39,8 +39,6 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
 
-
-
 public class ConsumerTest extends DatabaseTestFixture {
 
     @Inject private ConsumerResource consumerResource;
