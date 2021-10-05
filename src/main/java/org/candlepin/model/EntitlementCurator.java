@@ -541,25 +541,31 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @return
      *  A CandlepinQuery to iterate over the entitlements in the specified environment
      */
-    public CandlepinQuery<Entitlement> listByEnvironment(Environment environment) {
+    public List<Entitlement> listByEnvironment(Environment environment) {
         return this.listByEnvironment(environment != null ? environment.getId() : null);
     }
 
     /**
-     * Fetches a the entitlements used by consumers in the specified environment.
+     * Fetches the entitlements used by consumers in the specified environment.
      *
      * @param environmentId
      *  The ID of the environment for which to fetch entitlements
      *
      * @return
-     *  A CandlepinQuery to iterate over the entitlements in the specified environment
+     *  A List to iterate over the entitlements in the specified environment
      */
-    public CandlepinQuery<Entitlement> listByEnvironment(String environmentId) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Entitlement.class)
-            .createCriteria("consumer")
-            .add(Restrictions.eq("environmentId", environmentId));
+    public List<Entitlement> listByEnvironment(String environmentId) {
+        CriteriaBuilder cb = this.getEntityManager().getCriteriaBuilder();
+        CriteriaQuery<Entitlement> query = cb.createQuery(Entitlement.class);
+        Root<Entitlement> root = query.from(Entitlement.class);
+        Join<Entitlement, Consumer> consumer = root.join(Entitlement_.consumer);
+        MapJoin<Consumer, String, String> consumerEnvironments = consumer.join(Consumer_.environmentIds);
 
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
+        query.select(root)
+            .distinct(true)
+            .where(cb.equal(consumerEnvironments.value(), environmentId));
+
+        return listByCriteria(query);
     }
 
     /**

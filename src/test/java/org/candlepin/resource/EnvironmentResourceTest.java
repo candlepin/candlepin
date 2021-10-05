@@ -65,6 +65,7 @@ import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 
 @ExtendWith(MockitoExtension.class)
@@ -161,7 +162,7 @@ class EnvironmentResourceTest {
     @Test
     void canDeleteEmptyEnvironment() {
         when(this.envCurator.get(anyString())).thenReturn(this.environment1);
-        CandlepinQuery<Consumer> mockedQuery = mockedQueryOf();
+        List<Consumer> mockedQuery = mockedQueryOf().list();
         when(this.envCurator.getEnvironmentConsumers(eq(this.environment1)))
             .thenReturn(mockedQuery);
 
@@ -182,7 +183,7 @@ class EnvironmentResourceTest {
         consumer2.setIdCert(null);
         consumer2.setContentAccessCert(null);
         when(this.envCurator.get(anyString())).thenReturn(this.environment1);
-        CandlepinQuery<Consumer> mockedQuery = mockedQueryOf(consumer1, consumer2);
+        List<Consumer> mockedQuery = mockedQueryOf(consumer1, consumer2).list();
         when(this.envCurator.getEnvironmentConsumers(eq(this.environment1)))
             .thenReturn(mockedQuery);
 
@@ -212,7 +213,7 @@ class EnvironmentResourceTest {
         Consumer consumer = new Consumer("c1", "u1", this.owner, cType);
         consumer.setIdCert(TestUtil.createIdCert());
         consumer.setContentAccessCert(createContentAccessCert());
-        consumer.setEnvironment(environment);
+        consumer.addEnvironment(environment);
         return consumer;
     }
 

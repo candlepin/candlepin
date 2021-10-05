@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.exceptions.DuplicateEntryException;
 import org.candlepin.jackson.HateoasArrayExclude;
 import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.jackson.StringTrimmingConverter;
@@ -28,17 +29,22 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
@@ -188,9 +194,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Column(name = "owner_id")
     private String ownerId;
 
-    @Column(name = "environment_id")
-    private String environmentId;
-
     @Column(name = "entitlement_count")
     @NotNull
     private Long entitlementCount;
@@ -277,6 +280,15 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Size(max = 255)
     private String serviceType;
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 1000)
+    @CollectionTable(name = "cp_consumer_environments", joinColumns = @JoinColumn(name = "cp_consumer_id"))
+    @MapKeyColumn(name = "priority")
+    @Column(name = "environment_id")
+    @Cascade({org.hibernate.annotations.CascadeType.ALL})
+    @Fetch(FetchMode.SELECT)
+    private Map<String, String> environmentIds;
+
     public Consumer(String name, String userName, Owner owner, ConsumerType type) {
         this();
 
@@ -296,11 +308,14 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         if (owner != null) {
             this.setOwner(owner);
         }
+
+        this.environmentIds = new LinkedHashMap<>();
     }
 
     public Consumer() {
         this.entitlements = new HashSet<>();
         this.setEntitlementCount(0L);
+        this.environmentIds = new LinkedHashMap<>();
     }
 
     /**
@@ -778,58 +793,16 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     /**
-     * Fetches the ID of the environment with which this consumer is associated. If the consumer is not
+     * Fetches the ID of the highest prioritized environment with which
+     * this consumer is associated. If the consumer is not
      * associated with an environment, this method returns null.
      *
      * @return the ID of the environment for this consumer
+     * TODO: This method is kept temporarily to support the existing functionality.
+     * This needs to be removed in the later part of this epic.
      */
     public String getEnvironmentId() {
-        return this.environmentId;
-    }
-
-    /**
-     * Sets or clears the environment ID for this consumer.
-     *
-     * It is advised to use the setEnvironment method rather than setting the ID directly, as this
-     * method does not perform any validation on the environment being set.
-     *
-     * @param environmentId
-     *  The ID of the environment to set for this consumer
-     *
-     * @return
-     *  A reference to this consumer
-     */
-    public Consumer setEnvironmentId(String environmentId) {
-        this.environmentId = environmentId != null && !environmentId.isEmpty() ? environmentId : null;
-        return this;
-    }
-
-    /**
-     * Sets or clears the environment ID for this consumer. If the environment is not null, but does not
-     * have an environment ID, this method throws an exception.
-     *
-     * @param environment
-     *  The environment to associate to this consumer, or null to clear the environment
-     *
-     * @throws IllegalStateException
-     *  if environment is not null, but does not have an environment ID
-     *
-     * @return
-     *  A reference to this consumer
-     */
-    public Consumer setEnvironment(Environment environment) {
-        if (environment != null) {
-            if (environment.getId() == null || environment.getId().isEmpty()) {
-                throw new IllegalStateException("environment has not been persisted");
-            }
-
-            this.environmentId = environment.getId();
-        }
-        else {
-            this.environmentId = null;
-        }
-
-        return this;
+        return this.getEnvironmentIds() == null ? null : this.environmentIds.get("0");
     }
 
     /**
@@ -1024,4 +997,64 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.serviceType = serviceType;
         return this;
     }
+
+    public List<String> getEnvironmentIds() {
+        return this.environmentIds.entrySet().stream()
+            .sorted(Comparator.comparingInt(entry -> Integer.parseInt(entry.getKey())))
+            .map(Map.Entry::getValue)
+            .collect(Collectors.toList());
+    }
+
+    public Consumer setEnvironmentIds(List<String> environmentIds) {
+        if (this.environmentIds != null) {
+            this.environmentIds.clear();
+        }
+
+        // Creating a new map instance and assigning it to the environmentIds.
+        // This ensures that, we are deleting the existing entries and inserting the new entries.
+        // This is done to avoid constraint (cp_consumer_environments_pkey) violation exception.
+        // Whenever we try to update the existing data (changing priority), it actually updates
+        // the environment Id and not the priority.
+        LinkedHashMap<String, String> envMap = new LinkedHashMap<>();
+        if (environmentIds != null) {
+
+            for (String environmentId : environmentIds) {
+                if (envMap.containsValue(environmentId)) {
+                    throw new DuplicateEntryException("Environment " + environmentId +
+                        " specified more than once.");
+                }
+            }
+            for (String environmentId : environmentIds) {
+                envMap.put(String.valueOf(envMap.size()), environmentId);
+            }
+
+            this.environmentIds = envMap;
+        }
+        return this;
+    }
+
+    /**
+     * It adds the consumer's environment.
+     * It basically adds one after another with
+     * the lowering priority.
+     *
+     * @param environment incoming environment
+     * @return a consumer
+     */
+    public Consumer addEnvironment(Environment environment) {
+        if (environment != null) {
+            if (this.environmentIds == null) {
+                this.environmentIds = new LinkedHashMap<>();
+            }
+
+            if (this.environmentIds.containsValue(environment.getId())) {
+                throw new DuplicateEntryException("Environment " + environment.getId() +
+                    " specified more than once.");
+            }
+
+            this.environmentIds.put(String.valueOf(this.environmentIds.size()), environment.getId());
+        }
+        return this;
+    }
+
 }

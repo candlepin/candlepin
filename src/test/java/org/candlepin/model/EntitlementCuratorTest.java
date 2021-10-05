@@ -83,7 +83,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         environmentCurator.create(environment);
 
         consumer = createConsumer(owner);
-        consumer.setEnvironment(environment);
+        consumer.addEnvironment(environment);
         consumerCurator.create(consumer);
 
         testProduct = TestUtil.createProduct();
@@ -325,7 +325,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void listByEnvironment() {
-        List<Entitlement> ents = entitlementCurator.listByEnvironment(environment).list();
+        List<Entitlement> ents = entitlementCurator.listByEnvironment(environment);
         assertEquals(2, ents.size());
     }
 
@@ -501,7 +501,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         productCurator.create(product);
 
         Consumer otherConsumer = createConsumer(owner);
-        otherConsumer.setEnvironment(environment);
+        otherConsumer.addEnvironment(environment);
         consumerCurator.create(otherConsumer);
 
         List<Entitlement> createdEntitlements = new LinkedList<>();

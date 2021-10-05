@@ -166,7 +166,7 @@ public class StandardTranslator extends SimpleModelTranslator {
             Consumer.class, org.candlepin.dto.api.v1.ConsumerDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.api.v1.ConsumerArrayElementTranslator(
-            consumerTypeCurator, environmentCurator, ownerCurator),
+            consumerTypeCurator, ownerCurator),
             Consumer.class, org.candlepin.dto.api.v1.ConsumerDTOArrayElement.class);
         this.registerTranslator(
             new ConsumerInstalledProductTranslator(), ConsumerInstalledProduct.class,

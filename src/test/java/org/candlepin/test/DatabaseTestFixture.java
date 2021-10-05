@@ -554,7 +554,7 @@ public class DatabaseTestFixture {
         // Update consumers to point to the new environment
         if (consumers != null) {
             for (Consumer consumer : consumers) {
-                consumer.setEnvironmentId(environment.getId());
+                consumer.addEnvironment(environment);
                 this.consumerCurator.merge(consumer);
             }
         }

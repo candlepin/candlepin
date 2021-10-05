@@ -31,7 +31,7 @@ describe 'Consumer Resource' do
         @owner2['key'],
         [],
         [],
-        nil,
+        [],
         [],
         nil,
         [],
@@ -57,7 +57,7 @@ describe 'Consumer Resource' do
         @owner2['key'],
         [],
         [],
-        nil,
+        [],
         [],
         nil,
         [],
@@ -174,9 +174,8 @@ describe 'Consumer Resource' do
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
-
     expect{
-      consumer_client.update_consumer({:environment => {:name => "abc"}})
+      consumer_client.update_consumer({:environments => [{ 'name' => 'abc'}]})
     }.to raise_error(RestClient::ResourceNotFound)
   end
 
@@ -187,12 +186,12 @@ describe 'Consumer Resource' do
       consumer['idCert']['key'])
     env = @cp.create_environment(@owner1['key'], random_string("env_id"), random_string("env_name"))
 
-    expect(consumer.environment).to be_nil
+    expect(consumer.environments).to be_nil
 
-    consumer_client.update_consumer({:environment => {:name => env.name}})
+    consumer_client.update_consumer({:environments => [{:name => env.name}]})
     consumer = @cp.get_consumer(consumer['uuid'])
 
-    expect(consumer.environment).to_not be_nil
+    expect(consumer.environments).to_not be_nil
   end
 
   it 'should let consumer update environment with valid env id only' do
@@ -201,12 +200,12 @@ describe 'Consumer Resource' do
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     env = @cp.create_environment(@owner1['key'], random_string("env_id"), random_string("env_name"))
 
-    expect(consumer.environment).to be_nil
+    expect(consumer.environments).to be_nil
 
-    consumer_client.update_consumer({:environment => {:id => env.id}})
+    consumer_client.update_consumer({:environments => [{"id" => env.id}]})
     consumer = @cp.get_consumer(consumer['uuid'])
 
-    expect(consumer.environment).to_not be_nil
+    expect(consumer.environments).to_not be_nil
   end
 
   it 'should let not consumer update environment with incorrect env id' do
@@ -214,10 +213,9 @@ describe 'Consumer Resource' do
     consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
-    expect(consumer.environment).to be_nil
-
+    expect(consumer.environments).to be_nil
     expect{
-      consumer_client.update_consumer({:environment => {:id => 'incorrect_id'}})
+      consumer_client.update_consumer({:environments => [{ 'id' => 'incorrect_id'}]})
     }.to raise_error(RestClient::ResourceNotFound)
 
   end
@@ -433,7 +431,7 @@ describe 'Consumer Resource' do
   it "should let a consumer register with a hypervisorId" do
     some_owner = create_owner(random_string('someowner'))
     client = user_client(some_owner, random_string('bob'))
-    consumer = client.register(random_string('system1'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], nil, [], "aBcD")
+    consumer = client.register(random_string('system1'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], [], [], "aBcD")
     # hypervisorId should always be set to lower case for the database constraint
     consumer['hypervisorId']['hypervisorId'].should == "abcd"
   end
@@ -442,7 +440,7 @@ describe 'Consumer Resource' do
     some_owner = create_owner(random_string('someowner'))
     client = user_client(some_owner, random_string('bob'))
     tags = [ "awesomeos", "awesomeos-workstation", "otherproduct" ]
-    consumer = client.register(random_string('system1'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], nil, [], nil, tags)
+    consumer = client.register(random_string('system1'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], [], [], nil, tags)
     consumer['contentTags'].should =~ tags
   end
 
@@ -450,7 +448,7 @@ describe 'Consumer Resource' do
     some_owner = create_owner(random_string('someowner'))
     client = user_client(some_owner, random_string('bob'))
     annotations = "here is a piece of information, here is another piece."
-    consumer = client.register(random_string('system1'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], nil, [], nil, nil, nil, nil, annotations)
+    consumer = client.register(random_string('system1'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], [], [], nil, nil, nil, nil, annotations)
     consumer['annotations'].should == annotations
   end
 
@@ -461,7 +459,7 @@ describe 'Consumer Resource' do
     created_date = '2015-05-09T13:23:55+0000'
     checkin_date = '2015-05-19T13:23:55+0000'
     consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
-              owner['key'], [], [], nil, [], nil, [], created_date, checkin_date)
+              owner['key'], [], [], [], [], nil, [], created_date, checkin_date)
     consumer['lastCheckin'].should == checkin_date
     consumer['created'].should == created_date
     #reload to be sure it was persisted
@@ -484,7 +482,7 @@ describe 'Consumer Resource' do
       client = user_client(owner, user_name)
 
       consumer = client.register(random_string('system'), type=:candlepin, nil, {}, user_name, owner['key'],
-        [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil,
+        [], [], [], [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil,
         consumer_input_mode)
 
       expect(consumer).to_not be_nil
@@ -507,7 +505,7 @@ describe 'Consumer Resource' do
 
       expect {
         client.register(random_string('system'), type=:candlepin, nil, {}, user_name, owner['key'],
-          [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil,
+          [], [], [], [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil,
           consumer_input_mode)
       }.to raise_exception(RestClient::BadRequest)
     end
@@ -520,7 +518,7 @@ describe 'Consumer Resource' do
       client = user_client(owner, user_name)
 
       consumer = client.register(random_string('system'), type=:system, nil, {}, user_name, owner['key'],
-        [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil,
+        [], [], [], [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil,
         consumer_input_mode)
 
       expect(consumer).to_not be_nil
@@ -536,7 +534,7 @@ describe 'Consumer Resource' do
 
       expect {
         consumer = client.register(random_string('system'), type=:system, nil, {}, user_name, owner['key'],
-          [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil,
+          [], [], [], [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil,
           consumer_input_mode)
       }.to raise_exception(RestClient::BadRequest)
     end
@@ -587,7 +585,7 @@ describe 'Consumer Resource' do
     service_level = 'test_service_level'
 
     consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
-              owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, service_level)
+              owner['key'], [], [], [], [], nil, [], nil, nil, nil, nil, nil, 0, nil, service_level)
 
     expect(consumer['serviceLevel']).to eq(service_level)
 
@@ -602,7 +600,7 @@ describe 'Consumer Resource' do
     client = user_client(owner, user_name)
 
     consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
-                               owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil,
+                               owner['key'], [], [], [], [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil,
                                nil, nil, nil, nil, false)
 
     expect(consumer['autoheal']).to eq(false)
@@ -620,7 +618,7 @@ describe 'Consumer Resource' do
     role = 'test_role'
 
     consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
-              owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, role)
+              owner['key'], [], [], [], [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, role)
 
     expect(consumer['role']).to eq(role)
 
@@ -637,7 +635,7 @@ describe 'Consumer Resource' do
     usage = 'test_usage'
 
     consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
-              owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, usage)
+              owner['key'], [], [], [], [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, usage)
 
     expect(consumer['usage']).to eq(usage)
 
@@ -654,7 +652,7 @@ describe 'Consumer Resource' do
     addons = ['test_addon-1', 'test_addon-2', 'test_addon-3']
 
     consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
-              owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, addons)
+              owner['key'], [], [], [], [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, addons)
 
     expect(consumer['addOns']).to_not be_nil
     expect(consumer['addOns'].size).to eq(addons.size)
@@ -675,7 +673,7 @@ describe 'Consumer Resource' do
     created_date = '2015-05-09T13:23:55.968+0000'
     checkin_date = '2015-05-19T13:25:55.222+0000'
     consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
-              owner['key'], [], [], nil, [], nil, [], created_date, checkin_date)
+              owner['key'], [], [], [], [], nil, [], created_date, checkin_date)
     consumer = client.get_consumer(consumer['uuid'])
     consumer['lastCheckin'].should == '2015-05-19T13:25:55+0000'
     consumer['created'].should == '2015-05-09T13:23:55+0000'
@@ -684,12 +682,12 @@ describe 'Consumer Resource' do
   it "should not let a consumer register with a used hypervisorId in same the org" do
     some_owner = create_owner(random_string('someowner'))
     client = user_client(some_owner, random_string('bob'))
-    consumer = client.register(random_string('system1'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], nil, [], "aBcD")
+    consumer = client.register(random_string('system1'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], [], [], "aBcD")
     # hypervisorId should always be set to lower case for the database constraint
     consumer['hypervisorId']['hypervisorId'].should == "abcd"
 
     lambda do
-      client.register(random_string('system2'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], nil, [], "abCd")
+      client.register(random_string('system2'), :system, random_string("someuuid"), {}, random_string("uname"), some_owner['key'], [], [], [], [], "abCd")
     end.should raise_exception(RestClient::BadRequest)
   end
 
@@ -870,7 +868,7 @@ describe 'Consumer Resource' do
     user = user_client(@owner1, random_string('billy'))
     lambda do
       consumer = user.register(random_string('machine1'), :candlepin, nil,
-                               {}, nil, nil, [], [], nil, [], nil, [], nil, nil,
+                               {}, nil, nil, [], [], [], [], nil, [], nil, nil,
                                nil, nil, "RHSM/1.0 (cmd=subscription-manager)")
     end.should raise_exception(RestClient::BadRequest)
 
@@ -956,7 +954,7 @@ describe 'Consumer Resource' do
     user_cp = user_client(@owner1, random_string('billy'))
     consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
-    consumer1 = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [], nil, [], "hYpervisor")
+    consumer1 = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [], [], [], "hYpervisor")
     consumer_client1 = Candlepin.new(nil, nil, consumer1['idCert']['cert'], consumer1['idCert']['key'])
 
     consumer = consumer_client.get_consumer()
@@ -1553,6 +1551,91 @@ describe 'Consumer Resource' do
     }.to raise_exception(RestClient::BadRequest)
   end
 
+  it 'should create consumer with multiple environments' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    env1 = @cp.create_environment(@owner1['key'], random_string("env_id-1"), random_string("env_name-1"))
+    env2 = @cp.create_environment(@owner1['key'], random_string("env_id-2"), random_string("env_name-2"))
+
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [], [{'id' => env1.id}, {'id' => env2.id}])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    expect(consumer.environments.size).to eq(2)
+    expect(consumer.environments[0].name).to eq(env1.name)
+    expect(consumer.environments[1].name).to eq(env2.name)
+  end
+
+  it 'should not create consumer with nil environment in environments list' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    env1 = @cp.create_environment(@owner1['key'], random_string("env_id-1"), random_string("env_name-1"))
+
+    lambda do
+      consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [], [{'id' => env1.id}, {'id' => ''}])
+    end.should raise_exception(RestClient::ResourceNotFound)
+  end
+
+  it 'should update consumer with re-prioritized environments' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    env1 = @cp.create_environment(@owner1['key'], random_string("env_id-1"), random_string("env_name-1"))
+    env2 = @cp.create_environment(@owner1['key'], random_string("env_id-2"), random_string("env_name-2"))
+
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    consumer_client.update_consumer({:environments => [{:name => env1.name}, {:name => env2.name}]})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    expect(consumer.environments[0].name).to eq(env1.name)
+    expect(consumer.environments[1].name).to eq(env2.name)
+
+    # re-prioritized the environments
+    consumer_client.update_consumer({:environments => [{:name => env2.name}, {:name => env1.name}]})
+    consumer = @cp.get_consumer(consumer['uuid'])
+    expect(consumer.environments[0].name).to eq(env2.name)
+    expect(consumer.environments[1].name).to eq(env1.name)
+  end
+
+  it 'should preserve other environment priorities on a consumer when an environment is removed' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    env1 = @cp.create_environment(@owner1['key'], random_string("env_id-1"), random_string("env_name-1"))
+    env2 = @cp.create_environment(@owner1['key'], random_string("env_id-2"), random_string("env_name-2"))
+    env3 = @cp.create_environment(@owner1['key'], random_string("env_id-3"), random_string("env_name-3"))
+
+
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [],
+      [{'id' => env1.id}, {'id' => env2.id}, {'id' => env3.id}])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    expect(consumer.environments[0].name).to eq(env1.name)
+    expect(consumer.environments[1].name).to eq(env2.name)
+    expect(consumer.environments[2].name).to eq(env3.name)
+
+    # Removed the environment 2 (env_id-2).
+    consumer_client.update_consumer({:environments => [{:name => env1.name}, {:name => env3.name}]})
+    consumer = @cp.get_consumer(consumer['uuid'])
+
+    #It should maintain the lowering priority for the rest of other environments.
+    expect(consumer.environments[0].name).to eq(env1.name)
+    expect(consumer.environments[1].name).to eq(env3.name)
+  end
+
+  it 'should return exception when environment is specified more than once' do
+    user_cp = user_client(@owner1, random_string('billy'))
+    env1 = @cp.create_environment(@owner1['key'], random_string("env_id-1"), random_string("env_name-1"))
+    env2 = @cp.create_environment(@owner1['key'], random_string("env_id-2"), random_string("env_name-2"))
+
+    # Exception raised while creating consumer
+    expect {
+      user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [],
+        [{:id => env1.id}, {:id => env2.id}, {:id => env1.id}])
+    }.to raise_exception(RestClient::Conflict)
+
+    consumer = user_cp.register(random_string('system'), :system, nil, {}, nil, nil, [], [])
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    # Exception raised while updating consumer
+    expect {
+      consumer_client.update_consumer({:environments => [{:name => env1.name}, {:name => env2.name}, {:name => env1.name}]})
+    }.to raise_exception(RestClient::Conflict)
+  end
+
 end
 
 describe 'Consumer Resource Consumer Fact Filter Tests' do
@@ -1599,7 +1682,7 @@ describe 'Consumer Resource Consumer Fact Filter Tests' do
     service_type = 'test_service_type'
 
     consumer = client.register(random_string('system'), type=:system, nil, {}, user_name,
-                               owner['key'], [], [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil,
+                               owner['key'], [], [], [], [], nil, [], nil, nil, nil, nil, nil, 0, nil, nil,
                                nil, nil, nil, nil, nil, nil, nil, service_type)
 
     expect(consumer['serviceType']).to eq(service_type)

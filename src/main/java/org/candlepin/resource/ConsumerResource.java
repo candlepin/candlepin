@@ -56,6 +56,7 @@ import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.DeleteResult;
 import org.candlepin.dto.api.v1.EntitlementDTO;
+import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
 import org.candlepin.dto.api.v1.HypervisorIdDTO;
@@ -66,6 +67,7 @@ import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.CandlepinException;
+import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
@@ -95,7 +97,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
-import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
@@ -768,15 +769,6 @@ public class ConsumerResource implements ConsumersApi {
             entity.setReleaseVer(new Release(dto.getReleaseVer().getReleaseVer()));
         }
 
-        if (dto.getEnvironment() != null) {
-            Environment env = environmentCurator.get(dto.getEnvironment().getId());
-            if (env == null) {
-                throw new NotFoundException(i18n.tr("Environment \"{0}\" could not be found.",
-                    dto.getEnvironment().getId()));
-            }
-            entity.setEnvironment(env);
-        }
-
         if (dto.getLastCheckin() != null) {
             entity.setLastCheckin(Util.toDate(dto.getLastCheckin()));
         }
@@ -1001,6 +993,8 @@ public class ConsumerResource implements ConsumersApi {
         try {
             Date createdDate = consumerToCreate.getCreated();
             Date lastCheckIn = consumerToCreate.getLastCheckin();
+
+            this.updateEnvironments(consumer, consumerToCreate, false);
 
             // create sets created to current time.
             consumerToCreate = consumerCurator.create(consumerToCreate);
@@ -1534,7 +1528,7 @@ public class ConsumerResource implements ConsumersApi {
 
         changesMade = updateSystemPurposeData(updated, toUpdate) || changesMade;
 
-        changesMade = updateEnvironment(updated, toUpdate) || changesMade;
+        changesMade = updateEnvironments(updated, toUpdate, true) || changesMade;
 
         // like the other values in an update, if consumer name is null, act as if
         // it should remain the same
@@ -1604,57 +1598,83 @@ public class ConsumerResource implements ConsumersApi {
     }
 
     /**
-     * Updates consumer environment either by environment name or id, reset & re-generate CA certs.
+     * Validates and updates consumer's multiple environments.
+     *
+     * @param updated
+     *  The incoming consumer DTO for which to fetch multiple environments object
+     * @param toUpdate
+     *  The consumer instance to set the validated environments
+     * @param existing
+     *  This identifies whether the consumer is new or existing
+     *  if existing=true, it will regenerate the certificates
+     *
+     * @throws NotFoundException
+     *  if environment is not found by provided id or name
+     *
+     * @throws ConflictException
+     *  if environment is specified more than once
+     *
      * @return boolean status whether any updates are made or not.
      */
-    private boolean updateEnvironment(ConsumerDTO updated, Consumer toUpdate) {
-        if (updated.getEnvironment() == null) {
+    private boolean updateEnvironments(ConsumerDTO updated, Consumer toUpdate, boolean existing) {
+        List<EnvironmentDTO> environments = updated.getEnvironments();
+
+        if (environments == null) {
             return false;
         }
-
         boolean changesMade = false;
-        String environmentId = updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
-        String environmentName = updated.getEnvironment() == null ? null : updated.getEnvironment().getName();
-        String validatedEnvId = null;
+        List<String> validatedEnvIds = new ArrayList<>();
 
-        if (environmentId != null) {
-            if (toUpdate.getEnvironmentId() == null || !toUpdate.getEnvironmentId().equals(environmentId)) {
+        if (environments != null) {
+            for (EnvironmentDTO environment : environments) {
+                String environmentId = environment == null ? null : environment.getId();
+                String environmentName = environment == null ? null : environment.getName();
 
-                if (!environmentCurator.exists(environmentId)) {
-                    throw new NotFoundException(i18n.tr(
-                        "Environment with ID \"{0}\" could not be found.", environmentId));
+                if (environmentId != null) {
+                    if (!environmentCurator.exists(environmentId)) {
+                        throw new NotFoundException(i18n.tr(
+                            "Environment with ID \"{0}\" could not be found.", environmentId));
+                    }
+                }
+                else if (environmentName != null) {
+                    environmentId = this.environmentCurator
+                        .getEnvironmentIdByName(toUpdate.getOwnerId(), environmentName);
+
+                    if (environmentId == null) {
+                        throw new NotFoundException(i18n.tr(
+                            "Environment with name \"{0}\" could not be found.", environmentName));
+                    }
+                }
+                else {
+                    throw new NotFoundException(i18n.tr("Environment could not be" +
+                        " found using provided details."));
                 }
 
-                validatedEnvId = environmentId;
-            }
+                if (validatedEnvIds.contains(environmentId)) {
+                    throw new ConflictException(i18n.tr("Environment \"{0}\"" +
+                        " specified more than once." + environmentId));
+                }
 
-        }
-        else if (environmentName != null) {
-            String envId = this.environmentCurator.
-                getEnvironmentIdByName(toUpdate.getOwnerId(), environmentName);
-
-            if (envId == null) {
-                throw new NotFoundException(i18n.tr(
-                    "Environment with name \"{0}\" could not be found.", environmentName));
-            }
-
-            if (toUpdate.getEnvironmentId() == null || !envId.equals(toUpdate.getEnvironmentId())) {
-                validatedEnvId = envId;
+                validatedEnvIds.add(environmentId);
             }
         }
 
-        if (validatedEnvId != null) {
-            toUpdate.setEnvironmentId(validatedEnvId);
-            // reset content access cert
-            Owner owner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
+        if (validatedEnvIds.size() > 0) {
+            toUpdate.setEnvironmentIds(validatedEnvIds);
 
-            if (owner.isUsingSimpleContentAccess()) {
-                toUpdate.setContentAccessCert(null);
-                this.contentAccessManager.removeContentAccessCert(toUpdate);
+            if (existing) {
+                // reset content access cert
+                Owner owner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
+
+                if (owner.isUsingSimpleContentAccess()) {
+                    toUpdate.setContentAccessCert(null);
+                    this.contentAccessManager.removeContentAccessCert(toUpdate);
+                }
+
+                // lazily regenerate certs, so the client can still work
+                poolManager.regenerateCertificatesOf(toUpdate, true);
             }
 
-            // lazily regenerate certs, so the client can still work
-            poolManager.regenerateCertificatesOf(toUpdate, true);
             changesMade = true;
         }
 
@@ -3035,5 +3055,4 @@ public class ConsumerResource implements ConsumersApi {
             }
         }
     }
-
 }

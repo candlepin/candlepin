@@ -31,7 +31,6 @@ import static org.mockito.Mockito.when;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
@@ -264,7 +263,6 @@ public class EntitlementCertificateGeneratorTest {
             ecMap.put(entitlement.getPool().getId(), new EntitlementCertificate());
         }
 
-        CandlepinQuery<Entitlement> cqmock = mock(CandlepinQuery.class);
         when(this.mockEntitlementCurator
                 .listEntitlementIdByEnvironmentAndContent(any(String.class), any(List.class)))
                 .thenReturn(entitlementIds);

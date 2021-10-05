@@ -528,7 +528,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Environment e = this.mockEnvironment(new Environment("env1", "Env 1", owner));
 
         e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
-        this.consumer.setEnvironment(e);
+        this.consumer.addEnvironment(e);
 
         Map<String, EnvironmentContent> promotedContent = new HashMap<>();
         promotedContent.put(content.getId(), e.getEnvironmentContent().iterator().next());
@@ -591,7 +591,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // Setup an environment for the consumer:
         Environment e = this.mockEnvironment(new Environment("env1", "Awesome Environment #1", owner));
         e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
-        this.consumer.setEnvironment(e);
+        this.consumer.addEnvironment(e);
 
         certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
@@ -612,7 +612,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // Setup an environment for the consumer:
         Environment e = this.mockEnvironment(new Environment("env1", "Awesome Environment #1", owner));
         e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
-        this.consumer.setEnvironment(e);
+        this.consumer.addEnvironment(e);
 
         certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
             product, new HashSet<>(),
@@ -724,7 +724,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // Make sure that we filter by environment when asked.
         Environment environment = this.mockEnvironment(new Environment());
-        consumer.setEnvironment(environment);
+        consumer.addEnvironment(environment);
 
         Map<String, EnvironmentContent> promotedContent = new HashMap<>();
         promotedContent.put(normalContent.getId(), new EnvironmentContent(environment, normalContent, true));

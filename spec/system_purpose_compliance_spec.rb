@@ -16,7 +16,7 @@ describe 'System purpose compliance' do
 
   it 'should be not specified for a consumer sans purpose preference' do
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
       status['status'].should == 'not specified'
@@ -24,7 +24,7 @@ describe 'System purpose compliance' do
 
   it 'should be mismatched for unsatisfied role' do
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, 'unsatisfied-role', nil, nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
       status['status'].should == 'mismatched'
@@ -45,7 +45,7 @@ describe 'System purpose compliance' do
       p = create_pool_and_subscription(@owner2['key'], product.id, nil, nil, nil, nil, nil, start_date, end_date)
 
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, 'myrole', nil, nil)
 
       status = @user2.get_purpose_compliance(consumer['uuid'], on_date=Date.new(2037, 5, 5))
@@ -83,7 +83,7 @@ describe 'System purpose compliance' do
 
       # check that the status has been calculated during consumer registration
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, 'myrole', nil, nil)
       consumer = @user2.get_consumer(consumer['uuid'])
       consumer.systemPurposeStatus.should == 'mismatched'
@@ -114,7 +114,7 @@ describe 'System purpose compliance' do
                                :owner => @owner2['key']})
       p = create_pool_and_subscription(@owner2['key'], product.id)
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, 'myrole', nil, nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
       status['status'].should == 'mismatched'
@@ -133,7 +133,7 @@ describe 'System purpose compliance' do
                                :owner => @owner2['key']})
       p = create_pool_and_subscription(@owner2['key'], product.id)
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
@@ -149,7 +149,7 @@ describe 'System purpose compliance' do
                                :owner => @owner2['key']})
       p = create_pool_and_subscription(@owner2['key'], product.id)
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
@@ -165,7 +165,7 @@ describe 'System purpose compliance' do
                                :owner => @owner2['key']})
       p = create_pool_and_subscription(@owner2['key'], product.id)
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
@@ -181,7 +181,7 @@ describe 'System purpose compliance' do
                                :owner => @owner2['key']})
       p = create_pool_and_subscription(@owner2['key'], product.id)
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
@@ -192,7 +192,7 @@ describe 'System purpose compliance' do
 
   it 'should be mismatched for unsatisfied usage' do
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, 'taylor', nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
       status['status'].should == 'mismatched'
@@ -210,7 +210,7 @@ describe 'System purpose compliance' do
                                :owner => @owner2['key']})
       p = create_pool_and_subscription(@owner2['key'], product.id)
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, 'myusage', nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
       status['status'].should == 'mismatched'
@@ -224,7 +224,7 @@ describe 'System purpose compliance' do
 
   it 'should be mismatched for unsatisfied addon' do
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1', 'addon2'])
       status = @user2.get_purpose_compliance(consumer['uuid'])
       status['status'].should == 'mismatched'
@@ -252,7 +252,7 @@ describe 'System purpose compliance' do
       p2 = create_pool_and_subscription(@owner2['key'], product2.id)
 
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, ['addon1', 'addon2'])
       status = @user2.get_purpose_compliance(consumer['uuid'])
       status['status'].should == 'mismatched'
@@ -281,7 +281,7 @@ describe 'System purpose compliance' do
                                :owner => @owner2['key']})
       create_pool_and_subscription(@owner2['key'], product.id)
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, 'mysla', nil, nil, nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
       status['status'].should == 'mismatched'
@@ -315,7 +315,7 @@ describe 'System purpose compliance' do
                                :owner => @owner2['key']})
       p = create_pool_and_subscription(@owner2['key'], product.id)
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, 'mysla', nil, nil, nil)
       status = @user2.get_purpose_compliance(consumer['uuid'])
       status['status'].should == 'mismatched'
@@ -339,7 +339,7 @@ describe 'System purpose compliance' do
                                :owner => @owner2['key']})
       another_p = create_pool_and_subscription(@owner2['key'], another_product.id)
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, 'mysla', nil, nil, nil)
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
       @user2.consume_pool(another_p.id, params={:uuid=>consumer.uuid})
@@ -361,7 +361,7 @@ describe 'System purpose compliance' do
                                :owner => @owner2['key']})
       another_p = create_pool_and_subscription(@owner2['key'], another_product.id)
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, 'myusage', nil)
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
       @user2.consume_pool(another_p.id, params={:uuid=>consumer.uuid})
@@ -378,7 +378,7 @@ describe 'System purpose compliance' do
                                :owner => @owner2['key']})
       p = create_pool_and_subscription(@owner2['key'], product.id)
       consumer = @user2.register(
-          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+          random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
           nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, 'myusage', nil)
       @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
       status = @user2.get_purpose_compliance(consumer['uuid'])
@@ -409,7 +409,7 @@ describe 'System purpose compliance' do
           @owner2['key'],
           [],
           [],
-          nil,
+          [],
           [],
           nil,
           [],
@@ -466,7 +466,7 @@ describe 'System purpose compliance' do
           @owner2['key'],
           [],
           [],
-          nil,
+          [],
           [],
           nil,
           [],
@@ -536,7 +536,7 @@ describe 'System purpose compliance' do
           @owner2['key'],
           [],
           [],
-          nil,
+          [],
           [],
           nil,
           [],
@@ -596,7 +596,7 @@ describe 'System purpose compliance' do
     p = create_pool_and_subscription(@owner2['key'], product.id)
 
     consumer = @user2.register(
-        random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
 
     @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})
@@ -608,7 +608,7 @@ describe 'System purpose compliance' do
 
   it 'should be mismatched for unsatisfied service type' do
     consumer = @user2.register(
-        random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil, nil, nil, "test_service_type")
     status = @user2.get_purpose_compliance(consumer['uuid'])
     expect(status['status']).to eq('mismatched')
@@ -626,7 +626,7 @@ describe 'System purpose compliance' do
                               :owner => @owner2['key']})
     p = create_pool_and_subscription(@owner2['key'], product.id)
     consumer = @user2.register(
-        random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil, nil, nil, 'test_service_type')
 
     status = @user2.get_purpose_compliance(consumer['uuid'])
@@ -652,7 +652,7 @@ describe 'System purpose compliance' do
     another_p = create_pool_and_subscription(@owner2['key'], another_product.id)
 
     consumer = @user2.register(
-        random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], nil, [],
+        random_string('systempurpose'), :system, nil, {}, nil, @owner2['key'], [], [], [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, nil, nil, nil, nil, nil, "L1")
 
     @user2.consume_pool(p.id, params={:uuid=>consumer.uuid})

@@ -17,7 +17,7 @@ describe 'Hypervisor Resource', :type => :virt do
     # we must register the consumer to use it as a client
     # hypervisor check in creation does not result in a client cert
     consumer = @user.register(@expected_host_name, :hypervisor, nil, {"test_fact" => "fact_value"},
-        nil, nil, [], [], nil, [], @expected_host_hyp_id)
+        nil, nil, [], [], [], [], @expected_host_hyp_id)
 
     # Check in to associate guests.
     host_guest_mapping = get_host_guest_mapping(@expected_host_hyp_id, @expected_guest_ids)
@@ -773,9 +773,9 @@ describe 'Hypervisor Resource', :type => :virt do
     guests = [{:guestId => uuid1}]
 
     host_consumer = user.register(random_string('host1'), :hypervisor, nil,
-      {}, nil, owner['key'], [], [], nil, [], 'hypervisor_id_1')
+      {}, nil, owner['key'], [], [], [], [], 'hypervisor_id_1')
     new_host_consumer = user.register(random_string('host2'), :hypervisor, nil,
-      {}, nil, owner['key'], [], [], nil, [], 'hypervisor_id_2')
+      {}, nil, owner['key'], [], [], [], [], 'hypervisor_id_2')
 
     guest_consumer = user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, owner['key'], [], [])
@@ -832,9 +832,9 @@ describe 'Hypervisor Resource', :type => :virt do
     guests = [{:guestId => uuid1}]
 
     host_consumer = user.register(random_string('host1'), :hypervisor, nil,
-      {}, nil, owner['key'], [], [], nil, [], 'hypervisor_id_1')
+      {}, nil, owner['key'], [], [], [], [], 'hypervisor_id_1')
     new_host_consumer = user.register(random_string('host2'), :system, nil,
-      {}, nil, owner['key'], [], [], nil, [], 'hypervisor_id_2')
+      {}, nil, owner['key'], [], [], [], [], 'hypervisor_id_2')
 
     guest_consumer = user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, owner['key'], [], [])
@@ -971,7 +971,7 @@ describe 'Hypervisor Resource', :type => :virt do
     hypervisor_guests = [{"guestId"=>"myGuestId"}]
     hypervisor_id = random_string('hypervisorid')
     hypervisor = @cp.register('hypervisor.bind.com',:system, nil, hypervisor_facts, 'admin',
-      owner_key, [], [{"productId" => prod.id, "productName" => "taylor swift"}], nil, [], hypervisor_id)
+      owner_key, [], [{"productId" => prod.id, "productName" => "taylor swift"}], [], [], hypervisor_id)
     hypervisor = @cp.update_consumer({:uuid => hypervisor.uuid, :guestIds => hypervisor_guests})
     @cp.consume_product(nil, {:uuid => guest.uuid})
     @cp.list_entitlements({:uuid => guest.uuid}).length.should == 1
@@ -1153,7 +1153,7 @@ describe 'Hypervisor Resource', :type => :virt do
     guest_set = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
     guests = ['g1', 'g2']
 
-    test_host = user.register(host_hyp_id_1, :hypervisor, nil, {"dmi.system.uuid" => host_system_id, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [], host_hyp_id_1)
+    test_host = user.register(host_hyp_id_1, :hypervisor, nil, {"dmi.system.uuid" => host_system_id, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], [], [], host_hyp_id_1)
     @cp.update_consumer({:uuid => test_host.uuid, :guestIds => guest_set})
     @cp.get_consumer(test_host.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_1
 
@@ -1172,7 +1172,7 @@ describe 'Hypervisor Resource', :type => :virt do
     guest_set = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
     guests = ['g1', 'g2']
 
-    test_host = user.register(host_name, :hypervisor, nil, {"virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [])
+    test_host = user.register(host_name, :hypervisor, nil, {"virt.is_guest"=>"false"}, nil, owner['key'], [], [], [], [])
     @cp.update_consumer({:uuid => test_host.uuid, :guestIds => guest_set, :facts => {"dmi.system.uuid" => host_system_id, "virt.is_guest"=>"false"}})
     expect(@cp.get_consumer(test_host.uuid)['hypervisorId']).to be_nil
 
@@ -1226,7 +1226,7 @@ describe 'Hypervisor Resource', :type => :virt do
     guest_set = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
     guests = ['g1', 'g2']
 
-    test_host = user.register(host_hyp_id, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_1, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [], host_hyp_id)
+    test_host = user.register(host_hyp_id, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_1, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], [], [], host_hyp_id)
     @cp.update_consumer({:uuid => test_host.uuid, :guestIds => guest_set})
     @cp.get_consumer(test_host.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id
 
@@ -1258,15 +1258,15 @@ describe 'Hypervisor Resource', :type => :virt do
     guest_set_3 = [{"guestId"=>"g5"},{"guestId"=>"g6"}]
     guests_3 = ['g5', 'g6']
 
-    test_host_1 = user.register(host_hyp_id_1, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_1, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [], host_hyp_id_1)
+    test_host_1 = user.register(host_hyp_id_1, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_1, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], [], [], host_hyp_id_1)
     @cp.update_consumer({:uuid => test_host_1.uuid, :guestIds => guest_set_1})
     @cp.get_consumer(test_host_1.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_1
 
-    test_host_2 = user.register(host_hyp_id_2, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_2, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [], host_hyp_id_2)
+    test_host_2 = user.register(host_hyp_id_2, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_2, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], [], [], host_hyp_id_2)
     @cp.update_consumer({:uuid => test_host_2.uuid, :guestIds => guest_set_2})
     @cp.get_consumer(test_host_2.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_2
 
-    test_host_3 = user.register(host_hyp_id_3, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_3, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [], host_hyp_id_3)
+    test_host_3 = user.register(host_hyp_id_3, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_3, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], [], [], host_hyp_id_3)
     @cp.update_consumer({:uuid => test_host_3.uuid, :guestIds => guest_set_3})
     @cp.get_consumer(test_host_3.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_3
 
@@ -1297,7 +1297,7 @@ describe 'Hypervisor Resource', :type => :virt do
     guest_set_1 = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
     guests_1 = ['g1', 'g2']
 
-    test_host_1 = user.register(host_hyp_id_1, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_1, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [], host_hyp_id_1)
+    test_host_1 = user.register(host_hyp_id_1, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_1, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], [], [], host_hyp_id_1)
     @cp.update_consumer({:uuid => test_host_1.uuid, :guestIds => guest_set_1})
     @cp.get_consumer(test_host_1.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_1
 
@@ -1317,7 +1317,7 @@ describe 'Hypervisor Resource', :type => :virt do
     guest_set_1 = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
     guests_1 = ['g1', 'g2']
 
-    test_host_1 = user.register(host_hyp_id_1, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_1, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], nil, [], host_hyp_id_1)
+    test_host_1 = user.register(host_hyp_id_1, :hypervisor, nil, {"dmi.system.uuid" => host_system_id_1, "virt.is_guest"=>"false"}, nil, owner['key'], [], [], [], [], host_hyp_id_1)
     test_host_name = test_host_1['name']
     @cp.update_consumer({:uuid => test_host_1.uuid, :guestIds => guest_set_1})
     @cp.get_consumer(test_host_1.uuid)['hypervisorId']['hypervisorId'].should == host_hyp_id_1

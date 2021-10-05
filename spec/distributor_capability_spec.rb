@@ -66,7 +66,7 @@ describe 'Distributor Capability' do
     }
     capabilities = ["one","two"]
     consumer = @user.register(random_string("consumer"), :candlepin, nil, facts,
-                              nil, nil, [], [], nil, capabilities)
+                              nil, nil, [], [], [], capabilities)
     consumer.capabilities.size.should == 2
 
   end

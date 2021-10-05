@@ -8493,6 +8493,10 @@ components:
                   $ref: '#/components/schemas/ConsumerActivationKeyDTO'
               serviceType:
                 type: string
+              environments:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EnvironmentDTO'
 
     ConsumerActivationKeyDTO:
       description: Represent activation keys used by consumer in registration
@@ -8535,8 +8539,6 @@ components:
               $ref: '#/components/schemas/ReleaseVerDTO'
             owner:
               $ref: '#/components/schemas/NestedOwnerDTO'
-            environment:
-              $ref: '#/components/schemas/EnvironmentDTO'
             entitlementCount:
               type: integer
               format: int64
