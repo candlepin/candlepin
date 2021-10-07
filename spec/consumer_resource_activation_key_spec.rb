@@ -77,7 +77,7 @@ describe 'Consumer Resource Activation Key' do
     @cp.add_prod_id_to_key(key1['id'], prod1.id)
     consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
       @owner['key'], ["key1"], [{'productId' => prod1.id, 'productName' => prod1.name}],
-      nil, [], nil,
+      [], [], nil,
       [], nil, nil,
       nil, nil, nil,
       0, nil, nil, nil, nil,
@@ -100,7 +100,7 @@ describe 'Consumer Resource Activation Key' do
     @cp.add_prod_id_to_key(key1['id'], prod1.id)
     consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
       @owner['key'], ["key1"], [{'productId' => prod1.id, 'productName' => prod1.name}],
-      nil, [], nil,
+      [], [], nil,
       [], nil, nil,
       nil, nil, nil,
       0, nil, nil, nil, nil,
@@ -180,7 +180,7 @@ describe 'Consumer Resource Activation Key' do
     key1 = @cp.create_activation_key(@owner['key'], 'key1', nil, nil, 'ak-usage', 'ak-role', ['ak-addon1','ak-addon2'])
 
     consumer = @client.register(
-        random_string('machine1'), :system, nil, {}, nil, @owner['key'], ["key1"], nil, nil, nil, nil, nil, nil,
+        random_string('machine1'), :system, nil, {}, nil, @owner['key'], ["key1"], nil, [], nil, nil, nil, nil,
         nil, nil, nil, nil, nil, nil, "client-sla", "client-role", "client-usage", [])
     consumer.uuid.should_not be_nil
 
@@ -208,7 +208,7 @@ describe 'Consumer Resource Activation Key' do
     addons = ['consumer_addon-1', 'consumer_addon-2', 'consumer_addon-3']
 
     consumer = @client.register(random_string('machine1'), :system, nil, {}, nil, @owner['key'], ["key1"],
-      [], nil, [], nil, [], nil, nil, nil, nil, nil, 0, nil, service_level, role, usage, addons)
+      [], [], [], nil, [], nil, nil, nil, nil, nil, 0, nil, service_level, role, usage, addons)
 
     expect(consumer['uuid']).to_not be_nil
 

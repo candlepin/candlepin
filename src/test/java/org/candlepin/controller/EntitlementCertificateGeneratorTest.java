@@ -31,7 +31,6 @@ import static org.mockito.Mockito.when;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
@@ -238,7 +237,7 @@ public class EntitlementCertificateGeneratorTest {
     public void testLazyRegnerateForEnvironmentContent() {
         String environmentId = "env_id_1";
         List<Entitlement> entitlements = this.generateEntitlements();
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
+        List cqmock = mock(List.class);
         when(cqmock.iterator()).thenReturn(entitlements.iterator());
         when(this.mockEntitlementCurator.listByEnvironment(environmentId)).thenReturn(cqmock);
 
@@ -261,7 +260,7 @@ public class EntitlementCertificateGeneratorTest {
             ecMap.put(entitlement.getPool().getId(), new EntitlementCertificate());
         }
 
-        CandlepinQuery<Entitlement> cqmock = mock(CandlepinQuery.class);
+        List<Entitlement> cqmock = mock(List.class);
         when(cqmock.iterator()).thenReturn(entitlements.iterator());
         when(this.mockEntitlementCurator.listByEnvironment(environmentId)).thenReturn(cqmock);
         when(this.mockEntCertAdapter.generateEntitlementCerts(any(Consumer.class), any(Map.class),

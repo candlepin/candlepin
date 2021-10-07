@@ -21,8 +21,6 @@ import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.Environment;
-import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Release;
@@ -41,18 +39,13 @@ import java.util.Set;
 public class ConsumerArrayElementTranslator implements ObjectTranslator<Consumer, ConsumerDTOArrayElement> {
 
     protected ConsumerTypeCurator consumerTypeCurator;
-    protected EnvironmentCurator environmentCurator;
     private OwnerCurator ownerCurator;
 
     public ConsumerArrayElementTranslator(ConsumerTypeCurator consumerTypeCurator,
-        EnvironmentCurator environmentCurator, OwnerCurator ownerCurator) {
+        OwnerCurator ownerCurator) {
 
         if (consumerTypeCurator == null) {
             throw new IllegalArgumentException("ConsumerTypeCurator is null");
-        }
-
-        if (environmentCurator == null) {
-            throw new IllegalArgumentException("environmentCurator is null");
         }
 
         if (ownerCurator == null) {
@@ -61,7 +54,6 @@ public class ConsumerArrayElementTranslator implements ObjectTranslator<Consumer
 
         this.ownerCurator = ownerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
-        this.environmentCurator = environmentCurator;
     }
 
     /**
@@ -137,9 +129,6 @@ public class ConsumerArrayElementTranslator implements ObjectTranslator<Consumer
                 dest.setOwner(owner != null ? translator.translate(owner, NestedOwnerDTO.class) : null);
             }
 
-            Environment environment = this.environmentCurator.getConsumerEnvironment(source);
-            dest.setEnvironment(translator.translate(environment, EnvironmentDTO.class));
-
             Set<ConsumerInstalledProduct> installedProducts = source.getInstalledProducts();
             if (installedProducts != null) {
                 ObjectTranslator<ConsumerInstalledProduct, ConsumerInstalledProductDTO> cipTranslator =
@@ -191,7 +180,6 @@ public class ConsumerArrayElementTranslator implements ObjectTranslator<Consumer
         else {
             dest.setReleaseVer(null);
             dest.setOwner(null);
-            dest.setEnvironment(null);
             dest.setInstalledProducts(null);
             dest.setCapabilities(null);
             dest.setHypervisorId(null);

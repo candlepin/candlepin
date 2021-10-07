@@ -33,7 +33,10 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 
 /**
  * The ConsumerTranslator provides translation from Consumer model objects to
@@ -137,8 +140,17 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
                 dest.setOwner(owner != null ? translator.translate(owner, NestedOwnerDTO.class) : null);
             }
 
-            Environment environment = this.environmentCurator.getConsumerEnvironment(source);
-            dest.setEnvironment(translator.translate(environment, EnvironmentDTO.class));
+            if (source.getEnvironmentIds() != null && !source.getEnvironmentIds().isEmpty()) {
+                List<EnvironmentDTO> environments = this.environmentCurator.getConsumerEnvironments(source)
+                    .stream()
+                    .map(translator.getStreamMapper(Environment.class, EnvironmentDTO.class))
+                    .collect(Collectors.toList());
+
+                dest.setEnvironments(environments);
+            }
+            else {
+                dest.setEnvironments(null);
+            }
 
             Set<ConsumerInstalledProduct> installedProducts = source.getInstalledProducts();
             if (installedProducts != null) {
@@ -206,7 +218,7 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
         else {
             dest.setReleaseVer(null);
             dest.setOwner(null);
-            dest.setEnvironment(null);
+            dest.setEnvironments(null);
             dest.setInstalledProducts(null);
             dest.setCapabilities(null);
             dest.setHypervisorId(null);

@@ -280,7 +280,7 @@ public class ContentAccessManagerTest {
         Environment environment = new Environment("test_environment", "test_environment", owner);
         environment.setEnvironmentContent(Util.asSet(new EnvironmentContent(environment, content, true)));
 
-        consumer.setEnvironment(environment);
+        consumer.addEnvironment(environment);
 
         doReturn(environment).when(this.mockEnvironmentCurator).get(eq(environment.getId()));
         doReturn(environment).when(this.mockEnvironmentCurator).getConsumerEnvironment(eq(consumer));

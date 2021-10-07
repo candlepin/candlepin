@@ -689,16 +689,16 @@ describe 'Owner Resource' do
     user1 = user_client(owner1, username1)
 
     consumer1 = user1.register(random_string('consumer1'), :system, nil, {}, random_string('consumer1'), owner1_key,
-      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, 'sla1', 'common_role', 'usage1', ['addon1'],
+      [], [], [], [], nil, [], nil, nil, nil, nil, nil, nil, nil, 'sla1', 'common_role', 'usage1', ['addon1'],
       nil, nil, nil, nil, 'test_service-type1')
     consumer2 = user1.register(random_string('consumer2'), :system, nil, {}, random_string('consumer2'), owner1_key,
-      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, 'sla2', 'common_role', 'usage2', ['addon2'],
+      [], [], [], [], nil, [], nil, nil, nil, nil, nil, nil, nil, 'sla2', 'common_role', 'usage2', ['addon2'],
       nil, nil, nil, nil, 'test_service-type2')
     consumer3 = user1.register(random_string('consumer3'), :system, nil, {}, random_string('consumer3'), owner1_key,
-      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, nil, nil, 'usage3', [''],
+      [], [], [], [], nil, [], nil, nil, nil, nil, nil, nil, nil, nil, nil, 'usage3', [''],
       nil, nil, nil, nil, 'test_service-type3')
     consumer4 = user1.register(random_string('consumer4'), :system, nil, {}, random_string('consumer4'), owner1_key,
-      [], [], nil, [], nil, [], nil, nil, nil, nil, nil, nil, nil, nil, '', 'usage4', nil,
+      [], [], [], [], nil, [], nil, nil, nil, nil, nil, nil, nil, nil, '', 'usage4', nil,
       nil, nil, nil, nil, 'test_service-type4')
 
     user1.list_owner_consumers(owner1_key).length.should == 4
