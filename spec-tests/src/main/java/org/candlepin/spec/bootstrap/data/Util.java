@@ -13,7 +13,16 @@
  *  in this software or its documentation.
  */
 
-package org.candlepin.spec.bootstrap;
+package org.candlepin.spec.bootstrap.data;
 
-public class SpecTestExtension {
+import java.util.Random;
+
+public class Util {
+
+    private static final Random random = new Random();
+
+    public static String randomString(String prefix) {
+        return prefix + "-" + System.nanoTime() + "-" + random.nextInt(100000);
+    }
+
 }

@@ -25,6 +25,7 @@ import org.candlepin.spec.bootstrap.client.ApiClientFactory;
 import org.candlepin.spec.bootstrap.client.ClientBuilders;
 import org.candlepin.spec.bootstrap.client.Config;
 import org.candlepin.spec.bootstrap.client.OwnerClient;
+import org.candlepin.spec.bootstrap.data.Owners;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,10 +50,7 @@ public class OwnerResourceTest {
     @Test
     public void shouldCreateOwner() throws Exception {
         OwnerApi api = new OwnerApi(apiClient.createInstance());
-
-        OwnerDTO ownerDTO = new OwnerDTO();
-        ownerDTO.setKey("my_owner");
-        ownerDTO.displayName("An Awesome Owner");
+        OwnerDTO ownerDTO = Owners.simple();
 
         OwnerDTO status = api.createOwner(ownerDTO);
 
