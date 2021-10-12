@@ -15,10 +15,12 @@
 
 package org.candlepin.spec.bootstrap.data;
 
+import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 
 public class OwnerBuilder {
 
+    private NestedOwnerDTO parent = null;
     private String contentAccessMode = "entitlement";
     private String contentAccessModeList = "entitlement";
 
@@ -33,14 +35,19 @@ public class OwnerBuilder {
         return this;
     }
 
+    public OwnerBuilder withParent(NestedOwnerDTO parentOwner) {
+        this.parent = parentOwner;
+        return this;
+    }
+
     public OwnerDTO build() {
         OwnerDTO owner = new OwnerDTO();
         owner.setKey(Util.randomString("test_owner"));
         owner.displayName(Util.randomString("Test Owner"));
         owner.setContentAccessMode(this.contentAccessMode);
         owner.setContentAccessModeList(this.contentAccessModeList);
+        owner.setParentOwner(this.parent);
         // todo fill in rest of the data
         return owner;
     }
-
 }

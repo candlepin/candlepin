@@ -73,10 +73,9 @@ public class OwnerResourceTest {
         parentOwner.displayName("An Invalid Parent");
         parentOwner.key("unknown");
         parentOwner.id("unknown");
-        OwnerDTO ownerDTO = new OwnerDTO();
-        ownerDTO.setKey("my_owner");
-        ownerDTO.displayName("An Awesome Owner");
-        ownerDTO.setParentOwner(parentOwner);
+        OwnerDTO ownerDTO = Owners.builder()
+            .withParent(parentOwner)
+            .build();
 
         assertThatThrownBy(() -> api.createOwner(ownerDTO))
             .isInstanceOf(ApiException.class)

@@ -44,7 +44,7 @@ public class Config {
 
     public String get(ConfigKey key) {
         String property = this.properties.getProperty(key.key());
-        log.warn(property);
+        log.info("Loading a config property {} with value {}", key, property);
         return property;
     }
 
