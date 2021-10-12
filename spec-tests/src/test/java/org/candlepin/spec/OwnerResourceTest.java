@@ -68,13 +68,8 @@ public class OwnerResourceTest {
     @Test
     public void failsToCreateOwnerWithInvalidParent() {
         OwnerApi api = new OwnerApi(apiClient.createInstance());
-
-        NestedOwnerDTO parentOwner = new NestedOwnerDTO();
-        parentOwner.displayName("An Invalid Parent");
-        parentOwner.key("unknown");
-        parentOwner.id("unknown");
         OwnerDTO ownerDTO = Owners.builder()
-            .withParent(parentOwner)
+            .withParent(Owners.nested())
             .build();
 
         assertThatThrownBy(() -> api.createOwner(ownerDTO))

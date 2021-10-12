@@ -15,6 +15,7 @@
 
 package org.candlepin.spec.bootstrap.data;
 
+import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 
 /**
@@ -41,6 +42,15 @@ public final class Owners {
             .withContentAccess("org_environment")
             .withContentAccessList("org_environment,entitlement")
             .build();
+    }
+
+    /**
+     * Creates a {@link NestedOwnerDTO} populated by randomized data.
+     *
+     * @return a nested owner
+     */
+    public static NestedOwnerDTO nested() {
+        return new NestedOwnerBuilder().build();
     }
 
     /**
