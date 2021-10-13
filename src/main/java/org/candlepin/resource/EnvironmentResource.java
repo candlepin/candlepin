@@ -63,6 +63,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
@@ -300,18 +302,34 @@ public class EnvironmentResource implements EnvironmentsApi {
     @Override
     @SecurityHole(noAuth = true)
     public ConsumerDTO createConsumerInEnvironment(String envId, ConsumerDTO consumer,
-        String userName, String ownerKey, String activationKeys) throws BadRequestException {
+        String userName, String activationKeys) throws BadRequestException {
 
         this.validator.validateConstraints(consumer);
         this.validator.validateCollectionElementsNotNull(consumer::getInstalledProducts,
             consumer::getGuestIds, consumer::getCapabilities);
 
-        //TODO: This needs to support backward compatibility.
-        // Kept as it is to be handled in other task of multi-environment feature.
-        Environment e = lookupEnvironment(envId);
-        consumer.setEnvironments(Arrays.asList(translator.translate(e, EnvironmentDTO.class)));
+        List<EnvironmentDTO> environmentDTOs = Arrays.stream(envId.trim().split("\\s*,\\s*"))
+            .map(this::lookupEnvironment)
+            .map(this.translator.getStreamMapper(Environment.class, EnvironmentDTO.class))
+            .collect(Collectors.toList());
+
+        // Check if all envs belongs to same org
+        BinaryOperator<String> unify = (prev, next) -> {
+            if (prev != null && !prev.equals(next)) {
+                throw new BadRequestException(i18n.tr("Two or more environments " +
+                    "belong to different organizations"));
+            }
+
+            return next;
+        };
+
+        String ownerKey = environmentDTOs.stream()
+            .map(env -> env.getOwner().getKey())
+            .reduce(null, unify);
+
+        consumer.setEnvironments(environmentDTOs);
         return this.consumerResource.createConsumer(consumer, userName,
-            e.getOwner().getKey(), activationKeys, true);
+            ownerKey, activationKeys, true);
     }
 
     /**
