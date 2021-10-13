@@ -797,6 +797,18 @@ class Candlepin
     return delete(url, params)
   end
 
+  # This is a legacy registration endpoint
+  # (newer subscription-manager clients will not be using it)
+  def create_consumer_in_environments(env_ids, name, type=:system)
+    consumer = {
+        :type => {:label => type},
+        :name => name
+      }
+
+      params = {}
+      return post("/environments/#{env_ids}/consumers", params, consumer)
+  end
+
   def get_product_owners(product_ids)
     url = "/products/owners"
 
