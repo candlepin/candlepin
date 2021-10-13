@@ -3118,11 +3118,6 @@ paths:
           required: false
           schema:
             type: string
-        - name: owner
-          in: query
-          required: false
-          schema:
-            type: string
         - name: activation_keys
           in: query
           required: false
@@ -3152,13 +3147,13 @@ paths:
                 displayMessage: "No such environment: test_env"
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         400:
-          description: Unit type must be specified.
+          description: Unit type must be specified or Two or more environments belong to different organizations
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
-                displayMessage: Unit type must be specified.
+                displayMessage: Unit type must be specified or Two or more environments belong to different organizations
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         403:
           description: Principal is not authorized to register with organization org
