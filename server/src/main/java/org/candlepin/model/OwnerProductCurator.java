@@ -775,9 +775,9 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
                 count = 0;
                 if (akIds != null && !akIds.isEmpty()) {
-                    String sql = "DELETE FROM cp2_activation_key_products akp " +
-                        "WHERE akp.key_id IN (:ak_ids) " +
-                        "AND akp.product_uuid IN (:product_uuids)";
+                    String sql = "DELETE FROM cp2_activation_key_products " +
+                        "WHERE key_id IN (:ak_ids) " +
+                        "AND product_uuid IN (:product_uuids)";
 
                     Query query = entityManager.createNativeQuery(sql)
                         .setParameter("product_uuids", block);

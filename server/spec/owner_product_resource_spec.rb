@@ -479,5 +479,25 @@ describe 'Owner Product Resource' do
     expect(updated_prod_uuid).not_to eq(original_prod_uuid)
   end
 
+  it 'should allow deleting a product associated with an activation key' do
+    owner = create_owner(random_string('test_owner'))
+    product = @cp.create_product(owner['key'], random_string('test_prod'), 'Test product')
+    actkey = @cp.create_activation_key(owner['key'], random_string('test_key'))
+    @cp.add_prod_id_to_key(actkey['id'], product['id'])
+
+    # The activation key should have the product associated with it
+    actkey2 = @cp.get_activation_key(actkey['id'])
+    expect(actkey2).to_not be_nil
+    expect(actkey2['products'].find { |elem| elem['productId'] == product['id'] }).to_not be_nil
+
+    # Deleting the product should remove its reference from the activation key
+    @cp.delete_product(owner['key'], product['id'])
+
+    # The activation key should still exist, but should no longer reference the product
+    actkey2 = @cp.get_activation_key(actkey['id'])
+    expect(actkey2).to_not be_nil
+    expect(actkey2['products'].find { |elem| elem['productId'] == product['id'] }).to be_nil
+  end
+
 end
 
