@@ -16,10 +16,10 @@ package org.candlepin.util;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -95,9 +96,8 @@ public class X509V3ExtensionUtil extends X509Util {
         return toReturn;
     }
 
-    public Set<X509ByteExtensionWrapper> getByteExtensions(Product sku,
-        List<org.candlepin.model.dto.Product> productModels,
-        String contentPrefix, Map<String, EnvironmentContent> promotedContent) throws IOException {
+    public Set<X509ByteExtensionWrapper> getByteExtensions(
+        List<org.candlepin.model.dto.Product> productModels) throws IOException {
         Set<X509ByteExtensionWrapper> toReturn = new LinkedHashSet<>();
 
         EntitlementBody eb = createEntitlementBodyContent(productModels);
@@ -173,23 +173,23 @@ public class X509V3ExtensionUtil extends X509Util {
         if (StringUtils.isNotBlank(warningPeriod)) {
             // only included if not the default value of 0
             if (!warningPeriod.equals("0")) {
-                toReturn.setWarning(new Integer(warningPeriod));
+                toReturn.setWarning(Integer.valueOf(warningPeriod));
             }
         }
 
         String socketLimit = product.getAttributeValue(Product.Attributes.SOCKETS);
         if (StringUtils.isNotBlank(socketLimit)) {
-            toReturn.setSockets(new Integer(socketLimit));
+            toReturn.setSockets(Integer.valueOf(socketLimit));
         }
 
         String ramLimit = product.getAttributeValue(Product.Attributes.RAM);
         if (StringUtils.isNotBlank(ramLimit)) {
-            toReturn.setRam(new Integer(ramLimit));
+            toReturn.setRam(Integer.valueOf(ramLimit));
         }
 
         String coreLimit = product.getAttributeValue(Product.Attributes.CORES);
         if (StringUtils.isNotBlank(coreLimit)) {
-            toReturn.setCores(new Integer(coreLimit));
+            toReturn.setCores(Integer.valueOf(coreLimit));
         }
 
         String management = product.getAttributeValue(Product.Attributes.MANAGEMENT_ENABLED);
@@ -267,7 +267,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public List<org.candlepin.model.dto.Product> createProducts(Product sku,
-        Set<Product> products, String contentPrefix, Map<String, EnvironmentContent> promotedContent,
+        Set<Product> products, PromotedContent promotedContent,
         Consumer consumer, Pool pool) {
 
         List<org.candlepin.model.dto.Product> toReturn = new ArrayList<>();
@@ -276,8 +276,7 @@ public class X509V3ExtensionUtil extends X509Util {
             pool);
 
         for (Product p : Collections2.filter(products, PROD_FILTER_PREDICATE)) {
-            toReturn.add(mapProduct(p, sku, contentPrefix, promotedContent, consumer, pool,
-                entitledProductIds));
+            toReturn.add(mapProduct(p, sku, promotedContent, consumer, pool, entitledProductIds));
         }
 
         return toReturn;
@@ -290,8 +289,7 @@ public class X509V3ExtensionUtil extends X509Util {
     }
 
     public org.candlepin.model.dto.Product mapProduct(Product engProduct, Product sku,
-        String contentPrefix, Map<String, EnvironmentContent> promotedContent,
-        Consumer consumer, Pool pool, Set<String> entitledProductIds) {
+        PromotedContent promotedContent, Consumer consumer, Pool pool, Set<String> entitledProductIds) {
 
         org.candlepin.model.dto.Product toReturn = new org.candlepin.model.dto.Product();
 
@@ -314,7 +312,7 @@ public class X509V3ExtensionUtil extends X509Util {
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
         Set<ProductContent> filteredContent = filterProductContent(engProduct, consumer, promotedContent,
             enableEnvironmentFiltering, entitledProductIds, consumer.getOwner().isUsingSimpleContentAccess());
-        List<Content> content = createContent(filteredContent, sku, contentPrefix, promotedContent,
+        List<Content> content = createContent(filteredContent, sku, promotedContent,
             consumer, engProduct);
         toReturn.setContent(content);
 
@@ -351,8 +349,8 @@ public class X509V3ExtensionUtil extends X509Util {
      * productArchList is a list of arch strings parse from
      *   product attributes.
      */
-    public List<Content> createContent(Set<ProductContent> productContent, Product sku, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Consumer consumer, Product product) {
+    public List<Content> createContent(Set<ProductContent> productContent, Product sku,
+        PromotedContent promotedContent, Consumer consumer, Product product) {
 
         List<Content> toReturn = new ArrayList<>();
 
@@ -368,8 +366,7 @@ public class X509V3ExtensionUtil extends X509Util {
         for (ProductContent pc : archAppropriateProductContent) {
             Content content = new Content();
 
-            // Augment the content path with the prefix if it is passed in
-            String contentPath = this.createFullContentPath(contentPrefix, pc);
+            String contentPath = promotedContent.getPath(pc);
 
             content.setId(pc.getContent().getId());
             content.setType(pc.getContent().getType());
@@ -407,9 +404,9 @@ public class X509V3ExtensionUtil extends X509Util {
             }
 
             // Check if we should override the enabled flag due to setting on promoted content
-            if (enableEnvironmentFiltering && consumer.getEnvironmentId() != null) {
+            if (enableEnvironmentFiltering && !consumer.getEnvironmentIds().isEmpty()) {
                 // we know content has been promoted at this point
-                Boolean enabledOverride = promotedContent.get(pc.getContent().getId()).getEnabled();
+                Boolean enabledOverride = promotedContent.isEnabled(pc);
                 if (enabledOverride != null) {
                     log.debug("overriding enabled flag: {}", enabledOverride);
                     enabled = enabledOverride;
@@ -558,8 +555,7 @@ public class X509V3ExtensionUtil extends X509Util {
 
     private void condenseSubTreeNodes(PathNode location) {
         // "equivalent" parents are merged
-        List<PathNode> parentResult = new ArrayList<>();
-        parentResult.addAll(location.getParents());
+        List<PathNode> parentResult = new ArrayList<>(location.getParents());
         for (PathNode parent1 : location.getParents()) {
             if (!parentResult.contains(parent1)) {
                 continue;
@@ -824,8 +820,8 @@ public class X509V3ExtensionUtil extends X509Util {
         DeflaterOutputStream dos = new DeflaterOutputStream(baos,
             new Deflater(Deflater.BEST_COMPRESSION));
         for (String segment : entries) {
-            dos.write(segment.getBytes("UTF-8"));
-            dos.write("\0".getBytes("UTF-8"));
+            dos.write(segment.getBytes(StandardCharsets.UTF_8));
+            dos.write("\0".getBytes(StandardCharsets.UTF_8));
         }
         dos.finish();
         dos.close();
@@ -915,8 +911,7 @@ public class X509V3ExtensionUtil extends X509Util {
         }
 
         pathDictionary.add(new HuffNode(END_NODE, weight));
-        List<HuffNode> triePathDictionary = new ArrayList<>();
-        triePathDictionary.addAll(pathDictionary);
+        List<HuffNode> triePathDictionary = new ArrayList<>(pathDictionary);
         HuffNode pathTrie = makeTrie(triePathDictionary);
 
         StringBuffer nodeBits = new StringBuffer();
@@ -966,8 +961,7 @@ public class X509V3ExtensionUtil extends X509Util {
             nodeDictionary.add(new HuffNode(new PathNode(), j));
         }
 
-        List<HuffNode> trieNodeDictionary = new ArrayList<>();
-        trieNodeDictionary.addAll(nodeDictionary);
+        List<HuffNode> trieNodeDictionary = new ArrayList<>(nodeDictionary);
         HuffNode nodeTrie = makeTrie(trieNodeDictionary);
 
         // populate the PathNodes so we can rebuild the cool url tree
@@ -1083,7 +1077,7 @@ public class X509V3ExtensionUtil extends X509Util {
     private byte[] processPayload(String payload) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         DeflaterOutputStream dos = new DeflaterOutputStream(baos);
-        dos.write(payload.getBytes("UTF-8"));
+        dos.write(payload.getBytes(StandardCharsets.UTF_8));
         dos.finish();
         dos.close();
         return baos.toByteArray();

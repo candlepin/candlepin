@@ -1,8 +1,14 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
 
+def promote_content(content1, env1)
+  job = @cp.promote_content(env1['id'], [{ :contentId => content1['id'] }])
+  wait_for_job(job['id'], 15)
+end
+
 describe 'Environments' do
   include CandlepinMethods
+  include CertificateMethods
 
   before(:each) do
     @expected_env_id = random_string('testenv1')
@@ -215,7 +221,6 @@ describe 'Environments' do
   it 'filters content not promoted to environment' do
     consumer = @org_admin.register(random_string('testsystem'), :system, nil, {},
         nil, nil, [], [], [{ 'id' => @env['id']}])
-    expect(consumer['environments']).not_to be_nil
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
 
@@ -233,7 +238,7 @@ describe 'Environments' do
         }])
     wait_for_job(job['id'], 15)
 
-    pool = create_pool_and_subscription(@owner['key'], product['id'], 10)
+    pool = @cp.create_pool(@owner['key'], product['id'])
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
@@ -248,7 +253,6 @@ describe 'Environments' do
 
   it 'regenerates certificates after promoting/demoting content' do
     consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [], [{ 'id' => @env['id']}])
-    expect(consumer['environments']).not_to be_nil
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
     product = create_product
@@ -264,7 +268,7 @@ describe 'Environments' do
         }])
     wait_for_job(job['id'], 15)
 
-    pool = create_pool_and_subscription(@owner['key'], product['id'], 10)
+    pool = @cp.create_pool(@owner['key'], product['id'])
     ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
 
     x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
@@ -307,16 +311,12 @@ describe 'Environments' do
     # We'll use @env as env1 with nothing on it
 
     env2 = @cp.create_environment(@owner['key'], random_string("env2"), random_string("env2"))
-    job = @cp.promote_content(env2['id'], [{:contentId => content1['id']}])
-    wait_for_job(job['id'], 15)
-    job = @cp.promote_content(env2['id'], [{:contentId => content2['id']}])
-    wait_for_job(job['id'], 15)
+    promote_content(content1, env2)
+    promote_content(content2, env2)
 
     env3 = @cp.create_environment(@owner['key'], random_string("env3"), random_string("env3"))
-    job = @cp.promote_content(env3['id'], [{:contentId => content1['id']}])
-    wait_for_job(job['id'], 15)
-    job = @cp.promote_content(env3['id'], [{:contentId => content2['id']}])
-    wait_for_job(job['id'], 15)
+    promote_content(content1, env3)
+    promote_content(content2, env3)
     @cp.register(random_string("consumer1"), :system, nil, {}, random_string("consumer1"), @owner['key'], [], [], [{ 'id' => env3['id']}])
     @cp.register(random_string("consumer2"), :system, nil, {}, random_string("consumer2"), @owner['key'], [], [], [{ 'id' => env3['id']}])
 
@@ -378,4 +378,168 @@ describe 'Environments' do
       @cp.create_consumer_in_environments("randomEnvIdThatDoesNotExists", random_string('consumer'))
     }.to raise_error(RestClient::ResourceNotFound)
   end
+
+  it 'consumer should get content from multiple environments' do
+    product = create_product
+    content1 = new_content(1)
+    content2 = new_content(2)
+    content3 = new_content(3)
+
+    @cp.add_content_to_product(@owner['key'], product['id'], content1['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content2['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content3['id'])
+
+    env1 = @cp.create_environment(@owner['key'], random_string("env1"), random_string("env1"))
+    env2 = @cp.create_environment(@owner['key'], random_string("env2"), random_string("env2"))
+    env3 = @cp.create_environment(@owner['key'], random_string("env3"), random_string("env3"))
+    promote_content(content1, env1)
+    promote_content(content2, env2)
+    promote_content(content3, env3)
+    consumer = @cp.register(random_string("consumer1"), :system, nil,
+       facts={'system.certificate_version' => '3.3', "uname.machine" => "x86_64"}, random_string("consumer1"),
+       @owner['key'], [], [], [{ 'id' => env1['id']}, { 'id' => env2['id']}, { 'id' => env3['id']}])
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    certs = consumer_cp.list_certificates
+    certs.length.should == 1
+
+    json_body = extract_payload(certs[0]['cert'])
+    json_body['products'].length.should == 1
+    json_body['products'][0]['content'].size.should == 3
+
+    urls = [content1['contentUrl'], content2['contentUrl'], content3['contentUrl']]
+    json_body['products'][0]['content'].each { |content|
+      urls.should include(content['path'])
+    }
+
+  end
+
+  it 'content should use owner prefix' do
+    @owner = create_owner(random_string("test_owner"), nil, { :contentPrefix => "/#{random_string('test_prefix')}" })
+    product = create_product
+    content1 = new_content(1)
+    content2 = new_content(2)
+    content3 = new_content(3)
+
+    @cp.add_content_to_product(@owner['key'], product['id'], content1['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content2['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content3['id'])
+
+    env1 = @cp.create_environment(@owner['key'], random_string("env1"), random_string("env1"))
+    env2 = @cp.create_environment(@owner['key'], random_string("env2"), random_string("env2"))
+    env3 = @cp.create_environment(@owner['key'], random_string("env3"), random_string("env3"))
+    promote_content(content1, env1)
+    promote_content(content2, env2)
+    promote_content(content3, env3)
+    consumer = @cp.register(random_string("consumer1"), :system, nil,
+       facts={'system.certificate_version' => '3.3', "uname.machine" => "x86_64"}, random_string("consumer1"),
+       @owner['key'], [], [], [{ 'id' => env1['id']}, { 'id' => env2['id']}, { 'id' => env3['id']}])
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    certs = consumer_cp.list_certificates
+    certs.length.should == 1
+
+    json_body = extract_payload(certs[0]['cert'])
+    json_body['products'].length.should == 1
+    json_body['products'][0]['content'].size.should == 3
+
+    json_body['products'][0]['content'].each { |content|
+      content['path'].should include(@owner.contentPrefix)
+    }
+  end
+
+  it 'content should get prefix from environment' do
+    @owner = create_owner(random_string("test_owner"), nil, { :contentPrefix => "/#{random_string('test_prefix')}/$env" })
+    product = create_product
+    content1 = new_content(1)
+    content2 = new_content(2)
+    content3 = new_content(3)
+
+    @cp.add_content_to_product(@owner['key'], product['id'], content1['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content2['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content3['id'])
+
+    env1 = @cp.create_environment(@owner['key'], random_string("env1"), random_string("test_env_1"))
+    env2 = @cp.create_environment(@owner['key'], random_string("env2"), random_string("test_env_2"))
+    env3 = @cp.create_environment(@owner['key'], random_string("env3"), random_string("test_env_3"))
+    promote_content(content1, env1)
+    promote_content(content2, env2)
+    promote_content(content3, env3)
+    consumer = @cp.register(random_string("consumer1"), :system, nil,
+                            facts={'system.certificate_version' => '3.3', "uname.machine" => "x86_64"}, random_string("consumer1"),
+                            @owner['key'], [], [], [{ 'id' => env1['id']}, { 'id' => env2['id']}, { 'id' => env3['id']}])
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    certs = consumer_cp.list_certificates
+    certs.length.should == 1
+
+    json_body = extract_payload(certs[0]['cert'])
+    json_body['products'].length.should == 1
+    json_body['products'][0]['content'].size.should == 3
+
+    env_names = [env1.name, env2.name, env3.name]
+    json_body['products'][0]['content'].each { |content|
+      env_names.any? { |env_name| content['path'].include? env_name }
+    }
+  end
+
+  it 'should deduplicate content from multiple environments' do
+    @owner = create_owner(random_string("test_owner"), nil, { :contentPrefix => "/#{random_string('test_prefix')}/$env" })
+    product = create_product
+    content1 = new_content(1)
+    content2 = new_content(2)
+    content3 = new_content(3)
+
+    @cp.add_content_to_product(@owner['key'], product['id'], content1['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content2['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content3['id'])
+
+    env1 = @cp.create_environment(@owner['key'], random_string("env1"), random_string("test_env_1"))
+    env2 = @cp.create_environment(@owner['key'], random_string("env2"), random_string("test_env_2"))
+    env3 = @cp.create_environment(@owner['key'], random_string("env3"), random_string("test_env_3"))
+    promote_content(content1, env1)
+    promote_content(content1, env2)
+    promote_content(content1, env3)
+    promote_content(content2, env1)
+    promote_content(content2, env2)
+    promote_content(content2, env3)
+    promote_content(content3, env3)
+    consumer = @cp.register(random_string("consumer1"), :system, nil,
+                            facts={'system.certificate_version' => '3.3', "uname.machine" => "x86_64"}, random_string("consumer1"),
+                            @owner['key'], [], [], [{ 'id' => env1['id']}, { 'id' => env2['id']}, { 'id' => env3['id']}])
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    certs = consumer_cp.list_certificates
+    certs.length.should == 1
+
+    json_body = extract_payload(certs[0]['cert'])
+    json_body['products'].length.should == 1
+    json_body['products'][0]['content'].size.should == 3
+
+    # Verify content prioritization
+    json_body['products'][0]['content'].each { |content|
+      if content['id'] == content1.id
+        content['path'].should include(env1['name'])
+      elsif content['id'] == content2.id
+        content['path'].should include(env1['name'])
+      else
+        content['path'].should include(env3['name'])
+      end
+    }
+  end
+
+  def new_content(id)
+    return @cp.create_content(
+      @owner['key'], "cname#{id}", "test-content#{id}", random_string("clabel#{id}"), "ctype#{id}", "cvendor#{id}",
+      {:content_url=> "/this/is/the/path/#{id}", :arches => "x86_64"}, true)
+  end
+
 end

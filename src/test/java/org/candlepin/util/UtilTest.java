@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
@@ -360,19 +361,36 @@ public class UtilTest {
         }
 
         @ParameterizedTest(name = "An invalid value: \"{0}\" cannot be split")
-        @ValueSource(strings = { "", " ", " , " })
+        @ValueSource(strings = {"", " ", " , "})
         void emptyString(String list) {
             assertTrue(Util.toList(list).isEmpty());
         }
 
         @ParameterizedTest(name = "A valid value: \"{0}\" can be split")
-        @ValueSource(strings = { "item1, item2", " item1,item2 ", " item1 , item2 " })
+        @ValueSource(strings = {"item1, item2", " item1,item2 ", " item1 , item2 "})
         void validString(String list) {
             List<String> items = Util.toList(list);
 
             assertEquals(2, items.size());
             assertTrue(items.contains("item1"));
             assertTrue(items.contains("item2"));
+        }
+    }
+
+    @Nested
+    class EncodeUrlTest {
+
+        @Test
+        void nullString() {
+            assertThrows(NullPointerException.class, () -> Util.encodeUrl(null));
+        }
+
+        @Test
+        void encodesSpecialCharacters() {
+            String text = "/org!  #$%&'()*+,/123:;=?@[]\"-.<>\\^_`{|}~£円/$env/";
+            String expected = "%2Forg%21++%23%24%25%26%27%28%29*%2B%2C%2F123%3A%3B%3D%3F%40%5B%5D%22-." +
+                "%3C%3E%5C%5E_%60%7B%7C%7D%7E%C2%A3%E5%86%86%2F%24env%2F";
+            assertEquals(expected, Util.encodeUrl(text));
         }
     }
 

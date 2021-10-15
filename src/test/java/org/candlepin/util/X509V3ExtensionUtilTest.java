@@ -21,8 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import org.candlepin.TestingModules;
 import org.candlepin.config.Configuration;
+import org.candlepin.controller.util.ContentPrefix;
+import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Content;
@@ -36,18 +37,16 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509V3ExtensionUtil.NodePair;
 import org.candlepin.util.X509V3ExtensionUtil.PathNode;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Guice;
-import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.google.inject.name.Named;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -56,21 +55,14 @@ import java.util.Set;
 
 
 public class X509V3ExtensionUtilTest {
-    private Configuration config;
-    private EntitlementCurator ec;
     private X509V3ExtensionUtil util;
-    @Inject @Named("X509V3ExtensionUtilObjectMapper") private ObjectMapper mapper;
+    private ObjectMapper mapper;
 
     @BeforeEach
     public void init() {
-        config = mock(Configuration.class);
-        ec = mock(EntitlementCurator.class);
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.ServletEnvironmentModule(),
-            new TestingModules.StandardTest()
-        );
-        injector.injectMembers(this);
+        Configuration config = mock(Configuration.class);
+        EntitlementCurator ec = mock(EntitlementCurator.class);
+        mapper = new ObjectMapper();
         util = new X509V3ExtensionUtil(config, ec, this.mapper);
     }
 
@@ -115,38 +107,6 @@ public class X509V3ExtensionUtilTest {
     }
 
     @Test
-    public void testPrefixLogic() {
-        Product p = new Product("JarJar", "Binks");
-        Content c = new Content();
-        c.setContentUrl("/some/path");
-        ProductContent pc = new ProductContent(p, c, true);
-
-        assertEquals("/this/is/some/path", util.createFullContentPath("/this/is", pc));
-        assertEquals("/this/is/some/path", util.createFullContentPath("/this/is/", pc));
-        assertEquals("/this/is/some/path", util.createFullContentPath("/this/is///", pc));
-        c.setContentUrl("some/path");
-        assertEquals("/some/path", util.createFullContentPath(null, pc));
-        assertEquals("/some/path", util.createFullContentPath("", pc));
-        assertEquals("/this/is/some/path", util.createFullContentPath("/this/is/", pc));
-        assertEquals("/this/is/some/path", util.createFullContentPath("/this/is", pc));
-        assertEquals("/this/is/some/path", util.createFullContentPath("/this/is///", pc));
-        c.setContentUrl("///////some/path");
-        assertEquals("/this/is/some/path", util.createFullContentPath("/this/is/", pc));
-        assertEquals("/this/is/some/path", util.createFullContentPath("/this/is", pc));
-        assertEquals("/this/is/some/path", util.createFullContentPath("/this/is///", pc));
-        assertEquals("/some/path", util.createFullContentPath(null, pc));
-        assertEquals("/some/path", util.createFullContentPath("", pc));
-        c.setContentUrl("http://some/path");
-        assertEquals("http://some/path", util.createFullContentPath("/this/is", pc));
-        c.setContentUrl("https://some/path");
-        assertEquals("https://some/path", util.createFullContentPath("/this/is", pc));
-        c.setContentUrl("ftp://some/path");
-        assertEquals("ftp://some/path", util.createFullContentPath("/this/is", pc));
-        c.setContentUrl("file://some/path");
-        assertEquals("file://some/path", util.createFullContentPath("/this/is", pc));
-    }
-
-    @Test
     public void productWithBrandName() {
         String engProdId = "1000";
         String brandedName = "Branded Eng Product";
@@ -161,8 +121,8 @@ public class X509V3ExtensionUtilTest {
         Consumer consumer = new Consumer();
         consumer.setOwner(owner);
 
-        List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
-            prods, "", new HashMap<>(), consumer, pool);
+        List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd, prods,
+            new PromotedContent(emptyPrefix()), consumer, pool);
 
         assertEquals(1, certProds.size());
         assertEquals(brandedName, certProds.get(0).getBrandName());
@@ -269,8 +229,8 @@ public class X509V3ExtensionUtilTest {
         Consumer consumer = new Consumer();
         consumer.setOwner(owner);
 
-        List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
-            prods, "", new HashMap<>(), consumer, pool);
+        List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd, prods,
+            new PromotedContent(emptyPrefix()), consumer, pool);
 
         assertEquals(1, certProds.size());
         // Should get the first name we encountered
@@ -298,16 +258,23 @@ public class X509V3ExtensionUtilTest {
         consumer.setOwner(owner);
         consumer.setFact("uname.machine", "x86_64");
 
-        org.candlepin.model.dto.Product certProds = util.mapProduct(engProd,
-            sku, "", new HashMap<>(), consumer, pool, new HashSet<>(Arrays.asList("content_access")));
+        org.candlepin.model.dto.Product certProds = util.mapProduct(engProd, sku,
+            new PromotedContent(emptyPrefix()), consumer, pool,
+            new HashSet<>(Arrays.asList("content_access")));
 
         assertEquals(1, certProds.getContent().size());
         assertEquals(1, certProds.getContent().get(0).getArches().size());
         assertEquals("x86_64", certProds.getContent().get(0).getArches().get(0));
     }
 
+    private ContentPrefix emptyPrefix() {
+        return envId -> "";
+    }
+
     @Test
     public void subscriptionWithSysPurposeAttributes() throws JsonProcessingException {
+        this.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        this.mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         Owner owner = new Owner("Test Corporation");
         Product mktProd = new Product("mkt", "MKT SKU");
         mktProd.setAttribute(Product.Attributes.USAGE, "my_usage");
