@@ -14,8 +14,8 @@
  */
 package org.candlepin.util;
 
+import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 
@@ -27,13 +27,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 
-/**
- * X509Util
- */
+
 public abstract class X509Util {
 
     private static Logger log = LoggerFactory.getLogger(X509Util.class);
@@ -88,14 +85,14 @@ public abstract class X509Util {
      * @return ProductContent to include in the certificate.
      */
     public Set<ProductContent> filterProductContent(Product prod, Consumer consumer,
-        Map<String, EnvironmentContent> promotedContent, boolean filterEnvironment,
+        PromotedContent promotedContent, boolean filterEnvironment,
         Set<String> entitledProductIds, boolean contentAccessMode) {
         Set<ProductContent> filtered = new HashSet<>();
 
         for (ProductContent pc : prod.getProductContent()) {
             // Filter any content not promoted to environment.
-            if (filterEnvironment && consumer.getEnvironmentId() != null &&
-                !promotedContent.containsKey(pc.getContent().getId())) {
+            if (filterEnvironment && !consumer.getEnvironmentIds().isEmpty() &&
+                !promotedContent.contains(pc)) {
 
                 log.debug("Skipping content not promoted to environment: {}", pc.getContent());
                 continue;
@@ -124,36 +121,6 @@ public abstract class X509Util {
             }
         }
         return filtered;
-    }
-
-    /**
-     * Creates a Content URL from the prefix and the path
-     * @param contentPrefix to prepend to the path
-     * @param pc the product content
-     * @return the complete content path
-     */
-    public String createFullContentPath(String contentPrefix, ProductContent pc) {
-        String prefix = "/";
-        String contentPath = pc.getContent().getContentUrl();
-
-        // Allow for the case where the content URL is a true URL.
-        // If that is true, then return it as is.
-        if (contentPath != null && (contentPath.startsWith("http://") ||
-            contentPath.startsWith("file://") ||
-            contentPath.startsWith("https://") ||
-            contentPath.startsWith("ftp://"))) {
-
-            return contentPath;
-        }
-
-        if (!StringUtils.isEmpty(contentPrefix)) {
-            // Ensure there is no double // in the URL. See BZ952735
-            // remove them all except one.
-            prefix = StringUtils.stripEnd(contentPrefix, "/") + prefix;
-        }
-
-        contentPath = StringUtils.stripStart(contentPath, "/");
-        return prefix + contentPath;
     }
 
     /**

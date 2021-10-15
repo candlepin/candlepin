@@ -50,7 +50,7 @@ public class X509ExtensionUtilTest {
         Content content = new Content("123456", "testcontent", "yum", "testlabel", "testvendor");
         List<ProductContent> contents = List.of(new ProductContent(new Product(), content, true));
         Set<X509ExtensionWrapper> extensions = util
-            .contentExtensions(contents, null, null, null, new Product());
+            .contentExtensions(contents, null, null, new Product());
 
         assertFalse(extensions.isEmpty());
     }
@@ -63,7 +63,7 @@ public class X509ExtensionUtilTest {
         List<ProductContent> contents = List.of(new ProductContent(new Product(), content, true));
 
         assertThrows(IllegalStateException.class,
-            () -> util.contentExtensions(contents, null, null, null, new Product()));
+            () -> util.contentExtensions(contents, null, null, new Product()));
     }
 
     public static Stream<Arguments> invalidContentIds() {

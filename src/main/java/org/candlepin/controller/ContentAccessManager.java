@@ -17,6 +17,9 @@ package org.candlepin.controller;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.controller.util.ContentPrefix;
+import org.candlepin.controller.util.PromotedContent;
+import org.candlepin.controller.util.ScaContentPrefix;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -29,7 +32,6 @@ import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
-import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
@@ -55,18 +57,14 @@ import org.slf4j.LoggerFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -456,22 +454,6 @@ public class ContentAccessManager {
         return entitlementVersion != null && entitlementVersion.startsWith("3.");
     }
 
-    private Map<String, EnvironmentContent> getPromotedContent(Environment environment) {
-        // Build a set of all content IDs promoted to the consumer's environment so
-        // we can determine if anything needs to be skipped:
-        Map<String, EnvironmentContent> promotedContent = new HashMap<>();
-        if (environment != null) {
-            log.debug("Consumer has an environment, checking for promoted content in: {}", environment);
-
-            for (EnvironmentContent envContent : environment.getEnvironmentContent()) {
-                log.debug("  promoted content: {}", envContent.getContent().getId());
-                promotedContent.put(envContent.getContent().getId(), envContent);
-            }
-        }
-
-        return promotedContent;
-    }
-
     /**
      * Fetches the path to use for content used to generate the ENTITLEMENT_DATA certificate
      * extension
@@ -485,53 +467,18 @@ public class ContentAccessManager {
      * @return
      *  the container content path for the given owner and environment
      */
-    private String getContainerContentPath(Owner owner, Environment environment) throws IOException {
+    private String getContainerContentPath(Owner owner, Environment environment) {
         // Fix for BZ 1866525:
         // - In hosted, SCA entitlement content path needs to use a dummy value to prevent existing
         //   clients from breaking, while still being clear the path is present for SCA
         // - In satellite (standalone), the path should simply be the content prefix
 
-        return this.standalone ?
-            this.getContentPrefix(owner, environment) :
-            "/sca/" + URLEncoder.encode(owner.getKey(), StandardCharsets.UTF_8.toString());
-    }
-
-    /**
-     * Fetches the content prefix to apply to content specified in the entitlement payload.
-     *
-     * @param owner
-     *  the owner of the entitlement for which the content prefix is being generated
-     *
-     * @param environment
-     *  the environment to which the consumer receiving the entitlement belongs
-     *
-     * @return
-     *  the content prefix for the given owner and environment
-     */
-    private String getContentPrefix(Owner owner, Environment environment) throws IOException {
-        StringBuilder prefix = new StringBuilder();
-
-        // Fix for BZ 1866525:
-        // - In hosted, SCA entitlement content paths should not have any prefix
-        // - In satellite (standalone), the prefix should use the owner key and environment name
-        //   if available
-
         if (this.standalone) {
-            String charset =  StandardCharsets.UTF_8.toString();
-
-            prefix.append('/').append(URLEncoder.encode(owner.getKey(), charset));
-
-            if (environment != null) {
-                for (String chunk : environment.getName().split("/")) {
-                    if (!chunk.isEmpty()) {
-                        prefix.append("/");
-                        prefix.append(URLEncoder.encode(chunk, charset));
-                    }
-                }
-            }
+            String envId = environment == null ? null : environment.getId();
+            List<Environment> envs = environment == null ? List.of() : List.of(environment);
+            return ScaContentPrefix.from(owner, this.standalone, envs).get(envId);
         }
-
-        return prefix.toString();
+        return "/sca/" + Util.encodeUrl(owner.getKey());
     }
 
     private String createDN(Consumer consumer, Owner owner) {
@@ -561,7 +508,7 @@ public class ContentAccessManager {
         throws IOException {
         List<org.candlepin.model.dto.Product> products = new ArrayList<>();
         products.add(container);
-        return v3extensionUtil.getByteExtensions(null, products, null,  null);
+        return v3extensionUtil.getByteExtensions(products);
     }
 
     private byte[] createContentAccessDataPayload(Owner owner, Environment environment, Consumer consumer)
@@ -589,10 +536,12 @@ public class ContentAccessManager {
         Set<String> entitledProductIds = new HashSet<>();
         entitledProductIds.add("content-access");
 
-        Map<String, EnvironmentContent> promotedContent = getPromotedContent(environment);
-        String contentPrefix = this.getContentPrefix(owner, environment);
+        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
+        ContentPrefix contentPrefix = ScaContentPrefix.from(owner, this.standalone, environments);
+        PromotedContent promotedContent = new PromotedContent(contentPrefix).withAll(environments);
+
         org.candlepin.model.dto.Product productModel = v3extensionUtil.mapProduct(container, skuProduct,
-            contentPrefix, promotedContent, consumer, emptyPool, entitledProductIds);
+            promotedContent, consumer, emptyPool, entitledProductIds);
 
         List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();
         productModels.add(productModel);

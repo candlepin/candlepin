@@ -373,6 +373,7 @@ class Candlepin
     displayName = params['displayName'] || name
     contentAccessModeList = params['contentAccessModeList'] || nil
     contentAccessMode = params['contentAccessMode'] || nil
+    contentPrefix = params[:contentPrefix] || nil
 
     owner = {
       'key' => key,
@@ -381,6 +382,7 @@ class Candlepin
 
     owner['contentAccessModeList'] = contentAccessModeList unless contentAccessModeList.nil?
     owner['contentAccessMode'] = contentAccessMode unless contentAccessMode.nil?
+    owner['contentPrefix'] = contentPrefix unless contentPrefix.nil?
     owner['parentOwner'] = parent if !parent.nil?
 
     post('/owners', {}, owner)
