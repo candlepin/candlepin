@@ -16,8 +16,8 @@ package org.candlepin.util;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
@@ -34,7 +34,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -194,9 +193,8 @@ public class X509ExtensionUtil  extends X509Util{
         return toReturn;
     }
 
-    public Set<X509ExtensionWrapper> contentExtensions(
-        Collection<ProductContent> productContentList, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Consumer consumer, Product skuProduct) {
+    public Set<X509ExtensionWrapper> contentExtensions(Collection<ProductContent> productContentList,
+        PromotedContent promotedContent, Consumer consumer, Product skuProduct) {
 
         Set<ProductContent> productContent = new HashSet<>(productContentList);
         Set<X509ExtensionWrapper> toReturn = new LinkedHashSet<>();
@@ -210,8 +208,7 @@ public class X509ExtensionUtil  extends X509Util{
         // likely going to generate a certificate too large for the CDN, and return an
         // informative error message to the user.
         for (ProductContent pc : productContent) {
-            // augment the content path with the prefix if it is passed in
-            String contentPath = this.createFullContentPath(contentPrefix, pc);
+            String contentPath = promotedContent.getPath(pc);
 
             // If we get a content type we don't have content type OID for
             // skip it. see rhbz#997970
@@ -224,7 +221,7 @@ public class X509ExtensionUtil  extends X509Util{
             String contentOid = OIDUtil.REDHAT_OID +
                 "." +
                 OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + "." +
-                pc.getContent().getId().toString() + "." +
+                pc.getContent().getId() + "." +
                 OIDUtil.CF_REPO_TYPE.get(pc.getContent().getType());
             toReturn.add(new X509ExtensionWrapper(contentOid, false, pc
                 .getContent().getType()));
@@ -257,9 +254,9 @@ public class X509ExtensionUtil  extends X509Util{
 
             // Check if we should override the enabled flag due to setting on promoted
             // content:
-            if (enableEnvironmentFiltering && consumer.getEnvironmentId() != null) {
+            if (enableEnvironmentFiltering && !consumer.getEnvironmentIds().isEmpty()) {
                 // we know content has been promoted at this point:
-                Boolean enabledOverride = promotedContent.get(pc.getContent().getId()).getEnabled();
+                Boolean enabledOverride = promotedContent.isEnabled(pc);
                 if (enabledOverride != null) {
                     log.debug("overriding enabled flag: {}", enabledOverride);
                     enabled = enabledOverride;

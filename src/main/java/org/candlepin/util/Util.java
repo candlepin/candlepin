@@ -34,6 +34,8 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -607,5 +609,15 @@ public class Util {
         else {
             return LocalDate.from(temporalAccessor).atStartOfDay().atOffset(ZoneOffset.UTC);
         }
+    }
+
+    /**
+     * Method encodes given text into a format usable in URLs in UTF-8 encoding.
+     *
+     * @param text a chunk of text to be encoded
+     * @return encoded string
+     */
+    public static String encodeUrl(String text) {
+        return URLEncoder.encode(text, StandardCharsets.UTF_8);
     }
 }

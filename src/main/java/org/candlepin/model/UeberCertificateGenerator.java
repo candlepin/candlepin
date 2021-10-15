@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.auth.Principal;
+import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.pki.PKIUtility;
@@ -37,7 +38,6 @@ import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TimeZone;
@@ -53,7 +53,7 @@ public class UeberCertificateGenerator {
     private static final  String UEBER_CONTENT_NAME = "ueber_content";
     private static final String UEBER_PRODUCT_POSTFIX = "_ueber_product";
 
-    private static Logger log = LoggerFactory.getLogger(UeberCertificateGenerator.class);
+    private static final Logger log = LoggerFactory.getLogger(UeberCertificateGenerator.class);
 
     private UniqueIdGenerator idGenerator;
     private PKIUtility pki;
@@ -136,11 +136,10 @@ public class UeberCertificateGenerator {
 
     private X509Certificate createX509Certificate(UeberCertData data, BigInteger serialNumber,
         KeyPair keyPair) throws GeneralSecurityException, IOException {
-        Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<>();
         Set<X509ExtensionWrapper> extensions = new LinkedHashSet<>();
         extensions.addAll(extensionUtil.productExtensions(data.getProduct()));
-        extensions.addAll(extensionUtil.contentExtensions(data.getProduct().getProductContent(), null,
-            new HashMap<>(), new Consumer(), data.getProduct()));
+        extensions.addAll(extensionUtil.contentExtensions(data.getProduct().getProductContent(),
+            new PromotedContent(envId -> ""), new Consumer(), data.getProduct()));
         extensions.addAll(extensionUtil.subscriptionExtensions(data.getEntitlement().getPool()));
         extensions.addAll(extensionUtil.entitlementExtensions(data.getEntitlement().getQuantity()));
         extensions.addAll(extensionUtil.consumerExtensions(data.getConsumer()));
@@ -153,6 +152,7 @@ public class UeberCertificateGenerator {
         }
 
         String dn = "O=" + data.getOwner().getKey();
+        Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<>();
         return this.pki.createX509Certificate(dn, extensions, byteExtensions,  data.getStartDate(),
             data.getEndDate(), keyPair, serialNumber, null);
     }

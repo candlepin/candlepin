@@ -27,7 +27,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.version.CertVersionConflictException;
@@ -62,25 +61,23 @@ import java.util.stream.Collectors;
  * preferred to singular ones.
  */
 public class EntitlementCertificateGenerator {
-    private static Logger log = LoggerFactory.getLogger(EntitlementCertificateGenerator.class);
+    private static final Logger log = LoggerFactory.getLogger(EntitlementCertificateGenerator.class);
 
-    private EntitlementCertificateCurator entitlementCertificateCurator;
-    private EntitlementCertServiceAdapter entCertServiceAdapter;
-    private ContentAccessManager contentAccessManager;
-    private OwnerCurator ownerCurator;
-    private EntitlementCurator entitlementCurator;
-    private PoolCurator poolCurator;
-    private ProductCurator productCurator;
-    private EventSink eventSink;
-    private EventFactory eventFactory;
+    private final EntitlementCertificateCurator entitlementCertificateCurator;
+    private final EntitlementCertServiceAdapter entCertServiceAdapter;
+    private final ContentAccessManager contentAccessManager;
+    private final OwnerCurator ownerCurator;
+    private final EntitlementCurator entitlementCurator;
+    private final PoolCurator poolCurator;
+    private final EventSink eventSink;
+    private final EventFactory eventFactory;
 
 
     @Inject
     public EntitlementCertificateGenerator(EntitlementCertificateCurator entitlementCertificateCurator,
         EntitlementCertServiceAdapter entCertServiceAdapter, EntitlementCurator entitlementCurator,
         PoolCurator poolCurator, EventSink eventSink, EventFactory eventFactory,
-        ProductCurator productCurator, ContentAccessManager contentAccessManager,
-        OwnerCurator ownerCurator) {
+        ContentAccessManager contentAccessManager, OwnerCurator ownerCurator) {
 
         this.entitlementCertificateCurator = entitlementCertificateCurator;
         this.entCertServiceAdapter = entCertServiceAdapter;
@@ -91,7 +88,6 @@ public class EntitlementCertificateGenerator {
 
         this.eventSink = eventSink;
         this.eventFactory = eventFactory;
-        this.productCurator = productCurator;
     }
 
     /**
@@ -119,11 +115,8 @@ public class EntitlementCertificateGenerator {
             return this.entCertServiceAdapter.generateEntitlementCerts(consumer, poolQuantities,
                 entitlements, products, save);
         }
-        catch (CertVersionConflictException cvce) {
+        catch (CertVersionConflictException | CertificateSizeException cvce) {
             throw cvce;
-        }
-        catch (CertificateSizeException cse) {
-            throw cse;
         }
         // Fixme throw custom exception instead of generic RuntimeException
         catch (Exception ex) {
