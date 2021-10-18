@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.10
+Version: 4.0.11
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,10 @@ fi
 
 #raw
 %changelog
+* Mon Oct 18 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.11-1
+- Fixed an error when deleting products associated with activation keys
+  (crog@redhat.com)
+
 * Wed Sep 29 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.10-1
 - 2008443: Fix to avoid exceeding the overall query parameter limit
   (prakgupt@redhat.com)
