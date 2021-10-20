@@ -351,32 +351,10 @@ public class EntitlementCertificateGenerator {
 
         log.info("Regenerating relevant certificates in environment: {}", environment);
 
-        Set<Entitlement> entsToRegen = new HashSet<>();
-
-        entLoop: for (Entitlement entitlement : this.entitlementCurator.listByEnvironment(environment)) {
-            // Impl note:
-            // Since the entitlements came from the DB, we should be safe to traverse the graph as
-            // necessary without any sanity checks (so long as our model's restrictions aren't
-            // broken).
-
-            for (String contentId : contentIds) {
-                if (entitlement.getPool().getProduct().hasContent(contentId)) {
-                    entsToRegen.add(entitlement);
-                    continue entLoop;
-                }
-                Set<Product> providedProducts = productCurator
-                    .getPoolProvidedProductsCached(entitlement.getPool().getId());
-                for (Product provided : providedProducts) {
-                    if (provided.hasContent(contentId)) {
-                        entsToRegen.add(entitlement);
-                        continue entLoop;
-                    }
-                }
-            }
-        }
-
+        List<String> entsToRegen = entitlementCurator
+                .listEntitlementIdByEnvironmentAndContent(environment.getId(), contentIds);
         log.info("Found {} certificates to regenerate.", entsToRegen.size());
-        this.regenerateCertificatesOf(entsToRegen, lazy);
+        this.regenerateCertificatesByEntitlementIds(entsToRegen, lazy);
     }
 
     /**
