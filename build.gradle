@@ -29,6 +29,9 @@ plugins {
     id "war"
     id "checkstyle"
     id 'org.owasp.dependencycheck' version '6.2.2'
+    id "jacoco"
+    id "org.sonarqube" version "3.2.0"
+
 
     // The following are plugins are plugins we wrote in the buildSrc folder
     id 'org.candlepin.gradle.gettext'
@@ -367,6 +370,14 @@ test {
         }
     }
 }
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}
+
+project.tasks["sonarqube"].dependsOn "jacocoTestReport"
 
 wrapper {
     distributionType = Wrapper.DistributionType.ALL
