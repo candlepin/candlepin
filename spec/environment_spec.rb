@@ -349,4 +349,33 @@ describe 'Environments' do
     end
   end
 
+  it 'should able to create consumer in multiple environment using legacy registration endpoint' do
+    # create consumer for only one environment (backward compatible)
+    # TODO Assert on environment field as well
+    # whenever we make changes to consumerDTO to handle 'environment'
+    @cp.create_environment(@owner['key'], "env_priority_1", "env_priority_1")
+    consumer = @cp.create_consumer_in_environments("env_priority_1", random_string('consumer'))
+    expect(consumer).not_to be_nil
+    expect(consumer['environments']).not_to be_nil
+    expect(consumer['environments'].length).to eq(1)
+    expect(consumer['environments'][0].id).to eq("env_priority_1")
+
+    # create consumer for multiple environment
+    @cp.create_environment(@owner['key'], "env_priority_2", "env_priority_2")
+    envIds = "env_priority_2, env_priority_1"
+    consumer = @cp.create_consumer_in_environments(envIds, random_string('consumer'))
+    expect(consumer).not_to be_nil
+    expect(consumer['environments']).not_to be_nil
+    expect(consumer['environments'].length).to eq(2)
+
+    # check the priority ordering
+    expect(consumer['environments'][0].id).to eq("env_priority_2")
+    expect(consumer['environments'][1].id).to eq("env_priority_1")
+  end
+
+  it 'should fail to create consumer if environment does not exists when using legacy registration endpoint' do
+    expect {
+      @cp.create_consumer_in_environments("randomEnvIdThatDoesNotExists", random_string('consumer'))
+    }.to raise_error(RestClient::ResourceNotFound)
+  end
 end
