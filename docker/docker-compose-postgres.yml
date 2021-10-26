@@ -1,4 +1,4 @@
-version: '3'
+version: '3.3'
 services:
   db:
     # upgrade to 9.6 requires client version 9.4.1211
@@ -25,6 +25,14 @@ services:
       - ../:/candlepin-dev
     depends_on:
       - db
+    secrets:
+      - sonar_crt
+
+secrets:
+  sonar_crt:
+    file: /home/jenkins/sonar.crt
+
+
 networks:
   default:
     driver: bridge

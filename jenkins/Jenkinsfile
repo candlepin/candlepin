@@ -148,5 +148,45 @@ pipeline {
                 }
             }
         }
+        stage('SonarQube') {
+            parallel {
+                stage('Upload-PR-to-SonarQube') {
+                    agent { label 'candlepin' }
+                    steps {
+                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+                        checkout scm
+                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
+                        sh 'sh jenkins/upload-on-sonarqube.sh'
+                    }
+                    post {
+                        always {
+                            sh 'sh jenkins/cleanup.sh'
+                        }
+                    }
+                }
+                stage('Upload-Branch-to-SonarQube') {
+                    agent { label 'candlepin' }
+                    environment {
+                        BRANCH_UPLOAD = 'true'
+                    }
+                    when {
+                        not {
+                            changeRequest()
+                        }
+                    }
+                    steps {
+                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+                        checkout scm
+                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
+                        sh 'sh jenkins/upload-on-sonarqube.sh'
+                    }
+                    post {
+                        always {
+                            sh 'sh jenkins/cleanup.sh'
+                        }
+                    }
+                }
+            }
+        }
     }
 }
