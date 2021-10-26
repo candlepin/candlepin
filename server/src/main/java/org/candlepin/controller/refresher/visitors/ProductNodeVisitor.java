@@ -229,7 +229,7 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
     private Product resolveEntityVersion(EntityNode<Product, ProductInfo> node) {
         Owner owner = node.getOwner();
         Product entity = node.getMergedEntity();
-        int entityVersion = entity.getEntityVersion(false);
+        int entityVersion = entity.getEntityVersion();
 
         Map<String, List<Product>> entityMap = this.ownerVersionedEntityMap.computeIfAbsent(owner, key -> {
             Set<Integer> versions = this.ownerEntityVersions.remove(key);
@@ -240,7 +240,7 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
         });
 
         for (Product candidate : entityMap.getOrDefault(entity.getId(), Collections.emptyList())) {
-            if (entityVersion == candidate.getEntityVersion(true) && entity.equals(candidate)) {
+            if (entityVersion == candidate.getEntityVersion() && entity.equals(candidate)) {
                 return candidate;
             }
         }

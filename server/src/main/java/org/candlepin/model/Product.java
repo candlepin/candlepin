@@ -35,17 +35,20 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
 
@@ -81,6 +84,8 @@ import javax.validation.constraints.Size;
 @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable, Eventful,
     ProductInfo {
+
+    private static final Logger log = LoggerFactory.getLogger(Product.class);
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_products";
@@ -255,13 +260,6 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @Immutable
     private Set<Product> providedProducts;
 
-    @ElementCollection
-    @CollectionTable(name = "cp2_product_provided_products",
-        joinColumns = @JoinColumn(name = "product_uuid"))
-    @Column(name = "provided_product_uuid")
-    @Immutable
-    private Set<String> providedProductUuids;
-
     @ManyToOne
     @JoinColumn(name = "derived_product_uuid", nullable = true)
     private Product derivedProduct;
@@ -397,7 +395,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         this.setBranding(source.getBranding());
         this.setProvidedProducts(source.getProvidedProducts());
 
-        this.providedProductUuids = null;
+        this.entityVersion = null;
 
         return this;
     }
@@ -450,7 +448,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             .map(provProduct -> (Product) provProduct.clone())
             .collect(Collectors.toSet()));
 
-        copy.providedProductUuids = null;
+        copy.entityVersion = null;
 
         return copy;
     }
@@ -521,6 +519,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public Product setId(String productId) {
         this.id = productId;
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -541,6 +541,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public Product setName(String name) {
         this.name = name;
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -558,12 +560,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  a reference to this product instance
      */
     public Product setMultiplier(Long multiplier) {
-        if (multiplier == null) {
-            this.multiplier = 1L;
-        }
-        else {
-            this.multiplier = Math.max(1L, multiplier);
-        }
+        this.multiplier = multiplier != null ? Math.max(1L, multiplier) : 1L;
+        this.entityVersion = null;
 
         return this;
     }
@@ -648,6 +646,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         // effort to fix all of these inconsistencies with a massive database update, we can't
         // perform any input sanitation/massaging.
         this.attributes.put(key, value);
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -669,8 +669,12 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         }
 
         boolean present = this.attributes.containsKey(key);
-
         this.attributes.remove(key);
+
+        if (present) {
+            this.entityVersion = null;
+        }
+
         return present;
     }
 
@@ -682,6 +686,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public Product clearAttributes() {
         this.attributes.clear();
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -697,6 +703,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public Product setAttributes(Map<String, String> attributes) {
         this.attributes.clear();
+        this.entityVersion = null;
 
         if (attributes != null) {
             this.attributes.putAll(attributes);
@@ -727,6 +734,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public Product setBranding(Collection<Branding> branding) {
         this.branding.clear();
+        this.entityVersion = null;
 
         if (branding != null) {
             for (Branding brand : branding) {
@@ -755,6 +763,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new IllegalArgumentException("branding is null");
         }
 
+        this.entityVersion = null;
+
         branding.setProduct(this);
         return this.branding.add(branding);
     }
@@ -781,17 +791,20 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new IllegalArgumentException("branding id is null");
         }
 
-        Collection<Branding> remove = new LinkedList<>();
+        boolean changed = false;
 
-        for (Branding pb : this.branding) {
+        for (Iterator<Branding> biterator = this.branding.iterator(); biterator.hasNext();) {
+            Branding existing = biterator.next();
+            if (existing.equals(branding)) {
+                existing.setProduct(null);
+                biterator.remove();
 
-            if (branding.equals(pb)) {
-                pb.setProduct(null);
-                remove.add(pb);
+                this.entityVersion = null;
+                changed = true;
             }
         }
 
-        return this.branding.removeAll(remove);
+        return changed;
     }
 
     public List<String> getSkuEnabledContentIds() {
@@ -932,6 +945,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
             this.productContent.removeAll(remove);
             changed = this.productContent.add(productContent);
+            this.entityVersion = null;
         }
 
         return changed;
@@ -978,17 +992,19 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new IllegalArgumentException("contentId is null");
         }
 
-        Collection<ProductContent> remove = new LinkedList<>();
+        boolean changed = false;
 
-        for (ProductContent pcd : this.productContent) {
-            Content cd = pcd.getContent();
+        for (Iterator<ProductContent> pciterator = this.productContent.iterator(); pciterator.hasNext();) {
+            ProductContent pc = pciterator.next();
 
-            if (cd != null && contentId.equals(cd.getId())) {
-                remove.add(pcd);
+            if (pc != null && pc.getContent() != null && contentId.equals(pc.getContent().getId())) {
+                pciterator.remove();
+                changed = true;
+                this.entityVersion = null;
             }
         }
 
-        return this.productContent.removeAll(remove);
+        return changed;
     }
 
     /**
@@ -1049,6 +1065,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public Product clearProductContent() {
         this.productContent.clear();
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -1063,6 +1081,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public Product setProductContent(Collection<ProductContent> content) {
         this.productContent.clear();
+        this.entityVersion = null;
 
         if (content != null) {
             for (ProductContent pcd : content) {
@@ -1119,6 +1138,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new IllegalArgumentException("productId is null");
         }
 
+        this.entityVersion = null;
         return this.dependentProductIds.add(productId);
     }
 
@@ -1140,6 +1160,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new IllegalArgumentException("productId is null");
         }
 
+        this.entityVersion = null;
         return this.dependentProductIds.remove(productId);
     }
 
@@ -1151,6 +1172,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public Product clearDependentProductIds() {
         this.dependentProductIds.clear();
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -1166,6 +1189,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      */
     public Product setDependentProductIds(Collection<String> dependentProductIds) {
         this.dependentProductIds.clear();
+        this.entityVersion = null;
 
         if (dependentProductIds != null) {
             for (String pid : dependentProductIds) {
@@ -1206,12 +1230,18 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         if (obj instanceof Product) {
             Product that = (Product) obj;
 
-            // TODO:
-            // Maybe it would be better to check the UUID field and only check the following if
-            // both products have null UUIDs? By not doing this check, we run the risk of two
-            // different products being considered equal if they happen to have the same values at
-            // the time they're checked, or two products not being considered equal if they
-            // represent the same product in different states.
+            // - If the objects have the same non-null UUID, they are equal
+            // - If the objects have different entity versions, they cannot be equal
+            // - If the objects have the same entity versions, run through the checks below to
+            //   avoid collisions
+
+            if (this.getUuid() != null && this.getUuid().equals(that.getUuid())) {
+                return true;
+            }
+
+            if (this.getEntityVersion() != that.getEntityVersion()) {
+                return false;
+            }
 
             equals = new EqualsBuilder()
                 .append(this.id, that.id)
@@ -1220,13 +1250,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
                 .append(this.attributes, that.attributes)
                 .isEquals();
 
-            // When checking children versioned entities, we're only interested in verifying that the
-            // reference is the same, otherwise we could run into some weird linkage problems (also it's
-            // much faster)
-            Comparator<Product> productUuidComparator = Comparator.comparing(product -> product != null ?
-                product.getUuid() : null, Comparator.nullsLast(Comparator.naturalOrder()));
-
-            equals = equals && productUuidComparator.compare(this.derivedProduct, that.derivedProduct) == 0;
+            // Check derived product
+            equals = equals && Objects.equals(this.getDerivedProduct(), that.getDerivedProduct());
 
             // Check our collections.
             // Impl note: We can't use .equals here on the collections, as Hibernate's special
@@ -1234,28 +1259,15 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // have to step through each collection and do a manual comparison. Ugh.
             equals = equals && Util.collectionsAreEqual(this.dependentProductIds, that.dependentProductIds);
 
-            // Compare content UUIDs
-            equals = equals && Util.collectionsAreEqual(this.productContent, that.productContent,
-                (pc1, pc2) -> Objects.equals(pc1, pc2) ? 0 : 1);
+            // Compare our content
+            equals = equals && Util.collectionsAreEqual(this.productContent, that.productContent);
 
             // Compare branding collections
-            equals = equals && Util.collectionsAreEqual(this.branding, that.branding,
-                (b1, b2) -> Objects.equals(b1, b2) ? 0 : 1);
+            equals = equals && Util.collectionsAreEqual(this.branding, that.branding);
 
             // Compare provided products
-            Collection<String> thisProvidedProductUuids = this.providedProductUuids != null ?
-                this.providedProductUuids :
-                this.providedProducts.stream()
-                    .map(Product::getUuid)
-                    .collect(Collectors.toList());
-
-            Collection<String> thatProvidedProductUuids = that.providedProductUuids != null ?
-                that.providedProductUuids :
-                that.providedProducts.stream()
-                    .map(Product::getUuid)
-                    .collect(Collectors.toList());
-
-            equals = equals && Util.collectionsAreEqual(thisProvidedProductUuids, thatProvidedProductUuids);
+            equals = equals && Util.collectionsAreEqual(this.getProvidedProducts(),
+                that.getProvidedProducts());
         }
 
         return equals;
@@ -1277,80 +1289,67 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  a version hash for this entity
      */
     public int getEntityVersion() {
-        return this.getEntityVersion(false);
-    }
+        if (this.entityVersion == null) {
+            log.trace("Calculating entity version for product: {}", this);
 
-    /**
-     * Fetches the entity version, using the last-calcualted cache if available
-     *
-     * @param useCache
-     *  whether or not to returned the cached entity version, if available
-     *
-     * @return
-     *  a version hash for this entity
-     */
-    public int getEntityVersion(boolean useCache) {
-        if (useCache && this.entityVersion != null) {
-            // It would be super nice if we just cleared entityVersion on any setter, and then
-            // always returned it if it were available.
-            return this.entityVersion;
-        }
+            // This must always be a subset of equals
+            HashCodeBuilder builder = new HashCodeBuilder(37, 7)
+                .append(this.id)
+                .append(this.name)
+                .append(this.multiplier)
+                .append(this.attributes);
 
-        // This must always be a subset of equals
-        HashCodeBuilder builder = new HashCodeBuilder(37, 7)
-            .append(this.id)
-            .append(this.name)
-            .append(this.multiplier)
-            .append(this.attributes);
-
-        if (this.derivedProduct != null) {
-            builder.append(this.derivedProduct.getEntityVersion(useCache));
-        }
-
-        // Impl note:
-        // Stepping through the collections here is as painful as it looks, but Hibernate, once
-        // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
-        // manually step through these and add the elements to ensure the hash code is
-        // generated properly.
-        int accumulator;
-
-        if (!this.providedProducts.isEmpty()) {
-            accumulator = 0;
-            for (Product product : this.providedProducts) {
-                accumulator += (product != null ? product.getEntityVersion(useCache) : 0);
+            if (this.derivedProduct != null) {
+                builder.append(this.derivedProduct.getEntityVersion());
             }
 
-            builder.append(accumulator);
-        }
+            // Impl note:
+            // Stepping through the collections here is as painful as it looks, but Hibernate, once
+            // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
+            // manually step through these and add the elements to ensure the hash code is
+            // generated properly.
+            int accumulator;
 
-        if (!this.dependentProductIds.isEmpty()) {
-            accumulator = 0;
-            for (String pid : this.dependentProductIds) {
-                accumulator += (pid != null ? pid.hashCode() : 0);
+            if (!this.providedProducts.isEmpty()) {
+                accumulator = 0;
+                for (Product product : this.providedProducts) {
+                    accumulator += (product != null ? product.getEntityVersion() : 0);
+                }
+
+                builder.append(accumulator);
             }
 
-            builder.append(accumulator);
-        }
+            if (!this.dependentProductIds.isEmpty()) {
+                accumulator = 0;
+                for (String pid : this.dependentProductIds) {
+                    accumulator += (pid != null ? pid.hashCode() : 0);
+                }
 
-        if (!this.productContent.isEmpty()) {
-            accumulator = 0;
-            for (ProductContent pc : this.productContent) {
-                accumulator += (pc != null ? pc.getEntityVersion() : 0);
+                builder.append(accumulator);
             }
 
-            builder.append(accumulator);
-        }
+            if (!this.productContent.isEmpty()) {
+                accumulator = 0;
+                for (ProductContent pc : this.productContent) {
+                    accumulator += (pc != null ? pc.getEntityVersion() : 0);
+                }
 
-        if (!this.branding.isEmpty()) {
-            accumulator = 0;
-            for (Branding branding : this.branding) {
-                accumulator += (branding != null ? branding.hashCode() : 0);
+                builder.append(accumulator);
             }
 
-            builder.append(accumulator);
+            if (!this.branding.isEmpty()) {
+                accumulator = 0;
+                for (Branding branding : this.branding) {
+                    accumulator += (branding != null ? branding.hashCode() : 0);
+                }
+
+                builder.append(accumulator);
+            }
+
+            this.entityVersion = builder.toHashCode();
         }
 
-        return builder.toHashCode();
+        return this.entityVersion;
     }
 
     /**
@@ -1363,15 +1362,88 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     /**
+     * Checks for the existing of a cycle that includes the specific origin product, using the given
+     * derived product and provided products. If a cycle is detected, the provided stack will be populated
+     * with the path containing the cycle.
+     *
+     * @param chain
+     *  an empty stack to contain the path of the cycle, if found
+     *
+     * @param child
+     *  a single child product to use for detecting a cycle; analogous to a derived product or a
+     *  single provided product
+     *
+     * @param children
+     *  a collection of children to use for detecting a cycle; analogous to a collection of provided
+     *  products
+     *
+     * @return
+     *  true if a cycle is detected; false otherwise
+     */
+    private boolean checkForCycle(Stack<Product> chain, Product child, Collection<Product> children) {
+        if (!chain.isEmpty()) {
+            Product origin = chain.firstElement();
+            if (this == origin || (this.getUuid() != null && this.getUuid().equals(origin.getUuid()))) {
+                return true;
+            }
+        }
+
+        chain.push(this);
+
+        if (child != null && child.checkForCycle(chain, child.getDerivedProduct(),
+            child.getProvidedProducts())) {
+
+            return true;
+        }
+
+        if (children != null && children.stream().anyMatch(product -> product.checkForCycle(chain,
+            product.getDerivedProduct(), product.getProvidedProducts()))) {
+
+            return true;
+        }
+
+        chain.pop();
+        return false;
+    }
+
+    /**
+     * Utility method to reduce boilerplate code when checking for cycles. If a cycle is detected,
+     * this method throws an exception.
+     *
+     * @param child
+     *  a single child product to use for detecting a cycle; analogous to a derived product or a
+     *  single provided product
+     *
+     * @param children
+     *  a collection of children to use for detecting a cycle; analogous to a collection of provided
+     *  products
+     *
+     * @throws IllegalStateException
+     *  if a cycle is detected
+     */
+    private void checkForCycle(Product child, Collection<Product> children) {
+        Stack<Product> chain = new Stack<>();
+        if (this.checkForCycle(chain, child, children)) {
+            throw new IllegalStateException("product cycle detected: " + chain);
+        }
+    }
+
+    /**
      * Method to set provided products.
      *
      * @param providedProducts A collection of provided products.
      * @return A reference to this product.
      */
     public Product setProvidedProducts(Collection<Product> providedProducts) {
-        this.providedProducts = providedProducts != null ? new HashSet<>(providedProducts) : new HashSet<>();
-        this.providedProductUuids = null;
+        if (providedProducts != null) {
+            this.checkForCycle(null, providedProducts);
+            this.providedProducts = new HashSet<>(providedProducts);
+        }
+        else {
+            this.providedProducts = new HashSet<>();
+        }
 
+        this.entityVersion = null;
         return this;
     }
 
@@ -1387,10 +1459,14 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  boolean value if provided product is added or not.
      */
     public boolean addProvidedProduct(Product providedProduct) {
-        boolean result = providedProduct != null && this.providedProducts.add(providedProduct);
-        this.providedProductUuids = null;
+        if (providedProduct != null) {
+            this.checkForCycle(providedProduct, null);
 
-        return result;
+            this.entityVersion = null;
+            return this.providedProducts.add(providedProduct);
+        }
+
+        return false;
     }
 
     /**
@@ -1415,7 +1491,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      *  a reference to this product
      */
     public Product setDerivedProduct(Product derivedProduct) {
+        this.checkForCycle(derivedProduct, null);
+
         this.derivedProduct = derivedProduct;
+        this.entityVersion = null;
+
         return this;
     }
 }
