@@ -330,6 +330,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (pids != null && pids.size() > 0) {
             log.error("One or more pools references a product which no longer belongs to its " +
                 "organization: {}", pids);
+
             throw new IllegalStateException("One or more pools was left in an undefined state: " + pids);
         }
 

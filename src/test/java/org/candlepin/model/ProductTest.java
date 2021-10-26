@@ -17,6 +17,7 @@ package org.candlepin.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.util.Util;
@@ -24,15 +25,19 @@ import org.candlepin.util.Util;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+
 
 /**
  * ProductTest
@@ -87,33 +92,29 @@ public class ProductTest {
             new Branding(null, "eng_prod_id_6", "eng_prod_name_6", "OS")
         ).collect(Collectors.toSet());
 
-        Set<Product> providedP1 = Util.asSet(
-            new Product("ak1", "providedProduct1", "varient1", "version1",
-            "arch1" , "type1"),
-            new Product("ak2", "providedProduct2", "varient2", "version2",
-            "arch2", "type2")
-        );
+        Set<Product> provProducts1 = Set.of(
+            new Product("prov_prod-1", "prov_prod-1", "var1", "ver1", "arch1", "type1").setUuid("pp_uuid-1"),
+            new Product("prov_prod-2", "prov_prod-2", "var2", "ver2", "arch2", "type2").setUuid("pp_uuid-2"),
+            new Product("prov_prod-3", "prov_prod-3", "var3", "ver3", "arch3", "type3"));
 
-        for (Product product : providedP1) {
-            product.setUuid(product.getId() + "_uuid");
-        }
+        Set<Product> provProducts2 = Set.of(
+            new Product("prov_prod-4", "prov_prod-4", "var4", "ver4", "arch4", "type4").setUuid("pp_uuid-4"),
+            new Product("prov_prod-5", "prov_prod-5", "var5", "ver5", "arch5", "type5").setUuid("pp_uuid-5"),
+            new Product("prov_prod-6", "prov_prod-6", "var6", "ver6", "arch6", "type6"));
 
-        Set<Product> providedP2 = Util.asSet(
-            new Product("ak3", "providedProduct3", "varient3", "version3",
-            "arch3" , "type3"),
-            new Product("ak4", "providedProduct4", "varient4", "version4",
-            "arch4" , "type4")
-        );
+        Product derivedProd1 = new Product()
+            .setUuid("dp_uuid-1")
+            .setId("derived_product-1")
+            .setName("derived product 1");
 
-        for (Product product : providedP2) {
-            product.setUuid(product.getId() + "_uuid");
-        }
+        Product derivedProd2 = new Product()
+            .setUuid("dp_uuid-2")
+            .setId("derived_product-2")
+            .setName("derived product 2");
 
-        Product derivedProd1 = new Product("derivedProdId1", "dp-name-1");
-        derivedProd1.setUuid(derivedProd1.getId() + "_uuid");
-
-        Product derivedProd2 = new Product("derivedProdId2", "dp-name-2");
-        derivedProd2.setUuid(derivedProd2.getId() + "_uuid");
+        Product derivedProd3 = new Product()
+            .setId("derived_product-3")
+            .setName("derived product 3");
 
         return Stream.of(
             new Object[] { "Id", "test_value", "alt_value" },
@@ -123,8 +124,8 @@ public class ProductTest {
             new Object[] { "ProductContent", productContent1, productContent2 },
             new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5") },
             new Object[] { "Branding", brandings1, brandings2 },
-            new Object[] { "DerivedProduct", derivedProd1, derivedProd2 },
-            new Object[] { "ProvidedProducts", providedP1, providedP2 }
+            new Object[] { "DerivedProduct", derivedProd1, derivedProd2, derivedProd3 },
+            new Object[] { "ProvidedProducts", provProducts1, provProducts2 }
         );
     }
 
@@ -259,27 +260,137 @@ public class ProductTest {
         assertEquals(base.hashCode(), clone.hashCode());
     }
 
-    @Test
-    public void testProductEqualityWithCycles() {
-        Product product = new Product();
-        Product derivedProduct = new Product();
+    @ParameterizedTest
+    @ValueSource(strings = { "1", "3", "5" })
+    public void testSetDerivedProductChecksForCyclesOnDerivedProducts(int depth) {
+        Product parent = new Product();
 
-        product.setUuid("test-UUID-1");
-        derivedProduct.setUuid("test-UUID-2");
+        Product chain = new Product();
+        Product tail = chain;
 
-        // Creating endless cyclic product hierarchy
-        product.setDerivedProduct(derivedProduct);
-        derivedProduct.setDerivedProduct(product);
+        for (int cd = 1; cd < depth; ++cd) {
+            Product next = new Product();
+            tail.setDerivedProduct(next);
+            tail = next;
+        }
 
-        assertNotEquals(product, derivedProduct);
+        tail.setDerivedProduct(parent);
 
-        Product p1 = new Product();
-        p1.setUuid("test-UUID-3");
+        assertThrows(IllegalStateException.class, () -> parent.setDerivedProduct(chain));
+    }
 
-        // Creating cycle in provided product
-        p1.setProvidedProducts(Arrays.asList(product));
-        product.setProvidedProducts(Arrays.asList(p1));
+    @ParameterizedTest
+    @ValueSource(strings = { "1", "3", "5" })
+    public void testSetDerivedProductChecksForCyclesOnProvidedProducts(int depth) {
+        Product parent = new Product();
 
-        assertNotEquals(product, p1);
+        Product chain = new Product();
+        Product tail = chain;
+
+        for (int cd = 1; cd < depth; ++cd) {
+            Product next = new Product();
+            tail.addProvidedProduct(next);
+
+            // Add some noise on each level
+            for (int i = 0; i < 2; ++i) {
+                tail.addProvidedProduct(new Product());
+            }
+
+            tail = next;
+        }
+
+        tail.addProvidedProduct(parent);
+
+        assertThrows(IllegalStateException.class, () -> parent.setDerivedProduct(chain));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "1", "3", "5" })
+    public void testAddProvidedProductChecksForCyclesOnDerivedProducts(int depth) {
+        Product parent = new Product();
+
+        Product chain = new Product();
+        Product tail = chain;
+
+        for (int cd = 1; cd < depth; ++cd) {
+            Product next = new Product();
+            tail.setDerivedProduct(next);
+            tail = next;
+        }
+
+        tail.setDerivedProduct(parent);
+
+        assertThrows(IllegalStateException.class, () -> parent.addProvidedProduct(chain));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "1", "3", "5" })
+    public void testAddProvidedProductChecksForCyclesOnProvidedProducts(int depth) {
+        Product parent = new Product();
+
+        Product chain = new Product();
+        Product tail = chain;
+
+        for (int cd = 1; cd < depth; ++cd) {
+            Product next = new Product();
+            tail.addProvidedProduct(next);
+
+            // Add some noise on each level
+            for (int i = 0; i < 2; ++i) {
+                tail.addProvidedProduct(new Product());
+            }
+
+            tail = next;
+        }
+
+        tail.addProvidedProduct(parent);
+
+        assertThrows(IllegalStateException.class, () -> parent.addProvidedProduct(chain));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "1", "3", "5" })
+    public void testSetProvidedProductsChecksForCyclesOnDerivedProducts(int depth) {
+        Product parent = new Product();
+
+        Product chain = new Product();
+        Product tail = chain;
+
+        for (int cd = 1; cd < depth; ++cd) {
+            Product next = new Product();
+            tail.setDerivedProduct(next);
+            tail = next;
+        }
+
+        tail.setDerivedProduct(parent);
+
+        List<Product> children = List.of(new Product(), new Product(), chain);
+        assertThrows(IllegalStateException.class, () -> parent.setProvidedProducts(children));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "1", "3", "5" })
+    public void testSetProvidedProductsChecksForCyclesOnProvidedProducts(int depth) {
+        Product parent = new Product();
+
+        Product chain = new Product();
+        Product tail = chain;
+
+        for (int cd = 1; cd < depth; ++cd) {
+            Product next = new Product();
+            tail.addProvidedProduct(next);
+
+            // Add some noise on each level
+            for (int i = 0; i < 2; ++i) {
+                tail.addProvidedProduct(new Product());
+            }
+
+            tail = next;
+        }
+
+        tail.addProvidedProduct(parent);
+
+        List<Product> children = List.of(new Product(), new Product(), chain);
+        assertThrows(IllegalStateException.class, () -> parent.setProvidedProducts(children));
     }
 }

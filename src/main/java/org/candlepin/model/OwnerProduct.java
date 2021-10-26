@@ -102,6 +102,11 @@ public class OwnerProduct implements Persisted, Serializable {
         this.product = product;
     }
 
+    @Override
+    public String toString() {
+        return String.format("OwnerProduct [%s => %s]", this.getOwner(), this.getProduct());
+    }
+
     /**
      * Sets the database object IDs this join object uses to link owners to content. If either the
      * owner or content are not present or have not been persisted with a valid ID or UUID, this

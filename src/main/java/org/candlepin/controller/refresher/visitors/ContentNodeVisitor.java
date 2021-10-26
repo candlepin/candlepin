@@ -231,7 +231,7 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
         });
 
         for (Content candidate : entityMap.getOrDefault(entity.getId(), Collections.emptyList())) {
-            if (entityVersion == candidate.getEntityVersion(true) && entity.equals(candidate)) {
+            if (entityVersion == candidate.getEntityVersion() && entity.equals(candidate)) {
                 return candidate;
             }
         }
