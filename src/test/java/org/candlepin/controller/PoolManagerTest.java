@@ -926,7 +926,7 @@ public class PoolManagerTest {
         this.manager.getRefresher(mockSubAdapter, mockProdAdapter).add(owner).run();
 
         assertPoolsAreEqual(TestUtil.copyFromSub(s), argPool.getValue());
-        verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
+        verify(this.mockPoolCurator, times(1)).create(any(Pool.class), anyBoolean());
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -992,7 +992,7 @@ public class PoolManagerTest {
         when(poolRulesMock.createAndEnrichPools(eq(s), anyList())).thenReturn(newPools);
 
         this.manager.createAndEnrichPools(s);
-        verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
+        verify(this.mockPoolCurator, times(1)).create(any(Pool.class), anyBoolean());
     }
 
     @Test
@@ -1003,7 +1003,7 @@ public class PoolManagerTest {
         when(poolRulesMock.createAndEnrichPools(eq(p), anyList())).thenReturn(newPools);
 
         this.manager.createAndEnrichPools(p);
-        verify(this.mockPoolCurator, times(1)).create(any(Pool.class));
+        verify(this.mockPoolCurator, times(1)).create(any(Pool.class), anyBoolean());
     }
 
     @Test
@@ -1481,10 +1481,8 @@ public class PoolManagerTest {
         for (Pool pool : pools) {
             String subid = pool.getSubscriptionId();
             if (subid != null) {
-                if (!subToPools.containsKey(subid)) {
-                    subToPools.put(subid, new LinkedList<>());
-                }
-                subToPools.get(subid).add(pool);
+                subToPools.computeIfAbsent(subid, (sid) -> new LinkedList<>())
+                    .add(pool);
             }
             else {
                 floating.add(pool);
@@ -1496,6 +1494,19 @@ public class PoolManagerTest {
             when(cqmock.list()).thenReturn(subToPools.get(subid));
             when(mockPoolCurator.getPoolsBySubscriptionId(eq(subid))).thenReturn(cqmock);
         }
+
+        doAnswer(iom -> {
+            Collection<String> subids = (Collection<String>) iom.getArgument(0);
+            Map<String, List<Pool>> map = new HashMap<>();
+
+            for (String subid : subids) {
+                if (subToPools.containsKey(subid)) {
+                    map.put(subid, subToPools.get(subid));
+                }
+            }
+
+            return map;
+        }).when(mockPoolCurator).mapPoolsBySubscriptionIds(anyCollection());
 
         when(mockPoolCurator.getOwnersFloatingPools(any(Owner.class))).thenReturn(floating);
         when(mockPoolCurator.getPoolsFromBadSubs(any(Owner.class), anyCollection()))
