@@ -1385,6 +1385,193 @@ describe 'Refresh Pools' do
     product_json['content'].should == []
   end
 
+  it 'regenerates entitlements when pool start date changes' do
+    owner_key = random_string('test_owner')
+    owner = create_owner(owner_key)
+
+    product = create_upstream_product(random_string('test_prod'))
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key, {
+      :product => product,
+      :start_date => Date.today - 20,
+      :end_date => Date.today + 20
+    })
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(1)
+
+    user = user_client(owner, random_string('test_user'))
+    consumer = consumer_client(user, random_string('test_consumer'))
+
+    entitlements = consumer.consume_pool(pools.first['id'])
+    expect(entitlements.length).to eq(1)
+
+    consumer_entitlements = @cp.list_entitlements({:uuid => consumer.uuid})
+    expect(consumer_entitlements.length).to eq(1)
+    entitlement = consumer_entitlements.first
+
+    # Update subscription, then refresh. The entitlements should be regenerated
+    update_upstream_subscription(sub.id, { :start_date => Date.today - 10 })
+    @cp.refresh_pools(owner_key)
+
+    consumer_entitlements = @cp.list_entitlements({:uuid => consumer.uuid})
+    expect(consumer_entitlements.length).to eq(1)
+    new_entitlement = consumer_entitlements.first
+
+    expect(new_entitlement['pool']['id']).to eq(entitlement['pool']['id'])
+    expect(new_entitlement['certificates'].first['id']).to_not eq(entitlement['certificates'].first['id'])
+  end
+
+  it 'regenerates entitlements when pool end date changes' do
+    owner_key = random_string('test_owner')
+    owner = create_owner(owner_key)
+
+    product = create_upstream_product(random_string('test_prod'))
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key, {
+      :product => product,
+      :start_date => Date.today - 20,
+      :end_date => Date.today + 20
+    })
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(1)
+
+    user = user_client(owner, random_string('test_user'))
+    consumer = consumer_client(user, random_string('test_consumer'))
+
+    entitlements = consumer.consume_pool(pools.first['id'])
+    expect(entitlements.length).to eq(1)
+
+    consumer_entitlements = @cp.list_entitlements({:uuid => consumer.uuid})
+    expect(consumer_entitlements.length).to eq(1)
+    entitlement = consumer_entitlements.first
+
+    # Update subscription, then refresh. The entitlements should be regenerated
+    update_upstream_subscription(sub.id, { :end_date => Date.today + 10 })
+    @cp.refresh_pools(owner_key)
+
+    consumer_entitlements = @cp.list_entitlements({:uuid => consumer.uuid})
+    new_entitlement = consumer_entitlements.first
+
+    expect(new_entitlement['pool']['id']).to eq(entitlement['pool']['id'])
+    expect(new_entitlement['certificates'].first['id']).to_not eq(entitlement['certificates'].first['id'])
+  end
+
+  it 'regenerates entitlements when pool product changes' do
+    owner_key = random_string('test_owner')
+    owner = create_owner(owner_key)
+
+    product = create_upstream_product(random_string('test_prod'), { :attributes => { 'attrib' => 'value' }})
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key, { :product => product })
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(1)
+
+    user = user_client(owner, random_string('test_user'))
+    consumer = consumer_client(user, random_string('test_consumer'))
+
+    entitlements = consumer.consume_pool(pools.first['id'])
+    expect(entitlements.length).to eq(1)
+
+    consumer_entitlements = @cp.list_entitlements({:uuid => consumer.uuid})
+    expect(consumer_entitlements.length).to eq(1)
+    entitlement = consumer_entitlements.first
+
+    # Update product, then refresh. The entitlements should be regenerated
+    update_upstream_product(product.id, { :attributes => { 'attrib' => 'new_value' }})
+    @cp.refresh_pools(owner_key)
+
+    consumer_entitlements = @cp.list_entitlements({:uuid => consumer.uuid})
+    new_entitlement = consumer_entitlements.first
+
+    expect(new_entitlement['pool']['id']).to eq(entitlement['pool']['id'])
+    expect(new_entitlement['certificates'].first['id']).to_not eq(entitlement['certificates'].first['id'])
+  end
+
+  it 'regenerates entitlements when derived pools are removed' do
+    # Testing for BZ 1567922:
+    # - We have a main pool with a finite quantity, and also a virt_limit attribute on it
+    # - A host consumes entitlement(s) from it; creating a derived pool as a result of that entitlement
+    #   attachment
+    # - The main pool is changed in one of two ways:
+    #   a) the quantity of it is reduced, resulting in the host's entitlement being revoked (because now it
+    #   would be overconsuming), and that would mean we need to delete the derived pool that was created
+    #   because of it, or
+    #   b) virt_limit is removed from the main pool's product (meaning it no longer should provide derived
+    #   pools), which would mean we need to delete the derived pool
+    # - That derived pool that was marked for deletion is attempted to be locked+updated later on, which
+    #   results on some kind of error
+
+    owner_key = random_string('test_owner')
+    owner = create_owner(owner_key)
+
+    derived_product = create_upstream_product(random_string('derived_prod'))
+
+    product = create_upstream_product(random_string('host_prod'), {
+      :derived_product => derived_product,
+      :attributes => {
+        'virt_limit' => 5
+      }
+    })
+
+    sub = create_upstream_subscription(random_string('test_sub'), owner_key, {
+      :product => product,
+      :quantity => 2
+    })
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(2)
+
+    host_pool = pools.find {|pool| pool.type == 'NORMAL'}
+    guest_pool = pools.find {|pool| pool.type == 'BONUS'}
+
+    expect(host_pool).to_not be_nil
+    expect(guest_pool).to_not be_nil
+    expect(host_pool.id).to_not eq(guest_pool.id)
+
+
+    guest_uuid = random_string('system.uuid')
+    user = user_client(owner, random_string('test_user'))
+
+    host = user.register(random_string('host'), :system)
+    host_client = Candlepin.new(nil, nil, host['idCert']['cert'], host['idCert']['key'])
+
+    guest = user.register(random_string('guest'), :system, nil,
+      {'virt.uuid' => guest_uuid, 'virt.is_guest' => 'true', 'uname.machine' => 'x86_64'}, nil, nil, [], [])
+    guest_client = Candlepin.new(nil, nil, guest['idCert']['cert'], guest['idCert']['key'])
+
+    host_client.update_guestids([{'guestId' => guest_uuid}])
+
+    entitlements = host_client.consume_pool(host_pool.id)
+    expect(entitlements.length).to eq(1)
+    host_entitlement = entitlements.first
+
+    entitlements = guest_client.consume_pool(guest_pool.id)
+    expect(entitlements.length).to eq(1)
+    guest_entitlement = entitlements.first
+
+
+    # Update main sub product to no longer have a derived product
+    update_upstream_product(product.id, {
+      :derived_product => nil,
+      :attributes => {}
+    })
+
+    @cp.refresh_pools(owner_key)
+    pools = @cp.list_pools({:owner => owner.id})
+    expect(pools.length).to eq(1)
+    expect(pools.find {|pool| pool.type == 'BONUS'}).to be_nil
+
+    entitlements = @cp.list_entitlements({:uuid => host.uuid})
+    expect(entitlements.length).to eq(1)
+
+    entitlements = @cp.list_entitlements({:uuid => guest.uuid})
+    expect(entitlements.length).to eq(0)
+  end
+
   it 'deduplicates products and content' do
     # Create some orgs
     owners = []
@@ -1436,4 +1623,5 @@ describe 'Refresh Pools' do
     expect(product_uuids.size).to eq(owners.size)
     expect(product_uuids).to all(eq(product_uuids.first))
   end
+
 end
