@@ -61,6 +61,7 @@ import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -234,46 +235,52 @@ public class EntitlementCertificateGeneratorTest {
     public void testLazyRegnerateForEnvironmentContent() {
         String environmentId = "env_id_1";
         List<Entitlement> entitlements = this.generateEntitlements();
-        CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(entitlements.iterator());
-        when(this.mockEntitlementCurator.listByEnvironment(environmentId)).thenReturn(cqmock);
-
-        this.ecGenerator.regenerateCertificatesOf(environmentId, Arrays.asList("c1", "c2", "c4"), true);
-
-        assertTrue(entitlements.get(0).isDirty());
-        assertTrue(entitlements.get(1).isDirty());
-        assertFalse(entitlements.get(2).isDirty());
-
-        verifyZeroInteractions(this.mockEntCertAdapter);
+        List<String> entitlementIds = new ArrayList<>();
+        for (Entitlement e : entitlements) {
+            entitlementIds.add(e.getId());
+        }
+        List<String> contentIds = Arrays.asList("c1", "c2", "c4");
+        when(this.mockEntitlementCurator
+            .listEntitlementIdByEnvironmentAndContent(any(String.class), any(List.class)))
+            .thenReturn(entitlementIds);
+        this.ecGenerator.regenerateCertificatesOf(environmentId, contentIds, true);
+        verify(this.mockEntitlementCurator, times(1)).markEntitlementsDirty(entitlementIds);
     }
 
     @Test
     public void testNonLazyRegnerateForEnvironmentContent() throws Exception {
         String environmentId = "env_id_1";
         List<Entitlement> entitlements = this.generateEntitlements();
-
+        List<String> entitlementIds = new ArrayList<>();
+        for (Entitlement e : entitlements) {
+            entitlementIds.add(e.getId());
+        }
         HashMap<String, EntitlementCertificate> ecMap = new HashMap<>();
         for (Entitlement entitlement : entitlements) {
             ecMap.put(entitlement.getPool().getId(), new EntitlementCertificate());
         }
 
         CandlepinQuery<Entitlement> cqmock = mock(CandlepinQuery.class);
-        when(cqmock.iterator()).thenReturn(entitlements.iterator());
-        when(this.mockEntitlementCurator.listByEnvironment(environmentId)).thenReturn(cqmock);
+        when(this.mockEntitlementCurator
+            .listEntitlementIdByEnvironmentAndContent(any(String.class), any(List.class)))
+            .thenReturn(entitlementIds);
         when(this.mockEntCertAdapter.generateEntitlementCerts(any(Consumer.class), any(Map.class),
             any(Map.class), any(Map.class), anyBoolean())).thenReturn(ecMap);
         when(mockEventFactory.entitlementChanged(any(Entitlement.class))).thenReturn(mock(Event.class));
+        for (int i = 0; i < entitlementIds.size(); i++) {
+            when(mockEntitlementCurator.get(entitlementIds.get(i))).thenReturn(entitlements.get(i));
+        }
         this.ecGenerator.regenerateCertificatesOf(environmentId, Arrays.asList("c1", "c2", "c4"), false);
 
         assertFalse(entitlements.get(0).isDirty());
         assertFalse(entitlements.get(1).isDirty());
         assertFalse(entitlements.get(2).isDirty());
 
-        verify(this.mockEntCertAdapter, times(2)).generateEntitlementCerts(any(Consumer.class),
+        verify(this.mockEntCertAdapter, times(3)).generateEntitlementCerts(any(Consumer.class),
             this.poolQuantityMapCaptor.capture(), this.entMapCaptor.capture(), this.productMapCaptor
             .capture(), eq(false));
 
-        verify(this.mockEventSink, times(2)).queueEvent(any(Event.class));
+        verify(this.mockEventSink, times(3)).queueEvent(any(Event.class));
     }
 
     @Test
