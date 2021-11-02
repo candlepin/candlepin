@@ -41,9 +41,6 @@ import java.util.stream.Collectors;
 
 
 
-/**
- * Test suite for the ProductNodeBuilder class
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ProductNodeBuilderTest {

@@ -14,8 +14,8 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -33,19 +33,15 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 
-
-/**
- * CertificateSerialTest
- */
 public class CertificateSerialResourceTest {
 
     @Inject protected ModelTranslator modelTranslator;
 
-    @Before
+    @BeforeEach
     public void init() {
         Injector injector = Guice.createInjector(
             new TestingModules.MockJpaModule(),

@@ -14,92 +14,92 @@
  */
 package org.candlepin.katello;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-/**
- * KatelloUserServiceAdapterTest
- */
+
 public class KatelloUserServiceAdapterTest {
 
     private KatelloUserServiceAdapter kusa;
 
-    @Before
+    @BeforeEach
     public void init() {
         kusa = new KatelloUserServiceAdapter();
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void validateUser() throws Exception {
-        kusa.validateUser("admin", "admin");
+    @Test
+    public void validateUser() {
+        assertThrows(UnsupportedOperationException.class, () -> kusa.validateUser("admin", "admin"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void createUser() throws Exception {
+    @Test
+    public void createUser() {
         User user = mock(User.class);
-        kusa.createUser(user);
+        assertThrows(UnsupportedOperationException.class, () -> kusa.createUser(user));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void updateUser() throws Exception {
+    @Test
+    public void updateUser() {
         User user = mock(User.class);
-        kusa.updateUser("username", user);
+        assertThrows(UnsupportedOperationException.class, () -> kusa.updateUser("username", user));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void deleteUser() throws Exception {
-        kusa.deleteUser("username");
+    @Test
+    public void deleteUser() {
+        assertThrows(UnsupportedOperationException.class, () -> kusa.deleteUser("username"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void findByLogin() throws Exception {
-        kusa.findByLogin("admin");
+        assertThrows(UnsupportedOperationException.class, () -> kusa.findByLogin("admin"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void listUsers() throws Exception {
-        kusa.listUsers();
+    @Test
+    public void listUsers() {
+        assertThrows(UnsupportedOperationException.class, () -> kusa.listUsers());
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void createRole() throws Exception {
         Role r = mock(Role.class);
-        kusa.createRole(r);
+        assertThrows(UnsupportedOperationException.class, () -> kusa.createRole(r));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void updateRole() throws Exception {
+    @Test
+    public void updateRole() {
         Role r = mock(Role.class);
-        kusa.updateRole("role name", r);
+        assertThrows(UnsupportedOperationException.class, () -> kusa.updateRole("role name", r));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void deleteRole() throws Exception {
-        kusa.deleteRole("roleid");
+    @Test
+    public void deleteRole() {
+        assertThrows(UnsupportedOperationException.class, () -> kusa.deleteRole("roleid"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void addUserToRole() throws Exception {
-        kusa.addUserToRole("role name", "username");
+    @Test
+    public void addUserToRole() {
+        assertThrows(UnsupportedOperationException.class, () -> kusa.addUserToRole("role name", "username"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void removeUserFromRole() throws Exception {
-        kusa.removeUserFromRole("role name", "username");
+    @Test
+    public void removeUserFromRole() {
+        assertThrows(UnsupportedOperationException.class,
+            () -> kusa.removeUserFromRole("role name", "username"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void getRole() throws Exception {
-        kusa.getRole("roleid");
+        assertThrows(UnsupportedOperationException.class, () -> kusa.getRole("roleid"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
-    public void listRoles() throws Exception {
-        kusa.listRoles();
+    @Test
+    public void listRoles() {
+        assertThrows(UnsupportedOperationException.class, () -> kusa.listRoles());
     }
 }

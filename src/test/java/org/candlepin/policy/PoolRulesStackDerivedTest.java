@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Mockito.anyListOf;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
@@ -200,7 +200,7 @@ public class PoolRulesStackDerivedTest {
         entitlements.put(pool2.getId(), stackedEnts.get(0));
         Map<String, Map<String, String>> attributes = new HashMap<>();
         attributes.put(pool2.getId(), PoolHelper.getFlattenedAttributes(pool2));
-        when(poolManagerMock.createPools(anyListOf(Pool.class))).then(returnsFirstArg());
+        when(poolManagerMock.createPools(anyList())).then(returnsFirstArg());
         PoolOperationCallback poolOperationCallback = PoolHelper.createHostRestrictedPools(poolManagerMock,
             consumer, reqPools, entitlements, attributes, productCurator);
         stackDerivedPool = poolOperationCallback.getPoolCreates().get(0);

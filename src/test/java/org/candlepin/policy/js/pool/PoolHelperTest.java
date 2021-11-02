@@ -14,9 +14,17 @@
  */
 package org.candlepin.policy.js.pool;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.config.ConfigProperties;
@@ -29,7 +37,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -45,13 +52,9 @@ import java.util.Map;
 
 
 
-/**
- * PoolHelperTest
- */
 public class PoolHelperTest {
 
     private PoolManager pm;
-    private ProductServiceAdapter psa;
     private Entitlement ent;
     private Owner owner;
     private ProductCurator productCurator;
@@ -59,7 +62,6 @@ public class PoolHelperTest {
     @BeforeEach
     public void init() {
         pm = mock(PoolManager.class);
-        psa = mock(ProductServiceAdapter.class);
         ent = mock(Entitlement.class);
         productCurator = Mockito.mock(ProductCurator.class);
         Configuration config = mock(Configuration.class);
@@ -161,7 +163,7 @@ public class PoolHelperTest {
         attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
         attributes.put(targetPool2.getId(), PoolHelper.getFlattenedAttributes(targetPool2));
 
-        doAnswer(returnsFirstArg()).when(pm).createPools(anyListOf(Pool.class));
+        doAnswer(returnsFirstArg()).when(pm).createPools(anyList());
         PoolOperationCallback poolOperationCallback = PoolHelper.createHostRestrictedPools(pm,
             cons, targetPools, entitlements, attributes, productCurator);
         List<Pool> pools = poolOperationCallback.getPoolCreates();
@@ -219,7 +221,7 @@ public class PoolHelperTest {
         Map<String, Map<String, String>> attributes = new HashMap<>();
         attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
 
-        doAnswer(returnsFirstArg()).when(pm).createPools(anyListOf(Pool.class));
+        doAnswer(returnsFirstArg()).when(pm).createPools(anyList());
         PoolOperationCallback poolOperationCallback = PoolHelper.createHostRestrictedPools(pm,
             consumer, targetPools, entitlements, attributes, productCurator);
 

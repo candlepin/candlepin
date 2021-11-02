@@ -14,7 +14,8 @@
  */
 package org.candlepin.audit;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -30,11 +31,8 @@ import org.candlepin.model.Pool;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 
 public class EventBuilderTest {
@@ -48,10 +46,7 @@ public class EventBuilderTest {
     private PrincipalProvider principalProvider;
 
 
-    @Rule
-    public ExpectedException exceptions = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
         this.mockEnvironmentCurator = mock(EnvironmentCurator.class);
@@ -84,8 +79,7 @@ public class EventBuilderTest {
         Pool pool = mock(Pool.class);
         eventBuilder = new EventBuilder(factory, Event.Target.POOL, Event.Type.CREATED);
 
-        exceptions.expect(IseException.class);
-        exceptions.expectMessage("This method is only for type MODIFIED Events.");
-        eventBuilder.setEventData(pool, pool);
+        IseException e = assertThrows(IseException.class, () -> eventBuilder.setEventData(pool, pool));
+        assertEquals("This method is only for type MODIFIED Events.", e.getMessage());
     }
 }

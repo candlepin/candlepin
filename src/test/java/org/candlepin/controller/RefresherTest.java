@@ -14,8 +14,15 @@
  */
 package org.candlepin.controller;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.anyMap;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -37,7 +44,6 @@ import org.mockito.quality.Strictness;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 
 
@@ -126,8 +132,8 @@ public class RefresherTest {
 
         verify(poolManager, times(1))
             .refreshPoolsWithRegeneration(eq(subAdapter), eq(prodAdapter), eq(owner), eq(false));
-        verify(poolManager, times(0)).updatePoolsForMasterPool(any(List.class),
-            any(Pool.class), eq(pool.getQuantity()), eq(false), any(Map.class));
+        verify(poolManager, times(0)).updatePoolsForMasterPool(anyList(),
+            any(Pool.class), eq(pool.getQuantity()), eq(false), anyMap());
     }
 
     @Test
@@ -159,7 +165,7 @@ public class RefresherTest {
         refresher.run();
 
         verify(poolManager, times(1)).refreshPoolsForMasterPool(eq(mainPool), eq(true), eq(false),
-            any(Map.class));
+            anyMap());
     }
 
     protected void mockAdapterSubs(String input, Collection<? extends SubscriptionInfo> output) {

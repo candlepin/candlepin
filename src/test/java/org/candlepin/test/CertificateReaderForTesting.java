@@ -21,7 +21,7 @@ import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.pki.impl.JSSProviderLoader;
 
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -72,7 +72,7 @@ public class CertificateReaderForTesting extends CertificateReader {
             ca = (X509Certificate) CertificateFactory.getInstance("X.509").generateCertificate(caStream);
         }
         catch (IOException | CertificateException e) {
-            Assert.fail("Could not load CA certificate");
+            Assertions.fail("Could not load CA certificate");
         }
         return ca;
     }

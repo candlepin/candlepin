@@ -14,13 +14,11 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-/**
- * DeletedConsumerTest
- */
+
 public class DeletedConsumerTest {
 
     private DeletedConsumer dc = new DeletedConsumer("abcde", "10", "key", "displayname");

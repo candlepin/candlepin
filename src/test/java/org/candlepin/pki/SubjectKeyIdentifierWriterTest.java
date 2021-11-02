@@ -15,11 +15,13 @@
 
 package org.candlepin.pki;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import java.nio.charset.StandardCharsets;
 
 public class SubjectKeyIdentifierWriterTest {
 
@@ -29,6 +31,6 @@ public class SubjectKeyIdentifierWriterTest {
 
         // 0x04 is the DER tag for an octet string and 0x06 is the subsequent length of the octet string
         byte[] foobarInAsn1 = {0x04, 0x06, 0x66, 0x6f, 0x6f, 0x62, 0x61, 0x72};
-        assertArrayEquals(foobarInAsn1, writer.toOctetString("foobar".getBytes("UTF-8")));
+        assertArrayEquals(foobarInAsn1, writer.toOctetString("foobar".getBytes(StandardCharsets.UTF_8)));
     }
 }

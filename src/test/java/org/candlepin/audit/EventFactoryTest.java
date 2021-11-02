@@ -14,8 +14,8 @@
  */
 package org.candlepin.audit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -40,18 +40,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-
-/**
- * EventFactoryTest
- */
 
 public class EventFactoryTest {
     private ConsumerTypeCurator mockConsumerTypeCurator;
@@ -63,7 +59,7 @@ public class EventFactoryTest {
 
     private EventFactory eventFactory;
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         principalProvider = mock(PrincipalProvider.class);
         Principal principal = mock(Principal.class);
@@ -80,7 +76,7 @@ public class EventFactoryTest {
     }
 
     @Test
-    public void testGuestIdCreation() throws Exception {
+    public void testGuestIdCreation() {
         // this test is testing bz 786730, to ensure
         // the virt-who error does not occur
         Consumer consumer = mock(Consumer.class);

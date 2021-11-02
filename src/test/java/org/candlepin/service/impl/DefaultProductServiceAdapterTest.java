@@ -14,8 +14,8 @@
  */
 package org.candlepin.service.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
@@ -47,8 +47,8 @@ import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509ExtensionUtil;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -59,11 +59,6 @@ import java.util.List;
 
 // TODO: FIXME: Rewrite this test to not be so reliant upon mocks. It's making things incredibly brittle and
 // wasting dev time tracking down non-issues when a mock silently fails because the implementation changes.
-
-
-/**
- * DefaultProductServiceAdapterTest
- */
 public class DefaultProductServiceAdapterTest {
     private String someid = "deadbeef";
     private DefaultProductServiceAdapter dpsa;
@@ -74,7 +69,7 @@ public class DefaultProductServiceAdapterTest {
     private X509ExtensionUtil extUtil;
     private ContentCurator cc;
 
-    @Before
+    @BeforeEach
     public void init() {
         opc = mock(OwnerProductCurator.class);
         idgen = mock(UniqueIdGenerator.class);

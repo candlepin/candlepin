@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.js.compliance;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -25,8 +25,8 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -37,9 +37,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 
-/**
- * StatusReasonMessageGeneratorTest
- */
+
 public class StatusReasonMessageGeneratorTest {
 
     private StatusReasonMessageGenerator generator;
@@ -48,7 +46,7 @@ public class StatusReasonMessageGeneratorTest {
     private Entitlement ent1;
     private Entitlement entStacked1, entStacked2;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Locale locale = new Locale("en_US");
         I18n i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
@@ -205,7 +203,6 @@ public class StatusReasonMessageGeneratorTest {
             .setAccountNumber("1000")
             .setOrderNumber("1000");
 
-        Entitlement e = new Entitlement(p, consumer, owner, 1);
-        return e;
+        return new Entitlement(p, consumer, owner, 1);
     }
 }

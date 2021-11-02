@@ -14,14 +14,11 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
-/**
- * ValidationWarningTest
- */
 public class ValidationWarningTest {
 
     @Test
@@ -34,6 +31,5 @@ public class ValidationWarningTest {
     public void testToString() {
         ValidationWarning vw = new ValidationWarning("foobarbaz");
         assertEquals("foobarbaz", vw.toString());
-
     }
 }

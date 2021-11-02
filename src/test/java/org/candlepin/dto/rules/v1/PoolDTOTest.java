@@ -14,12 +14,13 @@
  */
 package org.candlepin.dto.rules.v1;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractDTOTest;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -108,10 +109,10 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
         assertTrue(dto.hasAttribute("attribute-key-2"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testHasAttributeWithNullInput() {
         PoolDTO dto = new PoolDTO();
-        dto.hasAttribute(null);
+        assertThrows(IllegalArgumentException.class, () -> dto.hasAttribute(null));
     }
 
     @Test
@@ -136,10 +137,10 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
         assertTrue(dto.removeAttribute("attribute-key-4"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testRemoveAttributeWithNullInput() {
         PoolDTO dto = new PoolDTO();
-        dto.removeAttribute(null);
+        assertThrows(IllegalArgumentException.class, () -> dto.removeAttribute(null));
     }
 
     @Test
@@ -158,10 +159,10 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
         assertTrue(dto.hasProductAttribute("prod-attribute-key-2"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testHasProductAttributeWithNullInput() {
         PoolDTO dto = new PoolDTO();
-        dto.hasProductAttribute(null);
+        assertThrows(IllegalArgumentException.class, () -> dto.hasAttribute(null));
     }
 
     @Test
@@ -186,19 +187,16 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
         assertFalse(dto.addProvidedProduct(product2));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAddProvidedProductWithNullInput() {
         PoolDTO dto = new PoolDTO();
-        dto.addProvidedProduct(null);
+        assertThrows(IllegalArgumentException.class, () -> dto.addProvidedProduct(null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddProvidedProductWithEmptyId() {
-        PoolDTO dto = new PoolDTO();
-
-        PoolDTO.ProvidedProductDTO product =
-            new PoolDTO.ProvidedProductDTO("", "test-name-provided-product-3");
-        dto.addProvidedProduct(product);
+    @Test
+    public void providedProductCannotHaveEmptyId() {
+        assertThrows(IllegalArgumentException.class,
+            () -> new PoolDTO.ProvidedProductDTO("", "test-name-provided-product-3"));
     }
 
     @Test
@@ -207,9 +205,9 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
         PoolDTO dto = new PoolDTO();
 
         PoolDTO.ProvidedProductDTO product =
-                new PoolDTO.ProvidedProductDTO(
-                        "test-id-derived-provided-product-1",
-                        "test-name-derived-provided-product-1");
+            new PoolDTO.ProvidedProductDTO(
+                "test-id-derived-provided-product-1",
+                "test-name-derived-provided-product-1");
         assertTrue(dto.addDerivedProvidedProduct(product));
     }
 
@@ -220,29 +218,21 @@ public class PoolDTOTest extends AbstractDTOTest<PoolDTO> {
 
         PoolDTO.ProvidedProductDTO product =
             new PoolDTO.ProvidedProductDTO(
-            "test-id-derived-provided-product-2",
-            "test-name-derived-provided-product-2");
+                "test-id-derived-provided-product-2",
+                "test-name-derived-provided-product-2");
         assertTrue(dto.addDerivedProvidedProduct(product));
 
         PoolDTO.ProvidedProductDTO product2 =
             new PoolDTO.ProvidedProductDTO(
-            "test-id-derived-provided-product-2",
-            "test-name-derived-provided-product-2");
+                "test-id-derived-provided-product-2",
+                "test-name-derived-provided-product-2");
         assertFalse(dto.addDerivedProvidedProduct(product2));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAddDerivedProvidedProductWithNullInput() {
         PoolDTO dto = new PoolDTO();
-        dto.addDerivedProvidedProduct(null);
+        assertThrows(IllegalArgumentException.class, () -> dto.addDerivedProvidedProduct(null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddDerivedProvidedProductWithEmptyId() {
-        PoolDTO dto = new PoolDTO();
-
-        PoolDTO.ProvidedProductDTO product =
-            new PoolDTO.ProvidedProductDTO("", "test-name-derived-provided-product-3");
-        dto.addDerivedProvidedProduct(product);
-    }
 }

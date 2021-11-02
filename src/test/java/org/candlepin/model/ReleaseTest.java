@@ -14,14 +14,12 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-/**
- * ReleaseTest
- */
+
 public class ReleaseTest {
     @Test
     public void testEquals() {
@@ -29,16 +27,16 @@ public class ReleaseTest {
         Release rl1 = new Release("24.1");
         Release rl2 = new Release("18.9");
 
-        assertTrue(rl.equals(rl1));
-        assertFalse(rl.equals(rl2));
-        assertFalse(rl.equals("345345"));
+        assertEquals(rl, rl1);
+        assertNotEquals(rl, rl2);
+        assertNotEquals("345345", rl);
 
         Release rlE = new Release("");
         Release rlE2 = new Release("");
 
-        assertTrue(rlE.equals(rlE2));
-        assertTrue(rl.equals(rl));
-        assertFalse(rl.equals(rlE));
+        assertEquals(rlE, rlE2);
+        assertEquals(rl, rl);
+        assertNotEquals(rl, rlE);
     }
 
     @Test
@@ -46,9 +44,9 @@ public class ReleaseTest {
         Release r = new Release(null);
         Release r1 = new Release("2.0");
 
-        assertFalse(r.equals(r1));
-        assertFalse(r1.equals(r));
-        assertTrue(r.equals(r));
-        assertTrue(r1.equals(r1));
+        assertNotEquals(r, r1);
+        assertNotEquals(r1, r);
+        assertEquals(r, r);
+        assertEquals(r1, r1);
     }
 }

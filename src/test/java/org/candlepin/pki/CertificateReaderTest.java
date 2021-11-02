@@ -19,13 +19,12 @@ import org.candlepin.config.Configuration;
 import org.candlepin.config.MapConfiguration;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 
-/**
- * CertificateReaderTest
- */
+
 public class CertificateReaderTest {
 
     @Test
@@ -35,7 +34,7 @@ public class CertificateReaderTest {
         final String caCertUpstream = loader.getResource("certs/upstream").toURI().getPath();
         final String caKey = loader.getResource("keys/pkcs1-des-encrypted.pem").toURI().getPath();
         final Configuration config = new MapConfiguration(
-            new HashMap<String, String>() {
+            new HashMap<>() {
                 {
                     put(ConfigProperties.CA_CERT, caCert);
                     put(ConfigProperties.CA_CERT_UPSTREAM, caCertUpstream);
@@ -43,6 +42,7 @@ public class CertificateReaderTest {
                     put(ConfigProperties.CA_KEY_PASSWORD, "password");
                 }
             });
-        new CertificateReader(config, new JSSPrivateKeyReader());
+
+        Assertions.assertDoesNotThrow(() -> new CertificateReader(config, new JSSPrivateKeyReader()));
     }
 }

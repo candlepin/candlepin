@@ -67,7 +67,6 @@ public class SSLAuthTest {
 
     /**
      * No cert
-     *
      */
     @Test
     public void noCert() {
@@ -129,7 +128,7 @@ public class SSLAuthTest {
     }
 
     private void mockCert(String dn) {
-        X509Certificate idCert =  mock(X509Certificate.class);
+        X509Certificate idCert = mock(X509Certificate.class);
         X500Principal principal = new X500Principal(dn);
 
         when(idCert.getSubjectX500Principal()).thenReturn(principal);

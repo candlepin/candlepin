@@ -348,7 +348,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         reset(this.eventSink); // pool creation events went out from setup
         poolManager.regenerateCertificatesOf(childVirtSystem, true);
         assertEquals(0, collectEntitlementCertIds(this.childVirtSystem).size());
-        Mockito.verifyZeroInteractions(this.eventSink);
+        Mockito.verifyNoInteractions(this.eventSink);
     }
 
     @Test

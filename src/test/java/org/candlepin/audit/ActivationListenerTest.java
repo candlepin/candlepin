@@ -24,15 +24,15 @@ import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class ActivationListenerTest {
 
     private ActivationListener listener;
     private SubscriptionServiceAdapter subscriptionService;
 
-    @Before
+    @BeforeEach
     public void init() {
         subscriptionService = mock(ImportSubscriptionServiceAdapter.class);
         listener = new ActivationListener(subscriptionService, new ObjectMapper());

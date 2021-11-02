@@ -14,31 +14,23 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
 
-import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.ContentDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
-import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.EntitlementCertificate;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -46,55 +38,30 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 
 
 
-/**
- * EntitlementImporterTest
- */
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
-@SuppressWarnings("synthetic-access")
 public class SubscriptionReconcilerTest {
 
     @Mock private PoolCurator poolCurator;
-    @Mock private CertificateSerialCurator certSerialCurator;
-    @Mock private CdnCurator cdnCurator;
-    @Mock private ProductCurator pc;
-    @Mock private EntitlementCurator ec;
 
     private Owner owner;
     private OwnerDTO ownerDto;
-    private EntitlementImporter importer;
-    private I18n i18n;
-    private int index = 1;
     private SubscriptionReconciler reconciler;
-    private ModelTranslator translator;
-
+    private int index = 1;
 
     @BeforeEach
     public void init() {
         this.owner = new Owner();
         this.ownerDto = new OwnerDTO();
-
         this.reconciler = new SubscriptionReconciler(this.poolCurator);
-        this.translator = new StandardTranslator(new ConsumerTypeCurator(), new EnvironmentCurator(),
-            new OwnerCurator());
-
-        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, pc, ec, translator);
     }
-
 
     public Content convertFromDTO(ContentDTO dto) {
         Content content = null;
@@ -210,7 +177,7 @@ public class SubscriptionReconcilerTest {
         SubscriptionDTO testSub1 = createSubscription(ownerDto, "test-prod-1", "up1", "ue1", "uc1", 25);
         createPoolsFor(testSub1);
 
-        reconciler.reconcile(owner, Arrays.asList(testSub1));
+        reconciler.reconcile(owner, List.of(testSub1));
 
         assertUpstream(testSub1, testSub1.getId());
     }
@@ -234,7 +201,7 @@ public class SubscriptionReconcilerTest {
 
         createPoolsFor(testSub2, testSub3);
 
-        reconciler.reconcile(owner, Arrays.asList(testSub3));
+        reconciler.reconcile(owner, List.of(testSub3));
         assertUpstream(testSub3, testSub3.getId());
     }
 

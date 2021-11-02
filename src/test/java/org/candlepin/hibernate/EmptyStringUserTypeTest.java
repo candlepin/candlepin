@@ -14,14 +14,15 @@
  */
 package org.candlepin.hibernate;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.hibernate.annotations.Type;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
@@ -33,9 +34,8 @@ import javax.persistence.Id;
 import javax.persistence.Persistence;
 import javax.persistence.Table;
 
-/**
- * EmptyStringUserTypeTest
- */
+
+
 public class EmptyStringUserTypeTest {
     private EntityManagerFactory emf;
     private EntityManager em;
@@ -78,7 +78,7 @@ public class EmptyStringUserTypeTest {
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         Properties props = new Properties();
 
@@ -89,7 +89,7 @@ public class EmptyStringUserTypeTest {
         em = emf.createEntityManager();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         em.close();
         emf.close();
@@ -110,7 +110,7 @@ public class EmptyStringUserTypeTest {
 
         t = em.find(Thing.class, 1);
 
-        assertEquals(null, t.getNotTyped());
+        assertNull(t.getNotTyped());
         assertEquals("", t.getTyped());
     }
 

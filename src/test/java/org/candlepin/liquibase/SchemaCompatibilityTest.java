@@ -14,8 +14,9 @@
  */
 package org.candlepin.liquibase;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.fail;
+
+import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
@@ -88,7 +89,7 @@ public class SchemaCompatibilityTest {
         }
 
         if (!warnings.isEmpty()) {
-            Assert.fail(String.join("\n", warnings));
+            fail(String.join("\n", warnings));
         }
     }
 

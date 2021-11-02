@@ -14,7 +14,7 @@
  */
 package org.candlepin.pki;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.pki.impl.ProviderBasedPrivateKeyReader;
@@ -30,11 +30,9 @@ import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
 import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
 import org.bouncycastle.pkcs.jcajce.JcePKCSPBEInputDecryptorProviderBuilder;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -42,12 +40,10 @@ import java.io.Reader;
 import java.lang.reflect.Constructor;
 import java.security.PrivateKey;
 import java.security.Provider;
-import java.util.Arrays;
 
 /**
  * Test ProviderBasedPrivateKeyReader
  */
-@RunWith(Parameterized.class)
 public class ProviderBasedPrivateKeyReaderTest {
     private static final Provider BC_PROVIDER = new BouncyCastleProvider();
     private static final char[] PASSWORD = "password".toCharArray();
@@ -56,19 +52,14 @@ public class ProviderBasedPrivateKeyReaderTest {
 
     private final Constructor<? extends ProviderBasedPrivateKeyReader> constructor;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         cl = ProviderBasedPrivateKeyReaderTest.class.getClassLoader();
     }
 
-    @Parameterized.Parameters
-    public static Iterable<Class> data() {
-        return Arrays.asList(JSSPrivateKeyReader.class);
-    }
-
-    public ProviderBasedPrivateKeyReaderTest(Class<? extends ProviderBasedPrivateKeyReader> clazz)
+    public ProviderBasedPrivateKeyReaderTest()
         throws Exception {
-        this.constructor = clazz.getConstructor();
+        this.constructor = JSSPrivateKeyReader.class.getConstructor();
     }
 
     @Test
@@ -91,7 +82,7 @@ public class ProviderBasedPrivateKeyReaderTest {
      * Currently fails due to a bug in OpenJDK: https://bugs.openjdk.java.net/browse/JDK-8076999
      */
     @Test
-    @Ignore
+    @Disabled
     public void testReadEncryptedPKCS8() throws Exception {
         String keyFile = "keys/pkcs8-aes256-encrypted.pem";
         try (

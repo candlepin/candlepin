@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.TestingModules;
 import org.candlepin.config.Configuration;
@@ -26,21 +26,20 @@ import com.google.inject.Injector;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.InExpression;
 import org.hibernate.criterion.LogicalExpression;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.LinkedList;
 import java.util.List;
 
 import javax.inject.Inject;
 
-/**
- * CPRestrictionsTest
- */
+
+
 public class CPRestrictionsTest {
     @Inject private Configuration config;
 
-    @Before
+    @BeforeEach
     public void init() {
         Injector injector = Guice.createInjector(
             new TestingModules.MockJpaModule(),

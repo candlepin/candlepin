@@ -15,9 +15,9 @@
 package org.candlepin.policy.js.entitlement;
 
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -36,16 +36,14 @@ import org.candlepin.policy.ValidationWarning;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * ManifestEntitlementRulesTest
- */
+
 public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     private Consumer createMockConsumer(boolean manifestDistributor) {
@@ -433,7 +431,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BIND);
         assertNotNull(results);
-        assertTrue("Expected no warnings or errors.", results.isSuccessful());
+        assertTrue(results.isSuccessful(), "Expected no warnings or errors.");
     }
 
     @Test
@@ -451,7 +449,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
 
         ValidationResult results = enforcer.preEntitlement(c, p, 1, CallerType.BEST_POOLS);
         assertNotNull(results);
-        assertTrue("Expected no warnings or errors.", results.isSuccessful());
+        assertTrue(results.isSuccessful(), "Expected no warnings or errors.");
     }
 
 }

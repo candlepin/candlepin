@@ -14,19 +14,18 @@
  */
 package org.candlepin.auth;
 
-import static org.junit.Assert.assertEquals;
 
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/**
- * ExternalSystemPrincipalTest
- */
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 public class ExternalSystemPrincipalTest {
 
     private ExternalSystemPrincipal principal;
 
-    @Before
+    @BeforeEach
     public void init() {
         principal = new ExternalSystemPrincipal();
     }
@@ -42,7 +41,7 @@ public class ExternalSystemPrincipalTest {
     }
 
     @Test
-    public void fullaccess() {
-        assertEquals(true, principal.hasFullAccess());
+    public void fullAccess() {
+        assertTrue(principal.hasFullAccess());
     }
 }

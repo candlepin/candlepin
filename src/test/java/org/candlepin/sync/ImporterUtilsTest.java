@@ -14,8 +14,8 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.candlepin.dto.manifest.v1.CertificateDTO;
 import org.candlepin.dto.manifest.v1.CertificateSerialDTO;
@@ -23,19 +23,16 @@ import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.RevocableCertificate;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
-@RunWith(MockitoJUnitRunner.class)
 public class ImporterUtilsTest {
 
     private CertificateDTO certDTO;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         certDTO = new CertificateDTO();
         certDTO.setCertificate("test-cert");

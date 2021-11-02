@@ -14,8 +14,10 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasItems;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyLong;
@@ -38,8 +40,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.test.TestUtil;
 
-import org.hamcrest.Matchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.ArrayList;
@@ -71,7 +72,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(false);
         enforcer.postEntitlement(poolManager, consumer, owner, entitlements, null, false, poolQuantityMap);
 
-        verify(poolManager, never()).createPools(any(List.class));
+        verify(poolManager, never()).createPools(anyList());
     }
 
     @Test
@@ -91,11 +92,11 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         Pool virtBonusPool = pools.get(1);
         virtBonusPool.setId("virt");
 
-        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(10L, physicalPool.getQuantity());
         assertEquals(0, physicalPool.getAttributes().size());
 
         // Quantity on bonus pool should be virt limit * sub quantity:
-        assertEquals(new Long(100), virtBonusPool.getQuantity());
+        assertEquals(100L, virtBonusPool.getQuantity());
         assertEquals("true", virtBonusPool.getAttributeValue(Product.Attributes.VIRT_ONLY));
         assertEquals("10", virtBonusPool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT));
 
@@ -150,11 +151,11 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         Pool virtBonusPool = pools.get(1);
         virtBonusPool.setId("virt");
 
-        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(10L, physicalPool.getQuantity());
         assertEquals(0, physicalPool.getAttributes().size());
 
         // Quantity on bonus pool should be virt limit * sub quantity:
-        assertEquals(new Long(100), virtBonusPool.getQuantity());
+        assertEquals(100L, virtBonusPool.getQuantity());
         assertEquals("true", virtBonusPool.getAttributeValue(Product.Attributes.VIRT_ONLY));
         assertEquals("10", virtBonusPool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT));
         Entitlement e = new Entitlement(physicalPool, consumer, owner, 1);
@@ -171,11 +172,11 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         Pool virtBonusPool2 = pools2.get(1);
         virtBonusPool2.setId("virt2");
 
-        assertEquals(new Long(10), physicalPool2.getQuantity());
+        assertEquals(10L, physicalPool2.getQuantity());
         assertEquals(0, physicalPool2.getAttributes().size());
 
         // Quantity on bonus pool should be virt limit * sub quantity:
-        assertEquals(new Long(100), virtBonusPool2.getQuantity());
+        assertEquals(100L, virtBonusPool2.getQuantity());
         assertEquals("true", virtBonusPool2.getAttributeValue(Product.Attributes.VIRT_ONLY));
         assertEquals("10", virtBonusPool2.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT));
         Entitlement e2 = new Entitlement(physicalPool2, consumer, owner, 1);
@@ -208,7 +209,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         @SuppressWarnings("unchecked")
         Set<String> subscriptionIds = captor.getValue();
         assertEquals(2, subscriptionIds.size());
-        assertThat(subscriptionIds, Matchers.hasItems("subId", "subId2"));
+        assertThat(subscriptionIds, hasItems("subId", "subId2"));
         assertEquals(2, poolOperationCallback.getPoolUpdates().size());
 
         Map<Pool, Long> poolUpdate = poolOperationCallback.getPoolUpdates();
@@ -238,7 +239,7 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         Pool physicalPool = pools.get(0);
         physicalPool.setId("physical");
 
-        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(10L, physicalPool.getQuantity());
         assertEquals(0, physicalPool.getAttributes().size());
 
         Entitlement e = new Entitlement(physicalPool, consumer, owner, 1);
@@ -265,11 +266,11 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         Pool virtBonusPool = pools.get(1);
         virtBonusPool.setId("virt");
 
-        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(10L, physicalPool.getQuantity());
         assertEquals(0, physicalPool.getAttributes().size());
 
         // Quantity on bonus pool should be -1:
-        assertEquals(new Long(-1), virtBonusPool.getQuantity());
+        assertEquals(-1L, virtBonusPool.getQuantity());
         assertEquals("true", virtBonusPool.getAttributeValue(Product.Attributes.VIRT_ONLY));
         assertEquals("unlimited",
             virtBonusPool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT));
@@ -311,11 +312,11 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         Pool virtBonusPool = pools.get(1);
         virtBonusPool.setId("virt");
 
-        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(10L, physicalPool.getQuantity());
         assertEquals(0, physicalPool.getAttributes().size());
 
         // Quantity on bonus pool should be -1:
-        assertEquals(new Long(-1), virtBonusPool.getQuantity());
+        assertEquals(-1L, virtBonusPool.getQuantity());
         assertEquals("true", virtBonusPool.getAttributeValue(Product.Attributes.VIRT_ONLY));
         assertEquals("unlimited",
             virtBonusPool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT));
@@ -352,11 +353,11 @@ public class HostedVirtLimitEntitlementRulesTest extends EntitlementRulesTestFix
         Pool virtBonusPool = pools.get(1);
         virtBonusPool.setId("virt");
 
-        assertEquals(new Long(10), physicalPool.getQuantity());
+        assertEquals(10L, physicalPool.getQuantity());
         assertEquals(0, physicalPool.getAttributes().size());
 
         // Quantity on bonus pool should be -1:
-        assertEquals(new Long(-1), virtBonusPool.getQuantity());
+        assertEquals(-1L, virtBonusPool.getQuantity());
         assertEquals("true", virtBonusPool.getAttributeValue(Product.Attributes.VIRT_ONLY));
         assertEquals("unlimited",
             virtBonusPool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT));

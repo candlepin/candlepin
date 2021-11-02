@@ -14,10 +14,10 @@
  */
 package org.candlepin.dto.rules.v1;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
@@ -212,8 +212,8 @@ public class ComplianceStatusTranslatorTest extends
                         if (entitlement != null) {
                             EntitlementDTO expected = this.entitlementTranslator.translate(entitlement);
 
-                            assertTrue(expected + " is not contained in collection: " + destEnts,
-                                destEnts.contains(expected));
+                            assertTrue(destEnts.contains(expected),
+                                expected + " is not contained in collection: " + destEnts);
                         }
                         else {
                             assertTrue(destEnts.contains(null));

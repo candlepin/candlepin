@@ -14,19 +14,17 @@
  */
 package org.candlepin.dto;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.candlepin.model.ModelEntity;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
-/**
- * Test suite for the ProductData class
- */
 public class SimpleModelTranslatorTest {
 
     private static class TestDTOSubclass extends TestDTO {
@@ -277,16 +275,15 @@ public class SimpleModelTranslatorTest {
         assertSame(entity, dto.getSourceObject());
     }
 
-    @Test(expected = TranslationException.class)
+    @Test
     public void testTranslateWithoutTranslator() {
         ModelTranslator modelTranslator = new SimpleModelTranslator();
-        ObjectTranslator translator = new TestTranslator();
 
         ModelEntity entity = new TestModelEntity() {};
-        TestDTO dto = modelTranslator.translate(entity, TestDTO.class);
+        assertThrows(TranslationException.class, () -> modelTranslator.translate(entity, TestDTO.class));
     }
 
-    @Test(expected = TranslationException.class)
+    @Test
     public void testTranslateWithWrongTranslator() {
         ModelTranslator modelTranslator = new SimpleModelTranslator();
         ObjectTranslator translator = new TestTranslator();
@@ -297,7 +294,7 @@ public class SimpleModelTranslatorTest {
         assertNull(output);
 
         ModelEntity entity = new TestModelEntity() {};
-        TestDTO dto = modelTranslator.translate(entity, TestDTO.class);
+        assertThrows(TranslationException.class, () -> modelTranslator.translate(entity, TestDTO.class));
     }
 
     @Test

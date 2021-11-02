@@ -14,9 +14,10 @@
  */
 package org.candlepin.auth;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -26,22 +27,20 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * ConsumerPrincipalTest
- */
+
 public class ConsumerPrincipalTest {
 
     private ConsumerPrincipal principal;
     private Consumer consumer;
     private Owner o;
 
-    @Before
+    @BeforeEach
     public void init() {
         o = mock(Owner.class);
         when(o.getKey()).thenReturn("donaldduck");
@@ -53,6 +52,7 @@ public class ConsumerPrincipalTest {
 
         principal = new ConsumerPrincipal(consumer, o);
     }
+
     @Test
     public void noFullAccess() {
         assertFalse(new ConsumerPrincipal(consumer, o).hasFullAccess());
@@ -77,19 +77,19 @@ public class ConsumerPrincipalTest {
 
     @Test
     public void equalsNull() {
-        assertFalse(principal.equals(null));
+        assertNotEquals(null, principal);
     }
 
     @Test
     public void equalsOtherObject() {
-        assertFalse(principal.equals(new Object()));
+        assertNotEquals(principal, new Object());
     }
 
     @Test
     public void equalsAnotherConsumerPrincipal() {
         // create a new one with same consumer
         ConsumerPrincipal cp = new ConsumerPrincipal(consumer, o);
-        assertTrue(principal.equals(cp));
+        assertEquals(principal, cp);
     }
 
     @Test
@@ -102,12 +102,12 @@ public class ConsumerPrincipalTest {
 
         Consumer c = new Consumer("Test Consumer", "test-consumer", newOwner, ctype);
         ConsumerPrincipal cp = new ConsumerPrincipal(c, o);
-        assertFalse(principal.equals(cp));
+        assertNotEquals(principal, cp);
     }
 
     @Test
     public void getConsumer() {
-        assertTrue(principal.getConsumer().equals(consumer));
+        assertEquals(principal.getConsumer(), consumer);
     }
 
     @Test
@@ -180,7 +180,7 @@ public class ConsumerPrincipalTest {
     }
 
     @Test
-    public void noAaccessToListEntitlementsInPool() {
+    public void noAccessToListEntitlementsInPool() {
         Pool p = mock(Pool.class);
         when(p.getOwner()).thenReturn(o);
 

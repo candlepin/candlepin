@@ -14,10 +14,11 @@
  */
 package org.candlepin.auth;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.security.cert.CertPath;
 import java.security.cert.CertPathValidator;
@@ -46,7 +47,7 @@ public class SSLCertTest {
     private CertificateFactory certificateFactory;
     private PKIXParameters PKIXparams;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         certificateFactory = CertificateFactory.getInstance("X.509");
 
@@ -64,26 +65,22 @@ public class SSLCertTest {
         PKIXparams.setRevocationEnabled(false);
     }
 
-    @SuppressWarnings("serial")
     @Test
     public void validCertificateShouldPassVerification() throws Exception {
         CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
         CertPath cp = certificateFactory.generateCertPath(Collections.singletonList(certificatePath));
 
-        // PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult)
         cpv.validate(cp, PKIXparams);
 
         assertEquals("CN=www.example.com, L=Halifax, ST=NS, C=CA",
             certificatePath.getSubjectDN().getName());
     }
 
-    @SuppressWarnings("serial")
-    @Test(expected = CertPathValidatorException.class)
+    @Test
     public void invalidCertificateShouldFailVerification() throws Exception {
         CertPathValidator cpv = CertPathValidator.getInstance("PKIX");
         CertPath cp = certificateFactory.generateCertPath(Collections.singletonList(selfSignedCertificate));
 
-        //PKIXCertPathValidatorResult result = (PKIXCertPathValidatorResult)
-        cpv.validate(cp, PKIXparams);
+        assertThrows(CertPathValidatorException.class, () -> cpv.validate(cp, PKIXparams));
     }
 }

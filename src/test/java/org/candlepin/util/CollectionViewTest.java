@@ -14,12 +14,14 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,35 +30,31 @@ import java.util.Iterator;
 import java.util.LinkedList;
 
 
-
-/**
- * Test suite for the CollectionView class
- */
 public class CollectionViewTest {
 
     protected Collection source;
     protected CollectionView testobj;
 
-    @Before
+    @BeforeEach
     public void init() {
         this.source = new LinkedList();
         this.testobj = new CollectionView(this.source);
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testAdd() {
         Object obj = new Object();
-        this.testobj.add(obj);
+        assertThrows(UnsupportedOperationException.class, () -> this.testobj.add(obj));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testAddAll() {
         Collection collection = new LinkedList();
         collection.add(new Object());
         collection.add(new Object());
         collection.add(new Object());
 
-        this.testobj.addAll(collection);
+        assertThrows(UnsupportedOperationException.class, () -> this.testobj.addAll(collection));
     }
 
     @Test
@@ -264,13 +262,13 @@ public class CollectionViewTest {
     @Test
     public void testToArray() {
         for (int i = 0; i < 5; ++i) {
-            assertEquals(this.source.toArray(), this.testobj.toArray());
+            assertArrayEquals(this.source.toArray(), this.testobj.toArray());
             assertTrue(this.testobj.toArray() instanceof Object[]);
             assertEquals(i, this.testobj.toArray().length);
 
             this.source.add(new Object());
 
-            assertEquals(this.source.toArray(), this.testobj.toArray());
+            assertArrayEquals(this.source.toArray(), this.testobj.toArray());
             assertTrue(this.testobj.toArray() instanceof Object[]);
             assertEquals(i + 1, this.testobj.toArray().length);
         }
@@ -281,13 +279,13 @@ public class CollectionViewTest {
         String[] arrType = new String[] {};
 
         for (int i = 0; i < 5; ++i) {
-            assertEquals(this.source.toArray(arrType), this.testobj.toArray(arrType));
+            assertArrayEquals(this.source.toArray(arrType), this.testobj.toArray(arrType));
             assertTrue(this.testobj.toArray(arrType) instanceof String[]);
             assertEquals(i, this.testobj.toArray(arrType).length);
 
             this.source.add(String.valueOf(i));
 
-            assertEquals(this.source.toArray(arrType), this.testobj.toArray(arrType));
+            assertArrayEquals(this.source.toArray(arrType), this.testobj.toArray(arrType));
             assertTrue(this.testobj.toArray(arrType) instanceof String[]);
             assertEquals(i + 1, this.testobj.toArray(arrType).length);
         }

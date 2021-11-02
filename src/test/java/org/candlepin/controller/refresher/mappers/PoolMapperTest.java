@@ -20,16 +20,10 @@ import org.candlepin.service.model.SubscriptionInfo;
 
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
 
 
-/**
- * Test suite for the PoolMapper class
- */
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 public class PoolMapperTest extends AbstractMapperTest<Pool, SubscriptionInfo> {
 
     @Override

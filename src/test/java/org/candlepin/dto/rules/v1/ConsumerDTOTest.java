@@ -14,13 +14,14 @@
  */
 package org.candlepin.dto.rules.v1;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractDTOTest;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -101,20 +102,20 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
         return input;
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddNullToInstalledProducts() throws Exception {
+    @Test
+    public void testAddNullToInstalledProducts() {
         ConsumerDTO dto = new ConsumerDTO();
-        dto.addInstalledProduct(null);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testRemoveNullFromInstalledProducts() throws Exception {
-        ConsumerDTO dto = new ConsumerDTO();
-        dto.removeInstalledProduct(null);
+        assertThrows(IllegalArgumentException.class, () -> dto.addInstalledProduct(null));
     }
 
     @Test
-    public void testAddToEmptyInstalledProductCollection() throws Exception {
+    public void testRemoveNullFromInstalledProducts() {
+        ConsumerDTO dto = new ConsumerDTO();
+        assertThrows(IllegalArgumentException.class, () -> dto.removeInstalledProduct(null));
+    }
+
+    @Test
+    public void testAddToEmptyInstalledProductCollection() {
         ConsumerDTO dto = new ConsumerDTO();
         assertTrue(dto.addInstalledProduct("product-id-to-add"));
 
@@ -123,7 +124,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
     }
 
     @Test
-    public void testAddDuplicateToInstalledProductCollection() throws Exception {
+    public void testAddDuplicateToInstalledProductCollection() {
         ConsumerDTO dto = new ConsumerDTO();
         assertTrue(dto.addInstalledProduct("product-id-to-add"));
 
@@ -136,7 +137,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
     }
 
     @Test
-    public void testRemoveFromInstalledProductCollectionWhenPresent() throws Exception {
+    public void testRemoveFromInstalledProductCollectionWhenPresent() {
         ConsumerDTO dto = new ConsumerDTO();
         assertTrue(dto.addInstalledProduct("product-id-to-remove"));
 
@@ -148,7 +149,7 @@ public class ConsumerDTOTest extends AbstractDTOTest<ConsumerDTO> {
     }
 
     @Test
-    public void testRemoveFromInstalledProductCollectionWhenAbsent() throws Exception {
+    public void testRemoveFromInstalledProductCollectionWhenAbsent() {
         ConsumerDTO dto = new ConsumerDTO();
         assertTrue(dto.addInstalledProduct("product-id-to-remove"));
 

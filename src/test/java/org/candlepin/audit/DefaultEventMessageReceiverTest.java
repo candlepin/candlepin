@@ -21,7 +21,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.async.impl.ActiveMQSessionFactory;
@@ -128,7 +128,7 @@ public class DefaultEventMessageReceiverTest {
             .when(mapper).readValue(anyString(), eq(Event.class));
         receiver.onMessage(clientMessage);
         verify(clientMessage).acknowledge();
-        verifyZeroInteractions(eventListener);
+        verifyNoInteractions(eventListener);
         verify(clientSession).rollback();
         verify(clientSession, never()).commit();
     }

@@ -33,9 +33,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.stream.Stream;
 
-/**
- * Test suite for the ListView class
- */
+
 public class ListViewTest extends SetViewTest {
     @BeforeEach
     @Override
@@ -66,21 +64,21 @@ public class ListViewTest extends SetViewTest {
     public void testEquals() {
         List comp = new LinkedList();
 
-        assertTrue(this.testobj.equals(comp));
+        assertEquals(this.testobj, comp);
 
         for (int i = 0; i < 5; ++i) {
             this.source.add(String.valueOf(i));
-            assertFalse(this.testobj.equals(comp));
+            assertNotEquals(this.testobj, comp);
 
             comp.add(String.valueOf(i));
-            assertTrue(this.testobj.equals(comp));
+            assertEquals(this.testobj, comp);
         }
 
         this.source.clear();
-        assertFalse(this.testobj.equals(comp));
+        assertNotEquals(this.testobj, comp);
 
         comp.clear();
-        assertTrue(this.testobj.equals(comp));
+        assertEquals(this.testobj, comp);
     }
 
     @Test

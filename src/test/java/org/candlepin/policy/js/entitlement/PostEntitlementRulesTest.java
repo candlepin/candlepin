@@ -14,7 +14,8 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyLong;
@@ -31,7 +32,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.List;
@@ -159,7 +160,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         enforcer.postEntitlement(poolManagerMock, consumer, owner, entitlements, null, false,
             poolQuantityMap);
 
-        verify(poolManagerMock, never()).createPools(any(List.class));
+        verify(poolManagerMock, never()).createPools(anyList());
         verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyInt());
 
         enforcer.postUnbind(consumer, poolManagerMock, e);
@@ -181,7 +182,7 @@ public class PostEntitlementRulesTest extends EntitlementRulesTestFixture {
         poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 1));
         enforcer.postEntitlement(poolManagerMock, consumer, owner, entitlements, null, false,
             poolQuantityMap);
-        verify(poolManagerMock, never()).createPools(any(List.class));
+        verify(poolManagerMock, never()).createPools(anyList());
         verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyInt());
 
         enforcer.postUnbind(consumer, poolManagerMock, e);

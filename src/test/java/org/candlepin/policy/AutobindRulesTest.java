@@ -14,8 +14,14 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
@@ -55,8 +61,8 @@ import org.candlepin.util.X509ExtensionUtil;
 
 import com.google.inject.Provider;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
@@ -75,9 +81,6 @@ import java.util.Set;
 
 
 
-/**
- * AutobindRulesTest
- */
 public class AutobindRulesTest {
     @Mock private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock private JsRunnerRequestCache cache;
@@ -101,8 +104,8 @@ public class AutobindRulesTest {
     private static final String HIGHEST_QUANTITY_PRODUCT = "QUANTITY001";
     private Map<String, String> activeGuestAttrs;
 
-    @Before
-    public void createEnforcer() throws Exception {
+    @BeforeEach
+    public void createEnforcer() {
         MockitoAnnotations.initMocks(this);
 
         when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
@@ -200,12 +203,23 @@ public class AutobindRulesTest {
     }
 
     @Test
-    public void testSelectBestPoolsLotsOfContentV2Client() {
-        Product mktProduct = TestUtil.createProduct(productId, "A test product");
-        Product engProduct = TestUtil.createProduct(Integer.toString(TestUtil.randomInt()), "An ENG product");
+    public void testSelectBestPoolsTooMuchContentV2Client() {
+        Pool pool = createV3OnlyPool();
+        List<Pool> pools = Arrays.asList(pool);
+
+        List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer, new String[]{ productId },
+            pools, compliance, null, new HashSet<>(), false);
+        assertEquals(0, bestPools.size());
+
+        // Shouldn't throw an exception as we do for certv1 clients.
+        consumer.setFact("system.certificate_version", "2.5");
+        List<PoolQuantity> bestPoolsV2 = autobindRules.selectBestPools(consumer, new String[]{ productId },
+            pools, compliance, null, new HashSet<>(), false);
+        assertEquals(0, bestPoolsV2.size());
     }
 
-    public void testSelectBestPoolsDoesntFilterTooMuchContentForHypervisor() {
+    @Test
+    public void testSelectBestPoolsDoesNotFilterTooMuchContentForHypervisor() {
         Pool pool = createV3OnlyPool();
 
         List<Pool> pools = Arrays.asList(pool);
@@ -334,7 +348,7 @@ public class AutobindRulesTest {
 
         assertEquals(1, bestPools.size());
         assertEquals(pool2, bestPools.get(0).getPool());
-        assertEquals(new Integer(3), bestPools.get(0).getQuantity());
+        assertEquals(3, bestPools.get(0).getQuantity());
     }
 
     /*
@@ -895,7 +909,7 @@ public class AutobindRulesTest {
      */
     @SuppressWarnings("checkstyle:localvariablename")
     @Test
-    public void testSysPurposePoolPriorityUseCase3MismatchedRoles() throws NoSuchMethodException {
+    public void testSysPurposePoolPriorityUseCase3MismatchedRoles() {
         Product product69 = new Product();
         product69.setId("compliant-69");
         Product product89 = new Product();
@@ -994,7 +1008,7 @@ public class AutobindRulesTest {
         assertTrue(MCT0352Priority > RH00009Priority);
 
         // Pool RH00009 should have equal priority with pool MCT1650
-        assertTrue(RH00009Priority.equals(MCT1650Priority));
+        assertEquals(RH00009Priority, MCT1650Priority);
     }
 
     @SuppressWarnings("checkstyle:localvariablename")
@@ -1106,7 +1120,7 @@ public class AutobindRulesTest {
 
         // Check that both pools would have the same priority
         // Pool MCT1963 should have equal priority with pool MCT1650
-        assertTrue(MCT1963Priority.equals(RH00030Priority));
+        assertEquals(MCT1963Priority, RH00030Priority);
     }
 
     @SuppressWarnings("checkstyle:localvariablename")
@@ -1633,8 +1647,7 @@ public class AutobindRulesTest {
 
     @SuppressWarnings("checkstyle:localvariablename")
     @Test
-    public void testSysPurposePoolPriorityUseCaseSLAOrUsageMatchDoesNotOverpowerRoleDuringAutoAttach()
-        throws NoSuchMethodException {
+    public void testSysPurposePoolPriorityUseCaseSLAOrUsageMatchDoesNotOverpowerRoleDuringAutoAttach() {
 
         Product product69 = new Product();
         product69.setId("non-compliant-69");
@@ -3451,18 +3464,17 @@ public class AutobindRulesTest {
         Product product = TestUtil.createProduct("a-product", "A product for testing");
 
         Pool pool1 = createPool(owner, product, 5, TestUtil
-            .createDate(2000, 02, 26), TestUtil.createDate(2050, 02, 26));
+            .createDate(2000, 2, 26), TestUtil.createDate(2050, 2, 26));
         Pool pool2 = createPool(owner, product, 5, TestUtil
-            .createDate(2000, 02, 26), TestUtil.createDate(2060, 02, 26));
+            .createDate(2000, 2, 26), TestUtil.createDate(2060, 2, 26));
 
-        List<Pool> availablePools
-            = Arrays.asList(new Pool[] {pool1, pool2});
+        List<Pool> availablePools = Arrays.asList(pool1, pool2);
 
         List<PoolQuantity> result = autobindRules.selectBestPools(consumer,
             new String[] {product.getId()}, availablePools, compliance, null, new HashSet<>(), false);
         assertNotNull(result);
         for (PoolQuantity pq : result) {
-            assertEquals(new Integer(1), pq.getQuantity());
+            assertEquals(1, pq.getQuantity());
         }
     }
 
@@ -3548,7 +3560,7 @@ public class AutobindRulesTest {
 
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(2), q.getQuantity());
+        assertEquals(2, q.getQuantity());
     }
 
     @Test
@@ -3562,7 +3574,7 @@ public class AutobindRulesTest {
 
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(8), q.getQuantity());
+        assertEquals(8, q.getQuantity());
     }
 
     @Test
@@ -3604,7 +3616,7 @@ public class AutobindRulesTest {
 
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(4), q.getQuantity());
+        assertEquals(4, q.getQuantity());
     }
 
      // Simple utility to simulate a pre-existing entitlement for a pool.
@@ -3625,7 +3637,7 @@ public class AutobindRulesTest {
 
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(1), q.getQuantity());
+        assertEquals(1, q.getQuantity());
     }
 
     private void setupConsumer(String socketFact, boolean isVirt) {
@@ -3673,7 +3685,7 @@ public class AutobindRulesTest {
 
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(1), q.getQuantity());
+        assertEquals(1, q.getQuantity());
     }
 
     // Simulating the subpool you would get after a physical system binds:
@@ -3717,7 +3729,7 @@ public class AutobindRulesTest {
 
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(1), q.getQuantity());
+        assertEquals(1, q.getQuantity());
     }
 
     @Test
@@ -3733,7 +3745,7 @@ public class AutobindRulesTest {
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{ product.getId() }, pools, compliance, null, new HashSet<>(), false);
         assertEquals(1, bestPools.size());
-        assertEquals(new Integer(1), bestPools.get(0).getQuantity());
+        assertEquals(1, bestPools.get(0).getQuantity());
         assertEquals("POOL-ID", bestPools.get(0).getPool().getId());
     }
 
@@ -3750,7 +3762,7 @@ public class AutobindRulesTest {
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{ product.getId() }, pools, compliance, null, new HashSet<>(), false);
         assertEquals(1, bestPools.size());
-        assertEquals(new Integer(4), bestPools.get(0).getQuantity());
+        assertEquals(4, bestPools.get(0).getQuantity());
         assertEquals("POOL-ID", bestPools.get(0).getPool().getId());
     }
 
@@ -3816,7 +3828,7 @@ public class AutobindRulesTest {
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{ server.getId() }, pools, compliance, null, new HashSet<>(), false);
         assertEquals(1, bestPools.size());
-        assertEquals(new Integer(4), bestPools.get(0).getQuantity());
+        assertEquals(4, bestPools.get(0).getQuantity());
         assertEquals("POOL-ID1", bestPools.get(0).getPool().getId());
     }
 
@@ -3855,7 +3867,7 @@ public class AutobindRulesTest {
         List<PoolQuantity> bestPools = autobindRules.selectBestPools(consumer,
             new String[]{ server.getId() }, pools, compliance, null, new HashSet<>(), false);
         assertEquals(1, bestPools.size());
-        assertEquals(new Integer(1), bestPools.get(0).getQuantity());
+        assertEquals(1, bestPools.get(0).getQuantity());
         assertEquals("POOL-ID1", bestPools.get(0).getPool().getId());
     }
 
@@ -3920,7 +3932,7 @@ public class AutobindRulesTest {
         // Should always pick the 2 socket subscriptions because less are required
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(16), q.getQuantity());
+        assertEquals(16, q.getQuantity());
     }
 
     @Test
@@ -3937,7 +3949,7 @@ public class AutobindRulesTest {
         // Should always pick the 2 socket subscriptions because there is no over-coverage
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(4), q.getQuantity());
+        assertEquals(4, q.getQuantity());
     }
 
     @Test
@@ -3955,7 +3967,7 @@ public class AutobindRulesTest {
         // and 2*5 provides 2 extra sockets.  using 1 quantity is worth .5 sockets
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(3), q.getQuantity());
+        assertEquals(3, q.getQuantity());
     }
 
     @Test
@@ -3974,7 +3986,7 @@ public class AutobindRulesTest {
         // used elsewhere
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(2), q.getQuantity());
+        assertEquals(2, q.getQuantity());
     }
 
     @Test
@@ -3991,7 +4003,7 @@ public class AutobindRulesTest {
         // Should always pick the 2 socket subscriptions because less are required
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(16), q.getQuantity());
+        assertEquals(16, q.getQuantity());
     }
 
     @Test
@@ -4008,7 +4020,7 @@ public class AutobindRulesTest {
         // Should always pick the 2 socket subscriptions because there is no over-coverage
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(4), q.getQuantity());
+        assertEquals(4, q.getQuantity());
     }
 
     @Test
@@ -4026,7 +4038,7 @@ public class AutobindRulesTest {
         // and 2*5 provides 2 extra sockets.  using 1 quantity is worth .5 sockets
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(3), q.getQuantity());
+        assertEquals(3, q.getQuantity());
     }
 
     @Test
@@ -4045,7 +4057,7 @@ public class AutobindRulesTest {
         // used elsewhere
         assertEquals(1, bestPools.size());
         PoolQuantity q = bestPools.get(0);
-        assertEquals(new Integer(2), q.getQuantity());
+        assertEquals(2, q.getQuantity());
     }
 
     /*

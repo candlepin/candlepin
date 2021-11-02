@@ -14,9 +14,10 @@
  */
 package org.candlepin.audit;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.Event.Target;
@@ -24,115 +25,116 @@ import org.candlepin.audit.Event.Type;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-@RunWith(MockitoJUnitRunner.class)
+
 public class EventFilterTest {
 
-    private EventFilter eventFilterEnabled = null;
-    private EventFilter eventFilterDisabled = null;
-    private EventFilter eventFilterDoNotFilter = null;
-
-    private Event event1;
-    private Event event2;
-    private Event event3;
-
-    @Mock
-    private Configuration configurationAuditEnabled;
-
-    @Mock
-    private Configuration configurationAuditDisabled;
-
-    @Mock
-    private Configuration configurationDoNotFilter;
-
-    @Before
-    @SuppressWarnings("checkstyle:indentation")
-    public void init() throws Exception {
-        when(configurationAuditEnabled
-                .getBoolean(eq(ConfigProperties.AUDIT_FILTER_ENABLED))).thenReturn(true);
-        when(configurationAuditEnabled
-            .getList(eq(ConfigProperties.AUDIT_FILTER_DO_NOT_FILTER))).thenReturn(
-                Arrays.asList("CREATED-ENTITLEMENT",
-                "DELETED-ENTITLEMENT",
-                "CREATED-POOL",
-                "DELETED-POOL",
-                "CREATED-COMPLIANCE"));
-        when(configurationAuditEnabled
-                .getString(eq(ConfigProperties.AUDIT_FILTER_DEFAULT_POLICY))).thenReturn("DO_FILTER");
-
-        when(configurationDoNotFilter
-                .getBoolean(eq(ConfigProperties.AUDIT_FILTER_ENABLED))).thenReturn(true);
-        when(configurationDoNotFilter
-            .getList(eq(ConfigProperties.AUDIT_FILTER_DO_NOT_FILTER))).thenReturn(
-                Arrays.asList("CREATED-ENTITLEMENT",
-                "DELETED-ENTITLEMENT",
-                "CREATED-POOL",
-                "DELETED-POOL",
-                "CREATED-COMPLIANCE"));
-        when(configurationDoNotFilter
-            .getList(eq(ConfigProperties.AUDIT_FILTER_DO_FILTER))).thenReturn(
-                Arrays.asList("MODIFIED-EXPORT"));
-        when(configurationDoNotFilter
-                .getString(eq(ConfigProperties.AUDIT_FILTER_DEFAULT_POLICY))).thenReturn("DO_NOT_FILTER");
-
-        when(configurationAuditDisabled
-                .getBoolean(eq(ConfigProperties.AUDIT_FILTER_ENABLED))).thenReturn(false);
-        when(configurationAuditDisabled
-                .getString(eq(ConfigProperties.AUDIT_FILTER_DEFAULT_POLICY))).thenReturn("DO_FILTER");
-
-
-        eventFilterEnabled = new EventFilter(configurationAuditEnabled);
-        eventFilterDisabled = new EventFilter(configurationAuditDisabled);
-        eventFilterDoNotFilter = new EventFilter(configurationDoNotFilter);
-
-        event1 = new Event();
-        event1.setType(Type.CREATED);
-        event1.setTarget(Target.ENTITLEMENT);
-
-        event2 = new Event();
-        event2.setType(Type.MODIFIED);
-        event2.setTarget(Target.CONSUMER);
-
-        event3 = new Event();
-        event3.setType(Type.MODIFIED);
-        event3.setTarget(Target.EXPORT);
-
-    }
-
     @Test
-    public void disabledShouldntFilter() {
-        assertFalse(eventFilterDisabled.shouldFilter(event1));
-        assertFalse(eventFilterDisabled.shouldFilter(event2));
-    }
+    public void disabledShouldNotFilter() {
+        Event event1 = createEvent(Type.CREATED, Target.ENTITLEMENT);
+        Event event2 = createEvent(Type.MODIFIED, Target.CONSUMER);
+        EventFilter filter = new EventFilter(configurationAuditDisabled());
 
+        assertFalse(filter.shouldFilter(event1));
+        assertFalse(filter.shouldFilter(event2));
+    }
 
     @Test
     public void filterUnknownEventPolicyDoFilter() {
-        assertTrue(eventFilterEnabled.shouldFilter(event2));
+        Event event = createEvent(Type.MODIFIED, Target.CONSUMER);
+        EventFilter filter = new EventFilter(configurationAuditEnabled());
+
+        assertTrue(filter.shouldFilter(event));
     }
 
     @Test
     public void notFilterIncludes() {
-        assertFalse(eventFilterEnabled.shouldFilter(event1));
+        Event event = createEvent(Type.CREATED, Target.ENTITLEMENT);
+        EventFilter filter = new EventFilter(configurationAuditEnabled());
+
+        assertFalse(filter.shouldFilter(event));
     }
 
-
     @Test
-    public void policyDoNotFilterShouldntFilter() {
-        assertFalse(eventFilterDoNotFilter.shouldFilter(event1));
-        assertFalse(eventFilterDoNotFilter.shouldFilter(event2));
+    public void policyDoNotFilterShouldNotFilter() {
+        Event event1 = createEvent(Type.CREATED, Target.ENTITLEMENT);
+        Event event2 = createEvent(Type.MODIFIED, Target.CONSUMER);
+        EventFilter filter = new EventFilter(configurationDoNotFilter());
+
+        assertFalse(filter.shouldFilter(event1));
+        assertFalse(filter.shouldFilter(event2));
     }
 
     @Test
     public void policyDoNotFilterShouldFilterExcludes() {
-        assertTrue(eventFilterDoNotFilter.shouldFilter(event3));
+        Event event = createEvent(Type.MODIFIED, Target.EXPORT);
+        EventFilter filter = new EventFilter(configurationDoNotFilterWithExcludes());
+
+        assertTrue(filter.shouldFilter(event));
+    }
+
+    private Event createEvent(Type type, Target target) {
+        Event event = new Event();
+        event.setType(type);
+        event.setTarget(target);
+        return event;
+    }
+
+    private Configuration configurationAuditDisabled() {
+        Configuration configuration = mock(Configuration.class);
+
+        when(configuration.getBoolean(eq(ConfigProperties.AUDIT_FILTER_ENABLED))).thenReturn(false);
+        when(configuration.getString(eq(ConfigProperties.AUDIT_FILTER_DEFAULT_POLICY)))
+            .thenReturn("DO_FILTER");
+
+        return configuration;
+    }
+
+    private Configuration configurationAuditEnabled() {
+        Configuration configuration = mock(Configuration.class);
+
+        when(configuration.getBoolean(eq(ConfigProperties.AUDIT_FILTER_ENABLED))).thenReturn(true);
+        when(configuration.getList(eq(ConfigProperties.AUDIT_FILTER_DO_NOT_FILTER))).thenReturn(Arrays.asList(
+            "CREATED-ENTITLEMENT",
+            "DELETED-ENTITLEMENT",
+            "CREATED-POOL",
+            "DELETED-POOL",
+            "CREATED-COMPLIANCE"));
+        when(configuration.getString(eq(ConfigProperties.AUDIT_FILTER_DEFAULT_POLICY)))
+            .thenReturn("DO_FILTER");
+
+        return configuration;
+    }
+
+    private Configuration configurationDoNotFilter() {
+        Configuration configuration = mock(Configuration.class);
+
+        when(configuration.getBoolean(eq(ConfigProperties.AUDIT_FILTER_ENABLED))).thenReturn(true);
+        when(configuration.getList(eq(ConfigProperties.AUDIT_FILTER_DO_NOT_FILTER))).thenReturn(Arrays.asList(
+            "CREATED-ENTITLEMENT",
+            "DELETED-ENTITLEMENT",
+            "CREATED-POOL",
+            "DELETED-POOL",
+            "CREATED-COMPLIANCE"));
+        when(configuration.getString(eq(ConfigProperties.AUDIT_FILTER_DEFAULT_POLICY)))
+            .thenReturn("DO_NOT_FILTER");
+
+        return configuration;
+    }
+
+    private Configuration configurationDoNotFilterWithExcludes() {
+        Configuration configuration = mock(Configuration.class);
+
+        when(configuration.getBoolean(eq(ConfigProperties.AUDIT_FILTER_ENABLED))).thenReturn(true);
+        when(configuration.getList(eq(ConfigProperties.AUDIT_FILTER_DO_FILTER)))
+            .thenReturn(Arrays.asList("MODIFIED-EXPORT"));
+        when(configuration.getString(eq(ConfigProperties.AUDIT_FILTER_DEFAULT_POLICY)))
+            .thenReturn("DO_NOT_FILTER");
+
+        return configuration;
     }
 
 }

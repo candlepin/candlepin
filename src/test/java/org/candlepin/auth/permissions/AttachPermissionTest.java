@@ -14,23 +14,24 @@
  */
 package org.candlepin.auth.permissions;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 
 public class AttachPermissionTest {
 
     private AttachPermission perm;
     private Owner owner;
 
-    @Before
+    @BeforeEach
     public void init() {
         owner = new Owner("ownerkey", "My Org");
         perm = new AttachPermission(owner);

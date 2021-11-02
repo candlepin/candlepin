@@ -14,8 +14,14 @@
  */
 package org.candlepin.resource.util;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.Entitler;
@@ -40,8 +46,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -54,14 +58,9 @@ import java.util.Locale;
 import java.util.Set;
 
 
-/**
- *
- */
-@ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
-public class ConsumerBindUtilTest {
 
-    private static final String USER = "testuser";
+@ExtendWith(MockitoExtension.class)
+public class ConsumerBindUtilTest {
 
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock private OwnerCurator ownerCurator;
@@ -71,7 +70,7 @@ public class ConsumerBindUtilTest {
     private I18n i18n;
 
     private ConsumerType systemConsumerType;
-    protected Owner owner;
+    private Owner owner;
 
     @BeforeEach
     public void init() throws Exception {
@@ -312,9 +311,6 @@ public class ConsumerBindUtilTest {
 
         Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
         ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
-
-        when(entitler.bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(10)))
-            .thenThrow(new ForbiddenException("fail"));
 
         consumerBindUtil.handleActivationKeys(consumer, keys, true);
     }

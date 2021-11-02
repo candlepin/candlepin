@@ -46,15 +46,12 @@ import org.candlepin.test.TestUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.persist.UnitOfWork;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 
 
-/**
- * Test suite for the JobMessageReceiver class
- */
 public class JobMessageReceiverTest {
 
     private JobManager jobManager;
@@ -68,7 +65,7 @@ public class JobMessageReceiverTest {
     private CPMConsumer consumer;
     private ThreadLocal<CPMMessageListener> listenerContainer;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         this.config = new CandlepinCommonTestConfig();
         this.jobManager = mock(JobManager.class);
@@ -153,17 +150,17 @@ public class JobMessageReceiverTest {
     }
 
     @Test
-    public void testReceiveAddressCannotBeNull() throws Exception {
+    public void testReceiveAddressCannotBeNull() {
         this.config.clearProperty(ConfigProperties.ASYNC_JOBS_RECEIVE_ADDRESS);
 
-        assertThrows(ConfigurationException.class, () -> this.buildJobMessageReceiver());
+        assertThrows(ConfigurationException.class, this::buildJobMessageReceiver);
     }
 
     @Test
-    public void testReceiveAddressCannotBeEmpty() throws Exception {
+    public void testReceiveAddressCannotBeEmpty() {
         this.config.setProperty(ConfigProperties.ASYNC_JOBS_RECEIVE_ADDRESS, "");
 
-        assertThrows(ConfigurationException.class, () -> this.buildJobMessageReceiver());
+        assertThrows(ConfigurationException.class, this::buildJobMessageReceiver);
     }
 
     @Test

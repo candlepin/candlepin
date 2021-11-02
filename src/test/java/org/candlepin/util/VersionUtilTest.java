@@ -14,31 +14,35 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.Rules;
 import org.candlepin.version.VersionUtil;
 
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.io.PrintStream;
 import java.util.Map;
 
-/**
- * VersionUtilTest
- */
+
 public class VersionUtilTest {
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        writeoutVersion("${version}", "${release}");
+    }
 
     @Test
     public void normalVersion() throws Exception {
         writeoutVersion("1.3.0", "1");
 
         Map<String, String> map = VersionUtil.getVersionMap();
-        assertTrue("1.3.0".equals(map.get("version")));
-        assertTrue("1".equals(map.get("release")));
+        assertEquals("1.3.0", map.get("version"));
+        assertEquals("1", map.get("release"));
     }
 
     @Test
@@ -49,24 +53,19 @@ public class VersionUtilTest {
         ps.close();
 
         Map<String, String> map = VersionUtil.getVersionMap();
-        assertTrue("Unknown".equals(map.get("version")));
-        assertTrue("Unknown".equals(map.get("release")));
-    }
-
-    @After
-    public void tearDown() throws Exception {
-        writeoutVersion("${version}", "${release}");
+        assertEquals("Unknown", map.get("version"));
+        assertEquals("Unknown", map.get("release"));
     }
 
     @Test
-    public void rulesCompatibility() throws Exception {
+    public void rulesCompatibility() {
         assertTrue(VersionUtil.getRulesVersionCompatibility("0.4.0", "0.4.0"));
         assertTrue(VersionUtil.getRulesVersionCompatibility("0.4.0", "0.5.1"));
         assertFalse(VersionUtil.getRulesVersionCompatibility("0.4.0", "0.3.99"));
     }
 
     @Test
-    public void rulesCompatibilityComplex() throws Exception {
+    public void rulesCompatibilityComplex() {
         assertFalse(VersionUtil.getRulesVersionCompatibility("0.5.15", "0.5.2"));
         assertFalse(VersionUtil.getRulesVersionCompatibility("0.5.15", "0.5.5.2-1"));
         assertFalse(VersionUtil.getRulesVersionCompatibility("0.5.15", "adf25d9c"));
@@ -76,12 +75,12 @@ public class VersionUtilTest {
     }
 
     @Test
-    public void rulesCompatibilityVsNull() throws Exception {
+    public void rulesCompatibilityVsNull() {
         assertFalse(VersionUtil.getRulesVersionCompatibility("0.5.15", null));
     }
 
     public static void writeoutVersion(String version, String release) throws Exception {
-        PrintStream ps = new PrintStream(new File(new Rules().getClass()
+        PrintStream ps = new PrintStream(new File(Rules.class
             .getClassLoader().getResource("version.properties").toURI()));
         ps.println("version=" + version);
         ps.println("release=" + release);

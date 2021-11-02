@@ -126,7 +126,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         assertEquals(output.getUuid(), content.getUuid());
         assertEquals(output, content);
 
-        verifyZeroInteractions(this.mockEntCertGenerator);
+        verifyNoInteractions(this.mockEntCertGenerator);
     }
 
     @ParameterizedTest
@@ -160,7 +160,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
                 eq(owner), eq(product.getId()), anyBoolean());
         }
         else {
-            verifyZeroInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertGenerator);
         }
     }
 
@@ -194,7 +194,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
                 eq(owner1), eq(product.getId()), anyBoolean());
         }
         else {
-            verifyZeroInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertGenerator);
         }
     }
 
@@ -225,7 +225,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
                 eq(owner1), eq(product.getId()), anyBoolean());
         }
         else {
-            verifyZeroInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertGenerator);
         }
     }
 
@@ -266,7 +266,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
                 eq(owner), eq(product.getId()), anyBoolean());
         }
         else {
-            verifyZeroInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertGenerator);
         }
     }
 
@@ -301,7 +301,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
                 eq(owner1), eq(product.getId()), anyBoolean());
         }
         else {
-            verifyZeroInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertGenerator);
         }
     }
 

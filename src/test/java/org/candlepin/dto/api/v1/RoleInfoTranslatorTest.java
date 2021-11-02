@@ -14,10 +14,10 @@
  */
 package org.candlepin.dto.api.v1;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
@@ -139,7 +139,7 @@ public class RoleInfoTranslatorTest extends AbstractTranslatorTest<RoleInfo, Rol
                     }
                 }
 
-                assertEquals("Permission object mismatch", matches, source.getPermissions().size());
+                assertEquals(matches, source.getPermissions().size(), "Permission object mismatch");
             }
             else {
                 assertNotNull(dest.getUsers());

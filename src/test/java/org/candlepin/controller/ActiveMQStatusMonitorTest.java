@@ -14,30 +14,31 @@
  */
 package org.candlepin.controller;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.ActiveMQStatus;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ActiveMQStatusMonitorTest {
 
-    @Mock private Configuration config;
+    @Mock
+    private Configuration config;
 
-    @Before
+    @BeforeEach
     public void setup() {
         when(config.getLong(ConfigProperties.ACTIVEMQ_CONNECTION_MONITOR_INTERVAL)).thenReturn(500L);
     }
@@ -82,7 +83,7 @@ public class ActiveMQStatusMonitorTest {
         }
     }
 
-    private class TestingMonitor extends ActiveMQStatusMonitor {
+    private static class TestingMonitor extends ActiveMQStatusMonitor {
 
         public TestingMonitor(Configuration config) throws Exception {
             super(config);
@@ -90,7 +91,7 @@ public class ActiveMQStatusMonitorTest {
         }
 
         @Override
-        public void initializeLocator() throws Exception {
+        public void initializeLocator() {
             // Bypass static locator creation
         }
 
@@ -105,8 +106,8 @@ public class ActiveMQStatusMonitorTest {
 
     }
 
-    private class TestingListener implements ActiveMQStatusListener {
-        private List<ActiveMQStatus> reported = new LinkedList<>();
+    private static class TestingListener implements ActiveMQStatusListener {
+        private final List<ActiveMQStatus> reported = new LinkedList<>();
 
         @Override
         public void onStatusUpdate(ActiveMQStatus oldStatus, ActiveMQStatus newStatus) {

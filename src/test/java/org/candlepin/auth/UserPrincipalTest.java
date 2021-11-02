@@ -14,11 +14,12 @@
  */
 package org.candlepin.auth;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -26,22 +27,19 @@ import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.model.Owner;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-/**
- * UserPrincipalTest
- */
 public class UserPrincipalTest {
     private Owner owner;
     private OwnerPermission ownerPerm;
     private UserPrincipal user;
 
-    @Before
+    @BeforeEach
     public void init() {
         owner = mock(Owner.class);
         ownerPerm = mock(OwnerPermission.class);
@@ -120,23 +118,23 @@ public class UserPrincipalTest {
 
     @Test
     public void equalsNull() {
-        assertFalse(user.equals(null));
+        assertNotEquals(null, user);
     }
 
     @Test
     public void equalsOtherObject() {
-        assertFalse(user.equals(new Object()));
+        assertNotEquals(user, new Object());
     }
 
     @Test
     public void equalsAnotherConsumerPrincipal() {
         UserPrincipal up = new UserPrincipal("icup", null, true);
-        assertTrue(user.equals(up));
+        assertEquals(user, up);
     }
 
     @Test
     public void equalsDifferentConsumer() {
         UserPrincipal up = new UserPrincipal("admin", null, true);
-        assertFalse(user.equals(up));
+        assertNotEquals(user, up);
     }
 }
