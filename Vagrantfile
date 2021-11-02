@@ -35,7 +35,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       #
       # domain.volume_cache = "unsafe"
     end
-
+    config.vm.provision "shell", inline: "yum -y update yum python ca-certificates"
     config.vm.provision "ansible" do |ansible|
       ansible.playbook = "vagrant/candlepin.yml"
       ansible.galaxy_role_file = "vagrant/requirements.yml"
