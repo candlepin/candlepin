@@ -563,6 +563,53 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     /**
+     * Fetches a the entitlement ids in the specified environment containing the
+     *  specified content ids.
+     *
+     * @param environmentId
+     *  The ID of the environment for which to fetch entitlements
+     *
+     *  @param contentIds
+     *  A collection of content Ids for which to fetch entitlements
+     *
+     * @return List of entitlement ids
+     */
+    public List<String> listEntitlementIdByEnvironmentAndContent(String environmentId,
+        Collection<String> contentIds) {
+        String sql =
+            "select a.id from cp_entitlement a " +
+            "    join cp_consumer b on a.consumer_id=b.id " +
+            "    join cp_environment c on b.environment_id=c.id " +
+            "    join cp_pool d on a.pool_id=d.id " +
+            "    join cp2_product_content f on d.product_uuid=f.product_uuid " +
+            "    join cp2_content g on f.content_uuid=g.uuid " +
+            "where c.id=:environmentId"  +
+            "    and g.content_id in (:contentIds) ";
+        List<String> results = this.getEntityManager()
+            .createNativeQuery(sql)
+            .setParameter("environmentId", environmentId)
+            .setParameter("contentIds", contentIds)
+            .getResultList();
+
+        sql =
+            "select a.id from cp_entitlement a " +
+            "    join cp_consumer b on a.consumer_id=b.id " +
+            "    join cp_environment c on b.environment_id=c.id " +
+            "    join cp_pool d on a.pool_id=d.id " +
+            "    join cp2_product_provided_products f on d.product_uuid=f.product_uuid " +
+            "    join cp2_product_content g on f.provided_product_uuid=g.product_uuid " +
+            "    join cp2_content h on g.content_uuid=h.uuid " +
+            "where c.id=:environmentId " +
+            "    and h.content_id in (:contentIds) ";
+        results.addAll(this.getEntityManager()
+            .createNativeQuery(sql)
+            .setParameter("environmentId", environmentId)
+            .setParameter("contentIds", contentIds)
+            .getResultList());
+        return results;
+    }
+
+    /**
      * List entitlements for a consumer which are valid for a specific date.
      *
      * @param consumer Consumer to list entitlements for.
