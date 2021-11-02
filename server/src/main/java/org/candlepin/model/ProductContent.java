@@ -33,6 +33,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlTransient;
+
 
 
 /**
@@ -79,6 +81,7 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
     }
 
     @Override
+    @XmlTransient
     public Serializable getId() {
         return this.id;
     }
@@ -108,6 +111,7 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
     /**
      * @return the product
      */
+    @XmlTransient
     public Product getProduct() {
         return product;
     }
