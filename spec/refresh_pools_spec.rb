@@ -1449,4 +1449,56 @@ describe 'Refresh Pools' do
     product_json = json_body['products'].find {|p| p['id'] == main_product['id']}
     product_json['content'].should == []
   end
+
+  it 'deduplicates products and content' do
+    # Create some orgs
+    owners = []
+    3.times do |i|
+      key = random_string("test_owner-#{i}")
+      owners << create_owner(key)
+    end
+
+    # Create products and content to be shared across all orgs
+    provided = []
+    3.times do |i|
+      content = create_upstream_content(random_string("prov_content-#{i}"), {'name' => "prov content #{i}"})
+      prov_product = create_upstream_product(random_string("provided-#{i}"))
+      add_content_to_product_upstream(prov_product['id'], content['id'])
+
+      provided << prov_product
+    end
+
+    product = create_upstream_product(random_string('test_prod'), :providedProducts => provided)
+
+    # Set up orgs with different subscriptions containing the product
+    owners.each do |owner|
+      create_upstream_subscription(random_string('test_sub'), owner['key'], {
+        :product => product
+      })
+    end
+
+    # Refresh orgs in serial (note: this *cannot* safely be done in parallel)
+    owners.each do |owner|
+      @cp.refresh_pools(owner['key'])
+    end
+
+    # Verify that the products used by both org is the same underlying product (i.e. same product UUID)
+    product_uuids = []
+    owners.each do |owner|
+      pools = @cp.list_pools({:owner => owner['id']})
+      expect(pools).to_not be_nil
+      expect(pools.size).to eq(1)
+
+      product = @cp.get_product(owner['key'], pools.first['productId'])
+
+      expect(product).to_not be_nil
+      expect(product).to have_key('uuid')
+      expect(product['uuid']).to_not be_nil
+
+      product_uuids << product['uuid']
+    end
+
+    expect(product_uuids.size).to eq(owners.size)
+    expect(product_uuids).to all(eq(product_uuids.first))
+  end
 end

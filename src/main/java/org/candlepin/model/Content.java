@@ -216,6 +216,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         this.setMetadataExpiration(source.getMetadataExpiration());
         this.setArches(source.getArches());
         this.setModifiedProductIds(source.getModifiedProductIds());
+        this.entityVersion = null;
 
         return this;
     }
@@ -241,6 +242,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
         copy.setCreated(this.getCreated() != null ? (Date) this.getCreated().clone() : null);
         copy.setUpdated(this.getUpdated() != null ? (Date) this.getUpdated().clone() : null);
+
+        copy.entityVersion = null;
 
         return copy;
     }
@@ -306,6 +309,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      */
     public Content setId(String id) {
         this.id = id;
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -316,6 +321,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setType(String type) {
         this.type = type;
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -326,6 +333,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setLabel(String label) {
         this.label = label;
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -336,6 +345,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setName(String name) {
         this.name = name;
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -346,6 +357,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setVendor(String vendor) {
         this.vendor = vendor;
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -356,6 +369,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setContentUrl(String contentUrl) {
         this.contentUrl = contentUrl;
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -377,6 +392,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      */
     public Content setRequiredTags(String requiredTags) {
         this.requiredTags = requiredTags;
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -396,6 +413,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      */
     public Content setReleaseVersion(String releaseVer) {
         this.releaseVer = releaseVer;
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -406,6 +425,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setGpgUrl(String gpgUrl) {
         this.gpgUrl = gpgUrl;
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -416,6 +437,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setMetadataExpiration(Long metadataExpire) {
         this.metadataExpire = metadataExpire;
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -456,6 +479,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             throw new IllegalArgumentException("productId is null");
         }
 
+        this.entityVersion = null;
         return this.modifiedProductIds.add(productId);
     }
 
@@ -477,6 +501,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             throw new IllegalArgumentException("productId is null");
         }
 
+        this.entityVersion = null;
         return this.modifiedProductIds != null ? this.modifiedProductIds.remove(productId) : false;
     }
 
@@ -494,6 +519,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      */
     public Content setModifiedProductIds(Collection<String> requiredProductIds) {
         this.modifiedProductIds.clear();
+        this.entityVersion = null;
 
         if (requiredProductIds != null) {
             this.modifiedProductIds.addAll(requiredProductIds);
@@ -504,6 +530,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setArches(String arches) {
         this.arches = arches;
+        this.entityVersion = null;
+
         return this;
     }
 
@@ -530,10 +558,24 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             return true;
         }
 
+        boolean equals = false;
+
         if (other instanceof Content) {
             Content that = (Content) other;
 
-            boolean equals = new EqualsBuilder()
+            // - If the objects have the same non-null UUID, they are equal
+            // - If the objects have different entity versions, they cannot be equal
+            // - If the objects have the same entity versions, run through the checks below to
+            //   avoid collisions
+            if (this.getUuid() != null && this.getUuid().equals(that.getUuid())) {
+                return true;
+            }
+
+            if (this.getEntityVersion() != that.getEntityVersion()) {
+                return false;
+            }
+
+            equals = new EqualsBuilder()
                 .append(this.getId(), that.getId())
                 .append(this.getType(), that.getType())
                 .append(this.getLabel(), that.getLabel())
@@ -551,16 +593,11 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
                 .append(this.getArches(), that.getArches())
                 .isEquals();
 
-            if (equals) {
-                if (!Util.collectionsAreEqual(this.getModifiedProductIds(), that.getModifiedProductIds())) {
-                    return false;
-                }
-            }
-
-            return equals;
+            equals = equals && Util.collectionsAreEqual(this.getModifiedProductIds(),
+                that.getModifiedProductIds());
         }
 
-        return false;
+        return equals;
     }
 
     @Override
@@ -579,50 +616,45 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      *  a version hash for this entity
      */
     public int getEntityVersion() {
-        return this.getEntityVersion(false);
-    }
+        if (this.entityVersion == null) {
+            // This must always be a subset of equals
+            HashCodeBuilder builder = new HashCodeBuilder(37, 7)
+                .append(this.getId())
+                .append(this.getType())
+                .append(this.getLabel())
+                .append(this.getName())
+                .append(this.getVendor())
+                .append(this.getContentUrl())
+                .append(this.getRequiredTags())
+                .append(this.getReleaseVersion())
+                .append(this.getGpgUrl())
+                .append(this.getMetadataExpiration())
+                .append(this.getArches());
 
-    public int getEntityVersion(boolean useCache) {
-        if (useCache && this.entityVersion != null) {
-            return this.entityVersion;
-        }
+            // Impl note:
+            // We need to be certain that the hash code is calculated in a way that's order
+            // independent and not subject to Hibernate's poor hashCode implementation on proxy
+            // collections. This calculation follows that defined by the Set.hashCode method.
+            int accumulator = 0;
 
-        // This must always be a subset of equals
-        HashCodeBuilder builder = new HashCodeBuilder(37, 7)
-            .append(this.getId())
-            .append(this.getType())
-            .append(this.getLabel())
-            .append(this.getName())
-            .append(this.getVendor())
-            .append(this.getContentUrl())
-            .append(this.getRequiredTags())
-            .append(this.getReleaseVersion())
-            .append(this.getGpgUrl())
-            .append(this.getMetadataExpiration())
-            .append(this.getArches());
+            if (!this.modifiedProductIds.isEmpty()) {
+                for (String pid : this.getModifiedProductIds()) {
+                    accumulator += (pid != null ? pid.hashCode() : 0);
+                }
 
-        // Impl note:
-        // We need to be certain that the hash code is calculated in a way that's order
-        // independent and not subject to Hibernate's poor hashCode implementation on proxy
-        // collections. This calculation follows that defined by the Set.hashCode method.
-        int accumulator = 0;
-
-        if (!this.modifiedProductIds.isEmpty()) {
-            for (String pid : this.getModifiedProductIds()) {
-                accumulator += (pid != null ? pid.hashCode() : 0);
+                builder.append(accumulator);
             }
 
-            builder.append(accumulator);
+            this.entityVersion = builder.toHashCode();
         }
 
-        // Return
-        return builder.toHashCode();
+        return this.entityVersion;
     }
 
     @Override
     public String toString() {
         return String.format("Content [uuid: %s, id: %s, name: %s, label: %s]",
-                this.uuid, this.id, this.name, this.label);
+            this.uuid, this.id, this.name, this.label);
     }
 
     @PrePersist

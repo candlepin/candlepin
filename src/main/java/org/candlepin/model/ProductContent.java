@@ -36,6 +36,7 @@ import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlTransient;
 
 
+
 /**
  * ProductContent
  */
@@ -139,12 +140,8 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
         if (obj instanceof ProductContent) {
             ProductContent that = (ProductContent) obj;
 
-            // We're only interested in ensuring the mapping between the two objects is the same.
-            String thisContentUuid = this.getContent() != null ? this.getContent().getUuid() : null;
-            String thatContentUuid = that.getContent() != null ? that.getContent().getUuid() : null;
-
             return new EqualsBuilder()
-                .append(thisContentUuid, thatContentUuid)
+                .append(this.getContent(), that.getContent())
                 .append(this.isEnabled(), that.isEnabled())
                 .isEquals();
         }
@@ -154,14 +151,8 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
 
     @Override
     public int hashCode() {
-        // Impl note:
-        // Product is not included in this calculation because it only exists in this object to
-        // properly map products to content -- it should not be used for comparing two
-        // instances.
-
         return new HashCodeBuilder(3, 23)
-            .append(this.getContent() != null ? this.getContent().getUuid() : null)
-            .append(this.isEnabled())
+            .append(this.getContent() != null ? this.getContent().getId() : null)
             .toHashCode();
     }
 
@@ -173,12 +164,10 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
      *  a version hash for this entity
      */
     public int getEntityVersion() {
-        int hash = 17;
-
-        hash = 7 * hash + (this.content != null ? this.content.getEntityVersion() : 0);
-        hash = 7 * hash + (this.enabled ? 1 : 0);
-
-        return hash;
+        return new HashCodeBuilder(7, 19)
+            .append(this.getContent() != null ? this.getContent().getEntityVersion() : 0)
+            .append(this.isEnabled())
+            .toHashCode();
     }
 
     /**
@@ -192,9 +181,7 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
     }
 
     public String toString() {
-        return String.format(
-            "ProductContent [id: %s, product = %s, content = %s, enabled = %s]",
-            this.getId(), this.getProduct(), this.getContent(), this.isEnabled()
-        );
+        return String.format("ProductContent [id: %s, product = %s, content = %s, enabled = %s]",
+            this.getId(), this.getProduct(), this.getContent(), this.isEnabled());
     }
 }
