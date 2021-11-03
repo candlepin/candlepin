@@ -53,6 +53,7 @@ public class NestedOwnerDTOTranslator implements ObjectTranslator<NestedOwnerDTO
         dest.setKey(source.getKey());
         dest.setDisplayName(source.getDisplayName());
         dest.setHref(source.getHref());
+        dest.setContentAccessMode(source.getContentAccessMode());
 
         return dest;
     }
