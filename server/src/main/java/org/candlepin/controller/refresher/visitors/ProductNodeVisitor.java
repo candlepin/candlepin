@@ -36,7 +36,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,7 +55,7 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
     private Map<Owner, Map<String, String>> ownerProductUuidMap;
     private Map<Owner, Set<String>> deletedProductUuids;
     private Map<Owner, Set<Integer>> ownerEntityVersions;
-    private Map<Owner, Map<String, List<Product>>> ownerVersionedEntityMap;
+    private Map<Owner, Map<String, Set<Product>>> ownerVersionedEntityMap;
 
 
     /**
@@ -231,15 +230,15 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
         Product entity = node.getMergedEntity();
         int entityVersion = entity.getEntityVersion();
 
-        Map<String, List<Product>> entityMap = this.ownerVersionedEntityMap.computeIfAbsent(owner, key -> {
+        Map<String, Set<Product>> entityMap = this.ownerVersionedEntityMap.computeIfAbsent(owner, key -> {
             Set<Integer> versions = this.ownerEntityVersions.remove(key);
 
             return versions != null ?
-                this.ownerProductCurator.getProductsByVersions(key, versions) :
+                this.ownerProductCurator.getProductsByVersions(versions) :
                 Collections.emptyMap();
         });
 
-        for (Product candidate : entityMap.getOrDefault(entity.getId(), Collections.emptyList())) {
+        for (Product candidate : entityMap.getOrDefault(entity.getId(), Collections.emptySet())) {
             if (entityVersion == candidate.getEntityVersion() && entity.equals(candidate)) {
                 return candidate;
             }

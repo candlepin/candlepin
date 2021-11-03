@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -49,7 +48,7 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
     private Map<Owner, Map<String, String>> ownerContentUuidMap;
     private Map<Owner, Set<String>> deletedContentUuids;
     private Map<Owner, Set<Integer>> ownerEntityVersions;
-    private Map<Owner, Map<String, List<Content>>> ownerVersionedEntityMap;
+    private Map<Owner, Map<String, Set<Content>>> ownerVersionedEntityMap;
 
 
     /**
@@ -222,15 +221,15 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
         Content entity = node.getMergedEntity();
         int entityVersion = entity.getEntityVersion();
 
-        Map<String, List<Content>> entityMap = this.ownerVersionedEntityMap.computeIfAbsent(owner, key -> {
+        Map<String, Set<Content>> entityMap = this.ownerVersionedEntityMap.computeIfAbsent(owner, key -> {
             Set<Integer> versions = this.ownerEntityVersions.remove(key);
 
             return versions != null ?
-                this.ownerContentCurator.getContentByVersions(key, versions) :
+                this.ownerContentCurator.getContentByVersions(versions) :
                 Collections.emptyMap();
         });
 
-        for (Content candidate : entityMap.getOrDefault(entity.getId(), Collections.emptyList())) {
+        for (Content candidate : entityMap.getOrDefault(entity.getId(), Collections.emptySet())) {
             if (entityVersion == candidate.getEntityVersion() && entity.equals(candidate)) {
                 return candidate;
             }

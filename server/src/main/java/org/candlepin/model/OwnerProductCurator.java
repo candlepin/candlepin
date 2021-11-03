@@ -28,12 +28,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
@@ -593,12 +594,10 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     }
 
     /**
-     * Fetches all products belonging to organizations other than the one provided having an entity
-     * version equal to one of the versions provided.
-     *
-     * @param exclude
-     *  The owner/organization to exclude from the search. If null, no organizations will be
-     *  excluded
+     * Fetches products with the specified entity versions as a map containing product IDs mapped to
+     * sorted sets of products with that ID and a matching entity version. Each set of products will
+     * be ordered by the product's UUID in ascending order. If no products are matched, this method
+     * returns an empty map.
      *
      * @param versions
      *  A collection of entity versions to use to select products
@@ -606,30 +605,19 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      * @return
      *  a map containing the products found, keyed by product ID
      */
-    public Map<String, List<Product>> getProductsByVersions(Owner exclude, Collection<Integer> versions) {
-        Map<String, List<Product>> result = new HashMap<>();
+    public Map<String, Set<Product>> getProductsByVersions(Collection<Integer> versions) {
+        Map<String, Set<Product>> result = new HashMap<>();
 
         if (versions != null && !versions.isEmpty()) {
-            TypedQuery<Product> query;
+            String jpql = "SELECT p FROM Product p WHERE p.entityVersion IN (:vblock)";
+            TypedQuery<Product> query = this.getEntityManager()
+                .createQuery(jpql, Product.class);
 
-            if (exclude != null) {
-                String jpql = "SELECT p FROM OwnerProduct op JOIN op.product p " +
-                    "WHERE op.owner.id != :owner_id AND p.entityVersion IN (:vblock)";
-
-                query = this.getEntityManager()
-                    .createQuery(jpql, Product.class)
-                    .setParameter("owner_id", exclude.getId());
-            }
-            else {
-                String jpql = "SELECT p FROM Product p WHERE p.entityVersion IN (:vblock)";
-
-                query = this.getEntityManager()
-                    .createQuery(jpql, Product.class);
-            }
+            Comparator<Product> comparator = Comparator.comparing(Product::getUuid);
 
             for (Collection<Integer> block : this.partition(versions)) {
                 for (Product element : query.setParameter("vblock", block).getResultList()) {
-                    result.computeIfAbsent(element.getId(), k -> new LinkedList<>())
+                    result.computeIfAbsent(element.getId(), k -> new TreeSet<>(comparator))
                         .add(element);
                 }
             }

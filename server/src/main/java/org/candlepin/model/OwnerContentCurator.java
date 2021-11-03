@@ -26,13 +26,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
@@ -389,43 +390,30 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
     }
 
     /**
-     * Fetches all content belonging to organizations other than the one provided having an entity
-     * version equal to one of the versions provided.
-     *
-     * @param exclude
-     *  The owner/organization to exclude from the search. If null, no organizations will be
-     *  excluded
+     * Fetches content with the specified entity versions as a map containing content IDs mapped to
+     * sorted sets of content with that ID and a matching entity version. Each set of content will
+     * be ordered by the content's UUID in ascending order. If no content are matched, this method
+     * returns an empty map.
      *
      * @param versions
-     *  A collection of entity versions to use to select contents
+     *  A collection of entity versions to use to select content
      *
      * @return
-     *  a map containing the contents found, keyed by content ID
+     *  a map containing the content found, keyed by content ID
      */
-    public Map<String, List<Content>> getContentByVersions(Owner exclude, Collection<Integer> versions) {
-        Map<String, List<Content>> result = new HashMap<>();
+    public Map<String, Set<Content>> getContentByVersions(Collection<Integer> versions) {
+        Map<String, Set<Content>> result = new HashMap<>();
 
         if (versions != null && !versions.isEmpty()) {
-            TypedQuery<Content> query;
+            String jpql = "SELECT c FROM Content c WHERE c.entityVersion IN (:vblock)";
+            TypedQuery<Content> query = this.getEntityManager()
+                .createQuery(jpql, Content.class);
 
-            if (exclude != null) {
-                String jpql = "SELECT c FROM OwnerContent op JOIN op.content c " +
-                    "WHERE op.owner.id != :owner_id AND c.entityVersion IN (:vblock)";
-
-                query = this.getEntityManager()
-                    .createQuery(jpql, Content.class)
-                    .setParameter("owner_id", exclude.getId());
-            }
-            else {
-                String jpql = "SELECT c FROM Content c WHERE c.entityVersion IN (:vblock)";
-
-                query = this.getEntityManager()
-                    .createQuery(jpql, Content.class);
-            }
+            Comparator<Content> comparator = Comparator.comparing(Content::getUuid);
 
             for (Collection<Integer> block : this.partition(versions)) {
                 for (Content element : query.setParameter("vblock", block).getResultList()) {
-                    result.computeIfAbsent(element.getId(), k -> new LinkedList<>())
+                    result.computeIfAbsent(element.getId(), k -> new TreeSet<>(comparator))
                         .add(element);
                 }
             }

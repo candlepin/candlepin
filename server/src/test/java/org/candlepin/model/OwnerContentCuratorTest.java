@@ -28,9 +28,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -601,50 +602,10 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         Content content3 = this.createContent("c1", "c1", owner3);
         Content content4 = this.createContent("c2", "c2", owner2);
 
-        Map<String, List<Content>> contentMap1 = this.ownerContentCurator
-            .getContentByVersions(owner1, Collections.singleton(content1.getEntityVersion()));
-        Map<String, List<Content>> contentMap2 = this.ownerContentCurator
-            .getContentByVersions(owner2, Collections.singleton(content2.getEntityVersion()));
-
-        // contentMap1 should contain only content2 and content3
-        // contentMap2 should contain only content1 and content3
-
-        assertEquals(1, contentMap1.size());
-        assertNotNull(contentMap1.get("c1"));
-        assertEquals(1, contentMap2.size());
-        assertNotNull(contentMap2.get("c1"));
-
-        List<String> uuidList1 = contentMap1.values()
-            .stream()
-            .flatMap(List::stream)
-            .map(Content::getUuid)
-            .collect(Collectors.toList());
-
-        List<String> uuidList2 = contentMap2.values()
-            .stream()
-            .flatMap(List::stream)
-            .map(Content::getUuid)
-            .collect(Collectors.toList());
-
-        assertEquals(Arrays.asList(content2.getUuid(), content3.getUuid()), uuidList1);
-        assertEquals(Arrays.asList(content1.getUuid(), content3.getUuid()), uuidList2);
-    }
-
-    @Test
-    public void testGetContentByVersionsNoOwner() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-        Owner owner3 = this.createOwner();
-
-        Content content1 = this.createContent("c1", "c1", owner1);
-        Content content2 = this.createContent("c1", "c1", owner2);
-        Content content3 = this.createContent("c1", "c1", owner3);
-        Content content4 = this.createContent("c2", "c2", owner2);
-
-        Map<String, List<Content>> contentMap1 = this.ownerContentCurator
-            .getContentByVersions(null, Collections.singleton(content1.getEntityVersion()));
-        Map<String, List<Content>> contentMap2 = this.ownerContentCurator
-            .getContentByVersions(null, Collections.singleton(content2.getEntityVersion()));
+        Map<String, Set<Content>> contentMap1 = this.ownerContentCurator
+            .getContentByVersions(Collections.singleton(content1.getEntityVersion()));
+        Map<String, Set<Content>> contentMap2 = this.ownerContentCurator
+            .getContentByVersions(Collections.singleton(content2.getEntityVersion()));
 
         // Both maps should contain both contents 1, 2 and 3
 
@@ -655,13 +616,13 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
         List<String> uuidList1 = contentMap1.values()
             .stream()
-            .flatMap(List::stream)
+            .flatMap(Set::stream)
             .map(Content::getUuid)
             .collect(Collectors.toList());
 
         List<String> uuidList2 = contentMap2.values()
             .stream()
-            .flatMap(List::stream)
+            .flatMap(Set::stream)
             .map(Content::getUuid)
             .collect(Collectors.toList());
 
@@ -690,98 +651,52 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
         List<Integer> versions = Arrays.asList(c1a.getEntityVersion(), c2a.getEntityVersion());
 
-        Map<String, List<Content>> contentMac1 = this.ownerContentCurator
-            .getContentByVersions(owner1, versions);
-        Map<String, List<Content>> contentMac2 = this.ownerContentCurator
-            .getContentByVersions(owner2, versions);
-        Map<String, List<Content>> contentMac3 = this.ownerContentCurator
-            .getContentByVersions(null, versions);
+        Map<String, Set<Content>> contentMap = this.ownerContentCurator
+            .getContentByVersions(versions);
 
-        // Map 1 should contain contents like c1 and c2 not owned by owner1: (c1b, c1c, c2b, c2c)
-        // Map 2 should contain contents like c1 and c2 not owned by owner2: (c1a, c1c, c2a, c2c)
-        // Map 3 should contain all contents like c1 and c2: (c1a, c1b, c1c, c2a, c2b, c2c)
+        // Map should contain all contents like c1 and c2: (c1a, c1b, c1c, c2a, c2b, c2c)
 
-        assertEquals(2, contentMac1.size());
-        assertEquals(2, contentMac2.size());
-        assertEquals(2, contentMac3.size());
+        assertEquals(2, contentMap.size());
 
-        assertNotNull(contentMac1.get("c1"));
-        assertEquals(2, contentMac1.get("c1").size());
-        assertNotNull(contentMac1.get("c2"));
-        assertEquals(2, contentMac1.get("c2").size());
+        assertNotNull(contentMap.get("c1"));
+        assertEquals(3, contentMap.get("c1").size());
+        assertNotNull(contentMap.get("c2"));
+        assertEquals(3, contentMap.get("c2").size());
 
-        assertNotNull(contentMac2.get("c1"));
-        assertEquals(2, contentMac2.get("c1").size());
-        assertNotNull(contentMac2.get("c2"));
-        assertEquals(2, contentMac2.get("c2").size());
-
-        assertNotNull(contentMac3.get("c1"));
-        assertEquals(3, contentMac3.get("c1").size());
-        assertNotNull(contentMac3.get("c2"));
-        assertEquals(3, contentMac3.get("c2").size());
-
-        List<String> uuidList1 = contentMac1.values()
+        List<String> uuidList = contentMap.values()
             .stream()
-            .flatMap(List::stream)
+            .flatMap(Set::stream)
             .map(Content::getUuid)
             .collect(Collectors.toList());
 
-        List<String> uuidList2 = contentMac2.values()
-            .stream()
-            .flatMap(List::stream)
-            .map(Content::getUuid)
-            .collect(Collectors.toList());
-
-        List<String> uuidList3 = contentMac3.values()
-            .stream()
-            .flatMap(List::stream)
-            .map(Content::getUuid)
-            .collect(Collectors.toList());
-
-        assertEquals(4, uuidList1.size());
-        assertThat(uuidList1, hasItems(c1b.getUuid(), c1c.getUuid(), c2b.getUuid(), c2c.getUuid()));
-
-        assertEquals(4, uuidList2.size());
-        assertThat(uuidList2, hasItems(c1a.getUuid(), c1c.getUuid(), c2a.getUuid(), c2c.getUuid()));
-
-        assertEquals(6, uuidList3.size());
-        assertThat(uuidList3, hasItems(c1a.getUuid(), c1b.getUuid(), c1c.getUuid(), c2a.getUuid(),
+        assertEquals(6, uuidList.size());
+        assertThat(uuidList, hasItems(c1a.getUuid(), c1b.getUuid(), c1c.getUuid(), c2a.getUuid(),
             c2b.getUuid(), c2c.getUuid()));
     }
 
     @Test
     public void testGetContentByVersionsNoVersionInfo() {
-        Owner owner1 = this.createOwner();
-
-        Map<String, List<Content>> contentMap1 = this.ownerContentCurator
-            .getContentByVersions(owner1, null);
+        Map<String, Set<Content>> contentMap1 = this.ownerContentCurator
+            .getContentByVersions(null);
         assertEquals(0, contentMap1.size());
 
-        Map<String, List<Content>> contentMap2 = this.ownerContentCurator
-            .getContentByVersions(owner1, Collections.emptyList());
+        Map<String, Set<Content>> contentMap2 = this.ownerContentCurator
+            .getContentByVersions(Collections.emptyList());
         assertEquals(0, contentMap2.size());
-
-        Map<String, List<Content>> contentMap3 = this.ownerContentCurator
-            .getContentByVersions(null, null);
-        assertEquals(0, contentMap3.size());
-
-        Map<String, List<Content>> contentMap4 = this.ownerContentCurator
-            .getContentByVersions(null, Collections.emptyList());
-        assertEquals(0, contentMap4.size());
     }
 
     @Test
     public void testGetContentByVersionsDoesntFailWithLargeDataSets() {
         Owner owner = this.createOwner();
+        int seed = 123;
 
-        int versionCount = 10000;
+        List<Integer> versions = new Random(seed)
+            .ints()
+            .boxed()
+            .limit(100000)
+            .collect(Collectors.toList());
 
-        List<Integer> versions = new LinkedList<>();
-        for (int i = 0; i < versionCount; ++i) {
-            versions.add(i);
-        }
-
-        this.ownerContentCurator.getContentByVersions(owner, versions);
+        this.ownerContentCurator.getContentByVersions(versions);
     }
 
     @Test
