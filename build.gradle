@@ -375,9 +375,19 @@ jacocoTestReport {
     reports {
         xml.enabled true
     }
+
+    doLast {
+        println "Generated unit test coverage report at $buildDir/reports/jacoco/test/html/index.html"
+    }
 }
 
-project.tasks["sonarqube"].dependsOn "jacocoTestReport"
+// User-friendly alias for jacocoTestReport task
+task coverage {
+    dependsOn jacocoTestReport
+}
+
+project.tasks["sonarqube"].dependsOn "test"
+project.tasks["sonarqube"].dependsOn "coverage"
 
 wrapper {
     distributionType = Wrapper.DistributionType.ALL

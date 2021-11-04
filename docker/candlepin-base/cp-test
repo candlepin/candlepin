@@ -56,10 +56,10 @@ sonarqube_upload() {
     if [ -f ./gradlew ]; then
         if [ ! -z "$CHANGE_ID" ]  && [ ! -z "$CHANGE_TARGET" ]; then
           #Uploading a PR to the SonarQube
-          ./gradlew --no-daemon sonarqube -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.pullrequest.key=${CHANGE_ID} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.pullrequest.branch=${CHECKOUT}  -Dsonar.projectKey=org.candlepin:candlepin-parent
+          ./gradlew --no-daemon test --fail-fast sonarqube -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.pullrequest.key=${CHANGE_ID} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.pullrequest.branch=${CHECKOUT}  -Dsonar.projectKey=org.candlepin:candlepin-parent
         else
           #Uploading a Branch to the SonarQube
-          ./gradlew --no-daemon sonarqube -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.branch.branch=${CHECKOUT}  -Dsonar.projectKey=org.candlepin:candlepin-parent
+          ./gradlew --no-daemon test --fail-fast sonarqube -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.branch.branch=${CHECKOUT}  -Dsonar.projectKey=org.candlepin:candlepin-parent
         fi
     fi
 }
@@ -233,7 +233,7 @@ OPTIONS:
   -v                enable verbose/debug output
   -i                internationalization - validate translation files
   -k                run cloud registration rspec test suite (only for "hosted" mode)
-  -n                uploading PR/Branch on SonarQube cloud
+  -n                uploading PR/Branch on SonarQube server
                     Below arguments are passed:
                     1) SONAR_HOST_URL
                     2) CHANGE_ID, pull request ID (when Uploading PR)
@@ -406,7 +406,7 @@ if [ "$TRANSLATE" == "1" ]; then
 fi
 
 if [ "$SONARQUBE" == "1" ]; then
-    echo "Uploading code on SonarQube cloud..."
+    echo "Uploading code on SonarQube server..."
     CLEAN_CP=1
 
     SONAR_HOST_URL=$1 # SONARQUBE Host URL
