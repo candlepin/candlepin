@@ -29,9 +29,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 
@@ -761,12 +761,12 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
     public void testGetProductsByVersionsDoesntFailWithLargeDataSets() {
         Owner owner = this.createOwner();
 
-        int versionCount = 10000;
-
-        List<Integer> versions = new LinkedList<>();
-        for (int i = 0; i < versionCount; ++i) {
-            versions.add(i);
-        }
+        int seed = 13579;
+        List<Integer> versions = new Random(seed)
+            .ints()
+            .boxed()
+            .limit(100000)
+            .collect(Collectors.toList());
 
         this.ownerProductCurator.getProductsByVersions(owner, versions);
     }
