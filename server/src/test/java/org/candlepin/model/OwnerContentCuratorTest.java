@@ -28,9 +28,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 
@@ -690,49 +690,49 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
         List<Integer> versions = Arrays.asList(c1a.getEntityVersion(), c2a.getEntityVersion());
 
-        Map<String, List<Content>> contentMac1 = this.ownerContentCurator
+        Map<String, List<Content>> contentMap1 = this.ownerContentCurator
             .getContentByVersions(owner1, versions);
-        Map<String, List<Content>> contentMac2 = this.ownerContentCurator
+        Map<String, List<Content>> contentMap2 = this.ownerContentCurator
             .getContentByVersions(owner2, versions);
-        Map<String, List<Content>> contentMac3 = this.ownerContentCurator
+        Map<String, List<Content>> contentMap3 = this.ownerContentCurator
             .getContentByVersions(null, versions);
 
         // Map 1 should contain contents like c1 and c2 not owned by owner1: (c1b, c1c, c2b, c2c)
         // Map 2 should contain contents like c1 and c2 not owned by owner2: (c1a, c1c, c2a, c2c)
         // Map 3 should contain all contents like c1 and c2: (c1a, c1b, c1c, c2a, c2b, c2c)
 
-        assertEquals(2, contentMac1.size());
-        assertEquals(2, contentMac2.size());
-        assertEquals(2, contentMac3.size());
+        assertEquals(2, contentMap1.size());
+        assertEquals(2, contentMap2.size());
+        assertEquals(2, contentMap3.size());
 
-        assertNotNull(contentMac1.get("c1"));
-        assertEquals(2, contentMac1.get("c1").size());
-        assertNotNull(contentMac1.get("c2"));
-        assertEquals(2, contentMac1.get("c2").size());
+        assertNotNull(contentMap1.get("c1"));
+        assertEquals(2, contentMap1.get("c1").size());
+        assertNotNull(contentMap1.get("c2"));
+        assertEquals(2, contentMap1.get("c2").size());
 
-        assertNotNull(contentMac2.get("c1"));
-        assertEquals(2, contentMac2.get("c1").size());
-        assertNotNull(contentMac2.get("c2"));
-        assertEquals(2, contentMac2.get("c2").size());
+        assertNotNull(contentMap2.get("c1"));
+        assertEquals(2, contentMap2.get("c1").size());
+        assertNotNull(contentMap2.get("c2"));
+        assertEquals(2, contentMap2.get("c2").size());
 
-        assertNotNull(contentMac3.get("c1"));
-        assertEquals(3, contentMac3.get("c1").size());
-        assertNotNull(contentMac3.get("c2"));
-        assertEquals(3, contentMac3.get("c2").size());
+        assertNotNull(contentMap3.get("c1"));
+        assertEquals(3, contentMap3.get("c1").size());
+        assertNotNull(contentMap3.get("c2"));
+        assertEquals(3, contentMap3.get("c2").size());
 
-        List<String> uuidList1 = contentMac1.values()
+        List<String> uuidList1 = contentMap1.values()
             .stream()
             .flatMap(List::stream)
             .map(Content::getUuid)
             .collect(Collectors.toList());
 
-        List<String> uuidList2 = contentMac2.values()
+        List<String> uuidList2 = contentMap2.values()
             .stream()
             .flatMap(List::stream)
             .map(Content::getUuid)
             .collect(Collectors.toList());
 
-        List<String> uuidList3 = contentMac3.values()
+        List<String> uuidList3 = contentMap3.values()
             .stream()
             .flatMap(List::stream)
             .map(Content::getUuid)
@@ -774,12 +774,12 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
     public void testGetContentByVersionsDoesntFailWithLargeDataSets() {
         Owner owner = this.createOwner();
 
-        int versionCount = 10000;
-
-        List<Integer> versions = new LinkedList<>();
-        for (int i = 0; i < versionCount; ++i) {
-            versions.add(i);
-        }
+        int seed = 13579;
+        List<Integer> versions = new Random(seed)
+            .ints()
+            .boxed()
+            .limit(100000)
+            .collect(Collectors.toList());
 
         this.ownerContentCurator.getContentByVersions(owner, versions);
     }
