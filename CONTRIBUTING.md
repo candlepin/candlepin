@@ -96,7 +96,9 @@ between 1.0 and 10.0.  Any CVEs above the maximum allowed CVSS score will cause 
 The reports will be generated automatically under build/reports folder.
 
 ### Checkstyle
-* `./gradlew checkstyleMain`
+* `./gradlew checkstyle` Runs checkstyle for both production and test code.
+* `./gradlew checkstyleMain` Runs checkstyle only for production code.
+* `./gradlew checkstyleTest` Runs checkstyle only for test code.
 
 Buildr provides a Checkstyle task, but we have our own that reads from the  
 Eclipse Checkstyle Plugin configuration.  The Eclipse configuration defines  
@@ -118,7 +120,15 @@ path to `checks.xml` and drop the result into `.checkstyle` in your Eclipse
 project directory.
 
 ### Unit Tests
-* `./gradlew tasks` runs Unit tests
+* `./gradlew test` runs all of the unit tests.
+* `./gradlew test --tests org.candlepin.controller.Cdn*` runs only the unit  
+   tests matched by the given package/class and wildcard(s).
+
+#### Unit Test Coverage
+We use JaCoCo for unit test coverage, by means of the gradle jacoco plugin.
+* `./gradlew test coverage` will run the unit tests and then generate a coverage report  
+  based on the unit test report. If you only run a subset of the tests, then the non-exercised  
+  classes/methods/lines will look uncovered in the report.
 
 ### Spec Tests
 * `./gradlew rspec` runs RSpec tests serially
