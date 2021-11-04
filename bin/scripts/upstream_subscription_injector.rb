@@ -55,18 +55,77 @@ def check_candlepin_configuration(candlepin)
     terminate("Cannot inject upstream data; Hosted adapter is absent or disabled") if !hosted_adapter
 end
 
-def load_subscriptions(filename)
+# Reads the subscriptions from the given file and loads them
+def load_subscriptions(filename, &block)
     begin
+        # open file
         json_file = File.open(filename)
-        subscriptions = JSON.load(json_file)
-        json_file.close()
 
-        # If we only get a single subscription object out of this, convert it to an array for uniform processing
-        if !subscriptions.is_a?(Array)
-            subscriptions = [subscriptions]
+        offset = 0
+        token_stack = []
+        json_buffer = ""
+        capture = false
+        dispatch = false
+
+        while !json_file.eof?
+            char = json_file.getc()
+            retain_last = true
+            offset += 1
+
+            if token_stack.last == '\\'
+                token_stack.pop
+            elsif ['\'', '"'].include?(token_stack.last)
+                if char == token_stack.last
+                    token_stack.pop
+                elsif char == '\\'
+                    token_stack.push(char)
+                end
+            else
+                case char
+                    when '{'
+                        token_stack.push(char)
+                        capture = true
+
+                    when '}'
+                        if token_stack.pop() != '{'
+                            terminate("JSON parsing error: unexpected obj_end at offset #{offset}")
+                        end
+
+                        dispatch = token_stack.empty? || (token_stack.length == 1 && token_stack.last == '[')
+
+                    when '['
+                        token_stack.push(char)
+
+                    when ']'
+                        if token_stack.pop() != '['
+                            terminate("JSON parsing error: unexpected arr_end at offset #{offset}")
+                        end
+
+                    when '"'
+                        token_stack.push(char)
+
+                    when '\''
+                        token_stack.push(char)
+
+                    when nil
+                        if !token_stack.empty?
+                            terminate("JSON parsing error: unexpected EOF")
+                        end
+                end
+            end
+
+            json_buffer << char if capture
+
+            if dispatch
+                subscription = JSON.parse(json_buffer)
+                block.call(subscription) if block
+
+                json_buffer = ""
+                capture = false
+                dispatch = false
+            end
+
         end
-
-        return subscriptions
     rescue
         terminate("Unable to parse provided subscription file: #{filename}\n"\
             "Ensure the file is readable and is a JSON-formatted subscription or array of subscriptions")
@@ -212,18 +271,15 @@ total = 0
 ARGV.each do |json_file|
     log("Loading subscriptions from file #{json_file}...")
 
-    # load subscriptions
-    subscriptions = load_subscriptions(json_file)
-
-    # Inject subscriptions
     count = 0
 
-    subscriptions.each do |subscription|
+    # load & inject subscriptions
+    load_subscriptions(json_file) do |subscription|
         sid = subscription['id']
         sid = generate_subscription_id(json_file, count, subscription) if !sid
 
-        count = count + 1
-        log("Persisting data for subscription: #{sid}  (#{count} of #{subscriptions.length})")
+        count += 1
+        log("Persisting data for subscription ##{count}: #{sid}")
         create_upstream_subscription(candlepin, sid, owner_key, subscription)
     end
 
