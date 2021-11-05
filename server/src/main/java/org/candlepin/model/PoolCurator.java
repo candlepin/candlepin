@@ -1358,6 +1358,40 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
         return pids;
     }
 
+    /**
+     * Fetches the pools associated with the specified subscription IDs as a mapping of subscription
+     * IDs to a list of pools for that subscription. If no pools exist for the given subscription
+     * IDs, this method returns an empty map
+     *
+     * @param subscriptionIds
+     *  a collection of subscription IDs to use for fetching pools
+     *
+     * @return
+     *  a map containing subscription IDs mapped to lists of associated pools
+     */
+    public Map<String, List<Pool>> mapPoolsBySubscriptionIds(Collection<String> subscriptionIds) {
+        Map<String, List<Pool>> output = new HashMap<>();
+
+        if (subscriptionIds != null && !subscriptionIds.isEmpty()) {
+            String jpql = "SELECT DISTINCT ss.pool FROM SourceSubscription ss " +
+                "WHERE ss.subscriptionId in (:sub_ids)";
+
+            TypedQuery<Pool> query = this.getEntityManager()
+                .createQuery(jpql, Pool.class);
+
+            for (List<String> block : this.partition(subscriptionIds)) {
+                query.setParameter("sub_ids", block)
+                    .getResultList()
+                    .forEach(pool -> {
+                        output.computeIfAbsent(pool.getSubscriptionId(), key -> new LinkedList<>())
+                            .add(pool);
+                    });
+            }
+        }
+
+        return output;
+    }
+
     @SuppressWarnings("unchecked")
     public CandlepinQuery<Pool> getPoolsBySubscriptionId(String subId) {
         String jpql = "SELECT DISTINCT ss.pool.id FROM SourceSubscription ss WHERE ss.subscriptionId = :sid";

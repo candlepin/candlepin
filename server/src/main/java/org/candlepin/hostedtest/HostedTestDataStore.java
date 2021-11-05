@@ -205,7 +205,9 @@ public class HostedTestDataStore {
 
         // Do product resolution here
         ProductData product = this.resolveProduct(sinfo.getProduct());
-        sdata.setProduct(product);
+        if (product != null) {
+            sdata.setProduct(product);
+        }
 
         // Set the other "safe" properties here...
         if (sinfo.getOwner() != null) {

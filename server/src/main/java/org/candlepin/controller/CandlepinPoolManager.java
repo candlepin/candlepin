@@ -93,7 +93,6 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -279,10 +278,10 @@ public class CandlepinPoolManager implements PoolManager {
         // Execute refresh!
         RefreshResult refreshResult = refresher.execute(owner);
 
-        List<EntityState> existingStates = Arrays.asList(
+        List<EntityState> existingStates = List.of(
             EntityState.CREATED, EntityState.UPDATED, EntityState.UNCHANGED);
 
-        List<EntityState> mutatedStates = Arrays.asList(
+        List<EntityState> mutatedStates = List.of(
             EntityState.CREATED, EntityState.UPDATED, EntityState.DELETED);
 
         Map<String, Product> existingProducts = refreshResult.getEntities(Product.class, existingStates);
@@ -290,6 +289,9 @@ public class CandlepinPoolManager implements PoolManager {
 
         // TODO: Move everything below this line to the refresher
         boolean poolsModified = false;
+
+        Map<String, List<Pool>> subscriptionPools = this.poolCurator
+            .mapPoolsBySubscriptionIds(subscriptionMap.keySet());
 
         log.debug("Refreshing {} pool(s)...", subscriptionMap.size());
         for (Iterator<? extends SubscriptionInfo> si = subscriptionMap.values().iterator(); si.hasNext();) {
@@ -305,9 +307,14 @@ public class CandlepinPoolManager implements PoolManager {
             log.debug("Processing subscription: {}", sub);
             Pool pool = this.convertToMasterPoolImpl(sub, owner, existingProducts);
             pool.setLocked(true);
-            this.refreshPoolsForMasterPool(pool, false, lazy, updatedProducts);
+
+            List<Pool> subPools = subscriptionPools.getOrDefault(sub.getId(), Collections.emptyList());
+            this.refreshPoolsForMasterPool(pool, false, lazy, updatedProducts, subPools);
             poolsModified = true;
         }
+
+        // Flush our newly created pools
+        this.poolCurator.flush();
 
         // delete pools whose subscription disappeared:
         log.debug("Deleting pools for absent subscriptions...");
@@ -391,7 +398,6 @@ public class CandlepinPoolManager implements PoolManager {
         return owner;
     }
 
-    @Transactional
     void refreshPoolsForMasterPool(Pool pool, boolean updateStackDerived, boolean lazy,
         Map<String, Product> changedProducts) {
 
@@ -400,6 +406,15 @@ public class CandlepinPoolManager implements PoolManager {
 
         if (pool.getSubscriptionId() != null) {
             subscriptionPools = this.poolCurator.getPoolsBySubscriptionId(pool.getSubscriptionId()).list();
+
+            if (log.isDebugEnabled()) {
+                log.debug("Found {} pools for subscription {}", subscriptionPools.size(),
+                    pool.getSubscriptionId());
+
+                for (Pool p : subscriptionPools) {
+                    log.debug("    owner={} - {}", p.getOwner().getKey(), p);
+                }
+            }
         }
         else {
             // If we don't have a subscription ID, this *is* the master pool, but we need to use
@@ -409,12 +424,12 @@ public class CandlepinPoolManager implements PoolManager {
                 Collections.<Pool>singletonList(pool);
         }
 
-        log.debug("Found {} pools for subscription {}", subscriptionPools.size(), pool.getSubscriptionId());
-        if (log.isDebugEnabled()) {
-            for (Pool p : subscriptionPools) {
-                log.debug("    owner={} - {}", p.getOwner().getKey(), p);
-            }
-        }
+        this.refreshPoolsForMasterPool(pool, updateStackDerived, lazy, changedProducts, subscriptionPools);
+    }
+
+    @Transactional
+    void refreshPoolsForMasterPool(Pool pool, boolean updateStackDerived, boolean lazy,
+        Map<String, Product> changedProducts, List<Pool> subscriptionPools) {
 
         // Update product references on the pools, I guess
         // TODO: Should this be performed by poolRules? Seems like that should be a thing.
@@ -442,7 +457,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // BZ 1012386: This will regenerate master/derived for bonus scenarios if only one of the
         // pair still exists.
-        createAndEnrichPools(pool, subscriptionPools);
+        this.createAndEnrichPools(pool, subscriptionPools, false);
 
         // don't update floating here, we'll do that later so we don't update anything twice
         Set<String> updatedMasterPools = updatePoolsForMasterPool(
@@ -555,16 +570,6 @@ public class CandlepinPoolManager implements PoolManager {
         List<PoolUpdate> updatedPools = poolRules.updatePools(pool, existingPools, originalQuantity,
             changedProducts);
 
-        /*
-         * 1567922: Due to poolRules.updatePools call above, some fields of a product on a pool might change.
-         * Hibernate does not persist these changes yet, and when those pool changes result in
-         * revocation of entitlements later in this process, and the same pool is attempted to be locked
-         * due to it, we get an error.
-         * Temporarily we are resorting to flush the changes here, there will be an investigation later, at
-         * which time, this line of the comment could be replaced with a refactor.
-         */
-        poolCurator.flush();
-
         String virtLimit = pool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT);
         boolean createsSubPools = !StringUtils.isBlank(virtLimit) && !"0".equals(virtLimit);
 
@@ -595,7 +600,6 @@ public class CandlepinPoolManager implements PoolManager {
     protected Set<String> processPoolUpdates(Map<String, EventBuilder> poolEvents,
         List<PoolUpdate> updatedPools) {
 
-        boolean flush = false;
         Set<String> existingUndeletedPoolIds = new HashSet<>();
         Set<Pool> poolsToDelete = new HashSet<>();
         Set<Pool> poolsToRegenEnts = new HashSet<>();
@@ -630,7 +634,6 @@ public class CandlepinPoolManager implements PoolManager {
 
             // save changes for the pool. We'll flush these changes later.
             this.poolCurator.merge(existingPool);
-            flush = true;
 
             // quantity has changed. delete any excess entitlements from pool
             // the quantity has not yet been expressed on the pool itself
@@ -652,11 +655,6 @@ public class CandlepinPoolManager implements PoolManager {
             else {
                 log.warn("Pool updated without an event builder: {}", existingPool);
             }
-        }
-
-        // Flush our merged changes
-        if (flush) {
-            this.poolCurator.flush();
         }
 
         // Check if we need to execute the revocation plan
@@ -745,7 +743,11 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Hand off to rules to determine which pools need updating
         List<PoolUpdate> updatedPools = poolRules.updatePools(floatingPools, changedProducts);
-        regenerateCertificatesByEntIds(processPoolUpdates(poolEvents, updatedPools), lazy);
+
+        Set<String> entIds = processPoolUpdates(poolEvents, updatedPools);
+        this.poolCurator.flush();
+
+        regenerateCertificatesByEntIds(entIds, lazy);
     }
 
     /**
@@ -758,11 +760,19 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     public List<Pool> createAndEnrichPools(SubscriptionInfo sub, List<Pool> existingPools) {
+        return this.createAndEnrichPools(sub, existingPools, true);
+    }
+
+    public List<Pool> createAndEnrichPools(SubscriptionInfo sub, List<Pool> existingPools, boolean flush) {
         List<Pool> pools = poolRules.createAndEnrichPools(sub, existingPools);
         log.debug("Creating {} pools for subscription: {}", pools.size(), sub);
 
         for (Pool pool : pools) {
-            createPool(pool);
+            createPool(pool, false);
+        }
+
+        if (flush) {
+            this.poolCurator.flush();
         }
 
         return pools;
@@ -770,16 +780,25 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public Pool createAndEnrichPools(Pool pool) {
-        return createAndEnrichPools(pool, Collections.<Pool>emptyList());
+        return createAndEnrichPools(pool, Collections.<Pool>emptyList(), true);
     }
 
     @Override
     public Pool createAndEnrichPools(Pool pool, List<Pool> existingPools) {
+        return this.createAndEnrichPools(pool, existingPools, true);
+    }
+
+    @Transactional
+    public Pool createAndEnrichPools(Pool pool, List<Pool> existingPools, boolean flush) {
         List<Pool> pools = poolRules.createAndEnrichPools(pool, existingPools);
         log.debug("Creating {} pools: ", pools.size());
 
         for (Pool p : pools) {
-            createPool(p);
+            createPool(p, false);
+        }
+
+        if (flush) {
+            this.poolCurator.flush();
         }
 
         return pool;
@@ -787,10 +806,14 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public Pool createPool(Pool pool) {
+        return this.createPool(pool, true);
+    }
+
+    public Pool createPool(Pool pool, boolean flush) {
         if (pool != null) {
             // We're assuming that net-new pools will not yet have an ID
             if (pool.getId() == null) {
-                pool = this.poolCurator.create(pool);
+                pool = this.poolCurator.create(pool, flush);
                 log.debug("  created pool: {}", pool);
 
                 if (pool != null) {
@@ -1717,7 +1740,7 @@ public class CandlepinPoolManager implements PoolManager {
         // we might have changed the bonus pool quantities, revoke ents if needed.
         checkBonusPoolQuantities(consumer.getOwnerId(), entMap);
 
-        this.entitlementCurator.markEntitlementsDirty(Arrays.asList(entitlement.getId()));
+        this.entitlementCurator.markEntitlementsDirty(Collections.singleton(entitlement.getId()));
 
         /*
          * If the consumer is not a distributor, check consumer's new compliance
