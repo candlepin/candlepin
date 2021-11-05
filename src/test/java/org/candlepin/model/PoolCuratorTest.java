@@ -43,7 +43,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,6 +59,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -2801,6 +2805,125 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertNotNull(output);
         assertEquals(1, output.size());
         assertEquals(output, Util.asSet(pool7.getId()));
+    }
+
+    public Map<String, List<Pool>> generateSubPools() {
+        Owner owner = this.createOwner("test-owner");
+
+        Supplier<Pool> generator = () -> {
+            Product prod = this.createProduct(owner);
+            return TestUtil.createPool(owner, prod);
+        };
+
+        Map<String, List<Pool>> subPoolMap = new HashMap<>();
+
+        subPoolMap.put("sub-1", Stream.generate(generator)
+            .limit(3)
+            .peek(pool -> pool.setSubscriptionId("sub-1"))
+            .map(pool -> this.poolCurator.create(pool))
+            .collect(Collectors.toList()));
+
+        subPoolMap.put("sub-2", Stream.generate(generator)
+            .limit(3)
+            .peek(pool -> pool.setSubscriptionId("sub-2"))
+            .map(pool -> this.poolCurator.create(pool))
+            .collect(Collectors.toList()));
+
+        subPoolMap.put("sub-3", Stream.generate(generator)
+            .limit(3)
+            .peek(pool -> pool.setSubscriptionId("sub-3"))
+            .map(pool -> this.poolCurator.create(pool))
+            .collect(Collectors.toList()));
+
+        subPoolMap.put(null, Stream.generate(generator)
+            .limit(3)
+            .map(pool -> this.poolCurator.create(pool))
+            .collect(Collectors.toList()));
+
+        this.poolCurator.flush();
+
+        return subPoolMap;
+    }
+
+    private void validateSubPoolMaps(Map<String, List<Pool>> expected, Map<String, List<Pool>> actual) {
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+
+        for (String key : expected.keySet()) {
+            assertTrue(actual.containsKey(key));
+
+            List<Pool> expectedPools = expected.get(key);
+            List<Pool> actualPools = actual.get(key);
+
+            assertNotNull(expectedPools);
+            assertNotNull(actualPools);
+            assertEquals(expectedPools.size(), actualPools.size());
+
+            assertTrue(actualPools.containsAll(expectedPools));
+            assertTrue(expectedPools.containsAll(actualPools));
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = { "sub-1", "sub-2", "sub-3", "no-sub" })
+    public void testMapPoolsBySubscriptionIdsWithSingleSub(String subId) {
+        Map<String, List<Pool>> subPoolMap = this.generateSubPools();
+        Map<String, List<Pool>> expected = new HashMap<>();
+        if (subPoolMap.containsKey(subId)) {
+            expected.put(subId, subPoolMap.get(subId));
+        }
+
+        Map<String, List<Pool>> result = this.poolCurator
+            .mapPoolsBySubscriptionIds(Collections.singleton(subId));
+
+        this.validateSubPoolMaps(expected, result);
+    }
+
+    public static Stream<Arguments> multiSubMethodSource() {
+        return Stream.of(
+            Arguments.of(Arrays.asList("sub-1", "sub-2")),
+            Arguments.of(Arrays.asList("sub-1", "sub-3")),
+            Arguments.of(Arrays.asList("sub-2", "sub-3")),
+            Arguments.of(Arrays.asList("sub-3", "no_sub")),
+            Arguments.of(Arrays.asList("no-sub-1", "no_sub-2")));
+    }
+
+    @ParameterizedTest
+    @MethodSource("multiSubMethodSource")
+    public void testMapPoolsBySubscriptionIdsWithMultipleSubs(Collection<String> subIds) {
+        Map<String, List<Pool>> subPoolMap = this.generateSubPools();
+
+        Map<String, List<Pool>> expected = new HashMap<>();
+        for (String subId : subIds) {
+            if (subPoolMap.containsKey(subId)) {
+                expected.put(subId, subPoolMap.get(subId));
+            }
+        }
+
+        Map<String, List<Pool>> result = this.poolCurator
+            .mapPoolsBySubscriptionIds(subIds);
+
+        this.validateSubPoolMaps(expected, result);
+    }
+
+    @Test
+    public void testMapPoolsBySubscriptionIdHandlesEmptyCollections() {
+        Map<String, List<Pool>> subPoolMap = this.generateSubPools();
+
+        Map<String, List<Pool>> result = this.poolCurator.mapPoolsBySubscriptionIds(Collections.emptyList());
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testMapPoolsBySubscriptionIdHandlesNullInputs() {
+        Map<String, List<Pool>> subPoolMap = this.generateSubPools();
+
+        Map<String, List<Pool>> result = this.poolCurator.mapPoolsBySubscriptionIds(null);
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
     }
 
 }
