@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.12
+Version: 4.0.13
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,14 @@ fi
 
 #raw
 %changelog
+* Mon Nov 08 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.13-1
+- Optimized refresh to avoid slow, repetitive operations (crog@redhat.com)
+- Optimized versioned entity lookup for products and content (crog@redhat.com)
+- Update JUnit5 version to 5.7 (ojanus@redhat.com)
+- Reverted removal of XmlTransient tags in ProductContent (crog@redhat.com)
+- Added support for very large JSON files to the upstream sub injector
+  (crog@redhat.com)
+
 * Fri Oct 29 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.12-1
 - Addressed issues with Product.equals and immutable entity versioning
   (crog@redhat.com)
