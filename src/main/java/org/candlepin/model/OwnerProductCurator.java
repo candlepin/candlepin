@@ -613,15 +613,17 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             TypedQuery<Product> query;
 
             if (exclude != null) {
-                String jpql = "SELECT p FROM OwnerProduct op JOIN op.product p " +
-                    "WHERE op.owner.id != :owner_id AND p.entityVersion IN (:vblock)";
+                String jpql = "SELECT p FROM Product p WHERE p.entityVersion IN (:vblock) AND EXISTS " +
+                    "(SELECT 1 FROM OwnerProduct op " +
+                    "  WHERE op.product.uuid = p.uuid AND op.owner.id != :owner_id)";
 
                 query = this.getEntityManager()
                     .createQuery(jpql, Product.class)
                     .setParameter("owner_id", exclude.getId());
             }
             else {
-                String jpql = "SELECT p FROM Product p WHERE p.entityVersion IN (:vblock)";
+                String jpql = "SELECT p FROM Product p WHERE p.entityVersion IN (:vblock) AND EXISTS " +
+                    "(SELECT 1 FROM OwnerProduct op WHERE op.product.uuid = p.uuid)";
 
                 query = this.getEntityManager()
                     .createQuery(jpql, Product.class);

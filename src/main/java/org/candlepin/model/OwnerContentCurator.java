@@ -409,15 +409,17 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             TypedQuery<Content> query;
 
             if (exclude != null) {
-                String jpql = "SELECT c FROM OwnerContent op JOIN op.content c " +
-                    "WHERE op.owner.id != :owner_id AND c.entityVersion IN (:vblock)";
+                String jpql = "SELECT c FROM Content c WHERE c.entityVersion IN (:vblock) AND EXISTS " +
+                    "(SELECT 1 FROM OwnerContent oc " +
+                    "  WHERE oc.content.uuid = c.uuid AND oc.owner.id != :owner_id)";
 
                 query = this.getEntityManager()
                     .createQuery(jpql, Content.class)
                     .setParameter("owner_id", exclude.getId());
             }
             else {
-                String jpql = "SELECT c FROM Content c WHERE c.entityVersion IN (:vblock)";
+                String jpql = "SELECT c FROM Content c WHERE c.entityVersion IN (:vblock) AND EXISTS " +
+                    "(SELECT 1 FROM OwnerContent oc WHERE oc.content.uuid = c.uuid)";
 
                 query = this.getEntityManager()
                     .createQuery(jpql, Content.class);
