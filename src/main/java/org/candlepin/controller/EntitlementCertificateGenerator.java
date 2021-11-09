@@ -44,6 +44,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -351,34 +352,10 @@ public class EntitlementCertificateGenerator {
     public void regenerateCertificatesOf(String environmentId, Collection<String> contentIds,
         boolean lazy) {
 
-        log.info("Regenerating relevant certificates in environment: {}", environmentId);
-
-        Set<Entitlement> entsToRegen = new HashSet<>();
-
-        entLoop: for (Entitlement entitlement : this.entitlementCurator.listByEnvironment(environmentId)) {
-            // Impl note:
-            // Since the entitlements came from the DB, we should be safe to traverse the graph as
-            // necessary without any sanity checks (so long as our model's restrictions aren't
-            // broken).
-
-            for (String contentId : contentIds) {
-                if (entitlement.getPool().getProduct().hasContent(contentId)) {
-                    entsToRegen.add(entitlement);
-                    continue entLoop;
-                }
-                Collection<Product> providedProducts = entitlement.getPool().getProduct()
-                    .getProvidedProducts();
-                for (Product provided : providedProducts) {
-                    if (provided.hasContent(contentId)) {
-                        entsToRegen.add(entitlement);
-                        continue entLoop;
-                    }
-                }
-            }
-        }
-
+        List<String> entsToRegen = entitlementCurator
+            .listEntitlementIdByEnvironmentAndContent(environmentId, contentIds);
         log.info("Found {} certificates to regenerate.", entsToRegen.size());
-        this.regenerateCertificatesOf(entsToRegen, lazy);
+        this.regenerateCertificatesByEntitlementIds(entsToRegen, lazy);
     }
 
     /**
