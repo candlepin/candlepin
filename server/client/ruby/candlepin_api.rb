@@ -530,6 +530,33 @@ class Candlepin
     end
   end
 
+  def wait_for_job(job_id, max_wait_time=30, cleanup_job=true)
+    finished_states = ['ABORTED', 'FINISHED', 'CANCELED', 'FAILED']
+
+    iterations = 0
+
+    while true
+      status = get_job(job_id)
+
+      if finished_states.include?(status['state'].upcase)
+        break
+      end
+
+      iterations += 1
+      if iterations >= max_wait_time
+        raise "Timeout occurred while waiting for job: #{job_id}"
+      end
+
+      sleep 1
+    end
+
+    if cleanup_job
+      delete('/jobs', {:id => job_id}, nil, true)
+    end
+
+    return status
+  end
+
   def create_consumer_type(type_label, manifest=false)
     consumer_type =  {
       'label' => type_label,

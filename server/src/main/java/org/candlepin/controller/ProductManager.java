@@ -251,7 +251,7 @@ public class ProductManager {
 
         // Check if we have an alternate version we can use instead.
         List<Product> alternateVersions = this.ownerProductCurator
-            .getProductsByVersions(owner, Collections.singleton(entity.getEntityVersion()))
+            .getProductsByVersions(Collections.singleton(entity.getEntityVersion()))
             .get(entity.getId());
 
         if (alternateVersions != null) {
@@ -351,7 +351,7 @@ public class ProductManager {
         // their own version.
         // This is probably going to be a very expensive operation, though.
         List<Product> alternateVersions = this.ownerProductCurator
-            .getProductsByVersions(owner, Collections.singleton(updated.getEntityVersion()))
+            .getProductsByVersions(Collections.singleton(updated.getEntityVersion()))
             .get(updated.getId());
 
         if (alternateVersions != null) {
@@ -472,7 +472,7 @@ public class ProductManager {
         // their own version.
         // This is probably going to be a very expensive operation, though.
         List<Product> alternateVersions = this.ownerProductCurator
-            .getProductsByVersions(owner, Collections.singleton(updated.getEntityVersion()))
+            .getProductsByVersions(Collections.singleton(updated.getEntityVersion()))
             .get(updated.getId());
 
         if (alternateVersions != null) {

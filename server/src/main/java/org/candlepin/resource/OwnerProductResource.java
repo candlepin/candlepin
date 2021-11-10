@@ -75,6 +75,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+
+
 /**
  * API Gateway into /product
  *
@@ -254,7 +256,7 @@ public class OwnerProductResource {
         ProductDTO pdto) {
 
         Owner owner = this.getOwnerByKey(ownerKey);
-        Product entity = productManager.createProduct(owner, pdto);
+        Product entity = this.productManager.createProduct(owner, pdto);
 
         return this.translator.translate(entity, ProductDTO.class);
     }
@@ -295,7 +297,6 @@ public class OwnerProductResource {
         }
 
         Product updated = this.productManager.updateProduct(owner, update, true);
-
         return this.translator.translate(updated, ProductDTO.class);
     }
 

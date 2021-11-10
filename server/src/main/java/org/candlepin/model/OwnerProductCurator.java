@@ -538,67 +538,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     }
 
     /**
-     * Retrieves a map containing all known versions of the products specified by IDs, for all orgs
-     * <em>except</em> the org specified. If no products are found for the specified IDs in other
-     * orgs, this method returns an empty map.
-     *
-     * @param owner
-     *  The owner to exclude from the product lookup. If this value is null, no owner-filtering
-     *  will be performed.
-     *
-     * @param productIds
-     *  A collection of productIds for which to fetch all known versions
-     *
-     * @return
-     *  A map containing all known versions of the given products, mapped by Red Hat ID
-     */
-    public Map<String, Set<Product>> getVersionedProductsById(Owner owner, Collection<String> productIds) {
-        Map<String, Set<Product>> result = new HashMap<>();
-
-        if (productIds != null && !productIds.isEmpty()) {
-            String jpql;
-
-            if (owner != null) {
-                jpql = "SELECT p FROM OwnerProduct op JOIN op.product p " +
-                    "WHERE op.owner.id != :owner_id AND p.id IN (:pids)";
-            }
-            else {
-                jpql = "SELECT p FROM Product p WHERE p.id IN (:pids)";
-            }
-
-            TypedQuery<Product> query = this.getEntityManager().createQuery(jpql, Product.class);
-
-            if (owner != null) {
-                query.setParameter("owner_id", owner.getId());
-            }
-
-            for (Collection<String> block : this.partition(productIds)) {
-                List<Product> fetched = query.setParameter("pids", block)
-                    .getResultList();
-
-                for (Product entity : fetched) {
-                    Set<Product> idSet = result.get(entity.getId());
-
-                    if (idSet == null) {
-                        idSet = new HashSet<>();
-                        result.put(entity.getId(), idSet);
-                    }
-
-                    idSet.add(entity);
-                }
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Fetches all products belonging to organizations other than the one provided having an entity
-     * version equal to one of the versions provided.
-     *
-     * @param exclude
-     *  The owner/organization to exclude from the search. If null, no organizations will be
-     *  excluded
+     * Fetches all products having an entity version equal to one of the versions provided.
      *
      * @param versions
      *  A collection of entity versions to use to select products
@@ -606,28 +546,14 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      * @return
      *  a map containing the products found, keyed by product ID
      */
-    public Map<String, List<Product>> getProductsByVersions(Owner exclude, Collection<Integer> versions) {
+    public Map<String, List<Product>> getProductsByVersions(Collection<Integer> versions) {
         Map<String, List<Product>> result = new HashMap<>();
 
         if (versions != null && !versions.isEmpty()) {
-            TypedQuery<Product> query;
+            String jpql = "SELECT p FROM Product p WHERE p.entityVersion IN (:vblock)";
 
-            if (exclude != null) {
-                String jpql = "SELECT p FROM Product p WHERE p.entityVersion IN (:vblock) AND EXISTS " +
-                    "(SELECT 1 FROM OwnerProduct op " +
-                    "  WHERE op.product.uuid = p.uuid AND op.owner.id != :owner_id)";
-
-                query = this.getEntityManager()
-                    .createQuery(jpql, Product.class)
-                    .setParameter("owner_id", exclude.getId());
-            }
-            else {
-                String jpql = "SELECT p FROM Product p WHERE p.entityVersion IN (:vblock) AND EXISTS " +
-                    "(SELECT 1 FROM OwnerProduct op WHERE op.product.uuid = p.uuid)";
-
-                query = this.getEntityManager()
-                    .createQuery(jpql, Product.class);
-            }
+            TypedQuery<Product> query = this.getEntityManager()
+                .createQuery(jpql, Product.class);
 
             for (Collection<Integer> block : this.partition(versions)) {
                 for (Product element : query.setParameter("vblock", block).getResultList()) {

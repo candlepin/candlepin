@@ -1856,17 +1856,9 @@ public class ConsumerResource {
         }
 
         // we want to insert the content access cert to this list if appropriate
-        try {
-            Certificate cert = this.contentAccessManager.getCertificate(consumer);
-            if (cert != null) {
-                returnCerts.add(translator.translate(cert, CertificateDTO.class));
-            }
-        }
-        catch (IOException ioe) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), ioe);
-        }
-        catch (GeneralSecurityException gse) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), gse);
+        Certificate cert = this.contentAccessManager.getCertificate(consumer);
+        if (cert != null) {
+            returnCerts.add(translator.translate(cert, CertificateDTO.class));
         }
 
         return returnCerts;
@@ -1897,32 +1889,24 @@ public class ConsumerResource {
                 .build();
         }
 
-        ContentAccessListing result = new ContentAccessListing();
-
-        try {
-            ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
-            if (cac == null) {
-                throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"));
-            }
-
-            String cert = cac.getCert();
-            String certificate = cert.substring(0, cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
-            String json = cert.substring(cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
-            List<String> pieces = new ArrayList<>();
-            pieces.add(certificate);
-            pieces.add(json);
-            result.setContentListing(cac.getSerial().getId(), pieces);
-            result.setLastUpdate(cac.getUpdated());
-
-            return Response.ok(result, MediaType.APPLICATION_JSON)
-                .build();
+        ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
+        if (cac == null) {
+            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"));
         }
-        catch (IOException ioe) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), ioe);
-        }
-        catch (GeneralSecurityException gse) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate", gse));
-        }
+
+        String cert = cac.getCert();
+        String certificate = cert.substring(0, cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
+        String json = cert.substring(cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
+        List<String> pieces = new ArrayList<>();
+        pieces.add(certificate);
+        pieces.add(json);
+
+        ContentAccessListing result = new ContentAccessListing()
+            .setContentListing(cac.getSerial().getId(), pieces)
+            .setLastUpdate(cac.getUpdated());
+
+        return Response.ok(result, MediaType.APPLICATION_JSON)
+            .build();
     }
 
     @ApiOperation(notes = "Retrieves a Compressed File of Entitlement Certificates",
@@ -2012,18 +1996,10 @@ public class ConsumerResource {
         }
 
         // add content access cert if needed
-        try {
-            ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
-            if (cac != null) {
-                allCerts.add(new CertificateSerialDTO().setSerial(
-                    BigInteger.valueOf(cac.getSerial().getId())));
-            }
-        }
-        catch (IOException ioe) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), ioe);
-        }
-        catch (GeneralSecurityException gse) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate", gse));
+        ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
+        if (cac != null) {
+            allCerts.add(new CertificateSerialDTO().setSerial(
+                BigInteger.valueOf(cac.getSerial().getId())));
         }
 
         return allCerts;

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20211110083000-1" author="crog">
+        <comment>
+            Removes existing entity versions to avoid conflicts with any existing duplicates, and
+            resets entity versioning to allow a rebuild of the versioning without a migration.
+        </comment>
+
+        <sql>
+            UPDATE cp2_products SET entity_version = NULL;
+            UPDATE cp2_content SET entity_version = NULL;
+        </sql>
+    </changeSet>
+
+    <changeSet id="20211110083000-2" author="crog">
+        <addUniqueConstraint tableName="cp2_products"
+            columnNames="product_id, entity_version"
+            constraintName="cp2_product_entity_version"
+            deferrable="true"
+            initiallyDeferred="false"/>
+    </changeSet>
+
+    <changeSet id="20211110083000-3" author="crog">
+        <addUniqueConstraint tableName="cp2_content"
+            columnNames="content_id, entity_version"
+            constraintName="cp2_content_entity_version"
+            deferrable="true"
+            initiallyDeferred="false"/>
+    </changeSet>
+
+</databaseChangeLog>

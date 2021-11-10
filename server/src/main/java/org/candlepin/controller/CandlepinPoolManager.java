@@ -137,10 +137,8 @@ public class CandlepinPoolManager implements PoolManager {
     private final ComplianceRules complianceRules;
     private final SystemPurposeComplianceRules systemPurposeComplianceRules;
     private final ProductCurator productCurator;
-    private final ProductManager productManager;
     private final AutobindRules autobindRules;
     private final ActivationKeyRules activationKeyRules;
-    private final ContentManager contentManager;
     private final OwnerCurator ownerCurator;
     private final OwnerProductCurator ownerProductCurator;
     private final CdnCurator cdnCurator;
@@ -173,8 +171,6 @@ public class CandlepinPoolManager implements PoolManager {
         AutobindRules autobindRules,
         ActivationKeyRules activationKeyRules,
         ProductCurator productCurator,
-        ProductManager productManager,
-        ContentManager contentManager,
         OwnerCurator ownerCurator,
         OwnerProductCurator ownerProductCurator,
         OwnerManager ownerManager,
@@ -200,8 +196,6 @@ public class CandlepinPoolManager implements PoolManager {
         this.productCurator = Objects.requireNonNull(productCurator);
         this.autobindRules = Objects.requireNonNull(autobindRules);
         this.activationKeyRules = Objects.requireNonNull(activationKeyRules);
-        this.productManager = Objects.requireNonNull(productManager);
-        this.contentManager = Objects.requireNonNull(contentManager);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
         this.ownerManager = Objects.requireNonNull(ownerManager);
@@ -216,7 +210,6 @@ public class CandlepinPoolManager implements PoolManager {
      * We need to update/regen entitlements in the same transaction we update pools
      * so we don't miss anything
      */
-    @Transactional
     @SuppressWarnings("checkstyle:methodlength")
     @Traceable
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter,
@@ -224,14 +217,14 @@ public class CandlepinPoolManager implements PoolManager {
         @TraceableParam("owner") Owner owner, boolean lazy) {
 
         Date now = new Date();
-        owner = this.resolveOwner(owner);
-        log.info("Refreshing pools for owner: {}", owner);
+        Owner resolvedOwner = this.resolveOwner(owner);
+        log.info("Refreshing pools for owner: {}", resolvedOwner);
 
         RefreshWorker refresher = this.refreshWorkerProvider.get();
 
         log.debug("Fetching subscriptions from adapter...");
-        refresher.addSubscriptions(subAdapter.getSubscriptions(owner.getKey()));
-        Map<String, ? extends SubscriptionInfo> subscriptionMap = refresher.getSubscriptions();
+        refresher.addSubscriptions(subAdapter.getSubscriptions(resolvedOwner.getKey()));
+        Map<String, ? extends SubscriptionInfo> subMap = refresher.getSubscriptions();
 
         // If trace output is enabled, dump some JSON representing the subscriptions we received so
         // we can simulate this in a testing environment.
@@ -240,8 +233,8 @@ public class CandlepinPoolManager implements PoolManager {
                 ObjectMapper mapper = this.jsonProvider
                     .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
 
-                log.trace("Received {} subscriptions from upstream:", subscriptionMap.size());
-                log.trace(mapper.writeValueAsString(subscriptionMap.values()));
+                log.trace("Received {} subscriptions from upstream:", subMap.size());
+                log.trace(mapper.writeValueAsString(subMap.values()));
                 log.trace("Finished outputting upstream subscriptions");
             }
             catch (Exception e) {
@@ -250,12 +243,13 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Check if there are any dev pools (products) that need refreshing
-        List<String> devProdIds = this.ownerProductCurator.getDevProductIds(owner.getId());
+        List<String> devProdIds = this.ownerProductCurator.getDevProductIds(resolvedOwner.getId());
         if (devProdIds != null && !devProdIds.isEmpty()) {
-            log.info("Refreshing {} development products for owner: {}", devProdIds.size(), owner.getKey());
+            log.info("Refreshing {} development products for owner: {}", devProdIds.size(),
+                resolvedOwner.getKey());
 
             Collection<? extends ProductInfo> devProducts = prodAdapter
-                .getProductsByIds(owner.getKey(), devProdIds);
+                .getProductsByIds(resolvedOwner.getKey(), devProdIds);
 
             // Dump JSON representing dev products for simulation
             if (log.isTraceEnabled()) {
@@ -276,7 +270,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Execute refresh!
-        RefreshResult refreshResult = refresher.execute(owner);
+        RefreshResult refreshResult = refresher.execute(resolvedOwner);
 
         List<EntityState> existingStates = List.of(
             EntityState.CREATED, EntityState.UPDATED, EntityState.UNCHANGED);
@@ -288,87 +282,92 @@ public class CandlepinPoolManager implements PoolManager {
         Map<String, Product> updatedProducts = refreshResult.getEntities(Product.class, EntityState.UPDATED);
 
         // TODO: Move everything below this line to the refresher
-        boolean poolsModified = false;
+        this.poolCurator.transactional((args) -> {
+            boolean poolsModified = false;
 
-        Map<String, List<Pool>> subscriptionPools = this.poolCurator
-            .mapPoolsBySubscriptionIds(subscriptionMap.keySet());
+            Map<String, List<Pool>> subscriptionPools = this.poolCurator
+                .mapPoolsBySubscriptionIds(subMap.keySet());
 
-        log.debug("Refreshing {} pool(s)...", subscriptionMap.size());
-        for (Iterator<? extends SubscriptionInfo> si = subscriptionMap.values().iterator(); si.hasNext();) {
-            SubscriptionInfo sub = si.next();
+            log.debug("Refreshing {} pool(s)...", subMap.size());
+            for (Iterator<? extends SubscriptionInfo> si = subMap.values().iterator(); si.hasNext();) {
+                SubscriptionInfo sub = si.next();
 
-            if (now.after(sub.getEndDate())) {
-                log.info("Skipping expired subscription: {}", sub);
+                if (now.after(sub.getEndDate())) {
+                    log.info("Skipping expired subscription: {}", sub);
 
-                si.remove();
-                continue;
-            }
+                    si.remove();
+                    continue;
+                }
 
-            log.debug("Processing subscription: {}", sub);
-            Pool pool = this.convertToMasterPoolImpl(sub, owner, existingProducts);
-            pool.setLocked(true);
+                log.debug("Processing subscription: {}", sub);
+                Pool pool = this.convertToMasterPoolImpl(sub, resolvedOwner, existingProducts);
+                pool.setLocked(true);
 
-            List<Pool> subPools = subscriptionPools.getOrDefault(sub.getId(), Collections.emptyList());
-            this.refreshPoolsForMasterPool(pool, false, lazy, updatedProducts, subPools);
-            poolsModified = true;
-        }
-
-        // Flush our newly created pools
-        this.poolCurator.flush();
-
-        // delete pools whose subscription disappeared:
-        log.debug("Deleting pools for absent subscriptions...");
-        List<Pool> poolsToDelete = new ArrayList<>();
-
-        for (Pool pool : poolCurator.getPoolsFromBadSubs(owner, subscriptionMap.keySet())) {
-            if (this.isManaged(pool)) {
-                poolsToDelete.add(pool);
+                List<Pool> subPools = subscriptionPools.getOrDefault(sub.getId(), Collections.emptyList());
+                this.refreshPoolsForMasterPool(pool, false, lazy, updatedProducts, subPools);
                 poolsModified = true;
             }
-        }
 
-        deletePools(poolsToDelete);
+            // Flush our newly created pools
+            this.poolCurator.flush();
 
-        // TODO: break this call into smaller pieces. There may be lots of floating pools
-        log.debug("Updating floating pools...");
-        List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(owner);
-        updateFloatingPools(floatingPools, lazy, updatedProducts);
+            // delete pools whose subscription disappeared:
+            log.debug("Deleting pools for absent subscriptions...");
+            List<Pool> poolsToDelete = new ArrayList<>();
 
-        // Check if we've put any pools into a state in which they're referencing a product which no
-        // longer belongs to the organization
-        List<String> pids = this.poolCurator.getPoolsUsingOrphanedProducts(owner.getId());
-        if (pids != null && pids.size() > 0) {
-            log.error("One or more pools references a product which no longer belongs to its " +
-                "organization: {}", pids);
+            for (Pool pool : poolCurator.getPoolsFromBadSubs(resolvedOwner, subMap.keySet())) {
+                if (this.isManaged(pool)) {
+                    poolsToDelete.add(pool);
+                    poolsModified = true;
+                }
+            }
 
-            throw new IllegalStateException("One or more pools was left in an undefined state: " + pids);
-        }
+            deletePools(poolsToDelete);
 
-        // If we've updated or deleted a pool and we have product/content changes, our content view has
-        // likely changed.
-        //
-        // Impl note:
-        // We're abusing some facts about how this whole process works *at the time of writing* to make
-        // a fairly accurate guess as to whether or not the content view changed. That is:
-        //
-        // - We only receive product and content info from subscriptions provided upstream
-        // - We only call refreshPoolsForMasterPool or deletePools based on matches with the
-        //   received subscriptions
-        //
-        // By checking both of these, we can estimate that if we have changed products/content AND
-        // have refreshed or deleted a pool, we likely have a content view update. Note that this
-        // does fall apart in a handful of cases (deletion of an expired pool + modification of that
-        // pool's product/content), but barring a major refactor of this code to make the evaluation
-        // on a per-pool basis, there's not a whole lot more we can do here.
-        if (poolsModified && refreshResult.hasEntity(Product.class, mutatedStates)) {
-            // TODO: Should we also mark any existing SCA certs as dirty/revoked here?
+            // TODO: break this call into smaller pieces. There may be lots of floating pools
+            log.debug("Updating floating pools...");
+            List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(resolvedOwner);
+            updateFloatingPools(floatingPools, lazy, updatedProducts);
 
-            owner.setLastContentUpdate(now);
-            this.ownerCurator.merge(owner);
-        }
+            // Check if we've put any pools into a state in which they're referencing a product which no
+            // longer belongs to the organization
+            List<String> pids = this.poolCurator.getPoolsUsingOrphanedProducts(resolvedOwner.getId());
+            if (pids != null && pids.size() > 0) {
+                log.error("One or more pools references a product which no longer belongs to its " +
+                    "organization: {}", pids);
 
-        log.info("Refresh pools for owner: {} completed in: {}ms", owner.getKey(),
-            System.currentTimeMillis() - now.getTime());
+                throw new IllegalStateException("One or more pools was left in an undefined state: " + pids);
+            }
+
+            // If we've updated or deleted a pool and we have product/content changes, our content view has
+            // likely changed.
+            //
+            // Impl note:
+            // We're abusing some facts about how this whole process works *at the time of writing* to make
+            // a fairly accurate guess as to whether or not the content view changed. That is:
+            //
+            // - We only receive product and content info from subscriptions provided upstream
+            // - We only call refreshPoolsForMasterPool or deletePools based on matches with the
+            //   received subscriptions
+            //
+            // By checking both of these, we can estimate that if we have changed products/content AND
+            // have refreshed or deleted a pool, we likely have a content view update. Note that this
+            // does fall apart in a handful of cases (deletion of an expired pool + modification of that
+            // pool's product/content), but barring a major refactor of this code to make the evaluation
+            // on a per-pool basis, there's not a whole lot more we can do here.
+            if (poolsModified && refreshResult.hasEntity(Product.class, mutatedStates)) {
+                // TODO: Should we also mark any existing SCA certs as dirty/revoked here?
+
+                resolvedOwner.setLastContentUpdate(now);
+                this.ownerCurator.merge(resolvedOwner);
+            }
+
+            log.info("Refresh pools for owner: {} completed in: {}ms", resolvedOwner.getKey(),
+                System.currentTimeMillis() - now.getTime());
+
+            return null;
+        }).allowExistingTransactions()
+        .execute();
     }
 
     private Owner resolveOwner(Owner owner) {

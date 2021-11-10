@@ -58,7 +58,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.io.FileUtils;
-import org.mockito.stubbing.Answer;
 
 import java.io.File;
 import java.io.IOException;
@@ -678,7 +677,7 @@ public class TestUtil {
     }
 
     public static void mockTransactionalFunctionality(EntityManager mockEntityManager,
-        AbstractHibernateCurator mockCurator) {
+        AbstractHibernateCurator... mockCurators) {
 
         EntityTransaction transaction = new EntityTransaction() {
             private boolean active;
@@ -692,10 +691,15 @@ public class TestUtil {
             @Override
             public void commit() {
                 if (!this.active) {
-                    throw new IllegalStateException();
+                    throw new IllegalStateException("transaction is not active");
+                }
+
+                if (this.rollbackOnly) {
+                    throw new IllegalStateException("transaction is flagged rollback only");
                 }
 
                 this.active = false;
+                this.rollbackOnly = false;
             }
 
             @Override
@@ -711,10 +715,11 @@ public class TestUtil {
             @Override
             public void rollback() {
                 if (!this.active) {
-                    throw new IllegalStateException();
+                    throw new IllegalStateException("transaction is not active");
                 }
 
                 this.active = false;
+                this.rollbackOnly = false;
             }
 
             @Override
@@ -725,10 +730,16 @@ public class TestUtil {
 
         doReturn(transaction).when(mockEntityManager).getTransaction();
 
-        doAnswer((Answer<Transactional>) iom -> {
-            Transactional.Action action = (Transactional.Action) iom.getArguments()[0];
-            return new Transactional(mockEntityManager).wrap(action);
-        }).when(mockCurator).transactional(any());
+        for (AbstractHibernateCurator mockCurator : mockCurators) {
+            doReturn(mockEntityManager).when(mockCurator).getEntityManager();
+            doReturn(transaction).when(mockCurator).getTransaction();
+
+            doAnswer(iom -> new Transactional(mockEntityManager)).when(mockCurator).transactional();
+            doAnswer(iom -> {
+                return new Transactional(mockEntityManager)
+                    .run((Transactional.Action) iom.getArguments()[0]);
+            }).when(mockCurator).transactional(any(Transactional.Action.class));
+        }
     }
 
 }

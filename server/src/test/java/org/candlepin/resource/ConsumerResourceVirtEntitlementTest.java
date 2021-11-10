@@ -79,7 +79,9 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
     }
 
     @BeforeEach
-    public void setUp() {
+    public void init() throws Exception {
+        super.init(false);
+
         List<SubscriptionDTO> subscriptions = new ArrayList<>();
         subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
 
@@ -137,7 +139,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
      * Checking behavior when the physical pool has a numeric virt_limit
      */
     @Test
-    public void testLimitPool() throws JobException {
+    public void testLimitedPool() throws JobException {
         List<Pool> subscribedTo = new ArrayList<>();
         Consumer guestConsumer = TestUtil.createConsumer(systemType, owner);
         guestConsumer.setFact("virt.is_guest", "true");
@@ -194,7 +196,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testUnlimitPool() throws JobException {
+    public void testUnlimitedPool() throws JobException {
         List<Pool> subscribedTo = new ArrayList<>();
         Consumer guestConsumer = TestUtil.createConsumer(systemType, owner);
         guestConsumer.setFact("virt.is_guest", "true");

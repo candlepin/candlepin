@@ -25,7 +25,6 @@ import org.candlepin.controller.OwnerContentAccess;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.jupiter.api.Assertions;
@@ -81,7 +80,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         assertThrows(PersistenceException.class, () -> ownerCurator.create(owner1));
     }
 
-    private void associateProductToOwner(Owner o, Product p) {
+    private void createAndConsumePool(Owner o, Product p) {
         Pool pool = TestUtil.createPool(o, p, 5);
         poolCurator.create(pool);
 
@@ -93,28 +92,36 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetMultipleOwnersByMultipleActiveProducts() {
-        Owner owner = createOwner();
-        Owner owner2 = createOwner();
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
 
-        Product provided = this.createProduct(owner);
-        Product product = TestUtil.createProduct("productId1", "productName1");
-        product.setProvidedProducts(Arrays.asList(provided));
-        Product finalProduct1 = this.createProduct(product, owner);
+        Product provided1 = this.createProduct(owner1, owner2, owner3);
+        Product provided2 = this.createProduct(owner1, owner2, owner3);
+        Product provided3 = this.createProduct(owner1, owner2, owner3);
 
-        Product provided2 = this.createProduct(owner2);
-        Product product2 = TestUtil.createProduct("productId1", "productName1");
-        product2.setProvidedProducts(Arrays.asList(provided));
-        Product finalProduct2 = this.createProduct(product2, owner);
+        Product product1 = TestUtil.createProduct("product1", "product1")
+            .setProvidedProducts(List.of(provided1));
+        Product product2 = TestUtil.createProduct("product2", "product2")
+            .setProvidedProducts(List.of(provided2));
+        Product product3 = TestUtil.createProduct("product3", "product3")
+            .setProvidedProducts(List.of(provided3));
 
-        associateProductToOwner(owner, finalProduct1);
-        associateProductToOwner(owner2, finalProduct2);
+        this.createProduct(product1, owner1, owner2, owner3);
+        this.createProduct(product2, owner1, owner2, owner3);
+        this.createProduct(product3, owner1, owner2, owner3);
 
-        List<String> productIds = new ArrayList<>();
-        productIds.add(provided.getId());
-        productIds.add(provided2.getId());
-        List<Owner> results = ownerCurator.getOwnersByActiveProduct(productIds).list();
+        this.createAndConsumePool(owner1, product1);
+        this.createAndConsumePool(owner2, product2);
+        this.createAndConsumePool(owner3, product3);
 
-        assertEquals(2, results.size());
+        List<String> productIds = List.of(provided1.getId(), provided2.getId());
+        List<Owner> result = this.ownerCurator.getOwnersByActiveProduct(productIds).list();
+
+        assertEquals(2, result.size());
+        assertTrue(result.contains(owner1));
+        assertTrue(result.contains(owner2));
+        assertFalse(result.contains(owner3));
     }
 
     @Test
@@ -126,7 +133,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         product.setProvidedProducts(Arrays.asList(provided));
         Product finalProduct1 = this.createProduct(product, owner);
 
-        associateProductToOwner(owner, finalProduct1);
+        createAndConsumePool(owner, finalProduct1);
 
         List<String> productIds = new ArrayList<>();
         productIds.add(provided.getId());
@@ -224,59 +231,52 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner("owner2");
         Owner owner3 = this.createOwner("owner3");
 
-        Product prod1o1 = this.createProduct("p1", "p1", owner1);
-        Product prod1o2 = this.createProduct("p1", "p1", owner2);
-        Product prod1o3 = this.createProduct("p1", "p1", owner3);
+        Product provided1 = this.createProduct("provided1", "eng1", owner1, owner2, owner3);
+        Product provided2 = this.createProduct("provided2", "eng2", owner1, owner2);
+        Product provided3 = this.createProduct("provided3", "eng3", owner2, owner3);
 
-        Product prod2o1 = this.createProduct("p2", "p2", owner1);
-        Product prod2o2 = this.createProduct("p2", "p2", owner2);
+        Product sku1derived = TestUtil.createProduct("sku1d", "sku1_derived")
+            .setProvidedProducts(List.of(provided2));
+        Product sku1 = TestUtil.createProduct("sku1", "sku1_owner1")
+            .setProvidedProducts(List.of(provided1))
+            .setDerivedProduct(sku1derived);
 
-        Product prod3o2 = this.createProduct("p3", "p3", owner2);
-        Product prod3o3 = this.createProduct("p3", "p3", owner3);
+        Product sku2derived = TestUtil.createProduct("sku2d", "sku2_derived")
+            .setProvidedProducts(List.of(provided3));
+        Product sku2 = TestUtil.createProduct("sku2", "sku2_owner2")
+            .setProvidedProducts(List.of(provided1, provided2))
+            .setDerivedProduct(sku2derived);
 
-        Product prod4 = TestUtil.createProduct("p4", "p4");
-        Product prod4d = TestUtil.createProduct("p4d", "p4d");
-        Product prod5 = TestUtil.createProduct("p5", "p5");
-        Product prod5d = TestUtil.createProduct("p5d", "p5d");
-        Product prod6 = TestUtil.createProduct("p6", "p6");
-        Product prod6d = TestUtil.createProduct("p6d", "p6d");
+        Product sku3derived = TestUtil.createProduct("sku3d", "sku3_derived")
+            .setProvidedProducts(List.of(provided3));
+        Product sku3 = TestUtil.createProduct("sku3", "sku3_owner3")
+            .setProvidedProducts(List.of(provided1))
+            .setDerivedProduct(sku3derived);
 
-        prod4.setDerivedProduct(prod4d);
-        prod4.addProvidedProduct(prod1o1);
-        prod4d.addProvidedProduct(prod2o1);
-        prod4d = this.createProduct(prod4d, owner1);
-        prod4 = this.createProduct(prod4, owner1);
-
-        prod5.setDerivedProduct(prod5d);
-        prod5.addProvidedProduct(prod1o2);
-        prod5.addProvidedProduct(prod2o2);
-        prod5d.addProvidedProduct(prod3o2);
-        prod5d = this.createProduct(prod5d, owner2);
-        prod5 = this.createProduct(prod5, owner2);
-
-        prod6.setDerivedProduct(prod6d);
-        prod6.addProvidedProduct(prod1o3);
-        prod6d.addProvidedProduct(prod3o3);
-        prod6d = this.createProduct(prod6d, owner3);
-        prod6 = this.createProduct(prod6, owner3);
+        this.createProduct(sku1derived, owner1);
+        this.createProduct(sku1, owner1);
+        this.createProduct(sku2derived, owner2);
+        this.createProduct(sku2, owner2);
+        this.createProduct(sku3derived, owner3);
+        this.createProduct(sku3, owner3);
 
         Pool pool1 = new Pool()
             .setOwner(owner1)
-            .setProduct(prod4)
+            .setProduct(sku1)
             .setStartDate(TestUtil.createDate(2000, 1, 1))
             .setEndDate(TestUtil.createDate(3000, 1, 1))
             .setQuantity(5L);
 
         Pool pool2 = new Pool()
             .setOwner(owner2)
-            .setProduct(prod5)
+            .setProduct(sku2)
             .setStartDate(TestUtil.createDate(1000, 1, 1))
             .setEndDate(TestUtil.createDate(2000, 1, 1))
             .setQuantity(5L);
 
         Pool pool3 = new Pool()
             .setOwner(owner3)
-            .setProduct(prod6)
+            .setProduct(sku3)
             .setStartDate(new Date())
             .setEndDate(new Date())
             .setQuantity(5L);
@@ -285,7 +285,7 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         this.poolCurator.create(pool2);
         this.poolCurator.create(pool3);
 
-        return Arrays.asList(owner1, owner2, owner3);
+        return List.of(owner1, owner2, owner3);
     }
 
     @Test
@@ -296,22 +296,22 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Owner owner3 = owners.get(2);
         Set<Owner> uniqueOwners = null;
 
-        uniqueOwners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p4"));
-        assertTrue(CollectionUtils.isEqualCollection(Util.asSet(owner1), uniqueOwners));
+        uniqueOwners = this.ownerCurator.getOwnersWithProducts(List.of("sku1"));
+        assertTrue(CollectionUtils.isEqualCollection(Set.of(owner1), uniqueOwners));
 
-        uniqueOwners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p5d"));
-        assertTrue(CollectionUtils.isEqualCollection(Util.asSet(owner2), uniqueOwners));
+        uniqueOwners = this.ownerCurator.getOwnersWithProducts(List.of("sku2d"));
+        assertTrue(CollectionUtils.isEqualCollection(Set.of(owner2), uniqueOwners));
 
-        uniqueOwners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p1"));
-        assertTrue(CollectionUtils.isEqualCollection(Util.asSet(owner1, owner2, owner3), uniqueOwners));
+        uniqueOwners = this.ownerCurator.getOwnersWithProducts(List.of("provided1"));
+        assertTrue(CollectionUtils.isEqualCollection(Set.of(owner1, owner2, owner3), uniqueOwners));
 
-        uniqueOwners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p3"));
-        assertTrue(CollectionUtils.isEqualCollection(Util.asSet(owner2, owner3), uniqueOwners));
+        uniqueOwners = this.ownerCurator.getOwnersWithProducts(List.of("provided3"));
+        assertTrue(CollectionUtils.isEqualCollection(Set.of(owner2, owner3), uniqueOwners));
 
-        uniqueOwners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("p4", "p6"));
-        assertTrue(CollectionUtils.isEqualCollection(Util.asSet(owner1, owner3), uniqueOwners));
+        uniqueOwners = this.ownerCurator.getOwnersWithProducts(List.of("sku1", "sku3"));
+        assertTrue(CollectionUtils.isEqualCollection(Set.of(owner1, owner3), uniqueOwners));
 
-        uniqueOwners = this.ownerCurator.getOwnersWithProducts(Arrays.asList("nope"));
+        uniqueOwners = this.ownerCurator.getOwnersWithProducts(List.of("nope"));
         assertEquals(0, uniqueOwners.size());
     }
 

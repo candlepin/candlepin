@@ -82,7 +82,6 @@ public class Entitler {
     private Configuration config;
     private ConsumerCurator consumerCurator;
     private ConsumerTypeCurator consumerTypeCurator;
-    private ContentManager contentManager;
     private EventFactory evtFactory;
     private EventSink sink;
     private EntitlementRulesTranslator messageTranslator;
@@ -91,7 +90,6 @@ public class Entitler {
     private OwnerCurator ownerCurator;
     private PoolCurator poolCurator;
     private PoolManager poolManager;
-    private ProductManager productManager;
     private ProductServiceAdapter productAdapter;
     private Provider<RefreshWorker> refreshWorkerProvider;
 
@@ -99,8 +97,7 @@ public class Entitler {
     public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
         EventSink sink, EntitlementRulesTranslator messageTranslator,
         EntitlementCurator entitlementCurator, Configuration config,
-        OwnerCurator ownerCurator, PoolCurator poolCurator,
-        ProductManager productManager, ProductServiceAdapter productAdapter, ContentManager contentManager,
+        OwnerCurator ownerCurator, PoolCurator poolCurator, ProductServiceAdapter productAdapter,
         ConsumerTypeCurator ctc, Provider<RefreshWorker> refreshWorkerProvider) {
 
         this.poolManager = pm;
@@ -113,9 +110,7 @@ public class Entitler {
         this.config = config;
         this.ownerCurator = ownerCurator;
         this.poolCurator = poolCurator;
-        this.productManager = productManager;
         this.productAdapter = productAdapter;
-        this.contentManager = contentManager;
         this.consumerTypeCurator = ctc;
         this.refreshWorkerProvider = refreshWorkerProvider;
     }
@@ -379,8 +374,6 @@ public class Entitler {
             .setStartDate(startDate)
             .setEndDate(endDate);
 
-        // FIXME: We may need to do something explicit with the provided products!
-
         log.info("Created development pool with SKU {}", skuProduct.getId());
         pool.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
         pool.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, consumer.getUuid());
@@ -420,10 +413,9 @@ public class Entitler {
             // Do a refresh so we're all up to date here
             log.debug("Importing products for dev pool resolution...");
 
-            RefreshWorker refresher = this.refreshWorkerProvider.get()
-                .addProducts(this.productAdapter.getProductsByIds(owner.getKey(), devProductIds));
-
-            RefreshResult refreshResult = refresher.execute(owner);
+            RefreshResult refreshResult = this.refreshWorkerProvider.get()
+                .addProducts(this.productAdapter.getProductsByIds(owner.getKey(), devProductIds))
+                .execute(owner);
 
             // Step through the items we refreshed and add the resulting products to our map
             List<EntityState> states = Arrays.asList(

@@ -866,23 +866,32 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Consumer consumer1 = this.createConsumer(owner1);
         Consumer consumer2 = this.createConsumer(owner2);
 
-        List<Product> reqProducts1 = Arrays.asList(
-            this.createProduct("req_prod_1", "req_prod_1", owner1),
-            this.createProduct("req_prod_2", "req_prod_2", owner1));
-
-        List<Product> reqProducts2 = Arrays.asList(
-            this.createProduct("req_prod_1", "req_prod_1", owner2),
-            this.createProduct("req_prod_2", "req_prod_2", owner2));
+        List<Product> reqProds = Arrays.asList(
+            this.createProduct("req_prod_1", "req_prod_1", owner1, owner2),
+            this.createProduct("req_prod_2", "req_prod_2", owner1, owner2));
 
         List<Product> dependentProductA = this.createDependentProducts(owner1, 1, "test_dep_prod_a",
-            reqProducts1.subList(0, 1));
+            reqProds.subList(0, 1));
         List<Product> dependentProductB = this.createDependentProducts(owner2, 1, "test_dep_prod_b",
-            reqProducts2.subList(0, 1));
+            reqProds.subList(0, 1));
 
-        Pool requiredPool1A = this.createPoolWithProducts(owner1, "reqPool1", reqProducts1.subList(0, 1));
-        Pool requiredPool2A = this.createPoolWithProducts(owner1, "reqPool2", reqProducts1.subList(1, 2));
-        Pool requiredPool1B = this.createPoolWithProducts(owner2, "reqPool1", reqProducts2.subList(0, 1));
-        Pool requiredPool2B = this.createPoolWithProducts(owner2, "reqPool2", reqProducts2.subList(1, 2));
+        Product skuProd1 = TestUtil.createProduct("reqPool1", "reqPool1")
+            .setProvidedProducts(reqProds.subList(0, 1));
+
+        Product skuProd2 = TestUtil.createProduct("reqPool2", "reqPool2")
+            .setProvidedProducts(reqProds.subList(1, 2));
+
+        this.createProduct(skuProd1, owner1, owner2);
+        this.createProduct(skuProd2, owner1, owner2);
+
+        Pool requiredPool1A = this.createPool(owner1, skuProd1, 1000L, TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2100, 1, 1));
+        Pool requiredPool2A = this.createPool(owner1, skuProd2, 1000L, TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2100, 1, 1));
+        Pool requiredPool1B = this.createPool(owner2, skuProd1, 1000L, TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2100, 1, 1));
+        Pool requiredPool2B = this.createPool(owner2, skuProd2, 1000L, TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2100, 1, 1));
         Pool dependentPoolA = this.createPoolWithProducts(owner1, "depPool1", dependentProductA);
         Pool dependentPoolB = this.createPoolWithProducts(owner2, "depPool2", dependentProductB);
 
@@ -915,23 +924,32 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Consumer consumer1 = this.createConsumer(owner1);
         Consumer consumer2 = this.createConsumer(owner2);
 
-        List<Product> reqProds1 = Arrays.asList(
-            this.createProduct("req_prod_1", "req_prod_1", owner1),
-            this.createProduct("req_prod_2", "req_prod_2", owner1));
-
-        List<Product> reqProds2 = Arrays.asList(
-            this.createProduct("req_prod_1", "req_prod_1", owner2),
-            this.createProduct("req_prod_2", "req_prod_2", owner2));
+        List<Product> reqProds = Arrays.asList(
+            this.createProduct("req_prod_1", "req_prod_1", owner1, owner2),
+            this.createProduct("req_prod_2", "req_prod_2", owner1, owner2));
 
         List<Product> dependentProductA = this.createDependentProducts(owner1, 1, "test_dep_prod_a",
-            reqProds1.subList(0, 1));
+            reqProds.subList(0, 1));
         List<Product> dependentProductB = this.createDependentProducts(owner2, 1, "test_dep_prod_b",
-            reqProds2.subList(0, 1));
+            reqProds.subList(0, 1));
 
-        Pool requiredPool1A = this.createPoolWithProducts(owner1, "reqPool1", reqProds1.subList(0, 1));
-        Pool requiredPool2A = this.createPoolWithProducts(owner1, "reqPool2", reqProds1.subList(1, 2));
-        Pool requiredPool1B = this.createPoolWithProducts(owner2, "reqPool1", reqProds2.subList(0, 1));
-        Pool requiredPool2B = this.createPoolWithProducts(owner2, "reqPool2", reqProds2.subList(1, 2));
+        Product skuProd1 = TestUtil.createProduct("reqPool1", "reqPool1")
+            .setProvidedProducts(reqProds.subList(0, 1));
+
+        Product skuProd2 = TestUtil.createProduct("reqPool2", "reqPool2")
+            .setProvidedProducts(reqProds.subList(1, 2));
+
+        this.createProduct(skuProd1, owner1, owner2);
+        this.createProduct(skuProd2, owner1, owner2);
+
+        Pool requiredPool1A = this.createPool(owner1, skuProd1, 1000L, TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2100, 1, 1));
+        Pool requiredPool2A = this.createPool(owner1, skuProd2, 1000L, TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2100, 1, 1));
+        Pool requiredPool1B = this.createPool(owner2, skuProd1, 1000L, TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2100, 1, 1));
+        Pool requiredPool2B = this.createPool(owner2, skuProd2, 1000L, TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2100, 1, 1));
         Pool dependentPoolA = this.createPoolWithProducts(owner1, "depPool1", dependentProductA);
         Pool dependentPoolB = this.createPoolWithProducts(owner2, "depPool2", dependentProductB);
 

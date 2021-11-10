@@ -128,9 +128,7 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         enforcer = new EntitlementRules(
             new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, consumerTypeCurator,
-            mockProductCurator, new RulesObjectMapper(), mockOwnerCurator, mockOwnerProductCurator,
-            mockProductManager, mockEventSink, mockEventFactory, translator
-        );
+            mockProductCurator, new RulesObjectMapper(), mockEventSink, mockEventFactory, translator);
     }
 
     @Test

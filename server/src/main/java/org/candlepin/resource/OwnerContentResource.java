@@ -47,8 +47,8 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -148,8 +148,7 @@ public class OwnerContentResource {
 
         if (content == null) {
             throw new NotFoundException(
-                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
-            );
+                i18n.tr("Content with ID \"{0}\" could not be found.", contentId));
         }
 
         return content;
@@ -227,6 +226,7 @@ public class OwnerContentResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
+    @Transactional
     public ContentDTO createContent(@PathParam("owner_key") String ownerKey,
         @ApiParam(name = "content", required = true) ContentDTO content) {
 
@@ -247,17 +247,16 @@ public class OwnerContentResource {
     public Collection<ContentDTO> createBatchContent(@PathParam("owner_key") String ownerKey,
         @ApiParam(name = "contents", required = true) List<ContentDTO> contents) {
 
-        Collection<ContentDTO> result = new LinkedList<>();
         Owner owner = this.getOwnerByKey(ownerKey);
 
-        for (ContentDTO content : contents) {
-            Content entity = this.createContentImpl(owner, content);
-            result.add(this.translator.translate(entity, ContentDTO.class));
-        }
+        List<ContentDTO> output = contents.stream()
+            .map(content -> this.createContentImpl(owner, content))
+            .map(this.translator.getStreamMapper(Content.class, ContentDTO.class))
+            .collect(Collectors.toList());
 
         this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
-        return result;
+        return output;
     }
 
     @ApiOperation(notes = "Updates a Content", value = "updateContent")
@@ -265,6 +264,7 @@ public class OwnerContentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
+    @Transactional
     public ContentDTO updateContent(@PathParam("owner_key") String ownerKey,
         @PathParam("content_id") String contentId,
         @ApiParam(name = "content", required = true) ContentDTO content) {
@@ -276,16 +276,17 @@ public class OwnerContentResource {
             throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
         }
 
-        existing = this.contentManager.updateContent(owner, content, true);
+        Content updated = this.contentManager.updateContent(owner, content, true);
         this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
-        return this.translator.translate(existing, ContentDTO.class);
+        return this.translator.translate(updated, ContentDTO.class);
     }
 
     @ApiOperation(notes = "Deletes a Content", value = "remove")
     @DELETE
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{content_id}")
+    @Transactional
     public void remove(@PathParam("owner_key") String ownerKey,
         @PathParam("content_id") String contentId) {
 

@@ -153,8 +153,8 @@ public class Transactional<O> {
     }
 
     /**
-     * Sets the action to perform within a transactional boundry. If the action has already been set,
-     * this method throws an exception.
+     * Sets the action to perform/run within a transactional boundry. If the action has already
+     * been set, this method throws an exception.
      *
      * @param action
      *  the action(s) to perform
@@ -168,7 +168,7 @@ public class Transactional<O> {
      * @return
      *  this transactional wrapper
      */
-    public Transactional<O> wrap(Action<O> action) {
+    public Transactional<O> run(Action<O> action) {
         if (action == null) {
             throw new IllegalArgumentException("action is null");
         }
@@ -347,36 +347,62 @@ public class Transactional<O> {
 
 
     /**
-     * Executes this transactional, passing the specified arguments through to the action.
+     * Executes the given action within the context of an existing transaction.
+     *
+     * @param transaction
+     *  a transaction object for the current transactional context
+     *
+     * @param action
+     *  the action to execute transactionally
      *
      * @param args
-     *  the args to pass through to the action
+     *  the arguments to pass through to the action
+     *
+     * @throws TransactionExecutionException
+     *  if an exception occurs while executing the provided action
      *
      * @return
-     *  the output of the action
+     *  the output of the given action
      */
-    public O execute(Object... args) throws Exception {
-        if (this.action == null) {
-            throw new IllegalStateException("no action provided");
+    private O executeNested(EntityTransaction transaction, Action<O> action, Object... args) {
+        // Impl note: at the time of writing, Hibernate does not support nested transactions
+        String errmsg = "Transactional block executed with a transaction already started";
+        if (this.exclusive) {
+            throw new IllegalStateException(errmsg);
         }
-
-        O output = null;
-        EntityTransaction transaction = this.entityManager.getTransaction();
-
-        if (!transaction.isActive()) {
-            transaction.begin();
-        }
-        else {
-            String errmsg = "Transactional block executed with a transaction already started";
-            if (this.exclusive) {
-                throw new IllegalStateException(errmsg);
-            }
-
-            log.warn(errmsg);
-        }
+        log.warn(errmsg);
 
         try {
-            output = this.action.execute(args);
+            return action.execute(args);
+        }
+        catch (Exception e) {
+            throw new TransactionExecutionException(e);
+        }
+    }
+
+    /**
+     * Executes the given action within the context of a new, fully-managed transaction.
+     *
+     * @param transaction
+     *  a transaction object for the current transactional context
+     *
+     * @param action
+     *  the action to execute transactionally
+     *
+     * @param args
+     *  the arguments to pass through to the action
+     *
+     * @throws TransactionExecutionException
+     *  if an exception occurs while executing the provided action
+     *
+     * @return
+     *  the output of the given action
+     */
+    private O executeTransactional(EntityTransaction transaction, Action<O> action, Object... args) {
+        transaction.begin();
+
+        try {
+            O output = action.execute(args);
 
             for (Validator<O> validator : this.validators) {
                 if (!validator.validate(output)) {
@@ -386,13 +412,15 @@ public class Transactional<O> {
                     break;
                 }
             }
+
+            return output;
         }
         catch (Exception e) {
             if (!this.commitOnException) {
                 transaction.setRollbackOnly();
             }
 
-            throw e;
+            throw new TransactionExecutionException(e);
         }
         finally {
             if (!transaction.isActive()) {
@@ -411,8 +439,65 @@ public class Transactional<O> {
                 this.rollbackTransaction(transaction);
             }
         }
-
-        return output;
     }
 
+    /**
+     * Executes this transactional block using the specified action by passing in the provided
+     * arguments. The specified action will be used in place of any action previously set via the
+     * call method. If no action is provided, this method will throw an exception.
+     *
+     * @param action
+     *  the action to execute transactionally
+     *
+     * @param args
+     *  the arguments to pass through to the action
+     *
+     * @throws IllegalArgumentException
+     *  if no action is provided
+     *
+     * @throws TransactionExecutionException
+     *  if an exception occurs while executing the provided action
+     *
+     * @return
+     *  the output of the action
+     */
+    public O execute(Action<O> action, Object... args) {
+        if (action == null) {
+            throw new IllegalArgumentException("no action provided");
+        }
+
+        return this.run(action)
+            .execute(args);
+    }
+
+    /**
+     * Executes this transactional block, passing the specified arguments through to the previously
+     * assigned action. If an action has not yet been set, this method throws an exception.
+     *
+     * @param args
+     *  the arguments to pass through to the action
+     *
+     * @throws IllegalStateException
+     *  if the transactional action has not yet been assigned
+     *
+     * @throws TransactionExecutionException
+     *  if an exception occurs in the assigned action
+     *
+     * @return
+     *  the output of the action
+     */
+    public O execute(Object... args) {
+        if (this.action == null) {
+            throw new IllegalStateException("no action provided");
+        }
+
+        EntityTransaction transaction = this.entityManager.getTransaction();
+        if (transaction == null) {
+            throw new IllegalStateException("Unable to fetch the current context transaction");
+        }
+
+        return !transaction.isActive() ?
+            this.executeTransactional(transaction, this.action, args) :
+            this.executeNested(transaction, this.action, args);
+    }
 }

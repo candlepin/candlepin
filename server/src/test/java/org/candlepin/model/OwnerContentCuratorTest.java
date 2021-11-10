@@ -512,34 +512,28 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
     public void testUpdateOwnerContentReferences() {
         Owner owner1 = this.createOwner("owner1");
         Owner owner2 = this.createOwner("owner2");
-        Content original = this.createContent("c1", "c1", owner1);
-        Content unmodified = this.createContent("c1", "c1", owner2);
-        Content updated = this.createContent("c1", "c1");
+        Content original = this.createContent("c1", "c1a", owner1, owner2);
+        Content modified = this.createContent("c1", "c1b");
 
-        assertTrue(original.getUuid() != updated.getUuid());
-        assertTrue(original.getUuid() != unmodified.getUuid());
-        assertTrue(updated.getUuid() != unmodified.getUuid());
+        assertTrue(original.getUuid() != modified.getUuid());
 
-        Environment environment1 = this.createEnvironment(
-            owner1, "test_env-1", "test_env-1", null, null, Arrays.asList(original)
-        );
-
-        Environment environment2 = this.createEnvironment(
-            owner2, "test_env-2", "test_env-2", null, null, Arrays.asList(unmodified)
-        );
+        Environment environment1 = this.createEnvironment(owner1, "test_env-1", "test_env-1", null, null,
+            List.of(original));
+        Environment environment2 = this.createEnvironment(owner2, "test_env-2", "test_env-2", null, null,
+            List.of(original));
 
         assertTrue(this.isContentMappedToOwner(original, owner1));
-        assertFalse(this.isContentMappedToOwner(updated, owner1));
-        assertTrue(this.isContentMappedToOwner(unmodified, owner2));
+        assertTrue(this.isContentMappedToOwner(original, owner2));
+        assertFalse(this.isContentMappedToOwner(modified, owner1));
+        assertFalse(this.isContentMappedToOwner(modified, owner2));
 
-        Map<String, String> uuidMap = new HashMap<>();
-        uuidMap.put(original.getUuid(), updated.getUuid());
-
-        this.ownerContentCurator.updateOwnerContentReferences(owner1, uuidMap);
+        this.ownerContentCurator.updateOwnerContentReferences(owner1,
+            Map.of(original.getUuid(), modified.getUuid()));
 
         assertFalse(this.isContentMappedToOwner(original, owner1));
-        assertTrue(this.isContentMappedToOwner(updated, owner1));
-        assertTrue(this.isContentMappedToOwner(unmodified, owner2));
+        assertTrue(this.isContentMappedToOwner(modified, owner1));
+        assertTrue(this.isContentMappedToOwner(original, owner2));
+        assertFalse(this.isContentMappedToOwner(modified, owner2));
 
         this.environmentCurator.evict(environment1);
         this.environmentCurator.evict(environment2);
@@ -548,9 +542,9 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
         assertEquals(1, environment1.getEnvironmentContent().size());
         assertEquals(1, environment2.getEnvironmentContent().size());
-        assertEquals(updated.getUuid(), environment1.getEnvironmentContent().iterator().next().getContent()
+        assertEquals(modified.getUuid(), environment1.getEnvironmentContent().iterator().next().getContent()
             .getUuid());
-        assertEquals(unmodified.getUuid(), environment2.getEnvironmentContent().iterator().next().getContent()
+        assertEquals(original.getUuid(), environment2.getEnvironmentContent().iterator().next().getContent()
             .getUuid());
     }
 
@@ -558,26 +552,20 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
     public void testRemoveOwnerContentReferences() {
         Owner owner1 = this.createOwner("owner1");
         Owner owner2 = this.createOwner("owner2");
-        Content original = this.createContent("c1", "c1", owner1);
-        Content unmodified = this.createContent("c1", "c1", owner2);
+        Content content = this.createContent("c1", "c1a", owner1, owner2);
 
-        assertTrue(original.getUuid() != unmodified.getUuid());
+        Environment environment1 = this.createEnvironment(owner1, "test_env-1", "test_env-1", null, null,
+            List.of(content));
+        Environment environment2 = this.createEnvironment(owner2, "test_env-2", "test_env-2", null, null,
+            List.of(content));
 
-        Environment environment1 = this.createEnvironment(
-            owner1, "test_env-1", "test_env-1", null, null, Arrays.asList(original)
-        );
+        assertTrue(this.isContentMappedToOwner(content, owner1));
+        assertTrue(this.isContentMappedToOwner(content, owner2));
 
-        Environment environment2 = this.createEnvironment(
-            owner2, "test_env-2", "test_env-2", null, null, Arrays.asList(unmodified)
-        );
+        this.ownerContentCurator.removeOwnerContentReferences(owner1, List.of(content.getUuid()));
 
-        assertTrue(this.isContentMappedToOwner(original, owner1));
-        assertTrue(this.isContentMappedToOwner(unmodified, owner2));
-
-        this.ownerContentCurator.removeOwnerContentReferences(owner1, Arrays.asList(original.getUuid()));
-
-        assertFalse(this.isContentMappedToOwner(original, owner1));
-        assertTrue(this.isContentMappedToOwner(unmodified, owner2));
+        assertFalse(this.isContentMappedToOwner(content, owner1));
+        assertTrue(this.isContentMappedToOwner(content, owner2));
 
         this.environmentCurator.evict(environment1);
         this.environmentCurator.evict(environment2);
@@ -586,28 +574,25 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
         assertEquals(0, environment1.getEnvironmentContent().size());
         assertEquals(1, environment2.getEnvironmentContent().size());
-        assertEquals(unmodified.getUuid(), environment2.getEnvironmentContent().iterator().next().getContent()
+        assertEquals(content.getUuid(), environment2.getEnvironmentContent().iterator().next().getContent()
             .getUuid());
     }
 
     @Test
-    public void testGetContentByVersions() {
+    public void testGetContentByVersionsSingleVersion() {
         Owner owner1 = this.createOwner();
         Owner owner2 = this.createOwner();
         Owner owner3 = this.createOwner();
 
-        Content content1 = this.createContent("c1", "c1", owner1);
-        Content content2 = this.createContent("c1", "c1", owner2);
-        Content content3 = this.createContent("c1", "c1", owner3);
-        Content content4 = this.createContent("c2", "c2", owner2);
+        Content c1a = this.createContent("c1", "c1a", owner1);
+        Content c1b = this.createContent("c1", "c1b", owner2);
+        Content c1c = this.createContent("c1", "c1c", owner3);
+        Content c2a = this.createContent("c2", "c2a", owner1);
 
         Map<String, List<Content>> contentMap1 = this.ownerContentCurator
-            .getContentByVersions(owner1, Collections.singleton(content1.getEntityVersion()));
+            .getContentByVersions(Collections.singleton(c1a.getEntityVersion()));
         Map<String, List<Content>> contentMap2 = this.ownerContentCurator
-            .getContentByVersions(owner2, Collections.singleton(content2.getEntityVersion()));
-
-        // contentMap1 should contain only content2 and content3
-        // contentMap2 should contain only content1 and content3
+            .getContentByVersions(Collections.singleton(c1b.getEntityVersion()));
 
         assertEquals(1, contentMap1.size());
         assertNotNull(contentMap1.get("c1"));
@@ -626,48 +611,11 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
             .map(Content::getUuid)
             .collect(Collectors.toList());
 
-        assertEquals(Arrays.asList(content2.getUuid(), content3.getUuid()), uuidList1);
-        assertEquals(Arrays.asList(content1.getUuid(), content3.getUuid()), uuidList2);
-    }
+        assertEquals(1, uuidList1.size());
+        assertThat(uuidList1, hasItems(c1a.getUuid()));
 
-    @Test
-    public void testGetContentByVersionsNoOwner() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-        Owner owner3 = this.createOwner();
-
-        Content content1 = this.createContent("c1", "c1", owner1);
-        Content content2 = this.createContent("c1", "c1", owner2);
-        Content content3 = this.createContent("c1", "c1", owner3);
-        Content content4 = this.createContent("c2", "c2", owner2);
-
-        Map<String, List<Content>> contentMap1 = this.ownerContentCurator
-            .getContentByVersions(null, Collections.singleton(content1.getEntityVersion()));
-        Map<String, List<Content>> contentMap2 = this.ownerContentCurator
-            .getContentByVersions(null, Collections.singleton(content2.getEntityVersion()));
-
-        // Both maps should contain both contents 1, 2 and 3
-
-        assertEquals(1, contentMap1.size());
-        assertNotNull(contentMap1.get("c1"));
-        assertEquals(1, contentMap2.size());
-        assertNotNull(contentMap2.get("c1"));
-
-        List<String> uuidList1 = contentMap1.values()
-            .stream()
-            .flatMap(List::stream)
-            .map(Content::getUuid)
-            .collect(Collectors.toList());
-
-        List<String> uuidList2 = contentMap2.values()
-            .stream()
-            .flatMap(List::stream)
-            .map(Content::getUuid)
-            .collect(Collectors.toList());
-
-        // We're counting on .equals not caring about order here
-        assertEquals(Arrays.asList(content1.getUuid(), content2.getUuid(), content3.getUuid()), uuidList1);
-        assertEquals(Arrays.asList(content1.getUuid(), content2.getUuid(), content3.getUuid()), uuidList2);
+        assertEquals(1, uuidList2.size());
+        assertThat(uuidList2, hasItems(c1b.getUuid()));
     }
 
     @Test
@@ -676,49 +624,38 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
         Owner owner3 = this.createOwner();
 
-        Content c1a = this.createContent("c1", "c1", owner1);
-        Content c2a = this.createContent("c2", "c2", owner1);
-        Content c3a = this.createContent("c3", "c3", owner1);
+        Content c1a = this.createContent("c1", "c1a", owner1);
+        Content c2a = this.createContent("c2", "c2a", owner1);
+        Content c3a = this.createContent("c3", "c3a", owner1);
 
-        Content c1b = this.createContent("c1", "c1", owner2);
-        Content c2b = this.createContent("c2", "c2", owner2);
-        Content c3b = this.createContent("c3", "c3", owner2);
+        Content c1b = this.createContent("c1", "c1b", owner2);
+        Content c2b = this.createContent("c2", "c2b", owner2);
+        Content c3b = this.createContent("c3", "c3b", owner2);
 
-        Content c1c = this.createContent("c1", "c1", owner3);
-        Content c2c = this.createContent("c2", "c2", owner3);
-        Content c3c = this.createContent("c3", "c3", owner3);
+        Content c1c = this.createContent("c1", "c1c", owner3);
+        Content c2c = this.createContent("c2", "c2c", owner3);
+        Content c3c = this.createContent("c3", "c3c", owner3);
 
-        List<Integer> versions = Arrays.asList(c1a.getEntityVersion(), c2a.getEntityVersion());
+        Map<String, List<Content>> contentMap1 = this.ownerContentCurator.getContentByVersions(
+            List.of(c1a.getEntityVersion(), c1b.getEntityVersion(), c2c.getEntityVersion()));
 
-        Map<String, List<Content>> contentMap1 = this.ownerContentCurator
-            .getContentByVersions(owner1, versions);
-        Map<String, List<Content>> contentMap2 = this.ownerContentCurator
-            .getContentByVersions(owner2, versions);
-        Map<String, List<Content>> contentMap3 = this.ownerContentCurator
-            .getContentByVersions(null, versions);
-
-        // Map 1 should contain contents like c1 and c2 not owned by owner1: (c1b, c1c, c2b, c2c)
-        // Map 2 should contain contents like c1 and c2 not owned by owner2: (c1a, c1c, c2a, c2c)
-        // Map 3 should contain all contents like c1 and c2: (c1a, c1b, c1c, c2a, c2b, c2c)
+        Map<String, List<Content>> contentMap2 = this.ownerContentCurator.getContentByVersions(
+            List.of(c1a.getEntityVersion(), c2b.getEntityVersion(), c3c.getEntityVersion()));
 
         assertEquals(2, contentMap1.size());
-        assertEquals(2, contentMap2.size());
-        assertEquals(2, contentMap3.size());
-
         assertNotNull(contentMap1.get("c1"));
         assertEquals(2, contentMap1.get("c1").size());
         assertNotNull(contentMap1.get("c2"));
-        assertEquals(2, contentMap1.get("c2").size());
+        assertEquals(1, contentMap1.get("c2").size());
+        assertNull(contentMap1.get("c3"));
 
+        assertEquals(3, contentMap2.size());
         assertNotNull(contentMap2.get("c1"));
-        assertEquals(2, contentMap2.get("c1").size());
+        assertEquals(1, contentMap2.get("c1").size());
         assertNotNull(contentMap2.get("c2"));
-        assertEquals(2, contentMap2.get("c2").size());
-
-        assertNotNull(contentMap3.get("c1"));
-        assertEquals(3, contentMap3.get("c1").size());
-        assertNotNull(contentMap3.get("c2"));
-        assertEquals(3, contentMap3.get("c2").size());
+        assertEquals(1, contentMap2.get("c2").size());
+        assertNotNull(contentMap2.get("c3"));
+        assertEquals(1, contentMap2.get("c3").size());
 
         List<String> uuidList1 = contentMap1.values()
             .stream()
@@ -732,21 +669,11 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
             .map(Content::getUuid)
             .collect(Collectors.toList());
 
-        List<String> uuidList3 = contentMap3.values()
-            .stream()
-            .flatMap(List::stream)
-            .map(Content::getUuid)
-            .collect(Collectors.toList());
+        assertEquals(3, uuidList1.size());
+        assertThat(uuidList1, hasItems(c1a.getUuid(), c1b.getUuid(), c2c.getUuid()));
 
-        assertEquals(4, uuidList1.size());
-        assertThat(uuidList1, hasItems(c1b.getUuid(), c1c.getUuid(), c2b.getUuid(), c2c.getUuid()));
-
-        assertEquals(4, uuidList2.size());
-        assertThat(uuidList2, hasItems(c1a.getUuid(), c1c.getUuid(), c2a.getUuid(), c2c.getUuid()));
-
-        assertEquals(6, uuidList3.size());
-        assertThat(uuidList3, hasItems(c1a.getUuid(), c1b.getUuid(), c1c.getUuid(), c2a.getUuid(),
-            c2b.getUuid(), c2c.getUuid()));
+        assertEquals(3, uuidList2.size());
+        assertThat(uuidList2, hasItems(c1a.getUuid(), c2b.getUuid(), c3c.getUuid()));
     }
 
     @Test
@@ -754,20 +681,12 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         Owner owner1 = this.createOwner();
 
         Map<String, List<Content>> contentMap1 = this.ownerContentCurator
-            .getContentByVersions(owner1, null);
+            .getContentByVersions(null);
         assertEquals(0, contentMap1.size());
 
         Map<String, List<Content>> contentMap2 = this.ownerContentCurator
-            .getContentByVersions(owner1, Collections.emptyList());
+            .getContentByVersions(Collections.emptyList());
         assertEquals(0, contentMap2.size());
-
-        Map<String, List<Content>> contentMap3 = this.ownerContentCurator
-            .getContentByVersions(null, null);
-        assertEquals(0, contentMap3.size());
-
-        Map<String, List<Content>> contentMap4 = this.ownerContentCurator
-            .getContentByVersions(null, Collections.emptyList());
-        assertEquals(0, contentMap4.size());
     }
 
     @Test
@@ -781,7 +700,7 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
             .limit(100000)
             .collect(Collectors.toList());
 
-        this.ownerContentCurator.getContentByVersions(owner, versions);
+        this.ownerContentCurator.getContentByVersions(versions);
     }
 
     @Test

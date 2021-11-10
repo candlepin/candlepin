@@ -14,21 +14,24 @@
  */
 package org.candlepin.model;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 
-import javax.inject.Inject;
+import javax.persistence.PersistenceException;
+
+
 
 /**
  * ContentCuratorTest
  */
 public class ContentCuratorTest extends DatabaseTestFixture {
-    @Inject private ContentCurator contentCurator;
-    @Inject private OwnerCurator ownerCurator;
 
     private Content updates;
     private Owner owner;
@@ -53,5 +56,27 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         updates.setReleaseVersion("releaseVer");
         updates.setMetadataExpiration(new Long(1));
         updates.setModifiedProductIds(new HashSet<String>() { { add("productIdOne"); } });
+    }
+
+    @Test
+    public void testCannotPersistIdenticalProducts() {
+        Content c1 = new Content()
+            .setId("test-content")
+            .setName("test-content")
+            .setType("content-type")
+            .setLabel("content-label")
+            .setVendor("content-vendor");
+
+        this.contentCurator.create(c1, true);
+        this.contentCurator.clear();
+
+        Content c2 = new Content()
+            .setId("test-content")
+            .setName("test-content")
+            .setType("content-type")
+            .setLabel("content-label")
+            .setVendor("content-vendor");
+
+        assertThrows(PersistenceException.class, () -> this.contentCurator.create(c2, true));
     }
 }

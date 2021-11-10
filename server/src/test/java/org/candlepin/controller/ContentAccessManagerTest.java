@@ -89,11 +89,9 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.KeyPair;
-import java.security.PrivateKey;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -101,6 +99,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+
+
 
 /**
  * Test suite for the ContentAccessManager class
@@ -721,22 +721,7 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testGetCertificateThrowsIOException() throws Exception {
-        Owner owner = this.mockOwner();
-        Consumer consumer = this.mockConsumer(owner);
-        Content content = this.mockContent(owner);
-        Product product = this.mockProduct(owner, content);
-        Pool pool = this.mockPool(product);
-
-        PKIUtility mockPkiUtility = mock(PKIUtility.class);
-        doThrow(IOException.class).when(mockPkiUtility).getPemEncoded(any(PrivateKey.class));
-        ContentAccessManager manager = this.createManager(mockPkiUtility);
-
-        assertThrows(IOException.class, () -> manager.getCertificate(consumer));
-    }
-
-    @Test
-    public void testGetCertificateReturnsNullOnUnknownException() throws Exception {
+    public void testGetCertificateReturnsNullOnException() throws Exception {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         Content content = this.mockContent(owner);

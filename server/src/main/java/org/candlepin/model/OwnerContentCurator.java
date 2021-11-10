@@ -334,67 +334,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
     }
 
     /**
-     * Retrieves a map containing all known versions of the content specified by IDs, for all orgs
-     * <em>except</em> the org specified. If no content is found for the specified IDs in other
-     * orgs, this method returns an empty map.
-     *
-     * @param owner
-     *  The owner to exclude from the content lookup. If this value is null, no owner-filtering
-     *  will be performed.
-     *
-     * @param contentIds
-     *  A collection of content IDs for which to fetch all known versions
-     *
-     * @return
-     *  A map containing all known versions of the given content, mapped by Red Hat ID
-     */
-    public Map<String, Set<Content>> getVersionedContentById(Owner owner, Collection<String> contentIds) {
-        Map<String, Set<Content>> result = new HashMap<>();
-
-        if (contentIds != null && !contentIds.isEmpty()) {
-            String jpql;
-
-            if (owner != null) {
-                jpql = "SELECT c FROM OwnerContent oc JOIN oc.content c " +
-                    "WHERE oc.owner.id != :owner_id AND c.id IN (:cids)";
-            }
-            else {
-                jpql = "SELECT c FROM Content c WHERE c.id IN (:cids)";
-            }
-
-            TypedQuery<Content> query = this.getEntityManager().createQuery(jpql, Content.class);
-
-            if (owner != null) {
-                query.setParameter("owner_id", owner.getId());
-            }
-
-            for (Collection<String> block : this.partition(contentIds)) {
-                List<Content> fetched = query.setParameter("cids", block)
-                    .getResultList();
-
-                for (Content entity : fetched) {
-                    Set<Content> idSet = result.get(entity.getId());
-
-                    if (idSet == null) {
-                        idSet = new HashSet<>();
-                        result.put(entity.getId(), idSet);
-                    }
-
-                    idSet.add(entity);
-                }
-            }
-        }
-
-        return result;
-    }
-
-    /**
-     * Fetches all content belonging to organizations other than the one provided having an entity
-     * version equal to one of the versions provided.
-     *
-     * @param exclude
-     *  The owner/organization to exclude from the search. If null, no organizations will be
-     *  excluded
+     * Fetches all content having an entity version equal to one of the versions provided.
      *
      * @param versions
      *  A collection of entity versions to use to select contents
@@ -402,28 +342,14 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      * @return
      *  a map containing the contents found, keyed by content ID
      */
-    public Map<String, List<Content>> getContentByVersions(Owner exclude, Collection<Integer> versions) {
+    public Map<String, List<Content>> getContentByVersions(Collection<Integer> versions) {
         Map<String, List<Content>> result = new HashMap<>();
 
         if (versions != null && !versions.isEmpty()) {
-            TypedQuery<Content> query;
+            String jpql = "SELECT c FROM Content c WHERE c.entityVersion IN (:vblock)";
 
-            if (exclude != null) {
-                String jpql = "SELECT c FROM Content c WHERE c.entityVersion IN (:vblock) AND EXISTS " +
-                    "(SELECT 1 FROM OwnerContent oc " +
-                    "  WHERE oc.content.uuid = c.uuid AND oc.owner.id != :owner_id)";
-
-                query = this.getEntityManager()
-                    .createQuery(jpql, Content.class)
-                    .setParameter("owner_id", exclude.getId());
-            }
-            else {
-                String jpql = "SELECT c FROM Content c WHERE c.entityVersion IN (:vblock) AND EXISTS " +
-                    "(SELECT 1 FROM OwnerContent oc WHERE oc.content.uuid = c.uuid)";
-
-                query = this.getEntityManager()
-                    .createQuery(jpql, Content.class);
-            }
+            TypedQuery<Content> query = this.getEntityManager()
+                .createQuery(jpql, Content.class);
 
             for (Collection<Integer> block : this.partition(versions)) {
                 for (Content element : query.setParameter("vblock", block).getResultList()) {

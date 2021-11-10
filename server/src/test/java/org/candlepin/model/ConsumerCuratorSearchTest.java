@@ -721,19 +721,15 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
         Consumer otherConsumer = new Consumer("testConsumer2", "testUser2", owner2, ct);
         otherConsumer = consumerCurator.create(otherConsumer);
 
-        // Two owners, two different products, but with the same SKU
-        Product product1 = TestUtil.createProduct("SKU1", "Product 1");
-        product1.setAttribute(Product.Attributes.TYPE, "MKT");
+        // Two owners, two different pools, but with the same SKU
+        Product product = TestUtil.createProduct("SKU1", "Product 1")
+            .setAttribute(Product.Attributes.TYPE, "MKT");
 
-        Product product2 = TestUtil.createProduct("SKU1", "Product 1");
-        product2.setAttribute(Product.Attributes.TYPE, "MKT");
-
-        productCurator.create(product1);
-        productCurator.create(product2);
+        this.createProduct(product, owner, owner2);
 
         Pool pool1 = new Pool()
             .setOwner(owner)
-            .setProduct(product1)
+            .setProduct(product)
             .setQuantity(10L)
             .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
             .setEndDate(TestUtil.createDateOffset(1, 0, 0))
@@ -744,7 +740,7 @@ public class ConsumerCuratorSearchTest extends DatabaseTestFixture {
 
         Pool pool2 = new Pool()
             .setOwner(owner2)
-            .setProduct(product2)
+            .setProduct(product)
             .setQuantity(10L)
             .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
             .setEndDate(TestUtil.createDateOffset(1, 0, 0))

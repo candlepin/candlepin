@@ -175,7 +175,23 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
      */
     @Override
     public void clear() {
+        this.clearExistingEntities();
+        this.clearImportedEntities();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clearExistingEntities() {
         this.existingEntities.clear();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clearImportedEntities() {
         this.importedEntities.clear();
     }
 }
