@@ -57,7 +57,8 @@ public class RefreshPoolsJob implements AsyncJob {
         public RefreshPoolsJobConfig() {
             this.setJobKey(JOB_KEY)
                 .setJobName(JOB_NAME)
-                .addConstraint(JobConstraints.uniqueByArguments(OWNER_KEY));
+                .addConstraint(JobConstraints.uniqueByArguments(OWNER_KEY))
+                .setRetryCount(3);
         }
 
         /**

@@ -2029,14 +2029,9 @@ public class ConsumerResource implements ConsumersApi {
         }
 
         // we want to insert the content access cert to this list if appropriate
-        try {
-            Certificate cert = this.contentAccessManager.getCertificate(consumer);
-            if (cert != null) {
-                returnCerts.add(translator.translate(cert, CertificateDTO.class));
-            }
-        }
-        catch (IOException | GeneralSecurityException e) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), e);
+        Certificate cert = this.contentAccessManager.getCertificate(consumer);
+        if (cert != null) {
+            returnCerts.add(translator.translate(cert, CertificateDTO.class));
         }
 
         return returnCerts;
@@ -2060,29 +2055,24 @@ public class ConsumerResource implements ConsumersApi {
                 .build();
         }
 
-        ContentAccessListing result = new ContentAccessListing();
-
-        try {
-            ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
-            if (cac == null) {
-                throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"));
-            }
-
-            String cert = cac.getCert();
-            String certificate = cert.substring(0, cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
-            String json = cert.substring(cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
-            List<String> pieces = new ArrayList<>();
-            pieces.add(certificate);
-            pieces.add(json);
-            result.setContentListing(cac.getSerial().getId(), pieces);
-            result.setLastUpdate(cac.getUpdated());
-
-            return Response.ok(result, MediaType.APPLICATION_JSON)
-                .build();
+        ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
+        if (cac == null) {
+            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"));
         }
-        catch (IOException | GeneralSecurityException e) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), e);
-        }
+
+        String cert = cac.getCert();
+        String certificate = cert.substring(0, cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
+        String json = cert.substring(cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
+        List<String> pieces = new ArrayList<>();
+        pieces.add(certificate);
+        pieces.add(json);
+
+        ContentAccessListing result = new ContentAccessListing()
+            .setContentListing(cac.getSerial().getId(), pieces)
+            .setLastUpdate(cac.getUpdated());
+
+        return Response.ok(result, MediaType.APPLICATION_JSON)
+            .build();
     }
 
     @Override
@@ -2155,14 +2145,9 @@ public class ConsumerResource implements ConsumersApi {
         }
 
         // add content access cert if needed
-        try {
-            ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
-            if (cac != null) {
-                allCerts.add(new CertificateSerialDTO().serial(cac.getSerial().getId()));
-            }
-        }
-        catch (IOException | GeneralSecurityException e) {
-            throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"), e);
+        ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
+        if (cac != null) {
+            allCerts.add(new CertificateSerialDTO().serial(cac.getSerial().getId()));
         }
 
         return allCerts;

@@ -235,12 +235,20 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
             Set<Integer> versions = this.ownerEntityVersions.remove(key);
 
             return versions != null ?
-                this.ownerProductCurator.getProductsByVersions(key, versions) :
+                this.ownerProductCurator.getProductsByVersions(versions) :
                 Collections.emptyMap();
         });
 
         for (Product candidate : entityMap.getOrDefault(entity.getId(), Collections.emptyList())) {
-            if (entityVersion == candidate.getEntityVersion() && entity.equals(candidate)) {
+            if (entityVersion == candidate.getEntityVersion()) {
+                if (!entity.equals(candidate)) {
+                    String errmsg = String.format("Entity version collision detected: %s != %s",
+                        entity, candidate);
+
+                    log.error(errmsg);
+                    throw new IllegalStateException(errmsg);
+                }
+
                 return candidate;
             }
         }

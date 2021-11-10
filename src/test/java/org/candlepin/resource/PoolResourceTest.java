@@ -88,15 +88,14 @@ public class PoolResourceTest extends DatabaseTestFixture {
         ownerCurator.create(owner1);
         ownerCurator.create(owner2);
 
-        product1 = this.createProduct(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED, owner1);
-        product1Owner2 = this.createProduct(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED, owner2);
+        product1 = this.createProduct(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED, owner1, owner2);
         product2 = this.createProduct(owner1);
 
         pool1 = this.createPool(owner1, product1, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
         pool2 = this.createPool(owner1, product2, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
-        pool3 = this.createPool(owner2 , product1Owner2, 500L,
+        pool3 = this.createPool(owner2 , product1, 500L,
              TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
 
         // Run most of these tests as an owner admin:

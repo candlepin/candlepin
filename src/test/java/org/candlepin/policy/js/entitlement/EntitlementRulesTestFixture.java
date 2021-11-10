@@ -138,9 +138,6 @@ public class EntitlementRulesTestFixture {
             consumerTypeCurator,
             productCurator,
             new RulesObjectMapper(),
-            ownerCurator,
-            ownerProductCuratorMock,
-            productManager,
             eventSink,
             eventFactory,
             translator

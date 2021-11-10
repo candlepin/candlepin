@@ -144,7 +144,7 @@ public class ContentManager {
 
         // Check if we have an alternate version we can use instead.
         List<Content> alternateVersions = this.ownerContentCurator
-            .getContentByVersions(owner, Collections.singleton(entity.getEntityVersion()))
+            .getContentByVersions(Collections.singleton(entity.getEntityVersion()))
             .get(entity.getId());
 
         if (alternateVersions != null) {
@@ -240,7 +240,7 @@ public class ContentManager {
         // their own version.
         // This is probably going to be a very expensive operation, though.
         List<Content> alternateVersions = this.ownerContentCurator
-            .getContentByVersions(owner, Collections.singleton(updated.getEntityVersion()))
+            .getContentByVersions(Collections.singleton(updated.getEntityVersion()))
             .get(updated.getId());
 
         if (alternateVersions != null) {

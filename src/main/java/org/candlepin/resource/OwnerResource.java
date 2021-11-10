@@ -2271,8 +2271,8 @@ public class OwnerResource implements OwnersApi {
     }
 
     @Override
+    @Transactional
     public ContentDTO createContent(String ownerKey, ContentDTO content) {
-
         this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
 
         Owner owner = this.getOwnerByKey(ownerKey);
@@ -2286,26 +2286,25 @@ public class OwnerResource implements OwnersApi {
     @Override
     @Transactional
     public Collection<ContentDTO> createBatchContent(String ownerKey, List<ContentDTO> contents) {
-
         for (ContentDTO content : contents) {
             this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
         }
 
-        Collection<ContentDTO> result = new LinkedList<>();
         Owner owner = this.getOwnerByKey(ownerKey);
 
-        for (ContentDTO content : contents) {
-            Content entity = this.createContentImpl(owner, content);
-            result.add(this.translator.translate(entity, ContentDTO.class));
-        }
+        List<ContentDTO> output = contents.stream()
+            .map(content -> this.createContentImpl(owner, content))
+            .map(this.translator.getStreamMapper(Content.class, ContentDTO.class))
+            .collect(Collectors.toList());
 
         this.contentAccessManager.syncOwnerLastContentUpdate(owner);
-        return result;
+
+        return output;
     }
 
     @Override
+    @Transactional
     public ContentDTO updateContent(String ownerKey, String contentId, ContentDTO content) {
-
         this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
 
         Owner owner = this.getOwnerByKey(ownerKey);
@@ -2315,13 +2314,15 @@ public class OwnerResource implements OwnersApi {
             throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
         }
 
-        existing = this.contentManager.updateContent(owner, InfoAdapter.contentInfoAdapter(content), true);
+        Content updated = this.contentManager
+            .updateContent(owner, InfoAdapter.contentInfoAdapter(content), true);
         this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
-        return this.translator.translate(existing, ContentDTO.class);
+        return this.translator.translate(updated, ContentDTO.class);
     }
 
     @Override
+    @Transactional
     public void remove(String ownerKey, String contentId) {
         Owner owner = this.getOwnerByKey(ownerKey);
         Content content = this.fetchContent(owner, contentId);

@@ -243,48 +243,37 @@ public class ContentAccessManager {
      * some content. The certificate will be regenerated if it is missing, or new content has been made
      * available. Otherwise, it will be simply fetched.
      *
-     * @return Client entitlement certificates.
-     * @throws IOException thrown if there's a problem reading the cert.
-     * @throws GeneralSecurityException thrown security problem
+     * @return Client entitlement certificates
      */
-    public ContentAccessCertificate getCertificate(Consumer consumer)
-        throws GeneralSecurityException, IOException {
-
+    public ContentAccessCertificate getCertificate(Consumer consumer) {
         // TODO: FIXME: Redesign all of this.
-
-        Owner owner = consumer.getOwner();
 
         // Ensure the org is in SCA mode and the consumer is able to process the cert we'll be
         // generating for them.
+        Owner owner = consumer.getOwner();
         if (owner == null || !owner.isUsingSimpleContentAccess() || !this.consumerIsCertV3Capable(consumer)) {
             return null;
         }
 
-        org.candlepin.util.Transactional<ContentAccessCertificate> transaction =
-            this.consumerCurator.transactional(args -> {
-                ContentAccessCertificate existing = consumer.getContentAccessCert();
-                return existing == null ?
-                    createNewScaCertificate(consumer, owner) :
-                    updateScaCertificate(consumer, owner, existing);
-            });
-
-        ContentAccessCertificate result;
         try {
-            result = transaction.allowExistingTransactions()
+            ContentAccessCertificate result = this.consumerCurator.<ContentAccessCertificate>transactional()
+                .allowExistingTransactions()
                 .onRollback(status -> log.error("Rolling back SCA cert (re)generation transaction"))
-                .execute();
-        }
-        catch (IOException | GeneralSecurityException e) {
-            throw e;
+                .execute(args -> {
+                    ContentAccessCertificate existing = consumer.getContentAccessCert();
+                    return existing == null ?
+                        createNewScaCertificate(consumer, owner) :
+                        updateScaCertificate(consumer, owner, existing);
+                });
+
+            return this.wrap(result);
         }
         catch (Exception e) {
-            // Something went horribly wrong...
-            log.error("Could not fetch or (re)generate SCA certificate for consumer {}",
-                consumer.getUuid(), e);
-            return null;
+            log.error("Unexpected exception occurred while fetching SCA certificate for consumer: {}",
+                consumer, e);
         }
 
-        return wrap(result);
+        return null;
     }
 
     private ContentAccessCertificate createNewScaCertificate(Consumer consumer, Owner owner)

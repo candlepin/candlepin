@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.*;
 
+import org.candlepin.controller.util.EntityVersioningRetryWrapper;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
@@ -36,7 +37,10 @@ import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
+import org.candlepin.test.TestUtil;
+import org.candlepin.util.TransactionExecutionException;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,10 +51,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import javax.persistence.EntityManager;
 
 
 
@@ -61,6 +68,7 @@ import java.util.Map;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class RefreshWorkerTest {
 
+    private EntityManager mockEntityManager;
     private PoolCurator mockPoolCurator;
     private ProductCurator mockProductCurator;
     private OwnerProductCurator mockOwnerProductCurator;
@@ -69,11 +77,16 @@ public class RefreshWorkerTest {
 
     @BeforeEach
     private void init() {
+        this.mockEntityManager = mock(EntityManager.class);
         this.mockPoolCurator = mock(PoolCurator.class);
         this.mockProductCurator = mock(ProductCurator.class);
         this.mockOwnerProductCurator = mock(OwnerProductCurator.class);
         this.mockContentCurator = mock(ContentCurator.class);
         this.mockOwnerContentCurator = mock(OwnerContentCurator.class);
+
+        TestUtil.mockTransactionalFunctionality(this.mockEntityManager, this.mockPoolCurator,
+            this.mockProductCurator, this.mockOwnerProductCurator, this.mockContentCurator,
+            this.mockOwnerContentCurator);
 
         doAnswer(returnsFirstArg())
             .when(this.mockProductCurator)
@@ -142,6 +155,11 @@ public class RefreshWorkerTest {
         when(cqmock.list()).thenReturn(elements);
 
         return cqmock;
+    }
+
+    private Exception buildVersioningConstraintViolationException() {
+        return new ConstraintViolationException("test exception", new SQLException(),
+            EntityVersioningRetryWrapper.CONSTRAINT_STRING);
     }
 
     @Test
@@ -1202,5 +1220,81 @@ public class RefreshWorkerTest {
         assertNotNull(result.getEntities(Content.class));
         assertEquals(0, result.getEntities(Content.class).size());
     }
+
+    @Test
+    public void testExecuteRetriesOnVersioningConstraintViolation() {
+        Owner owner = new Owner();
+
+        ProductContentInfo pcinfo1 = this.mockProductContentInfo("cid-1", "content-1");
+        ProductContentInfo pcinfo2 = this.mockProductContentInfo("cid-2", "content-2");
+        ProductInfo pinfo1 = this.mockProductInfo("pid-1", "product-1");
+        ProductInfo pinfo2 = this.mockProductInfo("pid-2", "product-2");
+
+        doReturn(List.of(pcinfo1, pcinfo2)).when(pinfo2).getProductContent();
+        doReturn(List.of(pinfo2)).when(pinfo1).getProvidedProducts();
+
+        CandlepinQuery cqmock1 = this.mockCandlepinQuery(Collections.emptyList());
+        CandlepinQuery cqmock2 = this.mockCandlepinQuery(Collections.emptyList());
+        doReturn(cqmock1).when(this.mockOwnerProductCurator).getProductsByOwner(eq(owner));
+        doReturn(cqmock2).when(this.mockOwnerContentCurator).getContentByOwner(eq(owner));
+
+        // Throw the constraint violation exception on the first invocation, triggering
+        // a retry
+        Exception exception = this.buildVersioningConstraintViolationException();
+
+        doThrow(exception).doAnswer(returnsFirstArg())
+            .when(this.mockProductCurator)
+            .create(Mockito.any(Product.class), anyBoolean());
+
+        SubscriptionInfo sinfo = this.mockSubscriptionInfo("sub", pinfo1);
+
+        RefreshWorker worker = this.buildRefreshWorker();
+        worker.addSubscriptions(sinfo);
+
+        RefreshResult result = worker.execute(owner);
+        assertNotNull(result);
+
+        verify(mockOwnerProductCurator, times(2)).getProductsByOwner(eq(owner));
+        verify(mockProductCurator, times(3)).create(Mockito.any(Product.class), anyBoolean());
+    }
+
+    @Test
+    public void testExecuteSkipsRetriesWhenTransactionAlreadyExists() {
+        Owner owner = new Owner();
+
+        ProductContentInfo pcinfo1 = this.mockProductContentInfo("cid-1", "content-1");
+        ProductContentInfo pcinfo2 = this.mockProductContentInfo("cid-2", "content-2");
+        ProductInfo pinfo1 = this.mockProductInfo("pid-1", "product-1");
+        ProductInfo pinfo2 = this.mockProductInfo("pid-2", "product-2");
+
+        doReturn(List.of(pcinfo1, pcinfo2)).when(pinfo2).getProductContent();
+        doReturn(List.of(pinfo2)).when(pinfo1).getProvidedProducts();
+
+        CandlepinQuery cqmock1 = this.mockCandlepinQuery(Collections.emptyList());
+        CandlepinQuery cqmock2 = this.mockCandlepinQuery(Collections.emptyList());
+        doReturn(cqmock1).when(this.mockOwnerProductCurator).getProductsByOwner(eq(owner));
+        doReturn(cqmock2).when(this.mockOwnerContentCurator).getContentByOwner(eq(owner));
+
+        // Throw the constraint violation exception on the first invocation, triggering
+        // a retry
+        Exception exception = this.buildVersioningConstraintViolationException();
+
+        doThrow(exception).doAnswer(returnsFirstArg())
+            .when(this.mockProductCurator)
+            .create(Mockito.any(Product.class), anyBoolean());
+
+        SubscriptionInfo sinfo = this.mockSubscriptionInfo("sub", pinfo1);
+
+        RefreshWorker worker = this.buildRefreshWorker();
+        worker.addSubscriptions(sinfo);
+
+        // Impl note: this only works because of the call to mockTransactionalFunctionality done in setup
+        this.mockEntityManager.getTransaction().begin();
+        assertThrows(TransactionExecutionException.class, () -> worker.execute(owner));
+
+        verify(mockOwnerProductCurator, times(1)).getProductsByOwner(eq(owner));
+        verify(mockProductCurator, times(1)).create(Mockito.any(Product.class), anyBoolean());
+    }
+
 
 }
