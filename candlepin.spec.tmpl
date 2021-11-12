@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.7
+Version: 4.1.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,20 @@ fi
 
 #raw
 %changelog
+* Fri Nov 12 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.8-1
+- Use new maven mead target (nmoumoul@redhat.com)
+- 2016418: Update method to mark entitlements dirty (wpoteat@redhat.com)
+- Optimized versioned entity lookup for products and content (crog@redhat.com)
+- Optimized refresh to avoid slow, repetitive operations (crog@redhat.com)
+- Upload code coverage report with sonarqube (nmoumoul@redhat.com)
+- Addressed issues with Product.equals and immutable entity versioning
+  (crog@redhat.com)
+- Added support for very large JSON files to the upstream sub injector
+  (crog@redhat.com)
+- updating ca-certs so the ansible provisioner can run (jmolet@redhat.com)
+- ENT-3218: Setting up SonarQube for Candlepin (sdhome@redhat.com)
+- Add a single checkstyle task (bcourt@redhat.com)
+
 * Mon Sep 27 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.7-1
 - Added validChecksums for modified provided product migration changes
   (crog@redhat.com)
