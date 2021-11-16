@@ -17,7 +17,6 @@ package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -241,10 +240,6 @@ class EnvironmentResourceTest {
         assertEquals(dto.getEnvironments().get(0).getId(), "env1");
         assertEquals(dto.getEnvironments().get(1).getId(), "env3");
         assertEquals(dto.getEnvironments().get(2).getId(), "env2");
-
-        // TODO this need to be changes whenever we make changes to
-        // consumerDTO to handle 'environment'
-        assertNull(dto.getEnvironment());
     }
 
     @SuppressWarnings("unchecked")

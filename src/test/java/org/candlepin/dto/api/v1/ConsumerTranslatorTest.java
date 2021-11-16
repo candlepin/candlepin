@@ -47,6 +47,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Test suite for the ConsumerTranslator class
@@ -108,8 +109,10 @@ public class ConsumerTranslatorTest extends
         ConsumerType ctype = this.consumerTypeTranslatorTest.initSourceObject();
         Environment environment1 = this.environmentTranslatorTest.initSourceObject();
         environment1.setId("env-1");
+        environment1.setName("env-name-1");
         Environment environment2 = this.environmentTranslatorTest.initSourceObject();
         environment2.setId("env-2");
+        environment2.setName("env-name-2");
         List<Environment> environments = Arrays.asList(environment1, environment2);
         Owner owner = this.ownerTranslatorTest.initSourceObject();
         when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
@@ -251,6 +254,11 @@ public class ConsumerTranslatorTest extends
 
                         this.environmentTranslatorTest.verifyOutput(srcEnvironment, destEnvironmentDTO, true);
                     }
+
+                    // Priority ordered environment names
+                    assertEquals(dest.getEnvironment().getName(), destEnvironments.stream()
+                        .map(EnvironmentDTO::getName)
+                        .collect(Collectors.joining(",")));
                 }
                 else {
                     assertNull(dest.getEnvironments());
