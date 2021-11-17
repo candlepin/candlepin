@@ -30,7 +30,9 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.KeyPairCurator;
+import org.candlepin.model.Owner;
 import org.candlepin.pki.PKIUtility;
+import org.candlepin.test.TestUtil;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.Util;
 
@@ -86,6 +88,9 @@ public class DefaultIdentityCertServiceAdapterTest {
         Consumer consumer = mock(Consumer.class);
         when(consumer.getId()).thenReturn("42");
         when(consumer.getUuid()).thenReturn(Util.generateUUID());
+        Owner owner = mock(Owner.class);
+        when(owner.getKey()).thenReturn(TestUtil.randomString());
+        when(consumer.getOwner()).thenReturn(owner);
         KeyPair kp = createKeyPair();
         when(kpc.getConsumerKeyPair(consumer)).thenReturn(kp);
         when(idcur.get(consumer.getId())).thenReturn(null);
@@ -147,6 +152,9 @@ public class DefaultIdentityCertServiceAdapterTest {
         Consumer consumer = mock(Consumer.class);
         IdentityCertificate mockic = mock(IdentityCertificate.class);
         when(consumer.getIdCert()).thenReturn(mockic);
+        Owner owner = mock(Owner.class);
+        when(owner.getKey()).thenReturn(TestUtil.randomString());
+        when(consumer.getOwner()).thenReturn(owner);
         when(mockic.getId()).thenReturn("43");
         when(idcur.get(mockic.getId())).thenReturn(mockic);
 
@@ -200,7 +208,9 @@ public class DefaultIdentityCertServiceAdapterTest {
         when(consumer.getId()).thenReturn("42L");
         when(consumer.getUuid()).thenReturn(Util.generateUUID());
         when(idcur.get(consumer.getId())).thenReturn(null);
-
+        Owner owner = mock(Owner.class);
+        when(owner.getKey()).thenReturn(TestUtil.randomString());
+        when(consumer.getOwner()).thenReturn(owner);
 
         KeyPair kp = createKeyPair();
         when(kpc.getConsumerKeyPair(consumer)).thenReturn(kp);
