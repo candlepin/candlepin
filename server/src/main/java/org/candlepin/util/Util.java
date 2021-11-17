@@ -37,6 +37,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -126,6 +127,10 @@ public class Util {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MINUTE, minuteField);
         return calendar.getTime();
+    }
+
+    public static Date roundDownToSeconds(Date date) {
+        return Date.from(date.toInstant().truncatedTo(ChronoUnit.SECONDS));
     }
 
     public static <T> T assertNotNull(T value, String message) {
