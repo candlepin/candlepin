@@ -351,24 +351,33 @@ describe 'Environments' do
 
   it 'should able to create consumer in multiple environment using legacy registration endpoint' do
     # create consumer for only one environment (backward compatible)
-    # TODO Assert on environment field as well
-    # whenever we make changes to consumerDTO to handle 'environment'
     @cp.create_environment(@owner['key'], "env_priority_1", "env_priority_1")
     consumer = @cp.create_consumer_in_environments("env_priority_1", random_string('consumer'))
+
     expect(consumer).not_to be_nil
     expect(consumer['environments']).not_to be_nil
     expect(consumer['environments'].length).to eq(1)
     expect(consumer['environments'][0].id).to eq("env_priority_1")
+    expect(consumer['environment']).not_to be_nil
+    expect(consumer['environment'].name).to eq("env_priority_1")
 
     # create consumer for multiple environment
     @cp.create_environment(@owner['key'], "env_priority_2", "env_priority_2")
     envIds = "env_priority_2, env_priority_1"
     consumer = @cp.create_consumer_in_environments(envIds, random_string('consumer'))
+
     expect(consumer).not_to be_nil
     expect(consumer['environments']).not_to be_nil
     expect(consumer['environments'].length).to eq(2)
+    expect(consumer['environment']).not_to be_nil
+    envNames = consumer['environment'].name.split(",")
+    expect(envNames.length).to eq(2)
 
-    # check the priority ordering
+    # check the priority ordering for envNames
+    expect(envNames[0]).to eq("env_priority_2")
+    expect(envNames[1]).to eq("env_priority_1")
+
+    # check the priority ordering for environments
     expect(consumer['environments'][0].id).to eq("env_priority_2")
     expect(consumer['environments'][1].id).to eq("env_priority_1")
   end

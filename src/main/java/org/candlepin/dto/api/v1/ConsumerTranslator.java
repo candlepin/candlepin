@@ -145,8 +145,11 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
                     .stream()
                     .map(translator.getStreamMapper(Environment.class, EnvironmentDTO.class))
                     .collect(Collectors.toList());
+                String orderedEnvNames = environments.stream().map(EnvironmentDTO::getName)
+                    .collect(Collectors.joining(","));
 
                 dest.setEnvironments(environments);
+                dest.setEnvironment(new EnvironmentDTO().name(orderedEnvNames));
             }
             else {
                 dest.setEnvironments(null);
