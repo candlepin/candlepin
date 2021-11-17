@@ -44,6 +44,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -141,6 +142,10 @@ public class Util {
             return null;
         }
         return Date.from(dt.toInstant());
+    }
+
+    public static Date roundDownToSeconds(Date date) {
+        return Date.from(date.toInstant().truncatedTo(ChronoUnit.SECONDS));
     }
 
     public static boolean equals(String str, String str1) {

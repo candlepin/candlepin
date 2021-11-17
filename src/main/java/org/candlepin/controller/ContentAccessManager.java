@@ -239,14 +239,14 @@ public class ContentAccessManager {
     }
 
     /**
-     * Generate an entitlement certificate, used to grant access to some content.
-     * End date specified explicitly to allow for flexible termination policies.
+     * Fetch and potentially regenerate a Simple Content Access certificate, used to grant access to
+     * some content. The certificate will be regenerated if it is missing, or new content has been made
+     * available. Otherwise, it will be simply fetched.
      *
      * @return Client entitlement certificates.
      * @throws IOException thrown if there's a problem reading the cert.
      * @throws GeneralSecurityException thrown security problem
      */
-    @Transactional
     public ContentAccessCertificate getCertificate(Consumer consumer)
         throws GeneralSecurityException, IOException {
 
@@ -260,14 +260,28 @@ public class ContentAccessManager {
             return null;
         }
 
-        ContentAccessCertificate existing = consumer.getContentAccessCert();
+        org.candlepin.util.Transactional<ContentAccessCertificate> transaction =
+            this.consumerCurator.transactional(args -> {
+                ContentAccessCertificate existing = consumer.getContentAccessCert();
+                return existing == null ?
+                    createNewScaCertificate(consumer, owner) :
+                    updateScaCertificate(consumer, owner, existing);
+            });
 
         ContentAccessCertificate result;
-        if (existing == null) {
-            result = createNewScaCertificate(consumer, owner);
+        try {
+            result = transaction.allowExistingTransactions()
+                .onRollback(status -> log.error("Rolling back SCA cert (re)generation transaction"))
+                .execute();
         }
-        else {
-            result = updateScaCertificate(consumer, owner, existing);
+        catch (IOException | GeneralSecurityException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            // Something went horribly wrong...
+            log.error("Could not fetch or (re)generate SCA certificate for consumer {}",
+                consumer.getUuid(), e);
+            return null;
         }
 
         return wrap(result);
@@ -655,9 +669,16 @@ public class ContentAccessManager {
 
             // Check cert properties
             ContentAccessCertificate cert = consumer.getContentAccessCert();
-            return cert == null ||
-                date.before(cert.getUpdated()) ||
-                date.after(cert.getSerial().getExpiration());
+            if (cert == null) {
+                return true;
+            }
+
+            // The date provided by the client does not preserve milliseconds, so we need to round down
+            // the dates preserved on the server by removing milliseconds for a proper date comparison
+            Date certUpdatedDate = Util.roundDownToSeconds(cert.getUpdated());
+            Date certExpirationDate = Util.roundDownToSeconds(cert.getSerial().getExpiration());
+            return date.before(certUpdatedDate) ||
+                date.after(certExpirationDate);
         }
 
         return false;

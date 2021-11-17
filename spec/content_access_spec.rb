@@ -465,16 +465,22 @@ describe 'Content Access' do
     old_cert = content_body.contentListing.values[0]
     old_x509 = old_cert[0]
     old_content = old_cert[1]
+    old_last_update = content_body.lastUpdate
 
     @cp.update_content(@owner["key"], @content_id, { :name => "new content name" })
+
+    # Sleep a bit to make sure the 'lastUpdate' has more than a second change
+    sleep 1
 
     content_body = @consumer.get_content_access_body()
     cert = content_body.contentListing.values[0]
     x509 = cert[0]
     content = cert[1]
+    last_update = content_body.lastUpdate
 
     expect(x509).to eq(old_x509)
     expect(content).to_not eq(old_content)
+    expect(last_update).to_not eq(old_last_update)
   end
 
   it "change in content only regenerates content part of the content access certificate (with environment)" do
@@ -488,29 +494,33 @@ describe 'Content Access' do
     old_cert = content_body.contentListing.values[0]
     old_x509 = old_cert[0]
     old_content = old_cert[1]
+    old_last_update = content_body.lastUpdate
 
     @cp.update_content(@owner["key"], @content_id, { :name => "new content name" })
+
+    # Sleep a bit to make sure the 'lastUpdate' has more than a second change
+    sleep 1
 
     content_body = @consumer.get_content_access_body()
     cert = content_body.contentListing.values[0]
     x509 = cert[0]
     content = cert[1]
+    last_update = content_body.lastUpdate
 
     expect(x509).to eq(old_x509)
     expect(content).to_not eq(old_content)
+    expect(last_update).to_not eq(old_last_update)
   end
 
   it "does return a not modified return code when the data has not been updated since date" do
     @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
-    certs = @consumer.list_certificates
-    certs.length.should == 1
-    sleep 1
-    date = Time.now
+    content_body = @consumer.get_content_access_body()
+    last_update = Time.parse(content_body.lastUpdate).httpdate
+
     lambda do
-      listing = @consumer.get_content_access_body({:since => date.httpdate})
+      listing = @consumer.get_content_access_body({:since => last_update})
     end.should raise_exception(RestClient::NotModified)
   end
-
 
   it "does update exisiting content access cert content when product data changes" do
     @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})

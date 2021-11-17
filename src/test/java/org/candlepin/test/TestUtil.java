@@ -60,7 +60,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.io.FileUtils;
 import org.mockito.stubbing.Answer;
 
@@ -491,19 +490,6 @@ public class TestUtil {
     public static Date createDateOffset(int years, int months, int days) {
         LocalDate now = LocalDate.now();
         return createDate(now.getYear() + years, now.getMonthValue() + months, now.getDayOfMonth() + days);
-    }
-
-    public static String xmlToBase64String(String xml) {
-        // byte[] bytes = Base64.encode(xml);
-        Base64 encoder = new Base64();
-        byte[] bytes = encoder.encode(xml.getBytes());
-
-        StringBuilder buf = new StringBuilder();
-        for (byte b : bytes) {
-            buf.append((char) Integer.parseInt(Integer.toHexString(b), 16));
-        }
-
-        return buf.toString();
     }
 
     public static User createUser(String username, String password,
