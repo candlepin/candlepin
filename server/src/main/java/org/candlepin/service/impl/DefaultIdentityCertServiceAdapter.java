@@ -148,7 +148,8 @@ public class DefaultIdentityCertServiceAdapter implements
     private String createDN(Consumer consumer) {
         StringBuilder sb = new StringBuilder("CN=");
         sb.append(consumer.getUuid());
-
+        sb.append(", O=");
+        sb.append(consumer.getOwner().getKey());
         return sb.toString();
     }
 }
