@@ -32,8 +32,9 @@ describe 'Identity Certificate' do
     @identity_cert.should_not be_nil
   end
 
-  it 'should have the same CN as the consumer\'s UUID' do
+  it 'should have the same CN and O as the consumer UUID & Owner Key' do
     @identity_cert.subject.to_s.should include("CN=#{@consumer.uuid}")
+    @identity_cert.subject.to_s.should include("O=#{@consumer.owner['key']}")
   end
 
   it 'should contain the consumer\'s name' do
