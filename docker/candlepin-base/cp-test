@@ -419,6 +419,7 @@ if [ "$DEPLOY" == "1" ]; then
         && [ "$CP_NEW_STRUCTURE" == true ] && ($PROJECT_DIR/bin/deployment/deploy '-?' | grep -q -- '-H'); then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -H -a"
     else
+        DEPLOY_FLAGS="$DEPLOY_FLAGS -a"
         echo "This deployment is not for HOSTED."
     fi
 
