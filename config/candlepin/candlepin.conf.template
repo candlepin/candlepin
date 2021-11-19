@@ -33,10 +33,8 @@ candlepin.pretty_print=true
 
 candlepin.async.scheduler.enabled=<%= candlepin.async_scheduler_enabled %>
 
-<% if (candlepin.hidden_resources) { %>\
-candlepin.hidden_resources=<%= candlepin.hidden_resources %>
+candlepin.hidden_resources=
 
-<% } %>\
 <% if (candlepin.hidden_capabilities) { %>\
 candlepin.hidden_capabilities=<%= candlepin.hidden_capabilities %>
 

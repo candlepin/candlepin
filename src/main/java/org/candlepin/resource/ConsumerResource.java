@@ -1622,41 +1622,45 @@ public class ConsumerResource implements ConsumersApi {
         if (environments == null) {
             return false;
         }
+
+        if (!environments.isEmpty() &&
+            this.config.getString(ConfigProperties.HIDDEN_RESOURCES).contains("environments")) {
+            throw new BadRequestException(i18n.tr("Server does not support environments."));
+        }
+
         boolean changesMade = false;
         List<String> validatedEnvIds = new ArrayList<>();
 
-        if (environments != null) {
-            for (EnvironmentDTO environment : environments) {
-                String environmentId = environment == null ? null : environment.getId();
-                String environmentName = environment == null ? null : environment.getName();
+        for (EnvironmentDTO environment : environments) {
+            String environmentId = environment == null ? null : environment.getId();
+            String environmentName = environment == null ? null : environment.getName();
 
-                if (environmentId != null) {
-                    if (!environmentCurator.exists(environmentId)) {
-                        throw new NotFoundException(i18n.tr(
-                            "Environment with ID \"{0}\" could not be found.", environmentId));
-                    }
+            if (environmentId != null) {
+                if (!environmentCurator.exists(environmentId)) {
+                    throw new NotFoundException(i18n.tr(
+                        "Environment with ID \"{0}\" could not be found.", environmentId));
                 }
-                else if (environmentName != null) {
-                    environmentId = this.environmentCurator
-                        .getEnvironmentIdByName(toUpdate.getOwnerId(), environmentName);
-
-                    if (environmentId == null) {
-                        throw new NotFoundException(i18n.tr(
-                            "Environment with name \"{0}\" could not be found.", environmentName));
-                    }
-                }
-                else {
-                    throw new NotFoundException(i18n.tr("Environment could not be" +
-                        " found using provided details."));
-                }
-
-                if (validatedEnvIds.contains(environmentId)) {
-                    throw new ConflictException(i18n.tr("Environment \"{0}\"" +
-                        " specified more than once." + environmentId));
-                }
-
-                validatedEnvIds.add(environmentId);
             }
+            else if (environmentName != null) {
+                environmentId = this.environmentCurator
+                    .getEnvironmentIdByName(toUpdate.getOwnerId(), environmentName);
+
+                if (environmentId == null) {
+                    throw new NotFoundException(i18n.tr(
+                        "Environment with name \"{0}\" could not be found.", environmentName));
+                }
+            }
+            else {
+                throw new NotFoundException(i18n.tr("Environment could not be" +
+                    " found using provided details."));
+            }
+
+            if (validatedEnvIds.contains(environmentId)) {
+                throw new ConflictException(i18n.tr("Environment \"{0}\"" +
+                    " specified more than once." + environmentId));
+            }
+
+            validatedEnvIds.add(environmentId);
         }
 
         if (validatedEnvIds.size() > 0) {
