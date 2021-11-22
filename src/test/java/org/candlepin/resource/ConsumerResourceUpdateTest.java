@@ -42,6 +42,7 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.Entitler;
@@ -178,10 +179,11 @@ public class ConsumerResourceUpdateTest {
 
     private ConsumerResource resource;
     private GuestMigration testMigration;
+    private Configuration config;
 
     @BeforeEach
     public void init() throws Exception {
-        Configuration config = new CandlepinCommonTestConfig();
+        this.config = new CandlepinCommonTestConfig();
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.testMigration = new GuestMigration(this.consumerCurator);
@@ -211,12 +213,12 @@ public class ConsumerResourceUpdateTest {
             this.deletedConsumerCurator,
             this.environmentCurator,
             this.distributorVersionCurator,
-            config,
+            this.config,
             this.calculatedAttributesUtil,
             this.consumerBindUtil,
             this.manifestManager,
             this.contentAccessManager,
-            new FactValidator(config, () -> this.i18n),
+            new FactValidator(this.config, () -> this.i18n),
             new ConsumerTypeValidator(consumerTypeCurator, i18n),
             this.consumerEnricher,
             Providers.of(this.testMigration),
@@ -1273,5 +1275,18 @@ public class ConsumerResourceUpdateTest {
         assertEquals(existing.getEnvironmentIds().get(2), env4.getId());
         assertEquals(existing.getEnvironmentIds().get(3), env11.getId());
         assertEquals(existing.getEnvironmentIds().get(4), env111.getId());
+    }
+
+    @Test
+    public void updateConsumerWithEnvironmentWhileEnvironmentResourceHiddenThrowsException() {
+        this.config.setProperty(ConfigProperties.HIDDEN_RESOURCES, "environments");
+
+        EnvironmentDTO changedEnvironment = new EnvironmentDTO().id("42").name("environment");
+        ConsumerDTO updated = new ConsumerDTO();
+        updated.addEnvironments(changedEnvironment);
+        Consumer existing = getFakeConsumer();
+
+        assertThrows(BadRequestException.class,
+            () -> resource.updateConsumer(existing.getUuid(), updated));
     }
 }
