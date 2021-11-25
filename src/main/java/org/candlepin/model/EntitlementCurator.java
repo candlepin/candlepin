@@ -585,11 +585,11 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         String sql =
             "select a.id from cp_entitlement a " +
             "    join cp_consumer b on a.consumer_id=b.id " +
-            "    join cp_environment c on b.environment_id=c.id " +
+            "    join cp_consumer_environments c on b.id=c.cp_consumer_id " +
             "    join cp_pool d on a.pool_id=d.id " +
             "    join cp2_product_content f on d.product_uuid=f.product_uuid " +
             "    join cp2_content g on f.content_uuid=g.uuid " +
-            "where c.id=:environmentId"  +
+            "where c.environment_id=:environmentId"  +
             "    and g.content_id in (:contentIds) ";
         List<String> results = this.getEntityManager()
             .createNativeQuery(sql)
@@ -600,12 +600,12 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         sql =
             "select a.id from cp_entitlement a " +
             "    join cp_consumer b on a.consumer_id=b.id " +
-            "    join cp_environment c on b.environment_id=c.id " +
+            "    join cp_consumer_environments c on b.id=c.cp_consumer_id " +
             "    join cp_pool d on a.pool_id=d.id " +
             "    join cp2_product_provided_products f on d.product_uuid=f.product_uuid " +
             "    join cp2_product_content g on f.provided_product_uuid=g.product_uuid " +
             "    join cp2_content h on g.content_uuid=h.uuid " +
-            "where c.id=:environmentId " +
+            "where c.environment_id=:environmentId " +
             "    and h.content_id in (:contentIds) ";
         results.addAll(this.getEntityManager()
             .createNativeQuery(sql)
