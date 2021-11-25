@@ -15,7 +15,7 @@
 
 Name: candlepin
 Version: 3.1.28
-Release: 1%{?dist}
+Release: 2%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -235,6 +235,9 @@ fi
 
 #raw
 %changelog
+* Thu Nov 25 2021 Nikos Moumoulidis <nmoumoul@redhat.com> 3.1.28-2
+- 1973257: Update method to mark entitlements dirty (wpoteat@redhat.com)
+
 * Thu Apr 15 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.28-1
 - Automatic commit of package [candlepin] release [3.1.27-1].
   (3229038+candlepin-bot@users.noreply.github.com)
