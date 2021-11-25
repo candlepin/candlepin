@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.exceptions.DuplicateEntryException;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.test.DatabaseTestFixture;
@@ -34,6 +35,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -107,7 +109,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testLookup() throws Exception {
+    public void testLookup() {
         Consumer lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(consumer.getId(), lookedUp.getId());
         assertEquals(consumer.getName(), lookedUp.getName());
@@ -120,7 +122,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testSetInitialization() throws Exception {
+    public void testSetInitialization() {
         Consumer noFacts = new Consumer(CONSUMER_NAME, USER_NAME, owner, consumerType);
         consumerCurator.create(noFacts);
         noFacts = consumerCurator.get(noFacts.getId());
@@ -141,7 +143,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void ensureUpdatedDateChangesOnUpdate() throws Exception {
+    public void ensureUpdatedDateChangesOnUpdate() {
         Date beforeUpdateDate = consumer.getUpdated();
 
         // Create a new consumer, can't re-use reference to the old:
@@ -426,7 +428,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testInstalledProducts() throws Exception {
+    public void testInstalledProducts() {
         Consumer lookedUp = consumerCurator.get(consumer.getId());
         lookedUp.addInstalledProduct(
             new ConsumerInstalledProduct("someproduct", "someproductname")
@@ -446,7 +448,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGuests() throws Exception {
+    public void testGuests() {
         Consumer lookedUp = consumerCurator.get(consumer.getId());
         lookedUp.addGuestId(new GuestId("guest1"));
         lookedUp.addGuestId(new GuestId("guest2"));
@@ -462,7 +464,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testRoleConvertedToEmpty() throws Exception {
+    public void testRoleConvertedToEmpty() {
         Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
         consumerCurator.create(consumer);
 
@@ -490,7 +492,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testUsageConvertedToEmpty() throws Exception {
+    public void testUsageConvertedToEmpty() {
         Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
         consumerCurator.create(consumer);
 
@@ -592,7 +594,7 @@ public class ConsumerTest extends DatabaseTestFixture {
 
 
     @Test
-    public void testServiceTypeConvertedToEmpty() throws Exception {
+    public void testServiceTypeConvertedToEmpty() {
         Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
         consumerCurator.create(consumer);
 
@@ -617,6 +619,35 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         consumer = consumerCurator.get(cid);
         assertTrue(consumer.getServiceType().isEmpty());
+    }
+
+    @Test
+    public void shouldFailWithDuplicateEnvIds() {
+        Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
+
+        assertThrows(DuplicateEntryException.class,
+            () -> consumer.setEnvironmentIds(List.of("env_1", "env_2", "env_1")));
+    }
+
+    @Test
+    public void shouldCleanEnvIdsWhenNull() {
+        Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
+
+        consumer.setEnvironmentIds(List.of("env_1", "env_2"));
+        assertEquals(2, consumer.getEnvironmentIds().size());
+
+        consumer.setEnvironmentIds(null);
+        assertTrue(consumer.getEnvironmentIds().isEmpty());
+    }
+
+    @Test
+    public void shouldAddEnvironments() {
+        Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
+
+        assertTrue(consumer.getEnvironmentIds().isEmpty());
+
+        consumer.setEnvironmentIds(List.of("env_1", "env_2"));
+        assertEquals(2, consumer.getEnvironmentIds().size());
     }
 
 }

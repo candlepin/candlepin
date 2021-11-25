@@ -1010,26 +1010,26 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
             this.environmentIds.clear();
         }
 
-        // Creating a new map instance and assigning it to the environmentIds.
-        // This ensures that, we are deleting the existing entries and inserting the new entries.
-        // This is done to avoid constraint (cp_consumer_environments_pkey) violation exception.
-        // Whenever we try to update the existing data (changing priority), it actually updates
-        // the environment Id and not the priority.
-        LinkedHashMap<String, String> envMap = new LinkedHashMap<>();
         if (environmentIds != null) {
-
-            for (String environmentId : environmentIds) {
-                if (envMap.containsValue(environmentId)) {
-                    throw new DuplicateEntryException("Environment " + environmentId +
-                        " specified more than once.");
-                }
+            HashSet<String> deDuplicatedIds = new HashSet<>(environmentIds);
+            if (environmentIds.size() != deDuplicatedIds.size()) {
+                throw new DuplicateEntryException("One or more environments were specified more than once.");
             }
-            for (String environmentId : environmentIds) {
-                envMap.put(String.valueOf(envMap.size()), environmentId);
+
+            // Creating a new map instance and assigning it to the environmentIds.
+            // This ensures that, we are deleting the existing entries and inserting the new entries.
+            // This is done to avoid constraint (cp_consumer_environments_pkey) violation exception.
+            // Whenever we try to update the existing data (changing priority), it actually updates
+            // the environment Id and not the priority.
+            LinkedHashMap<String, String> envMap = new LinkedHashMap<>();
+
+            for (int i = 0; i < environmentIds.size(); i++) {
+                envMap.put(String.valueOf(i), environmentIds.get(i));
             }
 
             this.environmentIds = envMap;
         }
+
         return this;
     }
 
