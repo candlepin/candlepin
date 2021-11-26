@@ -22,9 +22,12 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.lang.annotation.Annotation;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.DateTimeParseException;
 import java.util.Date;
+import java.util.Locale;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -58,10 +61,11 @@ public class DateFormatter implements StringParameterUnmarshaller<Date> {
                     log.debug("Attempting to parse date \"{}\" using format: {}", value, format);
 
                     try {
-                        SimpleDateFormat formatter = new SimpleDateFormat(format);
-                        return formatter.parse(value);
+                        DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern(format)
+                            .toFormatter(Locale.US);
+                        return Date.from(Instant.from(formatter.parse(value)));
                     }
-                    catch (ParseException exception) {
+                    catch (DateTimeParseException exception) {
                         // Whoops. Hopefully we have more formats to try...
                         log.debug("Unable to parse date \"{}\" with format {}", value, format, exception);
                     }

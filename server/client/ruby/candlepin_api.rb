@@ -1318,10 +1318,10 @@ class Candlepin
       else
         uuid = @uuid
       end
-      since = params[:since] if params[:since]
+      headers = {:accept => :json}
+      headers[:if_modified_since] = params[:since] if params[:since]
       path = "/consumers/#{uuid}/accessible_content"
-      response = get_client(path, Net::HTTP::Get, :get)[URI.escape(path)].get \
-        ({:accept => :json, :if_modified_since => since})
+      response = get_client(path, Net::HTTP::Get, :get)[URI.escape(path)].get(headers)
       return JSON.parse(response.body)
   end
 
