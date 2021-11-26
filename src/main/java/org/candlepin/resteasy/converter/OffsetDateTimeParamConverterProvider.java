@@ -28,6 +28,7 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.util.Locale;
 
 import javax.validation.constraints.Pattern;
 import javax.ws.rs.ext.ParamConverter;
@@ -79,7 +80,7 @@ public class OffsetDateTimeParamConverterProvider implements ParamConverterProvi
             try {
                 if (this.pattern != null && !this.pattern.isBlank()) {
                     DateTimeFormatter formatter = new DateTimeFormatterBuilder().appendPattern(pattern)
-                        .toFormatter();
+                        .toFormatter(Locale.US);
                     return Util.parseOffsetDateTime(formatter, value);
                 }
                 else {
