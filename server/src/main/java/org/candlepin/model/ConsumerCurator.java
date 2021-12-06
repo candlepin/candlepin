@@ -585,22 +585,22 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             .get("hibernate.dialect")).toLowerCase();
         if (db.contains("mysql") || db.contains("maria")) {
             query = "" +
-                "UPDATE cp_consumer a" +
-                " JOIN cp_consumer_hypervisor b on a.id = b.consumer_id " +
-                " JOIN cp_owner c on c.id = a.owner_id" +
-                " SET a.lastcheckin = :checkin" +
-                " WHERE b.reporter_id = :reporter" +
-                " AND c.account = :ownerKey";
+                "UPDATE cp_consumer consumer" +
+                " JOIN cp_consumer_hypervisor hypervisor on consumer.id = hypervisor.consumer_id " +
+                " JOIN cp_owner owner on owner.id = consumer.owner_id" +
+                " SET consumer.lastcheckin = :checkin" +
+                " WHERE hypervisor.reporter_id = :reporter" +
+                " AND owner.account = :ownerKey";
         }
         else if (db.contains("postgresql")) {
             query = "" +
-                "UPDATE cp_consumer" +
+                "UPDATE cp_consumer consumer" +
                 " SET lastcheckin = :checkin" +
-                " FROM cp_consumer a, cp_consumer_hypervisor b, cp_owner c" +
-                " WHERE a.id = b.consumer_id" +
-                " AND b.reporter_id = :reporter" +
-                " AND cp_consumer.owner_id = c.id" +
-                " AND c.account = :ownerKey";
+                " FROM cp_consumer_hypervisor hypervisor, cp_owner owner" +
+                " WHERE consumer.id = hypervisor.consumer_id" +
+                " AND hypervisor.reporter_id = :reporter" +
+                " AND consumer.owner_id = owner.id" +
+                " AND owner.account = :ownerKey";
         }
         else {
             throw new PersistenceException(
