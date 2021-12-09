@@ -13,6 +13,7 @@
 require 'optparse'
 require 'json'
 require 'digest'
+require 'zlib'
 
 require_relative "../client/ruby/candlepin_api"
 
@@ -55,11 +56,25 @@ def check_candlepin_configuration(candlepin)
     terminate("Cannot inject upstream data; Hosted adapter is absent or disabled") if !hosted_adapter
 end
 
+# verify target organization exists, creating it as necessary
+def ensure_organization_exists(candlepin, owner_key)
+    begin
+        owner = candlepin.get_owner(owner_key)
+    rescue RestClient::ResourceNotFound
+        log("Owner #{owner_key} does not exist; creating it...")
+        owner = candlepin.create_owner(owner_key)
+    end
+
+    return owner
+end
+
 # Reads the subscriptions from the given file and loads them
 def load_subscriptions(filename, &block)
     begin
         # open file
-        json_file = File.open(filename)
+        json_file = filename.end_with?('.gz') ?
+            Zlib::GzipReader.open(filename) :
+            File.open(filename)
 
         offset = 0
         token_stack = []
@@ -124,7 +139,6 @@ def load_subscriptions(filename, &block)
                 capture = false
                 dispatch = false
             end
-
         end
     rescue
         terminate("Unable to parse provided subscription file: #{filename}\n"\
@@ -136,7 +150,8 @@ def clear_upstream_data(candlepin)
   candlepin.delete('/hostedtest', {}, nil, true)
 end
 
-def create_upstream_subscription(candlepin, subscription_id, owner_key, params = {})
+# Creates the given subscription in Candlepin's upstream data store, updating it if it already exists
+def create_upstream_subscription(candlepin, subscription_id, params = {})
     start_date = params.delete(:start_date) || Date.today
     end_date = params.delete(:end_date) || start_date + 365
 
@@ -148,7 +163,7 @@ def create_upstream_subscription(candlepin, subscription_id, owner_key, params =
     }
 
     # Do not copy these with the rest of the merged keys
-    filter = ['id', 'owner', 'ownerId']
+    filter = ['id', 'ownerId']
 
     params.each do |key, value|
         # Convert the key to snake case so we can support whatever is thrown at us
@@ -161,15 +176,21 @@ def create_upstream_subscription(candlepin, subscription_id, owner_key, params =
 
     # Forcefully set critical identifiers
     subscription['id'] = subscription_id
-    subscription['owner'] = { :key => owner_key }
+
+    # if the sub is using the old-style ID-based owner reference, convert it
+    if (!subscription.key?('owner') && params['ownerId'])
+        subscription['owner'] = { :key => params['ownerId'] }
+    end
 
     # Create or update subscription in our upstream store
     begin
-        candlepin.post('hostedtest/subscriptions', {}, subscription)
+        output = candlepin.post('hostedtest/subscriptions', {}, subscription)
     rescue RestClient::Conflict
         log("  Subscription #{subscription['id']} already exists; updating existing entry")
-        candlepin.put("hostedtest/subscriptions/#{subscription['id']}", {}, subscription)
+        output = candlepin.put("hostedtest/subscriptions/#{subscription['id']}", {}, subscription)
     end
+
+    return output
 end
 
 
@@ -177,7 +198,7 @@ end
 @options = {}
 optparse = OptionParser.new do |opts|
     file = File.basename(__FILE__)
-    opts.banner = "Usage: #{file} [options] owner_key json_file [json_file_2 [json_file_3 [...]]]\n\nOptions:"
+    opts.banner = "Usage: #{file} [options] json_file [json_file_2 [json_file_3 [...]]]\n\nOptions:"
 
     @options[:user] = 'admin'
     opts.on('--username [USER]', 'Username to connect with; defaults to "admin".') do |opt|
@@ -225,8 +246,13 @@ optparse = OptionParser.new do |opts|
     end
 
     @options[:silent] = false
-    opts.on( '--silent', 'Disable output while generating consumers' ) do
+    opts.on('--silent', 'Disable output while generating consumers' ) do
         @options[:silent] = true
+    end
+
+    @options[:create_orgs] = false
+    opts.on('--create_orgs', 'Ensure the organizations for all subscriptions exist in Candlepin, creating them as necessary; defaults to false') do
+        @options[:create_orgs] = true
     end
 
     opts.on('-?', '--help', 'Displays command and option information') do
@@ -239,24 +265,13 @@ optparse.parse!
 
 candlepin = Candlepin.new(
     @options[:user], @options[:password], nil, nil, @options[:server], @options[:port], nil,
-    @options[:uuid], @options[:trused_user], @options[:context], @options[:ssl]
-)
+    @options[:uuid], @options[:trused_user], @options[:context], @options[:ssl])
 
 check_candlepin_configuration(candlepin)
 
-if ARGV.length < 2
+if ARGV.length < 1
     log(optparse)
     exit
-end
-
-owner_key = ARGV.shift
-
-# verify target owner exists, creating it as necessary
-begin
-    owner = candlepin.get_owner(owner_key)
-rescue RestClient::ResourceNotFound
-    log("Owner #{owner_key} does not exist; creating it...")
-    owner = candlepin.create_owner(owner_key)
 end
 
 # If we need to clean the upstream subscription first
@@ -267,6 +282,7 @@ end
 
 # Inject subscriptions from all files provided
 total = 0
+owner_cache = {}
 
 ARGV.each do |json_file|
     log("Loading subscriptions from file #{json_file}...")
@@ -280,11 +296,18 @@ ARGV.each do |json_file|
 
         count += 1
         log("Persisting data for subscription ##{count}: #{sid}")
-        create_upstream_subscription(candlepin, sid, owner_key, subscription)
+        created = create_upstream_subscription(candlepin, sid, subscription)
+
+        # Check if we should create the org
+        owner_key = created['owner']['key']
+        if @options[:create_orgs] && !owner_cache.key?(owner_key)
+            owner = ensure_organization_exists(candlepin, owner_key)
+            owner_cache[owner_key] = owner
+        end
     end
 
     total = total + count
 end
 
 log("Finished!")
-log("Persisted #{total} subscriptions for owner #{owner_key}")
+log("Persisted #{total} subscriptions")
