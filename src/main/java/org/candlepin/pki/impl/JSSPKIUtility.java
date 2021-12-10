@@ -25,10 +25,8 @@ import com.google.common.base.Charsets;
 import org.apache.commons.codec.binary.Base64OutputStream;
 import org.mozilla.jss.asn1.ASN1Util;
 import org.mozilla.jss.asn1.ASN1Value;
-import org.mozilla.jss.asn1.INTEGER;
 import org.mozilla.jss.asn1.InvalidBERException;
 import org.mozilla.jss.asn1.OCTET_STRING;
-import org.mozilla.jss.asn1.SEQUENCE;
 import org.mozilla.jss.asn1.UTF8String;
 import org.mozilla.jss.netscape.security.extensions.ExtendedKeyUsageExtension;
 import org.mozilla.jss.netscape.security.extensions.NSCertTypeExtension;
@@ -67,7 +65,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
-import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -77,8 +74,6 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.RSAPrivateCrtKeySpec;
 import java.util.Date;
 import java.util.Set;
 
@@ -94,7 +89,7 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
 
     // Note that using RSA PRIVATE KEY instead of PRIVATE KEY will indicate this is
     // a PKCS1 format instead of a PKCS8.
-    public static final String PRIVATE_KEY_PEM_NAME = "RSA PRIVATE KEY";
+    public static final String PRIVATE_KEY_PEM_NAME = "PRIVATE KEY";
 
     @Inject
     public JSSPKIUtility(CertificateReader reader, SubjectKeyIdentifierWriter writer, Configuration config) {
@@ -359,9 +354,9 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
     @Override
     public byte[] getPemEncoded(RSAPrivateKey key) throws IOException {
         try {
-            return getPemEncoded(toPKCS1(key), PRIVATE_KEY_PEM_NAME);
+            return getPemEncoded(key.getEncoded(), PRIVATE_KEY_PEM_NAME);
         }
-        catch (NoSuchAlgorithmException e) {
+        catch (Exception e) {
             throw new IOException("Could not encode key", e);
         }
     }
@@ -375,54 +370,5 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
         b64Out.eof();
         b64Out.flush();
         out.write(("-----END " + type + "-----\n").getBytes(Charsets.UTF_8));
-    }
-
-    /**
-     * Java will encode a Key object using the PKCS8 format (defined in RFC 5208).  Unfortunately, OpenSSL
-     * encodes RSA keys using PKCS1 (defined in Appendix A of RFC 3447).  All of our older code expects to
-     * work with PKCS1 formats.  I do not know for a fact that switching to PKCS8 would break anything, but I
-     * don't care to risk it.
-     * @param key a Key to encode in PKCS1 format
-     * @return a PKCS1 format key encoded in DER
-     */
-    private byte[] toPKCS1(RSAPrivateKey key) throws NoSuchAlgorithmException, IOException {
-        KeyFactory kf = KeyFactory.getInstance("RSA");
-        RSAPrivateCrtKeySpec keySpec;
-        try {
-            // Crt here stands for "Chinese Remainder Theorem", a commonly used way to optimize RSA.  Some
-            // extra numbers are stored with the RSA modulus and public and private exponents that speed up
-            // the modular exponentiation computations required for decryption.
-            keySpec = kf.getKeySpec(key, RSAPrivateCrtKeySpec.class);
-        }
-        catch (InvalidKeySpecException e) {
-            // If our RSAPrivateKey is not actually an RSAPrivateCrtKey, we're not going to be able to
-            // encode it to PKCS1.
-            throw new IOException("Key provided is not of type RSA with CRT attributes", e);
-        }
-
-        Integer version = 0;
-        BigInteger modulus = keySpec.getModulus();
-        BigInteger publicExponent = keySpec.getPublicExponent();
-        BigInteger privateExponent = keySpec.getPrivateExponent();
-        BigInteger primeP = keySpec.getPrimeP();
-        BigInteger primeQ = keySpec.getPrimeQ();
-        BigInteger primeExponentP = keySpec.getPrimeExponentP();
-        BigInteger primeExponentQ = keySpec.getPrimeExponentQ();
-        BigInteger coefficient = keySpec.getCrtCoefficient();
-
-        SEQUENCE sequence = new SEQUENCE();
-        sequence.addElement(new INTEGER(version));
-        sequence.addElement(new INTEGER(modulus));
-        sequence.addElement(new INTEGER(publicExponent));
-        sequence.addElement(new INTEGER(privateExponent));
-        sequence.addElement(new INTEGER(primeP));
-        sequence.addElement(new INTEGER(primeQ));
-        sequence.addElement(new INTEGER(primeExponentP));
-        sequence.addElement(new INTEGER(primeExponentQ));
-        sequence.addElement(new INTEGER(coefficient));
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        sequence.encode(baos);
-        return baos.toByteArray();
     }
 }
