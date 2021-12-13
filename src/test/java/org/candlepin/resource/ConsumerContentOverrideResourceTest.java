@@ -22,13 +22,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
-import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -43,12 +43,12 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
-import org.candlepin.policy.activationkey.ActivationKeyRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.consumer.ConsumerRules;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
@@ -65,7 +65,6 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.FactValidator;
-import org.candlepin.util.ServiceLevelValidator;
 
 import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -99,10 +98,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     @Mock private EntitlementCurator entitlementCurator;
     @Mock private ComplianceRules complianceRules;
     @Mock private SystemPurposeComplianceRules systemPurposeComplianceRules;
-    @Mock private ServiceLevelValidator serviceLevelValidator;
-    @Mock private ActivationKeyRules activationKeyRules;
     @Mock private EventFactory eventFactory;
-    @Mock private EventBuilder eventBuilder;
     @Mock private ConsumerRules consumerRules;
     @Mock private CalculatedAttributesUtil calculatedAttributesUtil;
     @Mock private ConsumerBindUtil consumerBindUtil;
@@ -124,6 +120,8 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     @Mock private Provider<GuestMigration> guestMigrationProvider;
     @Mock private GuestIdCurator guestIdCurator;
     @Mock private PrincipalProvider principalProvider;
+    @Mock private EntitlementCertificateGenerator entitlementCertificateGenerator;
+    @Mock private EnvironmentContentCurator environmentContentCurator;
 
     private Consumer consumer;
     private ContentOverrideValidator contentOverrideValidator;
@@ -179,7 +177,9 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             this.guestIdCurator,
             this.principalProvider,
             this.contentOverrideValidator,
-            this.consumerContentOverrideCurator
+            this.consumerContentOverrideCurator,
+            this.entitlementCertificateGenerator,
+            this.environmentContentCurator
         );
     }
 

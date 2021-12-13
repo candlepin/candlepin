@@ -40,6 +40,7 @@ import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -97,6 +98,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
+import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
@@ -124,6 +126,7 @@ import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
+import org.candlepin.resource.util.EntitlementEnvironmentFilter;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResourceDateParser;
@@ -158,6 +161,7 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -226,9 +230,10 @@ public class ConsumerResource implements ConsumersApi {
     private final PrincipalProvider principalProvider;
     private final ContentOverrideValidator coValidator;
     private final ConsumerContentOverrideCurator ccoCurator;
-
+    private final EntitlementCertificateGenerator entitlementCertificateGenerator;
     private final Pattern consumerSystemNamePattern;
     private final Pattern consumerPersonNamePattern;
+    private final EnvironmentContentCurator environmentContentCurator;
 
     @Inject
     @SuppressWarnings({ "checkstyle:parameternumber" })
@@ -268,7 +273,9 @@ public class ConsumerResource implements ConsumersApi {
         GuestIdCurator guestIdCurator,
         PrincipalProvider principalProvider,
         ContentOverrideValidator coValidator,
-        ConsumerContentOverrideCurator ccoCurator) {
+        ConsumerContentOverrideCurator ccoCurator,
+        EntitlementCertificateGenerator entitlementCertificateGenerator,
+        EnvironmentContentCurator environmentContentCurator) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
@@ -311,6 +318,8 @@ public class ConsumerResource implements ConsumersApi {
             ConfigProperties.CONSUMER_PERSON_NAME_PATTERN));
         this.consumerSystemNamePattern = Pattern.compile(config.getString(
             ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
+        this.entitlementCertificateGenerator = Objects.requireNonNull(entitlementCertificateGenerator);
+        this.environmentContentCurator = Objects.requireNonNull(environmentContentCurator);
     }
 
     /**
@@ -1664,6 +1673,12 @@ public class ConsumerResource implements ConsumersApi {
         }
 
         if (validatedEnvIds.size() > 0) {
+            List<String> preExistingEnvIds = null;
+
+            if (!toUpdate.getEnvironmentIds().isEmpty()) {
+                preExistingEnvIds = toUpdate.getEnvironmentIds();
+            }
+
             toUpdate.setEnvironmentIds(validatedEnvIds);
 
             if (existing) {
@@ -1676,7 +1691,20 @@ public class ConsumerResource implements ConsumersApi {
                 }
 
                 // lazily regenerate certs, so the client can still work
-                poolManager.regenerateCertificatesOf(toUpdate, true);
+                if (preExistingEnvIds != null) {
+                    Set<String> entitlementsToBeRegenerated =
+                        new EntitlementEnvironmentFilter(this.entitlementCurator,
+                        this.environmentContentCurator)
+                        .setConsumerToBeUpdated(Arrays.asList(toUpdate.getId()))
+                        .setPreExistingEnvironments(preExistingEnvIds)
+                        .setUpdatedEnvironment(validatedEnvIds)
+                        .filterEntitlements();
+                    entitlementCertificateGenerator
+                        .regenerateCertificatesByEntitlementIds(entitlementsToBeRegenerated, true);
+                }
+                else {
+                    entitlementCertificateGenerator.regenerateCertificatesOf(toUpdate, true);
+                }
             }
 
             changesMade = true;
