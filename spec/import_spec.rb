@@ -422,7 +422,7 @@ describe 'Import Test Group:', :serial => true do
       }[0]
       cert = @cp.get_pool_cert pool.id
       cert[0..26].should == "-----BEGIN CERTIFICATE-----"
-      cert.include?("-----BEGIN RSA PRIVATE KEY-----").should == true
+      cert.include?("-----BEGIN PRIVATE KEY-----").should == true
 
       # while were here, lets access the upstream cert via entitlement id
       consumer = consumer_client(@import_owner_client, 'system6')
