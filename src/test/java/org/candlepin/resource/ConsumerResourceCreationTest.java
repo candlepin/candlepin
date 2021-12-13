@@ -42,6 +42,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.MapConfiguration;
 import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -65,6 +66,7 @@ import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.IdentityCertificate;
@@ -167,6 +169,8 @@ public class ConsumerResourceCreationTest {
     @Mock private GuestIdCurator guestIdCurator;
     @Mock private PrincipalProvider principalProvider;
     @Mock private ContentOverrideValidator contentOverrideValidator;
+    @Mock private EntitlementCertificateGenerator entitlementCertificateGenerator;
+    @Mock private EnvironmentContentCurator environmentContentCurator;
 
     protected ModelTranslator modelTranslator;
 
@@ -225,7 +229,9 @@ public class ConsumerResourceCreationTest {
             this.guestIdCurator,
             this.principalProvider,
             this.contentOverrideValidator,
-            this.consumerContentOverrideCurator
+            this.consumerContentOverrideCurator,
+            this.entitlementCertificateGenerator,
+            this.environmentContentCurator
         );
 
         this.system = this.initConsumerType();

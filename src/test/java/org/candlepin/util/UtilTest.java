@@ -31,6 +31,7 @@ import ch.qos.logback.core.Appender;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.collections.CollectionUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -49,12 +50,12 @@ import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 
 /**
  * Test Class for the Util class
@@ -394,4 +395,27 @@ public class UtilTest {
         }
     }
 
+    @Test
+    public void testReorderItem() {
+        List<String> preexisting = List.of("A", "B", "C");
+        List<String> updated = List.of("A", "C");
+        assertTrue(Util.getReorderedItems(preexisting, updated).isEmpty());
+    }
+
+    @Test
+    public void testReorderItemListDifferentOrder() {
+        List<String> preexisting = List.of("A", "B", "C");
+        List<String> updated = List.of("A", "C", "B");
+        List<String> reordered = Util.getReorderedItems(preexisting, updated);
+        assertFalse(reordered.isEmpty());
+        assertFalse(reordered.contains("A"));
+        assertTrue(CollectionUtils.isEqualCollection(reordered, Arrays.asList("C", "B")));
+    }
+
+    @Test
+    public void testReorderItemListSameOrder() {
+        List<String> preexisting = List.of("A", "B");
+        List<String> updated = List.of("A", "C", "B");
+        assertTrue(Util.getReorderedItems(preexisting, updated).isEmpty());
+    }
 }

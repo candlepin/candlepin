@@ -48,6 +48,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
@@ -619,5 +620,40 @@ public class Util {
      */
     public static String encodeUrl(String text) {
         return URLEncoder.encode(text, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Returns the list items which got re-ordered in modified list.
+     * Method only detect reordering of common elements present in both original
+     * & modified list. Any extra elements will are not common (in both lists) are ignored.
+     *
+     * @return
+     *  Returns the list of items which got re-prioritized
+     */
+    public static List<String> getReorderedItems(List<String> original, List<String> modified) {
+        List<String> intersectionList = new ArrayList<>();
+        List<String> reorderedList = new ArrayList<>();
+        List<String> intersectionOfOriginal = new ArrayList<>();
+        // build intersection list with ordering
+        for (String envId : modified) {
+            if (original.contains(envId)) {
+                intersectionList.add(envId);
+            }
+        }
+
+        for (String envId : original) {
+            if (intersectionList.contains(envId)) {
+                intersectionOfOriginal.add(envId);
+            }
+        }
+
+        // check the ordering
+        for (int count = 0; count < intersectionList.size(); count++) {
+            if (!intersectionOfOriginal.get(count).equals(intersectionList.get(count))) {
+                reorderedList.add(intersectionList.get(count));
+            }
+        }
+
+        return reorderedList;
     }
 }

@@ -133,7 +133,7 @@ public class EntitlementCertificateGeneratorTest {
         this.ecGenerator = new EntitlementCertificateGenerator(this.mockEntCertCurator,
             this.mockEntCertAdapter, this.mockEntitlementCurator, this.mockPoolCurator,
             this.mockEventSink, this.mockEventFactory,
-                this.mockContentAccessManager, this.mockOwnerCurator);
+            this.mockContentAccessManager, this.mockOwnerCurator);
         Consumer consumer = mock(Consumer.class);
         Product product = mock(Product.class);
         Entitlement entitlement = mock(Entitlement.class);

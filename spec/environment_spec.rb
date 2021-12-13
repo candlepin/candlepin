@@ -551,4 +551,504 @@ describe 'Environments' do
       {:content_url=> "/this/is/the/path/#{id}", :arches => "x86_64"}, true)
   end
 
+  it 'should re-gen consumer entitlement cert when higher priority environment is added where provided
+    content is NOT same as higher priority environment' do
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [],
+      [{ 'id' => @env['id']}])
+
+    expect(consumer['environments']).not_to be_nil
+
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    product = create_product
+    contentA = create_content
+    contentB = create_content
+    contentC = create_content
+    @cp.add_content_to_product(@owner['key'], product['id'], contentA['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentB['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentC['id'])
+    job = @org_admin.promote_content(@env['id'], [{:contentId => contentB['id']}])
+    wait_for_job(job['id'], 15)
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    serial = ent['certificates'][0]['serial']['serial']
+
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentC['id']}.1")).to be false
+
+    envB = @org_admin.create_environment(@owner['key'], 'envB', "My Test Env 2", "For test systems only.")
+    job = @org_admin.promote_content(envB['id'],[{:contentId => contentC['id'],}])
+    wait_for_job(job['id'], 15)
+    consumer_cp.update_consumer({:environments => [{:name => envB.name}, {:name => @env.name}]})
+    ent = consumer_cp.list_entitlements()[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    new_serial = ent['certificates'][0]['serial']['serial']
+
+    expect(new_serial).not_to eq(serial)
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentC['id']}.1")).to be true
+  end
+
+  it 'should re-gen consumer entitlement cert when higher priority environment is added where provided
+    content is NOT same as higher priority environment (production)' do
+    # This spec test is same as above only difference is that,
+    # the content is present on provided products instead of on main product
+    # just like we have on production environment
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [],
+      [{ 'id' => @env['id']}])
+
+    expect(consumer['environments']).not_to be_nil
+
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    provided_prod = create_product("123", "123", { :owner => @owner['key']})
+    contentA = create_content
+    contentB = create_content
+    contentC = create_content
+    @cp.add_content_to_product(@owner['key'], provided_prod['id'], contentA['id'])
+    @cp.add_content_to_product(@owner['key'], provided_prod['id'], contentB['id'])
+    @cp.add_content_to_product(@owner['key'], provided_prod['id'], contentC['id'])
+    product = create_product("12345", "12345", {:owner => @owner['key'], :providedProducts => [provided_prod.id]})
+
+    job = @org_admin.promote_content(@env['id'], [{:contentId => contentB['id']}])
+    wait_for_job(job['id'], 15)
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    serial = ent['certificates'][0]['serial']['serial']
+
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentC['id']}.1")).to be false
+
+    envB = @org_admin.create_environment(@owner['key'], 'envB', "My Test Env 2", "For test systems only.")
+    job = @org_admin.promote_content(envB['id'],[{:contentId => contentC['id'],}])
+    wait_for_job(job['id'], 15)
+    consumer_cp.update_consumer({:environments => [{:name => envB.name}, {:name => @env.name}]})
+    ent = consumer_cp.list_entitlements()[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    new_serial = ent['certificates'][0]['serial']['serial']
+
+    expect(new_serial).not_to eq(serial)
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentC['id']}.1")).to be true
+  end
+
+  it 'should NOT re-gen consumer entitlement cert when lower priority environment is added where provided
+    content is same as higher priority environment' do
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [],
+      [{ 'id' => @env['id']}])
+
+    expect(consumer['environments']).not_to be_nil
+
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    product = create_product
+    contentA = create_content
+    contentB = create_content
+    contentC = create_content
+    @cp.add_content_to_product(@owner['key'], product['id'], contentA['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentB['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentC['id'])
+
+    job = @org_admin.promote_content(@env['id'],[{:contentId => contentB['id']}])
+    wait_for_job(job['id'], 15)
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    serial = ent['certificates'][0]['serial']['serial']
+
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentC['id']}.1")).to be false
+
+    envB = @org_admin.create_environment(@owner['key'], 'envB', "My Test Env 2", "For test systems only.")
+    job = @org_admin.promote_content(envB['id'],[{:contentId => contentB['id']}])
+    wait_for_job(job['id'], 15)
+    consumer_cp.update_consumer({:environments => [{:name => @env.name}, {:name => envB.name}]})
+    ent = consumer_cp.list_entitlements()[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    new_serial = ent['certificates'][0]['serial']['serial']
+
+    expect(new_serial).to eq(serial)
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentC['id']}.1")).to be false
+  end
+
+  it 'should re-gen consumer entitlement cert when environment is added having unique content' do
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [],
+      [{ 'id' => @env['id']}])
+
+    expect(consumer['environments']).not_to be_nil
+
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    product = create_product
+    contentA = create_content
+    contentB = create_content
+    contentC = create_content
+    @cp.add_content_to_product(@owner['key'], product['id'], contentA['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentB['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentC['id'])
+    job = @org_admin.promote_content(@env['id'],[{:contentId => contentB['id']}])
+    wait_for_job(job['id'], 15)
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    serial = ent['certificates'][0]['serial']['serial']
+
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentC['id']}.1")).to be false
+
+    envB = @org_admin.create_environment(@owner['key'], 'envB', "envB", "For test systems only.")
+    job = @org_admin.promote_content(envB['id'],[{:contentId => contentC['id']}])
+    wait_for_job(job['id'], 15)
+    consumer_cp.update_consumer({:environments => [{:name => @env.name}, {:name => envB.name}]})
+    ent = consumer_cp.list_entitlements()[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    new_serial = ent['certificates'][0]['serial']['serial']
+
+    expect(new_serial).not_to eq(serial)
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentC['id']}.1")).to be true
+  end
+
+  it 'should NOT re-gen consumer entitlement cert when environment is added where entitlement does
+    not provide content' do
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [],
+      [{ 'id' => @env['id']}])
+
+    expect(consumer['environments']).not_to be_nil
+
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    product = create_product
+    contentA = create_content
+    contentB = create_content
+    contentC = create_content
+    contentD = create_content
+    @cp.add_content_to_product(@owner['key'], product['id'], contentA['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentB['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentC['id'])
+    job = @org_admin.promote_content(@env['id'],[{:contentId => contentB['id'],}])
+    wait_for_job(job['id'], 15)
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    serial = ent['certificates'][0]['serial']['serial']
+
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentC['id']}.1")).to be false
+
+    envB = @org_admin.create_environment(@owner['key'], 'envB', "envB", "For test systems only.")
+    job = @org_admin.promote_content(@env['id'],[{:contentId => contentD['id'],}])
+    wait_for_job(job['id'], 15)
+    consumer_cp.update_consumer({:environments => [{:name => @env.name}, {:name => envB.name}]})
+    ent = consumer_cp.list_entitlements()[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    new_serial = ent['certificates'][0]['serial']['serial']
+
+    expect(new_serial).to eq(serial)
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentC['id']}.1")).to be false
+  end
+
+  it 'should re-gen consumer entitlement cert when environment priority are reversed and content
+    originates from different environment' do
+    envB = @org_admin.create_environment(@owner['key'], 'envB', "envB", "For test systems only.")
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [],
+      [{ 'id' => @env['id']}, { 'id' => envB['id']}])
+
+    expect(consumer['environments']).not_to be_nil
+
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    product = create_product
+    contentA = create_content
+    @cp.add_content_to_product(@owner['key'], product['id'], contentA['id'])
+
+    job = @org_admin.promote_content(@env['id'],[{:contentId => contentA['id'],}])
+    wait_for_job(job['id'], 15)
+    job = @org_admin.promote_content(envB['id'],[{:contentId => contentA['id'],}])
+    wait_for_job(job['id'], 15)
+
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    serial = ent['certificates'][0]['serial']['serial']
+
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be true
+
+    consumer_cp.update_consumer({:environments => [{:name => envB.name}, {:name => @env.name}]})
+    ent = consumer_cp.list_entitlements()[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    new_serial = ent['certificates'][0]['serial']['serial']
+
+    expect(new_serial).not_to eq(serial)
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be true
+  end
+
+  it 'should NOT re-gen consumer entitlement cert when environment priority are reordered excluding
+    higher priority environment' do
+    envB = @org_admin.create_environment(@owner['key'], 'envB', "envB", "For test systems only.")
+    envC = @org_admin.create_environment(@owner['key'], 'envC', "envC", "For test systems only.")
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [],
+      [{ 'id' => @env['id']}, { 'id' => envB['id']}, { 'id' => envC['id']}])
+
+    expect(consumer['environments']).not_to be_nil
+
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    product = create_product
+    contentA = create_content
+    contentB = create_content
+    contentC = create_content
+    @cp.add_content_to_product(@owner['key'], product['id'], contentA['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentB['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentC['id'])
+    job = @org_admin.promote_content(@env['id'],[{:contentId => contentB['id'],}])
+    wait_for_job(job['id'], 15)
+    job = @org_admin.promote_content(envB['id'],[{:contentId => contentB['id'],}])
+    wait_for_job(job['id'], 15)
+    job = @org_admin.promote_content(envC['id'],[{:contentId => contentB['id'],}])
+    wait_for_job(job['id'], 15)
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    serial = ent['certificates'][0]['serial']['serial']
+
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+
+    consumer_cp.update_consumer({:environments => [{:name => @env.name}, {:name => envC.name},
+      {:name => envB.name}]})
+    ent = consumer_cp.list_entitlements()[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    new_serial = ent['certificates'][0]['serial']['serial']
+
+    expect(new_serial).to eq(serial)
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+  end
+
+  it 'should re-gen consumer entitlement cert when environment priority are reordered and entitlement
+    does not provide specific content' do
+    envB = @org_admin.create_environment(@owner['key'], 'envB', "envB", "For test systems only.")
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [],
+      [{ 'id' => @env['id']}, {'id' => envB.name}])
+
+    expect(consumer['environments']).not_to be_nil
+
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    product = create_product
+    contentA = create_content
+    contentB = create_content
+    contentC = create_content
+    contentD = create_content # not added to product
+    @cp.add_content_to_product(@owner['key'], product['id'], contentA['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentB['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentC['id'])
+
+    job = @org_admin.promote_content(@env['id'],[{:contentId => contentB['id'],}])
+    wait_for_job(job['id'], 15)
+    job = @org_admin.promote_content(envB['id'],[{:contentId => contentD['id'],}])
+    wait_for_job(job['id'], 15)
+    job = @org_admin.promote_content(envB['id'],[{:contentId => contentB['id'],}])
+    wait_for_job(job['id'], 15)
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    serial = ent['certificates'][0]['serial']['serial']
+
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentD['id']}.1")).to be false
+
+    consumer_cp.update_consumer({:environments => [{:name => envB.name}, {:name => @env.name}]})
+    ent = consumer_cp.list_entitlements()[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    new_serial = ent['certificates'][0]['serial']['serial']
+
+    expect(new_serial).not_to eq(serial)
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentD['id']}.1")).to be false
+  end
+
+  it 'should re-gen consumer entitlement cert when environment of higher priority is removed that
+    provided same content as lower priority environment' do
+    envB = @org_admin.create_environment(@owner['key'], 'envB', "envB", "For test systems only.")
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [],
+      [{ 'id' => @env['id']}, { 'id' => envB['id']}])
+
+    expect(consumer['environments']).not_to be_nil
+
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    product = create_product
+    contentA = create_content
+    contentB = create_content
+    @cp.add_content_to_product(@owner['key'], product['id'], contentA['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentB['id'])
+
+    job = @org_admin.promote_content(@env['id'],[{:contentId => contentB['id'],}])
+    wait_for_job(job['id'], 15)
+    job = @org_admin.promote_content(envB['id'],[{:contentId => contentB['id'],}])
+    wait_for_job(job['id'], 15)
+
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    serial = ent['certificates'][0]['serial']['serial']
+
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    consumer_cp.update_consumer({:environments => [{:name => envB.name}]})
+    ent = consumer_cp.list_entitlements()[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    new_serial = ent['certificates'][0]['serial']['serial']
+
+    expect(new_serial).not_to eq(serial)
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+  end
+
+  it 'should NOT re-gen consumer entitlement cert when environment of lower priority is removed
+    that provided content which was already provided by higher priority environment' do
+    envB = @org_admin.create_environment(@owner['key'], 'envB', "envB", "For test systems only.")
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [],
+      [{ 'id' => @env['id']}, { 'id' => envB['id']}])
+
+    expect(consumer['environments']).not_to be_nil
+
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    product = create_product
+    contentA = create_content
+    contentB = create_content
+    @cp.add_content_to_product(@owner['key'], product['id'], contentA['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentB['id'])
+
+    job = @org_admin.promote_content(@env['id'],[{:contentId => contentB['id'],}])
+    wait_for_job(job['id'], 15)
+    job = @org_admin.promote_content(envB['id'],[{:contentId => contentB['id'],}])
+    wait_for_job(job['id'], 15)
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    serial = ent['certificates'][0]['serial']['serial']
+
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be false
+
+    consumer_cp.update_consumer({:environments => [{:name => @env.name}]})
+    ent = consumer_cp.list_entitlements()[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    new_serial = ent['certificates'][0]['serial']['serial']
+
+    expect(new_serial).to eq(serial)
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be false
+  end
+
+  it 'should re-gen consumer entitlement cert when environment of higher priority is removed which
+    was providing unique content' do
+    envB = @org_admin.create_environment(@owner['key'], 'envB', "envB", "For test systems only.")
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [],
+      [{ 'id' => envB['id']}, { 'id' => @env['id']}])
+
+    expect(consumer['environments']).not_to be_nil
+
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    product = create_product
+    contentA = create_content
+    contentB = create_content
+
+    @cp.add_content_to_product(@owner['key'], product['id'], contentA['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentB['id'])
+
+    job = @org_admin.promote_content(@env['id'],[{:contentId => contentA['id'],}])
+    wait_for_job(job['id'], 15)
+    job = @org_admin.promote_content(envB['id'],[{:contentId => contentB['id'],}])
+    wait_for_job(job['id'], 15)
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    serial = ent['certificates'][0]['serial']['serial']
+
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be true
+
+    consumer_cp.update_consumer({:environments => [{:name => @env.name}]})
+    ent = consumer_cp.list_entitlements()[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    new_serial = ent['certificates'][0]['serial']['serial']
+
+    expect(new_serial).not_to eq(serial)
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be true
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be false
+  end
+
+  it 'should NOT re-gen consumer entitlement cert when environment is removed that provide content
+    which is not provided by entitlement' do
+    envB = @org_admin.create_environment(@owner['key'], 'envB', "envB", "For test systems only.")
+    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {}, nil, nil, [], [],
+      [{ 'id' => @env['id']}, { 'id' => envB['id']}])
+
+    expect(consumer['environments']).not_to be_nil
+
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    product = create_product
+    contentA = create_content
+    contentB = create_content
+    contentC = create_content # not added to product
+    contentD = create_content # not added to product
+    @cp.add_content_to_product(@owner['key'], product['id'], contentA['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], contentB['id'])
+
+    job = @org_admin.promote_content(@env['id'],[{:contentId => contentC['id'],}])
+    wait_for_job(job['id'], 15)
+    job = @org_admin.promote_content(envB['id'],[{:contentId => contentD['id'],}])
+    wait_for_job(job['id'], 15)
+    pool = @cp.create_pool(@owner['key'], product['id'])
+    ent = consumer_cp.consume_pool(pool['id'], {:quantity => 1})[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    serial = ent['certificates'][0]['serial']['serial']
+
+    # no content provided
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentC['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentD['id']}.1")).to be false
+
+    consumer_cp.update_consumer({:environments => [{:name => @env.name}]})
+    ent = consumer_cp.list_entitlements()[0]
+    x509 = OpenSSL::X509::Certificate.new(ent['certificates'][0]['cert'])
+    extensions_hash = Hash[x509.extensions.collect { |ext| [ext.oid, ext.value] }]
+    new_serial = ent['certificates'][0]['serial']['serial']
+
+    expect(new_serial).to eq(serial)
+    # no content provided
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentA['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentB['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentC['id']}.1")).to be false
+    expect(extensions_hash.has_key?("1.3.6.1.4.1.2312.9.2.#{contentD['id']}.1")).to be false
+  end
 end

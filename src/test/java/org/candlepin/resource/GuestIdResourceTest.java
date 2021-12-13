@@ -35,6 +35,7 @@ import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -55,6 +56,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
@@ -142,6 +144,8 @@ public class GuestIdResourceTest {
     @Mock private PrincipalProvider principalProvider;
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock private ContentOverrideValidator contentOverrideValidator;
+    @Mock private EntitlementCertificateGenerator entitlementCertificateGenerator;
+    @Mock private EnvironmentContentCurator environmentContentCurator;
 
     private ConsumerResource resource;
 
@@ -204,7 +208,9 @@ public class GuestIdResourceTest {
             this.guestIdCurator,
             this.principalProvider,
             this.contentOverrideValidator,
-            this.consumerContentOverrideCurator
+            this.consumerContentOverrideCurator,
+            this.entitlementCertificateGenerator,
+            this.environmentContentCurator
         );
 
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);

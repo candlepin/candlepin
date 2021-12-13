@@ -48,6 +48,7 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -81,6 +82,7 @@ import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.IdentityCertificate;
@@ -199,6 +201,8 @@ public class ConsumerResourceTest {
     @Mock private PrincipalProvider principalProvider;
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock private ContentOverrideValidator contentOverrideValidator;
+    @Mock private EntitlementCertificateGenerator entitlementCertificateGenerator;
+    @Mock private EnvironmentContentCurator environmentContentCurator;
 
     private ModelTranslator translator;
     private ConsumerResource consumerResource;
@@ -254,7 +258,9 @@ public class ConsumerResourceTest {
             this.guestIdCurator,
             this.principalProvider,
             this.contentOverrideValidator,
-            this.consumerContentOverrideCurator
+            this.consumerContentOverrideCurator,
+            this.entitlementCertificateGenerator,
+            this.environmentContentCurator
         );
 
         mockedConsumerResource = Mockito.spy(consumerResource);
@@ -450,7 +456,9 @@ public class ConsumerResourceTest {
             this.guestIdCurator,
             this.principalProvider,
             this.contentOverrideValidator,
-            this.consumerContentOverrideCurator
+            this.consumerContentOverrideCurator,
+            this.entitlementCertificateGenerator,
+            this.environmentContentCurator
         );
 
         // Fixme throw custom exception from generator instead of generic RuntimeException

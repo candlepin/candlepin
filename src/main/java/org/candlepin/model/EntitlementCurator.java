@@ -36,6 +36,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -1300,5 +1301,63 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     private Predicate[] toArray(List<Predicate> predicates) {
         Predicate[] array = new Predicate[predicates.size()];
         return predicates.toArray(array);
+    }
+
+    /**
+     * Returns the map of entitlement ID & its content UUIDs for consumers.
+     * Note - Both of the queries below, covers the case when
+     * 1) Content is present in provided products (eng products).
+     * 2) Content is present in main products.
+     *
+     * @param consumerIds
+     *  list of consumers for which entitlement IDs & content UUIDs to be returned
+     *
+     * @return
+     *  Map of entitlement IDs & its associated content UUIDs
+     */
+    public Map<String, Set<String>> getEntitlementContentUUIDs(List<String> consumerIds) {
+        Map<String, Set<String>> contentMap = new HashMap<>();
+        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() - 1);
+
+        String getContentFromProduct = "SELECT ce.id, c2pc.content_uuid FROM cp2_product_content c2pc " +
+            "JOIN cp_pool cp on c2pc.product_uuid = cp.product_uuid " +
+            "JOIN cp_entitlement ce on cp.id = ce.pool_id " +
+            "JOIN cp_consumer cc on ce.consumer_id = cc.id " +
+            "WHERE cc.id IN (:consumerIds) ";
+
+        String getContentFromProvidedProducts =
+            "SELECT ce.id, c2pc.content_uuid from cp_consumer cc " +
+            "JOIN cp_entitlement ce on cc.id = ce.consumer_id " +
+            "JOIN cp_pool cp on ce.pool_id = cp.id " +
+            "JOIN cp2_product_provided_products c2ppp on cp.product_uuid = c2ppp.product_uuid " +
+            "JOIN cp2_product_content c2pc on c2ppp.provided_product_uuid = c2pc.product_uuid " +
+            "WHERE cc.id IN (:consumerIds) ";
+
+        for (List<String> block : Iterables.partition(consumerIds, blockSize)) {
+            List<Object[]> contentFromProduct = this.getEntityManager()
+                .createNativeQuery(getContentFromProduct)
+                .setParameter("consumerIds", block)
+                .getResultList();
+            getMapOfEntIDAndContentUUID(contentFromProduct, contentMap);
+        }
+
+        for (List<String> block : Iterables.partition(consumerIds, blockSize)) {
+            List<Object[]> contentFromProvidedProducts = this.getEntityManager()
+                .createNativeQuery(getContentFromProvidedProducts)
+                .setParameter("consumerIds", block)
+                .getResultList();
+            getMapOfEntIDAndContentUUID(contentFromProvidedProducts, contentMap);
+        }
+
+        return contentMap;
+    }
+
+    private void getMapOfEntIDAndContentUUID(List<Object[]> rawData, Map<String, Set<String>> map) {
+        for (Object[] obj : rawData) {
+            String entitlementId = obj[0].toString();
+            Set<String> listOfContentUUIDs = map.getOrDefault(entitlementId, new HashSet<>());
+            listOfContentUUIDs.add(obj[1].toString());
+            map.put(entitlementId, listOfContentUUIDs);
+        }
     }
 }
