@@ -23,8 +23,8 @@ import ch.qos.logback.classic.LoggerContext;
 import org.slf4j.LoggerFactory;
 
 /**
- * Sets the log4j logging levels dynamically based on values from the candlepin.conf file.
- * This removes the need to crack the log4j.properties file.
+ * Sets the logback logging levels dynamically based on values from the candlepin.conf file.
+ * This removes the need to crack the logback.xml file.
  *
  * Since we are actually adjusting logging configuration, we have to access the
  * underlying logger implementation instead of going through slf4j.
