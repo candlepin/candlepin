@@ -63,7 +63,7 @@ public class ExceptionMessage implements Serializable {
     }
 
     /**
-     * Pulls the request UUID from the log4j MDC if possible, and sets them for return to the client.
+     * Pulls the request UUID from the logback MDC if possible, and sets them for return to the client.
      *
      * Doesn't include the requestType, as I believe we can assume it's an HTTP request
      * and not a job, if this exception is being used.
