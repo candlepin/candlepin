@@ -513,8 +513,8 @@ public class ConsumerResource implements ConsumersApi {
 
             // Check for fact match (discard and continue)
             if (!pattern.matcher(key).matches()) {
-                log.warn("  Consumer fact \"{}\" does not match pattern \"{}\"", key, factPattern);
-                log.warn("  Discarding fact \"{}\"...", key);
+                log.debug("  Consumer fact \"{}\" does not match pattern \"{}\"", key, factPattern);
+                log.debug("  Discarding fact \"{}\"...", key);
                 continue;
             }
 
