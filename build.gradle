@@ -202,7 +202,7 @@ dependencies {
     runtimeOnly "mysql:mysql-connector-java:8.0.20"
     runtimeOnly "org.mariadb.jdbc:mariadb-java-client:2.3.0"
 
-    testRuntime "org.hsqldb:hsqldb:2.3.3"
+    testRuntime "org.hsqldb:hsqldb:2.6.1"
     testRuntimeOnly "org.glassfish:javax.el:3.0.0"
 
     // Core testing libraries
