@@ -45,9 +45,6 @@ ext {
     api_spec_path = "${projectDir}/api/candlepin-api-spec.yaml"
     config_file = "${projectDir}/api/candlepin-api-config.json"
 
-    logdriver_class = "net.rkbloom.logdriver.LogDriver"
-    use_logdriver = "true".equals(project.findProperty("logdriver"))
-
     cpdb_username = "candlepin"
     cpdb_password = ""
     db_name = "candlepin"
@@ -192,10 +189,6 @@ dependencies {
     // Hibernate JPA integration
     implementation "org.hibernate:hibernate-jpamodelgen:5.4.18.Final"
 
-    if (use_logdriver) {
-        implementation "logdriver:logdriver:1.0"
-    }
-
     annotationProcessor 'org.hibernate:hibernate-jpamodelgen:5.4.18.Final'
 
     checkstyle "com.puppycrawl.tools:checkstyle:8.29"
@@ -265,7 +258,6 @@ repositories {
     maven { url "https://repo.jenkins-ci.org/public/" }
     maven { url "https://repository.jboss.org/nexus/content/groups/public/" }
     maven { url "https://oauth.googlecode.com/svn/code/maven/" }
-    // For LogDriver
     maven { url "https://awood.fedorapeople.org/ivy/candlepin/" }
     // Temporary repo, which stores jss 4.4.6
     maven { url "https://barnabycourt.fedorapeople.org/repo/candlepin/" }

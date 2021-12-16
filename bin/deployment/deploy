@@ -159,8 +159,8 @@ create_var_cache_candlepin() {
 
 autoconf() {
   printf "\nGenerating candlepin.conf\n"
-  echo $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $EXTERNAL_BROKER -Pdb_host=${DBHOSTNAME:-localhost}
-  $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST $EXTERNAL_BROKER  -Pdb_host=${DBHOSTNAME:-localhost}
+  echo $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $HOSTEDTEST $EXTERNAL_BROKER -Pdb_host=${DBHOSTNAME:-localhost}
+  $(checkout_directory)/gradlew generateConfig $DATABASE_SERVER $HOSTEDTEST $EXTERNAL_BROKER  -Pdb_host=${DBHOSTNAME:-localhost}
 
   if [ "$?" -ne "0" ]; then
     err_msg "ERROR: candlepin.conf generation failed!"
@@ -187,7 +187,6 @@ OPTIONS:
   -t          import test data
   -T          import minimal test data, some owners, users, and roles
   -H          include test resources for hosted mode
-  -l          use Logdriver
   -m          use MySQL
   -a          auto-deploy a generated candlepin.conf
   -v          verbose output
@@ -245,7 +244,6 @@ while getopts ":fgtTrHolmavbd:" opt; do
         t  ) TESTDATA="1";;
         T  ) TESTDATA="MIN";;
         r  ) TESTREPO="1";;
-        l  ) LOGDRIVER="logdriver";;
         m  ) USE_MYSQL="1";;
         a  ) AUTOCONF="1";;
         v  ) VERBOSE="1";;
@@ -318,14 +316,6 @@ else
     EXTERNAL_BROKER=""
 fi
 
-# generate the postgresql DB
-if [ "$LOGDRIVER" == "logdriver" ]; then
-    info_msg "Using logdriver"
-    LOGDRIVER="-Plogdriver=true"
-else
-    LOGDRIVER=""
-fi
-
 if [ "$HOSTEDTEST" == "hostedtest" ]; then
     info_msg "Including hostedtest resources"
     info_msg "WARNING: DO NOT SPEC TEST IN PARALLEL MODE"
@@ -343,14 +333,15 @@ else
 fi
 
 printf "\nBuilding Candlepin\n"
-echo $(checkout_directory)/gradlew war $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST
-$(checkout_directory)/gradlew war $DATABASE_SERVER $LOGDRIVER $HOSTEDTEST
+echo $(checkout_directory)/gradlew war $DATABASE_SERVER $HOSTEDTEST
+$(checkout_directory)/gradlew war $DATABASE_SERVER $HOSTEDTEST
 
 if [ "$?" -ne "0" ]; then
   err_msg "ERROR: Compile failed."
   exit 1
 fi
 
+# generate the DB
 gendb
 
 if [ "$FORCECERT" == "1" ]; then

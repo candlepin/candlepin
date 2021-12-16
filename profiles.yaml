@@ -3,10 +3,7 @@
 # See http://viewsourcecode.org/why/redhanded/bits/yamlSMergeKey.html
 
 common:
-  static: &common_static
-    logdriver_class: "net.rkbloom.logdriver.LogDriver"
   server: &common_server
-    <<: *common_static
     username: "candlepin"
     password: ""
 

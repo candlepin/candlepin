@@ -72,8 +72,6 @@ certain features. The available flags are as follows:
   defaults to localhost
 * `-Papp_db_name="db_name"` Specify the name of the db schema to use. This defaults  
   to `candlepin`
-* `-Plogdriver=true` Enable Logdriver support in config file generation & the  
-  generated war file.
 * `-Pqpid=true` Enable qpid configuration when generating a config file
 * `-Phostedtest=true` Enable the hosted test suite
 
