@@ -31,6 +31,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -593,6 +594,10 @@ public class ContentAccessManagerTest {
 
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
+        Content content = this.mockContent(owner);
+        Environment environment = this.mockEnvironment(owner, consumer, content);
+        when(mockEnvironmentCurator.getConsumerEnvironments(any(Consumer.class)))
+            .thenReturn(List.of(environment));
 
         String expectedPath = "/sca/" + owner.getKey();
 
@@ -608,8 +613,12 @@ public class ContentAccessManagerTest {
 
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
+        Content content = this.mockContent(owner);
+        Environment environment = this.mockEnvironment(owner, consumer, content);
+        when(mockEnvironmentCurator.getConsumerEnvironments(any(Consumer.class)))
+            .thenReturn(List.of(environment));
 
-        String expectedPath = "/" + owner.getKey();
+        String expectedPath = "/" + owner.getKey() + "/" + environment.getName();
 
         ContentAccessManager manager = this.createManager();
         manager.getCertificate(consumer);
@@ -625,6 +634,8 @@ public class ContentAccessManagerTest {
         Consumer consumer = this.mockConsumer(owner);
         Content content = this.mockContent(owner);
         Environment environment = this.mockEnvironment(owner, consumer, content);
+        when(mockEnvironmentCurator.getConsumerEnvironments(any(Consumer.class)))
+            .thenReturn(List.of(environment));
 
         String expectedPrefix = "/" + owner.getKey() + "/" + environment.getName();
 
