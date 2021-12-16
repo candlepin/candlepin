@@ -14,406 +14,285 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
-import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.model.Pool.PoolType;
-import org.candlepin.model.dto.Subscription;
-import org.candlepin.policy.EntitlementRefusedException;
-import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
 
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-import javax.persistence.PersistenceException;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 
 
-public class PoolTest extends DatabaseTestFixture {
+/**
+ * Test suite for the Pool object
+ */
+public class PoolTest {
 
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private PoolCurator poolCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private EntitlementCurator entitlementCurator;
-    @Inject private CandlepinPoolManager poolManager;
+    @Test
+    public void testUnlimitedPoolsNeverOverflow() {
+        Pool pool = new Pool()
+            .setConsumed(9001L)
+            .setQuantity(-1L);
 
-    private Pool pool;
-    private Product prod1;
-    private Product prod2;
-    private Owner owner;
-    private Consumer consumer;
-    private Subscription subscription;
-
-    @BeforeEach
-    public void createObjects() {
-        beginTransaction();
-
-        try {
-            owner = new Owner("testowner");
-            ownerCurator.create(owner);
-
-            prod1 = this.createProduct(owner);
-            prod2 = this.createProduct(owner);
-
-            prod1.setProvidedProducts(Arrays.asList(prod2));
-
-            pool = TestUtil.createPool(owner, prod1, 1000);
-            subscription = TestUtil.createSubscription(owner, prod1);
-            subscription.setId(Util.generateDbUUID());
-
-            pool.setSourceSubscription(new SourceSubscription(subscription.getId(), "master"));
-            poolCurator.create(pool);
-            owner = pool.getOwner();
-
-            consumer = this.createConsumer(owner);
-
-            productCurator.create(prod1);
-            poolCurator.create(pool);
-
-            commitTransaction();
-        }
-        catch (RuntimeException e) {
-            rollbackTransaction();
-            throw e;
-        }
+        assertFalse(pool.isOverflowing());
     }
 
     @Test
-    public void testCreate() {
-        Pool lookedUp = this.getEntityManager().find(Pool.class, pool.getId());
-        assertNotNull(lookedUp);
-        assertEquals(owner.getId(), lookedUp.getOwner().getId());
-        assertEquals(prod1.getId(), lookedUp.getProductId());
+    public void testIsOverflowingUnconsumed() {
+        Pool pool = new Pool()
+            .setConsumed(0L)
+            .setQuantity(10L);
+
+        assertFalse(pool.isOverflowing());
     }
 
     @Test
-    public void testMultiplePoolsForOwnerProductAllowed() {
-        Pool duplicatePool = createPool(
-            owner, prod1, -1L, TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30)
-        );
+    public void testIsOverflowingUnderConsumed() {
+        Pool pool = new Pool()
+            .setConsumed(5L)
+            .setQuantity(10L);
 
-        // Just need to see no exception is thrown.
-        poolCurator.create(duplicatePool);
+        assertFalse(pool.isOverflowing());
     }
 
     @Test
-    public void testIsOverflowing() {
-        Pool duplicatePool = createPool(
-            owner, prod1, -1L, TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30)
-        );
+    public void testIsOverflowingOverConsumed() {
+        Pool pool = new Pool()
+            .setConsumed(50L)
+            .setQuantity(10L);
 
-        assertFalse(duplicatePool.isOverflowing());
+        assertTrue(pool.isOverflowing());
     }
 
     @Test
-    public void testQuantityAdjust() {
-        Pool p = new Pool();
-        p.setQuantity(10L);
-        Long q = p.adjustQuantity(2L);
-        assertEquals((Long) 12L, (Long) q);
+    public void testAdjustQuantity() {
+        Pool pool = new Pool()
+            .setQuantity(10L);
 
-        q = p.adjustQuantity(-2L);
-        assertEquals((Long) 8L, (Long) q);
+        long quantity = pool.adjustQuantity(2L);
+        assertEquals(12L, quantity);
+
+        // NOTE: pool.adjustQuantity DOES NOT CHANGE THE POOL'S QUANTITY (what!?)
+        assertEquals(10L, pool.getQuantity());
+
+        quantity = pool.adjustQuantity(-2L);
+        assertEquals(8L, quantity);
+        assertEquals(10L, pool.getQuantity());
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(longs = { -2L, -20L, -200L })
+    public void testAdjustQuantityDoesNotReturnNegativeQuantities(long adjustment) {
+        Pool pool = new Pool()
+            .setQuantity(1L);
+
+        long quantity = pool.adjustQuantity(adjustment);
+        assertEquals(0L, quantity);
+        assertEquals(1L, pool.getQuantity());
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(ints = { -1, 0, 1, 10, 100, 1000, 10000, 1000000 })
+    public void testEntitlementsAlwaysAvailableForUnlimitedPools(int qtyToConsume) {
+        Pool pool = new Pool()
+            .setQuantity(-1L);
+
+        assertTrue(pool.entitlementsAvailable(qtyToConsume));
     }
 
     @Test
-    public void testQuantityAdjustNonNegative() {
-        Pool p = new Pool();
-        p.setQuantity(0L);
-        Long q = p.adjustQuantity(-2L);
-        assertEquals((Long) 0L, (Long) q);
+    public void testPoolTypeNormalAsDefault() {
+        Pool pool = new Pool();
+
+        assertEquals(PoolType.NORMAL, pool.getType());
     }
 
     @Test
-    public void testUnlimitedPool() {
-        Product newProduct = this.createProduct(owner);
+    public void testPoolTypeBonus() {
+        Pool pool = new Pool()
+            .setAttribute(Pool.Attributes.DERIVED_POOL, "true");
 
-        Pool unlimitedPool = createPool(
-            owner, newProduct, -1L, TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30)
-        );
-
-        poolCurator.create(unlimitedPool);
-        assertTrue(unlimitedPool.entitlementsAvailable(1));
-    }
-
-    @Test
-    public void createEntitlementShouldIncreaseNumberOfMembers() throws Exception {
-        Long numAvailEntitlements = 1L;
-        Product newProduct = this.createProduct(owner);
-
-        Pool consumerPool = createPool(owner, newProduct, numAvailEntitlements,
-            TestUtil.createDate(2009, 11, 30), TestUtil.createDate(2050, 11, 30));
-
-        consumerPool = poolCurator.create(consumerPool);
-
-        Map<String, Integer> pQs = new HashMap<>();
-        pQs.put(consumerPool.getId(), 1);
-        poolManager.entitleByPools(consumer, pQs);
-
-        consumerPool = poolCurator.get(consumerPool.getId());
-        assertFalse(consumerPool.entitlementsAvailable(1));
-        assertEquals(1, consumerPool.getEntitlements().size());
-    }
-
-    @Test
-    public void createEntitlementShouldUpdateConsumer() throws Exception {
-        Long numAvailEntitlements = 1L;
-
-        Product newProduct = this.createProduct(owner);
-
-        Pool consumerPool = createPool(
-            owner,
-            newProduct,
-            numAvailEntitlements,
-            TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(2050, 11, 30)
-        );
-
-        poolCurator.create(consumerPool);
-
-        assertEquals(0, consumer.getEntitlements().size());
-        Map<String, Integer> pQs = new HashMap<>();
-        pQs.put(consumerPool.getId(), 1);
-        poolManager.entitleByPools(consumer, pQs);
-
-        assertEquals(1, consumerCurator.get(consumer.getId()).getEntitlements().size());
-    }
-
-    // test subscription product changed exception
-
-    @Test
-    public void testLookupPoolsProvidingProduct() {
-
-        Product childProduct = this.createProduct("2", "product-2", owner);
-
-        Product parentProduct = TestUtil.createProduct("1", "product-1");
-        parentProduct.setProvidedProducts(Arrays.asList(childProduct));
-
-        parentProduct = this.createProduct(parentProduct, owner);
-        Pool pool = TestUtil.createPool(owner, parentProduct, 5);
-        poolCurator.create(pool);
-
-
-        List<Pool> results = poolCurator.listAvailableEntitlementPools(
-            null, owner, childProduct.getId(), null
-        );
-        assertEquals(1, results.size());
-        assertEquals(pool.getId(), results.get(0).getId());
-    }
-
-    /**
-     * After creating a new pool object, test is made to determine whether
-     * the created and updated values are present and not null.
-     */
-    @Test
-    public void testCreationTimestamp() {
-        Product newProduct = this.createProduct(owner);
-
-        Pool pool = createPool(
-            owner, newProduct, 1L, TestUtil.createDate(2011, 3, 30), TestUtil.createDate(2022, 11, 29)
-        );
-
-        poolCurator.create(pool);
-        assertNotNull(pool.getCreated());
-    }
-
-    @Test
-    public void testInitialUpdateTimestamp() {
-        Product newProduct = this.createProduct(owner);
-
-        Pool pool = createPool(
-            owner, newProduct, 1L, TestUtil.createDate(2011, 3, 30), TestUtil.createDate(2022, 11, 29)
-        );
-
-        pool = poolCurator.create(pool);
-        assertNotNull(pool.getUpdated());
-    }
-
-    /**
-     * After updating an existing pool object, test is made to determine whether
-     * the updated value has changed
-     */
-    @Test
-    public void testSubsequentUpdateTimestamp() {
-        Product newProduct = this.createProduct(owner);
-
-        Pool pool = createPool(
-            owner, newProduct, 1L, TestUtil.createDate(2011, 3, 30), TestUtil.createDate(2022, 11, 29)
-        );
-
-        pool = poolCurator.create(pool);
-
-        // set updated to 10 minutes ago
-        Calendar calendar = Calendar.getInstance();
-        calendar.add(Calendar.MINUTE, -10);
-        pool.setUpdated(calendar.getTime());
-
-        Date updated = (Date) pool.getUpdated().clone();
-        pool.setQuantity(23L);
-        pool = poolCurator.merge(pool);
-
-        assertFalse(updated.getTime() == pool.getUpdated().getTime());
-    }
-
-    @Test
-    public void testProvidedProductImmutability() {
-        Product parentProduct = TestUtil.createProduct("1", "product-1");
-        Product providedProduct = this.createProduct("provided", "Child 1", owner);
-        parentProduct.setProvidedProducts(Arrays.asList(providedProduct));
-
-        Product childProduct1 = this.createProduct("child1", "child1", owner);
-
-        parentProduct = this.createProduct(parentProduct, owner);
-        Pool pool = TestUtil.createPool(owner, parentProduct, 5);
-        poolCurator.create(pool);
-        pool = poolCurator.get(pool.getId());
-        assertEquals(1, pool.getProduct().getProvidedProducts().size());
-
-        // provided products are immutable set.
-        pool.getProduct().addProvidedProduct(childProduct1);
-        Pool finalPool = pool;
-        Assertions.assertThrows(PersistenceException.class, () ->poolCurator.merge(finalPool));
-    }
-
-    // sunny test - real rules not invoked here. Can only be sure the counts are recorded.
-    // Rule tests already exist for quantity filter.
-    // Will use spec tests to see if quantity rules are followed in this scenario.
-    @Test
-    public void testEntitlementQuantityChange() throws EntitlementRefusedException {
-        Map<String, Integer> pQs = new HashMap<>();
-        pQs.put(pool.getId(), 3);
-        List<Entitlement> entitlements = poolManager.entitleByPools(consumer, pQs);
-
-        Entitlement ent = entitlements.get(0);
-        assertTrue(ent.getQuantity() == 3);
-        poolManager.adjustEntitlementQuantity(consumer, ent, 5);
-        Entitlement ent2 = entitlementCurator.get(ent.getId());
-        assertTrue(ent2.getQuantity() == 5);
-        Pool pool2 = poolCurator.get(pool.getId());
-        assertTrue(pool2.getConsumed() == 5);
-        assertTrue(pool2.getEntitlements().size() == 1);
-    }
-
-    @Test
-    public void testPoolType() {
-        pool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         assertEquals(PoolType.BONUS, pool.getType());
+    }
 
-        pool.setSourceEntitlement(new Entitlement());
+    @Test
+    public void testPoolTypeEntitlementDerived() {
+        Pool pool = new Pool()
+            .setAttribute(Pool.Attributes.DERIVED_POOL, "true")
+            .setSourceEntitlement(new Entitlement())
+            .setSourceStack(null);
+
         assertEquals(PoolType.ENTITLEMENT_DERIVED, pool.getType());
+    }
 
-        pool.setSourceEntitlement(null);
-        pool.setSourceStack(new SourceStack(new Consumer(), "something"));
+    @Test
+    public void testPoolTypeStackDerived() {
+        Pool pool = new Pool()
+            .setAttribute(Pool.Attributes.DERIVED_POOL, "true")
+            .setSourceEntitlement(null)
+            .setSourceStack(new SourceStack(new Consumer(), "something"));
+
         assertEquals(PoolType.STACK_DERIVED, pool.getType());
+    }
 
-        pool.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
+    @Test
+    public void testPoolTypeUnmappedGuestFromAttribute() {
+        Pool pool = new Pool()
+            .setAttribute(Pool.Attributes.DERIVED_POOL, "true")
+            .setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true")
+            .setSourceEntitlement(null)
+            .setSourceStack(null);
+
         assertEquals(PoolType.UNMAPPED_GUEST, pool.getType());
+    }
 
-        pool.setSourceEntitlement(new Entitlement());
-        pool.setSourceStack(null);
+    @Test
+    public void testPoolTypeUnmappedGuest() {
+        Pool pool = new Pool()
+            .setAttribute(Pool.Attributes.DERIVED_POOL, "true")
+            .setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true")
+            .setSourceEntitlement(new Entitlement())
+            .setSourceStack(null);
+
         assertEquals(PoolType.UNMAPPED_GUEST, pool.getType());
+    }
 
-        pool.removeAttribute(Pool.Attributes.DERIVED_POOL);
-        assertEquals(PoolType.NORMAL, pool.getType());
+    @Test
+    public void testPoolTypeNormalWithStack() {
+        Pool pool = new Pool()
+            .setSourceStack(new SourceStack(new Consumer(), "something"));
 
-        pool.setSourceEntitlement(null);
-        assertEquals(PoolType.NORMAL, pool.getType());
-
-        pool.setSourceStack(new SourceStack(new Consumer(), "something"));
         assertEquals(PoolType.NORMAL, pool.getType());
     }
 
     @Test
-    public void testSetSubIdFromValue() {
-        pool.setSubscriptionId("testid");
-        assertEquals("testid", pool.getSourceSubscription().getSubscriptionId());
-        // subkey should be unchanged
-        assertEquals("master", pool.getSourceSubscription().getSubscriptionSubKey());
-    }
+    public void testSetSourceSubIdFromNull() {
+        Pool pool = new Pool();
 
-    @Test
-    public void testSetSubIdFromNull() {
-        pool.setSourceSubscription(null);
-        pool.setSubscriptionId("testid");
-        assertEquals("testid", pool.getSourceSubscription().getSubscriptionId());
-        // subkey should be null
+        assertNull(pool.getSourceSubscription());
+
+        pool.setSubscriptionId("test_sub_id");
+
+        assertNotNull(pool.getSourceSubscription());
+        assertEquals("test_sub_id", pool.getSourceSubscription().getSubscriptionId());
         assertNull(pool.getSourceSubscription().getSubscriptionSubKey());
     }
 
     @Test
-    public void testSetSubIdNullRemoval() {
-        pool.getSourceSubscription().setSubscriptionSubKey(null);
-        pool.setSubscriptionId(null);
+    public void testUpdateSourceSubIdFromValue() {
+        SourceSubscription srcsub = new SourceSubscription()
+            .setSubscriptionId("test_sub_id")
+            .setSubscriptionSubKey("test_sub_key");
+
+        Pool pool = new Pool()
+            .setSourceSubscription(srcsub);
+
+        assertEquals(srcsub, pool.getSourceSubscription());
+
+        pool.setSubscriptionId("updated_sub_id");
+
+        assertNotNull(pool.getSourceSubscription());
+        assertEquals("updated_sub_id", pool.getSourceSubscription().getSubscriptionId());
+        assertEquals("test_sub_key", pool.getSourceSubscription().getSubscriptionSubKey());
+    }
+
+    /**
+     * Verifies that the SourceSubscription object is cleared when clearing the subscription ID
+     * when the subscription subkey is also null.
+     */
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testClearSourceSubIdClearsSourceSub(String value) {
+        SourceSubscription srcsub = new SourceSubscription()
+            .setSubscriptionId("test_sub_id")
+            .setSubscriptionSubKey(null);
+
+        Pool pool = new Pool()
+            .setSourceSubscription(srcsub);
+
+        assertNotNull(pool.getSourceSubscription());
+
+        pool.setSubscriptionId(value);
         assertNull(pool.getSourceSubscription());
     }
 
     @Test
-    public void testSetSubIdNullEmptyString() {
-        pool.getSourceSubscription().setSubscriptionSubKey(null);
-        pool.setSubscriptionId("");
+    public void testSetSourceSubKeyFromNull() {
+        Pool pool = new Pool();
+
         assertNull(pool.getSourceSubscription());
-    }
 
-    @Test
-    public void testSetSubKeyFromValue() {
-        pool.setSubscriptionSubKey("testkey");
-        assertEquals("testkey", pool.getSourceSubscription().getSubscriptionSubKey());
-        // subkey should be unchanged
-        assertEquals(subscription.getId(), pool.getSourceSubscription().getSubscriptionId());
-    }
+        pool.setSubscriptionSubKey("test_sub_key");
 
-    @Test
-    public void testSetSubKeyFromNull() {
-        pool.setSourceSubscription(null);
-        pool.setSubscriptionSubKey("testid");
-        assertEquals("testid", pool.getSourceSubscription().getSubscriptionSubKey());
-        // subkey should be null
+        assertNotNull(pool.getSourceSubscription());
+        assertEquals("test_sub_key", pool.getSourceSubscription().getSubscriptionSubKey());
         assertNull(pool.getSourceSubscription().getSubscriptionId());
     }
 
     @Test
-    public void testSetSubKeyNullRemoval() {
-        pool.getSourceSubscription().setSubscriptionId(null);
-        pool.setSubscriptionSubKey(null);
-        assertNull(pool.getSourceSubscription());
+    public void testUpdateSourceSubKeyFromValue() {
+        SourceSubscription srcsub = new SourceSubscription()
+            .setSubscriptionId("test_sub_id")
+            .setSubscriptionSubKey("test_sub_key");
+
+        Pool pool = new Pool()
+            .setSourceSubscription(srcsub);
+
+        assertEquals(srcsub, pool.getSourceSubscription());
+
+        pool.setSubscriptionSubKey("updated_sub_key");
+
+        assertNotNull(pool.getSourceSubscription());
+        assertEquals("updated_sub_key", pool.getSourceSubscription().getSubscriptionSubKey());
+        assertEquals("test_sub_id", pool.getSourceSubscription().getSubscriptionId());
     }
 
-    @Test
-    public void testSetSubKeyNullEmptyString() {
-        pool.getSourceSubscription().setSubscriptionId(null);
-        pool.setSubscriptionSubKey("");
+    /**
+     * Verifies that the SourceSubscription object is cleared when clearing the subscription subkey
+     * when the subscription ID is also null.
+     */
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testClearSourceSubKeyClearsSourceSub(String value) {
+        SourceSubscription srcsub = new SourceSubscription()
+            .setSubscriptionId(null)
+            .setSubscriptionSubKey("test_sub_key");
+
+        Pool pool = new Pool()
+            .setSourceSubscription(srcsub);
+
+        assertNotNull(pool.getSourceSubscription());
+
+        pool.setSubscriptionSubKey(value);
         assertNull(pool.getSourceSubscription());
     }
 
     @Test
     public void testIsDerivedPool() {
-        Pool derivedPool = TestUtil.createPool(owner, prod1, 1000);
-        derivedPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+        Owner owner = new Owner();
+        Product prod = new Product();
 
-        assertTrue(derivedPool.isDerived());
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(prod)
+            .setQuantity(1000L)
+            .setAttribute(Pool.Attributes.DERIVED_POOL, "true");
+
+        assertTrue(pool.isDerived());
     }
 
     @Test
     public void testIsNotDerivedPool() {
-        Pool derivedPool = TestUtil.createPool(owner, prod1, 1000);
+        Owner owner = new Owner();
+        Product prod = new Product();
 
-        assertFalse(derivedPool.isDerived());
+        Pool pool = new Pool()
+            .setOwner(owner)
+            .setProduct(prod)
+            .setQuantity(1000L);
+
+        assertFalse(pool.isDerived());
     }
 }

@@ -20,9 +20,11 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.auth.NoAuthPrincipal;
@@ -64,6 +66,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.persistence.PersistenceException;
+
 
 
 /**
@@ -2924,6 +2928,151 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         assertNotNull(result);
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    public void testCreatePool() {
+        Product prod = this.createProduct(this.owner);
+
+        Pool pool = new Pool()
+            .setOwner(this.owner)
+            .setProduct(prod)
+            .setQuantity(1L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0));
+
+        this.poolCurator.create(pool);
+
+        this.poolCurator.flush();
+        this.poolCurator.clear();
+
+        Pool lookedUp = this.getEntityManager().find(Pool.class, pool.getId());
+
+        assertNotNull(lookedUp);
+        assertEquals(this.owner.getId(), lookedUp.getOwner().getId());
+        assertEquals(prod.getId(), lookedUp.getProductId());
+    }
+
+    @Test
+    public void testMultiplePoolsForOwnerProductAllowed() {
+        Product prod = this.createProduct(this.owner);
+
+        Pool pool1 = new Pool()
+            .setOwner(this.owner)
+            .setProduct(prod)
+            .setQuantity(1L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0));
+
+        Pool pool2 = new Pool()
+            .setOwner(this.owner)
+            .setProduct(prod)
+            .setQuantity(1L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0));
+
+        this.poolCurator.create(pool1);
+        this.poolCurator.create(pool2);
+
+        this.poolCurator.flush();
+        this.poolCurator.clear();
+
+        Pool fetched1 = this.poolCurator.get(pool1.getId());
+        Pool fetched2 = this.poolCurator.get(pool2.getId());
+
+        assertNotNull(fetched1);
+        assertNotNull(fetched2);
+        assertNotEquals(fetched1.getId(), fetched2.getId());
+
+        assertEquals(fetched1.getOwner().getId(), fetched1.getOwner().getId());
+        assertEquals(fetched1.getProduct().getId(), fetched1.getProduct().getId());
+    }
+
+    @Test
+    public void testPersistPopulatesCreatedAndUpdatedTimestamps() {
+        Product product = this.createProduct(this.owner);
+
+        Pool pool = new Pool()
+            .setOwner(this.owner)
+            .setProduct(this.product)
+            .setQuantity(1L)
+            .setStartDate(TestUtil.createDateOffset(-1, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(1, 0, 0));
+
+        assertNull(pool.getCreated());
+        assertNull(pool.getUpdated());
+
+        this.poolCurator.create(pool);
+
+        assertNotNull(pool.getCreated());
+        assertNotNull(pool.getUpdated());
+    }
+
+    @Test
+    public void testPersistChangesUpdatedTimestamp() throws Exception {
+        Product prod = this.createProduct(this.owner);
+        Pool pool = this.createPool(this.owner, prod);
+
+        assertNotNull(pool.getCreated());
+        assertNotNull(pool.getUpdated());
+
+        Date created = (Date) pool.getCreated().clone();
+        Date updated = (Date) pool.getUpdated().clone();
+
+        // Wait a bit because MySQL tends to be silly with milliseconds
+        Thread.sleep(1500);
+
+        // Make an unrelated change to ensure the updated time is changed on persist
+        pool.setQuantity(25L);
+        this.poolCurator.merge(pool);
+        this.poolCurator.flush();
+
+        assertNotNull(pool.getCreated());
+        assertNotNull(pool.getUpdated());
+
+        assertNotEquals(updated, pool.getUpdated());
+        assertTrue(updated.before(pool.getUpdated()));
+
+        assertEquals(created, pool.getCreated());
+    }
+
+    @Test
+    public void testProvidedProductImmutability() {
+        Product parentProduct = TestUtil.createProduct("1", "product-1");
+        Product providedProduct = this.createProduct("provided", "Child 1", owner);
+        parentProduct.setProvidedProducts(Arrays.asList(providedProduct));
+
+        Product childProduct1 = this.createProduct("child1", "child1", owner);
+
+        parentProduct = this.createProduct(parentProduct, owner);
+        Pool pool = TestUtil.createPool(owner, parentProduct, 5);
+        poolCurator.create(pool);
+        pool = poolCurator.get(pool.getId());
+        assertEquals(1, pool.getProduct().getProvidedProducts().size());
+
+        // provided products are immutable set.
+        pool.getProduct().addProvidedProduct(childProduct1);
+        Pool finalPool = pool;
+        poolCurator.merge(finalPool);
+        assertThrows(PersistenceException.class, () -> this.poolCurator.flush());
+    }
+
+    @Test
+    public void testLookupPoolsProvidingProduct() {
+        Product childProduct = this.createProduct("2", "product-2", owner);
+
+        Product parentProduct = TestUtil.createProduct("1", "product-1");
+        parentProduct.setProvidedProducts(Arrays.asList(childProduct));
+
+        parentProduct = this.createProduct(parentProduct, owner);
+        Pool pool = TestUtil.createPool(owner, parentProduct, 5);
+        poolCurator.create(pool);
+
+        List<Pool> results = poolCurator.listAvailableEntitlementPools(
+            null, owner, childProduct.getId(), null);
+
+        assertEquals(1, results.size());
+        assertEquals(pool.getId(), results.get(0).getId());
     }
 
 }
