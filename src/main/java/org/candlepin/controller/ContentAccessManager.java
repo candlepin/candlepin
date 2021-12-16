@@ -19,6 +19,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.util.ContentPrefix;
 import org.candlepin.controller.util.PromotedContent;
+import org.candlepin.controller.util.ScaContainerContentPrefix;
 import org.candlepin.controller.util.ScaContentPrefix;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
@@ -39,6 +40,7 @@ import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
+import org.candlepin.model.dto.Content;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -77,13 +79,13 @@ import javax.naming.ldap.Rdn;
  * content access modes.
  */
 public class ContentAccessManager {
-    private static Logger log = LoggerFactory.getLogger(ContentAccessManager.class);
+    private static final Logger log = LoggerFactory.getLogger(ContentAccessManager.class);
 
     /**
      * The ContentAccessMode enum specifies the supported content access modes, as well as some
      * utility methods for resolving, matching, and converting to database-compatible values.
      */
-    public static enum ContentAccessMode {
+    public enum ContentAccessMode {
         ENTITLEMENT,
         ORG_ENVIRONMENT;
 
@@ -188,21 +190,20 @@ public class ContentAccessManager {
             ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
     }
 
-    private Configuration config;
-    private PKIUtility pki;
-    private KeyPairCurator keyPairCurator;
-    private CertificateSerialCurator serialCurator;
-    private OwnerCurator ownerCurator;
-    private OwnerContentCurator ownerContentCurator;
-    private ContentAccessCertificateCurator contentAccessCertificateCurator;
-    private X509V3ExtensionUtil v3extensionUtil;
-    private ConsumerCurator consumerCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private EnvironmentCurator environmentCurator;
-    private ContentAccessCertificateCurator contentAccessCertCurator;
-    private EventSink eventSink;
-
-    private boolean standalone;
+    private final Configuration config;
+    private final PKIUtility pki;
+    private final KeyPairCurator keyPairCurator;
+    private final CertificateSerialCurator serialCurator;
+    private final OwnerCurator ownerCurator;
+    private final OwnerContentCurator ownerContentCurator;
+    private final ContentAccessCertificateCurator contentAccessCertificateCurator;
+    private final X509V3ExtensionUtil v3extensionUtil;
+    private final ConsumerCurator consumerCurator;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final EnvironmentCurator environmentCurator;
+    private final ContentAccessCertificateCurator contentAccessCertCurator;
+    private final EventSink eventSink;
+    private final boolean standalone;
 
     @Inject
     public ContentAccessManager(
@@ -382,12 +383,18 @@ public class ContentAccessManager {
         log.info("Generating X509 certificate for consumer \"{}\"...", consumer.getUuid());
         // fake a product dto as a container for the org content
         org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
-        org.candlepin.model.dto.Content dContent = new org.candlepin.model.dto.Content();
         List<org.candlepin.model.dto.Content> dtoContents = new ArrayList<>();
-        dtoContents.add(dContent);
+        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
 
-        Environment environment = this.environmentCurator.getConsumerEnvironment(consumer);
-        dContent.setPath(this.getContainerContentPath(owner, environment));
+        ContentPrefix prefix = ScaContainerContentPrefix.from(owner, this.standalone, environments);
+
+        for (Environment environment : environments) {
+            dtoContents.add(getContent(prefix, environment.getId()));
+        }
+
+        if (dtoContents.isEmpty()) {
+            dtoContents.add(getContent(prefix, null));
+        }
 
         container.setContent(dtoContents);
 
@@ -401,12 +408,17 @@ public class ContentAccessManager {
         return new String(encodedCert);
     }
 
+    private Content getContent(ContentPrefix prefix, String environmentId) {
+        Content dContent = new Content();
+        dContent.setPath(prefix.get(environmentId));
+        return dContent;
+    }
+
     private String createPayloadAndSignature(Owner owner, Consumer consumer)
         throws IOException {
 
         log.info("Generating SCA payload for consumer \"{}\"...", consumer.getUuid());
-        Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
-        byte[] payloadBytes = createContentAccessDataPayload(owner, env, consumer);
+        byte[] payloadBytes = createContentAccessDataPayload(owner, consumer);
 
         String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
         payload += Util.toBase64(payloadBytes);
@@ -454,45 +466,8 @@ public class ContentAccessManager {
         return entitlementVersion != null && entitlementVersion.startsWith("3.");
     }
 
-    /**
-     * Fetches the path to use for content used to generate the ENTITLEMENT_DATA certificate
-     * extension
-     *
-     * @param owner
-     *  the owner of the entitlement for which the content path is being generated
-     *
-     * @param environment
-     *  the environment to which the consumer receiving the entitlement belongs
-     *
-     * @return
-     *  the container content path for the given owner and environment
-     */
-    private String getContainerContentPath(Owner owner, Environment environment) {
-        // Fix for BZ 1866525:
-        // - In hosted, SCA entitlement content path needs to use a dummy value to prevent existing
-        //   clients from breaking, while still being clear the path is present for SCA
-        // - In satellite (standalone), the path should simply be the content prefix
-
-        if (this.standalone) {
-            String envId = environment == null ? null : environment.getId();
-            List<Environment> envs = environment == null ? List.of() : List.of(environment);
-            return ScaContentPrefix.from(owner, this.standalone, envs).get(envId);
-        }
-        return "/sca/" + Util.encodeUrl(owner.getKey());
-    }
-
     private String createDN(Consumer consumer, Owner owner) {
-        StringBuilder sb = new StringBuilder("CN=")
-            .append(consumer.getUuid())
-            .append(", O=")
-            .append(Rdn.escapeValue(owner.getKey()));
-
-        if (consumer.getEnvironmentId() != null) {
-            Environment environment = this.environmentCurator.getConsumerEnvironment(consumer);
-            sb.append(", OU=").append(Rdn.escapeValue(environment.getName()));
-        }
-
-        return sb.toString();
+        return "CN=" + consumer.getUuid() + ", O=" + Rdn.escapeValue(owner.getKey());
     }
 
     private Set<X509ExtensionWrapper> prepareV3Extensions() {
@@ -511,7 +486,7 @@ public class ContentAccessManager {
         return v3extensionUtil.getByteExtensions(products);
     }
 
-    private byte[] createContentAccessDataPayload(Owner owner, Environment environment, Consumer consumer)
+    private byte[] createContentAccessDataPayload(Owner owner, Consumer consumer)
         throws IOException {
         Product container = new Product();
         container.setId("content_access");

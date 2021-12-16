@@ -261,6 +261,53 @@ describe 'Content Access' do
       end
   end
 
+  it "content access cert should handle multiple environments" do
+      env1 = @user.create_environment(@owner['key'], random_string('testenv'),
+        "My Test Env 1", "For test systems only.")
+      env2 = @user.create_environment(@owner['key'], random_string('testenv'),
+        "My Test Env 2", "For test systems only.")
+      content2 = @cp.create_content(
+        @owner['key'], "cname2", 'test-content2', random_string("clabel2"), "ctype", "cvendor",
+        {:content_url=> '/this/is/the/path2', :modified_products => [@modified_product["id"]], :arches => "x86_64"}, true)
+      @cp.add_content_to_product(@owner['key'], @product['id'], content2['id'])
+
+      promote_content_to_environment(@user, env1, @content, false)
+      promote_content_to_environment(@user, env2, content2, false)
+
+      consumer = @user.register(random_string('consumer'), :system, nil,
+          {'system.certificate_version' => '3.3'},nil, nil, [], [], [{'id' => env1['id']}, {'id' => env2['id']}])
+      expect(consumer['environments']).not_to eq([])
+      @consumer = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+      certs = @consumer.list_certificates
+      certs.length.should == 1
+      json_body = extract_payload(certs[0]['cert'])
+
+      contents = json_body['products'][0]['content']
+      contents.length().should == 2
+      env_contents = { env1['name'] => @content,  env2['name'] => content2 }
+      content_envs = { @content['id'] => env1,  content2['id'] => env2 }
+
+      contents.each { |content|
+        content['enabled'].should == false
+        value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
+
+        env = content_envs[content['id']]
+        content_url = env_contents[env['name']].contentUrl
+
+        # Check that Standalone uses the owner key and environment name as prefix for content url, while Hosted does not
+        if is_standalone?
+          # We URL encode the environment name when generating the prefix, which replaces spaces with +
+          encoded_env_name = env['name'].gsub(' ', '+')
+
+          expect(content['path']).to eq('/' + @owner['key'] + '/' + encoded_env_name + content_url)
+          expect(are_content_urls_present(value, ['/' + @owner['key'] + '/' + encoded_env_name])).to eq(true)
+        else
+          expect(content['path']).to eq(content_url)
+          expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
+        end
+      }
+  end
+
   it "environment content changes show in content access cert" do
     @env = @user.create_environment(@owner['key'], random_string('testenv'),
       "My Test Env 1", "For test systems only.")
