@@ -75,7 +75,10 @@ Summary:        SELinux policy module supporting candlepin
 Group:          System Environment/Base
 BuildRequires:  checkpolicy
 BuildRequires:  selinux-policy-devel
+BuildRequires:  util-linux
+%if (0%{?rhel} && 0%{?rhel} < 9)
 BuildRequires:  hardlink
+%endif
 
 Requires:	selinux-policy >= %{_selinux_policy_version}
 Requires:       %{name} = %{version}-%{release}
@@ -160,7 +163,7 @@ do
 done
 #end raw
 cd -
-/usr/sbin/hardlink -cv %{buildroot}/%{_datadir}/selinux
+hardlink -cv %{buildroot}/%{_datadir}/selinux
 
 %clean
 rm -rf %{buildroot}
