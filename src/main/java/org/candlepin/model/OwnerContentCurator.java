@@ -36,6 +36,7 @@ import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
@@ -343,6 +344,25 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      *  a map containing the contents found, keyed by content ID
      */
     public Map<String, List<Content>> getContentByVersions(Collection<Integer> versions) {
+        return this.getContentByVersions(versions, null);
+    }
+
+    /**
+     * Fetches all content having an entity version equal to one of the versions provided.
+     *
+     * @param versions
+     *  A collection of entity versions to use to select contents
+     *
+     * @param lockMode
+     *  the lock mode to apply to the products returned by this query, or null to not perform any
+     *  locking
+     *
+     * @return
+     *  a map containing the contents found, keyed by content ID
+     */
+    public Map<String, List<Content>> getContentByVersions(Collection<Integer> versions,
+        LockModeType lockMode) {
+
         Map<String, List<Content>> result = new HashMap<>();
 
         if (versions != null && !versions.isEmpty()) {
@@ -350,6 +370,19 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
             TypedQuery<Content> query = this.getEntityManager()
                 .createQuery(jpql, Content.class);
+
+            // Impl note:
+            // Hibernate handles locks on immutable entities very inconsistently. If the entity
+            // already exists in the session, this will throw an exception. But if it needs to be
+            // pulled from the database, this is safe and works as expected. For our purposes,
+            // this is fine to do here as our production code doesn't use this method after
+            // priming the session with DB-backed entities, but most of our database tests do.
+            // Working around this behavior by evicting such objects causes other problems for
+            // tests, which leaves us with little choice but to avoid applying this lock if the
+            // DB appears to be what we use for testing (hsqldb).
+            if (lockMode != null && !this.getDatabaseDialect().contains("hsql")) {
+                query.setLockMode(lockMode);
+            }
 
             for (Collection<Integer> block : this.partition(versions)) {
                 for (Content element : query.setParameter("vblock", block).getResultList()) {

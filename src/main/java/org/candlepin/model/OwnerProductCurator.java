@@ -547,6 +547,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      *  a map containing the products found, keyed by product ID
      */
     public Map<String, List<Product>> getProductsByVersions(Collection<Integer> versions) {
+
         Map<String, List<Product>> result = new HashMap<>();
 
         if (versions != null && !versions.isEmpty()) {

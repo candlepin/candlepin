@@ -17,6 +17,8 @@ package org.candlepin.async.tasks;
 import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.controller.ContentManager;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
@@ -69,8 +71,11 @@ public class OrphanCleanupJob implements AsyncJob  {
     @Override
     @Transactional
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        log.debug("Deleting orphaned entities");
+        log.debug("Obtaining system locks...");
+        this.productCurator.getSystemLock(ProductManager.SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
+        this.contentCurator.getSystemLock(ContentManager.SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
 
+        log.debug("Deleting orphaned entities...");
         int orphanedContent = this.deleteOrphanedContent();
         int orphanedProducts = this.deleteOrphanedProducts();
 
@@ -83,8 +88,7 @@ public class OrphanCleanupJob implements AsyncJob  {
 
     private int deleteOrphanedContent() {
         int count = 0;
-        CandlepinQuery<Content> contentQuery = this.ownerContentCurator.getOrphanedContent()
-            .setLockMode(LockModeType.PESSIMISTIC_WRITE);
+        CandlepinQuery<Content> contentQuery = this.ownerContentCurator.getOrphanedContent();
 
         for (Content content : contentQuery) {
             this.contentCurator.delete(content);

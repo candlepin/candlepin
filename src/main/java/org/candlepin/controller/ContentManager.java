@@ -35,6 +35,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+
+import javax.persistence.LockModeType;
 
 
 
@@ -48,6 +51,9 @@ import java.util.Objects;
  */
 public class ContentManager {
     private static final Logger log = LoggerFactory.getLogger(ContentManager.class);
+
+    /** Name of the system lock used by various content operations */
+    public static final String SYSTEM_LOCK = "content";
 
     private final ContentAccessManager contentAccessManager;
     private final ProductManager productManager;
@@ -135,6 +141,8 @@ public class ContentManager {
             throw new IllegalStateException("content has already been created: " + contentData.getId());
         }
 
+        this.ownerContentCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
+
         log.debug("Creating new content for org: {}, {}", contentData, owner);
 
         Content entity = new Content()
@@ -144,7 +152,7 @@ public class ContentManager {
 
         // Check if we have an alternate version we can use instead.
         List<Content> alternateVersions = this.ownerContentCurator
-            .getContentByVersions(Collections.singleton(entity.getEntityVersion()))
+            .getContentByVersions(Set.of(entity.getEntityVersion()))
             .get(entity.getId());
 
         if (alternateVersions != null) {
@@ -224,6 +232,8 @@ public class ContentManager {
             return entity;
         }
 
+        this.ownerContentCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
+
         log.debug("Applying content update for org: {} => {}, {}", contentData, entity, owner);
 
         Content updated = applyContentChanges((Content) entity.clone(), contentData)
@@ -240,7 +250,7 @@ public class ContentManager {
         // their own version.
         // This is probably going to be a very expensive operation, though.
         List<Content> alternateVersions = this.ownerContentCurator
-            .getContentByVersions(Collections.singleton(updated.getEntityVersion()))
+            .getContentByVersions(Set.of(updated.getEntityVersion()))
             .get(updated.getId());
 
         if (alternateVersions != null) {
