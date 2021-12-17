@@ -28,6 +28,7 @@ import org.candlepin.audit.Event;
 import org.candlepin.audit.EventSink;
 import org.candlepin.common.paging.Page;
 import org.candlepin.common.paging.PageRequest;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.dto.manifest.v1.BrandingDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
@@ -65,8 +66,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
@@ -951,6 +955,438 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         CertificateSerial revoked = certSerialCurator.get(serial.getId());
         assertTrue(revoked.isRevoked(), "cert serial should be marked as revoked once deleted!");
+    }
+
+    @Test
+    public void testRefreshPoolsWithNewSubscriptions() {
+        Owner owner = this.createOwner();
+        Product prod = this.createProduct(owner);
+
+        List<SubscriptionDTO> subscriptions = new LinkedList<>();
+        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod));
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
+            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+
+        SubscriptionDTO sub = new SubscriptionDTO();
+        sub.setId(Util.generateDbUUID());
+        sub.setOwner(ownerDto);
+        sub.setProduct(this.modelTranslator.translate(prod, ProductDTO.class));
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setLastModified(TestUtil.createDate(2010, 2, 12));
+        subscriptions.add(sub);
+
+        // Trigger the refresh:
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        List<Pool> pools = poolCurator.listByOwnerAndProduct(owner, prod.getId());
+        assertEquals(1, pools.size());
+        Pool newPool = pools.get(0);
+
+        assertEquals(sub.getId(), newPool.getSubscriptionId());
+        assertEquals(sub.getQuantity(), newPool.getQuantity());
+        assertEquals(sub.getStartDate(), newPool.getStartDate());
+        assertEquals(sub.getEndDate(), newPool.getEndDate());
+    }
+
+    @Test
+    public void testRefreshPoolsWithChangedSubscriptions() {
+        Owner owner = this.createOwner();
+        Product prod = this.createProduct(owner);
+        Pool pool = createPool(owner, prod, 1000L,
+            TestUtil.createDate(2009, 11, 30),
+            TestUtil.createDate(2015, 11, 30));
+
+        List<SubscriptionDTO> subscriptions = new LinkedList<>();
+        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod));
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
+            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+
+        SubscriptionDTO sub = new SubscriptionDTO();
+        sub.setId(Util.generateDbUUID());
+        sub.setOwner(ownerDto);
+        sub.setProduct(this.modelTranslator.translate(prod, ProductDTO.class));
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setLastModified(TestUtil.createDate(2010, 2, 12));
+        subscriptions.add(sub);
+
+        assertTrue(pool.getQuantity() < sub.getQuantity());
+        assertTrue(pool.getStartDate() != sub.getStartDate());
+        assertTrue(pool.getEndDate() != sub.getEndDate());
+
+        pool.getSourceSubscription().setSubscriptionId(sub.getId());
+        poolCurator.merge(pool);
+
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+
+        pool = poolCurator.get(pool.getId());
+        assertEquals(sub.getId(), pool.getSubscriptionId());
+        assertEquals(sub.getQuantity(), pool.getQuantity());
+        assertEquals(sub.getStartDate(), pool.getStartDate());
+        assertEquals(sub.getEndDate(), pool.getEndDate());
+    }
+
+    @Test
+    public void testRefreshPoolsWithRemovedSubscriptions() {
+        Owner owner = this.createOwner();
+        Product prod = this.createProduct(owner);
+
+        List<SubscriptionDTO> subscriptions = new LinkedList<>();
+        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod));
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
+            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+
+        SubscriptionDTO sub = new SubscriptionDTO();
+        sub.setId(Util.generateDbUUID());
+        sub.setOwner(ownerDto);
+        sub.setProduct(this.modelTranslator.translate(prod, ProductDTO.class));
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setLastModified(TestUtil.createDate(2010, 2, 12));
+
+        // This line is only present as a result of a (temporary?) fix for BZ 1452694. Once a
+        // better fix has been implemented, the upstream pool ID can be removed.
+        sub.setUpstreamPoolId("upstream_pool_id");
+
+        subscriptions.add(sub);
+
+        // Trigger the refresh:
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+
+        List<Pool> pools = poolCurator.listByOwnerAndProduct(owner, prod.getId());
+        assertEquals(1, pools.size());
+        Pool newPool = pools.get(0);
+        String poolId = newPool.getId();
+
+        // Now delete the subscription:
+        subscriptions.remove(sub);
+
+        // Trigger the refresh:
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        assertNull(poolCurator.get(poolId));
+    }
+
+    @Test
+    public void testRefreshMultiplePools() {
+        Owner owner = this.createOwner();
+        Product prod = this.createProduct(owner);
+        Product prod2 = this.createProduct(owner);
+
+        List<SubscriptionDTO> subscriptions = new LinkedList<>();
+        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod, prod2));
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
+            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+
+        SubscriptionDTO sub = new SubscriptionDTO();
+        sub.setId(Util.generateDbUUID());
+        sub.setOwner(ownerDto);
+        sub.setProduct(this.modelTranslator.translate(prod, ProductDTO.class));
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setLastModified(TestUtil.createDate(2010, 2, 12));
+        subscriptions.add(sub);
+
+        SubscriptionDTO sub2 = new SubscriptionDTO();
+        sub2.setId(Util.generateDbUUID());
+        sub2.setOwner(ownerDto);
+        sub2.setProduct(this.modelTranslator.translate(prod2, ProductDTO.class));
+        sub2.setQuantity(800L);
+        sub2.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub2.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub2.setLastModified(TestUtil.createDate(2010, 2, 12));
+        subscriptions.add(sub2);
+
+        // Trigger the refresh:
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+
+        List<Pool> pools = poolCurator.listByOwner(owner).list();
+        assertEquals(2, pools.size());
+    }
+
+    // test covers scenario from bug 1012386
+    @Test
+    public void testRefreshPoolsWithRemovedMasterPool() {
+        Owner owner = this.createOwner();
+        Product prod = TestUtil.createProduct();
+
+        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
+        createProduct(prod, owner);
+        config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        List<SubscriptionDTO> subscriptions = new LinkedList<>();
+        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod));
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
+            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+
+        SubscriptionDTO sub = new SubscriptionDTO();
+        sub.setId(Util.generateDbUUID());
+        sub.setOwner(ownerDto);
+        sub.setProduct(this.modelTranslator.translate(prod, ProductDTO.class));
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setLastModified(TestUtil.createDate(2010, 2, 12));
+        subscriptions.add(sub);
+
+        // Trigger the refresh:
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+
+        List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
+        assertEquals(2, pools.size());
+        String bonusId =  "";
+        String masterId = "";
+
+        for (Pool p : pools) {
+            if (p.getSourceSubscription().getSubscriptionSubKey().equals("master")) {
+                poolCurator.delete(p);
+                masterId = p.getId();
+            }
+            else {
+                bonusId = p.getId();
+            }
+        }
+
+        // Trigger the refresh:
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+
+        assertNull(poolCurator.get(masterId), "Original Master Pool should be gone");
+        assertNotNull(poolCurator.get(bonusId), "Bonus Pool should be the same");
+        // master pool should have been recreated
+        pools = poolCurator.getBySubscriptionId(owner, sub.getId());
+        assertEquals(2, pools.size());
+        boolean newMaster = false;
+        for (Pool p : pools) {
+            if (p.getSourceSubscription().getSubscriptionSubKey().equals("master")) {
+                newMaster = true;
+            }
+        }
+        assertTrue(newMaster);
+    }
+
+    // test covers a corollary scenario from bug 1012386
+    @Test
+    public void testRefreshPoolsWithRemovedBonusPool() {
+        Owner owner = this.createOwner();
+        Product prod = TestUtil.createProduct();
+
+        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
+        createProduct(prod, owner);
+        config.setProperty(ConfigProperties.STANDALONE, "false");
+
+        List<SubscriptionDTO> subscriptions = new LinkedList<>();
+        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod));
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
+            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+
+        SubscriptionDTO sub = new SubscriptionDTO();
+        sub.setId(Util.generateDbUUID());
+        sub.setOwner(ownerDto);
+        sub.setProduct(this.modelTranslator.translate(prod, ProductDTO.class));
+        sub.setQuantity(2000L);
+        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
+        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
+        sub.setLastModified(TestUtil.createDate(2010, 2, 12));
+        subscriptions.add(sub);
+
+        // Trigger the refresh:
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+
+        List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
+        assertEquals(2, pools.size());
+        String bonusId =  "";
+        String masterId = "";
+
+        for (Pool p : pools) {
+            if (p.getSourceSubscription().getSubscriptionSubKey().equals("derived")) {
+                poolCurator.delete(p);
+                bonusId = p.getId();
+            }
+            else {
+                masterId = p.getId();
+            }
+        }
+
+        // Trigger the refresh:
+        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+
+        assertNull(poolCurator.get(bonusId), "Original bonus pool should be gone");
+        assertNotNull(poolCurator.get(masterId), "Master pool should be the same");
+        // master pool should have been recreated
+        pools = poolCurator.getBySubscriptionId(owner, sub.getId());
+        assertEquals(2, pools.size());
+        boolean newBonus = false;
+        for (Pool p : pools) {
+            if (p.getSourceSubscription().getSubscriptionSubKey().equals("derived")) {
+                newBonus = true;
+            }
+        }
+        assertTrue(newBonus);
+    }
+
+    /**
+     * @param pool
+     * @param owner
+     * @param consumer
+     * @return
+     */
+    private Entitlement createEntitlementWithQ(Pool pool, Owner owner, Consumer consumer, int quantity,
+        String date) throws ParseException {
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        Entitlement e1 = createEntitlement(owner, consumer, pool, null);
+        e1.setQuantity(quantity);
+        pool.getEntitlements().add(e1);
+
+        this.entitlementCurator.create(e1);
+        e1.getPool().setConsumed(e1.getPool().getConsumed() + quantity);
+        this.poolCurator.merge(e1.getPool());
+
+        e1.setCreated(dateFormat.parse(date));
+        this.entitlementCurator.merge(e1);
+
+        return e1;
+    }
+
+    private Pool doTestEntitlementsRevocationCommon(long subQ, int e1, int e2) throws ParseException {
+        Owner owner = this.createOwner();
+        Product prod = this.createProduct(owner);
+
+        List<SubscriptionDTO> subscriptions = new LinkedList<>();
+        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
+        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            Arrays.asList(prod));
+
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
+            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+
+        SubscriptionDTO sub = new SubscriptionDTO();
+        sub.setId(Util.generateDbUUID());
+        sub.setOwner(ownerDto);
+        sub.setProduct(this.modelTranslator.translate(prod, ProductDTO.class));
+        sub.setQuantity(1000L);
+        sub.setStartDate(TestUtil.createDate(2009, 11, 30));
+        sub.setEndDate(TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 10, 30));
+        sub.setLastModified(TestUtil.createDate(2015, 11, 30));
+        subscriptions.add(sub);
+
+        List<Pool> pools = poolManager.createAndEnrichPools(sub);
+        assertTrue(pools.size() > 0);
+        Pool pool = pools.get(0);
+
+        sub.setQuantity(subQ);
+
+        Owner retrieved = pool.getOwner();
+        Consumer consumer = createConsumer(retrieved);
+        Consumer consumer1 = createConsumer(retrieved);
+
+        pool = this.poolCurator.get(pool.getId());
+        createEntitlementWithQ(pool, retrieved, consumer, e1, "01/02/2010");
+        createEntitlementWithQ(pool, retrieved, consumer1, e2, "01/01/2010");
+        assertEquals(pool.getConsumed(), Long.valueOf(e1 + e2));
+
+        poolManager.getRefresher(subAdapter, prodAdapter).add(retrieved).run();
+        pool = poolCurator.get(pool.getId());
+        return pool;
+    }
+
+    @Test
+    public void testEntitlementsRevocationWithLifoOrder() throws Exception {
+        Pool pool = doTestEntitlementsRevocationCommon(7, 4, 5);
+        assertEquals(5L, this.poolCurator.get(pool.getId()).getConsumed().longValue());
+    }
+
+    @Test
+    public void testEntitlementsRevocationWithNoOverflow() throws Exception {
+        Pool pool = doTestEntitlementsRevocationCommon(10, 4, 5);
+        assertEquals(9L, this.poolCurator.get(pool.getId()).getConsumed().longValue());
+    }
+
+    @Test
+    public void createEntitlementShouldIncreaseNumberOfMembers() throws Exception {
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner, this.systemType);
+        Product product = this.createProduct(owner);
+
+        Long numAvailEntitlements = 1L;
+        Pool consumerPool = this.createPool(owner, product, numAvailEntitlements,
+            TestUtil.createDateOffset(-1, 0, 0), TestUtil.createDateOffset(1, 0, 0));
+
+        assertEquals(0, consumer.getEntitlements().size());
+
+        Map<String, Integer> poolQuantities = new HashMap<>();
+        poolQuantities.put(consumerPool.getId(), 1);
+        this.poolManager.entitleByPools(consumer, poolQuantities);
+
+        consumerPool = poolCurator.get(consumerPool.getId());
+        assertFalse(consumerPool.entitlementsAvailable(1));
+        assertEquals(1, consumerPool.getEntitlements().size());
+    }
+
+    @Test
+    public void createEntitlementShouldUpdateConsumer() throws Exception {
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner, this.systemType);
+        Product product = this.createProduct(owner);
+
+        Long numAvailEntitlements = 1L;
+        Pool consumerPool = this.createPool(owner, product, numAvailEntitlements,
+            TestUtil.createDateOffset(-1, 0, 0), TestUtil.createDateOffset(1, 0, 0));
+
+        assertEquals(0, consumer.getEntitlements().size());
+
+        Map<String, Integer> poolQuantities = new HashMap<>();
+        poolQuantities.put(consumerPool.getId(), 1);
+        poolManager.entitleByPools(consumer, poolQuantities);
+
+        assertEquals(1, consumerCurator.get(consumer.getId()).getEntitlements().size());
+    }
+
+    // sunny test - real rules not invoked here. Can only be sure the counts are recorded.
+    // Rule tests already exist for quantity filter.
+    // Will use spec tests to see if quantity rules are followed in this scenario.
+    @Test
+    public void testEntitlementQuantityChange() throws EntitlementRefusedException {
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner, this.systemType);
+
+        Product product = TestUtil.createProduct()
+            .setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
+
+        product = this.createProduct(product, owner);
+
+        Pool consumerPool = this.createPool(owner, product, 1000L,
+            TestUtil.createDateOffset(-1, 0, 0), TestUtil.createDateOffset(1, 0, 0));
+
+        Map<String, Integer> poolQuantities = new HashMap<>();
+        poolQuantities.put(consumerPool.getId(), 3);
+        List<Entitlement> entitlements = poolManager.entitleByPools(consumer, poolQuantities);
+
+        Entitlement ent = entitlements.get(0);
+        assertTrue(ent.getQuantity() == 3);
+
+        poolManager.adjustEntitlementQuantity(consumer, ent, 5);
+        Entitlement ent2 = entitlementCurator.get(ent.getId());
+        assertTrue(ent2.getQuantity() == 5);
+
+        Pool pool2 = poolCurator.get(consumerPool.getId());
+        assertTrue(pool2.getConsumed() == 5);
+        assertTrue(pool2.getEntitlements().size() == 1);
     }
 }
 

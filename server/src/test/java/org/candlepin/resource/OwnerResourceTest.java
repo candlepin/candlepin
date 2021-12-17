@@ -68,8 +68,6 @@ import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
 import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
-import org.candlepin.dto.manifest.v1.ProductDTO;
-import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
@@ -106,15 +104,12 @@ import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resteasy.parameter.KeyValueParameter;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
-import org.candlepin.service.impl.ImportProductServiceAdapter;
-import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
-import org.candlepin.util.Util;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
@@ -128,16 +123,12 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -272,286 +263,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         ownerResource.deleteOwner(owner.getKey(), true, false);
         owner = ownerCurator.get(id);
         assertNull(owner);
-    }
-
-    // TODO: This test does not belong here; it does not hit the resource at all
-    @Test
-    public void testRefreshPoolsWithNewSubscriptions() {
-        Product prod = this.createProduct(owner);
-
-        List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod));
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
-
-        SubscriptionDTO sub = new SubscriptionDTO();
-        sub.setId(Util.generateDbUUID());
-        sub.setOwner(ownerDto);
-        sub.setProduct(this.modelTranslator.translate(prod, ProductDTO.class));
-        sub.setQuantity(2000L);
-        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
-        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
-        sub.setLastModified(TestUtil.createDate(2010, 2, 12));
-        subscriptions.add(sub);
-
-        // Trigger the refresh:
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
-        List<Pool> pools = poolCurator.listByOwnerAndProduct(owner, prod.getId());
-        assertEquals(1, pools.size());
-        Pool newPool = pools.get(0);
-
-        assertEquals(sub.getId(), newPool.getSubscriptionId());
-        assertEquals(sub.getQuantity(), newPool.getQuantity());
-        assertEquals(sub.getStartDate(), newPool.getStartDate());
-        assertEquals(sub.getEndDate(), newPool.getEndDate());
-    }
-
-    // TODO: This test does not belong here; it does not hit the resource at all
-    @Test
-    public void testRefreshPoolsWithChangedSubscriptions() {
-        Product prod = this.createProduct(owner);
-        Pool pool = createPool(owner, prod, 1000L,
-            TestUtil.createDate(2009, 11, 30),
-            TestUtil.createDate(2015, 11, 30));
-
-        List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod));
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
-
-        SubscriptionDTO sub = new SubscriptionDTO();
-        sub.setId(Util.generateDbUUID());
-        sub.setOwner(ownerDto);
-        sub.setProduct(this.modelTranslator.translate(prod, ProductDTO.class));
-        sub.setQuantity(2000L);
-        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
-        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
-        sub.setLastModified(TestUtil.createDate(2010, 2, 12));
-        subscriptions.add(sub);
-
-        assertTrue(pool.getQuantity() < sub.getQuantity());
-        assertTrue(pool.getStartDate() != sub.getStartDate());
-        assertTrue(pool.getEndDate() != sub.getEndDate());
-
-        pool.getSourceSubscription().setSubscriptionId(sub.getId());
-        poolCurator.merge(pool);
-
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
-
-        pool = poolCurator.get(pool.getId());
-        assertEquals(sub.getId(), pool.getSubscriptionId());
-        assertEquals(sub.getQuantity(), pool.getQuantity());
-        assertEquals(sub.getStartDate(), pool.getStartDate());
-        assertEquals(sub.getEndDate(), pool.getEndDate());
-    }
-
-    // TODO: This test does not belong here; it does not hit the resource at all
-    @Test
-    public void testRefreshPoolsWithRemovedSubscriptions() {
-        Product prod = this.createProduct(owner);
-
-        List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod));
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
-
-        SubscriptionDTO sub = new SubscriptionDTO();
-        sub.setId(Util.generateDbUUID());
-        sub.setOwner(ownerDto);
-        sub.setProduct(this.modelTranslator.translate(prod, ProductDTO.class));
-        sub.setQuantity(2000L);
-        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
-        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
-        sub.setLastModified(TestUtil.createDate(2010, 2, 12));
-
-        // This line is only present as a result of a (temporary?) fix for BZ 1452694. Once a
-        // better fix has been implemented, the upstream pool ID can be removed.
-        sub.setUpstreamPoolId("upstream_pool_id");
-
-        subscriptions.add(sub);
-
-        // Trigger the refresh:
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
-
-        List<Pool> pools = poolCurator.listByOwnerAndProduct(owner, prod.getId());
-        assertEquals(1, pools.size());
-        Pool newPool = pools.get(0);
-        String poolId = newPool.getId();
-
-        // Now delete the subscription:
-        subscriptions.remove(sub);
-
-        // Trigger the refresh:
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
-        assertNull(poolCurator.get(poolId));
-    }
-
-    // TODO: This test does not belong here; it does not hit the resource at all
-    @Test
-    public void testRefreshMultiplePools() {
-        Product prod = this.createProduct(owner);
-        Product prod2 = this.createProduct(owner);
-
-        List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod, prod2));
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
-
-        SubscriptionDTO sub = new SubscriptionDTO();
-        sub.setId(Util.generateDbUUID());
-        sub.setOwner(ownerDto);
-        sub.setProduct(this.modelTranslator.translate(prod, ProductDTO.class));
-        sub.setQuantity(2000L);
-        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
-        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
-        sub.setLastModified(TestUtil.createDate(2010, 2, 12));
-        subscriptions.add(sub);
-
-        SubscriptionDTO sub2 = new SubscriptionDTO();
-        sub2.setId(Util.generateDbUUID());
-        sub2.setOwner(ownerDto);
-        sub2.setProduct(this.modelTranslator.translate(prod2, ProductDTO.class));
-        sub2.setQuantity(800L);
-        sub2.setStartDate(TestUtil.createDate(2010, 2, 9));
-        sub2.setEndDate(TestUtil.createDate(3000, 2, 9));
-        sub2.setLastModified(TestUtil.createDate(2010, 2, 12));
-        subscriptions.add(sub2);
-
-        // Trigger the refresh:
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
-
-        List<Pool> pools = poolCurator.listByOwner(owner).list();
-        assertEquals(2, pools.size());
-    }
-
-    // TODO: This test does not belong here; it does not hit the resource at all
-    // test covers scenario from bug 1012386
-    @Test
-    public void testRefreshPoolsWithRemovedMasterPool() {
-        Product prod = TestUtil.createProduct();
-        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
-        createProduct(prod, owner);
-        config.setProperty(ConfigProperties.STANDALONE, "false");
-
-        List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod));
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
-
-        SubscriptionDTO sub = new SubscriptionDTO();
-        sub.setId(Util.generateDbUUID());
-        sub.setOwner(ownerDto);
-        sub.setProduct(this.modelTranslator.translate(prod, ProductDTO.class));
-        sub.setQuantity(2000L);
-        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
-        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
-        sub.setLastModified(TestUtil.createDate(2010, 2, 12));
-        subscriptions.add(sub);
-
-        // Trigger the refresh:
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
-
-        List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
-        assertEquals(2, pools.size());
-        String bonusId =  "";
-        String masterId = "";
-
-        for (Pool p : pools) {
-            if (p.getSourceSubscription().getSubscriptionSubKey().equals("master")) {
-                poolCurator.delete(p);
-                masterId = p.getId();
-            }
-            else {
-                bonusId = p.getId();
-            }
-        }
-
-        // Trigger the refresh:
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
-
-        assertNull(poolCurator.get(masterId), "Original Master Pool should be gone");
-        assertNotNull(poolCurator.get(bonusId), "Bonus Pool should be the same");
-        // master pool should have been recreated
-        pools = poolCurator.getBySubscriptionId(owner, sub.getId());
-        assertEquals(2, pools.size());
-        boolean newMaster = false;
-        for (Pool p : pools) {
-            if (p.getSourceSubscription().getSubscriptionSubKey().equals("master")) {
-                newMaster = true;
-            }
-        }
-        assertTrue(newMaster);
-    }
-
-    // TODO: This test does not belong here; it does not hit the resource at all
-    // test covers a corollary scenario from bug 1012386
-    @Test
-    public void testRefreshPoolsWithRemovedBonusPool() {
-        Product prod = TestUtil.createProduct();
-        prod.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
-        createProduct(prod, owner);
-        config.setProperty(ConfigProperties.STANDALONE, "false");
-
-        List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod));
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
-
-        SubscriptionDTO sub = new SubscriptionDTO();
-        sub.setId(Util.generateDbUUID());
-        sub.setOwner(ownerDto);
-        sub.setProduct(this.modelTranslator.translate(prod, ProductDTO.class));
-        sub.setQuantity(2000L);
-        sub.setStartDate(TestUtil.createDate(2010, 2, 9));
-        sub.setEndDate(TestUtil.createDate(3000, 2, 9));
-        sub.setLastModified(TestUtil.createDate(2010, 2, 12));
-        subscriptions.add(sub);
-
-        // Trigger the refresh:
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
-
-        List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
-        assertEquals(2, pools.size());
-        String bonusId =  "";
-        String masterId = "";
-
-        for (Pool p : pools) {
-            if (p.getSourceSubscription().getSubscriptionSubKey().equals("derived")) {
-                poolCurator.delete(p);
-                bonusId = p.getId();
-            }
-            else {
-                masterId = p.getId();
-            }
-        }
-
-        // Trigger the refresh:
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
-
-        assertNull(poolCurator.get(bonusId), "Original bonus pool should be gone");
-        assertNotNull(poolCurator.get(masterId), "Master pool should be the same");
-        // master pool should have been recreated
-        pools = poolCurator.getBySubscriptionId(owner, sub.getId());
-        assertEquals(2, pools.size());
-        boolean newBonus = false;
-        for (Pool p : pools) {
-            if (p.getSourceSubscription().getSubscriptionSubKey().equals("derived")) {
-                newBonus = true;
-            }
-        }
-        assertTrue(newBonus);
     }
 
     @Test
@@ -942,18 +653,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testEntitlementsRevocationWithLifoOrder() throws Exception {
-        Pool pool = doTestEntitlementsRevocationCommon(7, 4, 5);
-        assertEquals(5L, this.poolCurator.get(pool.getId()).getConsumed().longValue());
-    }
-
-    @Test
-    public void testEntitlementsRevocationWithNoOverflow() throws Exception {
-        Pool pool = doTestEntitlementsRevocationCommon(10, 4, 5);
-        assertEquals(9L, this.poolCurator.get(pool.getId()).getConsumed().longValue());
-    }
-
-    @Test
     public void testActivationKeyCreateRead() {
         ActivationKeyDTO key = new ActivationKeyDTO();
         key.setName("dd");
@@ -1027,70 +726,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         key.setReleaseVersion(TestUtil.getStringOfSize(256));
 
         assertThrows(BadRequestException.class, () -> resource.createActivationKey(owner.getKey(), key));
-    }
-
-    private Pool doTestEntitlementsRevocationCommon(long subQ, int e1, int e2) throws ParseException {
-        Product prod = this.createProduct(owner);
-
-        List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod));
-
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
-
-        SubscriptionDTO sub = new SubscriptionDTO();
-        sub.setId(Util.generateDbUUID());
-        sub.setOwner(ownerDto);
-        sub.setProduct(this.modelTranslator.translate(prod, ProductDTO.class));
-        sub.setQuantity(1000L);
-        sub.setStartDate(TestUtil.createDate(2009, 11, 30));
-        sub.setEndDate(TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 10, 10, 30));
-        sub.setLastModified(TestUtil.createDate(2015, 11, 30));
-        subscriptions.add(sub);
-
-        List<Pool> pools = poolManager.createAndEnrichPools(sub);
-        assertTrue(pools.size() > 0);
-        Pool pool = pools.get(0);
-
-        sub.setQuantity(subQ);
-
-        Owner retrieved = pool.getOwner();
-        Consumer consumer = createConsumer(retrieved);
-        Consumer consumer1 = createConsumer(retrieved);
-
-        pool = this.poolCurator.get(pool.getId());
-        createEntitlementWithQ(pool, retrieved, consumer, e1, "01/02/2010");
-        createEntitlementWithQ(pool, retrieved, consumer1, e2, "01/01/2010");
-        assertEquals(pool.getConsumed(), Long.valueOf(e1 + e2));
-
-        poolManager.getRefresher(subAdapter, prodAdapter).add(retrieved).run();
-        pool = poolCurator.get(pool.getId());
-        return pool;
-    }
-
-    /**
-     * @param pool
-     * @param owner
-     * @param consumer
-     * @return
-     */
-    private Entitlement createEntitlementWithQ(Pool pool, Owner owner,
-        Consumer consumer, int quantity, String date) throws ParseException {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-        Entitlement e1 = createEntitlement(owner, consumer, pool, null);
-        e1.setQuantity(quantity);
-        pool.getEntitlements().add(e1);
-
-        this.entitlementCurator.create(e1);
-        e1.getPool().setConsumed(e1.getPool().getConsumed() + quantity);
-        this.poolCurator.merge(e1.getPool());
-
-        e1.setCreated(dateFormat.parse(date));
-        this.entitlementCurator.merge(e1);
-
-        return e1;
     }
 
     @Test
@@ -1224,43 +859,28 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Owner owner = new Owner("Test Owner", "test");
         ownerCurator.create(owner);
 
-        Product prod1 = TestUtil.createProduct();
-        prod1.setAttribute(Product.Attributes.SUPPORT_LEVEL, "premium");
-        createProduct(prod1, owner);
-        Product prod2 = TestUtil.createProduct();
-        prod2.setAttribute(Product.Attributes.SUPPORT_LEVEL, "standard");
-        createProduct(prod2, owner);
+        Product prod1 = TestUtil.createProduct()
+            .setAttribute(Product.Attributes.SUPPORT_LEVEL, "premium");
 
-        List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod1, prod2));
+        Product prod2 = TestUtil.createProduct()
+            .setAttribute(Product.Attributes.SUPPORT_LEVEL, "standard");
 
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+        this.createProduct(prod1, owner);
+        this.createProduct(prod2, owner);
 
-        SubscriptionDTO sub1 = new SubscriptionDTO();
-        sub1.setId(Util.generateDbUUID());
-        sub1.setOwner(ownerDto);
-        sub1.setProduct(this.modelTranslator.translate(prod1, ProductDTO.class));
-        sub1.setQuantity(2000L);
-        sub1.setStartDate(TestUtil.createDate(2010, 2, 9));
-        sub1.setEndDate(TestUtil.createDate(3000, 2, 9));
-        sub1.setLastModified(TestUtil.createDate(2010, 2, 12));
-        subscriptions.add(sub1);
+        Pool pool1 = TestUtil.createPool(owner, prod1)
+            .setQuantity(2000L)
+            .setStartDate(TestUtil.createDateOffset(-2, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(2, 0, 0));
 
-        SubscriptionDTO sub2 = new SubscriptionDTO();
-        sub2.setId(Util.generateDbUUID());
-        sub2.setOwner(ownerDto);
-        sub2.setProduct(this.modelTranslator.translate(prod2, ProductDTO.class));
-        sub2.setQuantity(2000L);
-        sub2.setStartDate(TestUtil.createDate(2010, 2, 9));
-        sub2.setEndDate(TestUtil.createDate(3000, 2, 9));
-        sub2.setLastModified(TestUtil.createDate(2010, 2, 12));
-        subscriptions.add(sub2);
+        Pool pool2 = TestUtil.createPool(owner, prod2)
+            .setQuantity(2000L)
+            .setStartDate(TestUtil.createDateOffset(-2, 0, 0))
+            .setEndDate(TestUtil.createDateOffset(2, 0, 0));
 
-        // Trigger the refresh:
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.poolCurator.create(pool1);
+        this.poolCurator.create(pool2);
+        this.poolCurator.flush();
 
         owner.setDefaultServiceLevel("premium");
         Owner parentOwner1 = ownerCurator.create(new Owner("Paren Owner 1", "parentTest1"));
