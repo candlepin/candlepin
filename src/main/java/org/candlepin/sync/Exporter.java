@@ -59,7 +59,6 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.GeneralSecurityException;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -68,6 +67,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+
 
 /**
  * Exporter
@@ -399,8 +400,8 @@ public class Exporter {
             if ((serials == null) || (serials.contains(cert.getSerial().getId()))) {
                 log.debug("Exporting entitlement certificate: {}", cert.getSerial());
                 File file = new File(entCertDir.getCanonicalPath(), cert.getSerial().getId() + ".pem");
-                CertificateExporter crt = new CertificateExporter();
-                crt.exportCertificate(cert, file);
+
+                new CertificateExporter().exportCertificate(cert, file);
             }
         }
     }
@@ -419,24 +420,17 @@ public class Exporter {
      *  Throws IO exception if unable to export content access certs for the consumer.
      */
     private void exportContentAccessCerts(File baseDir, Consumer consumer) throws IOException {
-        ContentAccessCertificate contentAccessCert = null;
-
-        try {
-            contentAccessCert = this.contentAccessManager.getCertificate(consumer);
-        }
-        catch (GeneralSecurityException gse) {
-            throw new IOException("Cannot retrieve content access certificate", gse);
-        }
+        ContentAccessCertificate contentAccessCert = this.contentAccessManager.getCertificate(consumer);
 
         if (contentAccessCert != null) {
-            File contentAccessCertDir = new File(baseDir.getCanonicalPath(),
-                "content_access_certificates");
+            File contentAccessCertDir = new File(baseDir.getCanonicalPath(), "content_access_certificates");
             contentAccessCertDir.mkdir();
-            log.debug("Exporting content access certificate: " + contentAccessCert.getSerial());
+
+            log.debug("Exporting content access certificate: {}", contentAccessCert.getSerial());
             File file = new File(contentAccessCertDir.getCanonicalPath(),
                 contentAccessCert.getSerial().getId() + ".pem");
-            CertificateExporter crt = new CertificateExporter();
-            crt.exportCertificate(contentAccessCert, file);
+
+            new CertificateExporter().exportCertificate(contentAccessCert, file);
         }
     }
 

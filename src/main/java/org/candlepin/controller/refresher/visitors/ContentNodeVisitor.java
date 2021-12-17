@@ -226,12 +226,20 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
             Set<Integer> versions = this.ownerEntityVersions.remove(key);
 
             return versions != null ?
-                this.ownerContentCurator.getContentByVersions(key, versions) :
+                this.ownerContentCurator.getContentByVersions(versions) :
                 Collections.emptyMap();
         });
 
         for (Content candidate : entityMap.getOrDefault(entity.getId(), Collections.emptyList())) {
-            if (entityVersion == candidate.getEntityVersion() && entity.equals(candidate)) {
+            if (entityVersion == candidate.getEntityVersion()) {
+                if (!entity.equals(candidate)) {
+                    String errmsg = String.format("Entity version collision detected: %s != %s",
+                        entity, candidate);
+
+                    log.error(errmsg);
+                    throw new IllegalStateException(errmsg);
+                }
+
                 return candidate;
             }
         }

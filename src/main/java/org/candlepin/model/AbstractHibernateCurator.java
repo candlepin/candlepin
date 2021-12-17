@@ -66,6 +66,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
+import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -751,7 +752,18 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     public void flush() {
         try {
-            getEntityManager().flush();
+            EntityManager entityManager = this.getEntityManager();
+            EntityTransaction transaction = entityManager.getTransaction();
+
+            // If there's no transaction or it's not active, there's no reason to flush. Attempting
+            // to do so will trigger an exception. Instead, just toss out a warning about it.
+            if (transaction != null && transaction.isActive()) {
+                entityManager.flush();
+            }
+            else {
+                String errmsg = "flush issued outside of a transaction";
+                log.warn(errmsg, log.isDebugEnabled() ? new TransactionRequiredException(errmsg) : "");
+            }
         }
         catch (OptimisticLockException e) {
             throw new ConcurrentModificationException(getConcurrentModificationMessage(), e);
@@ -786,7 +798,18 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
-     * Creates a new transactional wrapper using the specified action.
+     * Creates a new transactional wrapper from the backing entity manager
+     *
+     * @return
+     *  a Transactional wrapper configured to execute the specified action
+     */
+    public <O> org.candlepin.util.Transactional<O> transactional() {
+        return new org.candlepin.util.Transactional<O>(this.getEntityManager());
+    }
+
+    /**
+     * Creates a new transactional wrapper from the backing entity manager using the specified
+     * action.
      *
      * @param action
      *  The action to perform in a transaction
@@ -797,10 +820,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public <O> org.candlepin.util.Transactional<O> transactional(
         org.candlepin.util.Transactional.Action<O> action) {
 
-        return new org.candlepin.util.Transactional<O>(this.getEntityManager())
-            .wrap(action);
+        return this.<O>transactional()
+            .run(action);
     }
-
 
     /**
      * Fetches the natural ID loader for this entity. This loader can be used and reused to

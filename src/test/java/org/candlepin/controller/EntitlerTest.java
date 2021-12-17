@@ -139,8 +139,7 @@ public class EntitlerTest {
         this.refreshWorkerProvider = () -> refreshWorker;
 
         entitler = new Entitler(pm, cc, i18n, ef, sink, translator, entitlementCurator, config,
-            ownerCurator, poolCurator, productManager, productAdapter,
-            contentManager, consumerTypeCurator, this.refreshWorkerProvider);
+            ownerCurator, poolCurator, productAdapter, consumerTypeCurator, this.refreshWorkerProvider);
     }
 
     private void mockRefresh(Owner owner, Collection<Product> products, Collection<Content> contents) {

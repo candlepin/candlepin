@@ -204,32 +204,6 @@ describe 'Content Versioning' do
     content[0]["uuid"].should eq(content2["uuid"])
   end
 
-  it "should not converge with an orphaned content" do
-    # NOTE:
-    # This test should be removed/disabled if in-place updating/converging is reenabled, as orphans
-    # will not be created in such a case
-
-    owner1 = create_owner random_string('test_owner')
-    owner2 = create_owner random_string('test_owner')
-
-    id = random_string('test_content')
-    label = "shared content"
-    type = "shared_content_type"
-    vendor = "generous vendor"
-
-    orphan = @cp.create_content(owner1["key"], id, id, label, type, vendor)
-    content1 = @cp.update_content(owner1["key"], id, { :name => "#{id}-update" })
-    content2 = @cp.create_content(owner2["key"], id, id, label, type, vendor)
-
-    expect(orphan['uuid']).to_not eq(content1['uuid'])
-    expect(orphan['uuid']).to_not eq(content2['uuid'])
-    expect(content1['uuid']).to_not eq(content2['uuid'])
-
-    expect(@cp.get_content_by_uuid(orphan['uuid'])).to_not be_nil
-    expect(@cp.get_content_by_uuid(content1['uuid'])).to_not be_nil
-    expect(@cp.get_content_by_uuid(content2['uuid'])).to_not be_nil
-  end
-
   it 'should cleanup orphans without interfering with normal actions' do
     # NOTE:
     # This test takes advantage of the immutable nature of contents with the in-place update branch

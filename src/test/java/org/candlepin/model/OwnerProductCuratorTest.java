@@ -573,28 +573,25 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetProductsByVersions() {
+    public void testGetProductsByVersionsSingleVersion() {
         Owner owner1 = this.createOwner();
         Owner owner2 = this.createOwner();
         Owner owner3 = this.createOwner();
 
-        Product product1 = this.createProduct("p1", "p1", owner1);
-        Product product2 = this.createProduct("p1", "p1", owner2);
-        Product product3 = this.createProduct("p1", "p1", owner3);
-        Product product4 = this.createProduct("p2", "p2", owner2);
+        Product p1a = this.createProduct("c1", "p1a", owner1);
+        Product p1b = this.createProduct("c1", "p1b", owner2);
+        Product p1c = this.createProduct("c1", "p1c", owner3);
+        Product p2a = this.createProduct("c2", "p2a", owner1);
 
         Map<String, List<Product>> productMap1 = this.ownerProductCurator
-            .getProductsByVersions(owner1, Collections.singleton(product1.getEntityVersion()));
+            .getProductsByVersions(Collections.singleton(p1a.getEntityVersion()));
         Map<String, List<Product>> productMap2 = this.ownerProductCurator
-            .getProductsByVersions(owner2, Collections.singleton(product2.getEntityVersion()));
-
-        // productMap1 should contain only product2 and product3
-        // productMap2 should contain only product1 and product3
+            .getProductsByVersions(Collections.singleton(p1b.getEntityVersion()));
 
         assertEquals(1, productMap1.size());
-        assertNotNull(productMap1.get("p1"));
+        assertNotNull(productMap1.get("c1"));
         assertEquals(1, productMap2.size());
-        assertNotNull(productMap2.get("p1"));
+        assertNotNull(productMap2.get("c1"));
 
         List<String> uuidList1 = productMap1.values()
             .stream()
@@ -608,35 +605,51 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
             .map(Product::getUuid)
             .collect(Collectors.toList());
 
-        assertEquals(2, uuidList1.size());
-        assertThat(uuidList1, hasItems(product2.getUuid(), product3.getUuid()));
+        assertEquals(1, uuidList1.size());
+        assertThat(uuidList1, hasItems(p1a.getUuid()));
 
-        assertEquals(2, uuidList2.size());
-        assertThat(uuidList2, hasItems(product1.getUuid(), product3.getUuid()));
+        assertEquals(1, uuidList2.size());
+        assertThat(uuidList2, hasItems(p1b.getUuid()));
     }
 
     @Test
-    public void testGetProductsByVersionsNoOwner() {
+    public void testGetProductsByVersionsMultipleVersions() {
         Owner owner1 = this.createOwner();
         Owner owner2 = this.createOwner();
         Owner owner3 = this.createOwner();
 
-        Product product1 = this.createProduct("p1", "p1", owner1);
-        Product product2 = this.createProduct("p1", "p1", owner2);
-        Product product3 = this.createProduct("p1", "p1", owner3);
-        Product product4 = this.createProduct("p2", "p2", owner2);
+        Product p1a = this.createProduct("c1", "p1a", owner1);
+        Product p2a = this.createProduct("c2", "p2a", owner1);
+        Product p3a = this.createProduct("c3", "p3a", owner1);
 
-        Map<String, List<Product>> productMap1 = this.ownerProductCurator
-            .getProductsByVersions(null, Collections.singleton(product1.getEntityVersion()));
-        Map<String, List<Product>> productMap2 = this.ownerProductCurator
-            .getProductsByVersions(null, Collections.singleton(product2.getEntityVersion()));
+        Product p1b = this.createProduct("c1", "p1b", owner2);
+        Product p2b = this.createProduct("c2", "p2b", owner2);
+        Product p3b = this.createProduct("c3", "p3b", owner2);
 
-        // Both maps should contain both products 1, 2 and 3
+        Product p1c = this.createProduct("c1", "p1c", owner3);
+        Product p2c = this.createProduct("c2", "p2c", owner3);
+        Product p3c = this.createProduct("c3", "p3c", owner3);
 
-        assertEquals(1, productMap1.size());
-        assertNotNull(productMap1.get("p1"));
-        assertEquals(1, productMap2.size());
-        assertNotNull(productMap2.get("p1"));
+        Map<String, List<Product>> productMap1 = this.ownerProductCurator.getProductsByVersions(
+            List.of(p1a.getEntityVersion(), p1b.getEntityVersion(), p2c.getEntityVersion()));
+
+        Map<String, List<Product>> productMap2 = this.ownerProductCurator.getProductsByVersions(
+            List.of(p1a.getEntityVersion(), p2b.getEntityVersion(), p3c.getEntityVersion()));
+
+        assertEquals(2, productMap1.size());
+        assertNotNull(productMap1.get("c1"));
+        assertEquals(2, productMap1.get("c1").size());
+        assertNotNull(productMap1.get("c2"));
+        assertEquals(1, productMap1.get("c2").size());
+        assertNull(productMap1.get("c3"));
+
+        assertEquals(3, productMap2.size());
+        assertNotNull(productMap2.get("c1"));
+        assertEquals(1, productMap2.get("c1").size());
+        assertNotNull(productMap2.get("c2"));
+        assertEquals(1, productMap2.get("c2").size());
+        assertNotNull(productMap2.get("c3"));
+        assertEquals(1, productMap2.get("c3").size());
 
         List<String> uuidList1 = productMap1.values()
             .stream()
@@ -651,89 +664,10 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
             .collect(Collectors.toList());
 
         assertEquals(3, uuidList1.size());
-        assertThat(uuidList1, hasItems(product1.getUuid(), product2.getUuid(), product3.getUuid()));
+        assertThat(uuidList1, hasItems(p1a.getUuid(), p1b.getUuid(), p2c.getUuid()));
 
         assertEquals(3, uuidList2.size());
-        assertThat(uuidList2, hasItems(product1.getUuid(), product2.getUuid(), product3.getUuid()));
-    }
-
-    @Test
-    public void testGetProductsByVersionsMultipleVersions() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-        Owner owner3 = this.createOwner();
-
-        Product p1a = this.createProduct("p1", "p1", owner1);
-        Product p2a = this.createProduct("p2", "p2", owner1);
-        Product p3a = this.createProduct("p3", "p3", owner1);
-
-        Product p1b = this.createProduct("p1", "p1", owner2);
-        Product p2b = this.createProduct("p2", "p2", owner2);
-        Product p3b = this.createProduct("p3", "p3", owner2);
-
-        Product p1c = this.createProduct("p1", "p1", owner3);
-        Product p2c = this.createProduct("p2", "p2", owner3);
-        Product p3c = this.createProduct("p3", "p3", owner3);
-
-        List<Integer> versions = Arrays.asList(p1a.getEntityVersion(), p2a.getEntityVersion());
-
-        Map<String, List<Product>> productMap1 = this.ownerProductCurator
-            .getProductsByVersions(owner1, versions);
-        Map<String, List<Product>> productMap2 = this.ownerProductCurator
-            .getProductsByVersions(owner2, versions);
-        Map<String, List<Product>> productMap3 = this.ownerProductCurator
-            .getProductsByVersions(null, versions);
-
-        // Map 1 should contain products like p1 and p2 not owned by owner1: (p1b, p1c, p2b, p2c)
-        // Map 2 should contain products like p1 and p2 not owned by owner2: (p1a, p1c, p2a, p2c)
-        // Map 3 should contain all products like p1 and p2: (p1a, p1b, p1c, p2a, p2b, p2c)
-
-        assertEquals(2, productMap1.size());
-        assertEquals(2, productMap2.size());
-        assertEquals(2, productMap3.size());
-
-        assertNotNull(productMap1.get("p1"));
-        assertEquals(2, productMap1.get("p1").size());
-        assertNotNull(productMap1.get("p2"));
-        assertEquals(2, productMap1.get("p2").size());
-
-        assertNotNull(productMap2.get("p1"));
-        assertEquals(2, productMap2.get("p1").size());
-        assertNotNull(productMap2.get("p2"));
-        assertEquals(2, productMap2.get("p2").size());
-
-        assertNotNull(productMap3.get("p1"));
-        assertEquals(3, productMap3.get("p1").size());
-        assertNotNull(productMap3.get("p2"));
-        assertEquals(3, productMap3.get("p2").size());
-
-        List<String> uuidList1 = productMap1.values()
-            .stream()
-            .flatMap(List::stream)
-            .map(Product::getUuid)
-            .collect(Collectors.toList());
-
-        List<String> uuidList2 = productMap2.values()
-            .stream()
-            .flatMap(List::stream)
-            .map(Product::getUuid)
-            .collect(Collectors.toList());
-
-        List<String> uuidList3 = productMap3.values()
-            .stream()
-            .flatMap(List::stream)
-            .map(Product::getUuid)
-            .collect(Collectors.toList());
-
-        assertEquals(4, uuidList1.size());
-        assertThat(uuidList1, hasItems(p1b.getUuid(), p1c.getUuid(), p2b.getUuid(), p2c.getUuid()));
-
-        assertEquals(4, uuidList2.size());
-        assertThat(uuidList2, hasItems(p1a.getUuid(), p1c.getUuid(), p2a.getUuid(), p2c.getUuid()));
-
-        assertEquals(6, uuidList3.size());
-        assertThat(uuidList3, hasItems(p1a.getUuid(), p1b.getUuid(), p1c.getUuid(), p2a.getUuid(),
-            p2b.getUuid(), p2c.getUuid()));
+        assertThat(uuidList2, hasItems(p1a.getUuid(), p2b.getUuid(), p3c.getUuid()));
     }
 
     @Test
@@ -741,20 +675,12 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Owner owner1 = this.createOwner();
 
         Map<String, List<Product>> productMap1 = this.ownerProductCurator
-            .getProductsByVersions(owner1, null);
+            .getProductsByVersions(null);
         assertEquals(0, productMap1.size());
 
         Map<String, List<Product>> productMap2 = this.ownerProductCurator
-            .getProductsByVersions(owner1, Collections.emptyList());
+            .getProductsByVersions(Collections.emptyList());
         assertEquals(0, productMap2.size());
-
-        Map<String, List<Product>> productMap3 = this.ownerProductCurator
-            .getProductsByVersions(null, null);
-        assertEquals(0, productMap3.size());
-
-        Map<String, List<Product>> productMap4 = this.ownerProductCurator
-            .getProductsByVersions(null, Collections.emptyList());
-        assertEquals(0, productMap4.size());
     }
 
     @Test
@@ -768,6 +694,6 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
             .limit(100000)
             .collect(Collectors.toList());
 
-        this.ownerProductCurator.getProductsByVersions(owner, versions);
+        this.ownerProductCurator.getProductsByVersions(versions);
     }
 }

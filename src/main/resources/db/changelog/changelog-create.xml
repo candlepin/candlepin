@@ -1255,4 +1255,5 @@
     <include file="db/changelog/20210412145432-drop_content_cache.xml"/>
     <include file="db/changelog/20210503150950-add-consumer-service_type-column.xml"/>
     <include file="db/changelog/20210622100950-cert_serials_drop_collected_column.xml"/>
+    <include file="db/changelog/20211110083000-disallow_duplicate_versioned_entities.xml"/>
 </databaseChangeLog>

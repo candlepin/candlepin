@@ -223,8 +223,17 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
     int addImportedEntities(Collection<I> entities);
 
     /**
-     * Clears this entity mapper, removing all known existing and imported entities, and clearing any
-     * provided candidate entities map.
+     * Clears this entity mapper, removing all known existing and imported entities
      */
     void clear();
+
+    /**
+     * Clears any existing entities from this mapper
+     */
+    void clearExistingEntities();
+
+    /**
+     * Clears any imported entities from this mapper
+     */
+    void clearImportedEntities();
 }
