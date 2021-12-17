@@ -405,7 +405,7 @@ describe 'Product Versioning' do
     length = 100
 
     # Repeat this test a few(ish) times to hopefully catch any synchronization error
-    (1..5).each do
+    (1..10).each do
       o1_uuids = []
       o2_uuids = []
 
@@ -436,10 +436,15 @@ describe 'Product Versioning' do
       end
 
       sleep 1
-      @cp.trigger_job("OrphanCleanupJob")
+      job = @cp.trigger_job("OrphanCleanupJob")
 
       updater.join
       generator.join
+      job_status = wait_for_job(job['id'])
+
+      # Verify the orphan cleanup job completed successfully
+      expect(job_status).to_not be_nil
+      expect(job_status['state'].upcase).to eq('FINISHED')
 
       # Verify the products created/updated still exist
       o1_uuids.each do |uuid|

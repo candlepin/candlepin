@@ -122,6 +122,11 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return config.getInt(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT);
     }
 
+    public String getDatabaseDialect() {
+        return ((String) this.currentSession().getSessionFactory().getProperties()
+            .get("hibernate.dialect")).toLowerCase();
+    }
+
     /**
      * Get one or zero items.  Thanks http://stackoverflow.com/a/6378045/6124862
      * @param query
@@ -1508,6 +1513,48 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
 
         return query.executeUpdate();
+    }
+
+    /**
+     * Obtains a system-level lock for serializing certain critical operations
+     *
+     * @param lockName
+     *  the name of the system lock to obtain
+     *
+     * @param lockMode
+     *  the type of lock to obtain; must be a pessimistic read or write lock
+     *
+     * @throws IllegalArgumentException
+     *  if no lock name is provided, or the provided lock mode is not a pessimistic read or
+     *  pessimistic write lock
+     */
+    public void getSystemLock(String lockName, LockModeType lockMode) {
+        if (lockName == null || lockName.isEmpty()) {
+            throw new IllegalArgumentException("lockName is null or empty");
+        }
+
+        if (!(lockMode == LockModeType.PESSIMISTIC_READ || lockMode == LockModeType.PESSIMISTIC_WRITE)) {
+            throw new IllegalArgumentException("Unsupported lock mode: " + lockMode);
+        }
+
+        log.trace("Obtaining system lock \"{}\" with lock mode {}...", lockName, lockMode);
+
+        try {
+            SystemLock lock = this.getEntityManager()
+                .createQuery("SELECT l FROM SystemLock l WHERE l.id = :lock_name", SystemLock.class)
+                .setParameter("lock_name", lockName)
+                .setLockMode(lockMode)
+                .getSingleResult();
+        }
+        catch (javax.persistence.NoResultException e) {
+            SystemLock lock = new SystemLock()
+                .setId(lockName);
+
+            this.getEntityManager()
+                .persist(lock);
+
+            this.getSystemLock(lockName, lockMode);
+        }
     }
 
     /**
