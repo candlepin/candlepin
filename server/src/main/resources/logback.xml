@@ -67,13 +67,18 @@
     </appender>
 
     <!--This appender can be used for logging in JSON format into the syslog-->
-    <!--<appender name="SyslogAppender" class="net.logstash.logback.appender.LogstashSocketAppender">-->
-        <!--<host>127.0.0.1</host>-->
-        <!--<port>514</port>-->
-        <!--<prefix class="ch.qos.logback.classic.PatternLayout">-->
-            <!--<pattern>candlepin @cee:</pattern>-->
-        <!--</prefix>-->
-    <!--</appender>-->
+    <!--
+    <conversionRule conversionWord="syslogStart" converterClass="ch.qos.logback.classic.pattern.SyslogStartConverter"/>
+    <appender name="SyslogAppender" class="net.logstash.logback.appender.LogstashUdpSocketAppender">
+        <host>127.0.0.1</host>
+        <port>514</port>
+        <layout class="net.logstash.logback.layout.LogstashLayout">
+            <prefix class="ch.qos.logback.classic.PatternLayout">
+                <pattern>%syslogStart{USER}@cee:</pattern>
+            </prefix>
+        </layout>
+    </appender>
+    -->
 
     <!--Note: This Appender is currently commented on because it is opening a random
               UDP port to send messages to the Syslog server. -->

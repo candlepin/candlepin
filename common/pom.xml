@@ -451,7 +451,7 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>jcl-over-slf4j</artifactId>
-        <version>1.7.12</version>
+        <version>1.7.32</version>
       </dependency>
       <dependency>
         <groupId>com.google.inject.extensions</groupId>
@@ -561,7 +561,7 @@
       <dependency>
         <groupId>net.logstash.logback</groupId>
         <artifactId>logstash-logback-encoder</artifactId>
-        <version>5.3</version>
+        <version>7.0.1</version>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
@@ -641,7 +641,7 @@
       <dependency>
         <groupId>org.slf4j</groupId>
         <artifactId>log4j-over-slf4j</artifactId>
-        <version>1.7.12</version>
+        <version>1.7.32</version>
       </dependency>
       <dependency>
         <groupId>io.swagger</groupId>
@@ -701,7 +701,7 @@
       <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-core</artifactId>
-        <version>1.2.3</version>
+        <version>1.2.9</version>
       </dependency>
       <dependency>
         <groupId>org.mockito</groupId>
@@ -716,7 +716,7 @@
       <dependency>
         <groupId>ch.qos.logback</groupId>
         <artifactId>logback-classic</artifactId>
-        <version>1.2.3</version>
+        <version>1.2.9</version>
       </dependency>
       <dependency>
         <groupId>javax.servlet</groupId>

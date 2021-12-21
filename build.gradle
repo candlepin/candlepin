@@ -191,7 +191,7 @@ allprojects {
             // Testing DB Drivers
             dependency group: 'org.hsqldb', name: 'hsqldb', version: '2.6.1'
             dependency group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
-            dependency group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '5.3'
+            dependency group: 'net.logstash.logback', name: 'logstash-logback-encoder', version: '7.0.1'
             dependency group: 'org.liquibase', name: 'liquibase-core', version: '3.1.0'
             dependency group: 'com.mattbertolini', name: 'liquibase-slf4j', version: '1.2.1'
             dependency group: 'org.eclipse.microprofile.config', name: 'microprofile-config-api', version:'1.3'
@@ -260,11 +260,11 @@ allprojects {
                 entry "oauth-provider"
             }
             //logging
-            dependencySet(group: "ch.qos.logback", version: "1.2.3") {
+            dependencySet(group: "ch.qos.logback", version: "1.2.9") {
                 entry "logback-core"
                 entry "logback-classic"
             }
-            dependencySet(group: "org.slf4j", version: "1.7.12") {
+            dependencySet(group: "org.slf4j", version: "1.7.32") {
                 entry "jcl-over-slf4j"
                 entry "log4j-over-slf4j"
             }
