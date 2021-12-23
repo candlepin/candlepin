@@ -37,6 +37,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -313,9 +314,9 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
 
-        List<String> jobIds = new Random().ints(Math.min(inputSize, created.size()), 0, created.size())
+        Set<String> jobIds = new Random().ints(Math.min(inputSize, created.size()), 0, created.size())
             .mapToObj(i -> created.get(i).getId())
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
         long expected = jobIds.size();
 
@@ -342,9 +343,9 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
 
-        List<String> expectedJobIds = new Random().ints(Math.min(3, created.size()), 0, created.size())
+        Set<String> expectedJobIds = new Random().ints(Math.min(3, created.size()), 0, created.size())
             .mapToObj(i -> created.get(i).getId())
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
         long expected = expectedJobIds.size();
         assertTrue(expected > 0);
@@ -1176,9 +1177,9 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
 
-        List<AsyncJobStatus> expected = new Random().ints(Math.min(count, created.size()), 0, created.size())
+        Set<AsyncJobStatus> expected = new Random().ints(Math.min(count, created.size()), 0, created.size())
             .mapToObj(i -> created.get(i))
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
         List<String> jobIds = expected.stream()
             .map(job -> job.getId())
@@ -1207,9 +1208,9 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
 
         List<AsyncJobStatus> created = this.createJobsForQueryTests(keys, states, owners, null, null, null);
 
-        List<AsyncJobStatus> expected = new Random().ints(Math.min(3, created.size()), 0, created.size())
+        Set<AsyncJobStatus> expected = new Random().ints(Math.min(3, created.size()), 0, created.size())
             .mapToObj(i -> created.get(i))
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
         List<String> expectedJobIds = expected.stream()
             .map(job -> job.getId())
@@ -1953,10 +1954,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             jobMap.put(job.getId(), job);
         }
 
-        List<String> expectedJobIds = new Random().ints(Math.min(count, created.size()), 0, created.size())
+        Set<String> expectedJobIds = new Random().ints(Math.min(count, created.size()), 0, created.size())
             .mapToObj(i -> created.get(i))
             .map(job -> job.getId())
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
         AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobIds(expectedJobIds);
@@ -1979,10 +1980,10 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             jobMap.put(job.getId(), job);
         }
 
-        List<String> expectedJobIds = new Random().ints(Math.min(3, created.size()), 0, created.size())
+        Set<String> expectedJobIds = new Random().ints(Math.min(3, created.size()), 0, created.size())
             .mapToObj(i -> created.get(i))
             .map(job -> job.getId())
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
         List<String> extraneousJobIds = Arrays.asList("extra_id-1", "extra_id-2", "extra_id-3");
 
@@ -1994,7 +1995,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .setJobIds(jobIds);
 
         int updated = this.asyncJobCurator.updateJobState(queryArgs, JobState.ABORTED);
-        assertEquals(extraneousJobIds.size(), updated);
+        assertEquals(expectedJobIds.size(), updated);
 
         this.validateJobStates(jobMap, expectedJobIds, JobState.ABORTED);
     }
