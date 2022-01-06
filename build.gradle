@@ -138,12 +138,12 @@ dependencies {
     implementation "org.liquibase:liquibase-core:3.1.0"
 
     // Logging
-    implementation "ch.qos.logback:logback-classic:1.2.3"
+    implementation "ch.qos.logback:logback-classic:1.2.9"
     // Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
     // JCL for example.
-    implementation "org.slf4j:jcl-over-slf4j:1.7.12"
-    implementation "org.slf4j:log4j-over-slf4j:1.7.12"
-    implementation "net.logstash.logback:logstash-logback-encoder:5.3"
+    implementation "org.slf4j:jcl-over-slf4j:1.7.32"
+    implementation "org.slf4j:log4j-over-slf4j:1.7.32"
+    implementation "net.logstash.logback:logstash-logback-encoder:7.0.1"
 
     // Oauth
     implementation "net.oauth.core:oauth-provider:20100527"
