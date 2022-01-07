@@ -25,6 +25,7 @@ import org.candlepin.pki.X509ExtensionWrapper;
 
 import com.google.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +43,8 @@ import java.util.Set;
  */
 public class X509ExtensionUtil  extends X509Util{
 
-    private static Logger log = LoggerFactory.getLogger(X509ExtensionUtil.class);
-    private Configuration config;
+    private static final Logger log = LoggerFactory.getLogger(X509ExtensionUtil.class);
+    private final Configuration config;
 
     // If we're generating a cert with more content sets than this limit, we will error
     // out, as the certificate is likely too large for the CDN:
@@ -221,11 +222,7 @@ public class X509ExtensionUtil  extends X509Util{
 
                 continue;
             }
-            String contentOid = OIDUtil.REDHAT_OID +
-                "." +
-                OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + "." +
-                pc.getContent().getId().toString() + "." +
-                OIDUtil.CF_REPO_TYPE.get(pc.getContent().getType());
+            String contentOid = createOid(pc);
             toReturn.add(new X509ExtensionWrapper(contentOid, false, pc
                 .getContent().getType()));
             toReturn.add(new X509ExtensionWrapper(contentOid + "." +
@@ -288,5 +285,17 @@ public class X509ExtensionUtil  extends X509Util{
         }
 
         return toReturn;
+    }
+
+    private String createOid(ProductContent pc) {
+        String contentId = pc.getContent().getId();
+        if (!StringUtils.isNumeric(contentId)) {
+            throw new IllegalStateException(String.format("Content id must be numeric: [%s].", contentId));
+        }
+        return OIDUtil.REDHAT_OID +
+            "." +
+            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.CHANNEL_FAMILY_NAMESPACE_KEY) + "." +
+            contentId + "." +
+            OIDUtil.CF_REPO_TYPE.get(pc.getContent().getType());
     }
 }

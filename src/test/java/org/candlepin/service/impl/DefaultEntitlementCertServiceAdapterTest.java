@@ -474,7 +474,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Content> productContent = new HashSet<>();
         for (int i = 0; i < numberToGenerate; i++) {
             productContent.add(createContent(prefix + CONTENT_NAME + i,
-                prefix + CONTENT_ID + i,
+                CONTENT_ID + i,
                 prefix + CONTENT_LABEL + i,
                 CONTENT_TYPE,
                 CONTENT_VENDOR,
