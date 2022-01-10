@@ -38,12 +38,6 @@ public class JSSProviderLoader {
     private static final String NSS_DB_LOCATION = "/etc/pki/nssdb";
     private static final Logger log = LoggerFactory.getLogger(JSSProviderLoader.class);
 
-    static {
-        // Satellite 6 is only supported on 64 bit architectures
-        addLibraryPath("/usr/lib64/jss");
-        System.loadLibrary("jss4");
-    }
-
     /**
      * Code from http://fahdshariff.blogspot.jp/2011/08/changing-java-library-path-at-runtime.html so that we
      * can add the JSS directory to the load path without having to require it as a JVM option on startup.

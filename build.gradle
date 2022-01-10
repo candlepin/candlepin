@@ -194,7 +194,9 @@ dependencies {
     checkstyle "com.puppycrawl.tools:checkstyle:8.29"
     checkstyle "com.github.sevntu-checkstyle:sevntu-checks:1.36.0"
 
-    providedCompile "org.mozilla:jss:4.4.6"
+    // Use wildcard because this could be called jss4.jar or jss.jar
+    // (depending on if we are before Fedora35/RHEL9 or after)
+    providedCompile fileTree(dir: '/usr/lib64/jss', include: '*.jar')
     providedCompile "javax.servlet:servlet-api:2.5"
 
     // DB Drivers
@@ -259,7 +261,6 @@ repositories {
     maven { url "https://repository.jboss.org/nexus/content/groups/public/" }
     maven { url "https://oauth.googlecode.com/svn/code/maven/" }
     maven { url "https://awood.fedorapeople.org/ivy/candlepin/" }
-    // Temporary repo, which stores jss 4.4.6
     maven { url "https://barnabycourt.fedorapeople.org/repo/candlepin/" }
 }
 
@@ -326,7 +327,11 @@ test {
 
     // Sometimes causes out of memory on vagrant
     maxHeapSize = "2g"
-    jvmArgs "-XX:+HeapDumpOnOutOfMemoryError"
+    jvmArgs = [
+            // We need to load the native jss lib (either libjss4.so or libjss.so) from this directory
+            '-Djava.library.path=/usr/lib64/jss',
+            '-XX:+HeapDumpOnOutOfMemoryError'
+    ]
 
     testLogging {
         // set options for log level LIFECYCLE
@@ -511,9 +516,41 @@ task pom {
                     connection = 'scm:git:git://github.com/candlepin/candlepin.git'
                     developerConnection = 'scm:git:git@github.com:candlepin/candlepin.git'
                 }
+                dependencies {
+                    dependency {
+                        groupId 'org.mozilla'
+                        artifactId 'jss'
+                        version '${jssVersion}'
+                        scope 'system'
+                        systemPath '${jssLocation}'
+                    }
+                }
+                // Choose which jss library to use by activating the appropriate profile
+                // based on which version of the jss jar exists on the file system.
                 profiles {
                     profile {
-                        id 'build'
+                        id 'build-with-jss4'
+                        activation {
+                            file {
+                                exists '/usr/lib64/jss/jss4.jar'
+                            }
+                        }
+                        properties {
+                            jssVersion '4.9.1'
+                            jssLocation '/usr/lib64/jss/jss4.jar'
+                        }
+                    }
+                    profile {
+                        id 'build-with-jss5-plus'
+                        activation {
+                            file {
+                                exists '/usr/lib64/jss/jss.jar'
+                            }
+                        }
+                        properties {
+                            jssVersion '5.0.0'
+                            jssLocation '/usr/lib64/jss/jss.jar'
+                        }
                     }
                 }
                 repositories {
@@ -712,6 +749,22 @@ task pom {
                                         includes {
                                             include 'candlepin-api-spec.yaml'
                                         }
+                                    }
+                                }
+                            }
+                        }
+                        // This helps debugging by printing out which profiles
+                        // are active during the compilation phase
+                        plugin {
+                            groupId 'org.apache.maven.plugins'
+                            artifactId 'maven-help-plugin'
+                            version '3.2.0'
+                            executions {
+                                execution {
+                                    id 'show-profiles'
+                                    phase 'compile'
+                                    goals {
+                                        goal 'active-profiles'
                                     }
                                 }
                             }

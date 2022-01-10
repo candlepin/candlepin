@@ -375,6 +375,12 @@ if (( MAJOR_TC_VERSION >= 8 )); then
     printf "\nTomcat version is 8 or newer. Updating context.xml...\n\n"
     $SUDO unzip -q $DEPLOY -d $DEPLOY_DIR
     $SUDO mv $DEPLOY_DIR/META-INF/context_tomcat8.xml $DEPLOY_DIR/META-INF/context.xml
+
+    # Starting with jss 5, the jar is called 'jss.jar' instead of 'jss4.jar'
+    if [ -f "/usr/lib64/jss/jss.jar" ]; then
+      $SUDO sed -i 's/jss4.jar/jss.jar/g' $DEPLOY_DIR/META-INF/context.xml
+    fi
+
     $SUDO chown -R tomcat:tomcat $DEPLOY_DIR
 fi
 

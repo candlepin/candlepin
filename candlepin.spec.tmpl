@@ -146,6 +146,11 @@ mv %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}/META-INF/context_tomca
 %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}/META-INF/context.xml
 %endif
 
+## If we're running with jss 5+ (RHEL9+/Fedora35+) use the appropriate jar file name
+%if (0%{?rhel} && 0%{?rhel} >= 9) || (0%{?fedora} && 0%{?fedora} >= 35)
+sed -i 's/jss4.jar/jss.jar/g' %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}/META-INF/context.xml
+%endif
+
 %{__ln_s} /etc/candlepin/certs/keystore %{buildroot}/%{_sysconfdir}/tomcat/keystore
 
 ## /var/lib dir for hornetq state
