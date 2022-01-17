@@ -44,4 +44,23 @@ describe 'Authorization' do
     trusted_user_cp.list_consumers :owner => owner1['key']
   end
 
+  it "should not be able to use SCA certificate for authentication" do
+      skip("candlepin running in standalone mode") unless is_hosted?
+
+      owner = create_owner(random_string("test_owner"), nil, {
+        'contentAccessModeList' => 'org_environment,entitlement',
+        'contentAccessMode' => "org_environment"
+      })
+      user = user_client(owner, random_string('guy'))
+      @consumer = consumer_client(user, random_string("consumer"), type=:system, username=nil,
+          facts= {'system.certificate_version' => '3.3'}, owner['key'])
+      certs = @consumer.list_certificates
+      certs.length.should == 1
+
+      malicious_consumer = Candlepin.new(nil, nil, certs[0]['cert'], certs[0]['key'])
+      lambda do
+        malicious_consumer.get_consumer()
+      end.should raise_exception(RestClient::Unauthorized)
+    end
+
 end
