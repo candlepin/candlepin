@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 3.2.21
+Version: 3.2.22
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -235,6 +235,9 @@ fi
 
 #raw
 %changelog
+* Mon Jan 17 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.22-1
+- Disallow authN with SCA certificate (nmoumoul@redhat.com)
+
 * Wed Sep 29 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.2.21-1
 - 1990832: Fix to avoid exceeding the overall query parameter limit
   (prakgupt@redhat.com)
