@@ -39,7 +39,7 @@ public abstract class ConsumerAuth implements AuthProvider {
     protected ConsumerCurator consumerCurator;
     protected OwnerCurator ownerCurator;
     protected DeletedConsumerCurator deletedConsumerCurator;
-    private Provider<I18n> i18nProvider;
+    protected Provider<I18n> i18nProvider;
 
     @Inject
     ConsumerAuth(ConsumerCurator consumerCurator, OwnerCurator ownerCurator,

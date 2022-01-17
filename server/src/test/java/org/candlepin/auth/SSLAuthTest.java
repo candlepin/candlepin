@@ -14,12 +14,16 @@
  */
 package org.candlepin.auth;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.common.exceptions.NotAuthorizedException;
+import org.candlepin.guice.I18nProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -30,15 +34,16 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.test.TestUtil;
 
 import org.jboss.resteasy.spi.HttpRequest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.security.cert.X509Certificate;
+import java.util.Locale;
 
-import javax.inject.Provider;
 import javax.security.auth.x500.X500Principal;
 
 public class SSLAuthTest {
@@ -47,11 +52,11 @@ public class SSLAuthTest {
     @Mock private ConsumerCurator consumerCurator;
     @Mock private OwnerCurator ownerCurator;
     @Mock private DeletedConsumerCurator deletedConsumerCurator;
-    @Mock private Provider<I18n> i18nProvider;
+    @Mock private I18nProvider i18nProvider;
 
     private SSLAuth auth;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         this.auth = new SSLAuth(this.consumerCurator,
@@ -63,20 +68,17 @@ public class SSLAuthTest {
     /**
      * No cert
      *
-     * @throws Exception
      */
     @Test
-    public void noCert() throws Exception {
+    public void noCert() {
         assertNull(this.auth.getPrincipal(httpRequest));
     }
 
     /**
      * Happy path - parses the username from the cert's DN correctly.
-     *
-     * @throws Exception
      */
     @Test
-    public void correctUserName() throws Exception {
+    public void correctUserName() {
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ctype.setId("test-ctype");
 
@@ -95,11 +97,9 @@ public class SSLAuthTest {
 
     /**
      * DN is set but does not contain UID
-     *
-     * @throws Exception
      */
     @Test
-    public void noUuidOnCert() throws Exception {
+    public void noUuidOnCert() {
         mockCert("OU=something");
         when(this.consumerCurator.findByUuid(anyString())).thenReturn(
             new Consumer("machine_name", "test user", null, null));
@@ -108,14 +108,24 @@ public class SSLAuthTest {
 
     /**
      * Uuid in the cert is not found by the curator.
-     *
-     * @throws Exception
      */
     @Test
-    public void noValidConsumerEntity() throws Exception {
+    public void noValidConsumerEntity() {
         mockCert("CN=235-8");
         when(this.consumerCurator.findByUuid("235-8")).thenReturn(null);
         assertNull(this.auth.getPrincipal(httpRequest));
+    }
+
+    @Test
+    public void invalidCertTypeThrowsException() {
+        X509Certificate idCert =  mock(X509Certificate.class);
+        when(this.httpRequest.getAttribute("javax.servlet.request.X509Certificate"))
+            .thenReturn(new X509Certificate[]{idCert});
+        when(idCert.getExtensionValue(any())).thenReturn("random".getBytes());
+        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        when(this.i18nProvider.get()).thenReturn(i18n);
+
+        assertThrows(NotAuthorizedException.class, () -> this.auth.getPrincipal(httpRequest));
     }
 
     private void mockCert(String dn) {
