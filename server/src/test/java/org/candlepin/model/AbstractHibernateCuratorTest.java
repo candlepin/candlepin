@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.config.DatabaseConfigFactory;
@@ -30,7 +31,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -41,6 +44,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+
+import javax.persistence.LockModeType;
+
+
 
 /**
  * AbstractHibernateCuratorTest
@@ -276,7 +283,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         );
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
     @MethodSource("largeValueSetSizes")
     public void testBulkSQLUpdateWithLargeValueSets(int count, int skip) {
         Owner owner = this.createOwner();
@@ -325,7 +332,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         return entries.toArray();
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
     @MethodSource("largeValueSetAndCriteriaSizes")
     public void testBulkSQLUpdateWithLargeValueSetAndCriteriaList(int valueCount, int criteriaListSize) {
         Owner owner = this.createOwner();
@@ -835,4 +842,45 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     }
 
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @EnumSource(value = LockModeType.class, names = { "PESSIMISTIC_READ", "PESSIMISTIC_WRITE" })
+    public void testGetSystemLock(LockModeType lockMode) {
+        String lockId = "test_lock";
+
+        this.ownerCurator.getSystemLock(lockId, lockMode);
+
+        SystemLock lock = this.getEntityManager()
+            .find(SystemLock.class, lockId);
+
+        assertNotNull(lock);
+        assertEquals(lockMode, this.getEntityManager().getLockMode(lock));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @EnumSource(value = LockModeType.class, names = { "PESSIMISTIC_READ", "PESSIMISTIC_WRITE" })
+    public void testGetSystemLockIsReentrant(LockModeType lockMode) {
+        this.ownerCurator.getSystemLock("test_lock", lockMode);
+        this.ownerCurator.getSystemLock("test_lock", lockMode);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @EnumSource(value = LockModeType.class, names = { "PESSIMISTIC_READ", "PESSIMISTIC_WRITE" },
+        mode = EnumSource.Mode.EXCLUDE)
+    public void testGetSystemLockRequiresPessimisticLock(LockModeType lockMode) {
+        assertThrows(IllegalArgumentException.class, () -> this.ownerCurator
+            .getSystemLock("test_lock", lockMode));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testGetSystemLockRequiresLockName(String lockName) {
+        assertThrows(IllegalArgumentException.class, () -> this.ownerCurator
+            .getSystemLock(lockName, LockModeType.PESSIMISTIC_READ));
+    }
+
+    @Test
+    public void testGetSystemLockRequiresLockMode() {
+        assertThrows(IllegalArgumentException.class, () -> this.ownerCurator
+            .getSystemLock("test_lock", null));
+    }
 }

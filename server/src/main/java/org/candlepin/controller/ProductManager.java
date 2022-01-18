@@ -45,6 +45,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.persistence.LockModeType;
+
 
 
 /**
@@ -57,6 +59,9 @@ import java.util.stream.Collectors;
  */
 public class ProductManager {
     private static final Logger log = LoggerFactory.getLogger(ProductManager.class);
+
+    /** Name of the system lock used by various product operations */
+    public static final String SYSTEM_LOCK = "products";
 
     private final ContentAccessManager contentAccessManager;
 
@@ -232,6 +237,8 @@ public class ProductManager {
             throw new IllegalStateException("product has already been created: " + productData.getId());
         }
 
+        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
+
         Map<String, Product> productMap = this.resolveProductRefs(owner, productData);
         Map<String, Content> contentMap = this.resolveContentRefs(owner, productData);
 
@@ -322,6 +329,8 @@ public class ProductManager {
         if (!isChangedBy(entity, productData)) {
             return entity;
         }
+
+        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
 
         Map<String, Product> productMap = this.resolveProductRefs(owner, productData);
         Map<String, Content> contentMap = this.resolveContentRefs(owner, productData);
@@ -436,6 +445,8 @@ public class ProductManager {
         if (entity == null) {
             throw new IllegalArgumentException("entity is null");
         }
+
+        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
 
         Map<String, Product> productMap = this.resolveProductRefs(owner, entity);
         Map<String, Content> contentMap = this.resolveContentRefs(owner, entity);

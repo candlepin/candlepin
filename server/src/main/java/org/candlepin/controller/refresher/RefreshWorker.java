@@ -14,6 +14,8 @@
  */
 package org.candlepin.controller.refresher;
 
+import org.candlepin.controller.ContentManager;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.controller.refresher.builders.ContentNodeBuilder;
 import org.candlepin.controller.refresher.builders.NodeFactory;
 import org.candlepin.controller.refresher.builders.PoolNodeBuilder;
@@ -48,6 +50,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.persistence.LockModeType;
 
 
 
@@ -434,6 +438,11 @@ public class RefreshWorker {
             .addVisitor(new PoolNodeVisitor(this.poolCurator))
             .addVisitor(new ProductNodeVisitor(this.productCurator, this.ownerProductCurator))
             .addVisitor(new ContentNodeVisitor(this.contentCurator, this.ownerContentCurator));
+
+        // Obtain system locks on products and content so we don't need to worry about
+        // orphan cleanup deleting stuff out from under us
+        this.ownerContentCurator.getSystemLock(ContentManager.SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
+        this.ownerProductCurator.getSystemLock(ProductManager.SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
 
         // Add in our existing entities
         this.poolMapper.addExistingEntities(
