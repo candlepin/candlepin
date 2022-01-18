@@ -36,6 +36,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
+import javax.persistence.LockModeType;
+
 
 
 /**
@@ -48,6 +50,9 @@ import java.util.Objects;
  */
 public class ContentManager {
     private static final Logger log = LoggerFactory.getLogger(ContentManager.class);
+
+    /** Name of the system lock used by various content operations */
+    public static final String SYSTEM_LOCK = "content";
 
     private final ContentAccessManager contentAccessManager;
     private final ProductManager productManager;
@@ -134,6 +139,8 @@ public class ContentManager {
         if (this.ownerContentCurator.contentExists(owner, contentData.getId())) {
             throw new IllegalStateException("content has already been created: " + contentData.getId());
         }
+
+        this.ownerContentCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
 
         log.debug("Creating new content for org: {}, {}", contentData, owner);
 
@@ -223,6 +230,8 @@ public class ContentManager {
         if (!isChangedBy(entity, contentData)) {
             return entity;
         }
+
+        this.ownerContentCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
 
         log.debug("Applying content update for org: {} => {}, {}", contentData, entity, owner);
 

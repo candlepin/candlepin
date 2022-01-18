@@ -581,9 +581,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public void heartbeatUpdate(final String reporterId, final Date checkIn, final String ownerKey)
         throws PersistenceException {
         final String query;
-        final String db = ((String) this.currentSession().getSessionFactory().getProperties()
-            .get("hibernate.dialect")).toLowerCase();
-        if (db.contains("mysql") || db.contains("maria")) {
+        final String dialect = this.getDatabaseDialect();
+
+        if (dialect.contains("mysql") || dialect.contains("maria")) {
             query = "" +
                 "UPDATE cp_consumer consumer" +
                 " JOIN cp_consumer_hypervisor hypervisor on consumer.id = hypervisor.consumer_id " +
@@ -592,7 +592,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 " WHERE hypervisor.reporter_id = :reporter" +
                 " AND owner.account = :ownerKey";
         }
-        else if (db.contains("postgresql")) {
+        else if (dialect.contains("postgresql")) {
             query = "" +
                 "UPDATE cp_consumer consumer" +
                 " SET lastcheckin = :checkin" +
