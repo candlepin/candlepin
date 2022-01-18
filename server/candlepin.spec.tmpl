@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.13
+Version: 4.0.14
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,20 @@ fi
 
 #raw
 %changelog
+* Tue Jan 18 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.14-1
+- Disallow authN with SCA certificate (nmoumoul@redhat.com)
+- Fix flaky job tests (nmoumoul@redhat.com)
+- Update logging libraries (incl. logback) to latest version
+  (nmoumoul@redhat.com)
+- Updated HSQLDB to 2.6.1 (crog@redhat.com)
+- Improved upstream subscription injector usability (crog@redhat.com)
+- 2028766: Change to query for correct updating and performance
+  (wpoteat@redhat.com)
+- 2026875: Enforce locale when parsing Date from String (nmoumoul@redhat.com)
+- 2023725: SCA 'lastUpdated' & If-Modified-Since date fixes
+  (nmoumoul@redhat.com)
+- Add the Owner key to the consumer identity certificate (bcourt@redhat.com)
+
 * Mon Nov 08 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.13-1
 - Optimized refresh to avoid slow, repetitive operations (crog@redhat.com)
 - Optimized versioned entity lookup for products and content (crog@redhat.com)
