@@ -45,6 +45,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.persistence.LockModeType;
+
 
 
 /**
@@ -57,6 +59,9 @@ import java.util.stream.Collectors;
  */
 public class ProductManager {
     private static final Logger log = LoggerFactory.getLogger(ProductManager.class);
+
+    /** Name of the system lock used by various product operations */
+    public static final String SYSTEM_LOCK = "products";
 
     private final ContentAccessManager contentAccessManager;
 
@@ -232,6 +237,8 @@ public class ProductManager {
             throw new IllegalStateException("product has already been created: " + productData.getId());
         }
 
+        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
+
         Map<String, Product> productMap = this.resolveProductRefs(owner, productData);
         Map<String, Content> contentMap = this.resolveContentRefs(owner, productData);
 
@@ -244,7 +251,7 @@ public class ProductManager {
 
         // Check if we have an alternate version we can use instead.
         List<Product> alternateVersions = this.ownerProductCurator
-            .getProductsByVersions(Collections.singleton(entity.getEntityVersion()))
+            .getProductsByVersions(Set.of(entity.getEntityVersion()))
             .get(entity.getId());
 
         if (alternateVersions != null) {
@@ -323,6 +330,8 @@ public class ProductManager {
             return entity;
         }
 
+        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
+
         Map<String, Product> productMap = this.resolveProductRefs(owner, productData);
         Map<String, Content> contentMap = this.resolveContentRefs(owner, productData);
 
@@ -342,7 +351,7 @@ public class ProductManager {
         // their own version.
         // This is probably going to be a very expensive operation, though.
         List<Product> alternateVersions = this.ownerProductCurator
-            .getProductsByVersions(Collections.singleton(updated.getEntityVersion()))
+            .getProductsByVersions(Set.of(updated.getEntityVersion()))
             .get(updated.getId());
 
         if (alternateVersions != null) {
@@ -437,6 +446,8 @@ public class ProductManager {
             throw new IllegalArgumentException("entity is null");
         }
 
+        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
+
         Map<String, Product> productMap = this.resolveProductRefs(owner, entity);
         Map<String, Content> contentMap = this.resolveContentRefs(owner, entity);
 
@@ -461,7 +472,7 @@ public class ProductManager {
         // their own version.
         // This is probably going to be a very expensive operation, though.
         List<Product> alternateVersions = this.ownerProductCurator
-            .getProductsByVersions(Collections.singleton(updated.getEntityVersion()))
+            .getProductsByVersions(Set.of(updated.getEntityVersion()))
             .get(updated.getId());
 
         if (alternateVersions != null) {
