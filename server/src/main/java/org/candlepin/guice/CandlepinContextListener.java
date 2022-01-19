@@ -280,7 +280,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         MapConfiguration defaults = new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES);
 
         // Default to Postgresql if jpa.config.hibernate.dialect is unset
-        DatabaseConfigFactory.SupportedDatabase db = determinDatabaseConfiguration(systemConfig.getString
+        DatabaseConfigFactory.SupportedDatabase db = determineDatabaseConfiguration(systemConfig.getString
             ("jpa.config.hibernate.dialect", PostgreSQL92Dialect.class.getName()));
         log.info("Running under {}", db.getLabel());
         Configuration databaseConfig = DatabaseConfigFactory.fetchConfig(db);
@@ -292,7 +292,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         return EncryptedConfiguration.merge(systemConfig, databaseConfig, defaults);
     }
 
-    private DatabaseConfigFactory.SupportedDatabase determinDatabaseConfiguration(String dialect) {
+    private DatabaseConfigFactory.SupportedDatabase determineDatabaseConfiguration(String dialect) {
         if (StringUtils.containsIgnoreCase(
             dialect, DatabaseConfigFactory.SupportedDatabase.MYSQL.getLabel())) {
             return DatabaseConfigFactory.SupportedDatabase.MYSQL;

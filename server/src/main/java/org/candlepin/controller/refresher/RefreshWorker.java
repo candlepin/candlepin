@@ -28,6 +28,7 @@ import org.candlepin.controller.refresher.visitors.ContentNodeVisitor;
 import org.candlepin.controller.refresher.visitors.NodeProcessor;
 import org.candlepin.controller.refresher.visitors.PoolNodeVisitor;
 import org.candlepin.controller.refresher.visitors.ProductNodeVisitor;
+import org.candlepin.controller.util.EntityVersioningRetryWrapper;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
@@ -39,9 +40,9 @@ import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
+import org.candlepin.util.Transactional;
 
 import com.google.inject.Inject;
-import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +52,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
+import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;
 
 
@@ -61,6 +63,13 @@ import javax.persistence.LockModeType;
  */
 public class RefreshWorker {
     private static Logger log = LoggerFactory.getLogger(RefreshWorker.class);
+
+    /**
+     * The number of times to retry certain CRUD operations which may fail as a result of
+     * entity versioning constraints
+     */
+    private static final int VERSIONING_CONSTRAINT_VIOLATION_RETRIES = 4;
+
 
     private PoolCurator poolCurator;
     private ContentCurator contentCurator;
@@ -420,43 +429,64 @@ public class RefreshWorker {
      * @return
      *  the result of this refresh operation
      */
-    @Transactional
     public RefreshResult execute(Owner owner) {
-        NodeMapper nodeMapper = new NodeMapper();
+        Transactional<RefreshResult> block = this.poolCurator.transactional((args) -> {
+            NodeMapper nodeMapper = new NodeMapper();
 
-        NodeFactory nodeFactory = new NodeFactory()
-            .setNodeMapper(nodeMapper)
-            .addMapper(this.poolMapper)
-            .addMapper(this.productMapper)
-            .addMapper(this.contentMapper)
-            .addBuilder(new PoolNodeBuilder())
-            .addBuilder(new ProductNodeBuilder())
-            .addBuilder(new ContentNodeBuilder());
+            NodeFactory nodeFactory = new NodeFactory()
+                .setNodeMapper(nodeMapper)
+                .addMapper(this.poolMapper)
+                .addMapper(this.productMapper)
+                .addMapper(this.contentMapper)
+                .addBuilder(new PoolNodeBuilder())
+                .addBuilder(new ProductNodeBuilder())
+                .addBuilder(new ContentNodeBuilder());
 
-        NodeProcessor nodeProcessor = new NodeProcessor()
-            .setNodeMapper(nodeMapper)
-            .addVisitor(new PoolNodeVisitor(this.poolCurator))
-            .addVisitor(new ProductNodeVisitor(this.productCurator, this.ownerProductCurator))
-            .addVisitor(new ContentNodeVisitor(this.contentCurator, this.ownerContentCurator));
+            NodeProcessor nodeProcessor = new NodeProcessor()
+                .setNodeMapper(nodeMapper)
+                .addVisitor(new PoolNodeVisitor(this.poolCurator))
+                .addVisitor(new ProductNodeVisitor(this.productCurator, this.ownerProductCurator))
+                .addVisitor(new ContentNodeVisitor(this.contentCurator, this.ownerContentCurator));
 
-        // Obtain system locks on products and content so we don't need to worry about
-        // orphan cleanup deleting stuff out from under us
-        this.ownerContentCurator.getSystemLock(ContentManager.SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
-        this.ownerProductCurator.getSystemLock(ProductManager.SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
+            // Clear existing entities in the event this isn't the first run of this refresher
+            this.poolMapper.clearExistingEntities();
+            this.productMapper.clearExistingEntities();
+            this.contentMapper.clearExistingEntities();
 
-        // Add in our existing entities
-        this.poolMapper.addExistingEntities(
-            this.poolCurator.listByOwnerAndTypes(owner.getId(), PoolType.NORMAL, PoolType.DEVELOPMENT));
+            // Obtain system locks on products and content so we don't need to worry about
+            // orphan cleanup deleting stuff out from under us
+            this.ownerContentCurator.getSystemLock(ContentManager.SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
+            this.ownerProductCurator.getSystemLock(ProductManager.SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
 
-        this.productMapper.addExistingEntities(this.ownerProductCurator.getProductsByOwner(owner).list());
-        this.contentMapper.addExistingEntities(this.ownerContentCurator.getContentByOwner(owner).list());
+            // Add in our existing entities
+            this.poolMapper.addExistingEntities(
+                this.poolCurator.listByOwnerAndTypes(owner.getId(), PoolType.NORMAL, PoolType.DEVELOPMENT));
 
-        // Have our node factory build the node trees
-        nodeFactory.buildNodes(owner);
+            this.productMapper.addExistingEntities(this.ownerProductCurator.getProductsByOwner(owner).list());
+            this.contentMapper.addExistingEntities(this.ownerContentCurator.getContentByOwner(owner).list());
 
-        // Process our nodes, starting at the roots, letting the processors build up any persistence
-        // state necessary to finalize everything
-        return nodeProcessor.processNodes();
+            // Have our node factory build the node trees
+            nodeFactory.buildNodes(owner);
+
+            // Process our nodes, starting at the roots, letting the processors build up any persistence
+            // state necessary to finalize everything
+            return nodeProcessor.processNodes();
+        });
+
+        // Attempt to retry if we're not already in a transaction
+        // Impl note: at the time of writing, nested transactions are not supported in Hibernate
+        EntityTransaction transaction = this.poolCurator.getTransaction();
+        if (transaction == null || !transaction.isActive()) {
+            // Retry this operation if we hit a constraint violation on the entity version constraint
+            return new EntityVersioningRetryWrapper()
+                .retries(VERSIONING_CONSTRAINT_VIOLATION_RETRIES)
+                .execute(() -> block.execute());
+        }
+        else {
+            // A transaction is already active, just run the block as-is
+            return block.allowExistingTransactions()
+                .execute();
+        }
     }
 
 }

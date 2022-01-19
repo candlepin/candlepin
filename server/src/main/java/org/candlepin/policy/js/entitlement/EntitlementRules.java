@@ -20,7 +20,6 @@ import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.rules.v1.ConsumerDTO;
 import org.candlepin.dto.rules.v1.EntitlementDTO;
@@ -32,8 +31,6 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
@@ -71,6 +68,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+
+
 /**
  * Enforces entitlement rules for normal (non-manifest) consumers.
  */
@@ -86,9 +85,6 @@ public class EntitlementRules implements Enforcer {
     private ConsumerTypeCurator consumerTypeCurator;
     private ProductCurator productCurator;
     private RulesObjectMapper objectMapper;
-    private OwnerCurator ownerCurator;
-    private OwnerProductCurator ownerProductCurator;
-    private ProductManager productManager;
     private EventSink eventSink;
     private EventFactory eventFactory;
     private ModelTranslator translator;
@@ -100,9 +96,7 @@ public class EntitlementRules implements Enforcer {
     public EntitlementRules(DateSource dateSource,
         JsRunner jsRules, I18n i18n, Configuration config, ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, RulesObjectMapper mapper,
-        OwnerCurator ownerCurator, OwnerProductCurator ownerProductCurator,
-        ProductManager productManager, EventSink eventSink,
-        EventFactory eventFactory, ModelTranslator translator) {
+        EventSink eventSink, EventFactory eventFactory, ModelTranslator translator) {
 
         this.jsRules = jsRules;
         this.dateSource = dateSource;
@@ -112,9 +106,6 @@ public class EntitlementRules implements Enforcer {
         this.consumerTypeCurator = consumerTypeCurator;
         this.productCurator = productCurator;
         this.objectMapper = mapper;
-        this.ownerCurator = ownerCurator;
-        this.ownerProductCurator = ownerProductCurator;
-        this.productManager = productManager;
         this.eventSink = eventSink;
         this.eventFactory = eventFactory;
         this.translator = translator;

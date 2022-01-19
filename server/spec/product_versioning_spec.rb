@@ -391,29 +391,6 @@ describe 'Product Versioning' do
     prod6["uuid"].should eq(prod5["uuid"])
   end
 
-  it "should not converge with an orphaned product" do
-    # NOTE:
-    # This test should be removed/disabled if in-place updating/converging is reenabled, as orphans
-    # will not be created in such a case
-
-    owner1 = create_owner random_string('test_owner')
-    owner2 = create_owner random_string('test_owner')
-
-    id = random_string('test_product')
-
-    orphan = @cp.create_product(owner1["key"], id, id)
-    product1 = @cp.update_product(owner1["key"], id, { :name => "#{id}-update" })
-    product2 = @cp.create_product(owner2["key"], id, id)
-
-    expect(orphan['uuid']).to_not eq(product1['uuid'])
-    expect(orphan['uuid']).to_not eq(product2['uuid'])
-    expect(product1['uuid']).to_not eq(product2['uuid'])
-
-    expect(@cp.get_product_by_uuid(orphan['uuid'])).to_not be_nil
-    expect(@cp.get_product_by_uuid(product1['uuid'])).to_not be_nil
-    expect(@cp.get_product_by_uuid(product2['uuid'])).to_not be_nil
-  end
-
   it 'should cleanup orphans without interfering with normal actions' do
     # NOTE:
     # This test takes advantage of the immutable nature of products with the in-place update branch

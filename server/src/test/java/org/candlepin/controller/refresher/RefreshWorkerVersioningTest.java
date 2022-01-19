@@ -46,7 +46,7 @@ public class RefreshWorkerVersioningTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void init() throws Exception {
-        super.init();
+        super.init(false);
     }
 
     private RefreshWorker buildRefreshWorker() {

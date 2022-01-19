@@ -122,15 +122,13 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void nameRequired() {
-
-        Product prod = new Product("someproductlabel", null);
+    public void testProductNameRequired() {
+        Product prod = new Product("some product id", null);
         assertThrows(PersistenceException.class, () -> productCurator.create(prod, true));
-
     }
 
     @Test
-    public void labelRequired() {
+    public void testProductIdRequired() {
         Product prod = new Product(null, "My Product Name");
         assertThrows(ConstraintViolationException.class, () -> productCurator.create(prod, true));
     }
@@ -145,6 +143,22 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         assertEquals(prod.getName(), prod2.getName());
         assertNotEquals(prod.getUuid(), prod2.getUuid());
+    }
+
+    @Test
+    public void testCannotPersistIdenticalProducts() {
+        Product p1 = new Product()
+            .setId("test-product")
+            .setName("test-product");
+
+        this.productCurator.create(p1, true);
+        this.productCurator.clear();
+
+        Product p2 = new Product()
+            .setId("test-product")
+            .setName("test-product");
+
+        assertThrows(PersistenceException.class, () -> this.productCurator.create(p2, true));
     }
 
     @Test

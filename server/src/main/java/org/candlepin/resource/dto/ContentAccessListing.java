@@ -26,16 +26,18 @@ public class ContentAccessListing {
     private Date lastUpdate;
     private Map<Long, List<String>> content = new HashMap<>();
 
-    public void setLastUpdate(Date lastUpdate) {
+    public ContentAccessListing setLastUpdate(Date lastUpdate) {
         this.lastUpdate = lastUpdate;
+        return this;
     }
 
     public Date getLastUpdate() {
         return this.lastUpdate;
     }
 
-    public void setContentListing(Long serial, List<String> contentListing) {
+    public ContentAccessListing setContentListing(Long serial, List<String> contentListing) {
         this.content.put(serial, contentListing);
+        return this;
     }
 
     public Map<Long, List<String>> getContentListing() {

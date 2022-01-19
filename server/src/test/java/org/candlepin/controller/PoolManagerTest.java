@@ -129,6 +129,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.inject.Provider;
+import javax.persistence.EntityManager;
 
 
 
@@ -192,6 +193,11 @@ public class PoolManagerTest {
         product = TestUtil.createProduct();
         pool = TestUtil.createPool(owner, product);
 
+        TestUtil.mockTransactionalFunctionality(mock(EntityManager.class), mockPoolCurator,
+            mockProductCurator, entitlementCurator, certCuratorMock, consumerCuratorMock,
+            consumerTypeCuratorMock, mockOwnerCurator, mockOwnerContentCurator, mockOwnerProductCurator,
+            mockCdnCurator, mockContentCurator);
+
         when(mockOwnerCurator.getByKey(eq(owner.getKey()))).thenReturn(owner);
 
         when(mockConfig.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
@@ -210,9 +216,9 @@ public class PoolManagerTest {
             mockPoolCurator, mockEventSink, eventFactory, mockConfig, enforcerMock, poolRulesMock,
             entitlementCurator, consumerCuratorMock, consumerTypeCuratorMock, certCuratorMock,
             mockECGenerator, complianceRules, systemPurposeComplianceRules, autobindRules,
-            activationKeyRules, mockProductCurator, mockProductManager, mockContentManager,
-            mockOwnerCurator, mockOwnerProductCurator, mockOwnerManager,
-            mockCdnCurator, i18n, mockBindChainFactory, jsonProvider, refreshWorkerProvider));
+            activationKeyRules, mockProductCurator, mockOwnerCurator, mockOwnerProductCurator,
+            mockOwnerManager, mockCdnCurator, i18n, mockBindChainFactory, jsonProvider,
+            refreshWorkerProvider));
 
         setupBindChain();
 

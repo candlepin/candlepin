@@ -210,11 +210,9 @@ public class ProductResourceTest extends DatabaseTestFixture {
         Owner owner2 = this.ownerCurator.create(new Owner("TestCorp-02"));
         Owner owner3 = this.ownerCurator.create(new Owner("TestCorp-03"));
 
-        Product prod1 = this.createProduct("p1", "p1", owner1);
-        Product prod2 = this.createProduct("p1", "p1", owner2);
-        Product prod3 = this.createProduct("p2", "p2", owner2);
-        Product prod4 = this.createProduct("p2", "p2", owner3);
-        Product prod5 = this.createProduct("p3", "p3", owner3);
+        Product prod1 = this.createProduct("p1", "p1", owner1, owner2);
+        Product prod2 = this.createProduct("p2", "p2", owner2, owner3);
+        Product prod3 = this.createProduct("p3", "p3", owner3);
 
         Product poolProd1 = this.createProduct(owner1);
         Product poolProd2 = this.createProduct(owner2);
@@ -224,10 +222,10 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
         // Set Provided Products
         poolProd1.setProvidedProducts(Arrays.asList(prod1));
-        poolProd2.setProvidedProducts(Arrays.asList(prod2));
-        poolProd3.setProvidedProducts(Arrays.asList(prod3));
-        poolProd4.setProvidedProducts(Arrays.asList(prod4));
-        poolProd5.setProvidedProducts(Arrays.asList(prod5));
+        poolProd2.setProvidedProducts(Arrays.asList(prod1));
+        poolProd3.setProvidedProducts(Arrays.asList(prod2));
+        poolProd4.setProvidedProducts(Arrays.asList(prod2));
+        poolProd5.setProvidedProducts(Arrays.asList(prod3));
 
         Pool pool1 = this.poolCurator.create(TestUtil.createPool(owner1, poolProd1, 5));
         Pool pool2 = this.poolCurator.create(TestUtil.createPool(owner2, poolProd2, 5));
