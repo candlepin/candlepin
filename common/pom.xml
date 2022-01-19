@@ -9,7 +9,7 @@
   </parent>
   <groupId>org.candlepin</groupId>
   <artifactId>candlepin-common</artifactId>
-  <version>4.0.14</version>
+  <version>4.0.15</version>
   <name>Candlepin Common</name>
   <description>Common code for Candlepin</description>
   <dependencies>

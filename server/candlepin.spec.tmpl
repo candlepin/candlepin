@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.14
+Version: 4.0.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,10 @@ fi
 
 #raw
 %changelog
+* Wed Jan 19 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.15-1
+- Duplicate entity versions are now disallowed per-ID (crog@redhat.com)
+- Updated locking model surrounding orphan entity cleanup (crog@redhat.com)
+
 * Tue Jan 18 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.14-1
 - Disallow authN with SCA certificate (nmoumoul@redhat.com)
 - Fix flaky job tests (nmoumoul@redhat.com)
