@@ -14,9 +14,11 @@
  */
 package org.candlepin.auth;
 
+import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.util.OIDUtil;
 
 import com.google.inject.Inject;
 
@@ -66,6 +68,8 @@ public class SSLAuth extends ConsumerAuth {
         // itself.
         X509Certificate identityCert = certs[0];
 
+        this.checkForInvalidCertificateType(identityCert);
+
         return createPrincipal(parseUuid(identityCert));
     }
 
@@ -85,4 +89,18 @@ public class SSLAuth extends ConsumerAuth {
         return dnAttributes.get(UUID_DN_ATTRIBUTE);
     }
 
+    // Disallow the use of an Entitlement or SCA certificate in place of an Identity certificate
+    private void checkForInvalidCertificateType(X509Certificate cert) {
+        byte[] entitlementVersionExtension = cert.getExtensionValue(OIDUtil.REDHAT_OID + "." +
+            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_VERSION_KEY));
+        byte[] entitlementDataExtension = cert.getExtensionValue(OIDUtil.REDHAT_OID + "." +
+            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY));
+        byte[] entitlementTypeExtension = cert.getExtensionValue(OIDUtil.REDHAT_OID + "." +
+            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY));
+
+        if (entitlementVersionExtension != null || entitlementDataExtension != null ||
+            entitlementTypeExtension != null) {
+            throw new NotAuthorizedException(this.i18nProvider.get().tr("Invalid Certificate Type"));
+        }
+    }
 }
