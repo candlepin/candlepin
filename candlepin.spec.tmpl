@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.8
+Version: 4.1.9
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -239,6 +239,34 @@ fi
 
 #raw
 %changelog
+* Thu Jan 20 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.9-1
+- Update translation files (noreply@weblate.org)
+- Translated using Weblate (Korean) (simmon@nplob.com)
+- Translated using Weblate (German) (atalanttore@googlemail.com)
+- Translated using Weblate (Russian) (igor.gorbounov@gmail.com)
+- Updated locking model surrounding orphan entity cleanup (crog@redhat.com)
+- Fix flaky job tests (nmoumoul@redhat.com)
+- Update logging libraries (incl. logback) to latest version
+  (nmoumoul@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Duplicate entity versions are now disallowed per-ID (crog@redhat.com)
+- Updated HSQLDB to 2.6.1 (crog@redhat.com)
+- Upgrade to Artemis 2.19.0 (and Netty 4.1.68.Final) (nmoumoul@redhat.com)
+- Remove logdriver (nmoumoul@redhat.com)
+- 2029916: lower logging level for excluded facts (wpoteat@redhat.com)
+- Fix rpm build for Fedora 29 to 35 (nmoumoul@redhat.com)
+- Compile against jss from the file system (nmoumoul@redhat.com)
+- Removed PKCS1 conversion when writing PEM keys (crog@redhat.com)
+- Remove obsolete log4j comment references (nmoumoul@redhat.com)
+- Improved upstream subscription injector usability (crog@redhat.com)
+- 2028765: Change to query for correct updating and performance
+  (wpoteat@redhat.com)
+- 2026874: Enforce locale when parsing Date from String (nmoumoul@redhat.com)
+- 2010251: SCA 'lastUpdated' & If-Modified-Since date fixes
+  (nmoumoul@redhat.com)
+- Add the Owner key to the consumer identity certificate (bcourt@redhat.com)
+
 * Fri Nov 12 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.8-1
 - Use new maven mead target (nmoumoul@redhat.com)
 - 2016418: Update method to mark entitlements dirty (wpoteat@redhat.com)
