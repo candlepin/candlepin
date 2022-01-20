@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-05-06 03:03-0400\n"
+"POT-Creation-Date: 2022-01-20 07:07-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -340,6 +340,10 @@ msgstr ""
 msgid "Error getting OAuth unit key"
 msgstr ""
 
+#: server/src/main/java/org/candlepin/auth/SSLAuth.java:103
+msgid "Invalid Certificate Type"
+msgstr ""
+
 #: server/src/main/java/org/candlepin/auth/UserAuth.java:54
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1179
 #: server/src/main/java/org/candlepin/resource/RoleResource.java:133
@@ -549,17 +553,17 @@ msgstr ""
 msgid "{0} COVERAGE PROBLEM.  Supports {1} of {2}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:269
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:270
 #, java-format
 msgid "Subscriptions for {0} expired on: {1}"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:357
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:358
 #, java-format
 msgid "\"{0}\" Should contain name, priority and at least one attribute"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:371
+#: server/src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:372
 msgid "second parameter should be the priority number."
 msgstr ""
 
@@ -785,7 +789,7 @@ msgstr ""
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:439
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1249
 #: server/src/main/java/org/candlepin/resource/HypervisorResource.java:349
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1755
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1751
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr ""
@@ -1384,39 +1388,39 @@ msgid ""
 "The flags add_future and only_future cannot be used with the parameter after."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1812
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1808
 msgid "Pool product ID not specified"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1857
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1853
 #, java-format
 msgid "Unable to find a pool with the ID \"{0}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1865
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1861
 #, java-format
 msgid "Pool \"{0}\" does not belong to the specified owner \"{1}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1871
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:1867
 msgid "Cannot update bonus pools, as they are auto generated"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2028
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2102
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2024
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2098
 msgid "Error reading export archive"
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2106
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2102
 msgid "Error storing uploaded archive for asynchronous processing."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2250
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2246
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2331
+#: server/src/main/java/org/candlepin/resource/OwnerResource.java:2327
 msgid "Unknown conflict to force"
 msgstr ""
 
@@ -1479,22 +1483,22 @@ msgstr ""
 msgid "A certificate was not found for pool \"{0}\""
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ProductResource.java:119
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:118
 #, java-format
 msgid "Product with UUID \"{0}\" could not be found."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ProductResource.java:167
-#: server/src/main/java/org/candlepin/resource/ProductResource.java:185
-#: server/src/main/java/org/candlepin/resource/ProductResource.java:205
-#: server/src/main/java/org/candlepin/resource/ProductResource.java:226
-#: server/src/main/java/org/candlepin/resource/ProductResource.java:243
-#: server/src/main/java/org/candlepin/resource/ProductResource.java:259
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:166
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:184
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:204
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:225
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:242
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:258
 msgid "Organization-agnostic product write operations are no longer supported."
 msgstr ""
 
-#: server/src/main/java/org/candlepin/resource/ProductResource.java:273
-#: server/src/main/java/org/candlepin/resource/ProductResource.java:292
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:272
+#: server/src/main/java/org/candlepin/resource/ProductResource.java:293
 msgid "No product IDs specified"
 msgstr ""
 
