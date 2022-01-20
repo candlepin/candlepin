@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.9
+Version: 4.1.10
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -239,6 +239,9 @@ fi
 
 #raw
 %changelog
+* Thu Jan 20 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.10-1
+- Disallow authN with SCA certificate (nmoumoul@redhat.com)
+
 * Thu Jan 20 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.9-1
 - Update translation files (noreply@weblate.org)
 - Translated using Weblate (Korean) (simmon@nplob.com)
