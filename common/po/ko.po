@@ -1,13 +1,13 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021.
-# simmon <simmon@nplob.com>, 2021.
+# simmon <simmon@nplob.com>, 2021, 2022.
 # Sundeep Anand <suanand@redhat.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-01-20 07:07-0500\n"
-"PO-Revision-Date: 2021-11-24 00:16+0000\n"
+"PO-Revision-Date: 2022-01-20 17:16+0000\n"
 "Last-Translator: simmon <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-0-hotfix/ko/>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.9\n"
+"X-Generator: Weblate 4.10.1\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -402,10 +402,8 @@ msgid "Error getting OAuth unit key"
 msgstr "OAuth 장치 키를 가져오는 도중 오류 발생"
 
 #: server/src/main/java/org/candlepin/auth/SSLAuth.java:103
-#, fuzzy
-#| msgid "Invalid Content-Type {0}"
 msgid "Invalid Certificate Type"
-msgstr "잘못된 내용-유형 {0}"
+msgstr "잘못된 인증 유형"
 
 #: server/src/main/java/org/candlepin/auth/UserAuth.java:54
 #: server/src/main/java/org/candlepin/resource/ConsumerResource.java:1152
