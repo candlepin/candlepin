@@ -33,6 +33,7 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.test.TestUtil;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
@@ -338,4 +339,27 @@ public class SystemPurposeComplianceRulesTest {
         assertEquals(0, status.getReasons().size());
     }
 
+    /*
+     * Tests that the syspurpose status hash is used to determine syspurpose
+     *  status changes and that the compliance status hash is not changed
+     */
+    @Test
+    public void testConsumerSystemPurposeStatusHash() {
+        Consumer consumer = mockConsumer();
+        consumer.setRole(" my_role ");
+
+        Product prod1 = new Product();
+        prod1.setAttribute(Product.Attributes.ROLES, " my_role ");
+        List<Entitlement> ents = new LinkedList<>();
+        ents.add(mockEntitlement(consumer, TestUtil.createProduct("Awesome Product"), prod1));
+
+        consumer.setSystemPurposeStatusHash("hash1");
+        consumer.setComplianceStatusHash("hash2");
+        SystemPurposeComplianceStatus status =
+            complianceRules.getStatus(consumer, ents, null, false);
+        Assertions.assertNotNull(consumer.getSystemPurposeStatusHash());
+        Assertions.assertNotEquals(consumer.getSystemPurposeStatusHash(), "hash1");
+        Assertions.assertNotNull(consumer.getComplianceStatusHash());
+        Assertions.assertEquals(consumer.getComplianceStatusHash(), "hash2");
+    }
 }
