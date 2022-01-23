@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-12-19 01:58-0500\n"
+"POT-Creation-Date: 2022-01-23 02:00-0500\n"
 "PO-Revision-Date: 2021-09-01 13:04+0000\n"
 "Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
 "Language-Team: Japanese <https://translate.fedoraproject.org/projects/"
@@ -275,6 +275,12 @@ msgstr "OAuth にエラーが発生しました。内部メッセージ: {0}"
 msgid "Error getting OAuth unit key"
 msgstr "OAuth ユニットキーの取得中にエラーが発生しました"
 
+#: src/main/java/org/candlepin/auth/SSLAuth.java:103
+#, fuzzy
+#| msgid "Invalid Content-Type {0}"
+msgid "Invalid Certificate Type"
+msgstr "無効なコンテンツタイプ {0}"
+
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1304
 #: src/main/java/org/candlepin/resource/RoleResource.java:112
@@ -401,7 +407,7 @@ msgstr "クエリーパラメーターには無効な形式です。要求され
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} は {1} に対して無効な値です"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1060
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1065
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "変更が同時に行われたため要求は失敗しました、やり直してください。"
 

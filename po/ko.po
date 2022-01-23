@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-12-19 01:58-0500\n"
+"POT-Creation-Date: 2022-01-23 02:00-0500\n"
 "PO-Revision-Date: 2021-11-24 00:16+0000\n"
 "Last-Translator: simmon <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
@@ -275,6 +275,12 @@ msgstr "OAuth 오류가 발생했습니다. 내부 오류 메세지는 다음과
 msgid "Error getting OAuth unit key"
 msgstr "OAuth 장치 키를 가져오는 도중 오류 발생"
 
+#: src/main/java/org/candlepin/auth/SSLAuth.java:103
+#, fuzzy
+#| msgid "Invalid Content-Type {0}"
+msgid "Invalid Certificate Type"
+msgstr "잘못된 내용-유형 {0}"
+
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1304
 #: src/main/java/org/candlepin/resource/RoleResource.java:112
@@ -402,7 +408,7 @@ msgstr ""
 msgid "{0} is not a valid value for {1}"
 msgstr "{0}은 {1}에 대해 잘못된 값입니다"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1060
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1065
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "동시에 변경하여 요청이 실패했습니다. 다시 시도하십시오."
 

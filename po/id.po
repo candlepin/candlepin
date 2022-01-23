@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-12-19 01:58-0500\n"
+"POT-Creation-Date: 2022-01-23 02:00-0500\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: Automatically generated\n"
 "Language-Team: none\n"
@@ -220,6 +220,10 @@ msgstr ""
 msgid "Error getting OAuth unit key"
 msgstr ""
 
+#: src/main/java/org/candlepin/auth/SSLAuth.java:103
+msgid "Invalid Certificate Type"
+msgstr ""
+
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1304
 #: src/main/java/org/candlepin/resource/RoleResource.java:112
@@ -334,7 +338,7 @@ msgstr ""
 msgid "{0} is not a valid value for {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1060
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1065
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr ""
 
