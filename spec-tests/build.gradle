@@ -2,8 +2,6 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 
 plugins {
-    id 'org.springframework.boot' version '2.5.0'
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
 }
 
@@ -16,18 +14,16 @@ description = "Candlepin Spec Tests"
 dependencies {
     implementation project(":client")
 
-    implementation 'org.springframework.boot:spring-boot-starter'
-    implementation "com.squareup.okhttp3:okhttp"
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
+    implementation 'org.slf4j:slf4j-api:1.7.33'
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-}
-
-bootJar {
-    enabled = false
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+    testImplementation 'org.assertj:assertj-core:3.22.0'
 }
 
 test {
-// TODO find a better way to exclute spec tests from notmal "./gradlew test" run
+// TODO find a better way to exclude spec tests from normal "./gradlew test" run
 //    onlyIf {
 //        project.hasProperty("runSpec")
 //    }

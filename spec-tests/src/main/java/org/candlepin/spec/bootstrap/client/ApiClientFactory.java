@@ -18,38 +18,40 @@ import org.candlepin.ApiClient;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.AbstractFactoryBean;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.lang.NonNull;
-import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Objects;
 
-import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import okhttp3.Authenticator;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.Route;
 
 /**
  * Class to build a Candlpin API instance.
  **/
-public class ApiClientFactory extends AbstractFactoryBean<ApiClient> {
+public class ApiClientFactory {
     private static final Logger log = LoggerFactory.getLogger(ApiClientFactory.class);
+    // Create a trust manager that does not validate certificate chains
+    private static final TrustManager[] TRUST_ALL_CERTS = new TrustManager[]{
+        new X509TrustManager() {
+            @Override
+            public void checkClientTrusted(X509Certificate[] chain, String authType) {
+            }
+
+            @Override
+            public void checkServerTrusted(X509Certificate[] chain, String authType) {
+            }
+
+            @Override
+            public X509Certificate[] getAcceptedIssuers() {
+                return new X509Certificate[]{};
+            }
+        }
+    };
 
     private final Config properties;
 
@@ -57,8 +59,6 @@ public class ApiClientFactory extends AbstractFactoryBean<ApiClient> {
         this.properties = Objects.requireNonNull(properties);
     }
 
-    @Override
-    @NonNull
     public ApiClient createInstance() {
         ApiClient apiClient = new ApiClient();
         apiClient.setUsername(properties.get(ConfigKey.USERNAME));
@@ -72,38 +72,16 @@ public class ApiClientFactory extends AbstractFactoryBean<ApiClient> {
     }
 
     private OkHttpClient getUnsafeOkHttpClient() {
-        // Create a trust manager that does not validate certificate chains
-        final TrustManager[] trustAllCerts = new TrustManager[]{
-            new X509TrustManager() {
-                @Override
-                public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                }
-
-                @Override
-                public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-                }
-
-                @Override
-                public X509Certificate[] getAcceptedIssuers() {
-                    return new X509Certificate[]{};
-                }
-            }
-        };
-
         // Install the all-trusting trust manager
-        final SSLContext sslContext = getSslContext(trustAllCerts);
-        // Create an ssl socket factory with our all-trusting manager
+        final SSLContext sslContext = getSslContext(TRUST_ALL_CERTS);
         final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
         OkHttpClient.Builder client = new OkHttpClient.Builder();
-        client.sslSocketFactory(sslSocketFactory, (X509TrustManager) trustAllCerts[0]);
+        client.sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS[0]);
         client.hostnameVerifier((hostname, session) -> true);
-        client.authenticator(new Authenticator() {
-            @Override
-            public Request authenticate(Route route, Response response) {
-                String credential = Credentials.basic(properties.get(ConfigKey.USERNAME), properties.get(ConfigKey.PASSWORD));
-                return response.request().newBuilder().header("Authorization", credential).build();
-            }
+        client.authenticator((route, response) -> {
+            String credential = Credentials.basic(properties.get(ConfigKey.USERNAME), properties.get(ConfigKey.PASSWORD));
+            return response.request().newBuilder().header("Authorization", credential).build();
         });
 
         return client.build();
@@ -120,13 +98,4 @@ public class ApiClientFactory extends AbstractFactoryBean<ApiClient> {
         }
     }
 
-    @Override
-    public boolean isSingleton() {
-        return false;
-    }
-
-    @Override
-    public Class<?> getObjectType() {
-        return ApiClient.class;
-    }
 }

@@ -14,11 +14,6 @@
  */
 package org.candlepin.spec.bootstrap.client;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.ConstructorBinding;
-
-@ConfigurationProperties(prefix = "spec.test.client")
-@ConstructorBinding
 public class ApiClientProperties {
     private final String url;
     private final String username;
