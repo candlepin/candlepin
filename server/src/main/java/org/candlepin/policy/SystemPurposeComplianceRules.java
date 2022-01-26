@@ -264,11 +264,11 @@ public class SystemPurposeComplianceRules {
     }
 
     public void applyStatus(Consumer c, SystemPurposeComplianceStatus status, boolean updateConsumer) {
-        String newHash = getComplianceStatusHash(status, c);
-        boolean complianceChanged = !newHash.equals(c.getComplianceStatusHash());
-        if (complianceChanged) {
-            log.debug("System purpose compliance has changed, sending Compliance event.");
-            c.setComplianceStatusHash(newHash);
+        String newHash = getSystemPurposeComplianceStatusHash(status, c);
+        boolean systemPurposeComplianceChanged = !newHash.equals(c.getSystemPurposeStatusHash());
+        if (systemPurposeComplianceChanged) {
+            log.debug("System purpose compliance has changed, sending System purpose event.");
+            c.setSystemPurposeStatusHash(newHash);
             eventSink.emitCompliance(c, status);
         }
 
@@ -277,13 +277,14 @@ public class SystemPurposeComplianceRules {
             c.setSystemPurposeStatus(status.getStatus());
         }
 
-        if (updateConsumer && (complianceChanged || statusChanged)) {
+        if (updateConsumer && (systemPurposeComplianceChanged || statusChanged)) {
             // Merge might work better here, but we use update in other places for this
             consumerCurator.update(c, false);
         }
     }
 
-    private String getComplianceStatusHash(SystemPurposeComplianceStatus status, Consumer consumer) {
+    private String getSystemPurposeComplianceStatusHash(SystemPurposeComplianceStatus status,
+        Consumer consumer) {
         ComplianceStatusHasher hasher = new ComplianceStatusHasher(consumer, status);
         return hasher.hash();
     }
