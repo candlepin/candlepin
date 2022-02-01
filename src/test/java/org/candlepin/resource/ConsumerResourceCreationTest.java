@@ -169,8 +169,8 @@ public class ConsumerResourceCreationTest {
     @Mock private GuestIdCurator guestIdCurator;
     @Mock private PrincipalProvider principalProvider;
     @Mock private ContentOverrideValidator contentOverrideValidator;
-    @Mock private EntitlementCertificateGenerator entitlementCertificateGenerator;
     @Mock private EnvironmentContentCurator environmentContentCurator;
+    @Mock private EntitlementCertificateGenerator entCertGenerator;
 
     protected ModelTranslator modelTranslator;
 
@@ -230,7 +230,7 @@ public class ConsumerResourceCreationTest {
             this.principalProvider,
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,
-            this.entitlementCertificateGenerator,
+            this.entCertGenerator,
             this.environmentContentCurator
         );
 

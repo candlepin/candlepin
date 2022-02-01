@@ -1,8 +1,13 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
 
-def promote_content(content1, env1)
-  job = @cp.promote_content(env1['id'], [{ :contentId => content1['id'] }])
+def promote_content(content, env)
+  job = @cp.promote_content(env['id'], [{ :contentId => content['id'] }])
+  wait_for_job(job['id'], 15)
+end
+
+def demote_content(content, env)
+  job = @cp.demote_content(env['id'], [ content['id'] ])
   wait_for_job(job['id'], 15)
 end
 
@@ -27,20 +32,6 @@ describe 'Environments' do
     @org_admin.delete_environment(@env['id'])
 
     @org_admin.list_environments(@owner['key']).length.should == 0
-  end
-
-  it 'should cleanup consumers of deleted environment' do
-    consumer = @org_admin.register(random_string('testsystem'), :system, nil, {},
-        nil, nil, [], [], [{'id' => @env['id']}])
-    id_cert_serial = consumer['idCert']['serial']['serial']
-
-    @org_admin.delete_environment(@env['id'])
-
-    @org_admin.list_environments(@owner['key']).length.should == 0
-    lambda {
-      @org_admin.get_consumer(consumer['uuid'])
-    }.should raise_exception(RestClient::Gone)
-    @cp.get_crl.should include(id_cert_serial)
   end
 
   it 'cannot be created by foreign owner admin' do
@@ -541,6 +532,84 @@ describe 'Environments' do
         content['path'].should include(env1['name'])
       else
         content['path'].should include(env3['name'])
+      end
+    }
+  end
+
+  it 'should delete consumer together with his last environment' do
+    product = create_product
+    content1 = new_content(1)
+    content2 = new_content(2)
+
+    @cp.add_content_to_product(@owner['key'], product['id'], content1['id'])
+    @cp.add_content_to_product(@owner['key'], product['id'], content2['id'])
+
+    env1 = @cp.create_environment(@owner['key'], random_string("env1"), random_string("test_env_1"))
+    env2 = @cp.create_environment(@owner['key'], random_string("env2"), random_string("test_env_2"))
+    promote_content(content1, env1)
+    promote_content(content2, env1)
+    promote_content(content2, env2)
+    consumer1 = @cp.register(random_string("consumer1"), :system, nil,
+                            facts={'system.certificate_version' => '3.3', "uname.machine" => "x86_64"}, random_string("consumer1"),
+                            @owner['key'], [], [], [{ 'id' => env1['id']}])
+    consumer2 = @cp.register(random_string("consumer2"), :system, nil,
+                            facts={'system.certificate_version' => '3.3', "uname.machine" => "x86_64"}, random_string("consumer2"),
+                            @owner['key'], [], [], [{ 'id' => env1['id']}, { 'id' => env2['id']}])
+
+    @cp.delete_environment(env1['id'])
+
+    lambda {
+      @cp.get_consumer(consumer1['uuid'])
+    }.should raise_exception(RestClient::Gone)
+
+    cons = @cp.get_consumer(consumer2['uuid'])
+    cons['environments'].length.should == 1
+  end
+
+  it 'should regenerate only entitlements affected by a deleted environment' do
+    product1 = create_product
+    product2 = create_product
+    content1 = new_content(1)
+    content2 = new_content(2)
+
+    @cp.add_content_to_product(@owner['key'], product1['id'], content1['id'])
+    @cp.add_content_to_product(@owner['key'], product2['id'], content2['id'])
+
+    env1 = @cp.create_environment(@owner['key'], random_string("env1"), random_string("test_env_1"))
+    env2 = @cp.create_environment(@owner['key'], random_string("env2"), random_string("test_env_2"))
+    promote_content(content1, env1)
+    promote_content(content2, env2)
+    consumer = @cp.register(random_string("consumer2"), :system, nil,
+                            facts={'system.certificate_version' => '3.3', "uname.machine" => "x86_64"}, random_string("consumer2"),
+                            @owner['key'], [], [], [{ 'id' => env1['id']}, { 'id' => env2['id']}])
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    pool1 = @cp.create_pool(@owner['key'], product1['id'])
+    pool2 = @cp.create_pool(@owner['key'], product2['id'])
+    ent1 = consumer_cp.consume_pool(pool1['id'], { :quantity => 1 })[0]
+    ent2 = consumer_cp.consume_pool(pool2['id'], {:quantity => 1})[0]
+    pool_1_serial = ent1['certificates'][0]['serial']['id']
+    pool_2_serial = ent2['certificates'][0]['serial']['id']
+
+    certs = consumer_cp.list_certificates
+    certs.length.should == 2
+
+    @cp.delete_environment(env1['id'])
+
+    current_serials = consumer_cp.list_entitlements.map { |ent| ent['certificates'][0]['serial']['id']}
+    current_serials.should_not include(pool_1_serial)
+    current_serials.should include(pool_2_serial)
+
+    certs = consumer_cp.list_certificates
+    certs.length.should == 2
+    certs.each { |cert|
+      json_body = extract_payload(cert['cert'])
+      json_body['products'].length.should == 1
+      content = json_body['products'][0]['content']
+      if cert['serial']['id'] == pool_2_serial
+        content.length.should == 1
+      else
+        content.length.should == 0
       end
     }
   end

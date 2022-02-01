@@ -1315,7 +1315,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      * @return
      *  Map of entitlement IDs & its associated content UUIDs
      */
-    public Map<String, Set<String>> getEntitlementContentUUIDs(List<String> consumerIds) {
+    public Map<String, Set<String>> getEntitlementContentUUIDs(Collection<String> consumerIds) {
         Map<String, Set<String>> contentMap = new HashMap<>();
         int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() - 1);
 
