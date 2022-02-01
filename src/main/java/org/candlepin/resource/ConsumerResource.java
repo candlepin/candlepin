@@ -128,6 +128,7 @@ import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementEnvironmentFilter;
 import org.candlepin.resource.util.EntitlementFinderUtil;
+import org.candlepin.resource.util.EnvironmentUpdates;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resource.validation.DTOValidator;
@@ -161,7 +162,6 @@ import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -181,7 +181,6 @@ import javax.persistence.OptimisticLockException;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
 
 
 /**
@@ -230,13 +229,13 @@ public class ConsumerResource implements ConsumersApi {
     private final PrincipalProvider principalProvider;
     private final ContentOverrideValidator coValidator;
     private final ConsumerContentOverrideCurator ccoCurator;
-    private final EntitlementCertificateGenerator entitlementCertificateGenerator;
+    private final EntitlementCertificateGenerator entCertGenerator;
     private final Pattern consumerSystemNamePattern;
     private final Pattern consumerPersonNamePattern;
-    private final EnvironmentContentCurator environmentContentCurator;
+    private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
 
     @Inject
-    @SuppressWarnings({ "checkstyle:parameternumber" })
+    @SuppressWarnings({"checkstyle:parameternumber"})
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
         SubscriptionServiceAdapter subAdapter,
@@ -274,7 +273,7 @@ public class ConsumerResource implements ConsumersApi {
         PrincipalProvider principalProvider,
         ContentOverrideValidator coValidator,
         ConsumerContentOverrideCurator ccoCurator,
-        EntitlementCertificateGenerator entitlementCertificateGenerator,
+        EntitlementCertificateGenerator entCertGenerator,
         EnvironmentContentCurator environmentContentCurator) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
@@ -318,8 +317,9 @@ public class ConsumerResource implements ConsumersApi {
             ConfigProperties.CONSUMER_PERSON_NAME_PATTERN));
         this.consumerSystemNamePattern = Pattern.compile(config.getString(
             ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
-        this.entitlementCertificateGenerator = Objects.requireNonNull(entitlementCertificateGenerator);
-        this.environmentContentCurator = Objects.requireNonNull(environmentContentCurator);
+        this.entCertGenerator = Objects.requireNonNull(entCertGenerator);
+        this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(
+            entitlementCurator, environmentContentCurator);
     }
 
     /**
@@ -1221,7 +1221,7 @@ public class ConsumerResource implements ConsumersApi {
                     change = true;
                 }
             }
-            else if (getFactValue(update.getFacts(), "distributor_version") !=  null) {
+            else if (getFactValue(update.getFacts(), "distributor_version") != null) {
                 DistributorVersion dv = distributorVersionCurator.findByName(
                     getFactValue(update.getFacts(), "distributor_version"));
 
@@ -1526,13 +1526,14 @@ public class ConsumerResource implements ConsumersApi {
             changesMade = true;
         }
 
-        if (updated.getReleaseVer() != null && updated.getReleaseVer().getReleaseVer() != null &&
-            !updated.getReleaseVer().getReleaseVer().equals(toUpdate.getReleaseVer() == null ? null :
-            toUpdate.getReleaseVer().getReleaseVer())) {
-
-            log.info("   Updating consumer releaseVer setting.");
-            toUpdate.setReleaseVer(new Release(updated.getReleaseVer().getReleaseVer()));
-            changesMade = true;
+        if (updated.getReleaseVer() != null && updated.getReleaseVer().getReleaseVer() != null) {
+            String releaseVer = toUpdate.getReleaseVer() == null ?
+                null : toUpdate.getReleaseVer().getReleaseVer();
+            if (!updated.getReleaseVer().getReleaseVer().equals(releaseVer)) {
+                log.info("   Updating consumer releaseVer setting.");
+                toUpdate.setReleaseVer(new Release(updated.getReleaseVer().getReleaseVer()));
+                changesMade = true;
+            }
         }
 
         changesMade = updateSystemPurposeData(updated, toUpdate) || changesMade;
@@ -1692,18 +1693,15 @@ public class ConsumerResource implements ConsumersApi {
 
                 // lazily regenerate certs, so the client can still work
                 if (preExistingEnvIds != null) {
-                    Set<String> entitlementsToBeRegenerated =
-                        new EntitlementEnvironmentFilter(this.entitlementCurator,
-                        this.environmentContentCurator)
-                        .setConsumerToBeUpdated(Arrays.asList(toUpdate.getId()))
-                        .setPreExistingEnvironments(preExistingEnvIds)
-                        .setUpdatedEnvironment(validatedEnvIds)
-                        .filterEntitlements();
-                    entitlementCertificateGenerator
+                    EnvironmentUpdates environmentUpdates = new EnvironmentUpdates();
+                    environmentUpdates.put(toUpdate.getId(), preExistingEnvIds, validatedEnvIds);
+                    Set<String> entitlementsToBeRegenerated = entitlementEnvironmentFilter
+                        .filterEntitlements(environmentUpdates);
+                    this.entCertGenerator
                         .regenerateCertificatesByEntitlementIds(entitlementsToBeRegenerated, true);
                 }
                 else {
-                    entitlementCertificateGenerator.regenerateCertificatesOf(toUpdate, true);
+                    this.entCertGenerator.regenerateCertificatesOf(toUpdate, true);
                 }
             }
 
@@ -2400,9 +2398,9 @@ public class ConsumerResource implements ConsumersApi {
             String message = "";
 
             if (owner.isUsingSimpleContentAccess()) {
-                log.debug("Organization \"{0}\" has auto-attach disabled because " +
+                log.debug("Organization \"{}\" has auto-attach disabled because " +
                     "of the content access mode setting.", owner.getKey());
-                return Collections.EMPTY_LIST;
+                return Collections.emptyList();
             }
             else {
                 message = (i18n.tr("Organization \"{0}\" has auto-attach disabled.", owner.getKey()));
@@ -2897,7 +2895,6 @@ public class ConsumerResource implements ConsumersApi {
     }
 
 
-
     private void addCalculatedAttributes(Entitlement ent) {
         // With no consumer/date, this will not build suggested quantity
         Map<String, String> calculatedAttributes =
@@ -2916,7 +2913,7 @@ public class ConsumerResource implements ConsumersApi {
     @RootResource.LinkedResource
     public CandlepinQuery<GuestIdDTOArrayElement> getGuestIds(@Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
-        return  translator.translateQuery(guestIdCurator.listByConsumer(consumer),
+        return translator.translateQuery(guestIdCurator.listByConsumer(consumer),
             GuestIdDTOArrayElement.class);
     }
 

@@ -183,7 +183,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             byteExtensions = this.v3extensionUtil.getByteExtensions(productModels);
         }
         else {
-            extensions = prepareV1Extensions(products, pool, consumer, ent.getQuantity(), promotedContent, entitledPools);
+            extensions = prepareV1Extensions(products, pool, consumer, ent.getQuantity(),
+                promotedContent, entitledPools);
         }
 
         Date endDate = setupEntitlementEndDate(pool, consumer);
@@ -279,8 +280,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         return false;
     }
 
-    public Set<X509ExtensionWrapper> prepareV1Extensions(Set<Product> products,
-        Pool pool, Consumer consumer, Integer quantity, PromotedContent promotedContent, Set<Pool> entitledPools) {
+    public Set<X509ExtensionWrapper> prepareV1Extensions(Set<Product> products, Pool pool, Consumer consumer,
+        Integer quantity, PromotedContent promotedContent, Set<Pool> entitledPools) {
         Set<X509ExtensionWrapper> result = new LinkedHashSet<>();
 
         Set<String> entitledProductIds = entCurator.listEntitledProductIds(

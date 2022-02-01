@@ -144,8 +144,8 @@ public class GuestIdResourceTest {
     @Mock private PrincipalProvider principalProvider;
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock private ContentOverrideValidator contentOverrideValidator;
-    @Mock private EntitlementCertificateGenerator entitlementCertificateGenerator;
     @Mock private EnvironmentContentCurator environmentContentCurator;
+    @Mock private EntitlementCertificateGenerator entCertGenerator;
 
     private ConsumerResource resource;
 
@@ -209,7 +209,7 @@ public class GuestIdResourceTest {
             this.principalProvider,
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,
-            this.entitlementCertificateGenerator,
+            this.entCertGenerator,
             this.environmentContentCurator
         );
 

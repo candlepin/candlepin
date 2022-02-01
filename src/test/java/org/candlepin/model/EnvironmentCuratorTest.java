@@ -23,9 +23,9 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -34,7 +34,6 @@ import javax.inject.Inject;
 
 public class EnvironmentCuratorTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
-    @Inject private ContentCurator contentCurator;
     @Inject private EnvironmentContentCurator envContentCurator;
     @Inject private EnvironmentCurator envCurator;
 
@@ -100,15 +99,15 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         Content content3 = this.createContent("c3", "c3", owner2);
 
         Environment environment1 = this.createEnvironment(
-            owner1, "test_env-1", "test_env-1", null, null, Arrays.asList(content1)
+            owner1, "test_env-1", "test_env-1", null, null, List.of(content1)
         );
 
         Environment environment2 = this.createEnvironment(
-            owner1, "test_env-2", "test_env-2", null, null, Arrays.asList(content2)
+            owner1, "test_env-2", "test_env-2", null, null, List.of(content2)
         );
 
         Environment environment3 = this.createEnvironment(
-            owner2, "test_env-3", "test_env-3", null, null, Arrays.asList(content3)
+            owner2, "test_env-3", "test_env-3", null, null, List.of(content3)
         );
 
         int output = this.environmentCurator.deleteEnvironmentsForOwner(owner1);
@@ -145,6 +144,72 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
 
         assertNull(envNameWhenOwnerIdNull);
         assertNull(envNameWhenEnvIdNull);
+    }
+
+    @Test
+    public void shouldListConsumersWithEnvironments() {
+        Owner owner1 = this.createOwner("owner1");
+        Owner owner2 = this.createOwner("owner2");
+        Consumer consumer1 = this.createConsumer(owner1);
+        Consumer consumer2 = this.createConsumer(owner2);
+        Content content1 = this.createContent("c1", "c1", owner1);
+        Content content2 = this.createContent("c3", "c3", owner2);
+        Environment environment1 = this.createEnvironment(
+            owner1, "test_env-1", "test_env-1", null, null, List.of(content1)
+        );
+        Environment environment2 = this.createEnvironment(
+            owner1, "test_env-2", "test_env-2", null, null, List.of(content2)
+        );
+        consumer1.addEnvironment(environment1);
+        consumer1.addEnvironment(environment2);
+        consumer2.addEnvironment(environment1);
+        consumer2.addEnvironment(environment2);
+
+        List<Consumer> output = this.environmentCurator.getEnvironmentConsumers(environment1.getId());
+        assertEquals(2, output.size());
+        for (Consumer consumer : output) {
+            assertEquals(2, consumer.getEnvironmentIds().size());
+        }
+    }
+
+    @Test
+    public void shouldListConsumersWithTheirEnvironments() {
+        Owner owner1 = this.createOwner("owner");
+        Consumer consumer1 = this.createConsumer(owner1);
+        Consumer consumer2 = this.createConsumer(owner1);
+        Content content1 = this.createContent("c1", "c1", owner1);
+        Content content2 = this.createContent("c2", "c2", owner1);
+        Content content3 = this.createContent("c3", "c3", owner1);
+        Environment environment1 = this.createEnvironment(
+            owner1, "test_env-1", "test_env-1", null, null, List.of(content1)
+        );
+        Environment environment2 = this.createEnvironment(
+            owner1, "test_env-2", "test_env-2", null, null, List.of(content2)
+        );
+        Environment environment3 = this.createEnvironment(
+            owner1, "test_env-3", "test_env-3", null, null, List.of(content3)
+        );
+        consumer1.addEnvironment(environment1);
+        consumer1.addEnvironment(environment2);
+        consumer1.addEnvironment(environment3);
+        consumer2.addEnvironment(environment3);
+        consumer2.addEnvironment(environment2);
+        consumer2.addEnvironment(environment1);
+
+        consumer1 = this.consumerCurator.saveOrUpdate(consumer1);
+        consumer2 = this.consumerCurator.saveOrUpdate(consumer2);
+
+        Map<String, List<String>> output = this.environmentCurator
+            .findEnvironmentsOf(List.of(consumer1.getId(), consumer2.getId()));
+        assertEquals(2, output.size());
+
+        assertEquals(environment1.getId(), output.get(consumer1.getId()).get(0));
+        assertEquals(environment2.getId(), output.get(consumer1.getId()).get(1));
+        assertEquals(environment3.getId(), output.get(consumer1.getId()).get(2));
+
+        assertEquals(environment3.getId(), output.get(consumer2.getId()).get(0));
+        assertEquals(environment2.getId(), output.get(consumer2.getId()).get(1));
+        assertEquals(environment1.getId(), output.get(consumer2.getId()).get(2));
     }
 
 }
