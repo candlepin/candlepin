@@ -1,2 +1,6 @@
+---
 - src: https://github.com/candlepin/ansible-role-candlepin.git
   name: candlepin
+  version: master
+
+- src: rvm.ruby

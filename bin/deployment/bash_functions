@@ -116,6 +116,18 @@ cert_from_pkcs12() {
     fi
 }
 
+select_jdbc_jar() {
+    for jar in "$@"
+    do
+        if [ -f "$jar" ]; then
+            JDBC_JAR="$jar"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 recreate_postgresql() {
     local db_name="$1"
     local db_user="${2:-$db_name}"
@@ -136,8 +148,11 @@ recreate_postgresql() {
 init_postgresql_jdbc() {
     local db_name="$1"
     local db_host="${DBHOSTNAME:-localhost}"
+
+    select_jdbc_jar "/usr/share/java/postgresql-jdbc.jar"
+    evalrc $? "No JDBC jar file available for PostgreSQL"
+
     JDBC_DRIVER="org.postgresql.Driver"
-    JDBC_JAR="/usr/share/java/postgresql-jdbc.jar"
     JDBC_URL="jdbc:postgresql://$db_host/$db_name"
 }
 
@@ -158,13 +173,17 @@ init_mysql_jdbc() {
     local db_host="${DBHOSTNAME:-localhost}"
     local password="$DBPASSWORD"
     [ -z "$password" ] && password=''
-    JDBC_DRIVER="com.mysql.jdbc.Driver"
-    JDBC_JAR="/usr/share/java/mysql-connector-java.jar"
+
+    select_jdbc_jar "/usr/lib/java/mariadb-java-client.jar" "/usr/share/java/mysql-connector-java.jar"
+    evalrc $? "No JDBC jar file available for MariaDB/MySQL"
+
+    JDBC_DRIVER="com.mysql.cj.jdbc.Driver"
     JDBC_URL="jdbc:mysql://$db_host/$db_name"
 
-    # Change once the mariadb-java-client RPM is available in EPEL
+    # FIXME:
+    # Use the mariadb driver and URL when the mariadb-java-client RPM is available in EL7 and the
+    # Liquibase errors are fully resolved with the newer drivers
     # JDBC_DRIVER="org.mariadb.jdbc.Driver"
-    # JDBC_JAR="/usr/lib/java/mariadb-java-client.jar"
     # JDBC_URL="jdbc:mariadb://$db_host/$db_name"
     local isolation_level=$(mysql -h $db_host $db_name  --user=$db_user --password="$password" -s -N -e 'select @@global.tx_isolation')
     echo "isolation_level : $isolation_level"

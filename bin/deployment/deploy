@@ -270,9 +270,10 @@ TC_VERSION=6
 if ( [ -f /usr/sbin/tomcat ] && (! [ -f /usr/sbin/tomcat6 ] ) );
 then
     TC=tomcat
+    TC_PATH=/usr/sbin/tomcat
 
     # Determine which Tomcat version we're using
-    TC_VERSION=$(rpm -q tomcat | grep -oP "(?<=^tomcat-)[0-9]+\.[0-9]+")
+    TC_VERSION=$($TC_PATH version | grep -oP "(?<=Server number:  )([0-9]+\.[0-9]+)")
 fi
 
 if [ -z $TC_HOME ]; then
