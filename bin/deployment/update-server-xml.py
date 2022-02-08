@@ -217,6 +217,9 @@ class LegacySSLContextEditor(AbstractBaseEditor):
             ("keystoreFile", "conf/keystore"),
             ("keystorePass", "password"),
             ("keystoreType", "PKCS12"),
+            ("compression", "on"),
+            ("compressionMinSize", "11"),
+            ("compressableMimeType", "application/json,text/html,text/xml"),
         ])
 
         # Return our top-level node
@@ -251,7 +254,9 @@ class CandlepinConnectorEditorV3(AbstractBaseEditor):
             ('scheme', 'https'),
             ('secure', 'true'),
             ('SSLEnabled', 'true'),
-            ('maxThreads', '150')
+            ('maxThreads', '150'),
+            ("compression", "on"),
+            ("compressableMimeType", "application/json,text/html,text/xml")
         ]
 
     def _build_node(self):
