@@ -1,5 +1,6 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
+include CertificateMethods
 
 describe 'Conditional Content and Dependent Entitlements' do
 
@@ -242,6 +243,179 @@ describe 'Conditional Content and Dependent Entitlements' do
     expect(content_repo_type(dependent_cert, @conditional_content_3.id)).to be_nil
   end
 
+  it 'v3 cert includes conditional content after auto attach that also entitles the required product' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    rh00271_eng_product = create_product("204", "Red Hat Enterprise Linux Server - Extended Life Cycle Support", {:owner => owner['key']})
+    rh00271_product = create_product("RH00271", "Extended Life Cycle Support (Unlimited Guests)", {
+      :owner => owner['key'],
+      :providedProducts => [rh00271_eng_product.id],
+      :multiplier => 1,
+      :attributes => {
+        :stacking_id => "RH00271"
+      }
+    })
+
+    rh00051_eng_product = create_product("69", "Red Hat Enterprise Linux Server", {:owner => owner['key']})
+    rh00051_product = create_product("RH00051", "Red Hat Enterprise Linux for Virtual Datacenters with Smart Management, Standard", {
+      :owner => owner['key'],
+      :providedProducts => [rh00051_eng_product.id],
+      :multiplier => 1,
+      :attributes => {
+        :stacking_id => "RH00051"
+      }
+    })
+
+    rh00051_content = @cp.create_content(
+      owner['key'], "cname-c1", 'test-content-c1', random_string("clabel"), "ctype", "cvendor",
+      {:content_url=> '/this/is/the/path'}, true)
+
+    # Content that has a required/modified product 'rh00051_eng_product' (this eng product needs to be entitled to the
+    # consumer already, or otherwise this content will get filtered out during entitlement cert generation)
+    rh00271_content = @cp.create_content(
+      owner['key'], "cname-c2", 'test-content-c2', random_string("clabel"), "ctype", "cvendor",
+      {:content_url=> '/this/is/the/path', :modified_products => [rh00051_eng_product["id"]]}, true)
+
+    @cp.add_content_to_product(owner['key'], rh00051_eng_product['id'], rh00051_content['id'], true)
+    @cp.add_content_to_product(owner['key'], rh00271_eng_product['id'], rh00271_content['id'], true)
+
+    # creating master pool for the RH00051 product
+    rh00051_pool = @cp.create_pool(owner['key'], rh00051_product['id'], {:quantity => 10,
+      :subscription_id => "random",
+      :upstream_pool_id => "random",
+      :provided_products => [rh00051_eng_product.id],
+      :locked => "true"})
+
+    #creating master pool for the RH00271 product
+    rh00271_pool = @cp.create_pool(owner['key'], rh00271_product['id'], {:quantity => 10,
+      :subscription_id => "random",
+      :upstream_pool_id => "random",
+      :provided_products => [rh00271_eng_product.id],
+      :locked => "true"})
+
+    # Create system with V3 certificate version
+    installed_prods = [{'productId' => rh00271_eng_product['id'], 'productName' => rh00271_eng_product['name']},
+      {'productId' => rh00051_eng_product['id'], 'productName' => rh00051_eng_product['name']}]
+    system1 = user.register(random_string('system55'), :system, nil, {"system.certificate_version" => "3.2" },
+       nil, owner['key'], [], installed_prods)
+    system1_client = Candlepin.new(nil, nil, system1['idCert']['cert'], system1['idCert']['key'])
+
+    # Auto-attach the system
+    ents = system1_client.consume_product
+    expect(ents.length).to eq(2)
+
+    # Verify each entitlement cert contains the appropriate content set
+    rh00271_cert_json_body = nil
+    rh00051_cert_json_body = nil
+    ents.each { |ent|
+      if ent.pool.id == rh00051_pool.id
+        rh00051_cert_json_body = extract_payload(ent['certificates'][0]['cert'])
+      end
+
+      if ent.pool.id == rh00271_pool.id
+        rh00271_cert_json_body = extract_payload(ent['certificates'][0]['cert'])
+      end
+    }
+    expect(rh00051_cert_json_body).to_not be_nil
+    expect(rh00271_cert_json_body).to_not be_nil
+
+    expect(rh00051_cert_json_body['products'][0]['content'].size).to eq(1)
+    expect(rh00051_cert_json_body['products'][0]['content'][0].id).to eq(rh00051_content.id)
+
+    # rh00271_content (which depends on modified product id 69) should not have been filtered out, because the
+    # engineering product 69 should already be covered by entitlement rh00051:
+    expect(rh00271_cert_json_body['products'][0]['content'].size).to eq(1)
+    expect(rh00271_cert_json_body['products'][0]['content'][0].id).to eq(rh00271_content.id)
+  end
+
+  it 'v1 cert includes conditional content after auto attach that also entitles the required product' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    rh00271_eng_product = create_product("204", "Red Hat Enterprise Linux Server - Extended Life Cycle Support", {:owner => owner['key']})
+    rh00271_product = create_product("RH00271", "Extended Life Cycle Support (Unlimited Guests)", {
+      :owner => owner['key'],
+      :providedProducts => [rh00271_eng_product.id],
+      :multiplier => 1,
+      :attributes => {
+        :stacking_id => "RH00271"
+      }
+    })
+
+    rh00051_eng_product = create_product("69", "Red Hat Enterprise Linux Server", {:owner => owner['key']})
+    rh00051_product = create_product("RH00051", "Red Hat Enterprise Linux for Virtual Datacenters with Smart Management, Standard", {
+      :owner => owner['key'],
+      :providedProducts => [rh00051_eng_product.id],
+      :multiplier => 1,
+      :attributes => {
+        :stacking_id => "RH00051"
+      }
+    })
+
+    # Note: for v1 certificates, we only support certain types of content type, like 'yum', so we must set the type
+    # to yum here, and also only numeric ids
+    rh00051_content = @cp.create_content(
+      owner['key'], "cname-c1", '111555', random_string("clabel"), "yum", "cvendor",
+      {:content_url=> '/this/is/the/path'}, true)
+
+    # Content that has a required/modified product 'rh00051_eng_product' (this eng product needs to be entitled to the
+    # consumer already, or otherwise this content will get filtered out during entitlement cert generation)
+    rh00271_content = @cp.create_content(
+      owner['key'], "cname-c2", '222333', random_string("clabel"), "yum", "cvendor",
+      {:content_url=> '/this/is/the/path', :modified_products => [rh00051_eng_product["id"]]}, true)
+
+    @cp.add_content_to_product(owner['key'], rh00051_eng_product['id'], rh00051_content['id'], true)
+    @cp.add_content_to_product(owner['key'], rh00271_eng_product['id'], rh00271_content['id'], true)
+
+    # creating master pool for the RH00051 product
+    rh00051_pool = @cp.create_pool(owner['key'], rh00051_product['id'], {:quantity => 10,
+      :subscription_id => "random",
+      :upstream_pool_id => "random",
+      :provided_products => [rh00051_eng_product.id],
+      :locked => "true"})
+
+    #creating master pool for the RH00271 product
+    rh00271_pool = @cp.create_pool(owner['key'], rh00271_product['id'], {:quantity => 10,
+      :subscription_id => "random",
+      :upstream_pool_id => "random",
+      :provided_products => [rh00271_eng_product.id],
+      :locked => "true"})
+
+    # creating system with V1 certificate version
+    installed_prods = [{'productId' => rh00271_eng_product['id'], 'productName' => rh00271_eng_product['name']},
+      {'productId' => rh00051_eng_product['id'], 'productName' => rh00051_eng_product['name']}]
+    system1 = user.register(random_string('system55'), :system, nil, {"system.certificate_version" => "1.0" },
+       nil, owner['key'], [], installed_prods)
+    system1_client = Candlepin.new(nil, nil, system1['idCert']['cert'], system1['idCert']['key'])
+
+    # Auto-attach the system
+    ents = system1_client.consume_product
+    expect(ents.length).to eq(2)
+
+    # Verify each entitlement cert contains the appropriate content set
+    rh00271_cert = nil
+    rh00051_cert = nil
+    ents.each { |ent|
+      if ent.pool.id == rh00051_pool.id
+        rh00051_cert = entitlement_cert(ent)
+      end
+
+      if ent.pool.id == rh00271_pool.id
+        rh00271_cert = entitlement_cert(ent)
+      end
+    }
+    expect(rh00271_cert).to_not be_nil
+    expect(rh00051_cert).to_not be_nil
+
+    expect(content_repo_type(rh00051_cert, rh00051_content.id)).to eq(rh00051_content.type)
+    expect(content_name(rh00051_cert, rh00051_content.id)).to eq(rh00051_content.name)
+
+    # rh00271_content (which depends on modified product id 69) should not have been filtered out, because the
+    # engineering product 69 should already be covered by entitlement rh00051:
+    expect(content_repo_type(rh00271_cert, rh00271_content.id)).to eq(rh00271_content.type)
+    expect(content_name(rh00271_cert, rh00271_content.id)).to eq(rh00271_content.name)
+  end
 
   private
 
@@ -255,5 +429,9 @@ describe 'Conditional Content and Dependent Entitlements' do
 
   def content_repo_type(cert, content_id)
     extension_from_cert(cert, "1.3.6.1.4.1.2312.9.2.#{content_id}.1")
+  end
+
+  def content_name(cert, content_id)
+    extension_from_cert(cert, "1.3.6.1.4.1.2312.9.2.#{content_id}.1.1")
   end
 end

@@ -270,12 +270,11 @@ public class X509V3ExtensionUtil extends X509Util {
 
     public List<org.candlepin.model.dto.Product> createProducts(Product sku,
         Set<Product> products, String contentPrefix, Map<String, EnvironmentContent> promotedContent,
-        Consumer consumer, Pool pool) {
+        Consumer consumer, Pool pool, Set<Pool> entitledPools) {
 
         List<org.candlepin.model.dto.Product> toReturn = new ArrayList<>();
 
-        Set<String> entitledProductIds = entCurator.listEntitledProductIds(consumer,
-            pool);
+        Set<String> entitledProductIds = entCurator.listEntitledProductIds(consumer, pool, entitledPools);
 
         for (Product p : Collections2.filter(products, PROD_FILTER_PREDICATE)) {
             toReturn.add(mapProduct(p, sku, contentPrefix, promotedContent, consumer, pool,

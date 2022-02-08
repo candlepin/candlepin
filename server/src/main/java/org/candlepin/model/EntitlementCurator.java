@@ -613,21 +613,26 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     /**
-     * List all entitled product IDs from entitlements which overlap the given date range.
+     * Returns the set of all entitled product IDs from consumer's entitlements, current pool &
+     * set of all pools about to be entitled (selected via auto attach or bulk pool attach) which overlap
+     * the given date range.
      *
-     * i.e. given start date must be within the entitlements start/end dates, or
+     * i.e. Given start date must be within the entitlements start/end dates, or
      * the given end date must be within the entitlements start/end dates,
      * or the given start date must be before the entitlement *and* the given end date
      * must be after entitlement. (i.e. we are looking for *any* overlap)
      *
-     * also assumes the consumer is about to create an entitlement with the pool provided
-     * as an argument, so includes the products from that pool
-     *
      * @param consumer
+     *  Entitled consumer
      * @param pool
-     * @return entitled product IDs
+     *  Pool under consideration to test for date overlap
+     * @param poolsToBeEntitled
+     *  Set of pools about to be entitled
+     *
+     * @return
+     *  Set of entitled product IDs
      */
-    public Set<String> listEntitledProductIds(Consumer consumer, Pool pool) {
+    public Set<String> listEntitledProductIds(Consumer consumer, Pool pool, Set<Pool> poolsToBeEntitled) {
         // FIXME Either address the TODO below, or move this method out of the curator.
         // TODO: Swap this to a db query if we're worried about memory:
         Set<String> entitledProductIds = new HashSet<>();
@@ -639,6 +644,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         pools.add(pool);
+        pools.addAll(poolsToBeEntitled);
         for (Pool p : pools) {
             if (!poolOverlapsRange(p, pool.getStartDate(), pool.getEndDate())) {
                 // Skip this entitlement:

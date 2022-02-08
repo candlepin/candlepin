@@ -27,6 +27,7 @@ import org.candlepin.common.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.hamcrest.Matchers;
 import org.hibernate.Hibernate;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +41,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -215,7 +217,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Test
     public void listEntitledProductIds() {
         Pool pool = setupListProvidingEntitlement().getPool();
-        Set<String> results = entitlementCurator.listEntitledProductIds(consumer, pool);
+        Set<String> results = entitlementCurator.listEntitledProductIds(consumer, pool, new HashSet<>());
         assertEquals(3, results.size());
         assertTrue(results.contains(providedProduct1.getId()));
         assertTrue(results.contains(providedProduct2.getId()));
@@ -235,7 +237,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Pool anotherPool = newPoolUsingProducts(existingEntPool,
             createDate(2002, 1, 1),
             createDate(2006, 1, 1));
-        Set<String> results = entitlementCurator.listEntitledProductIds(consumer, anotherPool);
+        Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
+            anotherPool, new HashSet<>());
         assertEquals(3, results.size());
         assertTrue(results.contains(existingEntPool.getProductId()));
     }
@@ -245,7 +248,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Pool existingEntPool = setupListProvidingEntitlement().getPool();
         Pool anotherPool = newPoolUsingProducts(existingEntPool, pastDate, createDate(2002, 1, 1));
 
-        Set<String> results = entitlementCurator.listEntitledProductIds(consumer, anotherPool);
+        Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
+            anotherPool, new HashSet<>());
         assertEquals(3, results.size());
         assertTrue(results.contains(existingEntPool.getProductId()));
     }
@@ -254,7 +258,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     public void listEntitledProductIdsTotalOverlap() {
         Pool existingEntPool = setupListProvidingEntitlement().getPool();
         Pool anotherPool = newPoolUsingProducts(existingEntPool, pastDate, futureDate);
-        Set<String> results = entitlementCurator.listEntitledProductIds(consumer, anotherPool);
+        Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
+            anotherPool, new HashSet<>());
         // Picks up suite pools as well:
         assertEquals(5, results.size());
         assertTrue(results.contains(existingEntPool.getProductId()));
@@ -264,9 +269,36 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     public void listEntitledProductIdsNoOverlap() {
         Pool existingEntPool = setupListProvidingEntitlement().getPool();
         Pool anotherPool = setupListProvidingEntitlement(parentProduct2, pastDate, pastDate).getPool();
-        Set<String> results = entitlementCurator.listEntitledProductIds(consumer, anotherPool);
+        Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
+            anotherPool, new HashSet<>());
         assertEquals(3, results.size());
         assertFalse(results.contains(existingEntPool.getProductId()));
+    }
+
+    @Test
+    public void testListEntitledProductIdsWhenEntitledPoolsArePresent() {
+        Product providedProduct = TestUtil.createProduct();
+        providedProduct = this.createProduct(providedProduct, owner);
+        Product product = TestUtil.createProduct();
+        product.addProvidedProduct(providedProduct);
+        product = this.createProduct(product, owner);
+
+        Pool entitlePool = this.poolCurator.create(new Pool()
+            .setOwner(owner).setProduct(product).setQuantity(16L)
+            .setStartDate(pastDate).setEndDate(futureDate));
+        Pool anotherPool = setupListProvidingEntitlement(parentProduct2, pastDate, pastDate).getPool();
+        Set<String> results = entitlementCurator.listEntitledProductIds(consumer,
+            anotherPool, Set.of(entitlePool));
+
+        assertEquals(5, results.size());
+
+        Set<String> providedProductIds = anotherPool.getProduct().getProvidedProducts().stream()
+            .map(prod -> prod.getId()).collect(Collectors.toSet());
+        providedProductIds.add(product.getId());
+        providedProductIds.add(providedProduct.getId());
+        providedProductIds.add(anotherPool.getProduct().getId());
+
+        assertTrue(CollectionUtils.isEqualCollection(results, providedProductIds));
     }
 
     @Test
@@ -1266,5 +1298,4 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         assertEquals(entitlementCount, deleted);
     }
-
 }

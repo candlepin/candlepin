@@ -6,6 +6,7 @@ describe 'Hypervisor Resource', :type => :virt do
   include CandlepinMethods
   include VirtHelper
   include AttributeHelper
+  include CertificateMethods
 
   before(:each) do
     skip("candlepin running in standalone mode") if is_hosted?
@@ -1324,5 +1325,202 @@ describe 'Hypervisor Resource', :type => :virt do
     async_update_hypervisor(owner, user, nil, host_hyp_id_1, guests_1, true, reporter_id, {"dmi.system.uuid" => host_system_id_1})
     test_host_1 = @cp.get_consumer(test_host_1.uuid)
     test_host_1['name'].should == test_host_name
+  end
+
+  it 'guest should keep conditional content after migration' do
+    owner = create_owner random_string('owner')
+    user = user_client(owner, random_string('user'))
+
+    rh00271_eng_product = create_product("204", "Red Hat Enterprise Linux Server - Extended Life Cycle Support", {:owner => owner['key']})
+    rh00271_product = create_product("RH00271", "Extended Life Cycle Support (Unlimited Guests)", {
+      :owner => owner['key'],
+      :providedProducts => [rh00271_eng_product.id],
+      :multiplier => 1,
+      :attributes => {
+        :virt_limit => "unlimited",
+        :stacking_id => "RH00271",
+        :host_limited => "true"
+      }
+    })
+
+    rh00051_eng_product = create_product("69", "Red Hat Enterprise Linux Server", {:owner => owner['key']})
+    rh00051_product = create_product("RH00051", "Red Hat Enterprise Linux for Virtual Datacenters with Smart Management, Standard", {
+      :owner => owner['key'],
+      :providedProducts => [rh00051_eng_product.id],
+      :multiplier => 1,
+      :attributes => {
+        :virt_limit => "unlimited",
+        :stacking_id => "RH00051",
+        :host_limited => "true"
+      }
+    })
+
+    rh00051_content = @cp.create_content(
+      owner['key'], "cname-c1", 'test-content-c1', random_string("clabel"), "ctype", "cvendor",
+      {:content_url=> '/this/is/the/path'}, true)
+
+    # Content that has a required/modified product 'rh00051_eng_product' (this eng product needs to be entitled to the
+    # consumer already, or otherwise this content will get filtered out during entitlement cert generation)
+    rh00271_content = @cp.create_content(
+      owner['key'], "cname-c2", 'test-content-c2', random_string("clabel"), "ctype", "cvendor",
+      {:content_url=> '/this/is/the/path', :modified_products => [rh00051_eng_product["id"]]}, true)
+
+    @cp.add_content_to_product(owner['key'], rh00051_eng_product['id'], rh00051_content['id'], true)
+    @cp.add_content_to_product(owner['key'], rh00271_eng_product['id'], rh00271_content['id'], true)
+
+    # creating master pool for the RH00051 product
+    rh00051_pool = @cp.create_pool(owner['key'], rh00051_product['id'], {:quantity => 10,
+     :subscription_id => "random",
+     :upstream_pool_id => "random",
+     :provided_products => [rh00051_eng_product.id],
+     :locked => "true"})
+
+    #creating master pool for the RH00271 product
+    rh00271_pool = @cp.create_pool(owner['key'], rh00271_product['id'], {:quantity => 10,
+     :subscription_id => "random",
+     :upstream_pool_id => "random",
+     :provided_products => [rh00271_eng_product.id],
+     :locked => "true"})
+    #creating hypervisor 1
+    host_hyp_id = random_string("hypervisor-1")
+    host_name1 = random_string("hypervisor-name-1")
+    hypervisor_1 = user.register(host_hyp_id, :hypervisor, nil, {}, nil, owner['key'], [], [], nil, [], host_name1)
+    hypervisor_1_client = Candlepin.new(nil, nil, hypervisor_1['idCert']['cert'], hypervisor_1['idCert']['key'])
+
+    #creating guest
+    guest = random_string('guest')
+    installed_prods = [{'productId' => rh00271_eng_product['id'], 'productName' => rh00271_eng_product['name']},
+     {'productId' => rh00051_eng_product['id'], 'productName' => rh00051_eng_product['name']}]
+    guest1 = user.register(guest, :system, nil, {"virt.is_guest"=>"true",'virt.uuid' => guest,
+      "system.certificate_version" => "3.2" }, nil, owner['key'], [], installed_prods)
+    guest1_client = Candlepin.new(nil, nil, guest1['idCert']['cert'], guest1['idCert']['key'])
+
+    # guest mapping (hypervisor1 => guest) is done by virtwho
+    virtwho = create_virtwho_client(user)
+    virtwho.hypervisor_check_in(owner['key'], get_host_guest_mapping(host_name1, [guest]))
+
+    # creating hypervisor 2
+    host_hyp_id = random_string("hypervisor-2")
+    host_name2 = random_string("hypervisor-name-2")
+    hypervisor_2 = user.register(host_hyp_id, :hypervisor, nil, {}, nil, owner['key'], [], [], nil, [], host_name2)
+    hypervisor_2_client = Candlepin.new(nil, nil, hypervisor_2['idCert']['cert'], hypervisor_2['idCert']['key'])
+
+    # Hypervisor1 consumes the same pool
+    hypervisor_1_client.consume_pool(rh00271_pool.id,{ :quantity => 1})  # stacked derived pool1 created
+    stack_der_pool = find_derived_pool_for_host(owner['key'], "STACK_DERIVED", rh00271_product.id, hypervisor_1.uuid)
+    hypervisor_1_stacked_derived_pool1 = stack_der_pool.id
+    hypervisor_1_client.consume_pool(rh00051_pool.id,{ :quantity => 1})  # stacked derived pool2 created
+    stack_der_pool = find_derived_pool_for_host(owner['key'], "STACK_DERIVED", rh00051_product.id, hypervisor_1.uuid)
+    hypervisor_1_stacked_derived_pool2 = stack_der_pool.id
+
+    # Hypervisor2 consumes the same pool
+    hypervisor_2_client.consume_pool(rh00271_pool.id,{ :quantity => 1})  # stacked derived pool1 created
+    stack_der_pool = find_derived_pool_for_host(owner['key'], "STACK_DERIVED", rh00271_product.id, hypervisor_2.uuid)
+    hypervisor_2_stacked_derived_pool1 = stack_der_pool.id
+    hypervisor_2_client.consume_pool(rh00051_pool.id,{ :quantity => 1})  # stacked derived pool2 created
+    stack_der_pool = find_derived_pool_for_host(owner['key'], "STACK_DERIVED", rh00051_product.id, hypervisor_2.uuid)
+    hypervisor_2_stacked_derived_pool2 = stack_der_pool.id
+
+    # guest consumes hypervisor1's derived pools
+    guest_rh00051_entitlement = guest1_client.consume_pool(hypervisor_1_stacked_derived_pool2, { :quantity => 1})[0]
+    expect(guest_rh00051_entitlement.pool.id).to eq(hypervisor_1_stacked_derived_pool2)
+    guest_rh00271_entitlement = guest1_client.consume_pool(hypervisor_1_stacked_derived_pool1, { :quantity => 1})[0]
+    expect(guest_rh00271_entitlement.pool.id).to eq(hypervisor_1_stacked_derived_pool1)
+
+
+    # Verify guest's entitlement certs each contain the appropriate content set
+    certs = guest1_client.list_certificates
+    expect(certs.length).to eq(2)
+
+    rh00051_cert = nil
+    rh00271_cert = nil
+    certs.each { |cert|
+        if cert['serial']['serial'] == guest_rh00051_entitlement['certificates'][0]['serial']['serial']
+          rh00051_cert = cert['cert']
+        end
+
+        if cert['serial']['serial'] == guest_rh00271_entitlement['certificates'][0]['serial']['serial']
+          rh00271_cert = cert['cert']
+        end
+    }
+    expect(rh00051_cert).to_not be_nil
+    expect(rh00271_cert).to_not be_nil
+
+    json_body = extract_payload(rh00051_cert)
+    expect(json_body['products'][0]['content'].size).to eq(1)
+    expect(json_body['products'][0]['content'][0].id).to eq(rh00051_content.id)
+    json_body = extract_payload(rh00271_cert)
+    expect(json_body['products'][0]['content'].size).to eq(1)
+    expect(json_body['products'][0]['content'][0].id).to eq(rh00271_content.id)
+
+
+    # Migrate the guest from hypervisor1 to hypervisor2
+    after_migration = {
+      "hypervisors" => [
+        {
+          "name" => host_name1,
+          "hypervisorId" => {"hypervisorId" => host_name1},
+          "guestIds" => []
+        },
+        {
+          "name" => host_name2,
+          "hypervisorId" => {"hypervisorId" => host_name2},
+          "guestIds" => [{'guestId' => guest}]
+        }
+      ]
+    }
+    job_detail = send_host_guest_mapping(owner, virtwho, after_migration.to_json())
+    expect(job_detail["state"]).to eq("FINISHED")
+
+
+    # At this point, the guest will have the entitlements from the old hypervisor revoked, and it will get the
+    # entitlements from the new hypervisor auto-attached
+    certs = guest1_client.list_certificates
+    expect(certs.length).to eq(2)
+
+    # Verify guest's entitlement certs each contain the appropriate content set
+    ents = guest1_client.list_entitlements({:regen => false})
+    expect(ents.length).to eq(2)
+
+    updated_guest_rh00271_entitlement = ents.select { |ent| ent.pool.productId == guest_rh00271_entitlement.pool.productId }[0]
+    expect(updated_guest_rh00271_entitlement).to_not be_nil
+
+    updated_guest_rh00051_entitlement = ents.select { |ent| ent.pool.productId == guest_rh00051_entitlement.pool.productId }[0]
+    expect(updated_guest_rh00051_entitlement).to_not be_nil
+
+    rh00051_cert = nil
+    rh00271_cert = nil
+    certs.each { |cert|
+        if cert['serial']['serial'] == updated_guest_rh00051_entitlement['certificates'][0]['serial']['serial']
+          rh00051_cert = cert['cert']
+        end
+
+        if cert['serial']['serial'] == updated_guest_rh00271_entitlement['certificates'][0]['serial']['serial']
+          rh00271_cert = cert['cert']
+        end
+    }
+    expect(rh00051_cert).to_not be_nil
+    expect(rh00271_cert).to_not be_nil
+
+    json_body = extract_payload(rh00051_cert)
+    expect(json_body['products'][0]['content'].size).to eq(1)
+    expect(json_body['products'][0]['content'][0].id).to eq(rh00051_content.id)
+
+    # rh00271_content (which depends on modified product id 69) should not have been filtered out, because the
+    # engineering product 69 should already be covered by entitlement rh00051:
+    json_body = extract_payload(rh00271_cert)
+    expect(json_body['products'][0]['content'].size).to eq(1)
+    expect(json_body['products'][0]['content'][0].id).to eq(rh00271_content.id)
+  end
+
+  def find_derived_pool_for_host(owner_key=nil, type=nil, product_id=nil, hypervisor_uuid=nil)
+    pools = @cp.list_owner_pools(owner_key)
+    selected = pools.select { |pool| pool['type'] == type && pool['productId'] == product_id }
+    selected.each { |pool|
+    req_host_attr = pool['attributes'].select{ |attr| attr['name'] == 'requires_host' }[0]
+      if req_host_attr['value'] == hypervisor_uuid
+        return pool
+      end
+    }
   end
 end
