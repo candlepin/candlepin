@@ -2199,7 +2199,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCreateOwnerCannotUseNonDefaultContentAccessModeInStandalone() {
+    public void testCreateOwnerCanUseNonDefaultContentAccessModeInStandalone() {
         this.config.setProperty(ConfigProperties.STANDALONE, "true");
 
         String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
@@ -2211,7 +2211,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .contentAccessModeList(orgEnvMode)
             .contentAccessMode(orgEnvMode);
 
-        assertThrows(BadRequestException.class, () -> ownerResource.createOwner(changes));
+        ownerResource.createOwner(changes);
     }
 
     @Test
@@ -2353,7 +2353,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testUpdateCannotChangeContentAccessModeListInStandalone() {
+    public void testUpdateCanChangeContentAccessModeListInStandalone() {
         this.config.setProperty(ConfigProperties.STANDALONE, "true");
 
         String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
@@ -2366,7 +2366,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerDTO changes = new OwnerDTO()
             .contentAccessModeList(orgEnvMode);
 
-        assertThrows(BadRequestException.class, () -> ownerResource.updateOwner(owner.getKey(), changes));
+        ownerResource.updateOwner(owner.getKey(), changes);
     }
 
     @Test
