@@ -1,13 +1,13 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# Yuri Chornoivan <yurchor@ukr.net>, 2020, 2021.
+# Yuri Chornoivan <yurchor@ukr.net>, 2020, 2021, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-12-19 01:58-0500\n"
-"PO-Revision-Date: 2021-08-12 11:04+0000\n"
+"POT-Creation-Date: 2022-01-23 02:00-0500\n"
+"PO-Revision-Date: 2022-01-23 10:16+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/uk/>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.7.2\n"
+"X-Generator: Weblate 4.10.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -226,6 +226,10 @@ msgstr "Сталася помилка із OAuth. Внутрішнє повід�
 msgid "Error getting OAuth unit key"
 msgstr "Помилка отримання ключа OAuth модуля"
 
+#: src/main/java/org/candlepin/auth/SSLAuth.java:103
+msgid "Invalid Certificate Type"
+msgstr "Некоректний тип сертифіката"
+
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1304
 #: src/main/java/org/candlepin/resource/RoleResource.java:112
@@ -348,7 +352,7 @@ msgstr "Некоректний формат для параметра запит
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} не є коректним значенням для {1}"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1060
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1065
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr ""
 "Не вдалося виконати запит через конкуренцію у внесенні змін. Будь ласка, "

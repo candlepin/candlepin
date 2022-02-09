@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-12-19 01:58-0500\n"
+"POT-Creation-Date: 2022-01-23 02:00-0500\n"
 "PO-Revision-Date: 2021-03-30 22:02+0000\n"
 "Last-Translator: Lucas Costa Paula Pessoa <lcppcoding@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) <https://translate.fedoraproject.org/"
@@ -278,6 +278,14 @@ msgstr "Foi encontrado um erro no OAuth. A mensagem interna é: {0}"
 msgid "Error getting OAuth unit key"
 msgstr "Erro ao obter a chave da unidade OAuth"
 
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/auth/SSLAuth.java:103
+#, fuzzy
+#| msgid "Invalid Credentials"
+msgid "Invalid Certificate Type"
+msgstr "Credenciais inválidas"
+
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1304
 #: src/main/java/org/candlepin/resource/RoleResource.java:112
@@ -408,7 +416,7 @@ msgstr "Formato inválido para parâmetro de consulta. Formato esperado: {0}"
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} não é um valor válido para {1}"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1060
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1065
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr ""
 "Falha na solicitação devido à modificação simultânea, por favor tente "

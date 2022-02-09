@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-12-19 01:58-0500\n"
+"POT-Creation-Date: 2022-01-23 02:00-0500\n"
 "PO-Revision-Date: 2017-10-18 11:42-0400\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Punjabi\n"
@@ -275,6 +275,14 @@ msgstr "OAuth ਗਲਤੀ ਆਈ ਹੈ। ਅੰਦਰੂਨੀ ਸੁਨੇ�
 msgid "Error getting OAuth unit key"
 msgstr ""
 
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/auth/SSLAuth.java:103
+#, fuzzy
+#| msgid "Invalid Credentials"
+msgid "Invalid Certificate Type"
+msgstr "ਗਲਤ ਕਰੀਡੈਂਸ਼ੀਅਲ"
+
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1304
 #: src/main/java/org/candlepin/resource/RoleResource.java:112
@@ -395,7 +403,7 @@ msgstr ""
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} ਇੱਕ ਯੋਗ ਮੁੱਲ ਨਹੀਂ ਹੈ {1} ਲਈ"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1060
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1065
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "ਬੇਨਤੀ ਇਕੱਠੇ ਇੱਕੋ ਵੇਲੇ ਸੁਧਾਰਾਂ ਕਰ ਕੇ ਅਸਫਲ ਹੋਈ, ਕਿਰਪਾ ਕਰ ਕੇ ਮੁੜ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
 
