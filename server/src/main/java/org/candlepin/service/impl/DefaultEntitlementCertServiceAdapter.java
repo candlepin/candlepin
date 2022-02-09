@@ -72,6 +72,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * DefaultEntitlementCertServiceAdapter
@@ -172,7 +173,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     public X509Certificate createX509Certificate(Consumer consumer, Owner owner, Pool pool,
         Entitlement ent, Product product, Set<Product> products,
         List<org.candlepin.model.dto.Product> productModels, BigInteger serialNumber,
-        KeyPair keyPair, boolean useContentPrefix)
+        KeyPair keyPair, boolean useContentPrefix, Set<Pool> entitledPools)
         throws GeneralSecurityException, IOException {
 
         // oidutil is busted at the moment, so do this manually
@@ -189,7 +190,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         }
         else {
             extensions = prepareV1Extensions(products, pool, consumer, ent.getQuantity(), contentPrefix,
-                promotedContent);
+                promotedContent, entitledPools);
         }
 
         Date endDate = setupEntitlementEndDate(pool, consumer);
@@ -337,11 +338,11 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
     public Set<X509ExtensionWrapper> prepareV1Extensions(Set<Product> products,
         Pool pool, Consumer consumer, Integer quantity, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent) {
+        Map<String, EnvironmentContent> promotedContent, Set<Pool> entitledPools) {
         Set<X509ExtensionWrapper> result = new LinkedHashSet<>();
 
         Set<String> entitledProductIds = entCurator.listEntitledProductIds(
-            consumer, pool);
+            consumer, pool, entitledPools);
 
         int contentCounter = 0;
         boolean enableEnvironmentFiltering = config.getBoolean(ConfigProperties.ENV_CONTENT_FILTERING);
@@ -454,6 +455,9 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         // Serials need to be saved to get generated ID.
         log.debug("Persisting new certificate serials");
         serialCurator.saveOrUpdateAll(serialMap.values(), false, false);
+        Set<Pool> entitledPools = poolQuantities.values().stream()
+            .map(PoolQuantity::getPool)
+            .collect(Collectors.toSet());
 
         Map<String, EntitlementCertificate> entitlementCerts = new HashMap<>();
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
@@ -481,11 +485,11 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             log.info("Creating X509 cert for product: {}", product);
             log.debug("Provided products: {}", products);
             List<org.candlepin.model.dto.Product> productModels = v3extensionUtil.createProducts(product,
-                products, contentPrefix, promotedContent, consumer, pool);
+                products, contentPrefix, promotedContent, consumer, pool, entitledPools);
 
             X509Certificate x509Cert = createX509Certificate(consumer, owner, pool, ent,
                 product, products, productModels,
-                BigInteger.valueOf(serial.getId()), keyPair, true);
+                BigInteger.valueOf(serial.getId()), keyPair, true, entitledPools);
 
             log.debug("Getting PEM encoded cert.");
             String pem = new String(this.pki.getPemEncoded(x509Cert));

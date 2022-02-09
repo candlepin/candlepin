@@ -168,7 +168,7 @@ public class X509V3ExtensionUtilTest {
         Entitlement e = new Entitlement(pool, consumer, owner, 10);
 
         List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
-            prods, "", new HashMap<>(), consumer, pool);
+            prods, "", new HashMap<>(), consumer, pool, new HashSet<>());
 
         assertEquals(1, certProds.size());
         assertEquals(brandedName, certProds.get(0).getBrandName());
@@ -276,7 +276,7 @@ public class X509V3ExtensionUtilTest {
         consumer.setOwner(owner);
 
         List<org.candlepin.model.dto.Product> certProds = util.createProducts(mktProd,
-            prods, "", new HashMap<>(), consumer, pool);
+            prods, "", new HashMap<>(), consumer, pool, new HashSet<>());
 
         assertEquals(1, certProds.size());
         // Should get the first name we encountered
