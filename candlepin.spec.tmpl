@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.10
+Version: 4.1.11
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -239,6 +239,23 @@ fi
 
 #raw
 %changelog
+* Wed Feb 09 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.11-1
+- Translated using Weblate (Korean) (simmon@nplob.com)
+- Translated using Weblate (Ukrainian) (yurchor@ukr.net)
+- Update translation files (noreply@weblate.org)
+- 1964379: Fix to include products from new entitlements (selected via
+  auto-attach or bulk-pool attach) as entitled products for
+  entitlement certificate generation (prakgupt@redhat.com)
+- Updated Vagrantfile to support el8-ready Ansible role (crog@redhat.com)
+- Upgrade to postgres 42.3.2 (nmoumoul@redhat.com)
+- Separate out docker script flag to expose ports to host (nmoumoul@redhat.com)
+- System purpose compliance updates to correct db column; ENT-4600
+  (wpoteat@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Update documentation about JSS dependency (nmoumoul@redhat.com)
+- 2036746: Fix Illegal embedded sign character (ojanus@redhat.com)
+
 * Thu Jan 20 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.10-1
 - Disallow authN with SCA certificate (nmoumoul@redhat.com)
 
