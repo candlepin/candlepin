@@ -1,92 +1,165 @@
-# Testing Candlepin with Vagrant
-The vagrant test setup performs the following actions:
-* Deploy a Centos 7 vm
-* sshfs mount your local source directory into the VM
-* Configure Tomcat remote debugging
-* Install Postgres and configure the candlepin user
-  without an external messaging broker).
-* Compile & install Candlepin
-* Forward Ports to your local system for debugging
-  * Tomcat remote debug on port 8000
-  * REST access for Candlepin on port 8080 and 8443
-* Optionally, setup yourkit profiler to enable profiling of the vm
+# Using Vagrant for Candlepin Testing and Development
+The Vagrantfile included with Candlepin is designed to provide a standardized testing and
+development environment, based on various versions of CentOS.
+
+By default, it will map in the Candlepin repo from which the Vagrant box is built, update the
+system packages, install any Candlepin dependencies (including PostgreSQL and MariaDB), and
+set up the user environment to be immediately usable.
+
+Additional options can be included to setup remote debugging in Tomcat via YourKit, but
+requires that YourKit has been installed on the host before provisioning.
+
+
 
 ## Prerequisites
-Running the Candlepin Vagrant deployer needs an up to date version of Vagrant, vagrant-sshfs, 
-and Ansible. If the vagrant-hostmanager pluign is installed then the hostname
-for the development candlepin box will automatically be added to your hosts file.
+Running the Candlepin Vagrant development image requires an up-to-date version of Vagrant, Ansible,
+vagrant-sshfs, and, optionally, vagrant-hostmanager. Further, an appropriate Vagrant backend must
+be installed on Linux hosts.
 
-If you have other services running on ports 8000, 8080, or 8443 they will either have
-to be stopped or you will have to edit the Vagrantfile and choose different ports.
+On Fedora installations, the following command can be run to install the necessary packages:
+
+`sudo dnf install vagrant vagrant-libvirt vagrant-hostmanager vagrant-sshfs ansible`
+
+
 
 ## Getting Started
-1. From the root directory of your Candlepin checkout run `vagrant up`
-1. When Vagrant up finishes you should be able to check the status of the server
-   by running `curl -k -u admin:admin "http://localhost:8080/candlepin/status"`
+Once the prerequisites are installed, the Vagrant image can be brought up with the `vagrant up`
+command. By default this will bring up the el8 box, but the el7 box can be brought up by specifying
+it during the `up` operation:
 
-## Directly connecting to the database using psql
-1. If it has not already been started `vagrant up` the candlepin system.
-1. From the root directory of your Candlepin checkout run `vagrant ssh` to connect to the system.
-1. `psql -U candlepin candlepin`
+`vagrant up el7`.
 
-## Recompile & redeploy
-1. From the root directory of your Candlepin checkout run `vagrant up`
-1. Run `vagrant ssh` to connect to the system.
-1. `cd /vagrant`
-1. If you are on candlepin master branch use`./bin/deployment/deploy` or else use `./server/bin/deploy` (these commands will automatically use gradle to recompile before deploying)
+After the box is brought up, you can connect to it with the `vagrant ssh` command. If no box is
+specified, it will default to the el8 box:
 
-## Deploy with test data
-The Candlepin Vagrant deployer will deploy candlepin without any test data in database.
-If you want to use candlepin e.g. for testing subscription-manager, then you
-will need to deploy server with different options:
+`vagrant ssh el8`
 
-1. Start VM with `vagrant up`
-1. Run `vagrant ssh`  to connect to the system
-1. `cd vagrant`
-1. If you are on candlepin master branch use `./bin/deployment/deploy -gta` or else use `./server/bin/deploy -gta`
+When the box is no longer needed, it can be destroyed with the `vagrant destroy` command. If no
+box is specified, all Candlepin Vagrant boxes will be destroyed, so it's probably best to specify
+exactly which box to destroy when doing so:
 
-> Default options used by Vagrant deployer are only: `-ga`. For more
-  information about deploy option run: `./server/bin/deploy -h`.
+`vagrant destroy el8`
 
-## Use of environment variables
-Any environment variables set starting with 'CANDLEPIN_' will be  passed to
-the ansible playbook as their name less the prefix of 'CANDLEPIN_'.
-As an example, if you have set 'CANDLEPIN_TEST=2' then a variable named 'test'
-will be passed to ansible with value '2'. These vars are used to modify the
-behavior of our ansible playbooks.
+This is the basic lifecycle of a Vagrant box. For more details on managing boxes, see the Vagrant
+CLI documentation linked below [1].
 
-NOTE TO DEVS: If you'd like to add any optional behavior to the ansible
-playbooks, add something like 'when: my_cool_var is defined' to the optional
-tasks that are dependant on the existance of the variable 'my_cool_var'.
 
-## Profiling the vagrant machine using YourKit
-1. `export CANDLEPIN_SETUP_YOURKIT=True`
-1. `export CANDLEPIN_YOURKIT_LIBRARY=/path/to/libyjpagent.so`
-1. Optionally specify the port to connect to the profiling agent by setting the `CANDLEPIN_YOURKIT_AGENT_PORT`.
-   The default port is 35675.
-1. Run `vagrant up`
 
-## Switching Java version in vagrant box
+## Compiling and Deploying Candlepin
+After bringing up and connecting to the desired box, the Candlepin repo from which the box was
+deployed will be mapped in at `/vagrant` and symlinked to `~/devel/candlepin`. Navigate to
+either directory and deploy Candlepin using the deploy command:
 
-Candlepin uses Java 11 from version 3.2.0 & onwards. We have an option to switch Java version back & forth for testing older/newer candlepin branches.  
+`./bin/deployment/deploy`
 
-NOTE - By default vagrant box boots up with Java 11.
+This will compile, configure, and run Tomcat and Candlepin using default Candlepin settings.
+For further details on compiling and testing Candlepin, see the developer deployment documentation
+linked below [2].
 
-To switch Java version back & forth we need to manually configure few things.
 
-1. Set Java version (Select Java 8 or Java 11).
-   * `sudo update-alternatives --config java`
-   * `sudo update-alternatives --config javac`
 
-2. Set `JAVA_HOME` in `bashrc`.
+## Deploying Candlepin with Ansible
+By default, the Ansible role used to provision the Vagrant boxes will not deploy Candlepin. However,
+if this is desired, environment variables can be provided on the command line to trigger deployment
+during provisioning:
 
-3. Manually edit `tomcat.conf` to update these config properties.
-    * Set Java Home
-       * `JAVA_HOME="<PATH>"`
-    * Set JVM Options
-       * For Java 8
-        `JAVA_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n`
-       * For Java 11
-        `JAVA_OPTS=-Xdebug -Xrunjdwp:transport=dt_socket,address=*:8000,server=y,suspend=n`
+- `cp_deploy`: whether or not to deploy Candlepin as part of the provisioning step; defaults to false
+- `cp_deploy_args`: the arguments to pass to the Candlepin deploy tool; defaults to "-gta"
 
-4. Restart Tomcat
+By setting "cp_deploy" to true, Candlepin will be deployed with the default arguments of "-gta" to
+regenerate the database schema, regenerate the default candlepin.conf configuration, and inject
+test data. This can be done by either exporting the environment variable and setting it to true, or
+assigning it temporarily on the command line while bringing up or provisioning the target box:
+
+`cp_deploy=true vagrant up el8`
+
+Candlepin's default configuration assumes PostgreSQL will be used as its database, so
+if it was not configured during the provisioning step, the deploy arguments will need to be adjusted
+accordingly:
+
+`cp_deploy=true cp_deploy_args="-gtma" vagrant up el8`
+
+
+
+## Configuring the box for YourKit profiling
+If the host machine has YourKit installed, the Candlepin Ansible role can be used to configure the
+Vagrant boxes for remote debugging. To enable this, two variables must be set:
+
+- `cp_configure_debugging`: controls whether or not Tomcat will be configured for remote debugging and
+  profiling via YourKit; defaults to true
+- `cp_yourkit_library`: the path to the YourKit Java profiling agent on the host system; defaults to
+  "/opt/yjp/bin/linux-x86-64/libyjpagent.so"
+
+If `cp_configure_debugging` is set to false, or the file specified by the `cp_yourkit_library`
+variable isn't readable as a file, YourKit configuration will be skipped. To ensure both are set
+properly for a given system, these can be explicitly set on the command line while a Vagrant box
+is being brought up or provisioned:
+
+`cp_configure_debugging=true cp_yourkit_library="/path/to/linux-x86-64/libyjpagent.so" vagrant up el8`
+
+Note that regardless of the host system being used to bring up the Vagrant boxes, the YourKit
+library provided *must* be the Linux-compatible x86-64 variant.
+
+If Tomcat was already running in the Vagrant box before provisioning, it may require a restart for
+the profiler to become active.
+
+Once the Vagrant box has been configured, a remote profiling profile must be added in YourKit. Click
+the plus icon labeled "Remote profile application..." to add a new connection, and then enter the
+following details:
+
+- Provide a meaningful name for the connection
+- Enter the hostname or IP address of the Vagrant box running the Tomcat/Candlepin instance to
+  profile
+- Change the "application discovery method" to "advanced"
+- Enter "vagrant" (all lower case) as the SSH user
+- Enter "22" as the SSH port
+- Click "Authentication settings..." next to the SSH user
+- Change the authentication method to "private key"
+- Locate the private key Vagrant generates for the SSH connections to the desired box, located at
+  `{candlepin_repo}/.vagrant/machines/{box_name}/libvirt/private_key`, where `{candlepin_repo}` is
+  the directory on the host system where the Candlepin repo has been checked out, and `{box_name}`
+  is the name of the desired Vagrant box (i.e. el7 or el8).
+- Leave the passphrase field empty
+
+At this point, the connection should be usable for profiling.
+
+
+## Custom provisioning tasks
+Though the Candlepin Ansible role attempts to set up most everything needed to test and work on
+Candlepin, it may not create the perfect environment for all developers. While some may be
+familiar enough with Ansible create a new ad-hoc playbook or role and run it against the Vagrant
+boxes themselves, it's somewhat tedious to set up. To facilitate rapid changes, the playbook used
+by Vagrant to invoke the Candlepin role also supports running a custom role named "candlepin_dev"
+if it is present in the `{candlepin_repo}/vagrant/roles` directory.
+
+The "candlepin_dev" role is exected to follow normal Ansible role conventions, and aside from the
+optional nature of its execution, has no special properties.
+
+To create a simple task, create `candlepin_dev` directory containing `tasks` directory, which
+contains a text file named `main.yml`. The full path to "main.yml" should be as follows:
+`{candlepin_repo}/vagrant/roles/candlepin_dev/tasks/main.yml` where `{candlepin_repo}` is the
+location of the Candlepin git repo.
+
+Next, open the `main.yml` file and add your desired Ansible tasks:
+
+```
+# My custom Candlepin Vagrant box tasks
+---
+- name: "Hello World!"
+  command: echo "do a barrel roll"
+```
+
+Then, reprovision (or destroy and re-create) the box to execute the tasks in the role:
+
+`vagrant provision el8`
+
+The tasks can get as complicated as permitted by Ansible, however that is beyond the scope of this
+document. For further details on creating an Ansible role, see the details at the document linked
+below [3].
+
+
+
+## Resources
+1. https://www.vagrantup.com/docs/cli
+1. https://www.candlepinproject.org/docs/candlepin/developer_deployment.html
+1. https://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_roles.html

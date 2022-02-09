@@ -1,8 +1,14 @@
 VAGRANTFILE_API_VERSION = "2"
 
+ANSIBLE_TAGS_VAR = "ansible_tags"
+ANSIBLE_SKIP_TAGS_VAR = "ansible_skip_tags"
+ANSIBLE_VAR_PREFIX = "cp_"
+
+
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-  config.vm.box = "centos/7"
   config.vm.synced_folder ".", "/vagrant", type: "sshfs", sshfs_opts_append: "-o nonempty"
+  config.vm.host_name = "candlepin.example.com"
+  config.ssh.forward_agent = true
 
   # Set up the hostmanager plugin to automatically configure host & guest hostnames
   if Vagrant.has_plugin?("vagrant-hostmanager")
@@ -12,49 +18,82 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.hostmanager.include_offline = true
   end
 
-  # Create the "candlepin" box
-  config.vm.define "dev" do |dev|
-    dev.vm.host_name = "candlepin.example.com"
-    # Tomcat remote debug
-    # config.vm.network "forwarded_port", guest: 8000, host: 8000
-    # Rest access for Candlepin
-    # config.vm.network "forwarded_port", guest: 8080, host: 8080
-    # config.vm.network "forwarded_port", guest: 8443, host: 8443
-    config.ssh.forward_x11 = true
-    dev.vm.provider :libvirt do |domain|
-      domain.cpus = 1
-      domain.graphics_type = "spice"
-      domain.memory = 2048
-      domain.video_type = "qxl"
+  config.vm.provider :libvirt do |provider|
+    provider.cpus = 2
+    provider.memory = 4096
+    provider.graphics_type = "spice"
+    provider.video_type = "qxl"
+  end
 
-      # Uncomment the following line if you would like to enable libvirt's unsafe cache
-      # mode. It is called unsafe for a reason, as it causes the virtual host to ignore all
-      # fsync() calls from the guest. Only do this if you are comfortable with the possibility of
-      # your development guest becoming corrupted (in which case you should only need to do a
-      # vagrant destroy and vagrant up to get a new one).
-      #
-      # domain.volume_cache = "unsafe"
-    end
-    config.vm.provision "shell", inline: "yum -y update yum python ca-certificates"
-    config.vm.provision "ansible" do |ansible|
+  config.vm.define("el7", autostart: false) do |vm_config|
+    vm_config.vm.box = "centos/7"
+    vm_config.vm.host_name = "candlepin-el7.example.com"
+
+    # Uncomment these lines for forward the Candlepin standard dev ports to this guest
+    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8080, host: 8080
+    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8443, host: 8443
+
+    vm_config.vm.provision "shell", inline: "yum update -y yum python ca-certificates"
+    vm_config.vm.provision "ansible" do |ansible|
       ansible.playbook = "vagrant/candlepin.yml"
       ansible.galaxy_role_file = "vagrant/requirements.yml"
+      # ansible.verbose = "v"
       ansible.extra_vars = {}
-      # This will pass any environment variables beginning with "CANDLEPIN_" or
-      # "candlepin_" (less the prefix) along with their values to ansible for
-      # use in our playbooks.
-      # An example: to setup yourkit you can add CANDLEPIN_SETUP_YOURKIT=true
-      # to your environment along with CANDLEPIN_YOURKIT_LIBRARY=/path/to/libyjpagent.so
-      # Ansible will receive setup_yourkit=true and yourkit_library=/path/to/libyjpagent.so
-      # Check the playbooks to see how these variables are used.
-      env_prefix = "candlepin_"
+
+      # Pass through ansible variables and tags from the environment variables
       ENV.each do |key, value|
-        if key.downcase.start_with?(env_prefix)
-            new_var_key = key[env_prefix.length, key.length - env_prefix.length]
-            new_var_key = new_var_key.downcase()
-            ansible.extra_vars[new_var_key] = value
+        # Pass through anything starting with the "cp_" prefix
+        if key.downcase.start_with?(ANSIBLE_VAR_PREFIX)
+          ansible.extra_vars[key.downcase] = value
+        end
+
+        # Pass through ansible tags
+        if key.downcase == ANSIBLE_TAGS_VAR
+          ansible.tags = value
+        end
+
+        # Pass through ansible tags to skip
+        if key.downcase == ANSIBLE_SKIP_TAGS_VAR
+          ansible.skip_tags = value
         end
       end
     end
   end
+
+  config.vm.define("el8", primary: true) do |vm_config|
+    vm_config.vm.box = "centos/stream8"
+    # vm_config.vm.box_url = "https://cloud.centos.org/centos/8-stream/x86_64/images/CentOS-Stream-Vagrant-8-20220125.1.x86_64.vagrant-libvirt.box"
+    vm_config.vm.host_name = "candlepin-el8.example.com"
+
+    # Uncomment these lines for forward the Candlepin standard dev ports to this guest.
+    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8080, host: 8080
+    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8443, host: 8443
+
+    vm_config.vm.provision "shell", inline: "dnf update -y dnf ca-certificates"
+    vm_config.vm.provision "ansible" do |ansible|
+      ansible.playbook = "vagrant/candlepin.yml"
+      ansible.galaxy_role_file = "vagrant/requirements.yml"
+      # ansible.verbose = "v"
+      ansible.extra_vars = {}
+
+      # Pass through ansible variables and tags from the environment variables
+      ENV.each do |key, value|
+        # Pass through anything starting with the "cp_" prefix
+        if key.downcase.start_with?(ANSIBLE_VAR_PREFIX)
+          ansible.extra_vars[key.downcase] = value
+        end
+
+        # Pass through ansible tags
+        if key.downcase == ANSIBLE_TAGS_VAR
+          ansible.tags = value
+        end
+
+        # Pass through ansible tags to skip
+        if key.downcase == ANSIBLE_SKIP_TAGS_VAR
+          ansible.skip_tags = value
+        end
+      end
+    end
+  end
+
 end

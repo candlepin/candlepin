@@ -1,16 +1,43 @@
-
 ---
-- hosts: dev
+- hosts: all
 
   environment:
-    JAVA_HOME: /usr/lib/jvm/java-1.8.0/
+    JAVA_HOME: /usr/lib/jvm/java
 
   roles:
     - role: candlepin
 
+  tasks:
+    # Run additional user-provided role if it exists. If it doesn't, this task will be skipped
+    # entirely. See the linked document below [1] for details on creating an Ansible role.
+    #
+    # [1] https://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_roles.html
+    - name: "Run custom user role"
+      include_role:
+        name: "{{role}}"
+      when:
+        "path is directory"
+      vars:
+        role: candlepin_dev
+        path: "vagrant/roles/{{role}}"
+      tags:
+        - user_env
+        - custom
+        - system
+
   vars:
     ansible_user: vagrant
-    candlepin_git_pull: False
     candlepin_user: vagrant
-    candlepin_user_home: /home/vagrant
-    candlepin_checkout: /vagrant
+    candlepin_home: /vagrant
+
+    cp_configure_postgresql: true
+    cp_configure_mariadb: true
+    cp_configure_user_env: true
+    cp_configure_debugging: true
+
+    cp_git_checkout: false
+    cp_deploy: false
+
+    rvm1_rubies: ['ruby-2.4']
+    rvm1_user: "{{ candlepin_user }}"
+    rvm1_bundler_install: true
