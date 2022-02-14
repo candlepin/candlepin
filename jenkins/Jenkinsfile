@@ -160,6 +160,7 @@ pipeline {
                 stage('bugzilla-reference') {
                     environment {
                         GITHUB_TOKEN = credentials('github-api-token-as-username-password')
+                        BUGZILLA_TOKEN = credentials('BUGZILLA_API_TOKEN')
                     }
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
