@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from __future__ import unicode_literals
 
-from configparser import ConfigParser
 import argparse
 import os
 import re
@@ -18,16 +17,9 @@ UH_OH = '''
  \__,_|_| |_|      \___/|_| |_(_)
 '''
 
-config = ConfigParser()
-with open(os.path.join(os.path.expanduser('~'), 'automation.properties'), 'rb') as config_file:
-    file_content = config_file.read().decode('utf-8')
-    config_contents = '[defaults]\n{}'.format(file_content)
-
-config.read_string(config_contents)
-
-bugzilla_user = config.get('defaults', 'bugzilla.login')
-bugzilla_password = config.get('defaults', 'bugzilla.password')
-bugzilla_url = config.get('defaults', 'bugzilla.url')
+bugzilla_token = os.environ.get('BUGZILLA_TOKEN')
+if not bugzilla_token:
+    raise EnvironmentError('BUGZILLA_TOKEN not specified')
 
 github_token = os.environ.get('GITHUB_TOKEN_PSW')
 if not github_token:
@@ -43,7 +35,7 @@ pr = requests.get('https://api.github.com/repos/candlepin/candlepin/pulls/{pr}'.
                   headers={'Authorization': 'token {}'.format(github_token)}).json()
 target = pr['base']['ref']
 
-bz = Bugzilla(bugzilla_url, user=bugzilla_user, password=bugzilla_password)
+bz = Bugzilla('bugzilla.redhat.com', api_key=bugzilla_token)
 
 master_version = None
 def fetch_master_version():
@@ -93,6 +85,6 @@ for commit in pr_commits:
             print(UH_OH)
             print('{commit}: BZ#{bz_number} references {final_version}, while PR references {version}'.format(commit=commit['sha'], bz_number=bz_number, final_version=final_version, version=version))
             sys.exit(1)
-        print('{commit} looks good, both BZ and PR reference {version}').format(commit=commit['sha'], version=version)
+        print('{commit} looks good, both BZ and PR reference {version}'.format(commit=commit['sha'], version=version))
     else:
         print('{commit} does not appear to reference a BZ number.'.format(commit=commit['sha']))
