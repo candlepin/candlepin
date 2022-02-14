@@ -73,8 +73,7 @@ public class OwnerResourceTest {
             .build();
 
         assertThatThrownBy(() -> api.createOwner(ownerDTO))
-            .isInstanceOf(ApiException.class)
-            .hasMessage("Not Found");
+            .isInstanceOf(ApiException.class);
     }
 
 }
