@@ -16,7 +16,6 @@ package org.candlepin.sync;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
 import org.candlepin.dto.ModelTranslator;
@@ -589,10 +588,6 @@ public class Importer {
             importSubs = importEntitlements(owner, new HashSet<>(), new File[]{}, consumer.getUuid(), meta);
         }
 
-        final String contentAccessMode = ContentAccessMode
-            .resolveModeName(consumer.getContentAccessMode(), true)
-            .toDatabaseValue();
-
         // Setup our import subscription adapter with the subscriptions imported:
         SubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(importSubs);
         ProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(), productsToImport);
@@ -600,9 +595,6 @@ public class Importer {
         Refresher refresher = poolManager.getRefresher(subAdapter, prodAdapter);
         refresher.add(owner);
         refresher.run();
-
-        // Make sure we update the content access mode bits now that we've updated everything else
-        this.contentAccessManager.updateOwnerContentAccess(owner, contentAccessMode, contentAccessMode);
 
         return importSubs;
     }

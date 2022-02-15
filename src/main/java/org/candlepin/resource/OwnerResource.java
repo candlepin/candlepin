@@ -878,12 +878,6 @@ public class OwnerResource implements OwnersApi {
         String contentAccessMode = dto.getContentAccessMode();
 
         if (!StringUtils.isBlank(contentAccessMode) && !contentAccessMode.equals(defaultContentAccess)) {
-            if (config.getBoolean(ConfigProperties.STANDALONE)) {
-                throw new BadRequestException(
-                    i18n.tr("The owner content access mode and content access mode list cannot be set " +
-                    "directly in standalone mode."));
-            }
-
             configureContentAccess = true;
         }
         else {
@@ -892,11 +886,6 @@ public class OwnerResource implements OwnersApi {
 
         if (!StringUtils.isBlank(contentAccessModeList) &&
             !contentAccessModeList.equals(defaultContentAccessList)) {
-
-            // Impl note: We have to allow this for the time being due to pre-existing, expected
-            // behaviors. This shouldn't impact actual functionality since the mode can't be set,
-            // but we still need to allow setting the mode list.
-
             configureContentAccess = true;
         }
         else {
@@ -944,7 +933,6 @@ public class OwnerResource implements OwnersApi {
 
         Owner owner = findOwnerByKey(key);
 
-        // Reject changes to the content access mode in standalone mode
         boolean updateContentAccess = false;
         String contentAccessModeList = dto.getContentAccessModeList();
         String contentAccessMode = dto.getContentAccessMode();
@@ -957,12 +945,6 @@ public class OwnerResource implements OwnersApi {
             !contentAccessMode.equals(owner.getContentAccessMode());
 
         if (caListChanged || caModeChanged) {
-            if (config.getBoolean(ConfigProperties.STANDALONE)) {
-                throw new BadRequestException(
-                    i18n.tr("The owner content access mode and content access mode list cannot be set " +
-                    "directly in standalone mode."));
-            }
-
             // This kinda doubles up on some work here, but at least we nice, clear error messages
             // rather than spooky ISEs.
             this.validateContentAccessModeChanges(owner, contentAccessModeList, contentAccessMode);

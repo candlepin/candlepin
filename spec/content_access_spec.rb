@@ -40,12 +40,6 @@ describe 'Content Access' do
     sleep 1
   end
 
-  after(:each) do
-    if is_standalone?
-      @export.cleanup()
-    end
-  end
-
   it "should filter content with mismatched architecture" do
     # We expect this content to NOT be filtered out due to a match with the system's architecture
     content1 = @cp.create_content(
@@ -113,8 +107,7 @@ describe 'Content Access' do
     expect(content3_output['arches'][0]).to eq(content3.arches)
   end
 
-  it "does allow changing the content access mode and mode list in hosted mode" do
-    skip("candlepin running in standalone mode") unless is_hosted?
+  it "does allow changing the content access mode and mode list" do
 
     @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
     @owner = @cp.get_owner(@owner['key'])
@@ -127,18 +120,6 @@ describe 'Content Access' do
 
     expect(@owner['contentAccessModeList']).to eq("entitlement")
     expect(@owner['contentAccessMode']).to eq("entitlement")
-  end
-
-  it "does NOT allow changing the content access mode and mode list in standalone mode" do
-    skip("candlepin running in hosted mode") unless is_standalone?
-
-    expect {
-      @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
-    }.to raise_exception(RestClient::BadRequest)
-
-    expect {
-      @cp.update_owner(@owner['key'], {'contentAccessModeList' => "entitlement"})
-    }.to raise_exception(RestClient::BadRequest)
   end
 
   it "will assign the default mode and list when none is specified" do
@@ -182,7 +163,6 @@ describe 'Content Access' do
   end
 
   it "sets mode to default when the list is updated to no longer have the original mode value" do
-    skip("candlepin running in standalone mode") unless is_hosted?
 
     # The owner is in SCA mode
     @owner = @cp.get_owner(@owner['key'])
@@ -358,33 +338,21 @@ describe 'Content Access' do
     certs = @consumer.list_certificates
     certs.length.should == 1
 
-    if is_hosted?
-      @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
-    else
-      set_content_access_mode_for_standalone_owner(@owner, 'entitlement', true)
-    end
+    @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
 
     certs = @consumer.list_certificates
     certs.length.should == 0
   end
 
   it "can create the content access certificate for the consumer when org content access mode added" do
-    if is_hosted?
-      @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
-    else
-      set_content_access_mode_for_standalone_owner(@owner, 'entitlement', true)
-    end
+    @cp.update_owner(@owner['key'], {'contentAccessMode' => "entitlement"})
 
     @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
 
     certs = @consumer.list_certificates
     certs.length.should == 0
 
-    if is_hosted?
-      @cp.update_owner(@owner['key'], {'contentAccessMode' => "org_environment"})
-    else
-      set_content_access_mode_for_standalone_owner(@owner, 'org_environment', true)
-    end
+    @cp.update_owner(@owner['key'], {'contentAccessMode' => "org_environment"})
 
     certs = @consumer.list_certificates
     certs.length.should == 1
@@ -551,13 +519,9 @@ describe 'Content Access' do
     consumer = @user.register(random_string('consumer'), :candlepin, nil, {}, nil, nil, [], [], nil)
     @consumer = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
-    # Both 'org_environment' and 'entitlement' modes are present on @owner when in Hosted mode, but
-    # in standalone only one (the value that was imported with the manifest; in this case 'org_environment').
-    if is_hosted?
-      @consumer.update_consumer({'contentAccessMode' => "entitlement"})
-      consumer_now = @consumer.get_consumer()
-      expect(consumer_now["contentAccessMode"]).to eq("entitlement")
-    end
+    @consumer.update_consumer({'contentAccessMode' => "entitlement"})
+    consumer_now = @consumer.get_consumer()
+    expect(consumer_now["contentAccessMode"]).to eq("entitlement")
 
     @consumer.update_consumer({'contentAccessMode' => "org_environment"})
     consumer_now = @consumer.get_consumer()
@@ -579,172 +543,28 @@ describe 'Content Access' do
     expect(consumer2["contentAccessMode"]).to eq("org_environment")
   end
 
+  it "will show up in the export for the distributor consumer" do
+    cp_export = StandardExporter.new
+    owner = cp_export.owner
+
+    @cp.update_owner(owner['key'],{'contentAccessMode' => "entitlement"})
+    candlepin_client = cp_export.candlepin_client
+    candlepin_client.update_consumer({'contentAccessMode' => "entitlement"})
+    cp_export.create_candlepin_export()
+    exported_consumer = JSON.parse File.read(
+      File.join(cp_export.export_dir, 'consumer.json')
+    )
+    expect(exported_consumer['contentAccessMode']).to eq("entitlement")
+    cp_export.cleanup()
+  end
+
+
   it "will not set the content access mode for a regular consumer" do
     @consumer = consumer_client(@user, @consumername, type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
 
     expect {
       @consumer.update_consumer({'contentAccessMode' => "org_environment"})
     }.to raise_exception(RestClient::BadRequest)
-  end
-
-  it "will show up in the owner at distributor on export/import" do
-    @cp = Candlepin.new('admin', 'admin')
-    @cp_export = StandardExporter.new
-    owner = @cp_export.owner
-
-    @cp.update_owner(owner['key'],{'contentAccessMode' => "entitlement"})
-    candlepin_client = @cp_export.candlepin_client
-    candlepin_client.update_consumer({'contentAccessMode' => "entitlement"})
-    @cp_export.create_candlepin_export()
-    @cp_export_file = @cp_export.export_filename
-
-    @candlepin_consumer = @cp_export.candlepin_client.get_consumer()
-    @candlepin_consumer.unregister @candlepin_consumer['uuid']
-
-    @import_owner = @cp.create_owner(random_string("test_owner"))
-    @import_username = random_string("import-user")
-    @import_owner_client = user_client(@import_owner, @import_username)
-    import_record = @cp.import(@import_owner['key'], @cp_export_file)
-    import_record.status.should == 'SUCCESS'
-    import_record.statusMessage.should == "#{@import_owner['key']} file imported successfully."
-
-    owner = @cp.get_owner(@import_owner['key'])
-    owner['contentAccessMode'].should == 'entitlement'
-    owner['contentAccessModeList'].should == 'entitlement'
-
-    uc = owner.upstreamConsumer['contentAccessMode'].should == 'entitlement'
-
-    @cp.delete_owner(@import_owner['key'])
-    @cp_export.cleanup()
-  end
-
-
-  RSpec.shared_examples "manifest import" do |async|
-    it "will import a manifest when only the access mode changes" do
-      cp_export = async ? AsyncStandardExporter.new : StandardExporter.new
-      candlepin_client = cp_export.candlepin_client
-
-      # Ensure the consumer is using the standard content access mode initially
-      candlepin_client.update_consumer({'contentAccessMode' => "entitlement"})
-      export1 = cp_export.create_candlepin_export()
-      export1_file = cp_export.export_filename
-
-      # Sleep long enough to ensure the timestamps would change
-      sleep 1
-
-      # Update the content access mode and create a new export
-      candlepin_client.update_consumer({'contentAccessMode' => "org_environment"})
-      export2 = cp_export.create_candlepin_export()
-      export2_file = cp_export.export_filename
-
-      def read_json_file(filename)
-        file = File.open(filename)
-        json = JSON.load(file)
-        file.close()
-
-        return json
-      end
-
-      # Verify the exports are indeed different
-      export1_metadata = read_json_file("#{export1.export_dir}/meta.json")
-      export2_metadata = read_json_file("#{export2.export_dir}/meta.json")
-
-      expect(export2_metadata['created']).to_not eq(export1_metadata['created'])
-
-      # Verify the consumer access mode is updated and correct in the second export
-      export1_consumer = read_json_file("#{export1.export_dir}/consumer.json")
-      export2_consumer = read_json_file("#{export2.export_dir}/consumer.json")
-
-      expect(export2_consumer['contentAccessMode']).to_not eq(export1_consumer['contentAccessMode'])
-      expect(export2_consumer['contentAccessMode']).to eq("org_environment")
-
-      candlepin_consumer = candlepin_client.get_consumer()
-      candlepin_consumer.unregister(candlepin_consumer['uuid'])
-
-      # Import the first manifest
-      import_owner = create_owner(random_string("import_org"), nil, {
-        'contentAccessModeList' => 'org_environment,entitlement',
-        'contentAccessMode' => "entitlement"
-      })
-      import_username = random_string("import-user")
-      import_owner_client = user_client(import_owner, import_username)
-
-      import_record = @cp.import(import_owner['key'], export1_file)
-      import_record.status.should == 'SUCCESS'
-      import_record.statusMessage.should == "#{import_owner['key']} file imported successfully."
-
-      owner = @cp.get_owner(import_owner['key'])
-      expect(owner['contentAccessMode']).to_not eq(export2_consumer['contentAccessMode'])
-
-      pools = @cp.list_owner_pools(import_owner['key'])
-
-      # Import the second manifest. This should set the content access mode properly
-      import_record = @cp.import(import_owner['key'], export2_file)
-      import_record.status.should == 'SUCCESS'
-      import_record.statusMessage.should == "#{import_owner['key']} file imported successfully."
-
-      owner = @cp.get_owner(import_owner['key'])
-      expect(owner['contentAccessMode']).to eq(export2_consumer['contentAccessMode'])
-
-      pools2 = @cp.list_owner_pools(import_owner['key'])
-
-      # Remove last updated time, since that changes anyway...? This seems odd, but as long as no other
-      # details change, it's fine... I guess.
-      pools.each { |p| p.delete("updated") }
-      pools2.each { |p| p.delete("updated") }
-
-      # Sort the objects by UUIDs so we don't get false negatives there.
-      pools = pools.sort_by { |p| p.id }
-      pools2 = pools2.sort_by { |p| p.id }
-
-      expect(pools2).to eq(pools)
-
-      cp_export.cleanup()
-    end
-  end
-
-  describe "Async Tests" do
-    it_should_behave_like "manifest import", true
-  end
-
-  describe "Sync import tests" do
-    it_should_behave_like "manifest import", false
-  end
-
-
-  it "will express on consumers at the distributor" do
-    @cp = Candlepin.new('admin', 'admin')
-    @cp_export = StandardExporter.new
-
-    candlepin_client = @cp_export.candlepin_client
-    candlepin_client.update_consumer({'contentAccessMode' => "org_environment"})
-
-    @cp_export.create_candlepin_export()
-    @cp_export_file = @cp_export.export_filename
-
-    @candlepin_consumer = @cp_export.candlepin_client.get_consumer()
-    @candlepin_consumer.unregister @candlepin_consumer['uuid']
-
-    @import_owner = @cp.create_owner(random_string("test_owner"))
-    @import_username = random_string("import-user")
-    @import_owner_client = user_client(@import_owner, @import_username)
-    import_record = @cp.import(@import_owner['key'], @cp_export_file)
-
-    expect(import_record.status).to eq('SUCCESS')
-    expect(import_record.statusMessage).to eq("#{@import_owner['key']} file imported successfully.")
-
-    owner = @cp.get_owner(@import_owner['key'])
-    @user = user_client(owner, random_string("user"))
-    @consumer = consumer_client(@user, random_string("consumer"), type=:system, username=nil, facts= {'system.certificate_version' => '3.3'})
-
-    expect(owner['contentAccessMode']).to eq("org_environment")
-    expect(owner['upstreamConsumer']).to_not be_nil
-    expect(owner['upstreamConsumer']['contentAccessMode']).to eq("org_environment")
-    expect(@consumer.list_certificate_serials().size).to eq(1)
-    expect(@consumer.list_certificates().size).to eq(1)
-
-    @cp.delete_owner(@import_owner['key'])
-    @cp_export.cleanup()
   end
 
   it "does produce a pre-dated content access certificate" do

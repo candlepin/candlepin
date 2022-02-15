@@ -796,55 +796,11 @@ end
 
 module SimpleContentAccessMethods
 
-  # In standalone mode, we are not allowed to set the content access mode and content access mode list for an Owner.
-  # This method provides a workaround that creates an empty export, sets its upstream consumer the content access mode
-  # we want, and then imports it in a new owner, which is returned, thus indirectly setting the mode on that owner.
-  def set_content_access_mode_for_standalone_owner(owner, access_mode, force_distributor_conflict=nil)
-      @export = Exporter.new
-
-      # Toggle SCA mode on or off for the upstream consumer
-      candlepin_client = @export.candlepin_client
-      candlepin_client.update_consumer({'contentAccessMode' => access_mode})
-
-      # Create the Export
-      @export.create_candlepin_export()
-      @export_file = @export.export_filename
-
-      @candlepin_consumer = @export.candlepin_client.get_consumer()
-      @candlepin_consumer.unregister @candlepin_consumer['uuid']
-
-      # Import the manifest to the new owner, to update the content access mode & mode list on it
-      @import_username = random_string("import-user")
-      @import_owner_client = user_client(owner, @import_username)
-      if force_distributor_conflict
-        @cp.import(owner['key'], @export_file,  {:force => ['DISTRIBUTOR_CONFLICT']})
-      else
-        @cp.import(owner['key'], @export_file)
-      end
-
-      # Fetch the owner again, to make sure it has the mode & mode list we expect
-      owner = @cp.get_owner(owner['key'])
-      expect(owner['contentAccessModeList']).to eq(access_mode)
-      expect(owner['contentAccessMode']).to eq(access_mode)
-
-      return owner
-  end
-
   def create_owner_in_sca_mode
-    if is_hosted?
-      owner = create_owner(random_string("test_owner"), nil, {
-        'contentAccessModeList' => 'org_environment,entitlement',
-        'contentAccessMode' => "org_environment"
-      })
-    else
-      # Create a new owner that is SCA-capable, but not SCA-enabled
-      owner = create_owner(random_string("test_owner"), nil, {
-          'contentAccessModeList' => 'org_environment,entitlement',
-          'contentAccessMode' => "entitlement"
-      })
-      # and then indirectly make the owner SCA-enabled
-      owner = set_content_access_mode_for_standalone_owner(owner, 'org_environment')
-    end
+    owner = create_owner(random_string("test_owner"), nil, {
+      'contentAccessModeList' => 'org_environment,entitlement',
+      'contentAccessMode' => "org_environment"
+    })
     return owner
   end
 end
