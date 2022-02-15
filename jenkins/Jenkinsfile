@@ -4,7 +4,7 @@ library identifier: 'fh-pipeline-library@master', retriever: modernSCM(
    credentialsId: 'github-api-token-as-username-password'])
 
 pipeline {
-    agent { label 'candlepin' }
+    agent { label 'jmolet-vm0' }
     options {
         skipDefaultCheckout true
         timeout(time: 16, unit: 'HOURS')
@@ -22,7 +22,7 @@ pipeline {
             parallel {
                 stage('unit') {
                     // ensures that this stage will get assigned its own workspace
-                    agent { label 'candlepin' }
+                    agent { label 'jmolet-vm0' }
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
@@ -36,7 +36,7 @@ pipeline {
                     }
                 }
                 stage('Upload-PR-to-SonarQube') {
-                    agent { label 'candlepin' }
+                    agent { label 'jmolet-vm0' }
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
@@ -50,7 +50,7 @@ pipeline {
                     }
                 }
                 stage('Upload-Branch-to-SonarQube') {
-                    agent { label 'candlepin' }
+                    agent { label 'jmolet-vm0' }
                     environment {
                         BRANCH_UPLOAD = 'true'
                     }
@@ -72,7 +72,7 @@ pipeline {
                     }
                 }
                 stage('checkstyle') {
-                    agent { label 'candlepin' }
+                    agent { label 'jmolet-vm0' }
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
@@ -86,7 +86,7 @@ pipeline {
                     }
                 }
                 stage('rspec-postgresql') {
-                    agent { label 'candlepin' }
+                    agent { label 'jmolet-vm0' }
                     environment {
                         CANDLEPIN_DATABASE = 'postgresql'
                         CP_TEST_ARGS = '-r'
@@ -104,7 +104,7 @@ pipeline {
                     }
                 }
                 stage('rspec-mysql') {
-                    agent { label 'candlepin' }
+                    agent { label 'jmolet-vm0' }
                     environment {
                         CANDLEPIN_DATABASE = 'mysql'
                         CP_TEST_ARGS = '-r'
@@ -122,7 +122,7 @@ pipeline {
                     }
                 }
                 stage('rspec-postgres-hosted') {
-                    agent { label 'candlepin' }
+                    agent { label 'jmolet-vm0' }
                     environment {
                         CANDLEPIN_DATABASE = 'postgresql'
                         CP_TEST_ARGS = '-H -k'
@@ -140,7 +140,7 @@ pipeline {
                     }
                 }
                 stage('rspec-mysql-hosted') {
-                    agent { label 'candlepin' }
+                    agent { label 'jmolet-vm0' }
                     environment {
                         CANDLEPIN_DATABASE = 'mysql'
                         CP_TEST_ARGS = '-H -k'
@@ -158,6 +158,7 @@ pipeline {
                     }
                 }
                 stage('bugzilla-reference') {
+                    agent { label 'jmolet-vm0' }
                     environment {
                         GITHUB_TOKEN = credentials('github-api-token-as-username-password')
                         BUGZILLA_TOKEN = credentials('BUGZILLA_API_TOKEN')
@@ -170,7 +171,7 @@ pipeline {
                     }
                 }
                 stage('validate-translation') {
-                    agent { label 'candlepin' }
+                    agent { label 'jmolet-vm0' }
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
