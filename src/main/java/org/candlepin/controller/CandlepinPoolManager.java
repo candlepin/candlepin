@@ -2667,4 +2667,5 @@ public class CandlepinPoolManager implements PoolManager {
             !pool.getType().isDerivedType() &&
             (pool.getUpstreamPoolId() != null || !this.config.getBoolean(ConfigProperties.STANDALONE, true));
     }
+
 }

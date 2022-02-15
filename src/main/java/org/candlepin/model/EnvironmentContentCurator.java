@@ -70,7 +70,7 @@ public class EnvironmentContentCurator extends AbstractHibernateCurator<Environm
      *  Map of environmentIds & respective contentUUIDs
      */
     public Map<String, List<String>> getEnvironmentContentUUIDs(Iterable<String> environmentIds) {
-        Map<String, List<String>> contentUUIDMap = new HashMap();
+        Map<String, List<String>> contentUUIDMap = new HashMap<>();
 
         String jpql = "SELECT e.id, ec.content.uuid FROM EnvironmentContent ec " +
             "JOIN Environment e ON ec.environment.id = e.id " +

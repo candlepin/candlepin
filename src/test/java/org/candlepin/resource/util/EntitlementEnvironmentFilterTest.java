@@ -13,274 +13,323 @@
  * in this software or its documentation.
  */
 package org.candlepin.resource.util;
+
+import static java.util.Map.entry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.anyIterable;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentContentCurator;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 public class EntitlementEnvironmentFilterTest {
-    @Mock private EnvironmentContentCurator environmentContentCurator;
-    @Mock private EntitlementCurator entitlementCurator;
-    @Mock private Consumer consumer;
+    @Mock
+    private EntitlementCurator entitlementCurator;
+    @Mock
+    private EnvironmentContentCurator environmentContentCurator;
+    private Consumer consumer;
 
-    @Test
-    public void filterEntitlementWhenEnvironmentBeingAddedTest() {
-        Entitlement ent = new Entitlement();
-        ent.setId("Dummy-ent");
-        Map<String, Set<String>> contentUUIDsConsumerIds = new HashMap<>();
-        contentUUIDsConsumerIds.put(ent.getId(), Set.of("c1", "c2", "c3"));
+    @BeforeEach
+    void setUp() {
+        this.consumer = createConsumer(1);
+    }
 
-        when(this.entitlementCurator.getEntitlementContentUUIDs(Arrays.asList(consumer.getId())))
+    @ParameterizedTest
+    @MethodSource("addedDetectChange")
+    public void shouldDetectEntitlementOfAddedEnvironment(List<String> currentEnvs,
+        List<String> updatedEnvs) {
+        Map<String, Set<String>> contentUUIDsConsumerIds = Map.ofEntries(
+            entry("ent1", Set.of("c1", "c2", "c3"))
+        );
+        when(this.entitlementCurator.getEntitlementContentUUIDs(anyCollection()))
             .thenReturn(contentUUIDsConsumerIds);
 
-        Map<String, List<String>> id = new HashMap<>();
-        id.put("envA", Arrays.asList("c1"));
-        id.put("envB", Arrays.asList("c2"));
-        id.put("envC", Arrays.asList("c1"));
+        Map<String, List<String>> id = Map.ofEntries(
+            entry("envA", List.of("c1")),
+            entry("envB", List.of("c2")),
+            entry("envC", List.of("c1"))
+        );
+        when(this.environmentContentCurator.getEnvironmentContentUUIDs(anyIterable())).thenReturn(id);
 
-        when(this.environmentContentCurator.getEnvironmentContentUUIDs(any())).thenReturn(id);
-
-        // EnvB added with Higher priority
-        // EnvA & EnvB both have different content
-        Set<String> filteredEnt1 =
-            new EntitlementEnvironmentFilter(this.entitlementCurator, this.environmentContentCurator)
-            .setConsumerToBeUpdated(Arrays.asList(consumer.getId()))
-            .setPreExistingEnvironments(Arrays.asList("envA"))
-            .setUpdatedEnvironment(Arrays.asList("envB", "envA"))
-            .filterEntitlements();
+        EnvironmentUpdates environmentUpdate = new EnvironmentUpdates();
+        environmentUpdate.put(consumer.getId(), currentEnvs, updatedEnvs);
+        Set<String> filteredEnt1 = createEntitlementFilter()
+            .filterEntitlements(environmentUpdate);
 
         assertEquals(filteredEnt1.size(), 1);
-        assertTrue(filteredEnt1.contains("Dummy-ent"));
+        assertTrue(filteredEnt1.contains("ent1"));
+    }
 
-        // EnvB added with Lower priority
-        // EnvA & EnvB both have different content
-        Set<String> filteredEnt2 =
-            new EntitlementEnvironmentFilter(this.entitlementCurator, this.environmentContentCurator)
-            .setConsumerToBeUpdated(Arrays.asList(consumer.getId()))
-            .setPreExistingEnvironments(Arrays.asList("envA"))
-            .setUpdatedEnvironment(Arrays.asList("envA", "envB"))
-            .filterEntitlements();
-        assertEquals(filteredEnt2.size(), 1);
-        assertTrue(filteredEnt2.contains("Dummy-ent"));
-
-
-        // EnvC is added with lower priority
-        // EnvA (high) & EnvC (low) both have same content
-        Set<String> filteredEnt3 =
-            new EntitlementEnvironmentFilter(this.entitlementCurator, this.environmentContentCurator)
-            .setConsumerToBeUpdated(Arrays.asList(consumer.getId()))
-            .setPreExistingEnvironments(Arrays.asList("envA"))
-            .setUpdatedEnvironment(Arrays.asList("envA", "envC"))
-            .filterEntitlements();
-        assertEquals(filteredEnt3.size(), 0);
-
-        // EnvC is added with Higher priority
-        // EnvA (low) & EnvC (high) both have same content
-        Set<String> filteredEnt4 =
-            new EntitlementEnvironmentFilter(this.entitlementCurator, this.environmentContentCurator)
-            .setConsumerToBeUpdated(Arrays.asList(consumer.getId()))
-            .setPreExistingEnvironments(Arrays.asList("envA"))
-            .setUpdatedEnvironment(Arrays.asList("envC", "envA"))
-            .filterEntitlements();
-        assertEquals(filteredEnt4.size(), 1);
-        assertTrue(filteredEnt4.contains("Dummy-ent"));
+    public static Stream<Arguments> addedDetectChange() {
+        return Stream.of(
+            // EnvB added with Higher priority
+            // EnvA & EnvB both have different content
+            Arguments.of(List.of("envA"), List.of("envB", "envA")),
+            // EnvB added with Lower priority
+            // EnvA & EnvB both have different content
+            Arguments.of(List.of("envA"), List.of("envA", "envB")),
+            // EnvC is added with Higher priority
+            // EnvA (low) & EnvC (high) both have same content
+            Arguments.of(List.of("envA"), List.of("envC", "envA"))
+        );
     }
 
     @Test
-    public void filterEntitlementWhenEnvironmentBeingRemovedTest() {
-        Entitlement ent = new Entitlement();
-        ent.setId("Dummy-ent");
-        Map<String, Set<String>> contentUUIDsConsumerIds = new HashMap<>();
-        contentUUIDsConsumerIds.put(ent.getId(), Set.of("c1", "c2", "c3"));
-
-        when(entitlementCurator.getEntitlementContentUUIDs(Arrays.asList(consumer.getId())))
+    public void shouldSkipEntitlementOfAddedEnvironmentWithSameContent() {
+        Map<String, Set<String>> contentUUIDsConsumerIds = Map.ofEntries(
+            entry("ent1", Set.of("c1", "c2", "c3"))
+        );
+        when(this.entitlementCurator.getEntitlementContentUUIDs(anyCollection()))
             .thenReturn(contentUUIDsConsumerIds);
 
-        Map<String, List<String>> id = new HashMap<>();
-        id.put("envA", Arrays.asList("c1"));
-        id.put("envB", Arrays.asList("c2"));
-        id.put("envC", Arrays.asList("c1"));
+        Map<String, List<String>> id = Map.ofEntries(
+            entry("envA", List.of("c1")),
+            entry("envB", List.of("c2")),
+            entry("envC", List.of("c1"))
+        );
+        when(this.environmentContentCurator.getEnvironmentContentUUIDs(anyIterable())).thenReturn(id);
 
-        when(environmentContentCurator.getEnvironmentContentUUIDs(any())).thenReturn(id);
-        // EnvA of higher priority is being removed
-        // envA & envB have different content
-        Set<String> filteredEnt1 =
-            new EntitlementEnvironmentFilter(this.entitlementCurator, this.environmentContentCurator)
-            .setConsumerToBeUpdated(Arrays.asList(consumer.getId()))
-            .setPreExistingEnvironments(Arrays.asList("envA", "envB"))
-            .setUpdatedEnvironment(Arrays.asList("envB"))
-            .filterEntitlements();
-        assertEquals(filteredEnt1.size(), 1);
-        assertTrue(filteredEnt1.contains("Dummy-ent"));
+        // EnvC is added with lower priority
+        // EnvA (high) & EnvC (low) both have same content
+        EnvironmentUpdates environmentUpdate = new EnvironmentUpdates();
+        environmentUpdate.put(consumer.getId(), List.of("envA"), List.of("envA", "envC"));
 
-        // EnvB of lower priority is being removed
-        // envA & envB have different content
-        Set<String> filteredEnt2 =
-            new EntitlementEnvironmentFilter(this.entitlementCurator, this.environmentContentCurator)
-            .setConsumerToBeUpdated(Arrays.asList(consumer.getId()))
-            .setPreExistingEnvironments(Arrays.asList("envA", "envB"))
-            .setUpdatedEnvironment(Arrays.asList("envA"))
-            .filterEntitlements();
-        assertEquals(filteredEnt2.size(), 1);
-        assertTrue(filteredEnt2.contains("Dummy-ent"));
+        Set<String> filteredEnt = createEntitlementFilter()
+            .filterEntitlements(environmentUpdate);
+        assertEquals(filteredEnt.size(), 0);
 
-        // EnvC of lower priority is being removed
-        // EnvC provides content same as envA
-        Set<String> filteredEnt3 =
-            new EntitlementEnvironmentFilter(this.entitlementCurator, this.environmentContentCurator)
-            .setConsumerToBeUpdated(Arrays.asList(consumer.getId()))
-            .setPreExistingEnvironments(Arrays.asList("envA", "envB", "envC"))
-            .setUpdatedEnvironment(Arrays.asList("envA", "envB"))
-            .filterEntitlements();
-        assertEquals(filteredEnt3.size(), 0);
+    }
 
-        // EnvC of higher priority is being removed
-        // EnvC provides content same as envA
-        Set<String> filteredEnt4 =
-            new EntitlementEnvironmentFilter(this.entitlementCurator, this.environmentContentCurator)
-            .setConsumerToBeUpdated(Arrays.asList(consumer.getId()))
-            .setPreExistingEnvironments(Arrays.asList("envC", "envA"))
-            .setUpdatedEnvironment(Arrays.asList("envA"))
-            .filterEntitlements();
-        assertEquals(filteredEnt4.size(), 1);
-        assertTrue(filteredEnt4.contains("Dummy-ent"));
+    @ParameterizedTest
+    @MethodSource("removedDetectChange")
+    public void shouldDetectEntitlementOfRemovedEnvironment(List<String> currentEnvs,
+        List<String> updatedEnvs) {
+        Map<String, Set<String>> contentUUIDsConsumerIds = Map.ofEntries(
+            entry("ent1", Set.of("c1", "c2", "c3"))
+        );
+        when(entitlementCurator.getEntitlementContentUUIDs(anyCollection()))
+            .thenReturn(contentUUIDsConsumerIds);
 
-        // EnvC of Lower priority is being removed
-        // EnvC provides content same as envA
-        Set<String> filteredEnt5 =
-            new EntitlementEnvironmentFilter(this.entitlementCurator, this.environmentContentCurator)
-            .setConsumerToBeUpdated(Arrays.asList(consumer.getId()))
-            .setPreExistingEnvironments(Arrays.asList("envA", "envC"))
-            .setUpdatedEnvironment(Arrays.asList("envA"))
-            .filterEntitlements();
-        assertEquals(filteredEnt5.size(), 0);
+        Map<String, List<String>> id = Map.ofEntries(
+            entry("envA", List.of("c1")),
+            entry("envB", List.of("c2")),
+            entry("envC", List.of("c1"))
+        );
+        when(environmentContentCurator.getEnvironmentContentUUIDs(anyIterable())).thenReturn(id);
+
+        EnvironmentUpdates environmentUpdate = new EnvironmentUpdates();
+        environmentUpdate.put(consumer.getId(), currentEnvs, updatedEnvs);
+        Set<String> filteredEnt = createEntitlementFilter()
+            .filterEntitlements(environmentUpdate);
+
+        assertEquals(filteredEnt.size(), 1);
+        assertTrue(filteredEnt.contains("ent1"));
+    }
+
+    public static Stream<Arguments> removedDetectChange() {
+        return Stream.of(
+            // EnvA of higher priority is being removed
+            // envA & envB have different content
+            Arguments.of(List.of("envA", "envB"), List.of("envB")),
+            // EnvB of lower priority is being removed
+            // envA & envB have different content
+            Arguments.of(List.of("envA", "envB"), List.of("envA")),
+            // EnvC of higher priority is being removed
+            // EnvC provides content same as envA
+            Arguments.of(List.of("envC", "envA"), List.of("envA"))
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("removedIgnoreChange")
+    public void shouldSkipEntitlementOfRemovedEnvironmentWithSameContent(
+        List<String> currentEnvs, List<String> updatedEnvs) {
+        Map<String, Set<String>> contentUUIDsConsumerIds = Map.ofEntries(
+            entry("ent1", Set.of("c1", "c2", "c3"))
+        );
+        when(entitlementCurator.getEntitlementContentUUIDs(anyCollection()))
+            .thenReturn(contentUUIDsConsumerIds);
+
+        Map<String, List<String>> id = Map.ofEntries(
+            entry("envA", List.of("c1")),
+            entry("envB", List.of("c2")),
+            entry("envC", List.of("c1"))
+        );
+        when(environmentContentCurator.getEnvironmentContentUUIDs(anyIterable())).thenReturn(id);
+
+        EnvironmentUpdates environmentUpdate = new EnvironmentUpdates();
+        environmentUpdate.put(consumer.getId(), currentEnvs, updatedEnvs);
+
+        Set<String> filteredEnt = createEntitlementFilter()
+            .filterEntitlements(environmentUpdate);
+        assertEquals(filteredEnt.size(), 0);
+    }
+
+    public static Stream<Arguments> removedIgnoreChange() {
+        return Stream.of(
+            // EnvC of lower priority is being removed
+            // EnvC provides content same as envA
+            Arguments.of(List.of("envA", "envB", "envC"), List.of("envA", "envB")),
+            // EnvC of Lower priority is being removed
+            // EnvC provides content same as envA
+            Arguments.of(List.of("envA", "envC"), List.of("envA"))
+        );
     }
 
     @Test
     public void testWhenLowerPriorityEnvsReorderedProvidingSameContent() {
-        Entitlement ent = new Entitlement();
-        ent.setId("Dummy-ent");
-        Map<String, Set<String>> contentUUIDsConsumerIds = new HashMap<>();
-        contentUUIDsConsumerIds.put(ent.getId(), Set.of("c1", "c2", "c3"));
-
-        when(entitlementCurator.getEntitlementContentUUIDs(Arrays.asList(consumer.getId())))
+        Map<String, Set<String>> contentUUIDsConsumerIds = Map.ofEntries(
+            entry("ent1", Set.of("c1", "c2", "c3"))
+        );
+        when(entitlementCurator.getEntitlementContentUUIDs(anyCollection()))
             .thenReturn(contentUUIDsConsumerIds);
 
-        Map<String, List<String>> id = new HashMap<>();
-        id.put("envA", Arrays.asList("c1"));
-        id.put("envB", Arrays.asList("c1"));
-        id.put("envC", Arrays.asList("c1"));
+        Map<String, List<String>> id = Map.ofEntries(
+            entry("envA", List.of("c1")),
+            entry("envB", List.of("c1")),
+            entry("envC", List.of("c1"))
+        );
+        when(environmentContentCurator.getEnvironmentContentUUIDs(anyIterable())).thenReturn(id);
 
-        when(environmentContentCurator.getEnvironmentContentUUIDs(any())).thenReturn(id);
+        EnvironmentUpdates environmentUpdate = new EnvironmentUpdates();
+        environmentUpdate.put(consumer.getId(),
+            List.of("envA", "envB", "envC"), List.of("envA", "envC", "envB"));
 
         // Reordering lower priority (envB & envC) environments
         // providing same contents
-        Set<String> filteredEnt =
-            new EntitlementEnvironmentFilter(this.entitlementCurator, this.environmentContentCurator)
-            .setConsumerToBeUpdated(Arrays.asList(consumer.getId()))
-            .setPreExistingEnvironments(Arrays.asList("envA", "envB", "envC"))
-            .setUpdatedEnvironment(Arrays.asList("envA", "envC", "envB"))
-            .filterEntitlements();
+        Set<String> filteredEnt = createEntitlementFilter()
+            .filterEntitlements(environmentUpdate);
         assertEquals(filteredEnt.size(), 0);
     }
 
     @Test
     public void testWhenEnvsAreReorderedProvidingDifferentContent() {
-        Entitlement ent = new Entitlement();
-        ent.setId("Dummy-ent");
-        Map<String, Set<String>> contentUUIDsConsumerIds = new HashMap<>();
-        contentUUIDsConsumerIds.put(ent.getId(), Set.of("c1", "c2", "c3"));
-
-        when(entitlementCurator.getEntitlementContentUUIDs(Arrays.asList(consumer.getId())))
+        Map<String, Set<String>> contentUUIDsConsumerIds = Map.ofEntries(
+            entry("ent1", Set.of("c1", "c2", "c3"))
+        );
+        when(entitlementCurator.getEntitlementContentUUIDs(anyCollection()))
             .thenReturn(contentUUIDsConsumerIds);
 
-        Map<String, List<String>> id = new HashMap<>();
-        id.put("envA", Arrays.asList("c1"));
-        id.put("envB", Arrays.asList("c2"));
+        Map<String, List<String>> id = Map.ofEntries(
+            entry("envA", List.of("c1")),
+            entry("envB", List.of("c2"))
+        );
+        when(environmentContentCurator.getEnvironmentContentUUIDs(anyIterable())).thenReturn(id);
 
-        when(environmentContentCurator.getEnvironmentContentUUIDs(any())).thenReturn(id);
+        EnvironmentUpdates environmentUpdate = new EnvironmentUpdates();
+        environmentUpdate.put(consumer.getId(), List.of("envA", "envB"), List.of("envB", "envA"));
 
         // Priority of envB & envA are reversed
-        Set<String> filteredEnt =
-            new EntitlementEnvironmentFilter(this.entitlementCurator, this.environmentContentCurator)
-            .setConsumerToBeUpdated(Arrays.asList(consumer.getId()))
-            .setPreExistingEnvironments(Arrays.asList("envA", "envB"))
-            .setUpdatedEnvironment(Arrays.asList("envB", "envA"))
-            .filterEntitlements();
+        Set<String> filteredEnt = createEntitlementFilter()
+            .filterEntitlements(environmentUpdate);
         assertEquals(filteredEnt.size(), 1);
-        assertTrue(filteredEnt.contains("Dummy-ent"));
+        assertTrue(filteredEnt.contains("ent1"));
     }
 
     @Test
     public void testWhenHigherPriorityEnvironmentIsDeleted() {
-        Entitlement ent = new Entitlement();
-        ent.setId("Dummy-ent");
-        Map<String, Set<String>> contentUUIDsConsumerIds = new HashMap<>();
-        contentUUIDsConsumerIds.put(ent.getId(), Set.of("c1", "c2"));
-
-        when(entitlementCurator.getEntitlementContentUUIDs(Arrays.asList(consumer.getId())))
+        Map<String, Set<String>> contentUUIDsConsumerIds = Map.ofEntries(
+            entry("ent1", Set.of("c1", "c2"))
+        );
+        when(entitlementCurator.getEntitlementContentUUIDs(anyCollection()))
             .thenReturn(contentUUIDsConsumerIds);
 
-        Map<String, List<String>> id = new HashMap<>();
-        id.put("envA", Arrays.asList("c1", "c2"));
-        id.put("envB", Arrays.asList("c1", "c2"));
+        Map<String, List<String>> id = Map.ofEntries(
+            entry("envA", List.of("c1", "c2")),
+            entry("envB", List.of("c1", "c2"))
+        );
+        when(environmentContentCurator.getEnvironmentContentUUIDs(anyIterable())).thenReturn(id);
 
-        when(environmentContentCurator.getEnvironmentContentUUIDs(any())).thenReturn(id);
+        EnvironmentUpdates environmentUpdate = new EnvironmentUpdates();
+        environmentUpdate.put(consumer.getId(), List.of("envA", "envB"), List.of("envB"));
 
-        Set<String> filteredEnt =
-            new EntitlementEnvironmentFilter(this.entitlementCurator, this.environmentContentCurator)
-            .setConsumerToBeUpdated(Arrays.asList(consumer.getId()))
-            .setPreExistingEnvironments(Arrays.asList("envA", "envB"))
-            .setUpdatedEnvironment(Arrays.asList("envB"))
-            .filterEntitlements();
+        Set<String> filteredEnt = createEntitlementFilter()
+            .filterEntitlements(environmentUpdate);
         assertEquals(filteredEnt.size(), 1);
-        assertTrue(filteredEnt.contains("Dummy-ent"));
+        assertTrue(filteredEnt.contains("ent1"));
     }
 
     @Test
     public void testEnvBeingAddedHasNoContent() {
-        Entitlement ent = new Entitlement();
-        ent.setId("Dummy-ent");
-        Map<String, Set<String>> contentUUIDsConsumerIds = new HashMap<>();
-        contentUUIDsConsumerIds.put(ent.getId(), Set.of("c1", "c2"));
-
-        when(entitlementCurator.getEntitlementContentUUIDs(Arrays.asList(consumer.getId())))
+        Map<String, Set<String>> contentUUIDsConsumerIds = Map.ofEntries(
+            entry("ent1", Set.of("c1", "c2"))
+        );
+        when(entitlementCurator.getEntitlementContentUUIDs(anyCollection()))
             .thenReturn(contentUUIDsConsumerIds);
 
-        Map<String, List<String>> id = new HashMap<>();
-        id.put("envA", Arrays.asList("c1", "c2"));
-        id.put("envB", new ArrayList<>());
+        Map<String, List<String>> id = Map.ofEntries(
+            entry("envA", List.of("c1", "c2")),
+            entry("envB", Collections.emptyList())
+        );
+        when(environmentContentCurator.getEnvironmentContentUUIDs(anyIterable())).thenReturn(id);
 
-        when(environmentContentCurator.getEnvironmentContentUUIDs(any())).thenReturn(id);
+        EnvironmentUpdates environmentUpdate = new EnvironmentUpdates();
+        environmentUpdate.put(consumer.getId(), List.of("envA"), List.of("envB", "envA"));
 
-        Set<String> filteredEnt =
-            new EntitlementEnvironmentFilter(this.entitlementCurator, this.environmentContentCurator)
-            .setConsumerToBeUpdated(Arrays.asList(consumer.getId()))
-            .setPreExistingEnvironments(Arrays.asList("envA"))
-            .setUpdatedEnvironment(Arrays.asList("envB", "envA"))
-            .filterEntitlements();
+        Set<String> filteredEnt = createEntitlementFilter()
+            .filterEntitlements(environmentUpdate);
 
         assertEquals(filteredEnt.size(), 0);
     }
+
+    @Test
+    public void shouldHandleUpdateOfMultipleConsumersAtOnce() {
+        Consumer consumer2 = createConsumer(2);
+        Map<String, Set<String>> contentUUIDsConsumerIds = Map.ofEntries(
+            entry("ent1", Set.of("c1", "c2")),
+            entry("ent2", Set.of("c2", "c3")),
+            entry("ent3", Set.of("c4"))
+        );
+        when(entitlementCurator.getEntitlementContentUUIDs(anyCollection()))
+            .thenReturn(contentUUIDsConsumerIds);
+
+        Map<String, List<String>> envContent = Map.ofEntries(
+            entry("envA", List.of("c1")),
+            entry("envB", List.of("c2")),
+            entry("envC", List.of("c3", "c4"))
+        );
+        when(environmentContentCurator.getEnvironmentContentUUIDs(anyIterable()))
+            .thenReturn(envContent);
+
+        EnvironmentUpdates environmentUpdate = new EnvironmentUpdates();
+        environmentUpdate.put(consumer.getId(), List.of("envA", "envB"), List.of("envB"));
+        environmentUpdate.put(consumer2.getId(), List.of("envA", "envB"), List.of("envA"));
+        environmentUpdate.put(consumer2.getId(), List.of("envC"), List.of("envA"));
+
+        Set<String> filteredEnt = createEntitlementFilter()
+            .filterEntitlements(environmentUpdate);
+        assertEquals(filteredEnt.size(), 3);
+    }
+
+    private EntitlementEnvironmentFilter createEntitlementFilter() {
+        return new EntitlementEnvironmentFilter(this.entitlementCurator,
+            this.environmentContentCurator);
+    }
+
+    private Consumer createConsumer(int id) {
+        Consumer consumer = new Consumer();
+        consumer.setUuid("test_consumer_" + id);
+        consumer.setId("test_consumer_" + id);
+        return consumer;
+    }
+
 }

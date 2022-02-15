@@ -29,6 +29,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.SimpleModelTranslator;
@@ -50,6 +51,7 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
@@ -104,6 +106,10 @@ class EnvironmentResourceTest {
     private IdentityCertificateCurator identityCertificateCurator;
     @Mock
     private ContentAccessCertificateCurator contentAccessCertificateCurator;
+    @Mock
+    private EntitlementCurator entitlementCurator;
+    @Mock
+    private EntitlementCertificateGenerator entCertGenerator;
     private I18n i18n;
     private ModelTranslator translator;
 
@@ -136,7 +142,9 @@ class EnvironmentResourceTest {
             this.contentAccessManager,
             this.certificateSerialCurator,
             this.identityCertificateCurator,
-            this.contentAccessCertificateCurator
+            this.contentAccessCertificateCurator,
+            this.entitlementCurator,
+            this.entCertGenerator
         );
 
         this.owner = new Owner("owner1", "Owner 1");
@@ -191,13 +199,31 @@ class EnvironmentResourceTest {
         when(this.envCurator.getEnvironmentConsumers(eq(this.environment1)))
             .thenReturn(mockedQuery);
 
-
         this.environmentResource.deleteEnvironment(ENV_ID_1);
 
         verify(this.identityCertificateCurator).deleteByIds(anyList());
         verify(this.contentAccessCertificateCurator).deleteByIds(anyList());
         verify(this.certificateSerialCurator).revokeByIds(anyList());
         verify(this.envCurator).delete(eq(this.environment1));
+    }
+
+    @Test
+    void onlyConsumersWithTheirLastEnvRemovedShouldBeCleanedUp() {
+        Consumer consumer1 = createConsumer(this.environment1);
+        Consumer consumer2 = createConsumer(this.environment1);
+        Environment environment2 = createEnvironment(owner, "env_id_2");
+        consumer2.setIdCert(null);
+        consumer2.setContentAccessCert(null);
+        consumer2.addEnvironment(environment2);
+        when(this.envCurator.get(anyString())).thenReturn(this.environment1);
+        List<Consumer> mockedQuery = mockedQueryOf(consumer1, consumer2).list();
+        when(this.envCurator.getEnvironmentConsumers(eq(this.environment1)))
+            .thenReturn(mockedQuery);
+
+        this.environmentResource.deleteEnvironment(ENV_ID_1);
+
+        verify(this.consumerCurator).delete(eq(consumer1));
+        verify(this.contentAccessManager).removeContentAccessCert(eq(consumer2));
     }
 
     @Test

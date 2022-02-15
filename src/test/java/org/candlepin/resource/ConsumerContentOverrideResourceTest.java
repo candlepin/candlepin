@@ -120,8 +120,8 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     @Mock private Provider<GuestMigration> guestMigrationProvider;
     @Mock private GuestIdCurator guestIdCurator;
     @Mock private PrincipalProvider principalProvider;
-    @Mock private EntitlementCertificateGenerator entitlementCertificateGenerator;
     @Mock private EnvironmentContentCurator environmentContentCurator;
+    @Mock private EntitlementCertificateGenerator entCertGenerator;
 
     private Consumer consumer;
     private ContentOverrideValidator contentOverrideValidator;
@@ -178,7 +178,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             this.principalProvider,
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,
-            this.entitlementCertificateGenerator,
+            this.entCertGenerator,
             this.environmentContentCurator
         );
     }

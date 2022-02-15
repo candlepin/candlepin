@@ -1249,4 +1249,40 @@ describe 'Content Access' do
     expect(serial_after_unregistration.revoked).to be(true)
   end
 
+  it 'environment deletion should regenerate sca certificate of affected consumers' do
+    product1 = create_product
+    content1 = @cp.create_content(
+      @owner['key'], "cname99", "test-content99", random_string("clabel99"), "ctype99", "cvendor99",
+      {:content_url=> "/this/is/the/path/99", :arches => "x86_64"}, true)
+
+    @cp.add_content_to_product(@owner['key'], product1['id'], content1['id'])
+
+    env1 = @cp.create_environment(@owner['key'], random_string("env1"), random_string("test_env_1"))
+    env2 = @cp.create_environment(@owner['key'], random_string("env1"), random_string("test_env_1"))
+    job = @cp.promote_content(env1['id'], [{ :contentId => content1['id'] }])
+    wait_for_job(job['id'], 15)
+
+    consumer = @cp.register(random_string("consumer2"), :system, nil,
+                            facts={'system.certificate_version' => '3.3', "uname.machine" => "x86_64"}, random_string("consumer2"),
+                            @owner['key'], [], [], [{ 'id' => env1['id']}, { 'id' => env2['id']}])
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    old_certs = consumer_cp.list_certificates
+    old_certs.length.should == 1
+
+    regenerate_cert_test(consumer_cp) do
+      @cp.delete_environment(env1['id'])
+      sleep 1
+    end
+
+    new_certs = consumer_cp.list_certificates
+    new_certs.length.should == 1
+
+    old_serials = old_certs.map { |cert| cert['serial']['id']}
+    new_serials = new_certs.map { |cert| cert['serial']['id']}
+    old_serials.should_not include(new_serials)
+
+
+  end
+
 end
