@@ -1,9 +1,6 @@
 ---
 - hosts: all
 
-  environment:
-    JAVA_HOME: /usr/lib/jvm/java
-
   roles:
     - role: candlepin
 
@@ -16,7 +13,7 @@
       include_role:
         name: "{{role}}"
       when:
-        "path is directory"
+        - "path is directory"
       vars:
         role: candlepin_dev
         path: "vagrant/roles/{{role}}"
@@ -37,7 +34,3 @@
 
     cp_git_checkout: false
     cp_deploy: false
-
-    rvm1_rubies: ['ruby-2.4']
-    rvm1_user: "{{ candlepin_user }}"
-    rvm1_bundler_install: true
