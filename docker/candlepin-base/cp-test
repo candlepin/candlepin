@@ -54,12 +54,12 @@ sonarqube_upload() {
     add_cert_to_keystore
 
     if [ -f ./gradlew ]; then
-        if [ ! -z "$CHANGE_ID" ]  && [ ! -z "$CHANGE_TARGET" ]; then
-          #Uploading a PR to the SonarQube
-          ./gradlew --no-daemon test --fail-fast sonarqube -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.pullrequest.key=${CHANGE_ID} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.pullrequest.branch=${CHECKOUT}  -Dsonar.projectKey=org.candlepin:candlepin-parent
+        if [ ! -z "$CHANGE_ID" ] && [ ! -z "$CHANGE_TARGET" ]; then
+          echo "Uploading PR to SonarQube server"
+          ./gradlew --no-daemon test --fail-fast sonarqube -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.pullrequest.branch=${BRANCH_NAME} -Dsonar.pullrequest.key=${CHANGE_ID} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.projectKey=chainsaw:candlepin-server
         else
-          #Uploading a Branch to the SonarQube
-          ./gradlew --no-daemon test --fail-fast sonarqube -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.branch.branch=${CHECKOUT}  -Dsonar.projectKey=org.candlepin:candlepin-parent
+          echo "Uploading branch to SonarQube server"
+          ./gradlew --no-daemon test --fail-fast sonarqube -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.branch.name=${BRANCH_NAME}  -Dsonar.projectKey=chainsaw:candlepin-server
         fi
     fi
 }
@@ -236,8 +236,9 @@ OPTIONS:
   -n                uploading PR/Branch on SonarQube server
                     Below arguments are passed:
                     1) SONAR_HOST_URL
-                    2) CHANGE_ID, pull request ID (when Uploading PR)
-                    3) CHANGE_TARGET, pull request branch (when Uploading PR)
+                    2) BRANCH_NAME, branch to be analyzed
+                    3) CHANGE_ID, pull request ID (when Uploading PR)
+                    4) CHANGE_TARGET, pull request target branch (when Uploading PR)
   -a <arguments>    extra arguments to pass to the Candlepin deploy script (implies -d)
 HELP
 }
@@ -406,12 +407,13 @@ if [ "$TRANSLATE" == "1" ]; then
 fi
 
 if [ "$SONARQUBE" == "1" ]; then
-    echo "Uploading code on SonarQube server..."
+    echo "About to upload code to SonarQube server..."
     CLEAN_CP=1
 
     SONAR_HOST_URL=$1 # SONARQUBE Host URL
-    CHANGE_ID=$2      # If PR needs to be uploaded, accept the pull request ID
-    CHANGE_TARGET=$3  # If PR needs to be uploaded, accept the pull request branch
+    BRANCH_NAME=$2    # The branch to analyze
+    CHANGE_ID=$3      # If PR needs to be uploaded, accept the pull request ID
+    CHANGE_TARGET=$4  # If PR needs to be uploaded, accept the pull request target branch
 
     tee /var/log/candlepin/sonarqube_upload.log < /tmp/teepipe &
     sonarqube_upload > /tmp/teepipe 2>&1

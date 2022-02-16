@@ -10,12 +10,12 @@ mkdir -p $WORKSPACE/artifacts/
 # make selinux happy via http://stackoverflow.com/a/24334000
 chcon -Rt svirt_sandbox_file_t $WORKSPACE//artifacts/
 
-if [ ! -z "$BRANCH_UPLOAD" ];  then
-  # Uploading PR on the SonarQube
-  ./docker/test -c "cp-test -c ${CHANGE_BRANCH} -n ${SONAR_HOST_URL} ${CHANGE_ID} ${CHANGE_TARGET}" -n "${STAGE_NAME}-${BUILD_TAG}"
+if [ -z "$BRANCH_UPLOAD" ];  then
+  # Uploading PR to SonarQube server
+  ./docker/test -c "cp-test -c ${CHANGE_BRANCH} -n ${SONAR_HOST_URL} ${BRANCH_NAME} ${CHANGE_ID} ${CHANGE_TARGET}" -n "${STAGE_NAME}-${BUILD_TAG}"
 else
-  # Uploading branch on the SonarQube
-  ./docker/test -c "cp-test -c ${CHANGE_BRANCH} -n ${SONAR_HOST_URL}" -n "${STAGE_NAME}-${BUILD_TAG}"
+  # Uploading branch to SonarQube server
+  ./docker/test -c "cp-test -c ${CHANGE_BRANCH} -n ${SONAR_HOST_URL} ${BRANCH_NAME}" -n "${STAGE_NAME}-${BUILD_TAG}"
 fi
 
 RETVAL=$?
