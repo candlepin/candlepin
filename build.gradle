@@ -200,7 +200,7 @@ dependencies {
     providedCompile "javax.servlet:servlet-api:2.5"
 
     // DB Drivers
-    runtimeOnly "org.postgresql:postgresql:42.3.2"
+    runtimeOnly "org.postgresql:postgresql:42.3.3"
     runtimeOnly "mysql:mysql-connector-java:8.0.20"
     runtimeOnly "org.mariadb.jdbc:mariadb-java-client:2.3.0"
 
