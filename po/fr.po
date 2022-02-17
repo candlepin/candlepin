@@ -1,5 +1,5 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
-# Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021.
+# Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021, 2022.
 # Nikos Moumoulidis <nmoumoul@redhat.com>, 2020. #zanata, 2021.
 # Sundeep Anand <suanand@redhat.com>, 2021.
 msgid ""
@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-01-23 02:00-0500\n"
-"PO-Revision-Date: 2021-09-01 13:04+0000\n"
-"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
+"PO-Revision-Date: 2022-02-15 11:16+0000\n"
+"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
 "candlepin/master/fr/>\n"
 "Language: fr\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.8\n"
+"X-Generator: Weblate 4.10.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -691,7 +691,7 @@ msgstr ""
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:185
 #, java-format
 msgid "Unable to attach pool with ID \"{1}\".: {0}."
-msgstr "Impossible d’attacher le pool ayant comme ID « {1} ».: {0}."
+msgstr "Impossible d’attacher le pool ayant comme ID « {1} ». : {0}."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:193
 #, java-format
@@ -720,7 +720,7 @@ msgstr ""
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:201
 #, java-format
 msgid "Unable to attach subscription for the product \"{1}\": {0}."
-msgstr "Impossible d’attacher un abonnement pour le produit « {1} »: {0}."
+msgstr "Impossible d’attacher un abonnement pour le produit « {1} » : {0}."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:209
 #, java-format
@@ -743,8 +743,8 @@ msgstr ""
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id \"{1}\": {0}"
 msgstr ""
-"Impossible d’ajuster la quantité pour le droit d’accès ayant comme id "
-"« {1} »: {0}"
+"Impossible d’ajuster la quantité pour le droit d’accès ayant comme id « {1} »"
+" : {0}"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:114
 msgid "Activation key ID is null or empty"
@@ -823,7 +823,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:331
 #, java-format
 msgid "Organization {0} does not exist"
-msgstr "L’organisation {0} n’existe pas."
+msgstr "L’organisation {0} n’existe pas"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:560
 msgid "Must specify at least one search criteria."
@@ -1186,7 +1186,7 @@ msgstr "La valeur de la quantité doit être supérieure à 0."
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:242
 #, java-format
 msgid "Unable to find upstream certificate for entitlement: {0}"
-msgstr "Certificat de droit d’accès en amont introuvable: {0}"
+msgstr "Certificat de droit d’accès en amont introuvable : {0}"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:300
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:306
@@ -1327,8 +1327,8 @@ msgstr "États de la tâche inconnus : {0}"
 #, java-format
 msgid "Invalid date range; start date occurs after the end date: {0} > {1}"
 msgstr ""
-"Plage de dates non valid; la date de commencement est postérieure à la date "
-"de complétion : {0} > {1}"
+"Plage de dates non valid ; la date de commencement est postérieure à la date "
+"de complétion : {0} > {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:323
 msgid "Owner key is null or empty."
