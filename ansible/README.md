@@ -130,14 +130,14 @@ Candlepin, it may not create the perfect environment for all developers. While s
 familiar enough with Ansible create a new ad-hoc playbook or role and run it against the Vagrant
 boxes themselves, it's somewhat tedious to set up. To facilitate rapid changes, the playbook used
 by Vagrant to invoke the Candlepin role also supports running a custom role named "candlepin_dev"
-if it is present in the `{candlepin_repo}/vagrant/roles` directory.
+if it is present in the `{candlepin_repo}/ansible/roles` directory.
 
 The "candlepin_dev" role is exected to follow normal Ansible role conventions, and aside from the
 optional nature of its execution, has no special properties.
 
 To create a simple task, create `candlepin_dev` directory containing `tasks` directory, which
 contains a text file named `main.yml`. The full path to "main.yml" should be as follows:
-`{candlepin_repo}/vagrant/roles/candlepin_dev/tasks/main.yml` where `{candlepin_repo}` is the
+`{candlepin_repo}/ansible/roles/candlepin_dev/tasks/main.yml` where `{candlepin_repo}` is the
 location of the Candlepin git repo.
 
 Next, open the `main.yml` file and add your desired Ansible tasks:
