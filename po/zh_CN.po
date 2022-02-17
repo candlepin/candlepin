@@ -1,13 +1,13 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021.
-# Sundeep Anand <suanand@redhat.com>, 2021.
+# Sundeep Anand <suanand@redhat.com>, 2021, 2022.
 # Charles Lee <lchopn@gmail.com>, 2021.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-01-23 02:00-0500\n"
-"PO-Revision-Date: 2021-09-01 13:04+0000\n"
+"PO-Revision-Date: 2022-02-15 11:16+0000\n"
 "Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
 "projects/candlepin/master/zh_CN/>\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.8\n"
+"X-Generator: Weblate 4.10.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -30,7 +30,7 @@ msgstr "所有者 {0}{1} 的自动附加功能已被禁用。"
 #: src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:191
 #, java-format
 msgid "Subscriptions deleted by {0}"
-msgstr "已被 {0} 删除的订阅"
+msgstr "被 {0} 删除的订阅"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -276,10 +276,8 @@ msgid "Error getting OAuth unit key"
 msgstr "获取 OAuth 单位密钥时出错"
 
 #: src/main/java/org/candlepin/auth/SSLAuth.java:103
-#, fuzzy
-#| msgid "Invalid Content-Type {0}"
 msgid "Invalid Certificate Type"
-msgstr "无效的 Content-Type {0}"
+msgstr "无效的证书类型"
 
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1304

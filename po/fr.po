@@ -1,14 +1,14 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021, 2022.
 # Nikos Moumoulidis <nmoumoul@redhat.com>, 2020. #zanata, 2021.
-# Sundeep Anand <suanand@redhat.com>, 2021.
+# Sundeep Anand <suanand@redhat.com>, 2021, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-01-23 02:00-0500\n"
 "PO-Revision-Date: 2022-02-15 11:16+0000\n"
-"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
+"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
 "candlepin/master/fr/>\n"
 "Language: fr\n"
@@ -278,10 +278,8 @@ msgid "Error getting OAuth unit key"
 msgstr "Erreur lors de l’obtention de la clé d’unité OAuth"
 
 #: src/main/java/org/candlepin/auth/SSLAuth.java:103
-#, fuzzy
-#| msgid "Invalid Content-Type {0}"
 msgid "Invalid Certificate Type"
-msgstr "Type de contenu non valide {0}"
+msgstr "Type de certificat non valide"
 
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1304
