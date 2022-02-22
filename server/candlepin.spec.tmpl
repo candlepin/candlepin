@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.15
+Version: 4.0.16
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -231,6 +231,13 @@ fi
 
 #raw
 %changelog
+* Tue Feb 22 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.16-1
+- 1964376: Fix to include products from new entitlements (selected via
+  auto-attach or bulk-pool attach) as entitled products for
+  entitlement certificate generation (prakgupt@redhat.com)
+- 2044946: System purpose compliance updates to correct db column
+  (wpoteat@redhat.com)
+
 * Wed Jan 19 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.15-1
 - Duplicate entity versions are now disallowed per-ID (crog@redhat.com)
 - Updated locking model surrounding orphan entity cleanup (crog@redhat.com)
