@@ -1280,10 +1280,11 @@ public class JobManager implements ModeChangeListener {
 
                 throw e;
             }
-            catch (Exception e) {
-                boolean retry = status.getAttempts() < status.getMaxAttempts();
-                status = this.processJobFailure(status, eventSink, e, retry);
+            catch (Throwable e) {
+                boolean retry = !(e instanceof Error) &&
+                    status.getAttempts() < status.getMaxAttempts();
 
+                status = this.processJobFailure(status, eventSink, e, retry);
                 throw new JobExecutionException(e);
             }
 

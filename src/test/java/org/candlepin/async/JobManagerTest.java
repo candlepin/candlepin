@@ -576,6 +576,137 @@ public class JobManagerTest {
     }
 
     @Test
+    public void testExecuteJobProperlyRecoversFromExceptions() throws JobException {
+        StateCollectingStatus status = new StateCollectingStatus(JOB_ID);
+        status.setJobKey(TestJob.JOB_KEY);
+
+        AsyncJob mockJob = mock(AsyncJob.class);
+        doThrow(new RuntimeException("test exception")).when(mockJob).execute(any(JobExecutionContext.class));
+
+        doReturn(mockJob).when(injector).getInstance(TestJob.class);
+        doReturn(new AsyncJobStatus().setState(JobState.QUEUED)).when(jobCurator).get(anyString());
+        this.injectMockedJobStatus(status);
+
+        JobManager manager = createJobManager();
+        manager.initialize();
+        manager.start();
+
+        assertThrows(Throwable.class, () -> manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY)));
+
+        List<JobState> jobStates = status.getCollectedStates();
+
+        assertNotNull(jobStates);
+        assertEquals(2, jobStates.size());
+        assertThat(jobStates, hasItems(JobState.RUNNING, JobState.FAILED));
+    }
+
+    @Test
+    public void testExecuteJobRetriesOnException() throws JobException {
+        StateCollectingStatus status = new StateCollectingStatus(JOB_ID);
+        status.setMaxAttempts(2)
+            .setJobKey(TestJob.JOB_KEY);
+
+        AsyncJob mockJob = mock(AsyncJob.class);
+        doThrow(new RuntimeException("test exception")).when(mockJob).execute(any(JobExecutionContext.class));
+
+        doReturn(mockJob).when(injector).getInstance(TestJob.class);
+        doReturn(new AsyncJobStatus().setState(JobState.QUEUED)).when(jobCurator).get(anyString());
+        this.injectMockedJobStatus(status);
+
+        JobManager manager = createJobManager();
+        manager.initialize();
+        manager.start();
+
+        // Note that this won't go through the cycle multiple times
+        assertThrows(Throwable.class, () -> manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY)));
+
+        List<JobState> jobStates = status.getCollectedStates();
+
+        assertNotNull(jobStates);
+        assertEquals(3, jobStates.size());
+        assertThat(jobStates, hasItems(JobState.RUNNING, JobState.FAILED_WITH_RETRY, JobState.QUEUED));
+    }
+
+    @Test
+    public void testExecuteJobDoesNotRetryOnTerminalException() throws JobException {
+        StateCollectingStatus status = new StateCollectingStatus(JOB_ID);
+        status.setMaxAttempts(100)
+            .setJobKey(TestJob.JOB_KEY);
+
+
+        AsyncJob mockJob = mock(AsyncJob.class);
+        JobExecutionException exception = new JobExecutionException("test exception", true);
+        doThrow(exception).when(mockJob).execute(any(JobExecutionContext.class));
+
+        doReturn(mockJob).when(injector).getInstance(TestJob.class);
+        doReturn(new AsyncJobStatus().setState(JobState.QUEUED)).when(jobCurator).get(anyString());
+        this.injectMockedJobStatus(status);
+
+        JobManager manager = createJobManager();
+        manager.initialize();
+        manager.start();
+
+        assertThrows(Throwable.class, () -> manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY)));
+
+        List<JobState> jobStates = status.getCollectedStates();
+
+        assertNotNull(jobStates);
+        assertEquals(2, jobStates.size());
+        assertThat(jobStates, hasItems(JobState.RUNNING, JobState.FAILED));
+    }
+
+    @Test
+    public void testExecuteJobProperlyRecoversFromErrors() throws JobException {
+        StateCollectingStatus status = new StateCollectingStatus(JOB_ID);
+        status.setJobKey(TestJob.JOB_KEY);
+
+        AsyncJob mockJob = mock(AsyncJob.class);
+        doThrow(new Error("test error, do not retry")).when(mockJob).execute(any(JobExecutionContext.class));
+
+        doReturn(mockJob).when(injector).getInstance(TestJob.class);
+        doReturn(new AsyncJobStatus().setState(JobState.QUEUED)).when(jobCurator).get(anyString());
+        this.injectMockedJobStatus(status);
+
+        JobManager manager = createJobManager();
+        manager.initialize();
+        manager.start();
+
+        assertThrows(Throwable.class, () -> manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY)));
+
+        List<JobState> jobStates = status.getCollectedStates();
+
+        assertNotNull(jobStates);
+        assertEquals(2, jobStates.size());
+        assertThat(jobStates, hasItems(JobState.RUNNING, JobState.FAILED));
+    }
+
+    @Test
+    public void testExecuteJobIgnoresRetriesOnError() throws JobException {
+        StateCollectingStatus status = new StateCollectingStatus(JOB_ID);
+        status.setMaxAttempts(100)
+            .setJobKey(TestJob.JOB_KEY);
+
+        AsyncJob mockJob = mock(AsyncJob.class);
+        doThrow(new Error("test error, do not retry")).when(mockJob).execute(any(JobExecutionContext.class));
+
+        doReturn(mockJob).when(injector).getInstance(TestJob.class);
+        doReturn(new AsyncJobStatus().setState(JobState.QUEUED)).when(jobCurator).get(anyString());
+        this.injectMockedJobStatus(status);
+
+        JobManager manager = createJobManager();
+        manager.initialize();
+        manager.start();
+
+        assertThrows(Throwable.class, () -> manager.executeJob(new JobMessage(JOB_ID, TestJob.JOB_KEY)));
+
+        List<JobState> collected = status.getCollectedStates();
+
+        assertNotNull(collected);
+        assertEquals(2, collected.size());
+        assertThat(collected, hasItems(JobState.RUNNING, JobState.FAILED));
+    }
+
+    @Test
     public void shouldSetJobExecutor() throws JobException {
         final AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY);
