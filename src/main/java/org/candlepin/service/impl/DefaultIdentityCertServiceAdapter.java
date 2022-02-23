@@ -83,8 +83,7 @@ public class DefaultIdentityCertServiceAdapter implements
         throws GeneralSecurityException, IOException {
 
         if (log.isDebugEnabled()) {
-            log.debug("Generating identity cert for consumer: " +
-                consumer.getUuid());
+            log.debug("Generating identity cert for consumer: {}", consumer.getUuid());
         }
 
         IdentityCertificate certificate = null;
