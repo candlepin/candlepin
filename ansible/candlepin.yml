@@ -33,9 +33,10 @@
         - name: "Include custom role if present"
           include_role:
             name: "{{cp_custom_role}}"
+            apply:
+              tags:
+                - custom
           when:
             - "cp_custom_role is defined"
       tags:
-        - user_env
         - custom
-        - system
