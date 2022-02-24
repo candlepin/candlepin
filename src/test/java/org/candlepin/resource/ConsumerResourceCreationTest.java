@@ -14,12 +14,15 @@
  */
 package org.candlepin.resource;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -39,6 +42,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.MapConfiguration;
 import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -46,6 +50,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
+import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
@@ -60,6 +65,8 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.EntitlementCurator;
+import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.IdentityCertificate;
@@ -162,6 +169,8 @@ public class ConsumerResourceCreationTest {
     @Mock private GuestIdCurator guestIdCurator;
     @Mock private PrincipalProvider principalProvider;
     @Mock private ContentOverrideValidator contentOverrideValidator;
+    @Mock private EnvironmentContentCurator environmentContentCurator;
+    @Mock private EntitlementCertificateGenerator entCertGenerator;
 
     protected ModelTranslator modelTranslator;
 
@@ -220,7 +229,9 @@ public class ConsumerResourceCreationTest {
             this.guestIdCurator,
             this.principalProvider,
             this.contentOverrideValidator,
-            this.consumerContentOverrideCurator
+            this.consumerContentOverrideCurator,
+            this.entCertGenerator,
+            this.environmentContentCurator
         );
 
         this.system = this.initConsumerType();
@@ -567,5 +578,88 @@ public class ConsumerResourceCreationTest {
         // Should be called with the consumer, null date (now),
         // no compliantUntil, and not update the consumer record
         verify(complianceRules).getStatus(any(Consumer.class), isNull(), eq(false), eq(false));
+    }
+
+    @Test
+    public void registerWithNoEnvironments() {
+        Principal p = new TrustedUserPrincipal("anyuser");
+        when(this.principalProvider.get()).thenReturn(p);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
+        consumer = resource.createConsumer(consumer, USER, owner.getKey(), null, true);
+        assertNull(consumer.getEnvironments());
+    }
+
+    @Test
+    public void registerWithEnvironmentUsingId() {
+        config.setProperty(ConfigProperties.HIDDEN_RESOURCES, "");
+
+        Principal p = new TrustedUserPrincipal("anyuser");
+        when(this.principalProvider.get()).thenReturn(p);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
+        EnvironmentDTO environmentDTO = new EnvironmentDTO().id("env1");
+        consumer.addEnvironments(environmentDTO);
+        doReturn(true).when(environmentCurator).exists(environmentDTO.getId());
+        Environment environment = new Environment();
+        environment.setId("env1");
+        doReturn(List.of(environment)).when(this.environmentCurator).getConsumerEnvironments(any());
+
+        consumer = resource.createConsumer(consumer, USER, owner.getKey(), null, true);
+        assertEquals(1, consumer.getEnvironments().size());
+    }
+
+    @Test
+    public void registerWithEnvironmentUsingName() {
+        config.setProperty(ConfigProperties.HIDDEN_RESOURCES, "");
+
+        Principal p = new TrustedUserPrincipal("anyuser");
+        when(this.principalProvider.get()).thenReturn(p);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
+        EnvironmentDTO environmentDTO = new EnvironmentDTO().name("envname1");
+        consumer.addEnvironments(environmentDTO);
+        doReturn("env1").when(environmentCurator).getEnvironmentIdByName(any(), any());
+        Environment environment = new Environment();
+        environment.setId("env1");
+        environment.setName("envname1");
+        doReturn(List.of(environment)).when(this.environmentCurator).getConsumerEnvironments(any());
+
+        consumer = resource.createConsumer(consumer, USER, owner.getKey(), null, true);
+        assertEquals(1, consumer.getEnvironments().size());
+    }
+
+    @Test
+    public void registerWithMultipleEnvironments() {
+        config.setProperty(ConfigProperties.HIDDEN_RESOURCES, "");
+
+        Principal p = new TrustedUserPrincipal("anyuser");
+        when(this.principalProvider.get()).thenReturn(p);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
+        EnvironmentDTO environmentDTO1 = new EnvironmentDTO().id("env1");
+        EnvironmentDTO environmentDTO2 = new EnvironmentDTO().id("env2");
+        consumer.addEnvironments(environmentDTO1);
+        consumer.addEnvironments(environmentDTO2);
+        doReturn(true).when(environmentCurator).exists(any());
+        Environment environment1 = new Environment();
+        environment1.setId("env1");
+        Environment environment2 = new Environment();
+        environment2.setId("env2");
+        doReturn(List.of(environment1, environment2)).when(this.environmentCurator)
+            .getConsumerEnvironments(any());
+
+        consumer = resource.createConsumer(consumer, USER, owner.getKey(), null, true);
+        assertEquals(2, consumer.getEnvironments().size());
+    }
+
+    @Test
+    public void registerWithEnvironmentWhileEnvironmentResourceHiddenThrowsException() {
+        config.setProperty(ConfigProperties.HIDDEN_RESOURCES, "environments");
+
+        Principal p = new TrustedUserPrincipal("anyuser");
+        when(this.principalProvider.get()).thenReturn(p);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
+        EnvironmentDTO environmentDTO = new EnvironmentDTO().id("env1");
+        consumer.addEnvironments(environmentDTO);
+
+        assertThrows(BadRequestException.class, () ->
+            resource.createConsumer(consumer, USER, owner.getKey(), null, true));
     }
 }

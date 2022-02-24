@@ -40,6 +40,7 @@ import org.candlepin.controller.AutobindDisabledForOwnerException;
 import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -56,6 +57,7 @@ import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.DeleteResult;
 import org.candlepin.dto.api.v1.EntitlementDTO;
+import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
 import org.candlepin.dto.api.v1.HypervisorIdDTO;
@@ -66,6 +68,7 @@ import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.CandlepinException;
+import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
@@ -95,7 +98,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
-import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
@@ -123,7 +126,9 @@ import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
+import org.candlepin.resource.util.EntitlementEnvironmentFilter;
 import org.candlepin.resource.util.EntitlementFinderUtil;
+import org.candlepin.resource.util.EnvironmentUpdates;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resource.validation.DTOValidator;
@@ -178,7 +183,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 
-
 /**
  * API Gateway for Consumers
  */
@@ -225,12 +229,13 @@ public class ConsumerResource implements ConsumersApi {
     private final PrincipalProvider principalProvider;
     private final ContentOverrideValidator coValidator;
     private final ConsumerContentOverrideCurator ccoCurator;
-
+    private final EntitlementCertificateGenerator entCertGenerator;
     private final Pattern consumerSystemNamePattern;
     private final Pattern consumerPersonNamePattern;
+    private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
 
     @Inject
-    @SuppressWarnings({ "checkstyle:parameternumber" })
+    @SuppressWarnings({"checkstyle:parameternumber"})
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
         SubscriptionServiceAdapter subAdapter,
@@ -267,7 +272,9 @@ public class ConsumerResource implements ConsumersApi {
         GuestIdCurator guestIdCurator,
         PrincipalProvider principalProvider,
         ContentOverrideValidator coValidator,
-        ConsumerContentOverrideCurator ccoCurator) {
+        ConsumerContentOverrideCurator ccoCurator,
+        EntitlementCertificateGenerator entCertGenerator,
+        EnvironmentContentCurator environmentContentCurator) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
@@ -310,6 +317,9 @@ public class ConsumerResource implements ConsumersApi {
             ConfigProperties.CONSUMER_PERSON_NAME_PATTERN));
         this.consumerSystemNamePattern = Pattern.compile(config.getString(
             ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
+        this.entCertGenerator = Objects.requireNonNull(entCertGenerator);
+        this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(
+            entitlementCurator, environmentContentCurator);
     }
 
     /**
@@ -768,15 +778,6 @@ public class ConsumerResource implements ConsumersApi {
             entity.setReleaseVer(new Release(dto.getReleaseVer().getReleaseVer()));
         }
 
-        if (dto.getEnvironment() != null) {
-            Environment env = environmentCurator.get(dto.getEnvironment().getId());
-            if (env == null) {
-                throw new NotFoundException(i18n.tr("Environment \"{0}\" could not be found.",
-                    dto.getEnvironment().getId()));
-            }
-            entity.setEnvironment(env);
-        }
-
         if (dto.getLastCheckin() != null) {
             entity.setLastCheckin(Util.toDate(dto.getLastCheckin()));
         }
@@ -1002,6 +1003,8 @@ public class ConsumerResource implements ConsumersApi {
             Date createdDate = consumerToCreate.getCreated();
             Date lastCheckIn = consumerToCreate.getLastCheckin();
 
+            this.updateEnvironments(consumer, consumerToCreate, false);
+
             // create sets created to current time.
             consumerToCreate = consumerCurator.create(consumerToCreate);
 
@@ -1218,7 +1221,7 @@ public class ConsumerResource implements ConsumersApi {
                     change = true;
                 }
             }
-            else if (getFactValue(update.getFacts(), "distributor_version") !=  null) {
+            else if (getFactValue(update.getFacts(), "distributor_version") != null) {
                 DistributorVersion dv = distributorVersionCurator.findByName(
                     getFactValue(update.getFacts(), "distributor_version"));
 
@@ -1523,18 +1526,19 @@ public class ConsumerResource implements ConsumersApi {
             changesMade = true;
         }
 
-        if (updated.getReleaseVer() != null && updated.getReleaseVer().getReleaseVer() != null &&
-            !updated.getReleaseVer().getReleaseVer().equals(toUpdate.getReleaseVer() == null ? null :
-            toUpdate.getReleaseVer().getReleaseVer())) {
-
-            log.info("   Updating consumer releaseVer setting.");
-            toUpdate.setReleaseVer(new Release(updated.getReleaseVer().getReleaseVer()));
-            changesMade = true;
+        if (updated.getReleaseVer() != null && updated.getReleaseVer().getReleaseVer() != null) {
+            String releaseVer = toUpdate.getReleaseVer() == null ?
+                null : toUpdate.getReleaseVer().getReleaseVer();
+            if (!updated.getReleaseVer().getReleaseVer().equals(releaseVer)) {
+                log.info("   Updating consumer releaseVer setting.");
+                toUpdate.setReleaseVer(new Release(updated.getReleaseVer().getReleaseVer()));
+                changesMade = true;
+            }
         }
 
         changesMade = updateSystemPurposeData(updated, toUpdate) || changesMade;
 
-        changesMade = updateEnvironment(updated, toUpdate) || changesMade;
+        changesMade = updateEnvironments(updated, toUpdate, true) || changesMade;
 
         // like the other values in an update, if consumer name is null, act as if
         // it should remain the same
@@ -1604,57 +1608,103 @@ public class ConsumerResource implements ConsumersApi {
     }
 
     /**
-     * Updates consumer environment either by environment name or id, reset & re-generate CA certs.
+     * Validates and updates consumer's multiple environments.
+     *
+     * @param updated
+     *  The incoming consumer DTO for which to fetch multiple environments object
+     * @param toUpdate
+     *  The consumer instance to set the validated environments
+     * @param existing
+     *  This identifies whether the consumer is new or existing
+     *  if existing=true, it will regenerate the certificates
+     *
+     * @throws NotFoundException
+     *  if environment is not found by provided id or name
+     *
+     * @throws ConflictException
+     *  if environment is specified more than once
+     *
      * @return boolean status whether any updates are made or not.
      */
-    private boolean updateEnvironment(ConsumerDTO updated, Consumer toUpdate) {
-        if (updated.getEnvironment() == null) {
+    private boolean updateEnvironments(ConsumerDTO updated, Consumer toUpdate, boolean existing) {
+        List<EnvironmentDTO> environments = updated.getEnvironments();
+
+        if (environments == null) {
             return false;
         }
 
+        if (!environments.isEmpty() &&
+            this.config.getString(ConfigProperties.HIDDEN_RESOURCES).contains("environments")) {
+            throw new BadRequestException(i18n.tr("Server does not support environments."));
+        }
+
         boolean changesMade = false;
-        String environmentId = updated.getEnvironment() == null ? null : updated.getEnvironment().getId();
-        String environmentName = updated.getEnvironment() == null ? null : updated.getEnvironment().getName();
-        String validatedEnvId = null;
+        List<String> validatedEnvIds = new ArrayList<>();
 
-        if (environmentId != null) {
-            if (toUpdate.getEnvironmentId() == null || !toUpdate.getEnvironmentId().equals(environmentId)) {
+        for (EnvironmentDTO environment : environments) {
+            String environmentId = environment == null ? null : environment.getId();
+            String environmentName = environment == null ? null : environment.getName();
 
+            if (environmentId != null) {
                 if (!environmentCurator.exists(environmentId)) {
                     throw new NotFoundException(i18n.tr(
                         "Environment with ID \"{0}\" could not be found.", environmentId));
                 }
+            }
+            else if (environmentName != null) {
+                environmentId = this.environmentCurator
+                    .getEnvironmentIdByName(toUpdate.getOwnerId(), environmentName);
 
-                validatedEnvId = environmentId;
+                if (environmentId == null) {
+                    throw new NotFoundException(i18n.tr(
+                        "Environment with name \"{0}\" could not be found.", environmentName));
+                }
+            }
+            else {
+                throw new NotFoundException(i18n.tr("Environment could not be" +
+                    " found using provided details."));
             }
 
+            if (validatedEnvIds.contains(environmentId)) {
+                throw new ConflictException(i18n.tr("Environment \"{0}\"" +
+                    " specified more than once." + environmentId));
+            }
+
+            validatedEnvIds.add(environmentId);
         }
-        else if (environmentName != null) {
-            String envId = this.environmentCurator.
-                getEnvironmentIdByName(toUpdate.getOwnerId(), environmentName);
 
-            if (envId == null) {
-                throw new NotFoundException(i18n.tr(
-                    "Environment with name \"{0}\" could not be found.", environmentName));
+        if (validatedEnvIds.size() > 0) {
+            List<String> preExistingEnvIds = null;
+
+            if (!toUpdate.getEnvironmentIds().isEmpty()) {
+                preExistingEnvIds = toUpdate.getEnvironmentIds();
             }
 
-            if (toUpdate.getEnvironmentId() == null || !envId.equals(toUpdate.getEnvironmentId())) {
-                validatedEnvId = envId;
+            toUpdate.setEnvironmentIds(validatedEnvIds);
+
+            if (existing) {
+                // reset content access cert
+                Owner owner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
+
+                if (owner.isUsingSimpleContentAccess()) {
+                    toUpdate.setContentAccessCert(null);
+                    this.contentAccessManager.removeContentAccessCert(toUpdate);
+                }
+
+                // lazily regenerate certs, so the client can still work
+                if (preExistingEnvIds != null) {
+                    EnvironmentUpdates environmentUpdates = new EnvironmentUpdates();
+                    environmentUpdates.put(toUpdate.getId(), preExistingEnvIds, validatedEnvIds);
+                    Set<String> entitlementsToBeRegenerated = entitlementEnvironmentFilter
+                        .filterEntitlements(environmentUpdates);
+                    this.entCertGenerator
+                        .regenerateCertificatesByEntitlementIds(entitlementsToBeRegenerated, true);
+                }
+                else {
+                    this.entCertGenerator.regenerateCertificatesOf(toUpdate, true);
+                }
             }
-        }
 
-        if (validatedEnvId != null) {
-            toUpdate.setEnvironmentId(validatedEnvId);
-            // reset content access cert
-            Owner owner = ownerCurator.findOwnerById(toUpdate.getOwnerId());
-
-            if (owner.isUsingSimpleContentAccess()) {
-                toUpdate.setContentAccessCert(null);
-                this.contentAccessManager.removeContentAccessCert(toUpdate);
-            }
-
-            // lazily regenerate certs, so the client can still work
-            poolManager.regenerateCertificatesOf(toUpdate, true);
             changesMade = true;
         }
 
@@ -2348,9 +2398,9 @@ public class ConsumerResource implements ConsumersApi {
             String message = "";
 
             if (owner.isUsingSimpleContentAccess()) {
-                log.debug("Organization \"{0}\" has auto-attach disabled because " +
+                log.debug("Organization \"{}\" has auto-attach disabled because " +
                     "of the content access mode setting.", owner.getKey());
-                return Collections.EMPTY_LIST;
+                return Collections.emptyList();
             }
             else {
                 message = (i18n.tr("Organization \"{0}\" has auto-attach disabled.", owner.getKey()));
@@ -2844,7 +2894,6 @@ public class ConsumerResource implements ConsumersApi {
     }
 
 
-
     private void addCalculatedAttributes(Entitlement ent) {
         // With no consumer/date, this will not build suggested quantity
         Map<String, String> calculatedAttributes =
@@ -2863,7 +2912,7 @@ public class ConsumerResource implements ConsumersApi {
     @RootResource.LinkedResource
     public CandlepinQuery<GuestIdDTOArrayElement> getGuestIds(@Verify(Consumer.class) String consumerUuid) {
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
-        return  translator.translateQuery(guestIdCurator.listByConsumer(consumer),
+        return translator.translateQuery(guestIdCurator.listByConsumer(consumer),
             GuestIdDTOArrayElement.class);
     }
 
@@ -3034,5 +3083,4 @@ public class ConsumerResource implements ConsumersApi {
             }
         }
     }
-
 }

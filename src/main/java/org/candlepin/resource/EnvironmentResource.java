@@ -21,6 +21,7 @@ import org.candlepin.async.tasks.RegenEnvEntitlementCertsJob;
 import org.candlepin.auth.SecurityHole;
 import org.candlepin.auth.Verify;
 import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
@@ -38,6 +39,7 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
@@ -45,6 +47,8 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.OwnerContentCurator;
+import org.candlepin.resource.util.EntitlementEnvironmentFilter;
+import org.candlepin.resource.util.EnvironmentUpdates;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.util.RdbmsExceptionTranslator;
 
@@ -56,12 +60,15 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
@@ -88,6 +95,8 @@ public class EnvironmentResource implements EnvironmentsApi {
     private final CertificateSerialCurator certificateSerialCurator;
     private final IdentityCertificateCurator identityCertificateCurator;
     private final ContentAccessCertificateCurator contentAccessCertificateCurator;
+    private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
+    private final EntitlementCertificateGenerator entCertGenerator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
@@ -97,7 +106,8 @@ public class EnvironmentResource implements EnvironmentsApi {
         JobManager jobManager, DTOValidator validator, ContentAccessManager contentAccessManager,
         CertificateSerialCurator certificateSerialCurator,
         IdentityCertificateCurator identityCertificateCurator,
-        ContentAccessCertificateCurator contentAccessCertificateCurator) {
+        ContentAccessCertificateCurator contentAccessCertificateCurator,
+        EntitlementCurator entCurator, EntitlementCertificateGenerator entCertGenerator) {
 
         this.envCurator = Objects.requireNonNull(envCurator);
         this.i18n = Objects.requireNonNull(i18n);
@@ -114,6 +124,8 @@ public class EnvironmentResource implements EnvironmentsApi {
         this.certificateSerialCurator = Objects.requireNonNull(certificateSerialCurator);
         this.identityCertificateCurator = Objects.requireNonNull(identityCertificateCurator);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
+        this.entCertGenerator = entCertGenerator;
+        this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(entCurator, envContentCurator);
     }
 
     /**
@@ -153,16 +165,55 @@ public class EnvironmentResource implements EnvironmentsApi {
             throw new NotFoundException(i18n.tr("No such environment: {0}", envId));
         }
 
-        List<Consumer> consumers = this.envCurator.getEnvironmentConsumers(environment).list();
-        deleteConsumers(environment, consumers);
+        List<Consumer> consumers = this.envCurator.getEnvironmentConsumers(environment);
+        List<Consumer> consumersToDelete = consumers.stream()
+            .filter(consumer -> consumer.getEnvironmentIds().size() == 1)
+            .collect(Collectors.toList());
+        deleteConsumers(environment, consumersToDelete);
+
+        List<Consumer> consumersToKeep = consumers.stream()
+            .filter(consumer -> consumer.getEnvironmentIds().size() > 1)
+            .collect(Collectors.toList());
+        removeConsumersFromEnvironment(environment, consumersToKeep);
 
         log.info("Deleting environment: {}", environment);
         this.envCurator.delete(environment);
     }
 
-    private void deleteConsumers(Environment environment, List<Consumer> consumers) {
+    private void removeConsumersFromEnvironment(Environment environment, List<Consumer> consumers) {
         if (consumers.isEmpty()) {
             log.info("No consumers found in environment: {}", environment);
+            return;
+        }
+        // No need to delete env from consumers manually. It will be handled by cascading delete.
+        List<String> consumerIds = consumers.stream()
+            .map(Consumer::getId)
+            .collect(Collectors.toList());
+
+        Set<String> entitlementsToBeRegenerated = this.entitlementEnvironmentFilter
+            .filterEntitlements(prepareEnvironmentUpdates(environment, consumerIds));
+        this.entCertGenerator.regenerateCertificatesByEntitlementIds(entitlementsToBeRegenerated, true);
+
+        for (Consumer consumer : consumers) {
+            this.contentAccessManager.removeContentAccessCert(consumer);
+        }
+    }
+
+    private EnvironmentUpdates prepareEnvironmentUpdates(Environment environment, List<String> consumerIds) {
+        EnvironmentUpdates environmentUpdate = new EnvironmentUpdates();
+        Map<String, List<String>> envsByConsumerId = this.envCurator.findEnvironmentsOf(consumerIds);
+        for (Map.Entry<String, List<String>> consumerEnvs : envsByConsumerId.entrySet()) {
+            List<String> updatedEnvs = consumerEnvs.getValue().stream()
+                .filter(s -> !environment.getId().equals(s))
+                .collect(Collectors.toList());
+            environmentUpdate.put(consumerEnvs.getKey(), consumerEnvs.getValue(), updatedEnvs);
+        }
+        return environmentUpdate;
+    }
+
+    private void deleteConsumers(Environment environment, List<Consumer> consumers) {
+        if (consumers.isEmpty()) {
+            log.info("No consumers found for deletion with environment: {}", environment);
             return;
         }
         // Cleanup all consumers and their entitlements:
@@ -172,15 +223,15 @@ public class EnvironmentResource implements EnvironmentsApi {
         List<String> idCertsToDelete = new ArrayList<>(consumers.size());
         List<String> caCertsToDelete = new ArrayList<>(consumers.size());
 
-        for (Consumer c : consumers) {
-            log.info("Deleting consumer: {}", c);
+        for (Consumer consumer : consumers) {
+            log.info("Deleting consumer: {}", consumer);
 
-            IdentityCertificate idCert = c.getIdCert();
+            IdentityCertificate idCert = consumer.getIdCert();
             if (idCert != null) {
                 idCertsToDelete.add(idCert.getId());
                 serialsToRevoke.add(idCert.getSerial().getId());
             }
-            ContentAccessCertificate contentAccessCert = c.getContentAccessCert();
+            ContentAccessCertificate contentAccessCert = consumer.getContentAccessCert();
             if (contentAccessCert != null) {
                 caCertsToDelete.add(contentAccessCert.getId());
                 serialsToRevoke.add(contentAccessCert.getSerial().getId());
@@ -188,8 +239,8 @@ public class EnvironmentResource implements EnvironmentsApi {
 
             // We're about to delete these consumers; no need to regen/dirty their dependent
             // entitlements or recalculate status.
-            this.poolManager.revokeAllEntitlements(c, false);
-            this.consumerCurator.delete(c);
+            this.poolManager.revokeAllEntitlements(consumer, false);
+            this.consumerCurator.delete(consumer);
         }
 
         int deletedCerts = this.identityCertificateCurator.deleteByIds(idCertsToDelete);
@@ -299,16 +350,34 @@ public class EnvironmentResource implements EnvironmentsApi {
     @Override
     @SecurityHole(noAuth = true)
     public ConsumerDTO createConsumerInEnvironment(String envId, ConsumerDTO consumer,
-        String userName, String ownerKey, String activationKeys) throws BadRequestException {
+        String userName, String activationKeys) throws BadRequestException {
 
         this.validator.validateConstraints(consumer);
         this.validator.validateCollectionElementsNotNull(consumer::getInstalledProducts,
             consumer::getGuestIds, consumer::getCapabilities);
 
-        Environment e = lookupEnvironment(envId);
-        consumer.setEnvironment(translator.translate(e, EnvironmentDTO.class));
+        List<EnvironmentDTO> environmentDTOs = Arrays.stream(envId.trim().split("\\s*,\\s*"))
+            .map(this::lookupEnvironment)
+            .map(this.translator.getStreamMapper(Environment.class, EnvironmentDTO.class))
+            .collect(Collectors.toList());
+
+        // Check if all envs belongs to same org
+        BinaryOperator<String> unify = (prev, next) -> {
+            if (prev != null && !prev.equals(next)) {
+                throw new BadRequestException(i18n.tr("Two or more environments " +
+                    "belong to different organizations"));
+            }
+
+            return next;
+        };
+
+        String ownerKey = environmentDTOs.stream()
+            .map(env -> env.getOwner().getKey())
+            .reduce(null, unify);
+
+        consumer.setEnvironments(environmentDTOs);
         return this.consumerResource.createConsumer(consumer, userName,
-            e.getOwner().getKey(), activationKeys, true);
+            ownerKey, activationKeys, true);
     }
 
     /**

@@ -98,7 +98,7 @@ describe 'Consumer Dev Resource' do
   it 'should not allow entitlement for consumer past expiration' do
     created_date = '2015-05-09T13:23:55+0000'
     consumer = @user.register(random_string('system'), type=:system, nil, facts = {:dev_sku => @dev_product_1['id']},
-      @username, @owner['key'], [], [], nil, [], nil, [], created_date)
+      @username, @owner['key'], [], [], [], [], nil, [], created_date)
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     expected_error = "Unable to attach subscription for the product \"#{@dev_product_1['id']}\": Subscriptions for #{@dev_product_1['id']} expired on:"
 

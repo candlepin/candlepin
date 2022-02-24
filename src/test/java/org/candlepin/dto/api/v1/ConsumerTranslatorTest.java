@@ -39,6 +39,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Release;
 import org.candlepin.util.Util;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -46,6 +47,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Test suite for the ConsumerTranslator class
@@ -105,7 +107,13 @@ public class ConsumerTranslatorTest extends
     @Override
     protected Consumer initSourceObject() {
         ConsumerType ctype = this.consumerTypeTranslatorTest.initSourceObject();
-        Environment environment = this.environmentTranslatorTest.initSourceObject();
+        Environment environment1 = this.environmentTranslatorTest.initSourceObject();
+        environment1.setId("env-1");
+        environment1.setName("env-name-1");
+        Environment environment2 = this.environmentTranslatorTest.initSourceObject();
+        environment2.setId("env-2");
+        environment2.setName("env-name-2");
+        List<Environment> environments = Arrays.asList(environment1, environment2);
         Owner owner = this.ownerTranslatorTest.initSourceObject();
         when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
 
@@ -123,7 +131,8 @@ public class ConsumerTranslatorTest extends
         consumer.setServiceType("consumer_service_type");
         consumer.setReleaseVer(new Release("releaseVer"));
         consumer.setOwner(owner);
-        consumer.setEnvironment(environment);
+        consumer.addEnvironment(environment1);
+        consumer.addEnvironment(environment2);
         consumer.setEntitlementCount(0L);
         consumer.setLastCheckin(new Date());
         consumer.setCanActivate(Boolean.TRUE);
@@ -186,8 +195,9 @@ public class ConsumerTranslatorTest extends
         when(mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
         when(mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
-        when(mockEnvironmentCurator.get(eq(environment.getId()))).thenReturn(environment);
-        when(mockEnvironmentCurator.getConsumerEnvironment(eq(consumer))).thenReturn(environment);
+        when(mockEnvironmentCurator.get(eq(environment1.getId()))).thenReturn(environment1);
+        when(mockEnvironmentCurator.get(eq(environment2.getId()))).thenReturn(environment2);
+        when(mockEnvironmentCurator.getConsumerEnvironments(eq(consumer))).thenReturn(environments);
 
         return consumer;
     }
@@ -199,6 +209,7 @@ public class ConsumerTranslatorTest extends
     }
 
     @Override
+    @SuppressWarnings("checkstyle:methodlength")
     protected void verifyOutput(Consumer source, ConsumerDTO dest, boolean childrenGenerated) {
 
         if (source != null) {
@@ -226,8 +237,32 @@ public class ConsumerTranslatorTest extends
                 ConsumerType ctype = this.mockConsumerTypeCurator.getConsumerType(source);
                 this.consumerTypeTranslatorTest.verifyOutput(ctype, dest.getType(), true);
 
-                Environment environment = this.mockEnvironmentCurator.getConsumerEnvironment(source);
-                this.environmentTranslatorTest.verifyOutput(environment, dest.getEnvironment(), true);
+                List<Environment> srcEnvironments = mockEnvironmentCurator.getConsumerEnvironments(source);
+                List<EnvironmentDTO> destEnvironments = dest.getEnvironments();
+
+                if (srcEnvironments != null && destEnvironments != null) {
+
+                    assertEquals(srcEnvironments.size(), dest.getEnvironments().size());
+
+                    for (int i = 0; i < srcEnvironments.size(); i++) {
+
+                        Environment srcEnvironment = srcEnvironments.get(i);
+                        EnvironmentDTO destEnvironmentDTO = destEnvironments.get(i);
+
+                        assertNotNull(srcEnvironment);
+                        assertNotNull(destEnvironmentDTO);
+
+                        this.environmentTranslatorTest.verifyOutput(srcEnvironment, destEnvironmentDTO, true);
+                    }
+
+                    // Priority ordered environment names
+                    assertEquals(dest.getEnvironment().getName(), destEnvironments.stream()
+                        .map(EnvironmentDTO::getName)
+                        .collect(Collectors.joining(",")));
+                }
+                else {
+                    assertNull(dest.getEnvironments());
+                }
 
                 assertEquals(source.getReleaseVer().getReleaseVer(), dest.getReleaseVer().getReleaseVer());
                 String destOwnerId = null;
@@ -291,7 +326,7 @@ public class ConsumerTranslatorTest extends
             else {
                 assertNull(dest.getReleaseVer());
                 assertNull(dest.getOwner());
-                assertNull(dest.getEnvironment());
+                assertNull(dest.getEnvironments());
                 assertNull(dest.getHypervisorId());
                 assertNull(dest.getType());
                 assertNull(dest.getIdCert());

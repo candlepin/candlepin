@@ -14,12 +14,17 @@
  */
 package org.candlepin.model;
 
+import com.google.common.collect.Iterables;
+
 import org.hibernate.criterion.Restrictions;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.inject.Singleton;
-
+import javax.persistence.Query;
 
 
 /**
@@ -27,7 +32,6 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class EnvironmentContentCurator extends AbstractHibernateCurator<EnvironmentContent> {
-
     public EnvironmentContentCurator() {
         super(EnvironmentContent.class);
     }
@@ -56,4 +60,43 @@ public class EnvironmentContentCurator extends AbstractHibernateCurator<Environm
             .list();
     }
 
+    /**
+     * Returns the map of environment ID & its respective content UUIDs
+     *
+     * @params environmentIds
+     *  List of environment IDs
+     *
+     * @return
+     *  Map of environmentIds & respective contentUUIDs
+     */
+    public Map<String, List<String>> getEnvironmentContentUUIDs(Iterable<String> environmentIds) {
+        Map<String, List<String>> contentUUIDMap = new HashMap<>();
+
+        String jpql = "SELECT e.id, ec.content.uuid FROM EnvironmentContent ec " +
+            "JOIN Environment e ON ec.environment.id = e.id " +
+            "WHERE e.id IN (:envIDs)";
+
+        Query query = this.getEntityManager().createQuery(jpql, Object[].class);
+        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() - 1);
+
+        for (List<String> block : Iterables.partition(environmentIds, blockSize)) {
+            query.setParameter("envIDs", block);
+            processData(contentUUIDMap, query.getResultList());
+        }
+
+        return contentUUIDMap;
+    }
+
+    /**
+     * Process the result list (row) which contains entitlement ID & content UUID to
+     * build a map.
+     */
+    private void processData(Map<String, List<String>> contentUUIDMap, List<Object[]> resultList) {
+        for (Object[] result : resultList) {
+            String envId = result[0].toString();
+            List<String> ids = contentUUIDMap.getOrDefault(envId, new ArrayList<>());
+            ids.add(result[1].toString());
+            contentUUIDMap.put(envId, ids);
+        }
+    }
 }

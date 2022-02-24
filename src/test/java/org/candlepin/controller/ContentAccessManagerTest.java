@@ -28,10 +28,10 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.nullable;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -95,8 +95,6 @@ import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
 
@@ -167,7 +165,7 @@ public class ContentAccessManagerTest {
         doReturn(this.testingKeyPair).when(this.mockKeyPairCurator).getConsumerKeyPair(any(Consumer.class));
 
         doAnswer(iom -> {
-            CertificateSerial serial = (CertificateSerial) iom.getArgument(0);
+            CertificateSerial serial = iom.getArgument(0);
 
             if (serial != null) {
                 serial.setId(Util.generateUniqueLong());
@@ -298,7 +296,7 @@ public class ContentAccessManagerTest {
         Environment environment = new Environment("test_environment", "test_environment", owner);
         environment.setEnvironmentContent(Util.asSet(new EnvironmentContent(environment, content, true)));
 
-        consumer.setEnvironment(environment);
+        consumer.addEnvironment(environment);
 
         doReturn(environment).when(this.mockEnvironmentCurator).get(eq(environment.getId()));
         doReturn(environment).when(this.mockEnvironmentCurator).getConsumerEnvironment(eq(consumer));
@@ -568,10 +566,9 @@ public class ContentAccessManagerTest {
     }
 
     private void verifyContainerContentPath(String expected) throws Exception {
-        ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<org.candlepin.model.dto.Product>> captor = ArgumentCaptor.forClass(List.class);
 
-        verify(this.x509V3ExtensionUtil, times(1)).getByteExtensions(nullable(Product.class),
-            captor.capture(), nullable(String.class), nullable(Map.class));
+        verify(this.x509V3ExtensionUtil, times(1)).getByteExtensions(captor.capture());
 
         List<org.candlepin.model.dto.Product> products = captor.getValue();
 
@@ -592,35 +589,15 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testContentPrefixShouldBeOmittedInHosted() throws Exception {
-        this.config.setProperty(ConfigProperties.STANDALONE, "false");
-
-        Owner owner = this.mockOwner();
-        Consumer consumer = this.mockConsumer(owner);
-        Content content = this.mockContent(owner);
-        Product product = this.mockProduct(owner, content);
-        Pool pool = this.mockPool(product);
-        Entitlement entitlement = this.mockEntitlement(owner, consumer, pool);
-
-        String expectedPrefix = "";
-
-        ContentAccessManager manager = this.createManager();
-        manager.getCertificate(consumer);
-
-        verify(this.x509V3ExtensionUtil, times(1)).mapProduct(any(Product.class), any(Product.class),
-            eq(expectedPrefix), any(Map.class), any(Consumer.class), any(Pool.class), any(Set.class));
-    }
-
-    @Test
     public void testContainerContentPathShouldUseOwnerKeyInHosted() throws Exception {
         this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         Content content = this.mockContent(owner);
-        Product product = this.mockProduct(owner, content);
-        Pool pool = this.mockPool(product);
-        Entitlement entitlement = this.mockEntitlement(owner, consumer, pool);
+        Environment environment = this.mockEnvironment(owner, consumer, content);
+        when(mockEnvironmentCurator.getConsumerEnvironments(any(Consumer.class)))
+            .thenReturn(List.of(environment));
 
         String expectedPath = "/sca/" + owner.getKey();
 
@@ -631,43 +608,20 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testContentPrefixesShouldBeUsedInStandalone() throws Exception {
-        this.config.setProperty(ConfigProperties.STANDALONE, "true");
-
-        Owner owner = this.mockOwner();
-        Consumer consumer = this.mockConsumer(owner);
-        Content content = this.mockContent(owner);
-        Product product = this.mockProduct(owner, content);
-        Pool pool = this.mockPool(product);
-        Entitlement entitlement = this.mockEntitlement(owner, consumer, pool);
-
-        String expectedPrefix = "/" + owner.getKey();
-
-        ContentAccessManager manager = this.createManager();
-        manager.getCertificate(consumer);
-
-        verify(this.x509V3ExtensionUtil, times(1)).mapProduct(any(Product.class), any(Product.class),
-            eq(expectedPrefix), any(Map.class), any(Consumer.class), any(Pool.class), any(Set.class));
-    }
-
-    @Test
     public void testContainerContentPathShouldBeContentPrefixInStandalone() throws Exception {
         this.config.setProperty(ConfigProperties.STANDALONE, "true");
 
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         Content content = this.mockContent(owner);
-        Product product = this.mockProduct(owner, content);
-        Pool pool = this.mockPool(product);
-        Entitlement entitlement = this.mockEntitlement(owner, consumer, pool);
+        Environment environment = this.mockEnvironment(owner, consumer, content);
+        when(mockEnvironmentCurator.getConsumerEnvironments(any(Consumer.class)))
+            .thenReturn(List.of(environment));
 
-        String expectedPath = "/" + owner.getKey();
+        String expectedPath = "/" + owner.getKey() + "/" + environment.getName();
 
         ContentAccessManager manager = this.createManager();
         manager.getCertificate(consumer);
-
-        verify(this.x509V3ExtensionUtil, times(1)).mapProduct(any(Product.class), any(Product.class),
-            eq(expectedPath), any(Map.class), any(Consumer.class), any(Pool.class), any(Set.class));
 
         this.verifyContainerContentPath(expectedPath);
     }
@@ -679,45 +633,16 @@ public class ContentAccessManagerTest {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         Content content = this.mockContent(owner);
-        Product product = this.mockProduct(owner, content);
-        Pool pool = this.mockPool(product);
-        Entitlement entitlement = this.mockEntitlement(owner, consumer, pool);
         Environment environment = this.mockEnvironment(owner, consumer, content);
+        when(mockEnvironmentCurator.getConsumerEnvironments(any(Consumer.class)))
+            .thenReturn(List.of(environment));
 
         String expectedPrefix = "/" + owner.getKey() + "/" + environment.getName();
 
         ContentAccessManager manager = this.createManager();
         manager.getCertificate(consumer);
 
-        verify(this.x509V3ExtensionUtil, times(1)).mapProduct(any(Product.class), any(Product.class),
-            eq(expectedPrefix), any(Map.class), any(Consumer.class), any(Pool.class), any(Set.class));
-
         this.verifyContainerContentPath(expectedPrefix);
-    }
-
-    @Test
-    public void testContentPrefixEncoding() throws Exception {
-        this.config.setProperty(ConfigProperties.STANDALONE, "true");
-
-        Owner owner = this.mockOwner();
-        Consumer consumer = this.mockConsumer(owner);
-        Content content = this.mockContent(owner);
-        Product product = this.mockProduct(owner, content);
-        Pool pool = this.mockPool(product);
-        Entitlement entitlement = this.mockEntitlement(owner, consumer, pool);
-        Environment environment = this.mockEnvironment(owner, consumer, content);
-
-        owner.setKey("org! #$%&'()*+,/123:;=?@[]\"-.<>\\^_`{|}~£円");
-        environment.setName("foo/test environment #1/bar");
-
-        String expectedPrefix = "/org%21+%23%24%25%26%27%28%29*%2B%2C%2F123%3A%3B%3D%3F%40%5B%5D%22" +
-            "-.%3C%3E%5C%5E_%60%7B%7C%7D%7E%C2%A3%E5%86%86/foo/test+environment+%231/bar";
-
-        ContentAccessManager manager = this.createManager();
-        manager.getCertificate(consumer);
-
-        verify(this.x509V3ExtensionUtil, times(1)).mapProduct(any(Product.class), any(Product.class),
-            eq(expectedPrefix), any(Map.class), any(Consumer.class), any(Pool.class), any(Set.class));
     }
 
     @Test

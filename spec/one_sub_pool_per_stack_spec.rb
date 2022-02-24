@@ -421,10 +421,10 @@ describe 'One Sub Pool Per Stack' do
     # Create some consumers, and have them consume the pool
     for i in 0..2 do
       owner1_consumer_name = random_string('test_system')
-      owner1_consumer = @cp.register(owner1_consumer_name, :system, nil, {}, nil, owner1['key'], [], [], nil)
+      owner1_consumer = @cp.register(owner1_consumer_name, :system, nil, {}, nil, owner1['key'], [], [], [])
 
       owner2_consumer_name = random_string('test_system')
-      owner2_consumer = @cp.register(owner2_consumer_name, :system, nil, {}, nil, owner2['key'], [], [], nil)
+      owner2_consumer = @cp.register(owner2_consumer_name, :system, nil, {}, nil, owner2['key'], [], [], [])
 
       @cp.consume_pool(owner1_pool['id'], { :uuid => owner1_consumer['uuid'] })
       @cp.consume_pool(owner2_pool['id'], { :uuid => owner2_consumer['uuid'] })

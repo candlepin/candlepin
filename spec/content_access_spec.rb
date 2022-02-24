@@ -217,8 +217,8 @@ describe 'Content Access' do
       promote_content_to_environment(@user, @env, @content, false)
 
       consumer = @user.register(random_string('consumer'), :system, nil,
-          {'system.certificate_version' => '3.3'},nil, nil, [], [], @env['id'])
-      consumer['environment'].should_not be_nil
+          {'system.certificate_version' => '3.3'},nil, nil, [], [], [{'id' => @env['id']}])
+      expect(consumer['environments']).not_to eq([])
       @consumer = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
       certs = @consumer.list_certificates
       certs.length.should == 1
@@ -241,14 +241,61 @@ describe 'Content Access' do
       end
   end
 
+  it "content access cert should handle multiple environments" do
+      env1 = @user.create_environment(@owner['key'], random_string('testenv'),
+        "My Test Env 1", "For test systems only.")
+      env2 = @user.create_environment(@owner['key'], random_string('testenv'),
+        "My Test Env 2", "For test systems only.")
+      content2 = @cp.create_content(
+        @owner['key'], "cname2", 'test-content2', random_string("clabel2"), "ctype", "cvendor",
+        {:content_url=> '/this/is/the/path2', :modified_products => [@modified_product["id"]], :arches => "x86_64"}, true)
+      @cp.add_content_to_product(@owner['key'], @product['id'], content2['id'])
+
+      promote_content_to_environment(@user, env1, @content, false)
+      promote_content_to_environment(@user, env2, content2, false)
+
+      consumer = @user.register(random_string('consumer'), :system, nil,
+          {'system.certificate_version' => '3.3'},nil, nil, [], [], [{'id' => env1['id']}, {'id' => env2['id']}])
+      expect(consumer['environments']).not_to eq([])
+      @consumer = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+      certs = @consumer.list_certificates
+      certs.length.should == 1
+      json_body = extract_payload(certs[0]['cert'])
+
+      contents = json_body['products'][0]['content']
+      contents.length().should == 2
+      env_contents = { env1['name'] => @content,  env2['name'] => content2 }
+      content_envs = { @content['id'] => env1,  content2['id'] => env2 }
+
+      contents.each { |content|
+        content['enabled'].should == false
+        value = extension_from_cert(certs[0]['cert'], "1.3.6.1.4.1.2312.9.7")
+
+        env = content_envs[content['id']]
+        content_url = env_contents[env['name']].contentUrl
+
+        # Check that Standalone uses the owner key and environment name as prefix for content url, while Hosted does not
+        if is_standalone?
+          # We URL encode the environment name when generating the prefix, which replaces spaces with +
+          encoded_env_name = env['name'].gsub(' ', '+')
+
+          expect(content['path']).to eq('/' + @owner['key'] + '/' + encoded_env_name + content_url)
+          expect(are_content_urls_present(value, ['/' + @owner['key'] + '/' + encoded_env_name])).to eq(true)
+        else
+          expect(content['path']).to eq(content_url)
+          expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
+        end
+      }
+  end
+
   it "environment content changes show in content access cert" do
     @env = @user.create_environment(@owner['key'], random_string('testenv'),
       "My Test Env 1", "For test systems only.")
     expect(@env['environmentContent'].size).to eq(0)
 
     consumer = @user.register(random_string('consumer'), :system, nil,
-      {'system.certificate_version' => '3.3'},nil, nil, [], [], @env['id'])
-    expect(consumer['environment']).to_not be_nil
+      {'system.certificate_version' => '3.3'},nil, nil, [], [], [{'id' => @env['id']}])
+    expect(consumer['environments']).to_not eq([])
 
     @consumer = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     certs = @consumer.list_certificates
@@ -285,8 +332,8 @@ describe 'Content Access' do
     env1 = @user.create_environment(@owner['key'], random_string('testenv1'), "My Test Env 1", "For test systems only.")
     env2 = @user.create_environment(@owner['key'], random_string('testenv2'), "My Test Env 2", "For test systems only.")
 
-    consumer = @user.register(random_string('consumer'), :system, nil, {'system.certificate_version' => '3.3'}, nil, nil, [], [], env1['id'])
-    consumer['environment'].should_not be_nil
+    consumer = @user.register(random_string('consumer'), :system, nil, {'system.certificate_version' => '3.3'}, nil, nil, [], [], [{'id' => env1['id']}])
+    consumer['environments'].should_not be_nil
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     certs = consumer_cp.list_certificates
     certs.length.should == 1
@@ -300,9 +347,9 @@ describe 'Content Access' do
       expect(are_content_urls_present(value, ['/sca/' + @owner['key']])).to eq(true)
     end
 
-    consumer_cp.update_consumer({:environment => env2})
+    consumer_cp.update_consumer({:environments => [env2]})
     changed_consumer = consumer_cp.get_consumer();
-    changed_consumer.environment['id'].should == env2.id
+    changed_consumer.environments[0]['id'].should == env2.id
 
     certs = consumer_cp.list_certificates
     certs.length.should == 1
@@ -516,7 +563,7 @@ describe 'Content Access' do
   end
 
   it "can set the correct content access mode for a manifest consumer" do
-    consumer = @user.register(random_string('consumer'), :candlepin, nil, {}, nil, nil, [], [], nil)
+    consumer = @user.register(random_string('consumer'), :candlepin, nil, {}, nil, nil, [], [], [])
     @consumer = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
 
     @consumer.update_consumer({'contentAccessMode' => "entitlement"})
@@ -538,7 +585,7 @@ describe 'Content Access' do
     expect(consumer_now["contentAccessMode"]).to be_nil
 
     # We should also be able to set the correct content access mode when registering (instead of updating)
-    consumer2 = @user.register(random_string('consumer'), :candlepin, nil, {}, nil, nil, [], [], nil, [],
+    consumer2 = @user.register(random_string('consumer'), :candlepin, nil, {}, nil, nil, [], [], [], [],
         nil, [], nil, nil, nil, nil, nil, 0, nil, nil, nil, nil, [], nil, nil, "org_environment")
     expect(consumer2["contentAccessMode"]).to eq("org_environment")
   end
@@ -616,8 +663,8 @@ describe 'Content Access' do
     environment = @user.create_environment(@owner['key'], random_string('testenv1'), "My Test Env 1", "For test systems only.")
     promote_content_to_environment(@user, environment, @content, false)
 
-    consumer = @user.register(random_string('consumer'), :system, nil, {'system.certificate_version' => '3.3'}, nil, nil, [], [], environment['id'])
-    expect(consumer['environment']).to_not be_nil
+    consumer = @user.register(random_string('consumer'), :system, nil, {'system.certificate_version' => '3.3'}, nil, nil, [], [], [{'id' => environment['id']}])
+    expect(consumer['environment']).to_not eq([])
 
     client = Candlepin.new(nil, nil, consumer.idCert.cert, consumer.idCert['key'])
 
@@ -680,9 +727,9 @@ describe 'Content Access' do
   it 'filter out content not promoted to environment when owner is in SCA mode' do
     @env = @org_admin.create_environment(@owner['key'], random_string('testenv1'), "My Test Env 1", "For test systems only.")
     consumer = @org_admin.register(random_string('testsystem'), :system, nil,
-        {'system.certificate_version' => '3.1'}, nil, nil, [], [], @env['id'])
+        {'system.certificate_version' => '3.1'}, nil, nil, [], [],  [{'id' => @env['id']}] )
 
-    expect(consumer['environment']).to_not be_nil
+    expect(consumer['environment']).to_not eq([])
 
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
     product = create_product
@@ -947,7 +994,7 @@ describe 'Content Access' do
 
   it 'should be disabled for owner in SCA mode' do
     consumer = @user.register(random_string('testsystem'), :system, nil,
-               {'system.certificate_version' => '3.1'}, nil, nil, [], [], nil)
+               {'system.certificate_version' => '3.1'}, nil, nil, [], [], [])
 
     # System purpose status
     status = @cp.get_purpose_compliance(consumer['uuid'])
@@ -974,6 +1021,42 @@ describe 'Content Access' do
     serial_after_unregistration = @cp.get_serial(cert_serial.id)
 
     expect(serial_after_unregistration.revoked).to be(true)
+  end
+
+  it 'environment deletion should regenerate sca certificate of affected consumers' do
+    product1 = create_product
+    content1 = @cp.create_content(
+      @owner['key'], "cname99", "test-content99", random_string("clabel99"), "ctype99", "cvendor99",
+      {:content_url=> "/this/is/the/path/99", :arches => "x86_64"}, true)
+
+    @cp.add_content_to_product(@owner['key'], product1['id'], content1['id'])
+
+    env1 = @cp.create_environment(@owner['key'], random_string("env1"), random_string("test_env_1"))
+    env2 = @cp.create_environment(@owner['key'], random_string("env1"), random_string("test_env_1"))
+    job = @cp.promote_content(env1['id'], [{ :contentId => content1['id'] }])
+    wait_for_job(job['id'], 15)
+
+    consumer = @cp.register(random_string("consumer2"), :system, nil,
+                            facts={'system.certificate_version' => '3.3', "uname.machine" => "x86_64"}, random_string("consumer2"),
+                            @owner['key'], [], [], [{ 'id' => env1['id']}, { 'id' => env2['id']}])
+    consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+
+    old_certs = consumer_cp.list_certificates
+    old_certs.length.should == 1
+
+    regenerate_cert_test(consumer_cp) do
+      @cp.delete_environment(env1['id'])
+      sleep 1
+    end
+
+    new_certs = consumer_cp.list_certificates
+    new_certs.length.should == 1
+
+    old_serials = old_certs.map { |cert| cert['serial']['id']}
+    new_serials = new_certs.map { |cert| cert['serial']['id']}
+    old_serials.should_not include(new_serials)
+
+
   end
 
 end

@@ -19,6 +19,7 @@ import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,14 +27,12 @@ import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.persistence.NoResultException;
+import javax.persistence.Query;
 
 
-/**
- * EnvironmentCurator
- */
 @Singleton
 public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
-    private static Logger log = LoggerFactory.getLogger(OwnerContentCurator.class);
+    private static final Logger log = LoggerFactory.getLogger(EnvironmentCurator.class);
 
     public EnvironmentCurator() {
         super(Environment.class);
@@ -85,7 +84,7 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
      * @return
      *  A CandlepinQuery to iterate the consumers associated with the specified environment
      */
-    public CandlepinQuery<Consumer> getEnvironmentConsumers(Environment environment) {
+    public List<Consumer> getEnvironmentConsumers(Environment environment) {
         return this.getEnvironmentConsumers(environment != null ? environment.getId() : null);
     }
 
@@ -98,28 +97,30 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
      * @return
      *  A CandlepinQuery to iterate the consumers associated with the specified environment ID
      */
-    public CandlepinQuery<Consumer> getEnvironmentConsumers(String environmentId) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Consumer.class)
-            .add(Restrictions.eq("environmentId", environmentId));
+    public List<Consumer> getEnvironmentConsumers(String environmentId) {
+        String jpql = "SELECT c FROM Consumer c " +
+            "JOIN c.environmentIds e " +
+            "WHERE e = :environmentId ";
 
-        return this.cpQueryFactory.<Consumer>buildQuery(this.currentSession(), criteria);
+        return this.getEntityManager()
+            .createQuery(jpql, Consumer.class)
+            .setParameter("environmentId", environmentId)
+            .getResultList();
     }
 
-    @SuppressWarnings("unchecked")
     public CandlepinQuery<Environment> listForOwner(Owner o) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(Restrictions.eq("owner", o));
 
-        return this.cpQueryFactory.<Environment>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
-    @SuppressWarnings("unchecked")
     public CandlepinQuery<Environment> listForOwnerByName(Owner o, String envName) {
         DetachedCriteria criteria = this.createSecureDetachedCriteria()
             .add(Restrictions.eq("owner", o))
             .add(Restrictions.eq("name", envName));
 
-        return this.cpQueryFactory.<Environment>buildQuery(this.currentSession(), criteria);
+        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
     }
 
     @SuppressWarnings("unchecked")
@@ -198,4 +199,74 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
 
         return envId;
     }
+
+    /**
+     * Fetches the multiple environments for the specified consumer. If the consumer does not have a defined
+     * environments, this method returns an empty list. If the consumer has an invalid environments,
+     * this method throws an exception.
+     *
+     * @param consumer
+     *  The consumer for which to fetch multiple environment object
+     *
+     * @throws IllegalArgumentException
+     *  if consumer is null
+     *
+     * @return
+     *  A list of environment instance for the specified consumer, or empty list
+     *  if the consumer does not have a defined environments.
+     */
+    public List<Environment> getConsumerEnvironments(Consumer consumer) {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        String jpql = "SELECT environment " +
+            "FROM Consumer c " +
+            "JOIN c.environmentIds e " +
+            "JOIN Environment environment on environment.id = e " +
+            "WHERE c.id = :consumerId " +
+            "ORDER BY key(e) ASC";
+
+        return this.getEntityManager()
+            .createQuery(jpql, Environment.class)
+            .setParameter("consumerId", consumer.getId())
+            .getResultList();
+    }
+
+    public Map<String, List<String>> findEnvironmentsOf(List<String> consumerIds) {
+        if (consumerIds.isEmpty()) {
+            throw new IllegalArgumentException("Consumers must not be empty!");
+        }
+
+        String jpql = "SELECT c.id, e" +
+            " FROM Consumer c" +
+            " JOIN c.environmentIds e" +
+            " WHERE c.id IN (:consumerIds)" +
+            " ORDER BY c.uuid, key(e) ASC";
+
+        Query query = this.getEntityManager()
+            .createQuery(jpql);
+
+        Map<String, List<String>> consumerEnvironments = new HashMap<>(consumerIds.size());
+        for (List<String> ids : partition(consumerIds)) {
+            List<Object[]> result = query.setParameter("consumerIds", ids).getResultList();
+            Map<String, List<String>> map = toMap(result);
+            consumerEnvironments.putAll(map);
+        }
+
+        return consumerEnvironments;
+    }
+
+    private Map<String, List<String>> toMap(List<Object[]> rawData) {
+        Map<String, List<String>> result = new HashMap<>();
+        for (Object[] obj : rawData) {
+            String consumerId = obj[0].toString();
+            String environmentId = obj[1].toString();
+            List<String> environments = result.getOrDefault(consumerId, new ArrayList<>());
+            environments.add(environmentId);
+            result.put(consumerId, environments);
+        }
+        return result;
+    }
+
 }

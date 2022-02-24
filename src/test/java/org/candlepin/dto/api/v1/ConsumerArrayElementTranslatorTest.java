@@ -29,7 +29,6 @@ import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
@@ -77,7 +76,7 @@ public class ConsumerArrayElementTranslatorTest extends
         this.mockOwnerCurator = mock(OwnerCurator.class);
 
         this.translator = new ConsumerArrayElementTranslator(this.mockConsumerTypeCurator,
-            this.mockEnvironmentCurator, this.mockOwnerCurator);
+            this.mockOwnerCurator);
 
         return this.translator;
     }
@@ -98,7 +97,6 @@ public class ConsumerArrayElementTranslatorTest extends
     @Override
     protected Consumer initSourceObject() {
         ConsumerType ctype = this.consumerTypeTranslatorTest.initSourceObject();
-        Environment environment = this.environmentTranslatorTest.initSourceObject();
         Owner owner = this.ownerTranslatorTest.initSourceObject();
         when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
 
@@ -116,7 +114,6 @@ public class ConsumerArrayElementTranslatorTest extends
         consumer.setServiceType("consumer_service_type");
         consumer.setReleaseVer(new Release("releaseVer"));
         consumer.setOwner(owner);
-        consumer.setEnvironment(environment);
         consumer.setEntitlementCount(0L);
         consumer.setLastCheckin(new Date());
         consumer.setCanActivate(Boolean.TRUE);
@@ -166,9 +163,6 @@ public class ConsumerArrayElementTranslatorTest extends
         when(mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
         when(mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
-        when(mockEnvironmentCurator.get(eq(environment.getId()))).thenReturn(environment);
-        when(mockEnvironmentCurator.getConsumerEnvironment(eq(consumer))).thenReturn(environment);
-
         return consumer;
     }
 
@@ -204,9 +198,6 @@ public class ConsumerArrayElementTranslatorTest extends
             if (childrenGenerated) {
                 ConsumerType ctype = this.mockConsumerTypeCurator.getConsumerType(source);
                 this.consumerTypeTranslatorTest.verifyOutput(ctype, dest.getType(), true);
-
-                Environment environment = this.mockEnvironmentCurator.getConsumerEnvironment(source);
-                this.environmentTranslatorTest.verifyOutput(environment, dest.getEnvironment(), true);
 
                 assertEquals(source.getReleaseVer().getReleaseVer(), dest.getReleaseVer().getReleaseVer());
                 String destOwnerId = null;
@@ -253,7 +244,6 @@ public class ConsumerArrayElementTranslatorTest extends
             else {
                 assertNull(dest.getReleaseVer());
                 assertNull(dest.getOwner());
-                assertNull(dest.getEnvironment());
                 assertNull(dest.getHypervisorId());
                 assertNull(dest.getType());
                 assertNull(dest.getInstalledProducts());

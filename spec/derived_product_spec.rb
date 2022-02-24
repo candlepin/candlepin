@@ -38,7 +38,7 @@ describe 'Derived Products' do
     # For linking the host and the guest:
     @uuid = random_string('system.uuid')
 
-    @physical_sys = @user.register(random_string('host'), :system, nil, {"cpu.cpu_socket(s)" => 8}, nil, nil, [], [], nil)
+    @physical_sys = @user.register(random_string('host'), :system, nil, {"cpu.cpu_socket(s)" => 8}, nil, nil, [], [], [])
     @physical_client = Candlepin.new(nil, nil, @physical_sys['idCert']['cert'], @physical_sys['idCert']['key'])
     @physical_client.update_consumer({
       :facts => {"system.certificate_version" => "3.2"},
@@ -98,7 +98,7 @@ describe 'Derived Products' do
     @pools = @cp.list_owner_pools(@owner['key'], { :product => @datacenter_product['id'] })
     expect(@pools.size).to eq(1)
 
-    @distributor = @user.register(random_string('host'), :candlepin, nil, {}, nil, nil, [], [], nil)
+    @distributor = @user.register(random_string('host'), :candlepin, nil, {}, nil, nil, [], [], [])
     @distributor_client = Candlepin.new(nil, nil, @distributor['idCert']['cert'], @distributor['idCert']['key'])
   end
 

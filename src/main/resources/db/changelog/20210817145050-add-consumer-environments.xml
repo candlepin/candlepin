@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20210817145050-1" author="sdhome">
+        <createTable tableName="cp_consumer_environments">
+            <column name="cp_consumer_id" type="VARCHAR(32)">
+                <constraints nullable="false"
+                    references="cp_consumer(id)"
+                    foreignKeyName="cp_consumer_environments_fk1"
+                    deleteCascade="true"/>
+            </column>
+            <column name="environment_id" type="VARCHAR(32)">
+                <constraints nullable="false"
+                    references="cp_environment(id)"
+                    foreignKeyName="cp_consumer_environments_fk2"
+                    deleteCascade="true"/>
+            </column>
+            <column name="priority" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey tableName="cp_consumer_environments"
+            columnNames="cp_consumer_id, environment_id"
+            constraintName="cp_consumer_environments_pkey"/>
+
+        <createIndex indexName="cp_consumer_environments_idx" tableName="cp_consumer_environments" unique="false">
+            <column name="cp_consumer_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

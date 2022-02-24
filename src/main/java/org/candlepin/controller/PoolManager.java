@@ -324,4 +324,5 @@ public interface PoolManager {
      *  true if the pool is a managed pool; false otherwise
      */
     boolean isManaged(Pool pool);
+
 }

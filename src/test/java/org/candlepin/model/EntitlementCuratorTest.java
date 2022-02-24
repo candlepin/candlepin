@@ -26,6 +26,7 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.hamcrest.Matchers;
@@ -40,6 +41,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -83,7 +85,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         environmentCurator.create(environment);
 
         consumer = createConsumer(owner);
-        consumer.setEnvironment(environment);
+        consumer.addEnvironment(environment);
         consumerCurator.create(consumer);
 
         testProduct = TestUtil.createProduct();
@@ -325,7 +327,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void listByEnvironment() {
-        List<Entitlement> ents = entitlementCurator.listByEnvironment(environment).list();
+        List<Entitlement> ents = entitlementCurator.listByEnvironment(environment);
         assertEquals(2, ents.size());
     }
 
@@ -501,7 +503,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         productCurator.create(product);
 
         Consumer otherConsumer = createConsumer(owner);
-        otherConsumer.setEnvironment(environment);
+        otherConsumer.addEnvironment(environment);
         consumerCurator.create(otherConsumer);
 
         List<Entitlement> createdEntitlements = new LinkedList<>();
@@ -1297,5 +1299,49 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         int deleted = this.entitlementCurator.batchDeleteByIds(entIds);
 
         assertEquals(entitlementCount, deleted);
+    }
+
+    @Test
+    public void testGetEntitlementContentUUIDsWhenContent() {
+        Owner owner = this.createOwner("test_owner");
+        Consumer consumer1 = this.createConsumer(owner);
+        Consumer consumer2 = this.createConsumer(owner);
+
+        Content content1 = this.createContent(owner);
+        Product product = TestUtil.createProduct("p1", "p1-prod");
+        product.setProductContent(Arrays.asList(new ProductContent(product, content1, false)));
+
+        Content content2 = this.createContent(owner);
+        Product providedProduct = TestUtil.createProduct("p1-provided", "p1-provided-product");
+        providedProduct.setProductContent(
+            Arrays.asList(new ProductContent(providedProduct, content2, false)));
+        providedProduct = this.createProduct(providedProduct, owner);
+
+        product.setProvidedProducts(Arrays.asList(providedProduct));
+
+        product = this.createProduct(product, owner);
+
+        Pool pool = this.poolCurator.create(new Pool()
+            .setOwner(owner)
+            .setProduct(product)
+            .setQuantity(100L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow()));
+
+        Entitlement ent1 = this.bind(consumer1, pool);
+        Entitlement ent2 = this.bind(consumer2, pool);
+        Set<String> entIds = Set.of(ent1.getId(), ent2.getId());
+        List<String> contentIds = Arrays.asList(content1.getUuid(), content2.getUuid());
+        List<String> consumerIds = Arrays.asList(consumer1.getId(), consumer2.getId());
+        Map<String, Set<String>> entitlementContentUUIDs = this.entitlementCurator
+            .getEntitlementContentUUIDs(consumerIds);
+
+        assertEquals(entitlementContentUUIDs.size(), 2);
+        assertTrue(CollectionUtils.isEqualCollection(entitlementContentUUIDs.keySet(), entIds));
+
+        assertTrue(CollectionUtils.isEqualCollection(
+            entitlementContentUUIDs.get(ent1.getId()), contentIds));
+        assertTrue(CollectionUtils.isEqualCollection(
+            entitlementContentUUIDs.get(ent2.getId()), contentIds));
     }
 }

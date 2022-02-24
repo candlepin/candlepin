@@ -74,8 +74,8 @@ describe 'SKU Level Enable Override' do
       "My Test Env 1", "For test systems only.")
     consumer = @org_admin.register(random_string('consumer'), :system, nil,
       {'system.certificate_version' => '3.2'},
-      nil, nil, [], [], env['id'])
-    consumer['environment'].should_not be_nil
+      nil, nil, [], [], [{'id' => env['id']}])
+    expect(consumer['environments']).to_not be_nil
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
     providedProduct = create_product
@@ -151,8 +151,8 @@ describe 'SKU Level Enable Override' do
       "My Test Env 1", "For test systems only.")
     consumer = @org_admin.register(random_string('consumer'), :system, nil,
         {'system.certificate_version' => '1.0'},
-        nil, nil, [], [], env['id'])
-    consumer['environment'].should_not be_nil
+        nil, nil, [], [], [{'id' => env['id']}])
+    expect(consumer['environments']).not_to be_nil
     consumer_cp = Candlepin.new(nil, nil, consumer['idCert']['cert'],
       consumer['idCert']['key'])
 

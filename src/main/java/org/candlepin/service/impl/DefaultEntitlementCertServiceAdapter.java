@@ -16,6 +16,9 @@ package org.candlepin.service.impl;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.controller.util.ContentPrefix;
+import org.candlepin.controller.util.EntitlementContentPrefix;
+import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
@@ -28,7 +31,6 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
-import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
@@ -37,7 +39,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
@@ -59,7 +60,6 @@ import org.xnap.commons.i18n.I18n;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.net.URLEncoder;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
@@ -78,20 +78,19 @@ import java.util.stream.Collectors;
  * DefaultEntitlementCertServiceAdapter
  */
 public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertServiceAdapter {
-    private static Logger log = LoggerFactory.getLogger(DefaultEntitlementCertServiceAdapter.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultEntitlementCertServiceAdapter.class);
 
-    private PKIUtility pki;
-    private X509ExtensionUtil extensionUtil;
-    private X509V3ExtensionUtil v3extensionUtil;
-    private KeyPairCurator keyPairCurator;
-    private CertificateSerialCurator serialCurator;
-    private OwnerCurator ownerCurator;
-    private EntitlementCurator entCurator;
-    private I18n i18n;
-    private Configuration config;
-    private ProductCurator productCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private EnvironmentCurator environmentCurator;
+    private final PKIUtility pki;
+    private final X509ExtensionUtil extensionUtil;
+    private final X509V3ExtensionUtil v3extensionUtil;
+    private final KeyPairCurator keyPairCurator;
+    private final CertificateSerialCurator serialCurator;
+    private final OwnerCurator ownerCurator;
+    private final EntitlementCurator entCurator;
+    private final I18n i18n;
+    private final Configuration config;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final EnvironmentCurator environmentCurator;
 
     @Inject
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
@@ -103,7 +102,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         OwnerCurator ownerCurator,
         EntitlementCurator entCurator, I18n i18n,
         Configuration config,
-        ProductCurator productCurator,
         ConsumerTypeCurator consumerTypeCurator,
         EnvironmentCurator environmentCurator) {
 
@@ -117,7 +115,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         this.entCurator = entCurator;
         this.i18n = i18n;
         this.config = config;
-        this.productCurator = productCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.environmentCurator = environmentCurator;
     }
@@ -173,7 +170,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     public X509Certificate createX509Certificate(Consumer consumer, Owner owner, Pool pool,
         Entitlement ent, Product product, Set<Product> products,
         List<org.candlepin.model.dto.Product> productModels, BigInteger serialNumber,
-        KeyPair keyPair, boolean useContentPrefix, Set<Pool> entitledPools)
+        KeyPair keyPair, PromotedContent promotedContent, Set<Pool> entitledPools)
         throws GeneralSecurityException, IOException {
 
         // oidutil is busted at the moment, so do this manually
@@ -181,15 +178,12 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<>();
         products.add(product);
 
-        Map<String, EnvironmentContent> promotedContent = getPromotedContent(consumer);
-        String contentPrefix = getContentPrefix(consumer, owner, useContentPrefix);
-
         if (shouldGenerateV3(consumer)) {
             extensions = prepareV3Extensions();
-            byteExtensions = prepareV3ByteExtensions(product, productModels, contentPrefix, promotedContent);
+            byteExtensions = this.v3extensionUtil.getByteExtensions(productModels);
         }
         else {
-            extensions = prepareV1Extensions(products, pool, consumer, ent.getQuantity(), contentPrefix,
+            extensions = prepareV1Extensions(products, pool, consumer, ent.getQuantity(),
                 promotedContent, entitledPools);
         }
 
@@ -204,11 +198,9 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             startDate = calMinusHour.getTime();
         }
 
-        X509Certificate x509Cert =  this.pki.createX509Certificate(
+        return this.pki.createX509Certificate(
             createDN(ent, owner), extensions, byteExtensions, startDate,
             endDate, keyPair, serialNumber, null);
-
-        return x509Cert;
     }
 
     /**
@@ -288,57 +280,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         return false;
     }
 
-    /**
-     * @param consumer
-     * @param useContentPrefix
-     * @throws IOException
-     */
-    private String getContentPrefix(Consumer consumer, Owner owner, boolean useContentPrefix)
-        throws IOException {
-        String contentPrefix = null;
-
-        if (useContentPrefix) {
-            contentPrefix = owner.getContentPrefix();
-            Environment env = this.environmentCurator.getConsumerEnvironment(consumer);
-
-            if (contentPrefix != null && !contentPrefix.equals("")) {
-                if (env != null) {
-                    contentPrefix = contentPrefix.replaceAll("\\$env", env.getName());
-                }
-
-                contentPrefix = this.cleanUpPrefix(contentPrefix);
-            }
-        }
-
-        return contentPrefix;
-    }
-
-    /**
-     * @param consumer
-     * @return
-     */
-    private Map<String, EnvironmentContent> getPromotedContent(Consumer consumer) {
-        // Build a set of all content IDs promoted to the consumer's environment so
-        // we can determine if anything needs to be skipped:
-        Map<String, EnvironmentContent> promotedContent = new HashMap<>();
-
-        if (consumer.getEnvironmentId() != null) {
-            Environment environment = this.environmentCurator.getConsumerEnvironment(consumer);
-            log.debug("Consumer has an environment; checking for promoted content in: {}", environment);
-
-            for (EnvironmentContent envContent : environment.getEnvironmentContent()) {
-                log.debug("  promoted content: {}", envContent.getContent());
-
-                promotedContent.put(envContent.getContent().getId(), envContent);
-            }
-        }
-
-        return promotedContent;
-    }
-
-    public Set<X509ExtensionWrapper> prepareV1Extensions(Set<Product> products,
-        Pool pool, Consumer consumer, Integer quantity, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent, Set<Pool> entitledPools) {
+    public Set<X509ExtensionWrapper> prepareV1Extensions(Set<Product> products, Pool pool, Consumer consumer,
+        Integer quantity, PromotedContent promotedContent, Set<Pool> entitledPools) {
         Set<X509ExtensionWrapper> result = new LinkedHashSet<>();
 
         Set<String> entitledProductIds = entCurator.listEntitledProductIds(
@@ -365,7 +308,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
             log.debug("Adding X509 extensions for content: {}", filteredContent);
             result.addAll(extensionUtil.contentExtensions(filteredContent,
-                contentPrefix, promotedContent, consumer, skuProd));
+                promotedContent, consumer, skuProd));
         }
 
         // For V1 certificates we're going to error out if we exceed a limit which is
@@ -398,31 +341,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY), false, "Basic");
         result.add(typeExtension);
         return result;
-    }
-
-    public Set<X509ByteExtensionWrapper> prepareV3ByteExtensions(Product sku,
-        List<org.candlepin.model.dto.Product> productModels, String contentPrefix,
-        Map<String, EnvironmentContent> promotedContent) throws IOException {
-
-        Set<X509ByteExtensionWrapper> result = v3extensionUtil.getByteExtensions(sku,
-            productModels, contentPrefix, promotedContent);
-        return result;
-    }
-
-    // Encode the entire prefix in case any part of it is not
-    // URL friendly. Any $ is put back in order to preseve
-    // the ability to pass $env to the client
-    public String cleanUpPrefix(String contentPrefix) throws IOException {
-
-
-        StringBuffer output = new StringBuffer("/");
-        for (String part : contentPrefix.split("/")) {
-            if (!part.equals("")) {
-                output.append(URLEncoder.encode(part, "UTF-8"));
-                output.append("/");
-            }
-        }
-        return output.toString().replace("%24", "$");
     }
 
     /**
@@ -459,6 +377,11 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             .map(PoolQuantity::getPool)
             .collect(Collectors.toSet());
 
+        List<Environment> environments = this.environmentCurator.getConsumerEnvironments(consumer);
+        ContentPrefix contentPrefix = EntitlementContentPrefix.from(owner, environments);
+        PromotedContent promotedContent = new PromotedContent(contentPrefix)
+            .withAll(environments);
+
         Map<String, EntitlementCertificate> entitlementCerts = new HashMap<>();
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
             Pool pool = entry.getValue().getPool();
@@ -479,17 +402,14 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             products.addAll(getDerivedProductsForDistributor(pool, consumer));
             products.add(product);
 
-            Map<String, EnvironmentContent> promotedContent = getPromotedContent(consumer);
-            String contentPrefix = getContentPrefix(consumer, owner, true);
-
             log.info("Creating X509 cert for product: {}", product);
             log.debug("Provided products: {}", products);
             List<org.candlepin.model.dto.Product> productModels = v3extensionUtil.createProducts(product,
-                products, contentPrefix, promotedContent, consumer, pool, entitledPools);
+                products, promotedContent, consumer, pool, entitledPools);
 
             X509Certificate x509Cert = createX509Certificate(consumer, owner, pool, ent,
                 product, products, productModels,
-                BigInteger.valueOf(serial.getId()), keyPair, true, entitledPools);
+                BigInteger.valueOf(serial.getId()), keyPair, promotedContent, entitledPools);
 
             log.debug("Getting PEM encoded cert.");
             String pem = new String(this.pki.getPemEncoded(x509Cert));
@@ -498,7 +418,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 log.debug("Generating v3 entitlement data");
 
                 byte[] payloadBytes = v3extensionUtil.createEntitlementDataPayload(productModels,
-                        consumer, pool, ent.getQuantity());
+                    consumer, pool, ent.getQuantity());
 
                 String payload = "-----BEGIN ENTITLEMENT DATA-----\n";
                 payload += Util.toBase64(payloadBytes);
@@ -562,11 +482,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     }
 
     private String createDN(Entitlement ent, Owner owner) {
-        StringBuilder sb = new StringBuilder("CN=");
-        sb.append(ent.getId());
-        sb.append(", O=");
-        sb.append(owner.getKey());
-        return sb.toString();
+        return "CN=" + ent.getId() + ", O=" + owner.getKey();
     }
 
     public List<Long> listEntitlementSerialIds(Consumer consumer) {

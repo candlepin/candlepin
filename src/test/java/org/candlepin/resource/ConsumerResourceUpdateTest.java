@@ -42,8 +42,10 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
@@ -57,6 +59,7 @@ import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
@@ -71,6 +74,7 @@ import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
@@ -170,6 +174,8 @@ public class ConsumerResourceUpdateTest {
     @Mock private ModelTranslator modelTranslator;
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock private ContentOverrideValidator contentOverrideValidator;
+    @Mock private EnvironmentContentCurator environmentContentCurator;
+    @Mock private EntitlementCertificateGenerator entCertGenerator;
 
     private ModelTranslator translator;
 
@@ -177,10 +183,11 @@ public class ConsumerResourceUpdateTest {
 
     private ConsumerResource resource;
     private GuestMigration testMigration;
+    private Configuration config;
 
     @BeforeEach
     public void init() throws Exception {
-        Configuration config = new CandlepinCommonTestConfig();
+        this.config = new CandlepinCommonTestConfig();
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.testMigration = new GuestMigration(this.consumerCurator);
@@ -210,12 +217,12 @@ public class ConsumerResourceUpdateTest {
             this.deletedConsumerCurator,
             this.environmentCurator,
             this.distributorVersionCurator,
-            config,
+            this.config,
             this.calculatedAttributesUtil,
             this.consumerBindUtil,
             this.manifestManager,
             this.contentAccessManager,
-            new FactValidator(config, () -> this.i18n),
+            new FactValidator(this.config, () -> this.i18n),
             new ConsumerTypeValidator(consumerTypeCurator, i18n),
             this.consumerEnricher,
             Providers.of(this.testMigration),
@@ -225,7 +232,9 @@ public class ConsumerResourceUpdateTest {
             this.guestIdCurator,
             this.principalProvider,
             this.contentOverrideValidator,
-            this.consumerContentOverrideCurator
+            this.consumerContentOverrideCurator,
+            this.entCertGenerator,
+            this.environmentContentCurator
         );
 
         when(this.complianceRules.getStatus(any(Consumer.class), any(Date.class), any(Boolean.class),
@@ -841,7 +850,7 @@ public class ConsumerResourceUpdateTest {
         Owner owner = createOwner();
         OwnerDTO ownerDTO = new OwnerDTO();
         ownerDTO.setId(owner.getId());
-        updated.setEnvironment(translator.translate(changedEnvironment, EnvironmentDTO.class));
+        updated.addEnvironments(translator.translate(changedEnvironment, EnvironmentDTO.class));
         updated.setOwner(new NestedOwnerDTO());
 
         when(environmentCurator.get(changedEnvironment.getId())).thenReturn(changedEnvironment);
@@ -863,7 +872,7 @@ public class ConsumerResourceUpdateTest {
 
         ConsumerDTO updated = new ConsumerDTO();
         updated.setUuid(uuid);
-        updated.setEnvironment(changedEnvironment);
+        updated.addEnvironments(changedEnvironment);
 
         Consumer existing = getFakeConsumer();
         existing.setUuid(updated.getUuid());
@@ -1044,5 +1053,246 @@ public class ConsumerResourceUpdateTest {
             guestIdDTOS.add(translator.translate(guestId, GuestIdDTO.class));
         }
         return translator.translate(consumer, ConsumerDTO.class).guestIds(guestIdDTOS);
+    }
+
+    @Test
+    public void canUpdateConsumerEnvironmentWithPriorities() {
+        Environment changedEnvironment = new Environment("42", "environment", null);
+
+        Consumer existing = getFakeConsumer();
+
+        ConsumerDTO updated = new ConsumerDTO();
+        Owner owner = createOwner();
+        OwnerDTO ownerDTO = new OwnerDTO();
+        ownerDTO.setId(owner.getId());
+
+        updated.addEnvironments(translator.translate(changedEnvironment, EnvironmentDTO.class));
+        updated.setOwner(new NestedOwnerDTO());
+
+        when(environmentCurator.get(changedEnvironment.getId())).thenReturn(changedEnvironment);
+        when(ownerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+        when(environmentCurator.exists(changedEnvironment.getId())).thenReturn(true);
+
+        resource.updateConsumer(existing.getUuid(), updated);
+        assertEquals(existing.getEnvironmentIds().size(), 1);
+    }
+
+    @Test
+    public void canUpdateConsumerNotImpactedWithEmptyEnvironments() {
+        Environment env1 = new Environment("1", "environment-1", null);
+        Environment env2 = new Environment("2", "environment-2", null);
+
+        Consumer existing = getFakeConsumer();
+        existing.addEnvironment(env1);
+        existing.addEnvironment(env2);
+
+        ConsumerDTO updated = new ConsumerDTO();
+        Owner owner = createOwner();
+        OwnerDTO ownerDTO = new OwnerDTO();
+        ownerDTO.setId(owner.getId());
+
+        updated.setEnvironments(null);
+        updated.setOwner(new NestedOwnerDTO());
+
+        when(ownerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+
+        resource.updateConsumer(existing.getUuid(), updated);
+        assertEquals(existing.getEnvironmentIds().size(), 2);
+    }
+
+    @Test
+    public void canUpdateConsumerEnvironmentWithUpdatedPriorities() {
+        Environment env1 = new Environment("1", "environment-1", null);
+        Environment env2 = new Environment("2", "environment-2", null);
+
+        Consumer existing = getFakeConsumer();
+        existing.addEnvironment(env1);
+        existing.addEnvironment(env2);
+
+        ConsumerDTO updated = new ConsumerDTO();
+        Owner owner = createOwner();
+        OwnerDTO ownerDTO = new OwnerDTO();
+        ownerDTO.setId(owner.getId());
+
+        // Priorities changed
+        List<EnvironmentDTO> updatedEnvs = new ArrayList<>();
+        updatedEnvs.add(translator.translate(env2, EnvironmentDTO.class));
+        updatedEnvs.add(translator.translate(env1, EnvironmentDTO.class));
+        updated.setEnvironments(updatedEnvs);
+        updated.setOwner(new NestedOwnerDTO());
+
+        when(environmentCurator.get(env1.getId())).thenReturn(env1);
+        when(environmentCurator.get(env2.getId())).thenReturn(env2);
+        when(ownerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+        when(environmentCurator.exists(env1.getId())).thenReturn(true);
+        when(environmentCurator.exists(env2.getId())).thenReturn(true);
+
+        resource.updateConsumer(existing.getUuid(), updated);
+        assertEquals(existing.getEnvironmentIds().get(0), env2.getId());
+        assertEquals(existing.getEnvironmentIds().get(1), env1.getId());
+    }
+
+    @Test
+    public void canUpdateConsumerEnvironmentWithNewEnvironments() {
+        Environment env1 = new Environment("1", "environment-1", null);
+        Environment env2 = new Environment("2", "environment-2", null);
+
+        Consumer existing = getFakeConsumer();
+        existing.addEnvironment(env1);
+        existing.addEnvironment(env2);
+
+        ConsumerDTO updated = new ConsumerDTO();
+        Owner owner = createOwner();
+        OwnerDTO ownerDTO = new OwnerDTO();
+        ownerDTO.setId(owner.getId());
+
+        //Brand-new environments to be updated to existing consumer.
+        Environment env3 = new Environment("3", "environment-3", null);
+        Environment env4 = new Environment("4", "environment-4", null);
+
+        List<EnvironmentDTO> updatedEnvs = new ArrayList<>();
+        updatedEnvs.add(translator.translate(env4, EnvironmentDTO.class));
+        updatedEnvs.add(translator.translate(env3, EnvironmentDTO.class));
+        updated.setEnvironments(updatedEnvs);
+        updated.setOwner(new NestedOwnerDTO());
+
+        when(environmentCurator.get(env3.getId())).thenReturn(env3);
+        when(environmentCurator.get(env4.getId())).thenReturn(env4);
+        when(ownerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+        when(environmentCurator.exists(env3.getId())).thenReturn(true);
+        when(environmentCurator.exists(env4.getId())).thenReturn(true);
+
+        resource.updateConsumer(existing.getUuid(), updated);
+        assertEquals(existing.getEnvironmentIds().get(0), env4.getId());
+        assertEquals(existing.getEnvironmentIds().get(1), env3.getId());
+    }
+
+    @Test
+    public void throwsExceptionWhenSameEnvironmentIsAddedToConsumer() {
+        Environment env1 = new Environment("1", "environment-1", null);
+        Environment env2 = new Environment("2", "environment-2", null);
+
+        Consumer existing = getFakeConsumer();
+        existing.addEnvironment(env1);
+        existing.addEnvironment(env2);
+
+        ConsumerDTO updated = new ConsumerDTO();
+        Owner owner = createOwner();
+        OwnerDTO ownerDTO = new OwnerDTO();
+        ownerDTO.setId(owner.getId());
+
+        List<EnvironmentDTO> updatedEnvs = new ArrayList<>();
+        updatedEnvs.add(translator.translate(env1, EnvironmentDTO.class));
+        updatedEnvs.add(translator.translate(env2, EnvironmentDTO.class));
+        updatedEnvs.add(translator.translate(env1, EnvironmentDTO.class)); // Repeated Environment
+        updated.setEnvironments(updatedEnvs);
+        updated.setOwner(new NestedOwnerDTO());
+
+        when(environmentCurator.get(env1.getId())).thenReturn(env1);
+        when(environmentCurator.get(env2.getId())).thenReturn(env2);
+        when(ownerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+        when(environmentCurator.exists(env1.getId())).thenReturn(true);
+        when(environmentCurator.exists(env2.getId())).thenReturn(true);
+
+        assertThrows(ConflictException.class,
+            () -> resource.updateConsumer(existing.getUuid(), updated));
+    }
+
+    @Test
+    public void throwsExceptionWhenNullEntryAddedToMultipleEnvList() {
+        Environment env1 = new Environment("1", "environment-1", null);
+        Environment env2 = new Environment("2", "environment-2", null);
+
+        Consumer existing = getFakeConsumer();
+        existing.addEnvironment(env1);
+        existing.addEnvironment(env2);
+
+        ConsumerDTO updated = new ConsumerDTO();
+        Owner owner = createOwner();
+        OwnerDTO ownerDTO = new OwnerDTO();
+        ownerDTO.setId(owner.getId());
+
+        List<EnvironmentDTO> updatedEnvs = new ArrayList<>();
+        updatedEnvs.add(translator.translate(env1, EnvironmentDTO.class));
+        updatedEnvs.add(null); // null entry added
+        updatedEnvs.add(translator.translate(env2, EnvironmentDTO.class));
+        updated.setEnvironments(updatedEnvs);
+        updated.setOwner(new NestedOwnerDTO());
+
+        when(environmentCurator.get(env1.getId())).thenReturn(env1);
+        when(environmentCurator.get(env2.getId())).thenReturn(env2);
+        when(ownerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+        when(environmentCurator.exists(env1.getId())).thenReturn(true);
+        when(environmentCurator.exists(env2.getId())).thenReturn(true);
+
+        assertThrows(NotFoundException.class,
+            () -> resource.updateConsumer(existing.getUuid(), updated));
+    }
+
+    @Test
+    public void shouldPreserveEnvPriorityOnConsumerWhenAnEnvironmentIsRemoved() {
+        Environment env1 = new Environment("1", "environment-1", null);
+        Environment env2 = new Environment("2", "environment-2", null);
+        Environment env3 = new Environment("3", "environment-3", null);
+        Environment env4 = new Environment("4", "environment-4", null);
+        Environment env11 = new Environment("11", "environment-11", null);
+        Environment env111 = new Environment("111", "environment-111", null);
+
+
+        Consumer existing = getFakeConsumer();
+        existing.addEnvironment(env1);
+        existing.addEnvironment(env2);
+        existing.addEnvironment(env3);
+        existing.addEnvironment(env4);
+        existing.addEnvironment(env11);
+        existing.addEnvironment(env111);
+
+        ConsumerDTO updated = new ConsumerDTO();
+        Owner owner = createOwner();
+        OwnerDTO ownerDTO = new OwnerDTO();
+        ownerDTO.setId(owner.getId());
+
+        List<EnvironmentDTO> updatedEnvs = new ArrayList<>();
+        updatedEnvs.add(translator.translate(env1, EnvironmentDTO.class));
+        updatedEnvs.add(translator.translate(env3, EnvironmentDTO.class));
+        updatedEnvs.add(translator.translate(env4, EnvironmentDTO.class));
+        updatedEnvs.add(translator.translate(env11, EnvironmentDTO.class));
+        updatedEnvs.add(translator.translate(env111, EnvironmentDTO.class));
+
+        updated.setEnvironments(updatedEnvs);
+        updated.setOwner(new NestedOwnerDTO());
+
+        when(environmentCurator.get(env1.getId())).thenReturn(env1);
+        when(environmentCurator.get(env3.getId())).thenReturn(env3);
+        when(environmentCurator.get(env4.getId())).thenReturn(env4);
+        when(environmentCurator.get(env11.getId())).thenReturn(env11);
+        when(environmentCurator.get(env111.getId())).thenReturn(env111);
+
+        when(ownerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+        when(environmentCurator.exists(env1.getId())).thenReturn(true);
+        when(environmentCurator.exists(env3.getId())).thenReturn(true);
+        when(environmentCurator.exists(env4.getId())).thenReturn(true);
+        when(environmentCurator.exists(env11.getId())).thenReturn(true);
+        when(environmentCurator.exists(env111.getId())).thenReturn(true);
+
+        resource.updateConsumer(existing.getUuid(), updated);
+        assertEquals(existing.getEnvironmentIds().get(0), env1.getId());
+        assertEquals(existing.getEnvironmentIds().get(1), env3.getId());
+        assertEquals(existing.getEnvironmentIds().get(2), env4.getId());
+        assertEquals(existing.getEnvironmentIds().get(3), env11.getId());
+        assertEquals(existing.getEnvironmentIds().get(4), env111.getId());
+    }
+
+    @Test
+    public void updateConsumerWithEnvironmentWhileEnvironmentResourceHiddenThrowsException() {
+        this.config.setProperty(ConfigProperties.HIDDEN_RESOURCES, "environments");
+
+        EnvironmentDTO changedEnvironment = new EnvironmentDTO().id("42").name("environment");
+        ConsumerDTO updated = new ConsumerDTO();
+        updated.addEnvironments(changedEnvironment);
+        Consumer existing = getFakeConsumer();
+
+        assertThrows(BadRequestException.class,
+            () -> resource.updateConsumer(existing.getUuid(), updated));
     }
 }

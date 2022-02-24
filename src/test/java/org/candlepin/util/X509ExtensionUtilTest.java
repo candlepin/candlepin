@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.config.Configuration;
+import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
@@ -49,8 +50,9 @@ public class X509ExtensionUtilTest {
 
         Content content = new Content("123456", "testcontent", "yum", "testlabel", "testvendor");
         List<ProductContent> contents = List.of(new ProductContent(new Product(), content, true));
+        PromotedContent promotedContent = new PromotedContent(environmentId -> "");
         Set<X509ExtensionWrapper> extensions = util
-            .contentExtensions(contents, null, null, null, new Product());
+            .contentExtensions(contents, promotedContent, null, new Product());
 
         assertFalse(extensions.isEmpty());
     }
@@ -61,9 +63,10 @@ public class X509ExtensionUtilTest {
         X509ExtensionUtil util = new X509ExtensionUtil(config);
         Content content = new Content(contentId, "testcontent", "yum", "testlabel", "testvendor");
         List<ProductContent> contents = List.of(new ProductContent(new Product(), content, true));
+        PromotedContent promotedContent = new PromotedContent(environmentId -> "");
 
         assertThrows(IllegalStateException.class,
-            () -> util.contentExtensions(contents, null, null, null, new Product()));
+            () -> util.contentExtensions(contents, promotedContent, null, new Product()));
     }
 
     public static Stream<Arguments> invalidContentIds() {
