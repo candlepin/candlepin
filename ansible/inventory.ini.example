@@ -1,0 +1,14 @@
+# Example inventory file for use with Ansible. Copy the contents here to a new file, make necessary
+# modifications, and then invoke the file with the following commands (assuming command is invoked
+# from the Candlepin checkout root):
+#
+# ansible-galaxy role install --role-file ansible/requirements.yml --roles-path ansible/roles
+# ansible-playbook -u <ssh user> -k -i <inventory file> ./ansible/candlepin.yml
+
+[candlepin]
+candlepin.example.com
+
+[candlepin:vars]
+candlepin_user=example_user
+cp_git_checkout=true
+cp_deploy=true

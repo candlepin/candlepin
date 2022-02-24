@@ -1,0 +1,41 @@
+# General playbook which invokes the Candlepin role and candlepin_dev custom role if present.
+# This playbook is intended for use with Vagrant to bring up Candlepin developer environments,
+# but may be used directly with Ansible if desired.
+---
+- hosts: all
+
+  roles:
+    - role: candlepin
+
+  post_tasks:
+    # Run additional user-provided role if it exists or has been explicitly defined. If not detected or
+    # specified, the custom role inclusion will be omitted. See the linked document below [1] for details on
+    # creating an Ansible role.
+    #
+    # [1] https://docs.ansible.com/ansible/latest/user_guide/playbooks_reuse_roles.html
+    - block:
+        - name: "Check for presence of custom role"
+          set_fact:
+            cp_custom_role: "{{cp_custom_role}}"
+            cp_custom_role_path: "{{item}}/{{cp_custom_role}}"
+          vars:
+            cp_custom_role: candlepin_dev
+          when:
+            - "cp_custom_role_path is not defined"
+            - "(item + '/' + cp_custom_role) is directory"
+          loop:
+            # Impl note: this doesn't work if the user has a modified ansible.cfg on the path.
+            - "{{playbook_dir}}/roles"
+            - "/usr/share/ansible/roles"
+            - "~/.ansible/roles"
+            - "/etc/ansible/roles"
+
+        - name: "Include custom role if present"
+          include_role:
+            name: "{{cp_custom_role}}"
+          when:
+            - "cp_custom_role is defined"
+      tags:
+        - user_env
+        - custom
+        - system

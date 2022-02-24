@@ -48,7 +48,7 @@ dataSources/
 **/bin/qpid/keys
 **/bin/artemis/selinux/build
 **/bin/__init__.py
-vagrant/roles
+ansible/roles
 
 buildconf/builder/config/local
 client.crt

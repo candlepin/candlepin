@@ -4,6 +4,21 @@ ANSIBLE_TAGS_VAR = "ansible_tags"
 ANSIBLE_SKIP_TAGS_VAR = "ansible_skip_tags"
 ANSIBLE_VAR_PREFIX = "cp_"
 
+ANSIBLE_VARS = {
+  :ansible_user => "vagrant",
+  :candlepin_user => "vagrant",
+  :candlepin_home => "/vagrant",
+
+  :cp_configure_postgresql => true,
+  :cp_configure_mariadb => true,
+  :cp_configure_user_env => true,
+  :cp_configure_debugging => true,
+
+  :cp_git_checkout => false,
+  :cp_deploy => false
+}
+
+
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.synced_folder ".", "/vagrant", type: "sshfs", sshfs_opts_append: "-o nonempty"
@@ -35,10 +50,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     vm_config.vm.provision "shell", inline: "yum update -y yum python ca-certificates"
     vm_config.vm.provision "ansible" do |ansible|
-      ansible.playbook = "vagrant/candlepin.yml"
-      ansible.galaxy_role_file = "vagrant/requirements.yml"
+      ansible.playbook = "ansible/candlepin.yml"
+      ansible.galaxy_role_file = "ansible/requirements.yml"
       # ansible.verbose = "v"
-      ansible.extra_vars = {}
+      ansible.extra_vars = ANSIBLE_VARS.clone
 
       # Pass through ansible variables and tags from the environment variables
       ENV.each do |key, value|
@@ -71,10 +86,10 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     vm_config.vm.provision "shell", inline: "dnf update -y dnf ca-certificates"
     vm_config.vm.provision "ansible" do |ansible|
-      ansible.playbook = "vagrant/candlepin.yml"
-      ansible.galaxy_role_file = "vagrant/requirements.yml"
+      ansible.playbook = "ansible/candlepin.yml"
+      ansible.galaxy_role_file = "ansible/requirements.yml"
       # ansible.verbose = "v"
-      ansible.extra_vars = {}
+      ansible.extra_vars = ANSIBLE_VARS.clone
 
       # Pass through ansible variables and tags from the environment variables
       ENV.each do |key, value|
