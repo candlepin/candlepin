@@ -2729,8 +2729,7 @@ public class ConsumerResource implements ConsumersApi {
         }
 
         if (errored) {
-            throw new BadRequestException(i18n.tr(
-                "Problem regenerating ID cert for unit {0}", c));
+            throw new BadRequestException(i18n.tr("Problem regenerating ID cert for unit {0}", c));
         }
 
         log.debug("Generated identity cert: {}", idCert.getSerial());

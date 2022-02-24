@@ -406,7 +406,7 @@ public class ConfigProperties {
 
             this.put(SUSPEND_MODE_ENABLED, "true");
 
-            this.put(IDENTITY_CERT_YEAR_ADDENDUM, "16");
+            this.put(IDENTITY_CERT_YEAR_ADDENDUM, "5");
             this.put(IDENTITY_CERT_EXPIRY_THRESHOLD, "90");
             this.put(SHARD_WEBAPP, "candlepin");
 
