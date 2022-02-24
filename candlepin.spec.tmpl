@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.11
+Version: 4.2.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -239,6 +239,37 @@ fi
 
 #raw
 %changelog
+* Thu Feb 24 2022 Nikos Moumoulidis <nmoumoul@redhat.com> 4.2.0-1
+- 2045066: Changed default identity certificate duration to 5 years
+  (crog@redhat.com)
+- Improved error handling during async job execution (crog@redhat.com)
+- ENT-3899: Support environment deletion in multi-env (ojanus@redhat.com)
+- ENT-4514: Changes to regenerate entitlements certs whenever environment list
+  is modified   - Added filtering logic to avoid regenerating all the ent certs
+  - Covered all the scenarios for environment addition, deletion, re-
+  prioritization (prakgupt@redhat.com)
+- ENT-3901: SCA cert regeneration for multi-environment consumers
+  (ojanus@redhat.com)
+- ENT-3900: Add support for multi-env entitlement cert regeneration
+  (ojanus@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Upgrade to postgres 42.3.3 (nmoumoul@redhat.com)
+- Fix Sonarqube jenkins task (nmoumoul@redhat.com)
+- ENT-4183: DB Upgrade for environment data (ojanus@redhat.com)
+- Disallow consumer environment data when resource hidden (nmoumoul@redhat.com)
+- ENT-4180: Update the ConsumerDTO for backwards compatibility
+  (prakgupt@redhat.com)
+- ENT-3898: Updated the old registration API for backwards compatibility
+  (prakgupt@redhat.com)
+- Support multiple environments on consumers (sdhome@redhat.com)
+- Add capability for multiple environments per consumer (nmoumoul@redhat.com)
+- Allow SCA update on owner in standalone without need for import
+  (wpoteat@redhat.com)
+- Corrected a few issues in the Ansible playbook used by Vagrant
+  (crog@redhat.com)
+- Use bugzilla API key instead of username/password (nmoumoul@redhat.com)
+
 * Wed Feb 09 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.11-1
 - Translated using Weblate (Korean) (simmon@nplob.com)
 - Translated using Weblate (Ukrainian) (yurchor@ukr.net)
