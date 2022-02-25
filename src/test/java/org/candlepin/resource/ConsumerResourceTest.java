@@ -946,7 +946,7 @@ public class ConsumerResourceTest {
     }
 
     @Test
-    public void testSearchConsumersRequiresPagingForLargeResultSets() {
+    public void testSearchConsumersDoesNotRequirePagingForSmallResultSets() {
         List<Consumer> expected = Stream.generate(this::createConsumer)
             .limit(5)
             .collect(Collectors.toList());
@@ -959,7 +959,10 @@ public class ConsumerResourceTest {
 
         assertNotNull(result);
         assertEquals(expected.size(), result.count());
+    }
 
+    @Test
+    public void testSearchConsumersRequiresPagingForLargeResultSets() {
         doReturn(5000L).when(this.consumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
 
         assertThrows(BadRequestException.class, () -> this.consumerResource
