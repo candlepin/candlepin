@@ -14,15 +14,15 @@
  */
 package org.candlepin.jackson;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class StringTrimmingConverterTest {
     private StringTrimmingConverter converter;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         converter = new StringTrimmingConverter();
     }

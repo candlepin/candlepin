@@ -69,7 +69,7 @@ public class ArtemisMessageSourceTest {
             receiverFactory);
 
         // Should not attempt to create a client session.
-        verifyZeroInteractions(clientSessionFactory);
+        verifyNoInteractions(clientSessionFactory);
 
         ClientSession session = mock(ClientSession.class);
         when(clientSessionFactory.createSession()).thenReturn(session);

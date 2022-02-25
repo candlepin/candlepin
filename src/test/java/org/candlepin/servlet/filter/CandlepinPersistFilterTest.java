@@ -18,13 +18,13 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 
 import com.google.inject.persist.UnitOfWork;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
@@ -34,15 +34,14 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-/**
- * CandlepinPersistFilterTest
- */
+
+
 public class CandlepinPersistFilterTest {
 
     private CandlepinPersistFilter filter;
     private UnitOfWork work;
 
-    @Before
+    @BeforeEach
     public void init() {
         work = mock(UnitOfWork.class);
         filter = new CandlepinPersistFilter(work);
@@ -63,7 +62,7 @@ public class CandlepinPersistFilterTest {
     public void destroy() {
         // make sure any changes don't cause an issue
         filter.destroy();
-        verifyZeroInteractions(work);
+        verifyNoInteractions(work);
     }
 
     @Test

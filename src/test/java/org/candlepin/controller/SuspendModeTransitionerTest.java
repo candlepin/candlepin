@@ -14,7 +14,7 @@
  */
 package org.candlepin.controller;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.audit.ActiveMQStatus;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -24,33 +24,24 @@ import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.controller.mode.ModeChangeReason;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.runners.MockitoJUnitRunner;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
 
 
-
-@RunWith(MockitoJUnitRunner.class)
 public class SuspendModeTransitionerTest {
     private Configuration config;
 
     private CandlepinModeManager modeManager;
     private SuspendModeTransitioner transitioner;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.config = new CandlepinCommonTestConfig();
         this.config.setProperty(ConfigProperties.SUSPEND_MODE_ENABLED, "true");
-
-        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         this.modeManager = new CandlepinModeManager();
         this.transitioner = new SuspendModeTransitioner(modeManager);
@@ -73,7 +64,7 @@ public class SuspendModeTransitionerTest {
     }
 
     @Test
-    public void transitionToNormalModeWhenAMQComesUp() throws Exception {
+    public void transitionToNormalModeWhenAMQComesUp() {
         this.suspendOperations(ActiveMQStatus.DOWN);
 
         transitioner.onStatusUpdate(ActiveMQStatus.DOWN, ActiveMQStatus.CONNECTED);
@@ -81,13 +72,13 @@ public class SuspendModeTransitionerTest {
     }
 
     @Test
-    public void transitionToSuspendModeWhenAMQGoesDown() throws Exception {
+    public void transitionToSuspendModeWhenAMQGoesDown() {
         transitioner.onStatusUpdate(ActiveMQStatus.CONNECTED, ActiveMQStatus.DOWN);
         assertMode(Mode.SUSPEND, ActiveMQStatus.DOWN);
     }
 
     @Test
-    public void transitionToNormalModeWhenAMQComesBackUp() throws Exception {
+    public void transitionToNormalModeWhenAMQComesBackUp() {
         this.suspendOperations(ActiveMQStatus.DOWN);
 
         transitioner.onStatusUpdate(ActiveMQStatus.DOWN, ActiveMQStatus.CONNECTED);

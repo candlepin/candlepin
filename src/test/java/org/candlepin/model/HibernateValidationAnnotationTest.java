@@ -14,14 +14,14 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.activationkeys.ActivationKey;
 
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;

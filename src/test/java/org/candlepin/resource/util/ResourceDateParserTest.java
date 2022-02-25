@@ -14,12 +14,13 @@
  */
 package org.candlepin.resource.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.candlepin.exceptions.BadRequestException;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -30,19 +31,22 @@ import java.util.TimeZone;
  */
 public class ResourceDateParserTest {
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void errorFromAndToPlusDays() {
-        ResourceDateParser.getFromDate("2012/01/01", "2012/10/10", "3");
+        assertThrows(BadRequestException.class,
+            () -> ResourceDateParser.getFromDate("2012/01/01", "2012/10/10", "3"));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void errorFromPlusDays() {
-        ResourceDateParser.getFromDate("2012/01/01", null, "3");
+        assertThrows(BadRequestException.class,
+            () -> ResourceDateParser.getFromDate("2012/01/01", null, "3"));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void errorToPlusDays() {
-        ResourceDateParser.getFromDate(null, "2012/01/01", "3");
+        assertThrows(BadRequestException.class,
+            () -> ResourceDateParser.getFromDate(null, "2012/01/01", "3"));
     }
 
     @Test
@@ -76,9 +80,10 @@ public class ResourceDateParserTest {
         assertEquals(1, cal.get(Calendar.DATE));
     }
 
-    @Test(expected = NumberFormatException.class)
+    @Test
     public void nonNumberForDays() {
-        ResourceDateParser.getFromDate(null, null, "ABC");
+        assertThrows(NumberFormatException.class,
+            () -> ResourceDateParser.getFromDate(null, null, "ABC"));
     }
 
     @Test
@@ -112,13 +117,14 @@ public class ResourceDateParserTest {
 
     @Test
     public void nullParseDate() {
-        assertEquals(null, ResourceDateParser.parseDateString(null));
-        assertEquals(null, ResourceDateParser.parseDateString(""));
-        assertEquals(null, ResourceDateParser.parseDateString("    "));
+        assertNull(ResourceDateParser.parseDateString(null));
+        assertNull(ResourceDateParser.parseDateString(""));
+        assertNull(ResourceDateParser.parseDateString("    "));
     }
 
-    @Test(expected = BadRequestException.class)
+    @Test
     public void parseDateError() {
-        ResourceDateParser.parseDateString("2012/13/64");
+        assertThrows(BadRequestException.class,
+            () -> ResourceDateParser.parseDateString("2012/13/64"));
     }
 }

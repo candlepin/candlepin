@@ -38,9 +38,8 @@ import java.io.StringReader;
 
 import javax.inject.Inject;
 
-/**
- * RulesImporterTest
- */
+
+
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class RulesImporterTest extends DatabaseTestFixture {

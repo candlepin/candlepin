@@ -14,18 +14,17 @@
  */
 package org.candlepin.model.dto;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -119,11 +118,11 @@ public class CandlepinDTOTest {
         CandlepinDTO lhs = new CandlepinDTOImpl();
         CandlepinDTO rhs = new CandlepinDTOImpl();
 
-        assertFalse(lhs.equals(null));
-        assertTrue(lhs.equals(lhs));
-        assertTrue(rhs.equals(rhs));
-        assertTrue(lhs.equals(rhs));
-        assertTrue(rhs.equals(lhs));
+        assertNotEquals(null, lhs);
+        assertEquals(lhs, lhs);
+        assertEquals(rhs, rhs);
+        assertEquals(lhs, rhs);
+        assertEquals(rhs, lhs);
     }
 
     @ParameterizedTest
@@ -140,19 +139,19 @@ public class CandlepinDTOTest {
         mutator.invoke(rhs, value1);
 
         assertEquals(accessor.invoke(lhs), accessor.invoke(rhs));
-        assertTrue(lhs.equals(rhs));
-        assertTrue(rhs.equals(lhs));
-        assertTrue(lhs.equals(lhs));
-        assertTrue(rhs.equals(rhs));
+        assertEquals(lhs, rhs);
+        assertEquals(rhs, lhs);
+        assertEquals(lhs, lhs);
+        assertEquals(rhs, rhs);
         assertEquals(lhs.hashCode(), rhs.hashCode());
 
         mutator.invoke(rhs, value2);
 
         assertNotEquals(accessor.invoke(lhs), accessor.invoke(rhs));
-        assertFalse(lhs.equals(rhs));
-        assertFalse(rhs.equals(lhs));
-        assertTrue(lhs.equals(lhs));
-        assertTrue(rhs.equals(rhs));
+        assertNotEquals(lhs, rhs);
+        assertNotEquals(rhs, lhs);
+        assertEquals(lhs, lhs);
+        assertEquals(rhs, rhs);
     }
 
     @ParameterizedTest

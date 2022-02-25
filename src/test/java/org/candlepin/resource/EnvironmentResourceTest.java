@@ -24,7 +24,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
@@ -180,11 +180,11 @@ class EnvironmentResourceTest {
 
         this.environmentResource.deleteEnvironment(BAD_ID);
 
-        verifyZeroInteractions(this.poolManager);
-        verifyZeroInteractions(this.consumerCurator);
-        verifyZeroInteractions(this.certificateSerialCurator);
-        verifyZeroInteractions(this.identityCertificateCurator);
-        verifyZeroInteractions(this.contentAccessCertificateCurator);
+        verifyNoInteractions(this.poolManager);
+        verifyNoInteractions(this.consumerCurator);
+        verifyNoInteractions(this.certificateSerialCurator);
+        verifyNoInteractions(this.identityCertificateCurator);
+        verifyNoInteractions(this.contentAccessCertificateCurator);
         verify(this.envCurator).delete(eq(this.environment1));
     }
 

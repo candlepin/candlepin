@@ -14,12 +14,13 @@
  */
 package org.candlepin.dto.manifest.v1;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractDTOTest;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -132,13 +133,14 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
         assertFalse(dto.addCertificate(certDTO2));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAddCertificateWithNullInput() {
         EntitlementDTO dto = new EntitlementDTO();
-        dto.addCertificate(null);
+
+        assertThrows(IllegalArgumentException.class, () -> dto.addCertificate(null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAddCertificateWithEmptyId() {
         EntitlementDTO dto = new EntitlementDTO();
 
@@ -147,10 +149,11 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
         certDTO.setKey("cert-key-3");
         certDTO.setCertificate("cert-cert-3");
         certDTO.setSerial(new CertificateSerialDTO());
-        dto.addCertificate(certDTO);
+
+        assertThrows(IllegalArgumentException.class, () -> dto.addCertificate(certDTO));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAddCertificateWithEmptyKey() {
         EntitlementDTO dto = new EntitlementDTO();
 
@@ -159,10 +162,11 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
         certDTO.setKey("");
         certDTO.setCertificate("cert-cert-4");
         certDTO.setSerial(new CertificateSerialDTO());
-        dto.addCertificate(certDTO);
+
+        assertThrows(IllegalArgumentException.class, () -> dto.addCertificate(certDTO));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAddCertificateWithEmptyCert() {
         EntitlementDTO dto = new EntitlementDTO();
 
@@ -171,10 +175,11 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
         certDTO.setKey("cert-key-5");
         certDTO.setCertificate("");
         certDTO.setSerial(new CertificateSerialDTO());
-        dto.addCertificate(certDTO);
+
+        assertThrows(IllegalArgumentException.class, () -> dto.addCertificate(certDTO));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAddCertificateWithNullSerial() {
         EntitlementDTO dto = new EntitlementDTO();
 
@@ -183,6 +188,7 @@ public class EntitlementDTOTest  extends AbstractDTOTest<EntitlementDTO> {
         certDTO.setKey("cert-key-6");
         certDTO.setCertificate("cert-cert-6");
         certDTO.setSerial(null);
-        dto.addCertificate(certDTO);
+
+        assertThrows(IllegalArgumentException.class, () -> dto.addCertificate(certDTO));
     }
 }

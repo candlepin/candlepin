@@ -14,7 +14,8 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -27,25 +28,21 @@ import org.candlepin.model.ConsumerTypeCurator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 
-
-/**
- * ConsumerTypeImporterTest
- */
 public class ConsumerTypeImporterTest {
     private ObjectMapper mapper;
 
-    @Before
+    @BeforeEach
     public void init() {
         Map<String, String> configProps = new HashMap<>();
         configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
@@ -70,7 +67,7 @@ public class ConsumerTypeImporterTest {
         Reader reader = new StringReader(consumerTypeString);
         ConsumerType consumerType = new ConsumerTypeImporter(null).createObject(this.mapper, reader);
 
-        assertEquals(null, consumerType.getId());
+        assertNull(consumerType.getId());
     }
 
     @Test
@@ -83,11 +80,7 @@ public class ConsumerTypeImporterTest {
         when(curator.getByLabel("prosumer")).thenReturn(testType);
 
         ConsumerTypeImporter importer = new ConsumerTypeImporter(curator);
-        importer.store(new HashSet<ConsumerType>() {
-            {
-                add(testType);
-            }
-        });
+        importer.store(Set.of(testType));
 
         verify(curator, never()).create(testType);
         verify(curator, never()).merge(testType);
@@ -103,11 +96,7 @@ public class ConsumerTypeImporterTest {
         when(curator.getByLabel("prosumer")).thenReturn(null);
 
         ConsumerTypeImporter importer = new ConsumerTypeImporter(curator);
-        importer.store(new HashSet<ConsumerType>() {
-            {
-                add(testType);
-            }
-        });
+        importer.store(Set.of(testType));
 
         verify(curator).create(testType);
         verify(curator, never()).merge(testType);

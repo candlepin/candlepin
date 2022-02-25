@@ -14,12 +14,13 @@
  */
 package org.candlepin.dto.manifest.v1;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractDTOTest;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -93,18 +94,15 @@ public class DistributorVersionDTOTest extends AbstractDTOTest<DistributorVersio
         assertFalse(dto.addCapability(dvcDTO2));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAddCapabilityWithNullInput() {
         DistributorVersionDTO dto = new DistributorVersionDTO();
-        dto.addCapability(null);
+        assertThrows(IllegalArgumentException.class, () -> dto.addCapability(null));
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddCapabilityWithEmptyName() {
-        DistributorVersionDTO dto = new DistributorVersionDTO();
-
-        DistributorVersionDTO.DistributorVersionCapabilityDTO dvcDTO =
-            new DistributorVersionDTO.DistributorVersionCapabilityDTO("dvc-id-3", "");
-        dto.addCapability(dvcDTO);
+    @Test
+    public void capabilityCannotHaveEmptyName() {
+        assertThrows(IllegalArgumentException.class,
+            () -> new DistributorVersionDTO.DistributorVersionCapabilityDTO("dvc-id-3", ""));
     }
 }

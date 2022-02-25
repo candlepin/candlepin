@@ -30,7 +30,7 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.nullable;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.TestingModules;
@@ -87,7 +87,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -855,7 +854,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             new BigInteger("1234"), keyPair, promotedContent, new HashSet<>());
         verify(mockV3extensionUtil).getExtensions();
         verify(mockV3extensionUtil).getByteExtensions(anyList());
-        verifyZeroInteractions(mockExtensionUtil);
+        verifyNoInteractions(mockExtensionUtil);
     }
 
     @Test
@@ -881,7 +880,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             new BigInteger("1234"), keyPair, promotedContent, new HashSet<>());
         verify(mockV3extensionUtil).getExtensions();
         verify(mockV3extensionUtil).getByteExtensions(anyList());
-        verifyZeroInteractions(mockExtensionUtil);
+        verifyNoInteractions(mockExtensionUtil);
     }
 
     @Test
@@ -904,7 +903,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // Verify v1
         verify(mockExtensionUtil).consumerExtensions(eq(consumer));
-        verifyZeroInteractions(mockV3extensionUtil);
+        verifyNoInteractions(mockV3extensionUtil);
     }
 
     @Test
@@ -926,7 +925,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             new BigInteger("1234"), keyPair, promotedContent, new HashSet<>());
         verify(mockV3extensionUtil).getExtensions();
         verify(mockV3extensionUtil).getByteExtensions(anyList());
-        verifyZeroInteractions(mockExtensionUtil);
+        verifyNoInteractions(mockExtensionUtil);
     }
 
     private Boolean extMapHasContentType(Content cont, Map<String, String> extMap,
@@ -1592,16 +1591,11 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testDetachedEntitlementDataNotAddedToCertV1() throws Exception {
         when(keyPairCurator.getConsumerKeyPair(any(Consumer.class))).thenReturn(keyPair);
         when(serialCurator.saveOrUpdateAll(any(), anyBoolean(), anyBoolean()))
-            .then(new Answer<Iterable<CertificateSerial>>() {
-
-                @Override
-                public Iterable<CertificateSerial> answer(InvocationOnMock invocationOnMock)
-                    throws Throwable {
-                    Iterable<CertificateSerial> certificateSerials = invocationOnMock.getArgument(0);
-                    certificateSerials
-                        .forEach(certificateSerial -> certificateSerial.setId(Util.generateUniqueLong()));
-                    return certificateSerials;
-                }
+            .then((Answer<Iterable<CertificateSerial>>) invocationOnMock -> {
+                Iterable<CertificateSerial> certificateSerials = invocationOnMock.getArgument(0);
+                certificateSerials
+                    .forEach(certificateSerial -> certificateSerial.setId(Util.generateUniqueLong()));
+                return certificateSerials;
             });
 
         when(mockedPKI

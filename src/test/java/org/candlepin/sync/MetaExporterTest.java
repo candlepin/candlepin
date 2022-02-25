@@ -14,7 +14,7 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.MapConfiguration;
@@ -22,7 +22,7 @@ import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -31,10 +31,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-
-/**
- * MetaExporterTest
- */
 public class MetaExporterTest {
 
     @Test
@@ -57,12 +53,11 @@ public class MetaExporterTest {
 
         metaEx.export(mapper, writer, meta);
 
-        StringBuffer json = new StringBuffer();
-        json.append("{\"version\":\"0.1.0\",\"created\":\"").append(nowString);
-        json.append("\",\"principalName\":\"myUsername\",");
-        json.append("\"webAppPrefix\":\"webapp_prefix\",");
-        json.append("\"cdnLabel\":\"test-cdn\"}");
-        assertTrue(TestUtil.isJsonEqual(json.toString(), writer.toString()));
+        String json = "{\"version\":\"0.1.0\",\"created\":\"" + nowString +
+            "\",\"principalName\":\"myUsername\"," +
+            "\"webAppPrefix\":\"webapp_prefix\"," +
+            "\"cdnLabel\":\"test-cdn\"}";
+        assertTrue(TestUtil.isJsonEqual(json, writer.toString()));
     }
 
 }

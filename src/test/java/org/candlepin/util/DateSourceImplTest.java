@@ -14,15 +14,13 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
-/**
- * Test Class for the DateSourceImpl class
- */
+
 public class DateSourceImplTest {
 
     protected DateSourceImpl impl = new DateSourceImpl();

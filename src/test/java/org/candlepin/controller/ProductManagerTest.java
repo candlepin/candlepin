@@ -26,7 +26,7 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
@@ -119,7 +119,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertEquals(output.getUuid(), product.getUuid());
         assertEquals(output, product);
 
-        verifyZeroInteractions(this.mockEntCertGenerator);
+        verifyNoInteractions(this.mockEntCertGenerator);
     }
 
     @ParameterizedTest
@@ -147,7 +147,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
                 eq(owner), eq(product.getId()), anyBoolean());
         }
         else {
-            verifyZeroInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertGenerator);
         }
     }
 
@@ -178,7 +178,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
                 eq(owner1), eq(product1.getId()), anyBoolean());
         }
         else {
-            verifyZeroInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertGenerator);
         }
     }
 
@@ -206,7 +206,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
                 eq(owner1), eq(product.getId()), anyBoolean());
         }
         else {
-            verifyZeroInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertGenerator);
         }
     }
 
@@ -236,7 +236,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertNotNull(this.productCurator.get(product.getUuid()));
         assertEquals(0, this.ownerProductCurator.getOwnerCount(product));
 
-        verifyZeroInteractions(this.mockEntCertGenerator);
+        verifyNoInteractions(this.mockEntCertGenerator);
     }
 
     @Test
@@ -255,7 +255,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertNotNull(this.productCurator.get(product.getUuid()));
         assertEquals(1, this.ownerProductCurator.getOwnerCount(product));
 
-        verifyZeroInteractions(this.mockEntCertGenerator);
+        verifyNoInteractions(this.mockEntCertGenerator);
     }
 
     @Test
@@ -312,7 +312,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
                 eq(owner), eq(product.getId()), anyBoolean());
         }
         else {
-            verifyZeroInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertGenerator);
         }
     }
 
@@ -349,7 +349,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
                 eq(owner1), eq(product.getId()), anyBoolean());
         }
         else {
-            verifyZeroInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertGenerator);
         }
     }
 
@@ -391,7 +391,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertNotEquals(product, output);
         assertTrue(output.hasContent(content.getId()));
 
-        verifyZeroInteractions(this.mockEntCertGenerator);
+        verifyNoInteractions(this.mockEntCertGenerator);
     }
 
     @ParameterizedTest
@@ -425,7 +425,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
                 eq(owner1), eq(product.getId()), anyBoolean());
         }
         else {
-            verifyZeroInteractions(this.mockEntCertGenerator);
+            verifyNoInteractions(this.mockEntCertGenerator);
         }
     }
 
@@ -623,7 +623,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertTrue(this.ownerProductCurator.isProductMappedToOwner(output, owner1));
         assertFalse(this.ownerProductCurator.isProductMappedToOwner(output, owner2));
 
-        verifyZeroInteractions(this.mockEntCertGenerator);
+        verifyNoInteractions(this.mockEntCertGenerator);
     }
 
     @Test

@@ -14,8 +14,9 @@
  */
 package org.candlepin.auth;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
 
@@ -26,16 +27,17 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
 
-import com.google.inject.Injector;
-
 import org.apache.commons.codec.binary.Base64;
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.spi.HttpRequest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
@@ -49,28 +51,32 @@ import java.util.Set;
 import javax.inject.Provider;
 import javax.ws.rs.core.HttpHeaders;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class BasicAuthViaUserServiceTest {
 
-    @Mock private HttpRequest request;
+    @Mock
+    private HttpRequest request;
     private MultivaluedMapImpl<String, String> headerMap;
-    @Mock private HttpHeaders mockHeaders;
-    @Mock private UserServiceAdapter userService;
-    @Mock private Injector injector;
-    @Mock private Provider<I18n> mockI18n;
-    @Mock private PermissionFactory mockPermissionFactory;
+    @Mock
+    private HttpHeaders mockHeaders;
+    @Mock
+    private UserServiceAdapter userService;
+    @Mock
+    private Provider<I18n> mockI18n;
+    @Mock
+    private PermissionFactory mockPermissionFactory;
     private BasicAuth auth;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         headerMap = new MultivaluedMapImpl<>();
         when(mockHeaders.getRequestHeaders()).thenReturn(headerMap);
         when(request.getHttpHeaders()).thenReturn(mockHeaders);
-        when(mockHeaders.getRequestHeader(anyString())).then(new Answer<List<String>>() {
-            public List<String> answer(InvocationOnMock invocation) {
-                Object[] args = invocation.getArguments();
-                return headerMap.get(args[0]);
-            }
+        when(mockHeaders.getRequestHeader(anyString())).then((Answer<List<String>>) invocation -> {
+            Object[] args = invocation.getArguments();
+            return headerMap.get(args[0]);
         });
 
         I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
@@ -82,40 +88,34 @@ public class BasicAuthViaUserServiceTest {
     /**
      * No authentication header is defined.
      *
-     * @throws Exception
      */
     @Test
-    public void noAuth() throws Exception {
+    public void noAuth() {
         assertNull(this.auth.getPrincipal(request));
     }
 
     /**
      * Authentication head is not BASIC
      *
-     * @throws Exception
      */
     @Test
-    public void notBasicAuth() throws Exception {
+    public void notBasicAuth() {
         headerMap.add("Authorization", "DIGEST username=billy");
         assertNull(this.auth.getPrincipal(request));
     }
 
     /**
      * The user service indicates that the given credentials are invalid
-     *
-     * @throws Exception
      */
-    @Test(expected = NotAuthorizedException.class)
+    @Test
     public void invalidUserPassword() throws Exception {
         setUserAndPassword("billy", "madison");
         when(userService.validateUser("billy", "madison")).thenReturn(false);
-        assertNull(this.auth.getPrincipal(request));
+        assertThrows(NotAuthorizedException.class, () -> this.auth.getPrincipal(request));
     }
 
     /**
      * Valid credentials are given - checks if the correct principal is created.
-     *
-     * @throws Exception
      */
     @Test
     public void correctPrincipal() throws Exception {
@@ -149,6 +149,7 @@ public class BasicAuthViaUserServiceTest {
         UserPrincipal expected = new UserPrincipal("user", new ArrayList<>(permissions), false);
         assertEquals(expected, this.auth.getPrincipal(request));
     }
+
     @Test
     public void correctPrincipalNoPassword() throws Exception {
         Owner owner = new Owner("user", "user");

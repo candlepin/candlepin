@@ -14,15 +14,16 @@
  */
 package org.candlepin.guice;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.config.Configuration;
 import org.candlepin.config.PropertiesFileConfiguration;
 
 import com.google.inject.Module;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.URISyntaxException;
 import java.util.Set;
@@ -39,15 +40,15 @@ public class CustomizableModulesTest {
         assertTrue(loaded.iterator().next() instanceof DummyModuleForTesting);
     }
 
-    // TODO: We should probably be more specific...
-    @Test(expected = RuntimeException.class)
+    @Test
     public void shouldFailWhenConfigurationContainsMissingClass()
         throws Exception {
 
         Configuration config = new PropertiesFileConfiguration(
             getAbsolutePath("customizable_modules_with_missing_class.conf"));
 
-        new CustomizableModules().load(config);
+        // TODO: We should probably be more specific...
+        assertThrows(RuntimeException.class, () -> new CustomizableModules().load(config));
     }
 
     private String getAbsolutePath(String fileName) throws URISyntaxException {

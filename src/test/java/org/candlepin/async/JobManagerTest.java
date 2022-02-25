@@ -31,7 +31,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager.ManagerState;
@@ -1720,8 +1720,8 @@ public class JobManagerTest {
         manager.start();
 
         // Ensure the scheduler wasn't actually invoked
-        verifyZeroInteractions(this.schedulerFactory);
-        verifyZeroInteractions(this.scheduler);
+        verifyNoInteractions(this.schedulerFactory);
+        verifyNoInteractions(this.scheduler);
     }
 
     @Test

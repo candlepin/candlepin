@@ -14,80 +14,61 @@
  */
 package org.candlepin.policy;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.candlepin.model.Rules;
 import org.candlepin.policy.js.RuleParseException;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
-import org.junit.runners.Parameterized.Parameters;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
-/**
- * RulesVersionmatchingTest
- */
-@RunWith(Parameterized.class)
+
 public class RulesVersionMatchingTest {
 
-    private String version;
-    private String expectedVersion;
-    private boolean expectedToBeValid;
-
-    @Parameters
-    public static Collection<Object[]> data() {
-        Object[][] parameters = new Object[][] {
-            // Valid version strings
-            { "// Version: 1.0", "1.0", true },
-            { "// version: 1.0", "1.0", true },
-            { "# Version: 1.0", "1.0", true },
-            { "# version: 1.0", "1.0", true },
-            { "//Version: 1.0", "1.0", true },
-            { "//version: 1.0", "1.0", true },
-            { "// Version:    1.0  ", "1.0", true },
-            { "// Version: 1.0.0", "1.0.0", true },
-            { "//version:1.0.0", "1.0.0", true },
-            { "// Version: 1.0.0\n// This is a new line", "1.0.0", true },
-
-            // invalid version strings.
-            { "", "", false },
-            { "// Version:  ", "", false },
-            { "// Version 1.0", "", false },
-            { "Version 1.0", "", false },
-            { "// Version: version", "", false },
-            { "// Version: 1.0.", "", false },
-            { "// Version: 1.0 RC", "", false },
-            { "// Version: 1.x", "", false },
-            { "THISisNOTaVALIDVersion: 1", "", false },
-        };
-        return Arrays.asList(parameters);
+    @ParameterizedTest
+    @MethodSource("validVersions")
+    public void shouldParseValidVersion(String version, String expectedVersion) {
+        Rules rules = new Rules(version);
+        assertEquals(expectedVersion, rules.getVersion());
     }
 
-    public RulesVersionMatchingTest(String version, String expectedVersion,
-        boolean expectedToBeValid) {
-        this.version = version;
-        this.expectedToBeValid = expectedToBeValid;
-        this.expectedVersion = expectedVersion;
+    public static Stream<Arguments> validVersions() {
+        return Stream.of(
+            Arguments.of("// Version: 1.0", "1.0"),
+            Arguments.of("// version: 1.0", "1.0"),
+            Arguments.of("# Version: 1.0", "1.0"),
+            Arguments.of("# version: 1.0", "1.0"),
+            Arguments.of("//Version: 1.0", "1.0"),
+            Arguments.of("//version: 1.0", "1.0"),
+            Arguments.of("// Version:    1.0  ", "1.0"),
+            Arguments.of("// Version: 1.0.0", "1.0.0"),
+            Arguments.of("//version:1.0.0", "1.0.0"),
+            Arguments.of("// Version: 1.0.0\n// This is a new line", "1.0.0")
+        );
     }
 
-    @Test
-    public void ensureWorking() {
-        Rules rules = null;
-        try {
-            rules = new Rules(version);
-            if (!expectedToBeValid) {
-                throw new RuntimeException("Expected rule parsing to have failed.");
-            }
-            assertEquals(expectedVersion, rules.getVersion());
-        }
-        catch (RuleParseException e) {
-            if (expectedToBeValid) {
-                throw e;
-            }
-        }
+    @ParameterizedTest
+    @MethodSource("invalidVersions")
+    public void invalidVersionShouldThrow(String version) {
+        assertThrows(RuleParseException.class, () -> new Rules(version));
+    }
+
+    public static Stream<Arguments> invalidVersions() {
+        return Stream.of(
+            Arguments.of(""),
+            Arguments.of("// Version:  "),
+            Arguments.of("// Version 1.0"),
+            Arguments.of("Version 1.0"),
+            Arguments.of("// Version: version"),
+            Arguments.of("// Version: 1.0."),
+            Arguments.of("// Version: 1.0 RC"),
+            Arguments.of("// Version: 1.x"),
+            Arguments.of("THISisNOTaVALIDVersion: 1")
+        );
     }
 
 }

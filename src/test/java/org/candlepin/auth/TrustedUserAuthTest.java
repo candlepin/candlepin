@@ -14,10 +14,10 @@
  */
 package org.candlepin.auth;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
@@ -31,11 +31,10 @@ import org.candlepin.service.UserServiceAdapter;
 
 import org.jboss.resteasy.specimpl.MultivaluedMapImpl;
 import org.jboss.resteasy.spi.HttpRequest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
@@ -48,26 +47,29 @@ import javax.ws.rs.core.HttpHeaders;
 
 public class TrustedUserAuthTest {
 
-    @Mock private HttpRequest request;
+    @Mock
+    private HttpRequest request;
     private MultivaluedMapImpl<String, String> headerMap;
-    @Mock private HttpHeaders mockHeaders;
-    @Mock private UserServiceAdapter userService;
-    @Mock private Provider<I18n> mockI18n;
-    @Mock private PermissionFactory mockPermissionFactory;
+    @Mock
+    private HttpHeaders mockHeaders;
+    @Mock
+    private UserServiceAdapter userService;
+    @Mock
+    private Provider<I18n> mockI18n;
+    @Mock
+    private PermissionFactory mockPermissionFactory;
     private TrustedUserAuth auth;
 
     private static final String USERNAME = "myusername";
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         headerMap = new MultivaluedMapImpl<>();
         when(mockHeaders.getRequestHeaders()).thenReturn(headerMap);
-        when(mockHeaders.getRequestHeader(anyString())).then(new Answer<List<String>>() {
-            public List<String> answer(InvocationOnMock invocation) {
-                Object[] args = invocation.getArguments();
-                return headerMap.get(args[0]);
-            }
+        when(mockHeaders.getRequestHeader(anyString())).then((Answer<List<String>>) invocation -> {
+            Object[] args = invocation.getArguments();
+            return headerMap.get(args[0]);
         });
 
         when(request.getHttpHeaders()).thenReturn(mockHeaders);
@@ -78,7 +80,7 @@ public class TrustedUserAuthTest {
     }
 
     @Test
-    public void missingUsernameHeader() throws Exception {
+    public void missingUsernameHeader() {
         Principal p = auth.getPrincipal(request);
         assertNull(p);
     }

@@ -14,7 +14,7 @@
  */
 package org.candlepin.servlet.filter;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -22,8 +22,8 @@ import static org.mockito.Mockito.verify;
 
 import org.candlepin.guice.CandlepinRequestScope;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.internal.verification.VerificationModeFactory;
 
 import javax.servlet.FilterChain;
@@ -42,7 +42,7 @@ public class CandlepinScopeFilterTest {
     private CandlepinScopeFilter filter;
     private FilterChain chain;
 
-    @Before
+    @BeforeEach
     public void init() {
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);

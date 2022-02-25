@@ -15,25 +15,17 @@
 
 package org.candlepin.cache;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.dto.api.v1.StatusDTO;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 
-/**
- * Created by mstead on 11/04/17.
- */
+
 public class StatusCacheTest {
-
-    @Before
-    public void setup() {
-
-    }
 
     @Test
     public void initialGetReturnsNull() {

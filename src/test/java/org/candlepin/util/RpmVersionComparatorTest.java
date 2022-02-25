@@ -14,27 +14,25 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.version.RpmVersionComparator;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-/**
- * RpmVersionComparatorTest
- */
+
 public class RpmVersionComparatorTest {
 
     private RpmVersionComparator cmp;
 
-    @Before
+    @BeforeEach
     public void init() throws Exception {
         cmp = new RpmVersionComparator();
     }
 
-    @After
+    @AfterEach
     public void down() throws Exception {
         cmp = null;
     }

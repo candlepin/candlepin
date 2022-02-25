@@ -14,29 +14,28 @@
  */
 package org.candlepin.logging;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.spi.FilterReply;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
-/**
- * LoggerAndMDCFilterTest
- */
+
+
 public class LoggerAndMDCFilterTest {
 
     private LoggerAndMDCFilter filter;
     private LoggerContext context;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         context = new LoggerContext();
         context.start();
@@ -52,7 +51,7 @@ public class LoggerAndMDCFilterTest {
         filter.start();
     }
 
-    @After
+    @AfterEach
     public void tearDown() throws Exception {
         MDC.clear();
     }

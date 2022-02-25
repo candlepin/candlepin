@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;

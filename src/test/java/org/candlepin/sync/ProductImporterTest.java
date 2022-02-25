@@ -14,7 +14,7 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.MapConfiguration;
@@ -27,8 +27,8 @@ import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -41,16 +41,13 @@ import java.util.Map;
 import java.util.Set;
 
 
-/**
- * ProductImporterTest
- */
 public class ProductImporterTest {
 
     private ObjectMapper mapper;
     private ProductImporter importer;
     private Owner owner = new Owner("Test Corporation");
 
-    @Before
+    @BeforeEach
     public void setUp() throws IOException {
         Map<String, String> configProps = new HashMap<>();
         configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
@@ -105,7 +102,7 @@ public class ProductImporterTest {
         ContentDTO c = created.getProductContent().iterator().next().getContent();
 
         // Metadata expiry should be overridden to 0 on import:
-        assertEquals(new Long(1), c.getMetadataExpiration());
+        assertEquals(1L, c.getMetadataExpiration());
     }
 
     @Test

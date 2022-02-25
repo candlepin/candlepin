@@ -57,7 +57,7 @@ import org.candlepin.util.Util;
 
 import com.google.inject.Provider;
 
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
@@ -112,8 +112,8 @@ public class EntitlementRulesTestFixture {
     protected PoolRules poolRules;
     protected ModelTranslator translator;
 
-    @Before
-    public void createEnforcer() throws Exception {
+    @BeforeEach
+    public void createEnforcer() {
         MockitoAnnotations.initMocks(this);
 
         when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
@@ -165,7 +165,7 @@ public class EntitlementRulesTestFixture {
 
             doAnswer(new Answer<ConsumerType>() {
                 @Override
-                public ConsumerType answer(InvocationOnMock invocation) throws Throwable {
+                public ConsumerType answer(InvocationOnMock invocation) {
                     Object[] args = invocation.getArguments();
                     Consumer consumer = (Consumer) args[0];
                     ConsumerTypeCurator curator = (ConsumerTypeCurator) invocation.getMock();
@@ -193,7 +193,7 @@ public class EntitlementRulesTestFixture {
         product.setAttribute(Product.Attributes.VIRT_LIMIT, virtLimit);
         when(ownerProductCuratorMock.getProductById(owner, productId)).thenReturn(product);
         Subscription s = TestUtil.createSubscription(owner, product);
-        s.setQuantity(new Long(quantity));
+        s.setQuantity((long) quantity);
         s.setId("subId");
         return s;
     }

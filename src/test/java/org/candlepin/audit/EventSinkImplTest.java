@@ -19,7 +19,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyByte;
-import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
@@ -138,7 +137,7 @@ public class EventSinkImplTest {
     @Test
     public void sendEventShouldSendMessageOnProperEventInput() throws Exception {
         String content = "Simple String";
-        doReturn(content).when(mapper).writeValueAsString(anyObject());
+        doReturn(content).when(mapper).writeValueAsString(any(Object.class));
 
         ArgumentCaptor<ClientMessage> argumentCaptor = ArgumentCaptor.forClass(ClientMessage.class);
         eventSinkImpl.queueEvent(mock(Event.class));

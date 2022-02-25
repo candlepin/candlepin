@@ -26,7 +26,7 @@ import static org.mockito.Mockito.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.Event;
@@ -73,9 +73,6 @@ import java.util.Set;
 
 
 
-/**
- * PoolManagerTest
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class EntitlementCertificateGeneratorTest {
@@ -154,7 +151,7 @@ public class EntitlementCertificateGeneratorTest {
         Entitlement entitlement = new Entitlement();
         this.ecGenerator.regenerateCertificatesOf(entitlement, true);
         assertTrue(entitlement.isDirty());
-        verifyZeroInteractions(this.mockEntCertAdapter);
+        verifyNoInteractions(this.mockEntCertAdapter);
     }
 
     @Test
@@ -169,7 +166,7 @@ public class EntitlementCertificateGeneratorTest {
             assertTrue(entitlement.isDirty());
         }
 
-        verifyZeroInteractions(this.mockEntCertAdapter);
+        verifyNoInteractions(this.mockEntCertAdapter);
     }
 
     /**
@@ -241,14 +238,14 @@ public class EntitlementCertificateGeneratorTest {
         }
         List<String> contentIds = Arrays.asList("c1", "c2", "c4");
         when(this.mockEntitlementCurator
-                .listEntitlementIdByEnvironmentAndContent(any(String.class), any(List.class)))
+                .listEntitlementIdByEnvironmentAndContent(any(String.class), anyList()))
                 .thenReturn(entitlementIds);
         this.ecGenerator.regenerateCertificatesOf(environmentId, contentIds, true);
         verify(this.mockEntitlementCurator, times(1)).markEntitlementsDirty(entitlementIds);
     }
 
     @Test
-    public void testNonLazyRegnerateForEnvironmentContent() throws Exception {
+    public void testNonLazyRegenerateForEnvironmentContent() throws Exception {
         String environmentId = "env_id_1";
         List<Entitlement> entitlements = this.generateEntitlements();
         List<String> entitlementIds = new ArrayList<>();
@@ -300,7 +297,7 @@ public class EntitlementCertificateGeneratorTest {
 
         assertTrue(entitlement.isDirty());
 
-        verifyZeroInteractions(this.mockEntCertAdapter);
+        verifyNoInteractions(this.mockEntCertAdapter);
     }
 
     @Test
@@ -347,7 +344,7 @@ public class EntitlementCertificateGeneratorTest {
         this.ecGenerator.regenerateCertificatesOf(consumer, true);
 
         assertTrue(entitlement.isDirty());
-        verifyZeroInteractions(this.mockEntCertAdapter);
+        verifyNoInteractions(this.mockEntCertAdapter);
     }
 
     @Test
@@ -361,8 +358,8 @@ public class EntitlementCertificateGeneratorTest {
         Map<String, EntitlementCertificate> entCerts = new HashMap<>();
         entCerts.put(pool.getId(), new EntitlementCertificate());
 
-        when(this.mockEntCertAdapter.generateEntitlementCerts(
-            any(Consumer.class), anyMap(), anyMap(), anyMap(), anyBoolean())).thenReturn(entCerts);
+        when(this.mockEntCertAdapter.generateEntitlementCerts(any(Consumer.class), anyMap(), anyMap(),
+            anyMap(), anyBoolean())).thenReturn(entCerts);
         when(mockEventFactory.entitlementChanged(any(Entitlement.class))).thenReturn(mock(Event.class));
         Consumer consumer = TestUtil.createConsumer(owner);
         Entitlement entitlement = new Entitlement(pool, consumer, owner, 1);
@@ -401,7 +398,7 @@ public class EntitlementCertificateGeneratorTest {
 
         verify(this.mockEntitlementCurator, times(1)).markEntitlementsDirty(eq(entitlements));
 
-        verifyZeroInteractions(this.mockEntCertAdapter);
+        verifyNoInteractions(this.mockEntCertAdapter);
     }
 
     @Test

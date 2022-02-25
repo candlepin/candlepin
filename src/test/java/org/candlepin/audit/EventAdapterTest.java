@@ -14,10 +14,10 @@
  */
 package org.candlepin.audit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.TestingModules;
 import org.candlepin.auth.PrincipalData;
@@ -29,8 +29,8 @@ import com.google.inject.Injector;
 
 import org.jboss.resteasy.plugins.providers.atom.Entry;
 import org.jboss.resteasy.plugins.providers.atom.Feed;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
@@ -40,13 +40,10 @@ import java.util.List;
 import javax.inject.Inject;
 
 
-/**
- * EventAdapterTest
- */
 public class EventAdapterTest {
     @Inject private I18n i18n;
 
-    @Before
+    @BeforeEach
     public void init() {
         Injector injector = Guice.createInjector(
             new TestingModules.MockJpaModule(),

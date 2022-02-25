@@ -15,14 +15,15 @@
 package org.candlepin.hibernate;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.hibernate.annotations.Type;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
@@ -158,13 +159,13 @@ public class ResultDataUserTypeTest {
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         emf =  Persistence.createEntityManagerFactory("testingUserType");
         em = emf.createEntityManager();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         em.close();
         emf.close();
@@ -193,7 +194,7 @@ public class ResultDataUserTypeTest {
         JsonThing actualThing = resultDataRow.getResultData();
         assertEquals("Abe Lincoln", actualThing.getName());
         assertEquals(50, actualThing.getAge());
-        assertEquals(true, actualThing.isApproved());
+        assertTrue(actualThing.isApproved());
         assertNotNull(actualThing.getCreated());
         assertEquals(Arrays.asList("dog", "cat", "horse"), actualThing.getFavoriteAnimals());
     }
@@ -289,7 +290,7 @@ public class ResultDataUserTypeTest {
         JsonThing actualThing = resultDataRow.getResultData();
         assertEquals("Harry Truman", actualThing.getName());
         assertEquals(65, actualThing.getAge());
-        assertEquals(true, actualThing.isApproved());
+        assertTrue(actualThing.isApproved());
         assertNotNull(actualThing.getCreated());
         assertEquals(Arrays.asList("duck", "goose", "chicken"), actualThing.getFavoriteAnimals());
     }

@@ -14,21 +14,19 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-/**
- * ConsumerInstalledProductTest
- */
+
 public class ConsumerInstalledProductTest {
 
     private ConsumerInstalledProduct cip1;
     private ConsumerInstalledProduct cip2;
 
-    @Before
+    @BeforeEach
     public void setUpTestObjects() {
         cip1 = new ConsumerInstalledProduct("ProdA", "Product A");
         cip1.setArch("x86");
@@ -51,26 +49,26 @@ public class ConsumerInstalledProductTest {
     @Test
     public void testNotEquals() {
         cip1.setProductId("SomeProd");
-        assertFalse(cip1.equals(cip2));
+        assertNotEquals(cip1, cip2);
         cip1.setProductId("ProdA");
         assertEquals(cip1, cip2);
         cip1.setProductName("some name");
-        assertFalse(cip1.equals(cip2));
+        assertNotEquals(cip1, cip2);
         cip1.setProductName("Product A");
         assertEquals(cip1, cip2);
         cip1.setVersion(null);
-        assertFalse(cip1.equals(cip2));
+        assertNotEquals(cip1, cip2);
         cip1.setVersion("1.0");
         assertEquals(cip1, cip2);
         cip2.setVersion(null);
-        assertFalse(cip1.equals(cip2));
+        assertNotEquals(cip1, cip2);
         cip2.setVersion("1.0");
         assertEquals(cip1, cip2);
         cip1.setArch(null);
-        assertFalse(cip1.equals(cip2));
+        assertNotEquals(cip1, cip2);
         cip1.setArch("x86");
         assertEquals(cip1, cip2);
         cip2.setArch(null);
-        assertFalse(cip1.equals(cip2));
+        assertNotEquals(cip1, cip2);
     }
 }

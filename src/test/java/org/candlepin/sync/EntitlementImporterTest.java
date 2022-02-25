@@ -17,7 +17,6 @@ package org.candlepin.sync;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.candlepin.audit.EventSink;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.BrandingDTO;
@@ -51,8 +50,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -64,15 +61,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * EntitlementImporterTest
- */
+
+
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
-@SuppressWarnings("synthetic-access")
 public class EntitlementImporterTest {
 
-    @Mock private EventSink sink;
     @Mock private CertificateSerialCurator certSerialCurator;
     @Mock private OwnerCurator ownerCurator;
     @Mock private CdnCurator cdnCurator;
@@ -84,13 +77,11 @@ public class EntitlementImporterTest {
 
     private Owner owner;
     private EntitlementImporter importer;
-    private I18n i18n;
     private Consumer consumer;
     private ConsumerDTO consumerDTO;
     private EntitlementCertificate cert;
     private Reader reader;
     private Meta meta;
-    private Cdn testCdn;
     private ModelTranslator translator;
 
 
@@ -103,7 +94,7 @@ public class EntitlementImporterTest {
             mockEnvironmentCurator,
             ownerCurator);
 
-        i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, mockProductCurator, ec,
             translator);
 
@@ -116,9 +107,6 @@ public class EntitlementImporterTest {
         consumerDTO.setUrlWeb("");
         consumerDTO.setUrlApi("");
 
-        when(this.mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
-        when(this.mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
-
         cert = createEntitlementCertificate("my-test-key", "my-cert");
         cert.setId("test-id");
 
@@ -126,7 +114,7 @@ public class EntitlementImporterTest {
 
         meta = new Meta();
         meta.setCdnLabel("test-cdn");
-        testCdn = new Cdn("test-cdn", "Test CDN", "https://test.url.com");
+        Cdn testCdn = new Cdn("test-cdn", "Test CDN", "https://test.url.com");
         when(cdnCurator.getByLabel("test-cdn")).thenReturn(testCdn);
     }
 

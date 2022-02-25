@@ -61,9 +61,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 
 
-/**
- * Test suite for the StatusResource class
- */
+
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class StatusResourceTest {

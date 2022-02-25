@@ -14,8 +14,8 @@
  */
 package org.candlepin.auth.permissions;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
@@ -25,8 +25,9 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.User;
 import org.candlepin.test.TestUtil;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 
 public class UsernameConsumersPermissionTest {
 
@@ -34,7 +35,7 @@ public class UsernameConsumersPermissionTest {
     private Owner owner;
     private final String username = "bill";
 
-    @Before
+    @BeforeEach
     public void init() {
         User u = new User(username, "dontcare");
         owner = new Owner("ownerkey", "My Org");

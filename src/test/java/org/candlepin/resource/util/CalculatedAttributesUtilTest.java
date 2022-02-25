@@ -16,6 +16,7 @@ package org.candlepin.resource.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
@@ -40,15 +41,12 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 import javax.inject.Inject;
 
-/**
- * CalculatedAttributesUtilTest
- */
+
 public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
@@ -101,7 +99,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         suggested.setIncrement(1L);
         Map<String, SuggestedQuantityDTO> suggestedMap = new HashMap<>();
         suggestedMap.put(pool1.getId(), suggested);
-        when(quantityRules.getSuggestedQuantities(any(List.class),
+        when(quantityRules.getSuggestedQuantities(anyList(),
             any(Consumer.class), any(Date.class))).
             thenReturn(suggestedMap);
 
@@ -153,7 +151,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         suggested.setIncrement(12L);
         Map<String, SuggestedQuantityDTO> suggestedMap = new HashMap<>();
         suggestedMap.put(pool2.getId(), suggested);
-        when(quantityRules.getSuggestedQuantities(any(List.class),
+        when(quantityRules.getSuggestedQuantities(anyList(),
             any(Consumer.class), any(Date.class))).
             thenReturn(suggestedMap);
 

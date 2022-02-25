@@ -14,18 +14,18 @@
  */
 package org.candlepin.dto.manifest.v1;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.candlepin.dto.AbstractDTOTest;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-
 
 
 /**
@@ -93,13 +93,13 @@ public class ContentDTOTest extends AbstractDTOTest<ContentDTO> {
         assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getRequiredProductIds());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testAddRequiredProductsWithNullValue() {
         ContentDTO dto = new ContentDTO();
         dto.setRequiredProductIds(Arrays.asList("1", "2"));
         assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getRequiredProductIds());
 
-        dto.addRequiredProductId(null);
+        assertThrows(IllegalArgumentException.class, () -> dto.addRequiredProductId(null));
     }
 
     @Test
@@ -122,12 +122,12 @@ public class ContentDTOTest extends AbstractDTOTest<ContentDTO> {
         assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getRequiredProductIds());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testRemoveRequiredProductsWithNullValue() {
         ContentDTO dto = new ContentDTO();
         dto.setRequiredProductIds(Arrays.asList("1", "2"));
         assertEquals(new HashSet<>(Arrays.asList("1", "2")), dto.getRequiredProductIds());
 
-        dto.removeRequiredProductId(null);
+        assertThrows(IllegalArgumentException.class, () -> dto.removeRequiredProductId(null));
     }
 }

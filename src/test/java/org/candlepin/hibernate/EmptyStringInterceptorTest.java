@@ -14,11 +14,12 @@
  */
 package org.candlepin.hibernate;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Properties;
 
@@ -64,12 +65,12 @@ public class EmptyStringInterceptorTest {
         }
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         props = new Properties();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         em.close();
         emf.close();
@@ -105,7 +106,7 @@ public class EmptyStringInterceptorTest {
         persist(p);
 
         p = em.find(Person.class, 1);
-        assertEquals(null, p.getName());
+        assertNull(p.getName());
     }
 
     @Test
@@ -122,7 +123,7 @@ public class EmptyStringInterceptorTest {
         persist(p);
 
         p = em.find(Person.class, 1);
-        assertEquals(null, p.getName());
+        assertNull(p.getName());
     }
 
     private void persist(Person p) {

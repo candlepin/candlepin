@@ -14,11 +14,11 @@
  */
 package org.candlepin.pki.impl;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -28,7 +28,7 @@ public class DefaultSubjectKeyIdentifierWriterTest {
 
     private KeyPair keyPair;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(2048);

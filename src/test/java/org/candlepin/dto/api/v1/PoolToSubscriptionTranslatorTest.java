@@ -40,7 +40,7 @@ import org.candlepin.model.dto.ContentData;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
@@ -170,8 +170,8 @@ public class PoolToSubscriptionTranslatorTest extends
 
         Pool pool = mock(Pool.class);
 
-        Long quantity = new Long(22);
-        Long multiplier = new Long(2);
+        Long quantity = 22L;
+        Long multiplier = 2L;
         product.setMultiplier(multiplier);
 
         when(pool.getQuantity()).thenReturn(quantity);
@@ -189,8 +189,8 @@ public class PoolToSubscriptionTranslatorTest extends
 
         Pool pool = mock(Pool.class);
 
-        Long quantity = new Long(64);
-        Long multiplier = new Long(2);
+        Long quantity = 64L;
+        Long multiplier = 2L;
 
         product.setMultiplier(multiplier);
         product.setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "0");
@@ -210,8 +210,8 @@ public class PoolToSubscriptionTranslatorTest extends
 
         Pool pool = mock(Pool.class);
 
-        Long quantity = new Long(64);
-        Long multiplier = new Long(2);
+        Long quantity = 64L;
+        Long multiplier = 2L;
 
         product.setMultiplier(multiplier);
         product.setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "4");

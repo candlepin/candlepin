@@ -14,19 +14,19 @@
  */
 package org.candlepin.model;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-/**
- * UpstreamConsumerTest
- */
+
 public class UpstreamConsumerTest {
     private UpstreamConsumer uc = null;
 
-    @Before
+    @BeforeEach
     public void init() {
         uc = new UpstreamConsumer("someuuid");
     }
@@ -46,9 +46,9 @@ public class UpstreamConsumerTest {
     public void defaultCtor() {
         UpstreamConsumer luc = new UpstreamConsumer();
         assertEquals("", luc.getUuid());
-        assertEquals(null, luc.getName());
-        assertEquals(null, luc.getOwnerId());
-        assertEquals(null, luc.getType());
+        assertNull(luc.getName());
+        assertNull(luc.getOwnerId());
+        assertNull(luc.getType());
     }
 
     @Test
@@ -96,10 +96,10 @@ public class UpstreamConsumerTest {
         assertEquals("some-fake-url", uc.getApiUrl());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void exception() {
         Owner o = mock(Owner.class);
         ConsumerType ct = mock(ConsumerType.class);
-        new UpstreamConsumer("fake name", o, ct, null);
+        assertThrows(IllegalArgumentException.class, () -> new UpstreamConsumer("fake name", o, ct, null));
     }
 }

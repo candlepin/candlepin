@@ -14,24 +14,19 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Set;
 
 
-/**
- * Test suite for the SetView class
- */
 public class SetViewTest extends CollectionViewTest {
 
-    @Before
+    @BeforeEach
     @Override
     public void init() {
         this.source = new HashSet();
@@ -42,21 +37,21 @@ public class SetViewTest extends CollectionViewTest {
     public void testEquals() {
         Set comp = new HashSet();
 
-        assertTrue(this.testobj.equals(comp));
+        assertEquals(this.testobj, comp);
 
         for (int i = 0; i < 5; ++i) {
             this.source.add(String.valueOf(i));
-            assertFalse(this.testobj.equals(comp));
+            assertNotEquals(this.testobj, comp);
 
             comp.add(String.valueOf(i));
-            assertTrue(this.testobj.equals(comp));
+            assertEquals(this.testobj, comp);
         }
 
         this.source.clear();
-        assertFalse(this.testobj.equals(comp));
+        assertNotEquals(this.testobj, comp);
 
         comp.clear();
-        assertTrue(this.testobj.equals(comp));
+        assertEquals(this.testobj, comp);
     }
 
     @Test

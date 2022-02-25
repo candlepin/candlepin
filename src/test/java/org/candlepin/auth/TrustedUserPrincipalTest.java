@@ -14,24 +14,22 @@
  */
 package org.candlepin.auth;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Pool;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-/**
- * TrustedUserPrincipalTest
- */
+
 public class TrustedUserPrincipalTest {
     private TrustedUserPrincipal principal;
 
-    @Before
+    @BeforeEach
     public void init() {
         principal = new TrustedUserPrincipal("admin");
     }
@@ -71,23 +69,23 @@ public class TrustedUserPrincipalTest {
 
     @Test
     public void equalsNull() {
-        assertFalse(principal.equals(null));
+        assertNotEquals(null, principal);
     }
 
     @Test
     public void equalsOtherObject() {
-        assertFalse(principal.equals(new Object()));
+        assertNotEquals(principal, new Object());
     }
 
     @Test
     public void equalsAnotherConsumerPrincipal() {
         TrustedUserPrincipal tup = new TrustedUserPrincipal("admin");
-        assertTrue(principal.equals(tup));
+        assertEquals(principal, tup);
     }
 
     @Test
     public void equalsDifferentConsumer() {
         TrustedUserPrincipal tup = new TrustedUserPrincipal("donald");
-        assertFalse(principal.equals(tup));
+        assertNotEquals(principal, tup);
     }
 }

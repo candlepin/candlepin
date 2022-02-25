@@ -14,7 +14,7 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.MapConfiguration;
@@ -28,10 +28,10 @@ import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -39,11 +39,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-
-/**
- * ConsumerTypeExporterTest
- */
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class ConsumerTypeExporterTest {
 
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
@@ -67,10 +63,8 @@ public class ConsumerTypeExporterTest {
 
         consumerType.export(mapper, writer, type);
 
-        StringBuffer json = new StringBuffer();
-        json.append("{\"id\":null,\"label\":\"TESTTYPE\",");
-        json.append("\"manifest\":false}");
-        assertTrue(TestUtil.isJsonEqual(json.toString(), writer.toString()));
+        String json = "{\"id\":null,\"label\":\"TESTTYPE\",\"manifest\":false}";
+        assertTrue(TestUtil.isJsonEqual(json, writer.toString()));
     }
 
 }

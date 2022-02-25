@@ -14,29 +14,26 @@
  */
 package org.candlepin.util;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
 
-
-/**
- * Test suite for the MapView class
- */
 public class MapViewTest {
 
     protected Map source;
     protected MapView testobj;
 
-    @Before
+    @BeforeEach
     public void init() {
         this.source = new HashMap();
         this.testobj = new MapView(this.source);
@@ -143,24 +140,24 @@ public class MapViewTest {
     public void testEquals() {
         Map comp = new HashMap();
 
-        assertTrue(this.testobj.equals(comp));
+        assertEquals(this.testobj, comp);
 
         for (int i = 0; i < 5; ++i) {
             this.source.put("k" + i, "v" + i);
-            assertFalse(this.testobj.equals(comp));
+            assertNotEquals(this.testobj, comp);
 
             comp.put("k" + i, "value");
-            assertFalse(this.testobj.equals(comp));
+            assertNotEquals(this.testobj, comp);
 
             comp.put("k" + i, "v" + i);
-            assertTrue(this.testobj.equals(comp));
+            assertEquals(this.testobj, comp);
         }
 
         this.source.clear();
-        assertFalse(this.testobj.equals(comp));
+        assertNotEquals(this.testobj, comp);
 
         comp.clear();
-        assertTrue(this.testobj.equals(comp));
+        assertEquals(this.testobj, comp);
     }
 
     @Test
@@ -251,19 +248,19 @@ public class MapViewTest {
         assertEquals(this.source.keySet(), this.testobj.keySet());
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testPut() {
-        this.testobj.put("k1", "v1");
+        assertThrows(UnsupportedOperationException.class, () -> this.testobj.put("k1", "v1"));
     }
 
-    @Test(expected = UnsupportedOperationException.class)
+    @Test
     public void testPutAll() {
         Map map = new HashMap();
         map.put("k1", "v1");
         map.put("k2", "v2");
         map.put("k3", "v3");
 
-        this.testobj.putAll(map);
+        assertThrows(UnsupportedOperationException.class, () -> this.testobj.putAll(map));
     }
 
     @Test

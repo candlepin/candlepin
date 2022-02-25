@@ -34,8 +34,8 @@ import org.candlepin.util.Util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -83,7 +83,7 @@ public class ProductDataTest {
 
     private ObjectMapper mapper;
 
-    @Before
+    @BeforeEach
     public void createObjects() {
         this.mapper = new ObjectMapper();
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
@@ -1158,11 +1158,11 @@ public class ProductDataTest {
         ProductData lhs = new ProductData();
         ProductData rhs = new ProductData();
 
-        assertFalse(lhs.equals(null));
-        assertTrue(lhs.equals(lhs));
-        assertTrue(rhs.equals(rhs));
-        assertTrue(lhs.equals(rhs));
-        assertTrue(rhs.equals(lhs));
+        assertNotEquals(null, lhs);
+        assertEquals(lhs, lhs);
+        assertEquals(rhs, rhs);
+        assertEquals(lhs, rhs);
+        assertEquals(rhs, lhs);
     }
 
     @ParameterizedTest
@@ -1187,10 +1187,10 @@ public class ProductDataTest {
             assertEquals(accessor.invoke(lhs), accessor.invoke(rhs));
         }
 
-        assertTrue(lhs.equals(rhs));
-        assertTrue(rhs.equals(lhs));
-        assertTrue(lhs.equals(lhs));
-        assertTrue(rhs.equals(rhs));
+        assertEquals(lhs, rhs);
+        assertEquals(rhs, lhs);
+        assertEquals(lhs, lhs);
+        assertEquals(rhs, rhs);
         assertEquals(lhs.hashCode(), rhs.hashCode());
 
         mutator.invoke(rhs, value2);
@@ -1204,10 +1204,10 @@ public class ProductDataTest {
             assertNotEquals(accessor.invoke(lhs), accessor.invoke(rhs));
         }
 
-        assertFalse(lhs.equals(rhs));
-        assertFalse(rhs.equals(lhs));
-        assertTrue(lhs.equals(lhs));
-        assertTrue(rhs.equals(rhs));
+        assertNotEquals(lhs, rhs);
+        assertNotEquals(rhs, lhs);
+        assertEquals(lhs, lhs);
+        assertEquals(rhs, rhs);
     }
 
     @ParameterizedTest

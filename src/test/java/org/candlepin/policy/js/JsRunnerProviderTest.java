@@ -14,6 +14,8 @@
  */
 package org.candlepin.policy.js;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -25,29 +27,27 @@ import org.candlepin.model.RulesCurator;
 
 import com.google.inject.Provider;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.mockito.runners.MockitoJUnitRunner;
 
 import java.util.Date;
-/**
- * JsRunnerProviderTest
- */
-@RunWith(MockitoJUnitRunner.class)
+
+
 public class JsRunnerProviderTest {
-    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
-    @Mock private RulesCurator rulesCurator;
+    @Mock
+    private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock
+    private RulesCurator rulesCurator;
     @Mock
     private JsRunnerRequestCache mockedCache;
-    @Mock private Rules rules;
+    @Mock
+    private Rules rules;
     private Date time1;
     private JsRunnerProvider provider;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         time1 = new Date();
@@ -93,9 +93,9 @@ public class JsRunnerProviderTest {
         provider.get();
         JsRunnerRequestCache newCache = new JsRunnerRequestCache();
         when(cacheProvider.get()).thenReturn(newCache);
-        Assert.assertEquals(null, newCache.getUpdated());
+        assertNull(newCache.getUpdated());
         provider.get();
-        Assert.assertEquals(time1, newCache.getUpdated());
+        assertEquals(time1, newCache.getUpdated());
         provider.get();
         verify(rulesCurator, times(3)).getUpdated();
     }

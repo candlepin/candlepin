@@ -14,13 +14,13 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
 public class EntitlementFinderUtilTest {

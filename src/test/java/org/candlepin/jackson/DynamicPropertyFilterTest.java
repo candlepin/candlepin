@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -60,7 +60,7 @@ public class DynamicPropertyFilterTest {
         ResteasyContext.pushContext(DynamicFilterData.class, null);
         DynamicPropertyFilter propertyFilter = new DynamicPropertyFilter();
         assertTrue(propertyFilter.isSerializable(null, jsonGenerator, null, writer));
-        verifyZeroInteractions(jsonGenerator, writer);
+        verifyNoInteractions(jsonGenerator, writer);
     }
 
     @Test

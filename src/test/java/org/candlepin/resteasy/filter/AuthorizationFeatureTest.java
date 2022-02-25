@@ -14,7 +14,8 @@
  */
 package org.candlepin.resteasy.filter;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -30,11 +31,11 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.lang.reflect.Method;
 
@@ -42,7 +43,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.FeatureContext;
 
-@RunWith(MockitoJUnitRunner.class)
+@ExtendWith(MockitoExtension.class)
 public class AuthorizationFeatureTest {
     Injector injector;
 
@@ -101,7 +102,7 @@ public class AuthorizationFeatureTest {
 
     private AuthorizationFeature authorizationFeature;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
         injector = Guice.createInjector(getGuiceOverrideModule());
         MethodLocator methodLocator = new MethodLocator(injector);
@@ -146,7 +147,7 @@ public class AuthorizationFeatureTest {
         Method m = FakeResource.class.getMethod("methodWithVerify", String.class);
         boolean isSuperAdminOnly = authorizationFeature.isSuperAdminOnly(m);
 
-        assertEquals(false, isSuperAdminOnly);
+        assertFalse(isSuperAdminOnly);
     }
 
     @Test
@@ -154,7 +155,7 @@ public class AuthorizationFeatureTest {
         Method m = FakeResource.class.getMethod("superAdminOnlyMethod", String.class);
         boolean isSuperAdminOnly = authorizationFeature.isSuperAdminOnly(m);
 
-        assertEquals(true, isSuperAdminOnly);
+        assertTrue(isSuperAdminOnly);
     }
 
     @Test
@@ -192,7 +193,7 @@ public class AuthorizationFeatureTest {
         Method m = FakeApi.class.getMethod("methodWithVerify", String.class);
         boolean isSuperAdminOnly = authorizationFeature.isSuperAdminOnly(m);
 
-        assertEquals(false, isSuperAdminOnly);
+        assertFalse(isSuperAdminOnly);
     }
 
     @Test
@@ -200,7 +201,7 @@ public class AuthorizationFeatureTest {
         Method m = FakeApi.class.getMethod("superAdminOnlyMethod", String.class);
         boolean isSuperAdminOnly = authorizationFeature.isSuperAdminOnly(m);
 
-        assertEquals(true, isSuperAdminOnly);
+        assertTrue(isSuperAdminOnly);
     }
 
     protected Module getGuiceOverrideModule() {

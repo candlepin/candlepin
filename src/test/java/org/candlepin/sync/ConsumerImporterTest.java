@@ -14,10 +14,11 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -38,8 +39,8 @@ import org.candlepin.model.UpstreamConsumer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
@@ -50,9 +51,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-/**
- * ConsumerImporterTest
- */
+
 public class ConsumerImporterTest {
 
     private ConsumerImporter importer;
@@ -62,7 +61,7 @@ public class ConsumerImporterTest {
     private IdentityCertificateCurator idCertCurator;
     private I18n i18n;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         curator = mock(OwnerCurator.class);
         serialCurator = mock(CertificateSerialCurator.class);
@@ -99,16 +98,17 @@ public class ConsumerImporterTest {
         assertEquals("test-uuid", consumer.getUuid());
     }
 
-    @Test(expected = JsonMappingException.class)
-    public void importFailsOnUnknownPropertiesWithNonDefaultConfig() throws Exception {
+    @Test
+    public void importFailsOnUnknownPropertiesWithNonDefaultConfig() {
         // Override default config to error out on unknown properties:
         Map<String, String> configProps = new HashMap<>();
         configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "true");
 
         this.mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
 
-        importer.createObject(mapper, new StringReader(
-            "{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}"));
+        String json = "{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}";
+        assertThrows(JsonMappingException.class,
+            () -> importer.createObject(mapper, new StringReader(json)));
     }
 
     @Test
@@ -161,9 +161,8 @@ public class ConsumerImporterTest {
         assertEquals("test-uuid", arg.getValue().getUpstreamUuid());
     }
 
-    @Test(expected = SyncDataFormatException.class)
-    public void importConsumerWithSameUuidOnAnotherOwnerShouldThrowException()
-        throws ImporterException {
+    @Test
+    public void importConsumerWithSameUuidOnAnotherOwnerShouldThrowException() {
         Owner owner = new Owner();
         UpstreamConsumer uc = new UpstreamConsumer("test-uuid");
         owner.setUpstreamConsumer(uc);
@@ -175,7 +174,8 @@ public class ConsumerImporterTest {
         anotherOwner.setUpstreamConsumer(uc);
         when(curator.getByUpstreamUuid(consumer.getUuid())).thenReturn(anotherOwner);
 
-        importer.store(owner, consumer, new ConflictOverrides(), null);
+        assertThrows(SyncDataFormatException.class,
+            () -> importer.store(owner, consumer, new ConflictOverrides(), null));
     }
 
     @Test
@@ -224,13 +224,14 @@ public class ConsumerImporterTest {
         verify(curator).merge(owner);
     }
 
-    @Test(expected = ImporterException.class)
-    public void importConsumerWithNullUuidOnConsumerShouldThrowException() throws ImporterException {
+    @Test
+    public void importConsumerWithNullUuidOnConsumerShouldThrowException() {
         Owner owner = new Owner();
         ConsumerDTO consumer = new ConsumerDTO();
         consumer.setUuid(null);
 
-        importer.store(owner, consumer, new ConflictOverrides(), null);
+        assertThrows(ImporterException.class,
+            () -> importer.store(owner, consumer, new ConflictOverrides(), null));
     }
 
     /*

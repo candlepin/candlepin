@@ -14,9 +14,9 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
@@ -32,7 +32,7 @@ import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,9 +41,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-/**
- * PreEntitlementRulesTest
- */
+
 public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void testBindForSameProductNotAllowed() {
@@ -167,7 +165,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Product product = TestUtil.createProduct(productId, "A product for testing");
         Pool pool = createPool(owner, product);
         pool.setId("TaylorSwift");
-        pool.setQuantity(new Long(100));
+        pool.setQuantity(100L);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 10);
 
@@ -183,11 +181,11 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Product product = TestUtil.createProduct(productId, "A product for testing");
         Pool pool = createPool(owner, product);
         pool.setId("TaylorSwift");
-        pool.setQuantity(new Long(100));
+        pool.setQuantity(100L);
 
         Pool pool2 = createPool(owner, product);
         pool2.setId("SwiftTaylor");
-        pool2.setQuantity(new Long(100));
+        pool2.setQuantity(100L);
 
         Map<String, ValidationResult> results = enforcer.preEntitlement(consumer,
             createPoolQuantities(100, pool, pool2), CallerType.UNKNOWN);
@@ -461,11 +459,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId("fakeid" + TestUtil.randomInt());
 
-        consumer.setFacts(new HashMap<String, String>() {
-            {
-                put(factName, factValue);
-            }
-        });
+        consumer.setFacts(Map.of(factName, factValue));
 
         return pool;
     }
