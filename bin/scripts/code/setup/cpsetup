@@ -60,38 +60,39 @@ def run_command(command):
 
 
 # run with 'sudo' if not running as root
-def run_command_with_sudo(command):
+def run_command_with_sudo(command, **kwargs):
     if os.geteuid()==0:
-        run_command(command)
+        output = run_command(command.format(**kwargs))
     else:
-        run_command('sudo %s' % command)
+        output = run_command('sudo %s' % command.format(**kwargs))
+
+    return output
 
 
 class TomcatSetup(object):
     def __init__(self, conf_dir, keystorepwd):
         self.conf_dir = conf_dir
-        self.comment_pattern = '<!--\s*?\n*?<Connector port="8443".*?-->'
-        self.existing_pattern = '<Connector port="8443".*?/>'
+        self.comment_pattern = '<!--\s*?<Connector port="8443".*?-->'
+        self.existing_pattern = '<Connector port="8443".*?</Connector>|<Connector port="8443".*?/>'
         self.https_conn = """
-    <Connector port="8443" protocol="HTTP/1.1" SSLEnabled="true"
-               maxThreads="150" scheme="https" secure="true"
-               clientAuth="want"
-               sslEnabledProtocols="TLSv1,TLSv1.1,TLSv1.2"
-               keystoreFile="conf/keystore"
-               truststoreFile="conf/keystore"
-               keystorePass="%s"
-               keystoreType="PKCS12"
-               ciphers="SSL_RSA_WITH_3DES_EDE_CBC_SHA,
-                    TLS_RSA_WITH_AES_256_CBC_SHA,
-                    TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,
-                    TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,
-                    TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,
-                    TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,
-                    TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,
-                    TLS_ECDH_anon_WITH_3DES_EDE_CBC_SHA,
-                    TLS_ECDH_anon_WITH_AES_128_CBC_SHA,
-                    TLS_ECDH_anon_WITH_AES_256_CBC_SHA"
-               truststorePass="%s" />""" % (keystorepwd, keystorepwd)
+        <Connector port="8443" protocol="HTTP/1.1"
+            scheme="https"
+            secure="true"
+            SSLEnabled="true"
+            maxThreads="150">
+
+            <SSLHostConfig certificateVerification="optional"
+                protocols="+TLSv1,+TLSv1.1,+TLSv1.2"
+                sslProtocol="TLS"
+                ciphers="SSL_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA">
+
+                <Certificate
+                    certificateFile="/etc/candlepin/certs/candlepin-ca.crt"
+                    certificateKeyFile="/etc/candlepin/certs/candlepin-ca.key"
+                    type="RSA"
+                />
+            </SSLHostConfig>
+        </Connector>"""
         self.main_conf = '/etc/tomcat/tomcat.conf'
         self.main_comment_pattern = '^#\s*JAVA_HOME.*'
         self.main_existing_pattern = '^JAVA_HOME.*'
@@ -122,10 +123,15 @@ class TomcatSetup(object):
         original_file = open(os.path.join(self.conf_dir, 'server.xml'), 'r')
         original = original_file.read()
 
+        # TODO: This isn't consistent. It will replace a commented-out version of the config
+        # before replacing an uncommented version of it, but due to regex limitations, attempting
+        # to flip this will just replace commented out blocks as if they weren't commented out.
+        # Replace this with a proper html/xml node parser.
         if re.search(self.comment_pattern, original, re.DOTALL):
             updated = self._replace_commented(original)
         else:
             updated = self._replace_current(original)
+
         original_file.close()
         with open(os.path.join(self.conf_dir, 'server.xml'), 'w') as config:
             config.write(updated)
@@ -173,11 +179,18 @@ class TomcatSetup(object):
 class CertSetup(object):
     def __init__(self):
         self.cert_home = '/etc/candlepin/certs'
-        self.ca_key_passwd = self.cert_home + '/candlepin-ca-password.txt'
-        self.ca_key = self.cert_home + '/candlepin-ca.key'
-        self.ca_pub_key = self.cert_home + '/candlepin-ca-pub.key'
-        self.ca_cert = self.cert_home + '/candlepin-ca.crt'
-        self.keystore = self.cert_home + '/keystore'
+        self.cert_name = 'candlepin-ca'
+
+        self.noise_file = '{cert_home}/noise.bin'.format(cert_home=self.cert_home)
+        self.password_file = '{cert_home}/cppw.txt'.format(cert_home=self.cert_home)
+
+        self.req_config_file = '{cert_home}/req.cnf'.format(cert_home=self.cert_home)
+        self.ca_key = '{cert_home}/{cert_name}.key'.format(cert_home=self.cert_home, cert_name=self.cert_name)
+        self.ca_pub_key = '{cert_home}/{cert_name}-pub.key'.format(cert_home=self.cert_home, cert_name=self.cert_name)
+        self.ca_cert = '{cert_home}/{cert_name}.crt'.format(cert_home=self.cert_home, cert_name=self.cert_name)
+
+        self.ca_cert_days = 365
+        self.cert_bit_length = 4096
 
     def generate(self):
         if not os.path.exists(self.cert_home):
@@ -187,29 +200,52 @@ class CertSetup(object):
             print("Certificates already exist, skipping...")
             return
 
-        print("Creating CA private key password")
-        run_command_with_sudo('su -c "echo $RANDOM > %s"' % self.ca_key_passwd)
+        args = {
+            'hostname': socket.gethostname(),
+            'interface_ip': run_command_with_sudo('hostname -I'),
+            'cert_home': self.cert_home,
+            'cert_name': self.cert_name,
+            'noise_file': self.noise_file,
+            'password_file': self.password_file,
+            'req_config_file': self.req_config_file,
+            'ca_key': self.ca_key,
+            'ca_pub_key': self.ca_pub_key,
+            'ca_cert': self.ca_cert,
+            'ca_cert_days': self.ca_cert_days,
+            'cert_bit_length': self.cert_bit_length,
+        }
 
-        print("Creating CA private key")
-        run_command_with_sudo('openssl genrsa -out %s -passout "file:%s" 2048'
-                              % (self.ca_key, self.ca_key_passwd))
+        print("Generating CA certs and keys... ")
 
-        print("Creating CA public key")
-        run_command_with_sudo('openssl rsa -pubout -in %s -out %s' % (self.ca_key, self.ca_pub_key))
+        # Commands copied directly from gen_certs.sh
+        run_command_with_sudo('rm -rf {cert_home}', **args)
+        run_command_with_sudo('mkdir -p {cert_home}', **args)
+        run_command_with_sudo('openssl rand -out {noise_file} {cert_bit_length}', **args)
+        run_command_with_sudo('openssl rand -base64 -out {password_file} 24', **args)
+        run_command_with_sudo('openssl genpkey -out {ca_key} -pass "file:{password_file}" -algorithm rsa -pkeyopt rsa_keygen_bits:{cert_bit_length}', **args)
+        run_command_with_sudo('openssl pkey -pubout -in {ca_key} -out {ca_pub_key}', **args)
 
-        print("Creating CA certificate")
-        run_command_with_sudo('openssl req -new -x509 -days 365 -key %s -out %s '
-                              '-subj "/CN=%s/C=US/L=Raleigh/"'
-                              % (self.ca_key, self.ca_cert, socket.gethostname()))
-        run_command_with_sudo('openssl pkcs12 -export -in %s -inkey %s -out %s -name tomcat -CAfile %s '
-                              '-caname root -chain -password pass:password'
-                              % (self.ca_cert, self.ca_key, self.keystore, self.ca_cert))
+        # Write cert generation config
+        with open(self.req_config_file, 'w') as cnf:
+            cnf.write('[req]\n')
+            cnf.write('distinguished_name = req\n')
+            cnf.write('x509_extensions = v3_ext\n')
+            cnf.write('[v3_ext]\n')
+            cnf.write('subjectKeyIdentifier = hash\n')
+            cnf.write('authorityKeyIdentifier = keyid, issuer\n')
+            cnf.write('basicConstraints = critical, CA:true\n')
+            cnf.write('subjectAltName = @san\n')
+            cnf.write('[san]\n')
+            cnf.write('IP.1 = 127.0.0.1\n')
+            cnf.write('IP.2 = {interface_ip}\n'.format(**args))
+            cnf.write('DNS.1 = localhost\n')
+            cnf.write('DNS.2 = {hostname}\n'.format(**args))
 
-        # Tomcat 8.5+ requires the cert be separate from the key when used
-        # as both a keystore and a trust store
-        run_command_with_sudo('keytool -keystore %s -noprompt -importcert -storepass password '
-                              '-alias candlepin_ca -file %s' % (self.keystore, self.ca_cert))
-        run_command_with_sudo('chmod a+r %s/*' % self.cert_home)
+        run_command_with_sudo('openssl req -new -x509 -days {ca_cert_days} -key {ca_key} -out {ca_cert} ' +
+            '-subj "/CN={hostname}/C=US/L=Raleigh/" -config {req_config_file}', **args)
+        run_command_with_sudo('chmod a+r {cert_home}/*', **args)
+        run_command_with_sudo('cp -f {ca_cert} "/etc/pki/ca-trust/source/anchors/{cert_name}.crt"', **args)
+        run_command_with_sudo('update-ca-trust', **args)
 
 
 class PostgresqlConf(object):
