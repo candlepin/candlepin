@@ -12,7 +12,16 @@ from contextlib import contextmanager
 logging.basicConfig(level=logging.INFO, format="%(levelname)-7s %(message)s")
 logger = logging.getLogger('update_server_xml')
 
-
+SSL_CIPHERS = [
+    "SSL_RSA_WITH_3DES_EDE_CBC_SHA",
+    "TLS_RSA_WITH_AES_256_CBC_SHA",
+    "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
+    "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA",
+    "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
+    "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
+    "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA",
+    "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
+]
 
 def compare_nodes(cnode, nnode):
     """Compares the two nodes and checks for differences in attributes or children.
@@ -187,17 +196,6 @@ class LegacySSLContextEditor(AbstractBaseEditor):
         return []
 
     def _build_node(self):
-        ciphers = ",".join([
-            "SSL_RSA_WITH_3DES_EDE_CBC_SHA",
-            "TLS_RSA_WITH_AES_256_CBC_SHA",
-            "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
-            "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA",
-            "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
-            "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
-            "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA",
-            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
-        ])
-
         # Setup our node configuration
         connector = libxml2.newNode("Connector")
         self._add_attributes(connector, [
@@ -213,30 +211,25 @@ class LegacySSLContextEditor(AbstractBaseEditor):
             # existing python-rhsm based clients (RHEL5).
             ("sslEnabledProtocols", "TLSv1.2,TLSv1.1,TLSv1"),
             ("SSLProtocol", "TLSv1.2,TLSv1.1,TLSv1"),
-            ("keystoreFile", "conf/keystore"),
+            ("ciphers", ",".join(SSL_CIPHERS)),
             ("truststoreFile", "conf/keystore"),
+            ("truststorePass", "password"),
+            ("keystoreFile", "conf/keystore"),
             ("keystorePass", "password"),
             ("keystoreType", "PKCS12"),
-            ("ciphers", ciphers),
-            ("truststorePass", "password"),
         ])
 
         # Return our top-level node
         return connector
 
 
-# <Connector protocol="HTTP/1.1" SSLEnabled="true" maxThreads="150" scheme="https" secure="true" port="8443">
-#   <SSLHostConfig certificateVerification="optional" protocols="+TLSv1,+TLSv1.1,+TLSv1.2" sslProtocol="TLS" truststoreFile="conf/keystore" truststorePassword="password" truststoreType="JKS" ciphers="SSL_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA">
 
-#     <Certificate certificateKeystoreFile="conf/keystore" certificateKeystorePassword="password" certificateKeystoreType="JKS" />
-#   </SSLHostConfig>
-# </Connector>
-
-class SSLContextEditor(AbstractBaseEditor):
+class CandlepinConnectorEditorV3(AbstractBaseEditor):
     def __init__(self, *args, **kwargs):
-        super(SSLContextEditor, self).__init__(*args, **kwargs)
+        super(CandlepinConnectorEditorV3, self).__init__(*args, **kwargs)
+
         self.port = "8443"
-        self._element = self._build_node()
+        self._node = self._build_node()
 
     @property
     def parent_xpath(self):
@@ -244,78 +237,82 @@ class SSLContextEditor(AbstractBaseEditor):
 
     @property
     def search_xpath(self):
-        return "./Connector[@port='%s']" % self.port
+        return './Connector[@port=\"{port}\"]'.format(port = self.port)
 
     @property
     def new_node(self):
-        return self._element
+        return self._node
 
     @property
     def attributes(self):
-        # We manually add the attributes below, so we don't want to return anything here.
-        return []
+        return [
+            ('port', self.port),
+            ('protocol', 'HTTP/1.1'),
+            ('scheme', 'https'),
+            ('secure', 'true'),
+            ('SSLEnabled', 'true'),
+            ('maxThreads', '150')
+        ]
 
     def _build_node(self):
-        ciphers = ",".join([
-            "SSL_RSA_WITH_3DES_EDE_CBC_SHA",
-            "TLS_RSA_WITH_AES_256_CBC_SHA",
-            "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
-            "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA",
-            "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
-            "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
-            "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA",
-            "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
-        ])
+        # <Connector port="8443" protocol="HTTP/1.1"
+        #     scheme="https"
+        #     secure="true"
+        #     SSLEnabled="true"
+        #     maxThreads="150">
+        #
+        #     <SSLHostConfig certificateVerification="optional"
+        #         protocols="+TLSv1,+TLSv1.1,+TLSv1.2"
+        #         sslProtocol="TLS"
+        #         ciphers="SSL_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA">
+        #
+        #         <Certificate
+        #                certificateFile="/etc/candlepin/certs/candlepin-ca.crt"
+        #                certificateKeyFile="/etc/candlepin/certs/candlepin-ca.key"
+        #                type="RSA"
+        #         />
+        #     </SSLHostConfig>
+        # </Connector>
 
-        # Setup our node configuration
         connector = libxml2.newNode("Connector")
-        self._add_attributes(connector, [
-            ("port", self.port),
-            ("protocol", "HTTP/1.1"),
-            ("SSLEnabled", "true"),
-            ("maxThreads", "150"),
-            ("scheme", "https"),
-            ("secure", "true"),
-        ])
+        self._add_attributes(connector, self.attributes)
 
-        sslconfig = libxml2.newNode("SSLHostConfig")
-        self._add_attributes(sslconfig, [
+        ssl_host_config = libxml2.newNode("SSLHostConfig")
+        self._add_attributes(ssl_host_config, [
             ("certificateVerification", "optional"),
             # Note SSLv3 is not included, to avoid poodle
             # For the time being, TLSv1 needs to stay enabled in Satellite deployments to support
             # existing python-rhsm based clients (RHEL5).
             ("protocols", "+TLSv1,+TLSv1.1,+TLSv1.2"),
             ("sslProtocol", "TLS"),
-            ("truststoreFile", "conf/keystore"),
-            ("truststorePassword", "password"),
-            ("truststoreType", "JKS"),
-            ("ciphers", ciphers),
+            ("ciphers", ",".join(SSL_CIPHERS))
         ])
 
         certificate = libxml2.newNode("Certificate")
         self._add_attributes(certificate, [
-            ("certificateKeystoreFile", "conf/keystore"),
-            ("certificateKeystorePassword", "password"),
-            ("certificateKeystoreType", "JKS"),
+            ('certificateFile', '/etc/candlepin/certs/candlepin-ca.crt'),
+            ('certificateKeyFile', '/etc/candlepin/certs/candlepin-ca.key'),
+            ('type', 'RSA')
         ])
 
         # Put it all together
         # The libxml2 bindings don't provide an obvious way to output indented XML, so we fake
         # it here to make it mostly human-readable.
         connector.addChild(libxml2.newText("\n  "))
-        connector.addChild(sslconfig)
+        connector.addChild(ssl_host_config)
         connector.addChild(libxml2.newText("\n"))
-        sslconfig.addChild(libxml2.newText("\n    "))
-        sslconfig.addChild(certificate)
-        sslconfig.addChild(libxml2.newText("\n  "))
+        ssl_host_config.addChild(libxml2.newText("\n    "))
+        ssl_host_config.addChild(certificate)
+        ssl_host_config.addChild(libxml2.newText("\n  "))
 
-        # Return our top-level node
+        # return
         return connector
 
 
-class AccessValveEditor(AbstractBaseEditor):
+
+class AccessLogValveEditor(AbstractBaseEditor):
     def __init__(self, *args, **kwargs):
-        super(AccessValveEditor, self).__init__(*args, **kwargs)
+        super(AccessLogValveEditor, self).__init__(*args, **kwargs)
         self.access_valve_class = "org.apache.catalina.valves.AccessLogValve"
         self._element = libxml2.newNode("Valve")
         self._add_attributes(self._element, self.attributes)
@@ -412,21 +409,27 @@ def main():
     (options, args) = parse_options()
     if options.debug:
         logger.setLevel(logging.DEBUG)
+
     conf_dir = args[0]
+
+    logger.info("Updating server.xml for Tomcat v{tc_version} found at: {tc_home}"
+        .format(tc_version = options.tc_version, tc_home = conf_dir))
+
     make_backup_config(conf_dir)
 
     # Determine which SSLContextEditor we need...
     tversion = parse_tc_version(options.tc_version)
     if not tversion or len(tversion) < 1 or tversion[0] > 8 or (tversion[0] == 8 and tversion[1] >= 5):
-        ssl_editor_target = SSLContextEditor
+        ssl_editor_target = CandlepinConnectorEditorV3
     else:
+        logger.warn("Using legacy Tomcat configuration")
         ssl_editor_target = LegacySSLContextEditor
 
     xml_file = os.path.join(conf_dir, "server.xml")
     logger.debug("Opening %s" % xml_file)
     with open_xml(xml_file) as doc:
         ssl_editor_target(doc).insert()
-        AccessValveEditor(doc).insert()
+        AccessLogValveEditor(doc).insert()
         AprListenerDeleter(doc).remove()
 
         if options.stdout:
