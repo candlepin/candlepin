@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-02-27 02:01-0500\n"
-"PO-Revision-Date: 2022-01-23 10:16+0000\n"
+"PO-Revision-Date: 2022-02-27 09:16+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/uk/>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.10.1\n"
+"X-Generator: Weblate 4.11\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -887,10 +887,8 @@ msgstr ""
 "Цей споживач не може використовувати наданий режим доступу до даних: {0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1638
-#, fuzzy
-#| msgid "Content does not exist in environment: {0}"
 msgid "Server does not support environments."
-msgstr "Даних не існує у середовищі: {0}"
+msgstr "Не сервері не передбачено підтримки середовищ."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1651
 #, java-format
@@ -903,16 +901,13 @@ msgid "Environment with name \"{0}\" could not be found."
 msgstr "Не вдалося знайти середовища з назвою «{0}»."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1664
-#, fuzzy
-#| msgid "Environment \"{0}\" could not be found."
 msgid "Environment could not be found using provided details."
-msgstr "Не вдалося знайти середовища «{0}»."
+msgstr "Не вдалося знайти середовище за наданими подробицями."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1669
-#, fuzzy, java-format
-#| msgid "Environment \"{0}\" could not be found."
+#, java-format
 msgid "Environment \"{0}\" specified more than once."
-msgstr "Не вдалося знайти середовища «{0}»."
+msgstr "Середовище «{0}» задано декілька разів."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1777
 #, java-format
@@ -1153,11 +1148,8 @@ msgid "One of the content does not exist in the environment anymore: {0}"
 msgstr "Одна з частин даних більше не існує у середовищі: {0}"
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:367
-#, fuzzy
-#| msgid "Source and destination units must belong to the same organization"
 msgid "Two or more environments belong to different organizations"
-msgstr ""
-"Початковий модуль і модуль призначення мають належати до однієї організації"
+msgstr "Два або більше середовищ належать до різних організацій"
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:398
 msgid "No environment specified, or environment lacks owner information"
