@@ -49,6 +49,7 @@ public class NestedOwnerDTOTranslatorTest extends
         owner.setId("owner_id");
         owner.setKey("owner_key");
         owner.setDisplayName("owner_name");
+        owner.setContentAccessMode("org_environment");
 
         return owner;
     }

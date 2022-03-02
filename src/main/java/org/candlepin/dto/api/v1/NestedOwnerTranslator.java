@@ -52,7 +52,8 @@ public class NestedOwnerTranslator implements ObjectTranslator<Owner, NestedOwne
         dest.id(source.getId())
             .key(source.getKey())
             .displayName(source.getDisplayName())
-            .href(source.getHref());
+            .href(source.getHref())
+            .contentAccessMode((source.getContentAccessMode()));
 
         return dest;
     }

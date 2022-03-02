@@ -9066,6 +9066,8 @@ components:
           type: string
         href:
           type: string
+        contentAccessMode:
+          type: string
 
     OwnerDTO:
       description: DTO representing an owner/organization
