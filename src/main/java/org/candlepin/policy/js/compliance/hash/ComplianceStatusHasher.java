@@ -49,7 +49,7 @@ public class ComplianceStatusHasher extends Hasher {
         putCollection(status.getNonCompliantAddOns(), HashableStringGenerators.STRING);
         putCollection(status.getCompliantSLA().keySet() , HashableStringGenerators.STRING);
         putCollection(status.getCompliantUsage().keySet() , HashableStringGenerators.STRING);
-        putObject(consumer, HashableStringGenerators.CONSUMER);
+        putCollection(consumer.getEntitlements(), HashableStringGenerators.ENTITLEMENT);
     }
 
 }
