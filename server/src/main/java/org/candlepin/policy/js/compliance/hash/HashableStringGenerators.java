@@ -61,7 +61,7 @@ public class HashableStringGenerators {
      * @param generator a generator capable of generating a string from T
      * @return the generated string
      */
-    public static <T extends Object> String generateFromCollection(
+    public static <T> String generateFromCollection(
         Collection<T> target, HashableStringGenerator<T> generator) {
         // Just append null if the collection was null.
         if (target == null) {
@@ -89,7 +89,7 @@ public class HashableStringGenerators {
      * @param generator a generator capable of generating a string from the target object
      * @return the generated string
      */
-    public static <T extends Object> String generateFromObject(T target,
+    public static <T> String generateFromObject(T target,
         HashableStringGenerator<T> generator) {
         return generator.generate(target);
     }
@@ -212,8 +212,7 @@ public class HashableStringGenerators {
 
             String generated = target.getUuid();
 
-            generated += generateFromCollection(target.getFacts() != null ?
-                target.getFacts().entrySet() : null, STRING_ENTRY);
+            generated += generateFromCollection(ComplianceFacts.of(target), STRING_ENTRY);
             generated += generateFromCollection(target.getInstalledProducts(), INSTALLED_PRODUCT);
             generated += generateFromCollection(target.getEntitlements(), ENTITLEMENT);
             return generated;
