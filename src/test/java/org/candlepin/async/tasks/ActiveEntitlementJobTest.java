@@ -54,6 +54,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
     public void setUp() {
         owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
+        owner.setContentAccessMode("entitlement");
 
         prod = this.createProduct("1", "2", owner);
 

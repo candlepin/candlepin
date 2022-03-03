@@ -80,6 +80,7 @@ public class ConsumerBindUtilTest {
         this.systemConsumerType.setId("test-ctype-" + TestUtil.randomInt());
         this.owner = TestUtil.createOwner();
         this.owner.setId(TestUtil.randomString());
+        this.owner.setContentAccessMode("entitlement");
     }
 
     private ConsumerBindUtil buildConsumerBindUtil() {

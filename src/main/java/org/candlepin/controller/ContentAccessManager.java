@@ -122,7 +122,7 @@ public class ContentAccessManager {
          *  the default ContentAccessMode instance
          */
         public static ContentAccessMode getDefault() {
-            return ENTITLEMENT;
+            return ORG_ENVIRONMENT;
         }
 
         /**

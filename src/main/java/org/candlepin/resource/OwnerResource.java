@@ -854,75 +854,7 @@ public class OwnerResource implements OwnersApi {
 
     @Override
     public OwnerDTO createOwner(OwnerDTO dto) {
-
-        // Verify that we have an owner key (as required)
-        if (StringUtils.isBlank(dto.getKey())) {
-            throw new BadRequestException(i18n.tr("Owners must be created with a valid key"));
-        }
-
-        Owner owner = new Owner();
-        owner.setKey(dto.getKey());
-
-        // Check that the default service level is *not* set at this point
-        if (!StringUtils.isBlank(dto.getDefaultServiceLevel())) {
-            throw new BadRequestException(
-                i18n.tr("The default service level cannot be specified during owner creation"));
-        }
-
-        // Validate and set content access mode list & content access mode
-        boolean configureContentAccess = false;
-
-        final String defaultContentAccess = ContentAccessMode.getDefault().toDatabaseValue();
-        final String defaultContentAccessList = ContentAccessManager.getListDefaultDatabaseValue();
-        String contentAccessModeList = dto.getContentAccessModeList();
-        String contentAccessMode = dto.getContentAccessMode();
-
-        if (!StringUtils.isBlank(contentAccessMode) && !contentAccessMode.equals(defaultContentAccess)) {
-            configureContentAccess = true;
-        }
-        else {
-            contentAccessMode = defaultContentAccess;
-        }
-
-        if (!StringUtils.isBlank(contentAccessModeList) &&
-            !contentAccessModeList.equals(defaultContentAccessList)) {
-            configureContentAccess = true;
-        }
-        else {
-            contentAccessModeList = defaultContentAccessList;
-        }
-
-        this.validateContentAccessModeChanges(owner, contentAccessModeList, contentAccessMode);
-
-        // Translate the DTO to an entity Owner.
-        this.populateEntity(owner, dto);
-        owner.setContentAccessModeList(contentAccessModeList);
-        owner.setContentAccessMode(contentAccessMode);
-
-        // Try to persist the owner
-        try {
-            owner = this.ownerCurator.create(owner);
-
-            if (owner == null) {
-                throw new BadRequestException(i18n.tr("Could not create the Owner: {0}", owner));
-            }
-
-            if (configureContentAccess) {
-                // Apply content access configuration if the user has given us non-default
-                // content access settings
-                owner = this.contentAccessManager
-                    .updateOwnerContentAccess(owner, contentAccessModeList, contentAccessMode);
-            }
-        }
-        catch (Exception e) {
-            log.debug("Unable to create owner: ", e);
-            throw new BadRequestException(i18n.tr("Could not create the Owner: {0}", owner), e);
-        }
-
-        log.info("Created owner: {}", owner);
-        sink.emitOwnerCreated(owner);
-
-        return this.translator.translate(owner, OwnerDTO.class);
+        return this.translator.translate(createOwnerFromDTO(dto), OwnerDTO.class);
     }
 
     @Override
@@ -1410,7 +1342,7 @@ public class OwnerResource implements OwnersApi {
         Owner owner = ownerCurator.getByKey(ownerKey);
         if (owner == null) {
             if (autoCreateOwner && ownerService.isOwnerKeyValidForCreation(ownerKey)) {
-                owner = this.ownerCurator.create(new Owner(ownerKey, ownerKey));
+                owner = createOwnerFromDTO(new OwnerDTO().key(ownerKey).displayName(ownerKey));
             }
             else {
                 throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
@@ -2222,7 +2154,6 @@ public class OwnerResource implements OwnersApi {
      * @return
      *  the newly created and/or merged Content object.
      */
-
     private Content createContentImpl(Owner owner, ContentDTO content) {
         // TODO: check if arches have changed ??
 
@@ -2317,4 +2248,73 @@ public class OwnerResource implements OwnersApi {
         this.contentAccessManager.syncOwnerLastContentUpdate(owner);
     }
 
+    private Owner createOwnerFromDTO(OwnerDTO ownerDTO) {
+        // Verify that we have an owner key (as required)
+        if (StringUtils.isBlank(ownerDTO.getKey())) {
+            throw new BadRequestException(i18n.tr("Owners must be created with a valid key"));
+        }
+
+        Owner owner = new Owner();
+        owner.setKey(ownerDTO.getKey());
+
+        // Check that the default service level is *not* set at this point
+        if (!StringUtils.isBlank(ownerDTO.getDefaultServiceLevel())) {
+            throw new BadRequestException(
+                i18n.tr("The default service level cannot be specified during owner creation"));
+        }
+
+        // Validate and set content access mode list & content access mode
+        boolean configureContentAccess = false;
+
+        final String defaultContentAccess = ContentAccessMode.getDefault().toDatabaseValue();
+        final String defaultContentAccessList = ContentAccessManager.getListDefaultDatabaseValue();
+        String contentAccessModeList = ownerDTO.getContentAccessModeList();
+        String contentAccessMode = ownerDTO.getContentAccessMode();
+
+        if (!StringUtils.isBlank(contentAccessMode) && !contentAccessMode.equals(defaultContentAccess)) {
+            configureContentAccess = true;
+        }
+        else {
+            contentAccessMode = defaultContentAccess;
+        }
+
+        if (!StringUtils.isBlank(contentAccessModeList) &&
+            !contentAccessModeList.equals(defaultContentAccessList)) {
+            configureContentAccess = true;
+        }
+        else {
+            contentAccessModeList = defaultContentAccessList;
+        }
+
+        this.validateContentAccessModeChanges(owner, contentAccessModeList, contentAccessMode);
+
+        // Translate the DTO to an entity Owner.
+        this.populateEntity(owner, ownerDTO);
+        owner.setContentAccessModeList(contentAccessModeList);
+        owner.setContentAccessMode(contentAccessMode);
+
+        // Try to persist the owner
+        try {
+            owner = this.ownerCurator.create(owner);
+
+            if (owner == null) {
+                throw new BadRequestException(i18n.tr("Could not create the Owner: {0}", owner));
+            }
+
+            if (configureContentAccess) {
+                // Apply content access configuration if the user has given us non-default
+                // content access settings
+                owner = this.contentAccessManager
+                    .updateOwnerContentAccess(owner, contentAccessModeList, contentAccessMode);
+            }
+        }
+        catch (Exception e) {
+            log.debug("Unable to create owner: ", e);
+            throw new BadRequestException(i18n.tr("Could not create the Owner: {0}", owner), e);
+        }
+
+        log.info("Created owner: {}", owner);
+        sink.emitOwnerCreated(owner);
+        return owner;
+    }
 }

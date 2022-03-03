@@ -130,6 +130,7 @@ public class InstalledProductStatusCalculatorTest {
     @Test
     public void validRangeForSingleValidEnitlement() {
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
 
@@ -152,6 +153,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -177,6 +179,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -201,6 +204,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -286,6 +290,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -310,6 +315,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -334,6 +340,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -357,6 +364,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -380,6 +388,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -403,6 +412,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -469,6 +479,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -491,6 +502,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -517,6 +529,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -542,6 +555,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -569,6 +583,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -598,6 +613,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Product product2 = TestUtil.createProduct("p2", "product2");
         Consumer consumer = this.mockConsumer(owner, product);
@@ -624,6 +640,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -656,6 +673,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -681,6 +699,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Consumer consumer = this.mockConsumer(owner, product);
         consumer.setCreated(now);
@@ -709,6 +728,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Product stacked = TestUtil.createProduct("p1_stack", "product1-stacked");
         Consumer consumer = this.mockConsumer(owner, product);
@@ -737,6 +757,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         Product sockets = TestUtil.createProduct("socketed", "socketed_product");
         sockets.setAttribute(Product.Attributes.SOCKETS, "2");
@@ -763,6 +784,7 @@ public class InstalledProductStatusCalculatorTest {
         Date now = new Date();
 
         Owner owner = TestUtil.createOwner();
+        owner.setContentAccessMode("entitlement");
         Product product = TestUtil.createProduct("p1", "product1");
         product.setAttribute(Product.Attributes.GUEST_LIMIT, "2");
 

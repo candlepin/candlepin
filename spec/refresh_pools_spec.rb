@@ -43,6 +43,20 @@ describe 'Refresh Pools' do
     end
   end
 
+  it 'contains the proper return value when owner is auto generated' do
+    result = @cp.refresh_pools("auto-generated-owner", false, true)
+
+    if !is_hosted?
+      expect(result).to be_nil
+    else
+      expect(result).to eq("Pools refreshed for owner: auto-generated-owner")
+
+      owner = @cp.get_owner("auto-generated-owner")
+      expect(owner['displayName']).to eq("auto-generated-owner")
+      expect(owner['contentAccessMode']).to eq("org_environment")
+    end
+  end
+
   it 'creates the correct number of pools' do
     owner = create_owner random_string('some-owner')
 
@@ -1688,5 +1702,4 @@ describe 'Refresh Pools' do
     expect(product_uuids.size).to eq(owners.size)
     expect(product_uuids).to all(eq(product_uuids.first))
   end
-
 end
