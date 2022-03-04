@@ -82,18 +82,30 @@ isrpm() {
     return $?
 }
 
+update_legacy_keystore() {
+    local CP_CERT_HOME="/etc/candlepin/certs"
+    local CP_KEYSTORE="${CP_CERT_HOME}/tc_keystore.jks"
+    local CP_KEYSTORE_PWFILE="${CP_CERT_HOME}/tc_keystore_pass.txt"
 
-update_keystore() {
-    if [ ! -f $CONTAINER_CONF_DIR/keystore ]; then
+    local CONTAINER_KEYSTORE="${CONTAINER_CONF_DIR}/keystore"
+
+    if [ ! -f $CP_KEYSTORE ]; then
+        info_msg "Legacy keystore does not exist; skipping symlink creation/update"
+        return 0 # nothing to do -- legacy keystore hasn't been generated
+    fi
+
+    if [ ! -f $CONTAINER_KEYSTORE ]; then
         info_msg "Symlinking keystore for tomcat"
-        $SUDO ln -s /etc/candlepin/certs/keystore $CONTAINER_CONF_DIR/keystore
+        $SUDO ln -s $CP_KEYSTORE $CONTAINER_KEYSTORE
     else
-        if [ ! -L "$CONTAINER_CONF_DIR/keystore" -a "$(readlink $CONTAINER_CONF_DIR/keystore)" != "/etc/candlepin/certs/keystore" ]; then
+        if [ ! -L $CONTAINER_KEYSTORE -a "$(readlink $CONTAINER_KEYSTORE)" != $CP_KEYSTORE ]; then
           warn_msg "Using existing keystore"
         fi
 
-        local candlepin_fp="$(fp_pkcs12 "/etc/candlepin/certs/keystore" "tomcat" "password")"
-        local tomcat_fp="$(fp_pkcs12 "$CONTAINER_CONF_DIR/keystore" "tomcat" "password")"
+        # Verify keystores are the same
+        local CP_KEYSTORE_PASSWORD=$(<$CP_KEYSTORE_PWFILE)
+        local candlepin_fp="$(fp_pkcs12 ${CP_KEYSTORE} "tomcat" ${CP_KEYSTORE_PASSWORD})"
+        local tomcat_fp="$(fp_pkcs12 ${CONTAINER_KEYSTORE} "tomcat" ${CP_KEYSTORE_PASSWORD})"
         if [ "$candlepin_fp" != "$tomcat_fp" ]; then
           err_msg "The keys in the Tomcat keystore don't match Candlepin's!"
         fi
@@ -304,8 +316,6 @@ DEPLOY_DIR="$TC_HOME/webapps/candlepin/"
 
 REPOS="$TC_HOME/webapps/ROOT"
 
-
-
 # stop the appserver
 eval $STOP
 
@@ -349,11 +359,11 @@ if [ "$FORCECERT" == "1" ]; then
     GEN_CERTS_ARGS="-f"
 fi
 
-# generate SSL certs if they are needed
-bash $SELF_DIR/gen-certs $GEN_CERTS_ARGS
+# generate SSL certs and keystores as needed
+$SUDO bash $SELF_DIR/gen_certs.sh $GEN_CERTS_ARGS
 
-# update keystore file and put it into tomcat's conf directory
-update_keystore
+# Update symlink to legacy keystore if we're on an old version of TC
+update_legacy_keystore
 
 # update server.xml
 $SUDO python $PROJECT_DIR/bin/deployment/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR
