@@ -784,6 +784,7 @@ public class ConsumerResourceTest {
     @Test
     public void testNoDryBindWhenAutobindDisabledForOwner() {
         Owner owner = createOwner();
+        owner.setContentAccessMode("entitlement");
         owner.setId(TestUtil.randomString());
         Consumer consumer = createConsumer(owner);
         owner.setAutobindDisabled(true);

@@ -80,6 +80,7 @@ public class HealEntireOrgJobTest {
     @Test
     public void testHealEntireOrgJob() throws JobExecutionException {
         Owner owner = this.createTestOwner(HealEntireOrgJob.OWNER_KEY, "log_level");
+        owner.setContentAccessMode("entitlement");
         doReturn(owner).when(ownerCurator).getByKey(owner.getKey());
 
         Consumer consumer1 = TestUtil.createConsumer(owner);
@@ -131,7 +132,7 @@ public class HealEntireOrgJobTest {
     @Test
     public void testGetConsumerException() throws JobExecutionException {
         Owner owner = this.createTestOwner(HealEntireOrgJob.OWNER_KEY, "log_level");
-        // owner.setContentAccessMode("org_environment");
+        owner.setContentAccessMode("entitlement");
         // owner.setAutobindDisabled(false);
         doReturn(owner).when(ownerCurator).getByKey(owner.getKey());
 

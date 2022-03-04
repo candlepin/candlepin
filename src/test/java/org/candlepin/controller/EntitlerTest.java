@@ -200,6 +200,7 @@ public class EntitlerTest {
     @Test
     public void bindByProductsString() throws Exception {
         Owner owner = new Owner("o1");
+        owner.setContentAccessMode("entitlement");
         owner.setId(TestUtil.randomString());
         String[] pids = {"prod1", "prod2", "prod3"};
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
@@ -394,6 +395,7 @@ public class EntitlerTest {
     @Test
     public void testRevokesLapsedUnmappedGuestEntitlementsOnAutoHeal() throws Exception {
         Owner owner1 = new Owner("o1");
+        owner1.setContentAccessMode("entitlement");
         owner1.setId(TestUtil.randomString());
         when(ownerCurator.findOwnerById(eq(owner1.getId()))).thenReturn(owner1);
         Product product = TestUtil.createProduct();

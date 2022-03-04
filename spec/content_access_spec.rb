@@ -126,7 +126,7 @@ describe 'Content Access' do
     owner = @cp.create_owner random_string("test_owner")
 
     expect(owner['contentAccessModeList']).to eq("entitlement,org_environment")
-    expect(owner['contentAccessMode']).to eq("entitlement")
+    expect(owner['contentAccessMode']).to eq("org_environment")
   end
 
   it "will assign the default mode and list when empty strings are specified" do
@@ -134,9 +134,8 @@ describe 'Content Access' do
       'contentAccessModeList' => '',
       'contentAccessMode' => ''
     })
-
     expect(owner['contentAccessModeList']).to eq("entitlement,org_environment")
-    expect(owner['contentAccessMode']).to eq("entitlement")
+    expect(owner['contentAccessMode']).to eq("org_environment")
   end
 
   it "leave mode and list unchanged when nil is specified" do

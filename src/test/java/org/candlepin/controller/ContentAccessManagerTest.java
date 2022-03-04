@@ -331,9 +331,9 @@ public class ContentAccessManagerTest {
     }
 
     @Test
-    public void testContentAccessModeDefaultIsEntitlement() {
+    public void testContentAccessModeDefaultIsOrgEntitlement() {
         ContentAccessMode output = ContentAccessMode.getDefault();
-        assertSame(ContentAccessMode.ENTITLEMENT, output);
+        assertSame(ContentAccessMode.ORG_ENVIRONMENT, output);
     }
 
     @Test
@@ -515,7 +515,7 @@ public class ContentAccessManagerTest {
             .setContentAccessModeList(initialAccessModeList)
             .setContentAccessMode(initialAccessMode);
 
-        String updatedAccessModeList = orgEnvironmentMode;
+        String updatedAccessModeList = entitlementMode;
         String updatedAccessMode = "";
 
         // We should convert the requested access mode to the default value, which is still invalid
