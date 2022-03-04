@@ -16,9 +16,7 @@
 package org.candlepin.policy.js.compliance.hash;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -32,6 +30,7 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.Calendar;
@@ -43,7 +42,17 @@ import java.util.Set;
 
 public class ComplianceStatusHasherTest {
 
-    private ComplianceStatus status;
+    private static final String RELATED_FACT_INITIAL = "memory.memtotal";
+    private static final String RELATED_FACT_NEW = "virt.is_guest";
+    private static final String UNRELATED_FACT_INITIAL = "unrelated";
+    private static final String UNRELATED_FACT_NEW = "unrelated2";
+    private static final String NON_COMPLIANT_PRODUCT_1 = "ncp1";
+    private static final String NON_COMPLIANT_PRODUCT_2 = "ncp2";
+    private static final String NON_COMPLIANT_PRODUCT_3 = "ncp3";
+    private static final String COMPLIANT_PRODUCT_1 = "cp1";
+    private static final String COMPLIANT_PRODUCT_2 = "cp2";
+    private static final String COMPLIANT_PRODUCT_3 = "cp3";
+
     private String initialHash;
     private Owner owner;
 
@@ -53,68 +62,78 @@ public class ComplianceStatusHasherTest {
         owner.setId("test-owner-id");
 
         Consumer consumer = createConsumer(owner);
-        status = createInitialStatus(consumer);
+        ComplianceStatus status = createStatusOf(consumer);
         initialHash = generateHash(status, consumer);
     }
 
     @Test
-    public void ensureSameHashWithNoChanges() {
+    void ensureSameHashWithNoChanges() {
         Consumer consumer = createConsumer(owner);
-        assertEquals(initialHash, generateHash(createInitialStatus(consumer), consumer));
+        assertEquals(initialHash, generateHash(createStatusOf(consumer), consumer));
     }
 
-    @Test
-    public void ensureDifferentHashWhenNonCompliantProductsChange() {
-        Consumer consumer = createConsumer(owner);
-        ComplianceStatus testStatus = createInitialStatus(consumer);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+    @Nested
+    class NonCompliantProductChangesTest {
+        @Test
+        void shouldChangeWhenNonCompliantProductsAreRemoved() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-        testStatus.getNonCompliantProducts().clear();
-        assertNotEquals(initialHash, generateHash(testStatus, consumer));
+            testStatus.getNonCompliantProducts().clear();
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
+        }
 
-        testStatus.addNonCompliantProduct("p1");
-        testStatus.addNonCompliantProduct("p2");
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+        @Test
+        void ensureDifferentHashWhenNonCompliantProductsAreAdded() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-        assertTrue(testStatus.getNonCompliantProducts().remove("p1"));
-        assertNotEquals(initialHash, generateHash(testStatus, consumer));
+            testStatus.addNonCompliantProduct(NON_COMPLIANT_PRODUCT_3);
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
+        }
     }
 
-    @Test
-    public void ensureDifferentHashWhenCompliantProductCountChanges() {
-        Consumer consumer = createConsumer(owner);
-        ComplianceStatus testStatus = createInitialStatus(consumer);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+    @Nested
+    class CompliantProductChangesTest {
+        @Test
+        void ensureDifferentHashWhenCompliantProductRemoved() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-        Set<Entitlement> ents = testStatus.getCompliantProducts().remove("p3");
-        assertFalse(testStatus.getCompliantProducts().containsKey("p3"));
-        assertNotEquals(initialHash, generateHash(testStatus, consumer));
+            testStatus.getCompliantProducts().remove(COMPLIANT_PRODUCT_1);
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
+        }
 
-        testStatus.getCompliantProducts().put("p3", ents);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
-    }
+        @Test
+        void ensureDifferentHashWhenCompliantProductAdded() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-    @Test
-    public void ensureDifferentHashWhenCompliantProductEntitlementCountChanges() {
-        Consumer consumer = createConsumer(owner);
-        ComplianceStatus testStatus = createInitialStatus(consumer);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+            testStatus.addCompliantProduct(COMPLIANT_PRODUCT_3,
+                createEntitlement(new Date(), owner, consumer, COMPLIANT_PRODUCT_3));
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
+        }
 
-        Entitlement ent = createEntitlement(Calendar.getInstance(), owner, consumer, "test-ent");
-        HashSet<Entitlement> ents = new HashSet<>();
-        ents.add(ent);
-        testStatus.getCompliantProducts().put(ent.getPool().getProductId(), ents);
+        @Test
+        void ensureDifferentHashWhenCompliantProductEntitlementCountChanges() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-        assertNotEquals(initialHash, generateHash(testStatus, consumer));
+            Entitlement ent = createEntitlement(new Date(), owner, consumer, "test-ent");
+            HashSet<Entitlement> ents = new HashSet<>();
+            ents.add(ent);
+            testStatus.getCompliantProducts().put(ent.getPool().getProductId(), ents);
+
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
+        }
     }
 
     @Test
     public void ensureDifferentHashWhenPartiallyCompliantProductsChange() {
         Consumer consumer = createConsumer(owner);
-        ComplianceStatus testStatus = createInitialStatus(consumer);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+        ComplianceStatus testStatus = createStatusOf(consumer);
 
-        Entitlement ent = createEntitlement(Calendar.getInstance(), owner, consumer, "test-ent");
+        Entitlement ent = createEntitlement(new Date(), owner, consumer, "test-ent");
         HashSet<Entitlement> ents = new HashSet<>();
         ents.add(ent);
         testStatus.getPartiallyCompliantProducts().put(ent.getPool().getProductId(), ents);
@@ -125,10 +144,9 @@ public class ComplianceStatusHasherTest {
     @Test
     public void ensureDifferentHashWhenPartialStacksChange() {
         Consumer consumer = createConsumer(owner);
-        ComplianceStatus testStatus = createInitialStatus(consumer);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+        ComplianceStatus testStatus = createStatusOf(consumer);
 
-        Entitlement ent = createEntitlement(Calendar.getInstance(), owner, consumer, "test-ent");
+        Entitlement ent = createEntitlement(new Date(), owner, consumer, "test-ent");
         HashSet<Entitlement> ents = new HashSet<>();
         ents.add(ent);
         testStatus.getPartialStacks().put("p-stack-2", ents);
@@ -139,8 +157,7 @@ public class ComplianceStatusHasherTest {
     @Test
     public void ensureDifferentHashWhenReasonsChange() {
         Consumer consumer = createConsumer(owner);
-        ComplianceStatus testStatus = createInitialStatus(consumer);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+        ComplianceStatus testStatus = createStatusOf(consumer);
 
         ComplianceReason reason = new ComplianceReason();
         reason.setKey("TEST-REASON-KEY");
@@ -153,8 +170,7 @@ public class ComplianceStatusHasherTest {
     @Test
     public void ensureDifferentHashWhenReasonKeyChange() {
         Consumer consumer = createConsumer(owner);
-        ComplianceStatus testStatus = createInitialStatus(consumer);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+        ComplianceStatus testStatus = createStatusOf(consumer);
 
         ComplianceReason reason = testStatus.getReasons().iterator().next();
         reason.setKey("FOOF");
@@ -165,14 +181,12 @@ public class ComplianceStatusHasherTest {
     @Test
     public void ensureDifferentHashWhenReasonAttributeChanges() {
         Consumer consumer = createConsumer(owner);
-        ComplianceStatus testStatus = createInitialStatus(consumer);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+        ComplianceStatus testStatus = createStatusOf(consumer);
 
         ComplianceReason reason = testStatus.getReasons().iterator().next();
 
         // Test new attribute map same values
-        Map<String, String> newAttrs = new HashMap<>();
-        newAttrs.putAll(reason.getAttributes());
+        Map<String, String> newAttrs = new HashMap<>(reason.getAttributes());
         reason.setAttributes(newAttrs);
         assertEquals(initialHash, generateHash(testStatus, consumer));
 
@@ -191,139 +205,185 @@ public class ComplianceStatusHasherTest {
         assertNotEquals(initialHash, generateHash(testStatus, consumer));
     }
 
-    @Test
-    public void ensureDifferentHashWhenConsumerFactsChange() {
-        Consumer consumer = createConsumer(owner);
-        ComplianceStatus testStatus = createInitialStatus(consumer);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+    @Nested
+    class ConsumerChangesTest {
 
-        Map<String, String> initialConsumerFacts = consumer.getFacts();
-        String firstFactKey = initialConsumerFacts.keySet().iterator().next();
+        @Test
+        void shouldNotChangeRegardlessOfContainer() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-        // Same facts, new map.
-        consumer.setFacts(new HashMap<>(initialConsumerFacts));
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+            // Same facts, new map.
+            consumer.setFacts(new HashMap<>(consumer.getFacts()));
+            assertEquals(initialHash, generateHash(testStatus, consumer));
+        }
 
-        // Facts cleared
-        consumer.getFacts().clear();
-        assertNotEquals(initialHash, generateHash(testStatus, consumer));
+        @Test
+        void shouldChangeOnClearedFacts() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-        // Fact added
-        consumer.setFacts(new HashMap<>(initialConsumerFacts));
-        assertEquals(initialHash, generateHash(testStatus, consumer));
-        consumer.setFact("another", "fact");
-        assertNotEquals(initialHash, generateHash(testStatus, consumer));
+            consumer.setFacts(new HashMap<>());
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
+        }
 
-        // Fact removed
-        consumer.setFacts(new HashMap<>(initialConsumerFacts));
-        assertEquals(initialHash, generateHash(testStatus, consumer));
-        consumer.getFacts().remove(firstFactKey);
-        assertNotEquals(initialHash, generateHash(testStatus, consumer));
+        @Test
+        void shouldChangeWithAdditionOfNewRelatedFact() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-        // Fact changed
-        consumer.setFacts(new HashMap<>(initialConsumerFacts));
-        assertEquals(initialHash, generateHash(testStatus, consumer));
-        consumer.setFact(firstFactKey, "Different Value");
-        assertNotEquals(initialHash, generateHash(testStatus, consumer));
-    }
+            consumer.setFact(RELATED_FACT_NEW, "fact");
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
+        }
+        @Test
+        void shouldChangeWithRemovalOfRelatedFact() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-    @Test
-    public void enssureDifferentHashWhenConsumerInstalledProductsChange() {
-        Consumer consumer = createConsumer(owner);
-        Product product = TestUtil.createProduct("Test Product");
-        ComplianceStatus testStatus = createInitialStatus(consumer);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+            consumer.getFacts().remove(RELATED_FACT_INITIAL);
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
+        }
+        @Test
+        void shouldChangeWithUpdateOfRelatedFact() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-        Set<ConsumerInstalledProduct> initialInstalled = consumer.getInstalledProducts();
-        consumer.setInstalledProducts(new HashSet<>(initialInstalled));
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+            consumer.setFact(RELATED_FACT_INITIAL, "Different Value");
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
+        }
 
-        consumer.setInstalledProducts(new HashSet<>(initialInstalled));
-        assertEquals(initialHash, generateHash(testStatus, consumer));
-        ConsumerInstalledProduct installed = new ConsumerInstalledProduct(product.getUuid(),
-            product.getName());
-        consumer.addInstalledProduct(installed);
+        @Test
+        void shouldNotChangeWithNewUnrelatedFact() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-        String updatedHash = generateHash(testStatus, consumer);
-        assertNotEquals(initialHash, updatedHash);
+            consumer.setFact(UNRELATED_FACT_NEW, "fact");
+            assertEquals(initialHash, generateHash(testStatus, consumer));
+        }
 
-        // Test arch change
-        installed.setArch("test-arch");
-        assertNotEquals(updatedHash, generateHash(testStatus, consumer));
-        installed.setArch(null);
-        assertEquals(updatedHash, generateHash(testStatus, consumer));
+        @Test
+        void shouldNotChangeWithRemovedUnrelatedFact() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-        // Test version change
-        installed.setVersion("1.2.3.4");
-        assertNotEquals(updatedHash, generateHash(testStatus, consumer));
-        installed.setVersion(null);
-        assertEquals(updatedHash, generateHash(testStatus, consumer));
+            consumer.getFacts().remove(UNRELATED_FACT_INITIAL);
+            assertEquals(initialHash, generateHash(testStatus, consumer));
+        }
 
-        consumer.getInstalledProducts().remove(installed);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+        @Test
+        void shouldNotChangeWithUnrelatedFactUpdate() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-        consumer.getInstalledProducts().clear();
-        assertNotEquals(initialHash, generateHash(testStatus, consumer));
-    }
+            consumer.setFact(UNRELATED_FACT_INITIAL, "Different Value");
+            assertEquals(initialHash, generateHash(testStatus, consumer));
+        }
 
-    @Test
-    public void ensureDifferentHashWhenConsumerEntitlementCountsChange() {
-        Consumer consumer = createConsumer(owner);
-        ComplianceStatus testStatus = createInitialStatus(consumer);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+        @Test
+        void ensureDifferentHashWhenConsumerInstalledProductsChange() {
+            Consumer consumer = createConsumer(owner);
+            Product product = TestUtil.createProduct("Test Product");
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-        Set<Entitlement> initialEnts = consumer.getEntitlements();
-        consumer.setEntitlements(new HashSet<>(initialEnts));
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+            Set<ConsumerInstalledProduct> initialInstalled = consumer.getInstalledProducts();
+            consumer.setInstalledProducts(new HashSet<>(initialInstalled));
+            assertEquals(initialHash, generateHash(testStatus, consumer));
 
-        // Create and add an entitlement to the consumer.
-        Entitlement ent = createEntitlement(Calendar.getInstance(), owner, consumer, "tp");
-        assertNotEquals(initialHash, generateHash(testStatus, consumer));
+            consumer.setInstalledProducts(new HashSet<>(initialInstalled));
+            assertEquals(initialHash, generateHash(testStatus, consumer));
+            ConsumerInstalledProduct installed = new ConsumerInstalledProduct(product.getUuid(),
+                product.getName());
+            consumer.addInstalledProduct(installed);
 
-        consumer.removeEntitlement(ent);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+            String updatedHash = generateHash(testStatus, consumer);
+            assertNotEquals(initialHash, updatedHash);
 
-        consumer.getEntitlements().clear();
-        assertNotEquals(initialHash, generateHash(testStatus, consumer));
-    }
+            // Test arch change
+            installed.setArch("test-arch");
+            assertNotEquals(updatedHash, generateHash(testStatus, consumer));
+            installed.setArch(null);
+            assertEquals(updatedHash, generateHash(testStatus, consumer));
 
-    @Test
-    public void ensureDifferentHashWhenConsumerEntitlementChanges() {
-        Consumer consumer = createConsumer(owner);
-        ComplianceStatus testStatus = createInitialStatus(consumer);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+            // Test version change
+            installed.setVersion("1.2.3.4");
+            assertNotEquals(updatedHash, generateHash(testStatus, consumer));
+            installed.setVersion(null);
+            assertEquals(updatedHash, generateHash(testStatus, consumer));
 
-        Entitlement ent = consumer.getEntitlements().iterator().next();
-        String id = ent.getId();
-        Integer quantity = ent.getQuantity();
+            consumer.getInstalledProducts().remove(installed);
+            assertEquals(initialHash, generateHash(testStatus, consumer));
 
-        // Check the ID
-        ent.setId("somethhing_differerent");
-        assertNotEquals(initialHash, generateHash(testStatus, consumer));
+            consumer.getInstalledProducts().clear();
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
+        }
 
-        ent.setId(id);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+        @Test
+        void ensureDifferentHashWhenConsumerEntitlementCountsChange() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
 
-        // Check the quantity
-        ent.setQuantity(112);
-        assertNotEquals(initialHash, generateHash(testStatus, consumer));
+            Set<Entitlement> initialEnts = consumer.getEntitlements();
+            consumer.setEntitlements(new HashSet<>(initialEnts));
+            assertEquals(initialHash, generateHash(testStatus, consumer));
 
-        ent.setQuantity(quantity);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
-    }
+            // Create and add an entitlement to the consumer.
+            Entitlement ent = createEntitlement(new Date(), owner, consumer, "tp");
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
 
-    @Test
-    public void ensureDifferentHashWhenEntitlementPoolChanges() {
-        Consumer consumer = createConsumer(owner);
-        ComplianceStatus testStatus = createInitialStatus(consumer);
-        assertEquals(initialHash, generateHash(testStatus, consumer));
+            consumer.removeEntitlement(ent);
+            assertEquals(initialHash, generateHash(testStatus, consumer));
 
-        Entitlement ent = consumer.getEntitlements().iterator().next();
-        Pool pool = ent.getPool();
+            consumer.getEntitlements().clear();
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
+        }
 
-        String poolId = pool.getId();
-        Date poolStartDate = pool.getStartDate();
-        Date poolEndDate = pool.getEndDate();
+        @Test
+        void ensureDifferentHashWhenConsumerEntitlementChanges() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
+
+            Entitlement ent = consumer.getEntitlements().iterator().next();
+            String id = ent.getId();
+            Integer quantity = ent.getQuantity();
+
+            // Check the ID
+            ent.setId("somethhing_differerent");
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
+
+            ent.setId(id);
+            assertEquals(initialHash, generateHash(testStatus, consumer));
+
+            // Check the quantity
+            ent.setQuantity(112);
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
+
+            ent.setQuantity(quantity);
+            assertEquals(initialHash, generateHash(testStatus, consumer));
+        }
+
+        @Test
+        void ensureDifferentHashWhenEntitlementPoolChanges() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
+
+            consumer.getEntitlements().stream().findFirst()
+                .map(Entitlement::getPool)
+                .ifPresent(pool -> pool.setId("changedId"));
+
+            assertNotEquals(initialHash, generateHash(testStatus, consumer));
+        }
+
+        @Test
+        void shouldGenerateHashForConsumerWithNullFacts() {
+            Consumer consumer = createConsumer(owner);
+            ComplianceStatus testStatus = createStatusOf(consumer);
+
+            consumer.setFacts(null);
+            // This should not throw NPE
+            String secondHash = generateHash(testStatus, consumer);
+
+            assertNotEquals(secondHash, initialHash);
+        }
     }
 
     private Consumer createConsumer(Owner owner) {
@@ -333,8 +393,9 @@ public class ComplianceStatusHasherTest {
         Consumer consumer = new Consumer("test-consumer", "test-consumer", owner, ctype);
         consumer.setId("1");
         consumer.setUuid("12345");
-        consumer.setFact("ram", "4");
-        consumer.setFact("cores", "2");
+        consumer.setFact(RELATED_FACT_INITIAL, "4");
+        consumer.setFact("cpu.cpu_socket(s)", "2");
+        consumer.setFact(UNRELATED_FACT_INITIAL, "true");
 
         Product product1 = TestUtil.createProduct("installed-1");
         Product product2 = TestUtil.createProduct("installed-2");
@@ -347,7 +408,7 @@ public class ComplianceStatusHasherTest {
         return consumer;
     }
 
-    private ComplianceStatus createInitialStatus(Consumer consumer) {
+    private ComplianceStatus createStatusOf(Consumer consumer) {
         // Need to make sure that dates are exactly the same
         // as this method will be called more than once.
         Calendar cal = Calendar.getInstance();
@@ -362,12 +423,15 @@ public class ComplianceStatusHasherTest {
         ComplianceStatus initialStatus = new ComplianceStatus(cal.getTime());
 
         addMonths(cal, 4);
-        initialStatus.addNonCompliantProduct("p1");
-        initialStatus.addNonCompliantProduct("p2");
-        initialStatus.addCompliantProduct("p3", createEntitlement(cal, owner, consumer, "p3"));
-        initialStatus.addCompliantProduct("p4", createEntitlement(cal, owner, consumer, "p4"));
-        initialStatus.addPartiallyCompliantProduct("p5", createEntitlement(cal, owner, consumer, "p5"));
-        initialStatus.addPartialStack("p-stack", createEntitlement(cal, owner, consumer, "p6"));
+        Date time = cal.getTime();
+        initialStatus.addNonCompliantProduct(NON_COMPLIANT_PRODUCT_1);
+        initialStatus.addNonCompliantProduct(NON_COMPLIANT_PRODUCT_2);
+        initialStatus.addCompliantProduct(COMPLIANT_PRODUCT_1,
+            createEntitlement(time, owner, consumer, COMPLIANT_PRODUCT_1));
+        initialStatus.addCompliantProduct(COMPLIANT_PRODUCT_2,
+            createEntitlement(time, owner, consumer, COMPLIANT_PRODUCT_2));
+        initialStatus.addPartiallyCompliantProduct("p5", createEntitlement(time, owner, consumer, "p5"));
+        initialStatus.addPartialStack("p-stack", createEntitlement(time, owner, consumer, "p6"));
 
         ComplianceReason reason1 = createReason("TEST-REASON-1");
         initialStatus.getReasons().add(reason1);
@@ -389,21 +453,21 @@ public class ComplianceStatusHasherTest {
         return reason;
     }
 
-    private Entitlement createEntitlement(Calendar cal, Owner owner, Consumer consumer,
+    private Entitlement createEntitlement(Date time, Owner owner, Consumer consumer,
         String productId) {
 
         Product product = TestUtil.createProduct(productId, productId);
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId(product.getId() + "pool");
-        pool.setUpdated(cal.getTime());
+        pool.setUpdated(time);
 
         Entitlement ent = new Entitlement();
         ent.setOwner(owner);
         ent.setPool(pool);
         ent.setOwner(owner);
         ent.setQuantity(2);
-        ent.setCreated(cal.getTime());
-        ent.setUpdated(cal.getTime());
+        ent.setCreated(time);
+        ent.setUpdated(time);
         ent.setId(product.getId() + "ent");
         consumer.addEntitlement(ent);
         return ent;
@@ -416,19 +480,6 @@ public class ComplianceStatusHasherTest {
     private String generateHash(ComplianceStatus status, Consumer consumer) {
         ComplianceStatusHasher hasher = new ComplianceStatusHasher(consumer, status);
         return hasher.hash();
-    }
-
-    @Test
-    public void shouldGenerateHashForConsumerWithNullFacts() {
-        Consumer consumer = createConsumer(owner);
-        ComplianceStatus testStatus = createInitialStatus(consumer);
-        String initialHash = generateHash(testStatus, consumer);
-
-        consumer.setFacts(null);
-        // This should not throw NPE
-        String secondHash = generateHash(testStatus, consumer);
-
-        assertNotEquals(secondHash, initialHash);
     }
 
 }
