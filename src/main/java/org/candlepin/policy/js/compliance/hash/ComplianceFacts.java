@@ -15,6 +15,7 @@
 
 package org.candlepin.policy.js.compliance.hash;
 
+import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.model.Consumer;
 
 import java.util.Arrays;
@@ -25,7 +26,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * specifies consumer facts considered for compliance calculation.
+ * Specifies consumer facts considered for compliance calculation.
  */
 public enum ComplianceFacts {
 
@@ -46,7 +47,7 @@ public enum ComplianceFacts {
         this.factKey = factKey;
     }
 
-    private String getFactKey() {
+    public String getFactKey() {
         return factKey;
     }
 
@@ -58,10 +59,36 @@ public enum ComplianceFacts {
      * @return facts relevant for compliance
      */
     public static Collection<Map.Entry<String, String>> of(Consumer target) {
-        if (target.getFacts() == null) {
+        if (target == null) {
             return Collections.emptySet();
         }
-        return target.getFacts().entrySet().stream()
+        return filter(target.getFacts());
+    }
+    /**
+     * Takes facts from a given consumer and filters out facts relevant for
+     * compliance calculation.
+     *
+     * @param target consumer for whom to filter facts
+     * @return facts relevant for compliance
+     */
+    public static Collection<Map.Entry<String, String>> of(ConsumerDTO target) {
+        if (target == null) {
+            return Collections.emptySet();
+        }
+        return filter(target.getFacts());
+    }
+
+    /**
+     * Method filters out facts relevant for compliance calculation from the given facts.
+     *
+     * @param facts facts from which to filter compliance relevant ones
+     * @return facts relevant for compliance
+     */
+    private static Collection<Map.Entry<String, String>> filter(Map<String, String> facts) {
+        if (facts == null || facts.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return facts.entrySet().stream()
             .filter(fact -> FACT_KEYS.contains(fact.getKey()))
             .collect(Collectors.toSet());
     }
