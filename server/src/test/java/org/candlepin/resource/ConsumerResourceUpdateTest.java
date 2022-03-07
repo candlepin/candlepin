@@ -20,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.atMost;
@@ -30,6 +32,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.nullable;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
@@ -74,6 +77,7 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.policy.js.compliance.hash.ComplianceFacts;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
@@ -109,6 +113,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Provider;
@@ -941,6 +946,33 @@ public class ConsumerResourceUpdateTest {
         update = getFakeConsumer();
         assertFalse(resource.performConsumerUpdates(
             this.translator.translate(update, ConsumerDTO.class), existing, testMigration));
+
+        verifyZeroInteractions(this.complianceRules);
+        verifyZeroInteractions(this.systemPurposeComplianceRules);
+    }
+
+    @Test
+    public void shouldDetectComplianceChange() {
+        Consumer consumer = getFakeConsumer();
+        ConsumerDTO updated = this.translator.translate(consumer, ConsumerDTO.class);
+        updated.setFacts(Map.ofEntries(
+            Map.entry(ComplianceFacts.CPU_SOCKETS.getFactKey(), "changed")
+        ));
+
+        assertTrue(resource.performConsumerUpdates(updated, consumer, testMigration));
+        verify(this.complianceRules)
+            .getStatus(any(Consumer.class), nullable(Date.class), anyBoolean(), anyBoolean());
+    }
+
+    @Test
+    public void shouldDetectSysPurposeChange() {
+        Consumer consumer = getFakeConsumer();
+        ConsumerDTO updated = this.translator.translate(consumer, ConsumerDTO.class);
+        updated.setUsage("Changed");
+
+        assertTrue(resource.performConsumerUpdates(updated, consumer, testMigration));
+        verify(this.systemPurposeComplianceRules)
+            .getStatus(any(Consumer.class), anyCollection(), isNull(), anyBoolean());
     }
 
     @Test
