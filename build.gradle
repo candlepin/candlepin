@@ -298,9 +298,10 @@ task generateOpenApiJson(type: org.openapitools.generator.gradle.plugin.tasks.Ge
     withXml = false
 }
 
-// Create a single checkstyle task to make it easier to run both the checkstyleMain & checkstyleTest targets
-task checkstyle(dependsOn: [tasks.checkstyleMain, tasks.checkstyleTest]) {
-    description = 'Run checkstyle for both the Main & Test targets'
+// Create a single checkstyle task to make it easier to run both the checkstyleMain, checkstyleTest,
+// and checkstyleSPec targets
+task checkstyle(dependsOn: [tasks.checkstyleMain, tasks.checkstyleTest, ":spec-tests:checkstyleSpec"]) {
+    description = 'Run checkstyle for the Main, Test, and Spec-test targets'
     group = 'Verification'
 }
 
@@ -318,7 +319,9 @@ msgfmt {
 }
 
 test {
-    useJUnitPlatform()
+    doFirst{ project.ext.skipSpec = "true" }
+
+    useJUnitPlatform ()
 
     // Sometimes causes out of memory on vagrant
     maxHeapSize = "2g"

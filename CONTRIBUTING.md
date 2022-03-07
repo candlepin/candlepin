@@ -95,9 +95,10 @@ between 1.0 and 10.0.  Any CVEs above the maximum allowed CVSS score will cause 
 The reports will be generated automatically under build/reports folder.
 
 ### Checkstyle
-* `./gradlew checkstyle` Runs checkstyle for both production and test code.
+* `./gradlew checkstyle` Runs checkstyle for both production, test, and spec test code.
 * `./gradlew checkstyleMain` Runs checkstyle only for production code.
 * `./gradlew checkstyleTest` Runs checkstyle only for test code.
+* `./gradlew checkstyleSpec` Runs checkstyle only for spec test code.
 
 Buildr provides a Checkstyle task, but we have our own that reads from the  
 Eclipse Checkstyle Plugin configuration.  The Eclipse configuration defines  
