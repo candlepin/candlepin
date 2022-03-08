@@ -25,8 +25,9 @@ import org.candlepin.spec.bootstrap.data.NestedOwnerDTOBuilder;
 import org.candlepin.spec.bootstrap.data.OwnerDTOBuilder;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
-@SpecTest
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class OwnerApiTest extends SpecTestFixture {
     @Test
     public void shouldCreateOwner() throws Exception {
