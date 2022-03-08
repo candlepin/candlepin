@@ -15,18 +15,20 @@
 package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.dto.api.v1.StatusDTO;
 import org.candlepin.resource.StatusApi;
 import org.candlepin.spec.bootstrap.client.SpecTestFixture;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 
 /**
  * Test the /status resource
  */
-@SpecTest
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class StatusApiTest extends SpecTestFixture {
 
     @Test
@@ -34,14 +36,15 @@ public class StatusApiTest extends SpecTestFixture {
         StatusApi api = new StatusApi(apiClientFactory.createClient());
         StatusDTO status = api.status();
 
-        assertThat(status.getMode()).isNotBlank();
+        assertEquals("NORMAL", status.getMode());
+        assertEquals(true, status.getResult());
         assertThat(status.getRelease()).isNotBlank();
         assertThat(status.getVersion()).isNotBlank();
         assertThat(status.getRulesVersion()).isNotBlank();
-//        assertThat(status.getStandalone()).isFalse();
+        assertThat(status.getStandalone()).isNotNull();
         assertThat(status.getRulesSource()).isEqualTo("default");
-//        assertThat(status.getRulesSource()).isEqualTo("database");
         assertThat(status.getManagerCapabilities()).isNotEmpty();
+        assertThat(status.getTimeUTC()).isNotNull();
     }
 
 }
