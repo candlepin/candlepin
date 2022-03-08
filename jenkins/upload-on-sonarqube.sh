@@ -12,10 +12,10 @@ chcon -Rt svirt_sandbox_file_t $WORKSPACE//artifacts/
 
 if [ -z "$BRANCH_UPLOAD" ];  then
   # Uploading PR to SonarQube server
-  ./docker/test -c "cp-test -c ${CHANGE_BRANCH} -n ${SONAR_HOST_URL} ${BRANCH_NAME} ${CHANGE_ID} ${CHANGE_TARGET}" -n "${STAGE_NAME}-${BUILD_TAG}"
+  ./docker/test -q -c "cp-test -c ${CHANGE_BRANCH} -n ${SONAR_HOST_URL} ${BRANCH_NAME} ${CHANGE_ID} ${CHANGE_TARGET}" -n "${STAGE_NAME}-${BUILD_TAG}"
 else
   # Uploading branch to SonarQube server
-  ./docker/test -c "cp-test -c ${CHANGE_BRANCH} -n ${SONAR_HOST_URL} ${BRANCH_NAME}" -n "${STAGE_NAME}-${BUILD_TAG}"
+  ./docker/test -q -c "cp-test -c ${CHANGE_BRANCH} -n ${SONAR_HOST_URL} ${BRANCH_NAME}" -n "${STAGE_NAME}-${BUILD_TAG}"
 fi
 
 RETVAL=$?

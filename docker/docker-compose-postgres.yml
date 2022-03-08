@@ -25,13 +25,6 @@ services:
       - ../:/candlepin-dev
     depends_on:
       - db
-    secrets:
-      - sonar_crt
-
-secrets:
-  sonar_crt:
-    file: /home/jenkins/sonar.crt
-
 
 networks:
   default:
