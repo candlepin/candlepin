@@ -94,7 +94,6 @@ import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.OwnerNotFoundException;
-import org.candlepin.model.OwnerProduct;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
@@ -170,6 +169,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -1911,13 +1911,12 @@ public class OwnerResource implements OwnersApi {
 
         Owner owner = this.getOwnerByKey(ownerKey);
 
-        // Get the matching owner_product & lock it while we are doing the update for this org
-        // This is done in order to prevent collisions in updates on different parts of the product
-        OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
-        ownerProductCurator.lock(ownerProduct);
-        ownerProductCurator.refresh(ownerProduct);
-
-        Product existing = ownerProduct.getProduct();
+        // Lock the owner_product while we are doing the update for this org.
+        // This is done in order to prevent collisions in updates on different parts of the product.
+        if (!this.ownerProductCurator.lockOwnerProduct(owner, productId, LockModeType.PESSIMISTIC_WRITE)) {
+            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
+        }
+        Product existing = this.ownerProductCurator.getProductById(owner, productId);
 
         if (existing.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", existing.getId()));
@@ -1951,13 +1950,12 @@ public class OwnerResource implements OwnersApi {
     public ProductDTO addBatchContent(String ownerKey, String productId, Map<String, Boolean> contentMap) {
         Owner owner = this.getOwnerByKey(ownerKey);
 
-        // Get the matching owner_product & lock it while we are doing the update for this org
+        // Lock the owner_product while we are doing the update for this org
         // This is done in order to prevent collisions in updates on different parts of the product
-        OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
-        ownerProductCurator.lock(ownerProduct);
-        ownerProductCurator.refresh(ownerProduct);
-
-        Product product = ownerProduct.getProduct();
+        if (!this.ownerProductCurator.lockOwnerProduct(owner, productId, LockModeType.PESSIMISTIC_WRITE)) {
+            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
+        }
+        Product product = this.ownerProductCurator.getProductById(owner, productId);
 
         if (product.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
@@ -1995,13 +1993,12 @@ public class OwnerResource implements OwnersApi {
     public ProductDTO removeBatchContent(String ownerKey, String productId, List<String> contentIds) {
         Owner owner = this.getOwnerByKey(ownerKey);
 
-        // Get the matching owner_product & lock it while we are doing the update for this org
+        // Lock the owner_product while we are doing the update for this org
         // This is done in order to prevent collisions in updates on different parts of the product
-        OwnerProduct ownerProduct = ownerProductCurator.getOwnerProductByProductId(owner, productId);
-        ownerProductCurator.lock(ownerProduct);
-        ownerProductCurator.refresh(ownerProduct);
-
-        Product product = ownerProduct.getProduct();
+        if (!this.ownerProductCurator.lockOwnerProduct(owner, productId, LockModeType.PESSIMISTIC_WRITE)) {
+            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
+        }
+        Product product = this.ownerProductCurator.getProductById(owner, productId);
 
         if (product.isLocked()) {
             throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));

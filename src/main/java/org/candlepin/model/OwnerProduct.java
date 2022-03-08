@@ -68,6 +68,9 @@ public class OwnerProduct implements Persisted, Serializable {
     private String ownerId;
 
     @Id
+    @Column(name = "product_id")
+    private String productId;
+
     @Column(name = "product_uuid")
     private String productUuid;
 
@@ -136,7 +139,12 @@ public class OwnerProduct implements Persisted, Serializable {
             );
         }
 
+        if (this.product.getId() == null) {
+            throw new IllegalStateException("Product must have a value for the Id field");
+        }
+
         this.ownerId = owner.getId();
+        this.productId = product.getId();
         this.productUuid = product.getUuid();
     }
 
