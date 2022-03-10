@@ -119,6 +119,7 @@ import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.policy.js.compliance.hash.ComplianceFacts;
 import org.candlepin.policy.js.consumer.ConsumerRules;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.resource.dto.ContentAccessListing;
@@ -1503,15 +1504,17 @@ public class ConsumerResource implements ConsumersApi {
         EventBuilder eventBuilder = eventFactory.getEventBuilder(Target.CONSUMER, Type.MODIFIED)
             .setEventData(toUpdate);
 
-
         // version changed on non-checked in consumer, or list of capabilities
         // changed on checked in consumer
         boolean changesMade = updateCapabilities(toUpdate, updated);
 
+        boolean complianceFactsChanged = complianceFactsChanged(updated, toUpdate);
+        boolean installedProductsChanged = checkForInstalledProductsUpdate(toUpdate, updated);
+        boolean guestMigrationChanged = guestMigration.isMigrationPending();
+        boolean complianceChangesMade = complianceFactsChanged ||
+            installedProductsChanged || guestMigrationChanged;
         changesMade = checkForFactsUpdate(toUpdate, updated) || changesMade;
-        changesMade = checkForInstalledProductsUpdate(toUpdate, updated) || changesMade;
         changesMade = checkForHypervisorIdUpdate(toUpdate, updated) || changesMade;
-        changesMade = guestMigration.isMigrationPending() || changesMade;
 
         if (updated.getContentTags() != null && !updated.getContentTags().equals(toUpdate.getContentTags())) {
             log.info("   Updating content tags.");
@@ -1536,7 +1539,7 @@ public class ConsumerResource implements ConsumersApi {
             }
         }
 
-        changesMade = updateSystemPurposeData(updated, toUpdate) || changesMade;
+        boolean sysPurposeChangesMade = updateSystemPurposeData(updated, toUpdate);
 
         changesMade = updateEnvironments(updated, toUpdate, true) || changesMade;
 
@@ -1589,6 +1592,8 @@ public class ConsumerResource implements ConsumersApi {
             changesMade = true;
         }
 
+        changesMade = changesMade || complianceChangesMade || sysPurposeChangesMade;
+
         if (changesMade) {
             log.debug("Consumer {} updated.", toUpdate.getUuid());
 
@@ -1596,15 +1601,28 @@ public class ConsumerResource implements ConsumersApi {
             // since only the facts table will receive the update.
             toUpdate.setUpdated(new Date());
 
-            // this should update compliance on toUpdate, but not call the curator
-            complianceRules.getStatus(toUpdate, null, false, false);
-            systemPurposeComplianceRules.getStatus(toUpdate, toUpdate.getEntitlements(), null, false);
-
             Event event = eventBuilder.setEventData(toUpdate).buildEvent();
             sink.queueEvent(event);
         }
 
+        if (sysPurposeChangesMade) {
+            // this should update compliance on toUpdate, but not call the curator
+            systemPurposeComplianceRules.getStatus(toUpdate, toUpdate.getEntitlements(), null, false);
+        }
+
+        if (complianceChangesMade) {
+            // this should update compliance on toUpdate, but not call the curator
+            complianceRules.getStatus(toUpdate, null, false, false);
+        }
+
         return changesMade;
+    }
+
+    private boolean complianceFactsChanged(ConsumerDTO updated, Consumer toUpdate) {
+        if (updated == null || updated.getFacts() == null) {
+            return false;
+        }
+        return !Objects.equals(ComplianceFacts.of(updated), ComplianceFacts.of(toUpdate));
     }
 
     /**
