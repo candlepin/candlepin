@@ -25,7 +25,7 @@ import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.RSAPrivateCrtKeySpec;
 import java.util.Map;
@@ -37,6 +37,8 @@ import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
+
 
 /**
  * Implementation of ProviderBasedPrivateKeyReader using JSS as the crypto provider.
@@ -59,7 +61,7 @@ public class JSSPrivateKeyReader extends ProviderBasedPrivateKeyReader {
      */
     private static class PKCS1PrivateKeyPemParser implements PrivateKeyPemParser {
         @Override
-        public RSAPrivateKey decode(byte[] der, String password, Map<String, String> headers)
+        public PrivateKey decode(byte[] der, String password, Map<String, String> headers)
             throws IOException {
 
             DerValue[] seqItems = new DerInputStream(der).getSequence(9);
@@ -91,7 +93,7 @@ public class JSSPrivateKeyReader extends ProviderBasedPrivateKeyReader {
                 primeP, primeQ, primeExponentP, primeExponentQ, coefficient);
             try {
                 KeyFactory kf = KeyFactory.getInstance("RSA");
-                return (RSAPrivateKey) kf.generatePrivate(spec);
+                return kf.generatePrivate(spec);
             }
             catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
                 throw new IOException("Could not read key", e);
@@ -117,7 +119,7 @@ public class JSSPrivateKeyReader extends ProviderBasedPrivateKeyReader {
     private static class PKCS1EncryptedPrivateKeyPemParser extends
         AbstractPKCS1EncryptedPrivateKeyPemParser {
         @Override
-        public RSAPrivateKey decode(byte[] der, String password, Map<String, String> headers)
+        public PrivateKey decode(byte[] der, String password, Map<String, String> headers)
             throws IOException {
             readHeaders(headers);  // prime the algoName and iv class fields
 

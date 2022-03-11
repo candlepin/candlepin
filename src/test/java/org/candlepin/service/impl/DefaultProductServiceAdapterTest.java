@@ -124,7 +124,7 @@ public class DefaultProductServiceAdapterTest {
         doReturn(null).when(pcc).findForProduct(eq(product));
 
         KeyPair kp = createKeyPair();
-        when(pki.generateNewKeyPair()).thenReturn(kp);
+        when(pki.generateKeyPair()).thenReturn(kp);
         when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("junk".getBytes());
 
         CertificateInfo result = dpsa.getProductCertificate(owner.getKey(), product.getId());

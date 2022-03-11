@@ -29,7 +29,6 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
-import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.test.TestUtil;
@@ -65,15 +64,13 @@ public class DefaultIdentityCertServiceAdapterTest {
 
     @Mock private PKIUtility pki;
     @Mock private IdentityCertificateCurator idcur;
-    @Mock private KeyPairCurator kpc;
     @Mock private CertificateSerialCurator csc;
     private DefaultIdentityCertServiceAdapter dicsa;
 
 
     @BeforeEach
     public void setUp() {
-        dicsa = new DefaultIdentityCertServiceAdapter(pki, idcur, kpc, csc,
-            new ExpiryDateFunction(1));
+        dicsa = new DefaultIdentityCertServiceAdapter(pki, idcur, csc, new ExpiryDateFunction(1));
     }
 
     // can't mock a final class, so create a dummy one
@@ -92,7 +89,7 @@ public class DefaultIdentityCertServiceAdapterTest {
         when(owner.getKey()).thenReturn(TestUtil.randomString());
         when(consumer.getOwner()).thenReturn(owner);
         KeyPair kp = createKeyPair();
-        when(kpc.getConsumerKeyPair(consumer)).thenReturn(kp);
+        when(pki.getConsumerKeyPair(consumer)).thenReturn(kp);
         when(idcur.get(consumer.getId())).thenReturn(null);
         when(csc.create(any(CertificateSerial.class))).thenAnswer(
             new Answer<CertificateSerial>() {
@@ -160,7 +157,7 @@ public class DefaultIdentityCertServiceAdapterTest {
 
 
         KeyPair kp = createKeyPair();
-        when(kpc.getConsumerKeyPair(consumer)).thenReturn(kp);
+        when(pki.getConsumerKeyPair(consumer)).thenReturn(kp);
         when(csc.create(any(CertificateSerial.class))).thenAnswer(
             new Answer<CertificateSerial>() {
                 public CertificateSerial answer(InvocationOnMock invocation) {
@@ -215,7 +212,7 @@ public class DefaultIdentityCertServiceAdapterTest {
 
 
         KeyPair kp = createKeyPair();
-        when(kpc.getConsumerKeyPair(consumer)).thenReturn(kp);
+        when(pki.getConsumerKeyPair(consumer)).thenReturn(kp);
         when(csc.create(any(CertificateSerial.class))).thenAnswer(
             new Answer<CertificateSerial>() {
                 public CertificateSerial answer(InvocationOnMock invocation) {

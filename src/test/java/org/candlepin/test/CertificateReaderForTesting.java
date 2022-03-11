@@ -25,10 +25,10 @@ import org.junit.jupiter.api.Assertions;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -38,7 +38,7 @@ import javax.inject.Inject;
  */
 public class CertificateReaderForTesting extends CertificateReader {
     static {
-        JSSProviderLoader.addProvider();
+        JSSProviderLoader.initialize();
     }
 
     @Inject
@@ -58,7 +58,7 @@ public class CertificateReaderForTesting extends CertificateReader {
     }
 
     @Override
-    protected RSAPrivateKey readPrivateKey(PrivateKeyReader reader) throws IOException {
+    protected PrivateKey readPrivateKey(PrivateKeyReader reader) throws IOException {
         InputStream keyStream = this.getClass().getClassLoader().getResourceAsStream(getKeyFileName());
         return reader.read(keyStream, null);
     }

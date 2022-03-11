@@ -285,7 +285,7 @@ public class HibernateValidationAnnotationTest {
     @Test
     public void keyPairTest() throws Exception {
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<>();
-        fm.put(KeyPair.class.getDeclaredField("id"), notNull);
+        fm.put(KeyPairData.class.getDeclaredField("id"), notNull);
         runMap(fm);
     }
 

@@ -50,7 +50,7 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.KeyPair;
+import org.candlepin.model.KeyPairData;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -82,8 +82,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.GeneralSecurityException;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -92,6 +91,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -162,20 +162,21 @@ public class ExporterTest {
         when(exportRules.canExport(any(Entitlement.class))).thenReturn(Boolean.TRUE);
     }
 
-    private KeyPair createKeyPair() {
-        KeyPair cpKeyPair = null;
+    private KeyPairData buildConsumerKeyPairData() {
+        Random rnd = new Random();
+        final int keySize = 4096;
 
-        try {
-            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-            generator.initialize(2048);
-            java.security.KeyPair newPair = generator.generateKeyPair();
-            cpKeyPair = new KeyPair(newPair.getPrivate(), newPair.getPublic());
-        }
-        catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
+        byte[] pubKeyBytes = new byte[keySize];
+        byte[] privKeyBytes = new byte[keySize];
 
-        return cpKeyPair;
+        rnd.nextBytes(pubKeyBytes);
+        rnd.nextBytes(privKeyBytes);
+
+        // This isn't even remotely close to a valid pair of keys, but we don't need valid keys
+        // for the purposes of these tests; everything is mocked out.
+        return new KeyPairData()
+            .setPublicKeyData(pubKeyBytes)
+            .setPrivateKeyData(privKeyBytes);
     }
 
     @SuppressWarnings("unchecked")
@@ -246,9 +247,9 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
-        KeyPair keyPair = createKeyPair();
-        when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        when(consumer.getKeyPairData()).thenReturn(keyPairData);
+        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -309,9 +310,9 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
-        KeyPair keyPair = createKeyPair();
-        when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        when(consumer.getKeyPairData()).thenReturn(keyPairData);
+        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -347,9 +348,9 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
-        KeyPair keyPair = createKeyPair();
-        when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        when(consumer.getKeyPairData()).thenReturn(keyPairData);
+        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -398,9 +399,9 @@ public class ExporterTest {
         idcert.setUpdated(new Date());
         when(consumer.getIdCert()).thenReturn(idcert);
 
-        KeyPair keyPair = createKeyPair();
-        when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        when(consumer.getKeyPairData()).thenReturn(keyPairData);
+        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
@@ -450,9 +451,9 @@ public class ExporterTest {
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
 
-        KeyPair keyPair = createKeyPair();
-        when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        when(consumer.getKeyPairData()).thenReturn(keyPairData);
+        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
         when(consumer.getContentAccessMode()).thenReturn("access_mode");
@@ -504,9 +505,9 @@ public class ExporterTest {
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
 
-        KeyPair keyPair = createKeyPair();
-        when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        when(consumer.getKeyPairData()).thenReturn(keyPairData);
+        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
         when(consumer.getUuid()).thenReturn("8auuid");
         when(consumer.getName()).thenReturn("consumer_name");
         when(consumer.getTypeId()).thenReturn(ctype.getId());
@@ -552,9 +553,9 @@ public class ExporterTest {
         Consumer consumer = mock(Consumer.class);
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
-        KeyPair keyPair = createKeyPair();
-        when(consumer.getKeyPair()).thenReturn(keyPair);
-        when(pki.getPemEncoded(keyPair.getPrivateKey())).thenReturn("privateKey".getBytes());
+        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        when(consumer.getKeyPairData()).thenReturn(keyPairData);
+        when(pki.getPemEncoded(any(PrivateKey.class))).thenReturn("privateKey".getBytes());
         when(consumer.getUuid()).thenReturn("consumer");
         when(consumer.getName()).thenReturn("consumer_name");
         when(consumer.getTypeId()).thenReturn(ctype.getId());
@@ -612,9 +613,9 @@ public class ExporterTest {
         Consumer consumer = mock(Consumer.class);
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
-        KeyPair keyPair = createKeyPair();
-        doReturn(keyPair).when(consumer).getKeyPair();
-        doReturn("privateKey".getBytes()).when(pki).getPemEncoded(keyPair.getPrivateKey());
+        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        doReturn(keyPairData).when(consumer).getKeyPairData();
+        doReturn("privateKey".getBytes()).when(pki).getPemEncoded(any(PrivateKey.class));
         doReturn("consumer").when(consumer).getUuid();
         doReturn("consumer_name").when(consumer).getName();
         doReturn(ctype.getId()).when(consumer).getTypeId();
@@ -674,9 +675,9 @@ public class ExporterTest {
         Consumer consumer = mock(Consumer.class);
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
-        KeyPair keyPair = createKeyPair();
-        doReturn(keyPair).when(consumer).getKeyPair();
-        doReturn("privateKey".getBytes()).when(pki).getPemEncoded(keyPair.getPrivateKey());
+        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        doReturn(keyPairData).when(consumer).getKeyPairData();
+        doReturn("privateKey".getBytes()).when(pki).getPemEncoded(any(PrivateKey.class));
         doReturn("consumer").when(consumer).getUuid();
         doReturn("consumer_name").when(consumer).getName();
         doReturn(ctype.getId()).when(consumer).getTypeId();
@@ -736,9 +737,9 @@ public class ExporterTest {
         Consumer consumer = mock(Consumer.class);
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         ctype.setId("test-ctype");
-        KeyPair keyPair = createKeyPair();
-        doReturn(keyPair).when(consumer).getKeyPair();
-        doReturn("privateKey".getBytes()).when(pki).getPemEncoded(keyPair.getPrivateKey());
+        KeyPairData keyPairData = this.buildConsumerKeyPairData();
+        doReturn(keyPairData).when(consumer).getKeyPairData();
+        doReturn("privateKey".getBytes()).when(pki).getPemEncoded(any(PrivateKey.class));
         doReturn("consumer").when(consumer).getUuid();
         doReturn("consumer_name").when(consumer).getName();
         doReturn(ctype.getId()).when(consumer).getTypeId();

@@ -182,7 +182,7 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @JoinColumn(name = "consumer_idcert_id")
     private IdentityCertificate idCert;
 
-    @OneToOne (fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cont_acc_cert_id")
     private ContentAccessCertificate contentAccessCert;
 
@@ -216,7 +216,8 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     private Map<String, String> facts;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private KeyPair keyPair;
+    @JoinColumn(name = "keypair_id")
+    private KeyPairData keyPairData;
 
     private Date lastCheckin;
 
@@ -634,13 +635,13 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         this.lastCheckin = lastCheckin;
     }
 
-    @XmlTransient
-    public KeyPair getKeyPair() {
-        return keyPair;
+    public KeyPairData getKeyPairData() {
+        return keyPairData;
     }
 
-    public void setKeyPair(KeyPair keyPair) {
-        this.keyPair = keyPair;
+    public Consumer setKeyPairData(KeyPairData keyPairData) {
+        this.keyPairData = keyPairData;
+        return this;
     }
 
     @Override

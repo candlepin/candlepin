@@ -34,7 +34,6 @@ import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
@@ -192,7 +191,6 @@ public class ContentAccessManager {
 
     private final Configuration config;
     private final PKIUtility pki;
-    private final KeyPairCurator keyPairCurator;
     private final CertificateSerialCurator serialCurator;
     private final OwnerCurator ownerCurator;
     private final OwnerContentCurator ownerContentCurator;
@@ -211,7 +209,6 @@ public class ContentAccessManager {
         PKIUtility pki,
         X509V3ExtensionUtil v3extensionUtil,
         ContentAccessCertificateCurator contentAccessCertificateCurator,
-        KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
         OwnerCurator ownerCurator,
         OwnerContentCurator ownerContentCurator,
@@ -224,7 +221,6 @@ public class ContentAccessManager {
         this.config = Objects.requireNonNull(config);
         this.pki = Objects.requireNonNull(pki);
         this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
-        this.keyPairCurator = Objects.requireNonNull(keyPairCurator);
         this.serialCurator = Objects.requireNonNull(serialCurator);
         this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
@@ -281,8 +277,8 @@ public class ContentAccessManager {
         Validity oneYearValidity = Validity.oneYear();
         CertificateSerial serial = createSerial(oneYearValidity);
 
-        KeyPair keyPair = this.keyPairCurator.getConsumerKeyPair(consumer);
-        byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
+        KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
+        byte[] pemEncodedKeyPair = this.pki.getPemEncoded(keyPair.getPrivate());
 
         ContentAccessCertificate existing = new ContentAccessCertificate();
         existing.setSerial(serial);
@@ -305,7 +301,7 @@ public class ContentAccessManager {
 
         if (isX509CertExpired) {
             Validity oneYearValidity = Validity.oneYear();
-            KeyPair keyPair = this.keyPairCurator.getConsumerKeyPair(consumer);
+            KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
             this.serialCurator.revokeById(existing.getSerial().getId());
             CertificateSerial serial = createSerial(oneYearValidity);
             existing.setSerial(serial);

@@ -14,19 +14,23 @@
  */
 package org.candlepin.pki;
 
+import org.candlepin.model.Consumer;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.security.KeyException;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.Date;
 import java.util.Set;
+
+
 
 /**
  * Interface for lower level PKI operations that require access to a provider's internals.
@@ -46,14 +50,32 @@ public interface PKIUtility {
      */
     byte[] getPemEncoded(X509Certificate cert) throws IOException;
 
-    byte[] getPemEncoded(RSAPrivateKey key) throws IOException;
-
     byte[] getPemEncoded(PrivateKey key) throws IOException;
+
+    byte[] getSHA256WithRSAHash(InputStream input);
 
     boolean verifySHA256WithRSAHashAgainstCACerts(File input, byte[] signedHash)
         throws CertificateException, IOException;
 
-    KeyPair generateNewKeyPair() throws NoSuchAlgorithmException;
+    /**
+     * Generates a new, unassociated key pair consisting of a public and private key.
+     *
+     * @return
+     *  a KeyPair instance containing a new public and private key
+     */
+    KeyPair generateKeyPair() throws KeyException;
 
-    byte[] getSHA256WithRSAHash(InputStream input);
+    /**
+     * Fetches the key pair for the specified consumer, generating one if necessary. If the current
+     * key pair is invalid, malformed, or unreadable, a new key pair will be generated instead.
+     *
+     * @param consumer
+     *  the consumer for which to fetch a key pair
+     *
+     * @throws NoSuchAlgorithmException
+     *
+     * @return
+     *  the KeyPair instance containing the public and private keys for the specified consumer
+     */
+    KeyPair getConsumerKeyPair(Consumer consumer) throws KeyException;
 }

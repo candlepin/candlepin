@@ -28,7 +28,6 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -43,7 +42,7 @@ public class CertificateReader {
     private String caKeyPassword;
     private final X509Certificate x509Certificate;
     private final Set<X509Certificate> upstreamX509Certificates;
-    private final RSAPrivateKey privateKey;
+    private final PrivateKey privateKey;
 
     @Inject
     public CertificateReader(Configuration config, PrivateKeyReader reader)
@@ -74,7 +73,7 @@ public class CertificateReader {
         }
     }
 
-    protected RSAPrivateKey readPrivateKey(PrivateKeyReader reader) throws IOException {
+    protected PrivateKey readPrivateKey(PrivateKeyReader reader) throws IOException {
         return reader.read(caKeyPath, caKeyPassword);
     }
     /**
@@ -99,7 +98,7 @@ public class CertificateReader {
      * @throws IOException if a file can't be read or is not found
      * @throws GeneralSecurityException if something violated policy
      */
-    public RSAPrivateKey getCaKey() throws IOException, GeneralSecurityException {
+    public PrivateKey getCaKey() throws IOException, GeneralSecurityException {
         return this.privateKey;
     }
 

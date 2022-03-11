@@ -31,7 +31,7 @@ import java.io.Writer;
 import java.nio.file.Path;
 import java.util.Properties;
 
-import javax.crypto.BadPaddingException;
+
 
 public class EncryptedConfigurationTest {
     // generated with katello-secure-passphrase and katell-passwd
@@ -106,9 +106,10 @@ public class EncryptedConfigurationTest {
         props.setProperty("passphrase_file", passphraseFile.getAbsolutePath());
 
         EncryptedConfiguration c = new EncryptedConfiguration(props);
-        Throwable t = assertThrows(ConfigurationException.class,
-            () -> c.use("passphrase_file").toDecrypt(key1, key2));
-        assertThat(t.getCause(), IsInstanceOf.instanceOf(BadPaddingException.class));
+        assertThrows(ConfigurationException.class, () -> c.use("passphrase_file").toDecrypt(key1, key2));
+
+        // Note: if we care about being backend-agnostic here, we can't guarantee a specific exception
+        // will be thrown, as which exception is used varies between crypto providers.
     }
 
     @Test

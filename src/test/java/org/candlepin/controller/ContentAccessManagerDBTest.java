@@ -26,7 +26,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.Environment;
-import org.candlepin.model.KeyPairCurator;
+import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
@@ -63,7 +63,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
     private static final String ORG_ENVIRONMENT_MODE = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
     @Inject private ContentAccessCertificateCurator caCertCurator;
-    @Inject private KeyPairCurator keyPairCurator;
+    @Inject private KeyPairDataCurator keyPairDataCurator;
 
     private PKIUtility pkiUtility;
     private ObjectMapper objMapper;
@@ -77,7 +77,8 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
         PrivateKeyReader keyReader = new JSSPrivateKeyReader();
         CertificateReader certReader = new CertificateReader(this.config, keyReader);
         SubjectKeyIdentifierWriter keyIdWriter = new DefaultSubjectKeyIdentifierWriter();
-        this.pkiUtility = spy(new JSSPKIUtility(certReader, keyIdWriter, this.config));
+        this.pkiUtility = spy(new JSSPKIUtility(certReader, keyIdWriter, this.config,
+            this.keyPairDataCurator));
 
         this.objMapper = new ObjectMapper();
         this.x509V3ExtensionUtil = spy(new X509V3ExtensionUtil(this.config, this.entitlementCurator,
@@ -88,9 +89,9 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
 
     private ContentAccessManager createManager() {
         return new ContentAccessManager(this.config, this.pkiUtility, this.x509V3ExtensionUtil,
-            this.caCertCurator, this.keyPairCurator, this.certSerialCurator, this.ownerCurator,
-            this.ownerContentCurator, this.consumerCurator, this.consumerTypeCurator,
-            this.environmentCurator, this.caCertCurator, this.mockEventSink);
+            this.caCertCurator, this.certSerialCurator, this.ownerCurator, this.ownerContentCurator,
+            this.consumerCurator, this.consumerTypeCurator, this.environmentCurator, this.caCertCurator,
+            this.mockEventSink);
     }
 
     private Owner createSCAOwner() {

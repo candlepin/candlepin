@@ -15,6 +15,7 @@
 package org.candlepin.pki.impl;
 
 import org.candlepin.config.Configuration;
+import org.candlepin.model.Consumer;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
@@ -30,18 +31,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.security.KeyException;
 import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.SignatureException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
 import java.util.Date;
 import java.util.Set;
+
+
 
 /**
  * ProviderBasedPKIUtility is an abstract class implementing functionality in PKIUtility that only relies
@@ -53,14 +53,13 @@ import java.util.Set;
 public abstract class ProviderBasedPKIUtility implements PKIUtility {
     private static final Logger log = LoggerFactory.getLogger(ProviderBasedPKIUtility.class);
 
-    public static final int RSA_KEY_SIZE = 4096;
-
     protected CertificateReader reader;
     protected SubjectKeyIdentifierWriter subjectKeyWriter;
     protected Configuration config;
 
     public ProviderBasedPKIUtility(CertificateReader reader, SubjectKeyIdentifierWriter writer,
         Configuration config) {
+
         this.reader = reader;
         this.subjectKeyWriter = writer;
         this.config = config;
@@ -72,13 +71,6 @@ public abstract class ProviderBasedPKIUtility implements PKIUtility {
         Date startDate, Date endDate, KeyPair clientKeyPair, BigInteger serialNumber, String alternateName)
         throws GeneralSecurityException, IOException;
 
-    @Override
-    public KeyPair generateNewKeyPair() throws NoSuchAlgorithmException {
-        KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-        generator.initialize(RSA_KEY_SIZE);
-        return generator.generateKeyPair();
-    }
-
     /**
      * Take an X509Certificate object and return a byte[] of the certificate, PEM encoded
      * @param cert
@@ -87,19 +79,6 @@ public abstract class ProviderBasedPKIUtility implements PKIUtility {
      */
     @Override
     public abstract byte[] getPemEncoded(X509Certificate cert) throws IOException;
-
-    @Override
-    public abstract byte[] getPemEncoded(RSAPrivateKey key) throws IOException;
-
-    @Override
-    public byte[] getPemEncoded(PrivateKey key) throws IOException {
-        if (RSAPrivateKey.class.isAssignableFrom(key.getClass())) {
-            return getPemEncoded((RSAPrivateKey) key);
-        }
-        else {
-            throw new RuntimeException("Only RSA keys are supported");
-        }
-    }
 
     /**
      * Compute a SHA256withRSA digital signature on an inputStream.  The digest is signed
@@ -180,4 +159,16 @@ public abstract class ProviderBasedPKIUtility implements PKIUtility {
             signature.update(dataBytes, 0, nread);
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public abstract KeyPair generateKeyPair() throws KeyException;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public abstract KeyPair getConsumerKeyPair(Consumer consumer) throws KeyException;
 }

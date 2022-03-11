@@ -232,25 +232,41 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
-     * @param entity to be created.
-     * @return newly created entity
+     * Persists the given entity, flushing after the persistence if the calling thread is operating
+     * within a transaction.
+     *
+     * @param entity
+     *  the new entity to persist
+     *
+     * @return
+     *  the newly persisted entity
      */
-    @Transactional
     public E create(E entity) {
-        return create(entity, true);
+        return create(entity, this.inTransaction());
     }
 
     /**
-     * @param entity to be created.
-     * @param flush whether or not to flush after the persist.
-     * @return newly created entity.
+     * Persists the given entity, optionally flushing after persistence.
+     *
+     * @param entity
+     *  the new entity to persist
+     *
+     * @param flush
+     *  whether or not to flush the persist operation. Should not be set when operating outside of
+     *  a transaction
+     *
+     * @return
+     *  the newly persisted entity
      */
     @Transactional
     public E create(E entity, boolean flush) {
-        getEntityManager().persist(entity);
+        this.getEntityManager()
+            .persist(entity);
+
         if (flush) {
-            flush();
+            this.flush();
         }
+
         return entity;
     }
 
@@ -758,11 +774,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public void flush() {
         try {
             EntityManager entityManager = this.getEntityManager();
-            EntityTransaction transaction = entityManager.getTransaction();
 
             // If there's no transaction or it's not active, there's no reason to flush. Attempting
             // to do so will trigger an exception. Instead, just toss out a warning about it.
-            if (transaction != null && transaction.isActive()) {
+            if (this.inTransaction()) {
                 entityManager.flush();
             }
             else {
@@ -800,6 +815,18 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public EntityTransaction getTransaction() {
         EntityManager manager = this.getEntityManager();
         return manager != null ? manager.getTransaction() : null;
+    }
+
+    /**
+     * Checks if the calling thread is currently operating within the context of a database
+     * transaction.
+     *
+     * @return
+     *  true if the calling thread is operating within a database transaction; false otherwise
+     */
+    public boolean inTransaction() {
+        EntityTransaction transaction = this.getTransaction();
+        return transaction != null && transaction.isActive();
     }
 
     /**

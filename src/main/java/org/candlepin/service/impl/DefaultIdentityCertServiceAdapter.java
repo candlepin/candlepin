@@ -19,7 +19,6 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
-import org.candlepin.model.KeyPairCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.IdentityCertServiceAdapter;
 
@@ -47,7 +46,6 @@ public class DefaultIdentityCertServiceAdapter implements
     private static Logger log =
         LoggerFactory.getLogger(DefaultIdentityCertServiceAdapter.class);
     private IdentityCertificateCurator idCertCurator;
-    private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
     private Function<Date, Date> endDateGenerator;
 
@@ -55,12 +53,10 @@ public class DefaultIdentityCertServiceAdapter implements
     @Inject
     public DefaultIdentityCertServiceAdapter(PKIUtility pki,
         IdentityCertificateCurator identityCertCurator,
-        KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
         @Named("endDateGenerator") Function endDtGen) {
         this.pki = pki;
         this.idCertCurator = identityCertCurator;
-        this.keyPairCurator = keyPairCurator;
         this.serialCurator = serialCurator;
         this.endDateGenerator = endDtGen;
     }
@@ -131,7 +127,7 @@ public class DefaultIdentityCertServiceAdapter implements
 
         String dn = createDN(consumer);
         IdentityCertificate identityCert = new IdentityCertificate();
-        KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
+        KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
         X509Certificate x509cert = pki.createX509Certificate(dn, null, null,
             startDate, endDate, keyPair, BigInteger.valueOf(serial.getId()),
             consumer.getName());
