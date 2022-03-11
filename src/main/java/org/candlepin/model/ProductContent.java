@@ -88,9 +88,13 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
 
     /**
      * @param content the content to set
+     *
+     * @return
+     *  a reference to this ProductContent instance
      */
-    public void setContent(Content content) {
+    public ProductContent setContent(Content content) {
         this.content = content;
+        return this;
     }
 
     /**
@@ -103,9 +107,13 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
 
     /**
      * @param product the product to set
+     *
+     * @return
+     *  a reference to this ProductContent instance
      */
-    public void setProduct(Product product) {
+    public ProductContent setProduct(Product product) {
         this.product = product;
+        return this;
     }
 
     /**
@@ -118,9 +126,13 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
 
     /**
      * @param enabled the enabled to set
+     *
+     * @return
+     *  a reference to this ProductContent instance
      */
-    public void setEnabled(boolean enabled) {
+    public ProductContent setEnabled(boolean enabled) {
         this.enabled = enabled;
+        return this;
     }
 
     /**
