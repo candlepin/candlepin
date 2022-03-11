@@ -135,7 +135,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
     public void testUpdateContent(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner", "Test Owner");
@@ -170,7 +170,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
     public void testUpdateContentConvergeWithExisting(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
@@ -204,7 +204,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
     public void testUpdateContentDivergeFromExisting(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
@@ -247,7 +247,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
             () -> this.contentManager.updateContent(owner, update, false));
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
     public void testRemoveContent(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner-1", "Test Owner 1");
@@ -276,7 +276,7 @@ public class ContentManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
     public void testRemoveContentDivergeFromExisting(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");

@@ -258,14 +258,17 @@ public class ProductManager {
             log.debug("Checking {} alternate product versions", alternateVersions.size());
 
             for (Product alt : alternateVersions) {
-                if (alt.equals(entity)) {
-                    log.debug("Converging with existing product version: {} => {}", entity, alt);
-
-                    // If we're "creating" a product, we shouldn't have any other object references to
-                    // update for this product. Instead, we'll just add the new owner to the product.
-                    this.ownerProductCurator.mapProductToOwner(alt, owner);
-                    return alt;
+                if (!alt.equals(entity)) {
+                    String errmsg = String.format("Entity version collision detected: %s != %s", alt, entity);
+                    throw new IllegalStateException(errmsg);
                 }
+
+                log.debug("Converging with existing product version: {} => {}", entity, alt);
+
+                // If we're "creating" a product, we shouldn't have any other object references to
+                // update for this product. Instead, we'll just add the new owner to the product.
+                this.ownerProductCurator.mapProductToOwner(alt, owner);
+                return alt;
             }
         }
 
@@ -358,14 +361,19 @@ public class ProductManager {
             log.debug("Checking {} alternate product versions", alternateVersions.size());
 
             for (Product alt : alternateVersions) {
-                if (alt.equals(updated)) {
-                    log.debug("Converging with existing product version: {} => {}", updated, alt);
+                if (!alt.equals(updated)) {
+                    String errmsg = String.format("Entity version collision detected: %s != %s",
+                        alt, updated);
 
-                    this.ownerProductCurator.updateOwnerProductReferences(owner,
-                        Collections.singletonMap(entity.getUuid(), alt.getUuid()));
-
-                    updated = alt;
+                    throw new IllegalStateException(errmsg);
                 }
+
+                log.debug("Converging with existing product version: {} => {}", updated, alt);
+
+                this.ownerProductCurator.updateOwnerProductReferences(owner,
+                    Collections.singletonMap(entity.getUuid(), alt.getUuid()));
+
+                updated = alt;
             }
         }
 
@@ -479,14 +487,19 @@ public class ProductManager {
             log.debug("Checking {} alternate product versions", alternateVersions.size());
 
             for (Product alt : alternateVersions) {
-                if (alt.equals(updated)) {
-                    log.debug("Converging with existing product: {} => {}", updated, alt);
+                if (!alt.equals(updated)) {
+                    String errmsg = String.format("Entity version collision detected: %s != %s",
+                        alt, updated);
 
-                    this.ownerProductCurator.updateOwnerProductReferences(owner,
-                        Collections.singletonMap(entity.getUuid(), alt.getUuid()));
-
-                    updated = alt;
+                    throw new IllegalStateException(errmsg);
                 }
+
+                log.debug("Converging with existing product: {} => {}", updated, alt);
+
+                this.ownerProductCurator.updateOwnerProductReferences(owner,
+                    Collections.singletonMap(entity.getUuid(), alt.getUuid()));
+
+                updated = alt;
             }
         }
 
