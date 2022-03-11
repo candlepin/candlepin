@@ -730,7 +730,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testListConsumersRequiresPagingForLargeResultSets() {
+    public void testListConsumersDoesNotRequirePagingForSmallResultSets() {
+        ResteasyContext.pushContext(PageRequest.class, null);
         Owner owner = this.mockOwner("test_owner");
         ConsumerType ctype = this.mockConsumerType();
 
@@ -747,11 +748,18 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         assertNotNull(result);
         assertEquals(expected.size(), result.count());
+    }
 
+    @Test
+    public void testListConsumersRequiresPagingForLargeResultSets() {
+        ResteasyContext.pushContext(PageRequest.class, null);
+        String ownerKey = "test_owner";
+        this.mockOwner(ownerKey);
+        OwnerResource resource = this.buildOwnerResource();
         doReturn(5000L).when(this.mockConsumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
 
         assertThrows(BadRequestException.class, () ->
-            resource.listConsumers(owner.getKey(), "username", null, null, null, null));
+            resource.listConsumers(ownerKey, "username", null, null, null, null));
     }
 
     @Test

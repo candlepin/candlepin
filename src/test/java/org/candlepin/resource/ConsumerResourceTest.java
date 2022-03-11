@@ -93,6 +93,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
@@ -116,6 +117,7 @@ import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
 
 import org.apache.commons.lang.RandomStringUtils;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -948,6 +950,7 @@ public class ConsumerResourceTest {
 
     @Test
     public void testSearchConsumersDoesNotRequirePagingForSmallResultSets() {
+        ResteasyContext.pushContext(PageRequest.class, null);
         List<Consumer> expected = Stream.generate(this::createConsumer)
             .limit(5)
             .collect(Collectors.toList());
@@ -964,6 +967,7 @@ public class ConsumerResourceTest {
 
     @Test
     public void testSearchConsumersRequiresPagingForLargeResultSets() {
+        ResteasyContext.pushContext(PageRequest.class, null);
         doReturn(5000L).when(this.consumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
 
         assertThrows(BadRequestException.class, () -> this.consumerResource
