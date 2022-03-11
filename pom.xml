@@ -161,7 +161,13 @@
     <dependency>
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
-      <version>3.1.0</version>
+      <version>4.8.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>info.picocli</groupId>
+      <artifactId>picocli</artifactId>
+      <version>4.6.3</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -359,7 +365,7 @@
     <dependency>
       <groupId>com.mattbertolini</groupId>
       <artifactId>liquibase-slf4j</artifactId>
-      <version>1.2.1</version>
+      <version>4.0.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>

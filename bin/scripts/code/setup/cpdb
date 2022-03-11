@@ -83,8 +83,8 @@ class DbSetup(object):
         # Figure out what to append to the classpath for liquibase:
         classpath = ":".join(glob.glob(JAR_PATH + "*postgresql*.jar"))
 
-        if os.path.exists('target/classes'):
-            classpath = "%s:%s" % (classpath, 'target/classes/')
+        if os.path.exists('build/classes'):
+            classpath = "%s:%s" % (classpath, 'build/classes')
 
         if os.path.exists(TOMCAT_CLASSPATH):
             classpath = "%s:%s" % (classpath, TOMCAT_CLASSPATH)
@@ -92,7 +92,8 @@ class DbSetup(object):
         if os.path.exists(JBOSS_CLASSPATH):
             classpath = "%s:%s" % (classpath, JBOSS_CLASSPATH)
 
-        liquibase_options = "--driver=%s --classpath=%s --changeLogFile=%s --url=\"%s\" --username=$DBUSERNAME" % (
+        liquibase_options = "--driver=%s --classpath=%s --changelog-file=%s --url=\"%s\" --username=$DBUSERNAME \
+            --headless=true --hub-mode=OFF" % (
             self.driver_class,
             classpath,
             changelog_path,
@@ -107,11 +108,11 @@ class DbSetup(object):
             liquibase_options += " --password=$DBPASSWORD"
 
         # Add in output level. By default, Liquibase defaults to "off"
-        liquibase_options += " --logLevel=%s" % ('debug' if self.verbose else 'severe')
+        liquibase_options += " --log-level=%s" % ('debug' if self.verbose else 'severe')
 
         print(liquibase_options)
 
-        output = run_command("/usr/share/candlepin/liquibase.sh %s migrate -Dcommunity=%s" % (liquibase_options, self.community))
+        output = run_command("/usr/share/candlepin/liquibase.sh %s update -Dcommunity=%s" % (liquibase_options, self.community))
         print(output)
 
 
@@ -185,7 +186,7 @@ if __name__ == "__main__":
 
     parser.add_option("--schema-only",
             dest="schema_only", action="store_true", default=False,
-            help="assumes database is already created by another tool and"
+            help="assumes database is already created by another tool and "
                  "applies schema to database; used with --create")
 
     parser.add_option("--validate",
