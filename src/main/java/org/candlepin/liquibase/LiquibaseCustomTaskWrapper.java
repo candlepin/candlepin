@@ -66,7 +66,9 @@ public abstract class LiquibaseCustomTaskWrapper<T extends LiquibaseCustomTask> 
 
     @Override
     public String getConfirmationMessage() {
-        return null;
+        // We MUST return an empty string here instead of null, to avoid this issue:
+        // https://github.com/liquibase/liquibase/issues/1858
+        return "";
     }
 
     @Override

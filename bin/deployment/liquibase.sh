@@ -15,7 +15,7 @@ if [ -f $HOME/.liquibaserc ] ; then
 fi
 
 # Configuration
-MAIN_CLASS=liquibase.integration.commandline.Main
+MAIN_CLASS=liquibase.integration.commandline.LiquibaseCommandLine
 BASE_FLAGS=""
 BASE_OPTIONS=""
 
