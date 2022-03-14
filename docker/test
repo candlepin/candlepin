@@ -14,6 +14,11 @@ OPTIONS:
   -m        use mysql
   -n NAME   Sets the project name for the docker-compose run
   -p        use postgres
+  -x        use no database. only spin up the candlepin container
+              (useful for running things like unit tests, checkstyle,
+              that don't need a running server with db)
+  -q        use no database, but require the sonarqube certificate
+              (for running a sonarqube upload)
   -l        skip docker pull and use local images
   -d        run containers detached and do not
               automatically shut down & remove the
@@ -23,7 +28,7 @@ OPTIONS:
 USAGE
 }
 
-while getopts ":c:mn:plde" opt; do
+while getopts ":c:mn:pxqlde" opt; do
   case $opt in
     c) TEST_CMD="$OPTARG";;
     m) COMPOSE_ARGS="-f $DIR/docker-compose-mysql.yml";
@@ -31,6 +36,8 @@ while getopts ":c:mn:plde" opt; do
        sudo chown 999:999 $DIR/mysql.cnf;;
     n) PROJ_NAME="-p $OPTARG";;
     p) COMPOSE_ARGS="-f $DIR/docker-compose-postgres.yml";;
+    x) COMPOSE_ARGS="-f $DIR/docker-compose-no-db.yml";;
+    q) COMPOSE_ARGS="-f $DIR/docker-compose-sonarqube.yml";;
     l) USE_CACHE="1";;
     d) DETACHED="1";;
     e) EXPOSE_PORTS="1";;

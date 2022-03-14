@@ -11,7 +11,7 @@ mkdir -p $WORKSPACE/artifacts/
 chcon -Rt svirt_sandbox_file_t $WORKSPACE//artifacts/
 
 # Run the Candlepin unit tests
-./docker/test -p -c "cp-test -uuu -c ${CHANGE_BRANCH}" -n "${STAGE_NAME}-${BUILD_TAG}"
+./docker/test -x -c "cp-test -u -c ${CHANGE_BRANCH}" -n "${STAGE_NAME}-${BUILD_TAG}"
 RETVAL=$?
 sudo chown -R jenkins:jenkins $WORKSPACE/artifacts
 exit $RETVAL
