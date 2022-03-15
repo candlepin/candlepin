@@ -202,7 +202,7 @@ class CertSetup(object):
 
         args = {
             'hostname': socket.gethostname(),
-            'interface_ip': run_command_with_sudo('hostname -I'),
+            'interface_ip': run_command_with_sudo('hostname -I | cut -d \' \' -f 1'),
             'cert_home': self.cert_home,
             'cert_name': self.cert_name,
             'noise_file': self.noise_file,
