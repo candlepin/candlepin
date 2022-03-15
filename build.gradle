@@ -68,10 +68,10 @@ ext {
 
     // If MYSQL set up the mysql stuff else set up postgres (default)
     if (project.findProperty("database_server") == "mysql") {
-        jdbc_driver_class = "com.mysql.jdbc.Driver"
+        jdbc_driver_class = "org.mariadb.jdbc.Driver"
         jdbc_dialect = "org.hibernate.dialect.MySQL5InnoDBDialect"
         jdbc_quartz_driver_class = "org.quartz.impl.jdbcjobstore.StdJDBCDelegate"
-        jdbc_url = "jdbc:mysql://${db_host}/${db_name}"
+        jdbc_url = "jdbc:mariadb://${db_host}/${db_name}"
     } else {
         jdbc_driver_class = "org.postgresql.Driver"
         jdbc_dialect = "org.hibernate.dialect.PostgreSQL92Dialect"

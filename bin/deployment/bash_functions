@@ -177,14 +177,8 @@ init_mysql_jdbc() {
     select_jdbc_jar "/usr/lib/java/mariadb-java-client.jar" "/usr/share/java/mysql-connector-java.jar"
     evalrc $? "No JDBC jar file available for MariaDB/MySQL"
 
-    JDBC_DRIVER="com.mysql.cj.jdbc.Driver"
-    JDBC_URL="jdbc:mysql://$db_host/$db_name"
-
-    # FIXME:
-    # Use the mariadb driver and URL when the mariadb-java-client RPM is available in EL7 and the
-    # Liquibase errors are fully resolved with the newer drivers
-    # JDBC_DRIVER="org.mariadb.jdbc.Driver"
-    # JDBC_URL="jdbc:mariadb://$db_host/$db_name"
+    JDBC_DRIVER="org.mariadb.jdbc.Driver"
+    JDBC_URL="jdbc:mariadb://$db_host/$db_name"
     local isolation_level=$(mysql -h $db_host $db_name  --user=$db_user --password="$password" -s -N -e 'select @@global.tx_isolation')
     echo "isolation_level : $isolation_level"
     if [[ $isolation_level != "READ-COMMITTED" ]]; then
