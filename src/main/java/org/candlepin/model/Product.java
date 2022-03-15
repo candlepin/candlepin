@@ -1300,6 +1300,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
                 .append(this.attributes);
 
             if (this.derivedProduct != null) {
+                builder.append("derived_product");
                 builder.append(this.derivedProduct.getEntityVersion());
             }
 
@@ -1308,42 +1309,46 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
             // manually step through these and add the elements to ensure the hash code is
             // generated properly.
-            int accumulator;
+            // Additionally, the algorithm used by HashCodeBuilder is order dependent, so we must be
+            // sure to add our children entities into it in a consistent manner.
 
             if (!this.providedProducts.isEmpty()) {
-                accumulator = 0;
-                for (Product product : this.providedProducts) {
-                    accumulator += (product != null ? product.getEntityVersion() : 0);
-                }
+                builder.append("provided_products");
 
-                builder.append(accumulator);
+                this.providedProducts.stream()
+                    .filter(Objects::nonNull)
+                    .map(Product::getEntityVersion)
+                    .sorted()
+                    .forEach(builder::append);
             }
 
             if (!this.dependentProductIds.isEmpty()) {
-                accumulator = 0;
-                for (String pid : this.dependentProductIds) {
-                    accumulator += (pid != null ? pid.hashCode() : 0);
-                }
+                builder.append("dependent_product_ids");
 
-                builder.append(accumulator);
+                this.dependentProductIds.stream()
+                    .filter(Objects::nonNull)
+                    .sorted()
+                    .forEach(builder::append);
             }
 
             if (!this.productContent.isEmpty()) {
-                accumulator = 0;
-                for (ProductContent pc : this.productContent) {
-                    accumulator += (pc != null ? pc.getEntityVersion() : 0);
-                }
+                builder.append("product_content");
 
-                builder.append(accumulator);
+                this.productContent.stream()
+                    .filter(Objects::nonNull)
+                    .map(ProductContent::getEntityVersion)
+                    .sorted()
+                    .forEach(builder::append);
             }
 
             if (!this.branding.isEmpty()) {
-                accumulator = 0;
-                for (Branding branding : this.branding) {
-                    accumulator += (branding != null ? branding.hashCode() : 0);
-                }
+                builder.append("branding");
 
-                builder.append(accumulator);
+                this.branding.stream()
+                    .filter(Objects::nonNull)
+                    .map(Branding::hashCode)
+                    .sorted()
+                    .forEach(builder::append);
             }
 
             this.entityVersion = builder.toHashCode();

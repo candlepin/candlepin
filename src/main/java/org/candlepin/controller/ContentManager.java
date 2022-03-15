@@ -159,14 +159,17 @@ public class ContentManager {
             log.debug("Checking {} alternate content versions", alternateVersions.size());
 
             for (Content alt : alternateVersions) {
-                if (alt.equals(entity)) {
-                    log.debug("Converging content with existing version: {} => {}", entity, alt);
-
-                    // If we're "creating" a content, we shouldn't have any other object references to
-                    // update for this content. Instead, we'll just add the new owner to the content.
-                    this.ownerContentCurator.mapContentToOwner(alt, owner);
-                    return alt;
+                if (!alt.equals(entity)) {
+                    String errmsg = String.format("Entity version collision detected: %s != %s", alt, entity);
+                    throw new IllegalStateException(errmsg);
                 }
+
+                log.debug("Converging content with existing version: {} => {}", entity, alt);
+
+                // If we're "creating" a content, we shouldn't have any other object references to
+                // update for this content. Instead, we'll just add the new owner to the content.
+                this.ownerContentCurator.mapContentToOwner(alt, owner);
+                return alt;
             }
         }
 
@@ -257,14 +260,19 @@ public class ContentManager {
             log.debug("Checking {} alternate content versions", alternateVersions.size());
 
             for (Content alt : alternateVersions) {
-                if (alt.equals(updated)) {
-                    log.debug("Converging content with existing version: {} => {}", updated, alt);
+                if (!alt.equals(updated)) {
+                    String errmsg = String.format("Entity version collision detected: %s != %s",
+                        alt, updated);
 
-                    this.ownerContentCurator.updateOwnerContentReferences(owner,
-                        Collections.singletonMap(entity.getUuid(), alt.getUuid()));
-
-                    updated = alt;
+                    throw new IllegalStateException(errmsg);
                 }
+
+                log.debug("Converging content with existing version: {} => {}", updated, alt);
+
+                this.ownerContentCurator.updateOwnerContentReferences(owner,
+                    Collections.singletonMap(entity.getUuid(), alt.getUuid()));
+
+                updated = alt;
             }
         }
 
