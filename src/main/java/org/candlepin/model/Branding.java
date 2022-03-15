@@ -93,8 +93,9 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
         return id;
     }
 
-    public void setId(String id) {
+    public Branding setId(String id) {
         this.id = id;
+        return this;
     }
 
     /**
@@ -109,8 +110,9 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
         return productId;
     }
 
-    public void setProductId(String productId) {
+    public Branding setProductId(String productId) {
         this.productId = productId;
+        return this;
     }
 
     /**
@@ -121,8 +123,9 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
         return name;
     }
 
-    public void setName(String name) {
+    public Branding setName(String name) {
         this.name = name;
+        return this;
     }
 
     /**
@@ -135,8 +138,9 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
         return type;
     }
 
-    public void setType(String type) {
+    public Branding setType(String type) {
         this.type = type;
+        return this;
     }
 
     /**
@@ -150,9 +154,13 @@ public class Branding extends AbstractHibernateObject<Branding> implements Brand
 
     /**
      * Sets the parent marketing product that this branding belongs to.
+     *
+     * @return
+     *  a reference to this Branding instance
      */
-    public void setProduct(Product product) {
+    public Branding setProduct(Product product) {
         this.product = product;
+        return this;
     }
 
     @Override
