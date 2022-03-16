@@ -78,6 +78,8 @@ test {
 }
 
 task spec {
+    description = 'Run Java based spec tests'
+    group = 'Verification'
     finalizedBy 'test'
 }
 
