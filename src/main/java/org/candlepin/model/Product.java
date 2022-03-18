@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.ListView;
+import org.candlepin.util.LongHashCodeBuilder;
 import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
@@ -51,6 +52,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -237,7 +239,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     private Set<String> dependentProductIds;
 
     @Column(name = "entity_version")
-    private Integer entityVersion;
+    private Long entityVersion;
 
     @Column
     @Type(type = "org.hibernate.type.NumericBooleanType")
@@ -1288,68 +1290,72 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return
      *  a version hash for this entity
      */
-    public int getEntityVersion() {
+    public long getEntityVersion() {
         if (this.entityVersion == null) {
             log.trace("Calculating entity version for product: {}", this);
 
-            // This must always be a subset of equals
-            HashCodeBuilder builder = new HashCodeBuilder(37, 7)
-                .append(this.id)
-                .append(this.name)
-                .append(this.multiplier)
-                .append(this.attributes);
+            // initialValue and multiplier choosen fairly arbitrarily from a list of prime numbers
+            // These should be unique per versioned entity.
+            LongHashCodeBuilder builder = new LongHashCodeBuilder(223, 257)
+                .append(this.getId())
+                .append(this.getName())
+                .append(this.getMultiplier())
+                .append(this.getAttributes());
 
             if (this.derivedProduct != null) {
-                builder.append("derived_product");
                 builder.append(this.derivedProduct.getEntityVersion());
+            }
+            else {
+                builder.append((Object) null);
             }
 
             // Impl note:
-            // Stepping through the collections here is as painful as it looks, but Hibernate, once
-            // again, doesn't implement .hashCode reliably on the proxy collections. So, we have to
-            // manually step through these and add the elements to ensure the hash code is
-            // generated properly.
-            // Additionally, the algorithm used by HashCodeBuilder is order dependent, so we must be
-            // sure to add our children entities into it in a consistent manner.
+            // None of our collections actually care about order, but order is critical to building
+            // the version hash properly, so we do some sorting on each stream to ensure the current
+            // values are added in the same order on every invocation.
 
-            if (!this.providedProducts.isEmpty()) {
-                builder.append("provided_products");
+            builder.append("provided_products");
+            Collection<Product> providedProducts = this.getProvidedProducts();
+            Stream<Product> ppstream = providedProducts != null && !providedProducts.isEmpty() ?
+                providedProducts.stream() :
+                Stream.empty();
 
-                this.providedProducts.stream()
-                    .filter(Objects::nonNull)
-                    .map(Product::getEntityVersion)
-                    .sorted()
-                    .forEach(builder::append);
-            }
+            ppstream.filter(Objects::nonNull)
+                .map(Product::getEntityVersion)
+                .sorted()
+                .forEach(builder::append);
 
-            if (!this.dependentProductIds.isEmpty()) {
-                builder.append("dependent_product_ids");
+            builder.append("dependent_product_ids");
+            Collection<String> dependentProductIds = this.getDependentProductIds();
+            Stream<String> dpstream = dependentProductIds != null && !dependentProductIds.isEmpty() ?
+                dependentProductIds.stream() :
+                Stream.empty();
 
-                this.dependentProductIds.stream()
-                    .filter(Objects::nonNull)
-                    .sorted()
-                    .forEach(builder::append);
-            }
+            dpstream.filter(Objects::nonNull)
+                .sorted()
+                .forEach(builder::append);
 
-            if (!this.productContent.isEmpty()) {
-                builder.append("product_content");
+            builder.append("product_content");
+            Collection<ProductContent> productContent = this.getProductContent();
+            Stream<ProductContent> pcstream = productContent != null && !productContent.isEmpty() ?
+                productContent.stream() :
+                Stream.empty();
 
-                this.productContent.stream()
-                    .filter(Objects::nonNull)
-                    .map(ProductContent::getEntityVersion)
-                    .sorted()
-                    .forEach(builder::append);
-            }
+            pcstream.filter(Objects::nonNull)
+                .map(ProductContent::getEntityVersion)
+                .sorted()
+                .forEach(builder::append);
 
-            if (!this.branding.isEmpty()) {
-                builder.append("branding");
+            builder.append("branding");
+            Collection<Branding> branding = this.getBranding();
+            Stream<Branding> bstream = branding != null && !branding.isEmpty() ?
+                branding.stream() :
+                Stream.empty();
 
-                this.branding.stream()
-                    .filter(Objects::nonNull)
-                    .map(Branding::hashCode)
-                    .sorted()
-                    .forEach(builder::append);
-            }
+            bstream.filter(Objects::nonNull)
+                .map(Branding::hashCode)
+                .sorted()
+                .forEach(builder::append);
 
             this.entityVersion = builder.toHashCode();
         }

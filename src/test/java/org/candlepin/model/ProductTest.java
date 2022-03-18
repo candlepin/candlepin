@@ -406,15 +406,19 @@ public class ProductTest {
         Product p3 = spy(new Product())
             .setId("p3");
 
-        doReturn(1).when(p1).getEntityVersion();
-        doReturn(2).when(p2).getEntityVersion();
-        doReturn(3).when(p3).getEntityVersion();
+        // Explictly set the entity version such that we can get into a case where the sum
+        // of a subset equals the sum of a different subset
+        doReturn(1L).when(p1).getEntityVersion();
+        doReturn(2L).when(p2).getEntityVersion();
+        doReturn(3L).when(p3).getEntityVersion();
 
         return List.of(p1, p2, p3);
     }
 
     @Test
     public void testEntityVersionChangesWithProvidedProducts() {
+        // The products here must be generated such that the sum of the entity versions of the first
+        // two children is equal to the entity version of the third.
         List<Product> children = this.buildTestProducts();
 
         Product p1 = new Product();
@@ -492,15 +496,17 @@ public class ProductTest {
 
         // Explictly set the entity version such that we can get into a case where the sum
         // of a subset equals the sum of a different subset
-        doReturn(1).when(pc1).getEntityVersion();
-        doReturn(2).when(pc2).getEntityVersion();
-        doReturn(3).when(pc3).getEntityVersion();
+        doReturn(1L).when(pc1).getEntityVersion();
+        doReturn(2L).when(pc2).getEntityVersion();
+        doReturn(3L).when(pc3).getEntityVersion();
 
         return List.of(pc1, pc2, pc3);
     }
 
     @Test
     public void testEntityVersionChangesWithContent() {
+        // The ProductContent instances here must be generated such that the sum of the entity
+        // versions of the first two children is equal to the entity version of the third.
         List<ProductContent> children = this.buildTestContent();
 
         Product p1 = new Product();
@@ -601,6 +607,8 @@ public class ProductTest {
 
     @Test
     public void testEntityVersionChangesWithBranding() {
+        // The branding here must be generated such that the sum of the hashcodes of the first two
+        // children is equal to the hash code of the third.
         List<Branding> children = this.buildTestBranding();
 
         Product p1 = new Product();
@@ -676,9 +684,9 @@ public class ProductTest {
         ProductContent pcontent = spy(new ProductContent())
             .setContent(new Content().setId("content"));
 
-        doReturn(1).when(derived).getEntityVersion();
-        doReturn(1).when(provided).getEntityVersion();
-        doReturn(1).when(pcontent).getEntityVersion();
+        doReturn(1L).when(derived).getEntityVersion();
+        doReturn(1L).when(provided).getEntityVersion();
+        doReturn(1L).when(pcontent).getEntityVersion();
 
         Branding branding = new Branding() {
             @Override

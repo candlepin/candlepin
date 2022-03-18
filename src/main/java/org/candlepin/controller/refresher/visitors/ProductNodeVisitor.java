@@ -55,7 +55,7 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
     private Set<OwnerProduct> ownerProductEntities;
     private Map<Owner, Map<String, String>> ownerProductUuidMap;
     private Map<Owner, Set<String>> deletedProductUuids;
-    private Map<Owner, Set<Integer>> ownerEntityVersions;
+    private Map<Owner, Set<Long>> ownerEntityVersions;
     private Map<Owner, Map<String, List<Product>>> ownerVersionedEntityMap;
 
 
@@ -229,10 +229,10 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
     private Product resolveEntityVersion(EntityNode<Product, ProductInfo> node) {
         Owner owner = node.getOwner();
         Product entity = node.getMergedEntity();
-        int entityVersion = entity.getEntityVersion();
+        long entityVersion = entity.getEntityVersion();
 
         Map<String, List<Product>> entityMap = this.ownerVersionedEntityMap.computeIfAbsent(owner, key -> {
-            Set<Integer> versions = this.ownerEntityVersions.remove(key);
+            Set<Long> versions = this.ownerEntityVersions.remove(key);
 
             return versions != null ?
                 this.ownerProductCurator.getProductsByVersions(versions) :
