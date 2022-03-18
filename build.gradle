@@ -212,7 +212,7 @@ allprojects {
                 entry "hibernate-validator"
                 entry "hibernate-validator-annotation-processor"
             }
-            dependencySet(group: "org.apache.activemq", version: "2.18.0") {
+            dependencySet(group: "org.apache.activemq", version: "2.20.0") {
                 entry "artemis-server"
                 entry "artemis-stomp-protocol"
             }
