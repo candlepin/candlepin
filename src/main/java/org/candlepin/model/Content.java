@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.model.ContentInfo;
+import org.candlepin.util.LongHashCodeBuilder;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
 
@@ -33,6 +34,7 @@ import org.hibernate.annotations.Type;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.CollectionTable;
@@ -137,7 +139,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     @XmlTransient
     @Column(name = "entity_version")
-    private Integer entityVersion;
+    private Long entityVersion;
 
     @XmlTransient
     @Column
@@ -615,10 +617,11 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      * @return
      *  a version hash for this entity
      */
-    public int getEntityVersion() {
+    public long getEntityVersion() {
         if (this.entityVersion == null) {
-            // This must always be a subset of equals
-            HashCodeBuilder builder = new HashCodeBuilder(37, 7)
+            // initialValue and multiplier choosen fairly arbitrarily from a list of prime numbers
+            // These should be unique per versioned entity.
+            LongHashCodeBuilder builder = new LongHashCodeBuilder(419, 433)
                 .append(this.getId())
                 .append(this.getType())
                 .append(this.getLabel())
@@ -634,15 +637,18 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             // Impl note:
             // We need to be certain that the hash code is calculated in a way that's order
             // independent and not subject to Hibernate's poor hashCode implementation on proxy
-            // collections. This calculation follows that defined by the Set.hashCode method.
-            int accumulator = 0;
+            // collections.
+            Collection<String> modifiedProductIds = this.getModifiedProductIds();
+            if (modifiedProductIds != null && !modifiedProductIds.isEmpty()) {
+                builder.append("modified_product_ids");
 
-            if (!this.modifiedProductIds.isEmpty()) {
-                for (String pid : this.getModifiedProductIds()) {
-                    accumulator += (pid != null ? pid.hashCode() : 0);
-                }
-
-                builder.append(accumulator);
+                modifiedProductIds.stream()
+                    .filter(Objects::nonNull)
+                    .sorted()
+                    .forEach(builder::append);
+            }
+            else {
+                builder.append((Object) null);
             }
 
             this.entityVersion = builder.toHashCode();

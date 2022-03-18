@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.service.model.ProductContentInfo;
+import org.candlepin.util.LongHashCodeBuilder;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -175,9 +176,11 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
      * @return
      *  a version hash for this entity
      */
-    public int getEntityVersion() {
-        return new HashCodeBuilder(7, 19)
-            .append(this.getContent() != null ? this.getContent().getEntityVersion() : 0)
+    public long getEntityVersion() {
+        // initialValue and multiplier choosen fairly arbitrarily from a list of prime numbers
+        // These should be unique per versioned entity.
+        return new LongHashCodeBuilder(307, 317)
+            .append(this.getContent() != null ? this.getContent().getEntityVersion() : null)
             .append(this.isEnabled())
             .toHashCode();
     }
