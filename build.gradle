@@ -176,8 +176,8 @@ dependencies {
     implementation "javax.cache:cache-api:1.0.0"
 
     // Artemis server & client
-    implementation "org.apache.activemq:artemis-server:2.19.0"
-    implementation "org.apache.activemq:artemis-stomp-protocol:2.19.0"
+    implementation "org.apache.activemq:artemis-server:2.20.0"
+    implementation "org.apache.activemq:artemis-stomp-protocol:2.20.0"
 
     // Javascript Engine
     implementation "org.mozilla:rhino:1.7R3"

@@ -21,13 +21,13 @@ import shutil
 from contextlib import contextmanager
 from optparse import OptionParser
 import logging
-import urllib2
+import urllib.request as request
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger('configure-artemis')
 
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
-DEFAULT_VERSION = "2.12.0"
+DEFAULT_VERSION = "2.20.0"
 
 # Installation paths for Artemis as suggested by the docs.
 # For this reason, we are not allowing these to be changed by
@@ -69,15 +69,15 @@ def download_artemis(version, target_dir):
 
     try:
         logger.debug("Downloading artemis: %s" % (url))
-        response = urllib2.urlopen(url, timeout = 5)
+        response = request.urlopen(url, timeout = 5)
         content = response.read()
 
-        with open(path_to_file, 'w') as dl_file:
+        with open(path_to_file, 'wb') as dl_file:
             dl_file.write(content)
 
         return path_to_file
 
-    except urllib2.URLError as e:
+    except request.URLError as e:
         logger.error("Unable to download artemis install file: %s" % (url))
         raise e
 
@@ -185,7 +185,7 @@ def generate_certs(broker_path):
     logger.debug("Generating a server keystore.")
     call_with_array(["sudo", "keytool", "-genkey", "-keystore", "%s/artemis-server.ks" % certs_dir,
                      "-storepass", "securepassword", "-keypass", "securepassword", "-dname",
-                     "CN=$HOSTNAME, L=Brno, S=South Moravia, C=CZ", "-keyalg", "RSA", "-storetype",
+                     "CN=localhost, L=Brno, S=South Moravia, C=CZ", "-keyalg", "RSA", "-storetype",
                      "pkcs12"], "Failed to generate a server keystore...")
 
     logger.debug("Exporting the server certificate from the server keystore.")
@@ -201,7 +201,7 @@ def generate_certs(broker_path):
     logger.debug("Generating a client keystore.")
     call_with_array(["sudo", "keytool", "-genkey", "-keystore", "%s/artemis-client.ks" % certs_dir,
                      "-storepass", "securepassword", "-keypass", "securepassword", "-dname",
-                     "CN=$HOSTNAME, L=Brno, S=South Moravia, C=CZ", "-keyalg", "RSA", "-storetype",
+                     "CN=localhost, L=Brno, S=South Moravia, C=CZ", "-keyalg", "RSA", "-storetype",
                      "pkcs12"], "Failed to generate a client keystore...")
 
     logger.debug("Exporting the client certificate from the client keystore.")
