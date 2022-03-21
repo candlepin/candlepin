@@ -19,9 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.isA;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.nullable;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
@@ -351,5 +354,116 @@ public class EntitlementResourceTest {
 
         assertEquals(1, result.size());
         assertEquals("getAllEntitlementsForConsumer", result.get(0).getId());
+    }
+
+    @Test
+    public void testUpdateEntitlementWithNullQuantity() {
+        String entitlementId = "uniqueId";
+        Entitlement entitlement = new Entitlement();
+        entitlement.setId(entitlementId);
+        entitlement.setQuantity(3);
+
+        EntitlementDTO entitlementDTO = new EntitlementDTO();
+        entitlementDTO.setId(entitlementId);
+        entitlementDTO.setQuantity(null);
+
+        doReturn(entitlement).when(entitlementCurator).get(eq(entitlementId));
+
+        entResource.updateEntitlement(entitlementId, entitlementDTO);
+
+        verify(entitler, never())
+            .adjustEntitlementQuantity(any(Consumer.class), any(Entitlement.class), any(Integer.class));
+    }
+
+    @Test
+    public void testUpdateEntitlementWith0Quantity() {
+        String entitlementId = "uniqueId";
+        Entitlement entitlement = new Entitlement();
+        entitlement.setId(entitlementId);
+        entitlement.setQuantity(3);
+
+        EntitlementDTO entitlementDTO = new EntitlementDTO();
+        entitlementDTO.setId(entitlementId);
+        entitlementDTO.setQuantity(0);
+
+        doReturn(entitlement).when(entitlementCurator).get(eq(entitlementId));
+
+        assertThrows(BadRequestException.class, () ->
+            entResource.updateEntitlement(entitlementId, entitlementDTO)
+        );
+
+        verify(entitler, never())
+            .adjustEntitlementQuantity(any(Consumer.class), any(Entitlement.class), any(Integer.class));
+    }
+
+    @Test
+    public void testUpdateEntitlementWithNegativeQuantity() {
+        String entitlementId = "uniqueId";
+        Entitlement entitlement = new Entitlement();
+        entitlement.setId(entitlementId);
+        entitlement.setQuantity(3);
+
+        EntitlementDTO entitlementDTO = new EntitlementDTO();
+        entitlementDTO.setId(entitlementId);
+        entitlementDTO.setQuantity(-5);
+
+        doReturn(entitlement).when(entitlementCurator).get(eq(entitlementId));
+
+        assertThrows(BadRequestException.class, () ->
+            entResource.updateEntitlement(entitlementId, entitlementDTO)
+        );
+
+        verify(entitler, never())
+            .adjustEntitlementQuantity(any(Consumer.class), any(Entitlement.class), any(Integer.class));
+    }
+
+    @Test
+    public void testUpdateEntitlementWithUnchangedQuantity() {
+        String entitlementId = "uniqueId";
+        int quantity = 3;
+        Entitlement entitlement = new Entitlement();
+        entitlement.setId(entitlementId);
+        entitlement.setQuantity(quantity);
+
+        EntitlementDTO entitlementDTO = new EntitlementDTO();
+        entitlementDTO.setId(entitlementId);
+        entitlementDTO.setQuantity(quantity);
+
+        doReturn(entitlement).when(entitlementCurator).get(eq(entitlementId));
+
+        entResource.updateEntitlement(entitlementId, entitlementDTO);
+
+        verify(entitler, never())
+            .adjustEntitlementQuantity(any(Consumer.class), any(Entitlement.class), any(Integer.class));
+    }
+
+    @Test
+    public void testUpdateEntitlementWithValidQuantityUpdate() {
+        String entitlementId = "uniqueId";
+        Entitlement entitlement = new Entitlement();
+        entitlement.setId(entitlementId);
+        entitlement.setQuantity(3);
+
+        EntitlementDTO entitlementDTO = new EntitlementDTO();
+        entitlementDTO.setId(entitlementId);
+        entitlementDTO.setQuantity(4);
+
+        doReturn(entitlement).when(entitlementCurator).get(eq(entitlementId));
+
+        entResource.updateEntitlement(entitlementId, entitlementDTO);
+
+        verify(entitler).adjustEntitlementQuantity(nullable(Consumer.class), eq(entitlement), eq(4));
+    }
+
+    @Test
+    public void testUpdateEntitlementWithInvalidEntitlementId() {
+        String entitlementId = "uniqueId";
+        EntitlementDTO entitlementDTO = new EntitlementDTO();
+        entitlementDTO.setId(entitlementId);
+        entitlementDTO.setQuantity(4);
+
+        assertThrows(NotFoundException.class, () ->
+            entResource.updateEntitlement(entitlementId, entitlementDTO)
+        );
     }
 }

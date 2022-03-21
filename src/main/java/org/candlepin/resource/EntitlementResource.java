@@ -186,24 +186,24 @@ public class EntitlementResource implements EntitlementsApi {
 
     @Override
     public void updateEntitlement(@Verify(Entitlement.class) String id, EntitlementDTO update) {
-        //TODO Why do we accept a whole Entitlement object here, if we only use the quantity field???
-
-        // Check that quantity param was set and is not 0:
-        if (update.getQuantity() <= 0) {
-            throw new BadRequestException(i18n.tr("Quantity value must be greater than 0."));
-        }
-
         // Verify entitlement exists:
         Entitlement entitlement = entitlementCurator.get(id);
-        if (entitlement != null) {
-            // make sure that this will be a change
-            if (!entitlement.getQuantity().equals(update.getQuantity())) {
+        if (entitlement == null) {
+            throw new NotFoundException(i18n.tr("Entitlement with ID \"{0}\" could not be found.", id));
+        }
+
+        Integer updateQuantity = update.getQuantity();
+        if (updateQuantity != null) {
+            // Quantity changes must be larger than 0.
+            if (updateQuantity <= 0) {
+                throw new BadRequestException(i18n.tr("Quantity value must be greater than 0"));
+            }
+
+            // Ensure a change will occur with the update.
+            if (entitlement.getQuantity() != null && !entitlement.getQuantity().equals(updateQuantity)) {
                 Consumer consumer = entitlement.getConsumer();
                 entitler.adjustEntitlementQuantity(consumer, entitlement, update.getQuantity());
             }
-        }
-        else {
-            throw new NotFoundException(i18n.tr("Entitlement with ID \"{0}\" could not be found.", id));
         }
     }
 
