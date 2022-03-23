@@ -2469,7 +2469,7 @@ public class ConsumerResource implements ConsumersApi {
 
     @Override
     public List<EntitlementDTO> listEntitlements(@Verify(Consumer.class) String consumerUuid,
-        String productId, Boolean regen, String matches, List<KeyValueParamDTO> attrFilters) {
+        String productId, Boolean regen, List<KeyValueParamDTO> attrFilters) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
@@ -2477,7 +2477,7 @@ public class ConsumerResource implements ConsumersApi {
             revokeOnGuestMigration(consumer);
         }
 
-        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
+        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(null, attrFilters);
         Page<List<Entitlement>> entitlementsPage = entitlementCurator.listByConsumer(consumer, productId,
             filters, pageRequest);
 

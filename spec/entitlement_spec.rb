@@ -119,18 +119,6 @@ describe 'Entitlements' do
     expect(variant).to eq("Satellite Starter Pack")
   end
 
-  it 'should filter consumer entitlements by matches parameter' do
-    @system.consume_pool find_pool_for_product(@ram).id
-    @system.consume_pool find_pool_for_product(@super_awesome).id
-    @system.list_entitlements().length.should eq(2)
-
-    entitlements = @system.list_entitlements(:matches => "*ram*")
-    entitlements.length.should eq(1)
-
-    found_attr = false
-    entitlements[0].pool.productName.should == @ram.name
-  end
-
   it 'should be removed after revoking all entitlements' do
     @system.consume_product @virt.id
     @system.revoke_all_entitlements

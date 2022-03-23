@@ -1473,11 +1473,6 @@ paths:
           schema:
             type: boolean
             default: true
-        - name: matches
-          in: query
-          description: Match criteria for filtering
-          schema:
-            type: string
         - name: attribute
           in: query
           description: Attribute filters
@@ -4945,11 +4940,6 @@ paths:
         - name: product
           in: query
           description: The product id
-          schema:
-            type: string
-        - name: matches
-          in: query
-          description: A text to search for in various fields on the entitlements
           schema:
             type: string
         - name: attribute

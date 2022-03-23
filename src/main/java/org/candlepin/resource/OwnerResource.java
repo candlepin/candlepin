@@ -986,13 +986,12 @@ public class OwnerResource implements OwnersApi {
 
     @Override
     public List<EntitlementDTO> ownerEntitlements(
-        @Verify(Owner.class) String ownerKey, String productId,
-        String matches, List<KeyValueParamDTO> attrFilters) {
+        @Verify(Owner.class) String ownerKey, String productId, List<KeyValueParamDTO> attrFilters) {
 
         Owner owner = findOwnerByKey(ownerKey);
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
 
-        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
+        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(null, attrFilters);
         Page<List<Entitlement>> entitlementsPage = entitlementCurator
             .listByOwner(owner, productId, filters, pageRequest);
 
