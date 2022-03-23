@@ -768,14 +768,16 @@ describe 'Hypervisor Resource', :type => :virt do
   it 'should allow a single guest to be migrated and revoke host-limited ents' do
     owner = create_owner random_string('test_owner1')
     user = user_client(owner, random_string("user"))
+    hypervisor_id_1 = random_string('hypervisor').downcase
+    hypervisor_id_2 = random_string('hypervisor').downcase
     virtwho = create_virtwho_client(user)
     uuid1 = random_string('system.uuid')
     guests = [{:guestId => uuid1}]
 
     host_consumer = user.register(random_string('host1'), :hypervisor, nil,
-      {}, nil, owner['key'], [], [], [], [], 'hypervisor_id_1')
+      {}, nil, owner['key'], [], [], [], [], hypervisor_id_1)
     new_host_consumer = user.register(random_string('host2'), :hypervisor, nil,
-      {}, nil, owner['key'], [], [], [], [], 'hypervisor_id_2')
+      {}, nil, owner['key'], [], [], [], [], hypervisor_id_2)
 
     guest_consumer = user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, owner['key'], [], [])
@@ -787,7 +789,7 @@ describe 'Hypervisor Resource', :type => :virt do
     new_consumer_client = Candlepin.new(nil, nil, new_host_consumer['idCert']['cert'], new_host_consumer['idCert']['key'])
     guest_client = Candlepin.new(nil, nil, guest_consumer['idCert']['cert'], guest_consumer['idCert']['key'])
 
-    virtwho.hypervisor_check_in(owner['key'], get_host_guest_mapping('hypervisor_id_1', [uuid1]))
+    virtwho.hypervisor_check_in(owner['key'], get_host_guest_mapping(hypervisor_id_1, [uuid1]))
 
     # consumer_client.update_guestids(guests)
     pools = consumer_client.list_pools :consumer => host_consumer['uuid']
@@ -818,7 +820,7 @@ describe 'Hypervisor Resource', :type => :virt do
     # Updating to a new host should remove host specific entitlements
 
     sleep 2
-    virtwho.hypervisor_check_in(owner['key'], get_host_guest_mapping('hypervisor_id_2', [uuid1]))
+    virtwho.hypervisor_check_in(owner['key'], get_host_guest_mapping(hypervisor_id_2, [uuid1]))
 
     # The guests host limited entitlement should be gone
     guest_client.list_entitlements().length.should == 0
@@ -827,14 +829,16 @@ describe 'Hypervisor Resource', :type => :virt do
   it 'should allow a single guest to be migrated and revoke host-limited ents - async' do
     owner = create_owner random_string('test_owner1')
     user = user_client(owner, random_string("user"))
+    hypervisor_id_1 = random_string('hypervisor').downcase
+    hypervisor_id_2 = random_string('hypervisor').downcase
     virtwho = create_virtwho_client(user)
     uuid1 = random_string('system.uuid')
     guests = [{:guestId => uuid1}]
 
     host_consumer = user.register(random_string('host1'), :hypervisor, nil,
-      {}, nil, owner['key'], [], [], [], [], 'hypervisor_id_1')
+      {}, nil, owner['key'], [], [], [], [], hypervisor_id_1)
     new_host_consumer = user.register(random_string('host2'), :system, nil,
-      {}, nil, owner['key'], [], [], [], [], 'hypervisor_id_2')
+      {}, nil, owner['key'], [], [], [], [], hypervisor_id_2)
 
     guest_consumer = user.register(random_string('guest'), :system, nil,
       {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, owner['key'], [], [])
@@ -846,7 +850,7 @@ describe 'Hypervisor Resource', :type => :virt do
     new_consumer_client = Candlepin.new(nil, nil, new_host_consumer['idCert']['cert'], new_host_consumer['idCert']['key'])
     guest_client = Candlepin.new(nil, nil, guest_consumer['idCert']['cert'], guest_consumer['idCert']['key'])
 
-    async_update_hypervisor(owner, user, 'tester', 'hypervisor_id_1', [uuid1])
+    async_update_hypervisor(owner, user, 'tester', hypervisor_id_1, [uuid1])
 
     # consumer_client.update_guestids(guests)
     pools = consumer_client.list_pools :consumer => host_consumer['uuid']
@@ -876,7 +880,7 @@ describe 'Hypervisor Resource', :type => :virt do
     guest_client.list_entitlements().length.should == 1
     # Updating to a new host should remove host specific entitlements
 
-    async_update_hypervisor(owner, user, 'tester', 'hypervisor_id_2', [uuid1])
+    async_update_hypervisor(owner, user, 'tester', hypervisor_id_2, [uuid1])
 
     # The guests host limited entitlement should be gone
     guest_client.list_entitlements().length.should == 0
@@ -885,6 +889,8 @@ describe 'Hypervisor Resource', :type => :virt do
   it 'should allow existing guest to be migrated to an existing host - async' do
     owner = create_owner random_string('test_owner1')
     user = user_client(owner, random_string("user"))
+    hypervisor_id_1 = random_string('hypervisor').downcase
+    hypervisor_id_2 = random_string('hypervisor').downcase
     virtwho = create_virtwho_client(user)
 
     host1_name = random_string('host1')
@@ -897,7 +903,7 @@ describe 'Hypervisor Resource', :type => :virt do
         "hypervisors" => [
             {
                 "name" => 'host_1',
-                "hypervisorId" => {"hypervisorId" => 'hypervisor_id_1'},
+                "hypervisorId" => {"hypervisorId" => hypervisor_id_1},
                 "guestIds" => [
                     {'guestId' => uuid1}
                 ],
@@ -905,7 +911,7 @@ describe 'Hypervisor Resource', :type => :virt do
             },
             {
                 "name" => "host_2",
-                "hypervisorId" => {"hypervisorId" => 'hypervisor_id_2'},
+                "hypervisorId" => {"hypervisorId" => hypervisor_id_2},
                 "guestIds" => [
                     {'guestId' => guest_id_to_migrate}
                 ],
@@ -921,7 +927,7 @@ describe 'Hypervisor Resource', :type => :virt do
         "hypervisors" => [
             {
                 "name" => host1_name,
-                "hypervisorId" => {"hypervisorId" => 'hypervisor_id_1'},
+                "hypervisorId" => {"hypervisorId" => hypervisor_id_1},
                 "guestIds" => [
                     {'guestId' => uuid1},
                     {'guestId' => guest_id_to_migrate}
@@ -930,7 +936,7 @@ describe 'Hypervisor Resource', :type => :virt do
             },
             {
                 "name" => "host_2",
-                "hypervisorId" => {"hypervisorId" => 'hypervisor_id_2'},
+                "hypervisorId" => {"hypervisorId" => hypervisor_id_2},
                 "guestIds" => [
 
                 ],
@@ -1083,7 +1089,7 @@ describe 'Hypervisor Resource', :type => :virt do
 
     test_host = user.register("test-host", :system, nil, {"dmi.system.uuid" => "TEST-UUID", "virt.is_guest"=>"false"}, nil, owner['key'])
 
-    host_hyp_id = "hypervisor"
+    host_hyp_id = 'hypervisor'
     guests = ['g1', 'g2']
     host_facts = {
         "dmi.system.uuid" => "test-uuid"}
@@ -1104,7 +1110,7 @@ describe 'Hypervisor Resource', :type => :virt do
 
     test_host = user.register("test-host", :system, nil, {"dmi.system.uuid" => "test-uuid", "virt.is_guest"=>"false"}, nil, owner['key'])
 
-    host_hyp_id = "hypervisor"
+    host_hyp_id = 'hypervisor'
     guests = ['g1', 'g2']
     host_facts = {
         "dmi.system.uuid" => "TEST-UUID"}
@@ -1147,8 +1153,8 @@ describe 'Hypervisor Resource', :type => :virt do
     owner = create_owner random_string('owner')
     user = user_client(owner, random_string('user'))
 
-    host_hyp_id_1 = "hypervisor_id_1"
-    host_hyp_id_2 = "hypervisor_id_2"
+    host_hyp_id_1 = random_string('hypervisor').downcase
+    host_hyp_id_2 = random_string('hypervisor').downcase
     host_system_id = "system_id"
     guest_set = [{"guestId"=>"g1"},{"guestId"=>"g2"}]
     guests = ['g1', 'g2']
@@ -1187,11 +1193,12 @@ describe 'Hypervisor Resource', :type => :virt do
     user = user_client(owner, random_string("user"))
     uuid1 = random_string('system.uuid')
     uuid2 = random_string('system.uuid')
+    hypervisor_id_1 = random_string('hypervisor').downcase
     # incorrect json structure
     report = {
         "name" => '',
         "uuid" => uuid1,
-        "hypervisorId" => {"hypervisorId" => 'hypervisor_id_1'},
+        "hypervisorId" => {"hypervisorId" => hypervisor_id_1},
         "guestIds" => [
             {'guestId' => uuid2}
         ],
