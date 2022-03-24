@@ -110,6 +110,18 @@ build_rspec() {
     fi
 }
 
+build_spec() {
+    # TODO: Add support for filtering spec tests once it's supported
+
+    # Check that both gradlew exists and the task exists
+    if ! test -f ./gradlew || ! ./gradlew tasks | grep -q "^spec\b"; then
+        echo "Warning: Java spec tests not found"
+        return;
+    fi
+
+    ./gradlew spec
+}
+
 trapex() {
     target="$1"
     shift
@@ -139,6 +151,7 @@ collect_artifacts() {
         lint.log
         buildr.log
         unit_tests.log
+        spec.log
         rspec.log
         translation.log
         sonarqube_upload.log
@@ -220,7 +233,7 @@ OPTIONS:
   -d                deploy a live candlepin
   -t                populate Candlepin database with test data (implies -d)
   -R                populate Candlepin environment with test repositories (implies -t)
-  -r [filter]       run rspec test suite (implies -d); may be filtered by test
+  -r [filter]       run spec test suite (implies -d); may be filtered by test
                     suite and name
   -H                run rspec tests in "hosted" mode (implies -r and -d)
   -u                run unit test suite N number of times, where N is number
@@ -257,7 +270,7 @@ while getopts ":dtRqrHulskib:c:a:vj:n" opt; do
             REPODATA="1"
             ;;
         r  )
-            RSPEC="1"
+            SPEC_TESTS="1"
             DEPLOY="1"
 
             ARG="${ARGV[$OPTIND - 1]}"
@@ -268,7 +281,7 @@ while getopts ":dtRqrHulskib:c:a:vj:n" opt; do
             ;;
         H  )
             HOSTED="1"
-            RSPEC="1"
+            SPEC_TESTS="1"
             DEPLOY="1"
             ;;
         u  ) UNITTEST=$((UNITTEST + 1))
@@ -290,7 +303,7 @@ while getopts ":dtRqrHulskib:c:a:vj:n" opt; do
         v  ) VERBOSE="1";;
         j  ) JAVA_VERSION="${OPTARG}";;
         i  ) TRANSLATE="1";;
-        k  ) CLOUD_AUTH_RSPEC="1";;
+        k  ) CLOUD_AUTH_SPEC="1";;
         n  ) SONARQUBE="1";;
         ?  ) usage; exit;;
     esac
@@ -466,10 +479,10 @@ if [ "$DEPLOY" == "1" ]; then
 
     DEPLOY_FLAGS="-g"
 
-    if [ "$RSPEC" == "1" ] && [ "$HOSTED" == "1" ] \
+    if [ "$SPEC_TESTS" == "1" ] && [ "$HOSTED" == "1" ] \
         && [ "$CP_NEW_STRUCTURE" == false ] && ($PROJECT_DIR/bin/deploy '-?' | grep -q -- '-H'); then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -H -a"
-    elif [ "$RSPEC" == "1" ] && [ "$HOSTED" == "1" ] \
+    elif [ "$SPEC_TESTS" == "1" ] && [ "$HOSTED" == "1" ] \
         && [ "$CP_NEW_STRUCTURE" == true ] && ($PROJECT_DIR/bin/deployment/deploy '-?' | grep -q -- '-H'); then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -H -a"
     else
@@ -495,11 +508,11 @@ if [ "$DEPLOY" == "1" ]; then
 
     DEPLOY_FLAGS="${DEPLOY_FLAGS}${EX_ARGS}"
 
-    # To run the cloud auth rspec test suite.
+    # To run the cloud auth spec test suite.
     # We generate custom.yaml to enable the
     # cloud auth property.
     # This is valid only for hosted mode.
-    if [ "$CLOUD_AUTH_RSPEC" == "1" ] && [ "$HOSTED" == "1" ]; then
+    if [ "$CLOUD_AUTH_SPEC" == "1" ] && [ "$HOSTED" == "1" ]; then
         if [ "$CP_NEW_STRUCTURE" == false ]; then
             python $PROJECT_DIR/bin/generate_custom_yaml.py $PROJECT_DIR
         else
@@ -520,12 +533,15 @@ if [ "$DEPLOY" == "1" ]; then
     sleep 7
 fi
 
-if [ "$RSPEC" == "1" ]; then
-    echo "Running rspec tests..."
+if [ "$SPEC_TESTS" == "1" ]; then
+    echo "Running spec tests..."
     CLEAN_CP=1
 
+    tee /var/log/candlepin/spec.log < /tmp/teepipe &
+    build_spec $SPEC_FILTER > /tmp/teepipe 2>&1
+
     tee /var/log/candlepin/rspec.log < /tmp/teepipe &
-    build_rspec $RSPEC_FILTER > /tmp/teepipe 2>&1
+    build_rspec $SPEC_FILTER > /tmp/teepipe 2>&1
 fi
 
 if [ ! -z "$BUILDR_TASK" ]; then
