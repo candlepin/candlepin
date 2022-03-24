@@ -688,8 +688,8 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Owner owner = this.createOwner();
 
         int seed = 13579;
-        List<Integer> versions = new Random(seed)
-            .ints()
+        List<Long> versions = new Random(seed)
+            .longs()
             .boxed()
             .limit(100000)
             .collect(Collectors.toList());

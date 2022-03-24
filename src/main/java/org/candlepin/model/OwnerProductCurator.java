@@ -546,7 +546,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      * @return
      *  a map containing the products found, keyed by product ID
      */
-    public Map<String, List<Product>> getProductsByVersions(Collection<Integer> versions) {
+    public Map<String, List<Product>> getProductsByVersions(Collection<Long> versions) {
         Map<String, List<Product>> result = new HashMap<>();
 
         if (versions != null && !versions.isEmpty()) {
@@ -555,7 +555,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             TypedQuery<Product> query = this.getEntityManager()
                 .createQuery(jpql, Product.class);
 
-            for (Collection<Integer> block : this.partition(versions)) {
+            for (Collection<Long> block : this.partition(versions)) {
                 for (Product element : query.setParameter("vblock", block).getResultList()) {
                     result.computeIfAbsent(element.getId(), k -> new LinkedList<>())
                         .add(element);
