@@ -48,7 +48,7 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
     private Set<OwnerContent> ownerContentEntities;
     private Map<Owner, Map<String, String>> ownerContentUuidMap;
     private Map<Owner, Set<String>> deletedContentUuids;
-    private Map<Owner, Set<Integer>> ownerEntityVersions;
+    private Map<Owner, Set<Long>> ownerEntityVersions;
     private Map<Owner, Map<String, List<Content>>> ownerVersionedEntityMap;
 
 
@@ -220,10 +220,10 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
     private Content resolveEntityVersion(EntityNode<Content, ContentInfo> node) {
         Owner owner = node.getOwner();
         Content entity = node.getMergedEntity();
-        int entityVersion = entity.getEntityVersion();
+        long entityVersion = entity.getEntityVersion();
 
         Map<String, List<Content>> entityMap = this.ownerVersionedEntityMap.computeIfAbsent(owner, key -> {
-            Set<Integer> versions = this.ownerEntityVersions.remove(key);
+            Set<Long> versions = this.ownerEntityVersions.remove(key);
 
             return versions != null ?
                 this.ownerContentCurator.getContentByVersions(versions) :
