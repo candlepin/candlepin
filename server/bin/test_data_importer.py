@@ -674,6 +674,9 @@ def create_subscriptions(cp, options, owners, data):
 
         for product in products:
             if 'type' in product and product['type'] == 'MKT':
+                if 'skip_pools' in product and product['skip_pools']:
+                    continue
+
                 if 'quantity' in product:
                     small_quantity = int(product['quantity'])
                     large_quantity = small_quantity * 10 if small_quantity > 0 else 10
