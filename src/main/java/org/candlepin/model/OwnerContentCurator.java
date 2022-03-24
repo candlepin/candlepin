@@ -342,7 +342,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      * @return
      *  a map containing the contents found, keyed by content ID
      */
-    public Map<String, List<Content>> getContentByVersions(Collection<Integer> versions) {
+    public Map<String, List<Content>> getContentByVersions(Collection<Long> versions) {
         Map<String, List<Content>> result = new HashMap<>();
 
         if (versions != null && !versions.isEmpty()) {
@@ -351,7 +351,7 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             TypedQuery<Content> query = this.getEntityManager()
                 .createQuery(jpql, Content.class);
 
-            for (Collection<Integer> block : this.partition(versions)) {
+            for (Collection<Long> block : this.partition(versions)) {
                 for (Content element : query.setParameter("vblock", block).getResultList()) {
                     result.computeIfAbsent(element.getId(), k -> new LinkedList<>())
                         .add(element);

@@ -7,13 +7,28 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <changeSet id="20220314130000-1" author="crog">
+        <modifyDataType
+            columnName="entity_version"
+            newDataType="bigint"
+            tableName="cp2_products"/>
+    </changeSet>
+
+    <changeSet id="20220314130000-2" author="crog">
+        <modifyDataType
+            columnName="entity_version"
+            newDataType="bigint"
+            tableName="cp2_content"/>
+    </changeSet>
+
+    <changeSet id="20220314130000-3" author="crog">
         <comment>
-            Clear existing product entity versions to prevent accidental collisions due to the
+            Clear existing entity versions to prevent accidental collisions due to the
             algorithm change
         </comment>
 
         <sql>
             UPDATE cp2_products SET entity_version = NULL;
+            UPDATE cp2_content SET entity_version = NULL;
         </sql>
     </changeSet>
 
