@@ -819,6 +819,7 @@ describe 'Hypervisor Resource', :type => :virt do
     guest_client.list_entitlements().length.should == 1
     # Updating to a new host should remove host specific entitlements
 
+    #because mysql
     sleep 2
     virtwho.hypervisor_check_in(owner['key'], get_host_guest_mapping(hypervisor_id_2, [uuid1]))
 
@@ -880,6 +881,8 @@ describe 'Hypervisor Resource', :type => :virt do
     guest_client.list_entitlements().length.should == 1
     # Updating to a new host should remove host specific entitlements
 
+    #because mysql
+    sleep 2
     async_update_hypervisor(owner, user, 'tester', hypervisor_id_2, [uuid1])
 
     # The guests host limited entitlement should be gone
