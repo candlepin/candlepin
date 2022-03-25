@@ -140,8 +140,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         MethodLocator methodLocator = new MethodLocator(injector);
         methodLocator.init();
         AnnotationLocator annotationLocator = new AnnotationLocator(methodLocator);
-        interceptor = new AuthenticationFilter(config, consumerCurator, deletedConsumerCurator, injector,
-            annotationLocator);
+        interceptor = new AuthenticationFilter(config, injector, annotationLocator);
         interceptor.setHttpServletRequest(mockHttpServletRequest);
 
         return interceptor;
@@ -424,8 +423,8 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         doReturn(mockProvider).when(mockInjector).getInstance(eq(CloudRegistrationAuth.class));
         doReturn(mockPrincipal).when(mockProvider).getPrincipal(any(HttpRequest.class));
 
-        AuthenticationFilter interceptor = new AuthenticationFilter(this.config, this.consumerCurator,
-            this.deletedConsumerCurator, mockInjector, this.annotationLocator);
+        AuthenticationFilter interceptor = new AuthenticationFilter(this.config,
+            mockInjector, this.annotationLocator);
 
         mockReq.header("Authorization", "Bearer FAKE_CLOUD_AUTH_TOKEN");
         interceptor.filter(this.getContext());

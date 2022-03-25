@@ -53,7 +53,6 @@ import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
@@ -113,15 +112,14 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
-
+import java.util.Set;
 
 
 /*
@@ -421,24 +419,16 @@ public class ConsumerResourceCreationTest {
             () -> createConsumer("bar$%camp"));
     }
 
-    @Test
-    public void authRequired() {
-        Principal p = new NoAuthPrincipal();
-        when(this.principalProvider.get()).thenReturn(p);
-
-        assertThrows(ForbiddenException.class,
-            () -> createConsumer("sys.example.com", p));
-    }
-
-    private List<String> mockActivationKeys() {
+    private Set<String> mockActivationKeys() {
         ActivationKey key1 = new ActivationKey("key1", owner);
-        when(activationKeyCurator.getByKeyName(owner, "key1")).thenReturn(key1);
-        List<String> keys = new LinkedList<>();
+        when(activationKeyCurator.findByKeyNames(owner.getKey(), new LinkedHashSet<>(List.of("key1"))))
+            .thenReturn(List.of(key1));
+        Set<String> keys = new LinkedHashSet<>();
         keys.add(key1.getName());
         return keys;
     }
 
-    private String createKeysString(List<String> activationKeys) {
+    private String createKeysString(Collection<String> activationKeys) {
         // Allow empty string through because we accept it for ",foo" etc.
         if (!activationKeys.isEmpty()) {
             return StringUtils.join(activationKeys, ',');
@@ -459,14 +449,13 @@ public class ConsumerResourceCreationTest {
     public void registerWithKeys() {
         // No auth should be required for registering with keys:
         Principal p = new NoAuthPrincipal();
-        List<String> keys = mockActivationKeys();
+        Set<String> keys = mockActivationKeys();
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
+
         resource.createConsumer(consumer, null, owner.getKey(), createKeysString(keys), true);
 
-        for (String keyName : keys) {
-            verify(activationKeyCurator).getByKeyName(owner, keyName);
-        }
+        verify(activationKeyCurator).findByKeyNames(owner.getKey(), keys);
     }
 
     @Test
@@ -493,7 +482,7 @@ public class ConsumerResourceCreationTest {
     @Test
     public void orgRequiredWithActivationKeys() {
         Principal p = new NoAuthPrincipal();
-        List<String> keys = mockActivationKeys();
+        Set<String> keys = mockActivationKeys();
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
 
@@ -504,7 +493,7 @@ public class ConsumerResourceCreationTest {
     @Test
     public void cannotMixUsernameWithActivationKeys() {
         Principal p = new NoAuthPrincipal();
-        List<String> keys = mockActivationKeys();
+        Set<String> keys = mockActivationKeys();
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
 
@@ -513,21 +502,9 @@ public class ConsumerResourceCreationTest {
     }
 
     @Test
-    public void failIfOnlyActivationKeyDoesNotExistForOrg() {
-        Principal p = new NoAuthPrincipal();
-        List<String> keys = new ArrayList<>();
-        keys.add("NoSuchKey");
-        ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
-        when(this.principalProvider.get()).thenReturn(p);
-
-        assertThrows(BadRequestException.class,
-            () -> resource.createConsumer(consumer, null, owner.getKey(), createKeysString(keys), true));
-    }
-
-    @Test
     public void passIfOnlyOneActivationKeyDoesNotExistForOrg() {
         Principal p = new NoAuthPrincipal();
-        List<String> keys = mockActivationKeys();
+        Set<String> keys = mockActivationKeys();
         keys.add("NoSuchKey");
         when(this.principalProvider.get()).thenReturn(p);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);

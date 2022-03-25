@@ -379,6 +379,30 @@ describe 'Environments' do
     }.to raise_error(RestClient::ResourceNotFound)
   end
 
+
+  it 'legacy registration endpoint should pass activation key auth' do
+    no_auth_client = Candlepin.new
+    prod1 = create_product(random_string('product1'), random_string('product1'),
+                           :attributes => { :'multi-entitlement' => 'yes'})
+    @cp.create_pool(@owner['key'], prod1.id, {:quantity => 10})
+    pool1 = @cp.list_pools({:owner => @owner['id']}).first
+
+    key1 = @cp.create_activation_key(@owner['key'], 'key1')
+    @cp.add_pool_to_key(key1['id'], pool1['id'], 3)
+    @cp.create_activation_key(@owner['key'], 'key2')
+    @cp.create_environment(@owner['key'], "env_priority_1", "env_priority_1")
+    consumer = no_auth_client.create_consumer_in_environments("env_priority_1", random_string('consumer'),
+                                                              :system, @owner['key'], ["key1", "key2"])
+
+    expect(consumer).not_to be_nil
+    expect(consumer['environments']).not_to be_nil
+    expect(consumer['environments'].length).to eq(1)
+    expect(consumer['environments'][0].id).to eq("env_priority_1")
+    expect(consumer['environment']).not_to be_nil
+    expect(consumer['environment'].name).to eq("env_priority_1")
+    @cp.get_pool(pool1.id).consumed.should == 3
+  end
+
   it 'consumer should get content from multiple environments' do
     product = create_product
     content1 = new_content(1)

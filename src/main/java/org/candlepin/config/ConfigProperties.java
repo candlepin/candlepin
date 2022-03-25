@@ -135,6 +135,7 @@ public class ConfigProperties {
     public static final String BASIC_AUTHENTICATION = "candlepin.auth.basic.enable";
     public static final String KEYCLOAK_AUTHENTICATION = "candlepin.auth.keycloak.enable";
     public static final String CLOUD_AUTHENTICATION = "candlepin.auth.cloud.enable";
+    public static final String ACTIVATION_KEY_AUTHENTICATION = "candlepin.auth.activation_key.enable";
 
     // JWT configuration
     public static final String JWT_ISSUER = "candlepin.jwt.issuer";
@@ -392,6 +393,7 @@ public class ConfigProperties {
             this.put(KEYCLOAK_AUTHENTICATION, "false");
             this.put(BASIC_AUTHENTICATION, "true");
             this.put(CLOUD_AUTHENTICATION, "false");
+            this.put(ACTIVATION_KEY_AUTHENTICATION, "true");
 
             this.put(AUTH_OVER_HTTP, "false");
             // By default, environments should be hidden so clients do not need to

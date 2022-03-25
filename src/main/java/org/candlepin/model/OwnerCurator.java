@@ -39,7 +39,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -286,6 +285,19 @@ public class OwnerCurator extends AbstractHibernateCurator<Owner> {
         catch (NoResultException e) {
             throw new OwnerNotFoundException(ownerKey, e);
         }
+    }
+
+    /**
+     * Checks if the owner exists in the database.
+     *
+     * @param ownerKey key of the owner to be checked
+     * @return true if the owner exists
+     */
+    public boolean existsByKey(String ownerKey) {
+        return this.getEntityManager()
+            .createQuery("SELECT COUNT(o.id) FROM Owner o WHERE o.key = :owner_key", Long.class)
+            .setParameter("owner_key", ownerKey)
+            .getSingleResult() > 0;
     }
 
 }

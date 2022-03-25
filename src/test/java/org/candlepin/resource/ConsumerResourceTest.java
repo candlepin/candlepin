@@ -42,7 +42,6 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
-import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
@@ -90,7 +89,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.paging.PageRequest;
@@ -553,25 +551,6 @@ public class ConsumerResourceTest {
         ConsumerDTO c = consumerResource.getConsumer(consumer.getUuid());
 
         assertNull(c.getIdCert());
-    }
-
-    @Test
-    public void testCreatePersonConsumerWithActivationKey() {
-        ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.PERSON));
-
-        Owner owner = this.createOwner();
-        Consumer consumer = this.createConsumer(owner, ctype);
-        ConsumerDTO consumerDto = this.translator.translate(consumer, ConsumerDTO.class);
-
-        ActivationKey ak = mock(ActivationKey.class);
-        NoAuthPrincipal nap = mock(NoAuthPrincipal.class);
-
-        when(ak.getId()).thenReturn("testKey");
-        when(activationKeyCurator.getByKeyName(eq(owner), eq(owner.getKey()))).thenReturn(ak);
-        when(this.principalProvider.get()).thenReturn(nap);
-        assertThrows(BadRequestException.class, () ->
-            consumerResource.createConsumer(consumerDto, null, owner.getKey(), "testKey", true)
-        );
     }
 
     @Test

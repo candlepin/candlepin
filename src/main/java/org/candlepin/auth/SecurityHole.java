@@ -44,4 +44,11 @@ public @interface SecurityHole {
      * real principal.
      */
     boolean anon() default false;
+
+    /**
+     * @return true if the method allows an activation key identity (e.g.
+     * {@link ActivationKeyPrincipal}).
+     */
+    boolean activationKey() default false;
+
 }

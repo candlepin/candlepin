@@ -30,6 +30,23 @@ describe 'Consumer Resource Activation Key' do
     @cp.get_pool(pool1.id).consumed.should == 3
   end
 
+
+  it 'should allow consumer registration with activation key auth' do
+    no_auth_client = Candlepin.new
+    prod1 = create_product(random_string('product1'), random_string('product1'),
+                           :attributes => { :'multi-entitlement' => 'yes'})
+    @cp.create_pool(@owner['key'], prod1.id, {:quantity => 10})
+    pool1 = @cp.list_pools({:owner => @owner['id']}).first
+
+    key1 = @cp.create_activation_key(@owner['key'], 'key1')
+    @cp.add_pool_to_key(key1['id'], pool1['id'], 3)
+    @cp.create_activation_key(@owner['key'], 'key2')
+    consumer = no_auth_client.register(random_string('machine1'), :system, nil, {}, nil,
+                                @owner['key'], ["key1", "key2"])
+    consumer.uuid.should_not be_nil
+    @cp.get_pool(pool1.id).consumed.should == 3
+  end
+
   it 'should allow a physical consumer to register with activation keys' do
     prod1 = create_product(random_string('product1'), random_string('product1'),
                            :attributes => { :'multi-entitlement' => 'yes'})

@@ -14,12 +14,25 @@
  */
 package org.candlepin.resteasy.filter;
 
+import org.candlepin.auth.ActivationKeyPrincipal;
+import org.candlepin.auth.Principal;
+import org.candlepin.auth.SecurityHole;
+import org.candlepin.resteasy.AnnotationLocator;
+
+import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
+
+import java.lang.reflect.Method;
+import java.util.Objects;
 
 import javax.annotation.Priority;
+import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ResourceInfo;
 
 /**
  * SecurityHoleAuthorizationFilter is a no-op JAX-RS 2.0 Filter that is applied
@@ -28,14 +41,33 @@ import javax.ws.rs.container.ContainerRequestContext;
  * a method.
  */
 @Priority(Priorities.AUTHORIZATION)
-public class SecurityHoleAuthorizationFilter
-    extends AbstractAuthorizationFilter {
+public class SecurityHoleAuthorizationFilter extends AbstractAuthorizationFilter {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityHoleAuthorizationFilter.class);
+
+    private final AnnotationLocator annotationLocator;
+
+    @Inject
+    public SecurityHoleAuthorizationFilter(
+        Provider<I18n> i18nProvider,
+        AnnotationLocator annotationLocator) {
+        this.i18nProvider = i18nProvider;
+        this.annotationLocator = Objects.requireNonNull(annotationLocator);
+    }
 
     @Override
     void runFilter(ContainerRequestContext requestContext) {
         log.debug("NO authorization check for {}", requestContext.getUriInfo().getPath());
-        // Do nothing
+
+        Principal principal = (Principal) requestContext.getSecurityContext().getUserPrincipal();
+
+        if (principal instanceof ActivationKeyPrincipal) {
+            ResourceInfo resourceInfo = ResteasyContext.getContextData(ResourceInfo.class);
+            Method method = resourceInfo.getResourceMethod();
+            SecurityHole securityHole = annotationLocator.getAnnotation(method, SecurityHole.class);
+            if (!securityHole.activationKey()) {
+                denyAccess(principal, method);
+            }
+        }
     }
 }
