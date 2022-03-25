@@ -3,13 +3,14 @@
 # simmon <simmon@nplob.com>, 2021, 2022.
 # Sundeep Anand <suanand@redhat.com>, 2021.
 # Kim InSoo <simmon@nplob.com>, 2022.
+# 김인수 <simmon@nplob.com>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-24 03:01-0400\n"
-"PO-Revision-Date: 2022-03-01 06:16+0000\n"
-"Last-Translator: Kim InSoo <simmon@nplob.com>\n"
+"PO-Revision-Date: 2022-03-25 06:17+0000\n"
+"Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
 "Language: ko\n"
@@ -17,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.11\n"
+"X-Generator: Weblate 4.11.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -1125,10 +1126,8 @@ msgid "Unit \"{0}\" has no subscription for product \"{1}\"."
 msgstr "장치 ''{0}''에는 제품 ''{1}''에 대한 서브스크립션이 없습니다."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:199
-#, fuzzy
-#| msgid "Quantity value must be greater than 0."
 msgid "Quantity value must be greater than 0"
-msgstr "수량 값은 0 보다 커야 합니다."
+msgstr "수량 값은 0 보다 커야 합니다"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:242
 #, java-format
