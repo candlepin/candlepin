@@ -9,9 +9,6 @@ pipeline {
         skipDefaultCheckout true
         timeout(time: 16, unit: 'HOURS')
     }
-    environment {
-        CANDLEPIN_QUAY_BOT = credentials("candlepin-quay-bot")
-    }
     stages {
         stage('Trust') {
             steps {
@@ -26,7 +23,6 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/unit-tests.sh'
                     }
                     post {
@@ -40,7 +36,6 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/upload-on-sonarqube.sh'
                     }
                     post {
@@ -62,7 +57,6 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/upload-on-sonarqube.sh'
                     }
                     post {
@@ -76,7 +70,6 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/lint.sh'
                     }
                     post {
@@ -94,7 +87,6 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/rspec-tests.sh'
                     }
                     post {
@@ -112,7 +104,6 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/rspec-tests.sh'
                     }
                     post {
@@ -130,7 +121,6 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/rspec-tests.sh'
                     }
                     post {
@@ -148,7 +138,6 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/rspec-tests.sh'
                     }
                     post {
@@ -165,7 +154,6 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'python jenkins/check_pr_branch.py $CHANGE_ID'
                     }
                 }
@@ -174,7 +162,6 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'docker login -u "$CANDLEPIN_QUAY_BOT_USR" -p "$CANDLEPIN_QUAY_BOT_PSW" quay.io'
                         sh 'sh jenkins/candlepin-validate-text.sh'
                     }
                     post {
