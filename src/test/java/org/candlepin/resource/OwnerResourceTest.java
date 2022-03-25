@@ -1936,8 +1936,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         ResteasyContext.pushContext(PageRequest.class, req);
 
-        List<EntitlementDTO> result = this.ownerResource
-            .ownerEntitlements(owner.getKey(), null, null, null);
+        List<EntitlementDTO> result = this.ownerResource.ownerEntitlements(owner.getKey(), null, null);
 
         assertEquals(1, result.size());
         assertEquals(e.getId(), result.get(0).getId());
@@ -1954,7 +1953,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource resource = this.buildOwnerResource();
 
         assertThrows(NotFoundException.class, () ->
-            resource.ownerEntitlements("Taylor Swift", null, null, null)
+            resource.ownerEntitlements("Taylor Swift", null, null)
         );
     }
 

@@ -63,16 +63,6 @@ describe 'Entitlement Resource' do
     expect(variant).to eq("Satellite Starter Pack")
   end
 
-  it 'can filter consumer entitlements by using matches param' do
-    @system.consume_product(@monitoring_prod.id)
-    @system.consume_product(@virt_prod.id)
-    @cp.list_entitlements(:uuid => @system.uuid).length.should eq(2)
-
-    ents = @cp.list_entitlements(:uuid => @system.uuid,
-      :matches => "virtualization")
-    ents.length.should eq(1)
-  end
-
   it 'should allow entitlement certificate regeneration based on product id' do
     @system.consume_product(@monitoring_prod.id)
     old_ent = @system.list_certificate_serials()[0]

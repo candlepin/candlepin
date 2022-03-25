@@ -1010,11 +1010,6 @@ describe 'Owner Resource Entitlement List Tests' do
     ents.length.should eq(2)
   end
 
-  it 'can filter all entitlements by using matches param' do
-    ents = @cp.list_ents_via_owners_resource(@owner['key'], {:matches => "virtualization"})
-    ents.length.should eq(1)
-  end
-
   it 'can filter consumer entitlements by product attribute' do
     ents = @cp.list_ents_via_owners_resource(@owner['key'], {
       :attr_filters => { "variant" => "Satellite Starter Pack" }
