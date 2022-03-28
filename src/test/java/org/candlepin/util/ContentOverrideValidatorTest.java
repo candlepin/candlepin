@@ -23,6 +23,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.model.ContentOverride;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -132,7 +134,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
         // Add our invalid override...
         StringBuilder builder = new StringBuilder();
-        while (builder.length() < ContentOverrideValidator.MAX_VALUE_LENGTH) {
+        while (builder.length() < ContentOverride.MAX_NAME_AND_LABEL_LENGTH) {
             builder.append("longstring");
         }
 
@@ -194,7 +196,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
         // Add our invalid override...
         StringBuilder builder = new StringBuilder();
-        while (builder.length() < ContentOverrideValidator.MAX_VALUE_LENGTH) {
+        while (builder.length() < ContentOverride.MAX_NAME_AND_LABEL_LENGTH) {
             builder.append("longstring");
         }
 
@@ -316,26 +318,42 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
     }
 
     @Test
-    public void testValidateWithLongOverrideValue() {
-        List<ContentOverrideDTO> overrides = this.buildOverridesList(3);
-
-        // We expect this invocation to pass
-        this.validator.validate(overrides);
-
-        // Add our invalid override...
+    public void testValidateWithValidOverrideValue() {
         StringBuilder builder = new StringBuilder();
-        while (builder.length() < ContentOverrideValidator.MAX_VALUE_LENGTH) {
+        String value = "longstring";
+        while (builder.length() < ContentOverride.MAX_NAME_AND_LABEL_LENGTH - 100) {
             builder.append("longstring");
         }
 
-        ContentOverrideDTO invalid = new ContentOverrideDTO()
+        List<ContentOverrideDTO> overrides = new ArrayList<>();
+        ContentOverrideDTO contentOverride = new ContentOverrideDTO()
             .contentLabel("test_label-x")
             .name("test_name-x")
             .value(builder.toString());
 
-        overrides.add(invalid);
+        overrides.add(contentOverride);
 
-        // This should fail now
+        this.validator.validate(overrides);
+
+        //No assertions. There should be no error thrown for the valid content overrides.
+    }
+
+    @Test
+    public void testValidateWithInvalidLongOverrideValue() {
+        StringBuilder builder = new StringBuilder();
+        String value = "longstring";
+        while (builder.length() < ContentOverride.MAX_VALUE_LENGTH + 100) {
+            builder.append("longstring");
+        }
+
+        List<ContentOverrideDTO> overrides = new ArrayList<>();
+        ContentOverrideDTO contentOverride = new ContentOverrideDTO()
+            .contentLabel("test_label-x")
+            .name("test_name-x")
+            .value(builder.toString());
+
+        overrides.add(contentOverride);
+
         assertThrows(BadRequestException.class, () -> this.validator.validate(overrides));
     }
 }

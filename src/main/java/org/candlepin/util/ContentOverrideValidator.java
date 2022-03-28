@@ -18,6 +18,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.model.ContentOverride;
 
 import com.google.inject.Inject;
 
@@ -39,7 +40,6 @@ import java.util.Set;
  */
 public class ContentOverrideValidator {
 
-    public static final int MAX_VALUE_LENGTH = 255;
     public static final Set<String> DEFAULT_BLACKLIST = Collections.<String>unmodifiableSet(
         new HashSet<String>(Arrays.asList("", "name", "label")));
     public static final Set<String> HOSTED_BLACKLIST = Collections.<String>unmodifiableSet(
@@ -81,6 +81,7 @@ public class ContentOverrideValidator {
             Set<String> invalidLabels = new HashSet<>();
             Set<String> invalidProps = new HashSet<>();
             Set<String> invalidValues = new HashSet<>();
+            Set<String> invalidLengthValues = new HashSet<>();
 
             for (ContentOverrideDTO override : overrides) {
                 if  (override != null) {
@@ -88,23 +89,29 @@ public class ContentOverrideValidator {
                     String name = override.getName();
                     String value = override.getValue();
 
-                    if (label == null || label.length() == 0 || label.length() > MAX_VALUE_LENGTH) {
+                    if (label == null || label.length() == 0 ||
+                        label.length() > ContentOverride.MAX_NAME_AND_LABEL_LENGTH) {
                         invalidLabels.add(label != null ? label : "null");
                     }
 
                     if (name == null || this.blacklist.contains(name.toLowerCase()) ||
-                        name.length() > MAX_VALUE_LENGTH) {
+                        name.length() > ContentOverride.MAX_NAME_AND_LABEL_LENGTH) {
 
                         invalidProps.add(name != null ? name : "null");
                     }
 
-                    if (value == null || value.length() == 0 || value.length() > MAX_VALUE_LENGTH) {
+                    if (value == null || value.length() == 0) {
                         invalidValues.add(value != null ? value : "null");
+                    }
+
+                    if (value != null && value.length() > ContentOverride.MAX_VALUE_LENGTH) {
+                        invalidLengthValues.add(name != null ? name : "null");
                     }
                 }
             }
 
-            if (!invalidLabels.isEmpty() || !invalidProps.isEmpty() || !invalidValues.isEmpty()) {
+            if (!invalidLabels.isEmpty() || !invalidProps.isEmpty() || !invalidValues.isEmpty() ||
+                !invalidLengthValues.isEmpty()) {
                 StringBuilder builder = new StringBuilder();
 
                 if (!invalidLabels.isEmpty()) {
@@ -128,6 +135,17 @@ public class ContentOverrideValidator {
 
                     builder.append(i18n.tr("The following override values are invalid: {0}",
                         String.join(", ", invalidValues)));
+                }
+
+                if (!invalidLengthValues.isEmpty()) {
+                    if (builder.length() > 0) {
+                        builder.append('\n');
+                    }
+
+                    builder.append(i18n.tr("The following overrides have values longer than the " +
+                        "maximum length of {0}: {1}",
+                        ContentOverride.MAX_VALUE_LENGTH,
+                        String.join(", ", invalidLengthValues)));
                 }
 
                 throw new BadRequestException(builder.toString());

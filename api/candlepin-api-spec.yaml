@@ -8699,6 +8699,7 @@ components:
               minLength: 1
             value:
               type: string
+              maxLength: 2048
 
     ContentToPromoteDTO:
       description: Represents the JSON input when promoting content, or updating promoted content.
