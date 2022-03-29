@@ -145,9 +145,6 @@ describe 'Export', :serial => true do
     it 'exports rules' do
       Base64.decode64(@cp.list_rules).should == File.read(
         File.join(@cp_export.export_dir, "rules2/rules.js"))
-
-      # Should also contain legacy rules file:
-      File.exists?(File.join(@cp_export.export_dir, "rules/default-rules.js")).should be true
     end
 
     it 'should export products' do

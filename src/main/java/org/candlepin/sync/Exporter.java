@@ -47,7 +47,6 @@ import org.candlepin.version.VersionUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -576,23 +575,6 @@ public class Exporter {
                 writer.close();
             }
         }
-
-        exportLegacyRules(baseDir);
-    }
-
-    /*
-     * We still need to export a copy of the deprecated default-rules.js so new manifests
-     * can still be imported by old candlepin servers.
-     */
-    private void exportLegacyRules(File baseDir) throws IOException {
-        File oldRulesDir = new File(baseDir.getCanonicalPath(), "rules");
-        oldRulesDir.mkdir();
-        File oldRulesFile = new File(oldRulesDir.getCanonicalPath(), "default-rules.js");
-
-        // TODO: does this need a "exporter" object as well?
-        FileUtils.copyFile(new File(
-            this.getClass().getResource(LEGACY_RULES_FILE).getPath()),
-            oldRulesFile);
     }
 
     private void exportDistributorVersions(File baseDir) throws IOException {
