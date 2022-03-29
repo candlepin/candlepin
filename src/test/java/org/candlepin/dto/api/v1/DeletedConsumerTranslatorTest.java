@@ -44,6 +44,7 @@ public class DeletedConsumerTranslatorTest extends
         DeletedConsumer source = new DeletedConsumer();
         source.setId("deleted-consumer-id");
         source.setConsumerUuid("deleted-consumer-uuid");
+        source.setConsumerName("deleted-consumer-name");
         source.setOwnerId("deleted-consumer-owner-id");
         source.setOwnerKey("deleted-consumer-owner-key");
         source.setOwnerDisplayName("deleted-consumer-owner-display-name");
@@ -62,6 +63,7 @@ public class DeletedConsumerTranslatorTest extends
         if (source != null) {
             assertEquals(source.getId(), dest.getId());
             assertEquals(source.getConsumerUuid(), dest.getConsumerUuid());
+            assertEquals(source.getConsumerName(), dest.getConsumerName());
             assertEquals(source.getOwnerId(), dest.getOwnerId());
             assertEquals(source.getOwnerKey(), dest.getOwnerKey());
         }

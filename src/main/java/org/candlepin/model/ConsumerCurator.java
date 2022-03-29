@@ -216,6 +216,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         deletedConsumer.setConsumerUuid(entity.getUuid())
             .setOwnerId(entity.getOwnerId())
             .setOwnerKey(owner.getKey())
+            .setConsumerName(entity.getName())
             .setOwnerDisplayName(owner.getDisplayName())
             .setPrincipalName(principal != null ? principal.getName() : null);
 

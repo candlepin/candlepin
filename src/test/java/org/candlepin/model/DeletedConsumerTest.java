@@ -15,42 +15,138 @@
 package org.candlepin.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.UUID;
 
 public class DeletedConsumerTest {
 
-    private DeletedConsumer dc = new DeletedConsumer("abcde", "10", "key", "displayname");
-
     @Test
-    public void consumerId() {
-        assertEquals("abcde", dc.getConsumerUuid());
-        dc.setConsumerUuid("changed");
-        assertEquals("changed", dc.getConsumerUuid());
+    public void testConstructors() {
+        DeletedConsumer deletedConsumer = new DeletedConsumer();
+        assertNull(deletedConsumer.getConsumerUuid());
+        assertNull(deletedConsumer.getConsumerName());
+        assertNull(deletedConsumer.getOwnerId());
+        assertNull(deletedConsumer.getOwnerKey());
+        assertNull(deletedConsumer.getOwnerDisplayName());
+        assertNull(deletedConsumer.getPrincipalName());
+
+        String expectedConsumerUuid = UUID.randomUUID().toString();
+        String expectedConsumerName = "test-consumer-name";
+        String expectedOwnerId = "test-owner-id";
+        String expectedOwnerKey = "test-owner-key";
+        String expectedOwnerDisplayName = "test-owner-display-name";
+        deletedConsumer = new DeletedConsumer(expectedConsumerUuid, expectedOwnerId,
+            expectedOwnerKey, expectedOwnerDisplayName);
+
+        assertEquals(expectedConsumerUuid, deletedConsumer.getConsumerUuid());
+        assertEquals(expectedOwnerId, deletedConsumer.getOwnerId());
+        assertEquals(expectedOwnerKey, deletedConsumer.getOwnerKey());
+        assertEquals(expectedOwnerDisplayName, deletedConsumer.getOwnerDisplayName());
     }
 
     @Test
-    public void ownerId() {
-        assertEquals("10", dc.getOwnerId());
-        dc.setOwnerId("11");
-        assertEquals("11", dc.getOwnerId());
+    public void testGetSetConsumerUuid() {
+        DeletedConsumer deletedConsumer = new DeletedConsumer();
+
+        // Verify initial state is as we expect
+        assertNull(deletedConsumer.getConsumerUuid());
+
+        String expectedConsumerUuid = UUID.randomUUID().toString();
+
+        // Update the field, and ensure we're returning a self-ref
+        DeletedConsumer out = deletedConsumer.setConsumerUuid(expectedConsumerUuid);
+        assertSame(out, deletedConsumer);
+
+        //Verify final state is as expected
+        assertEquals(expectedConsumerUuid, deletedConsumer.getConsumerUuid());
     }
 
     @Test
-    public void displayName() {
-        assertEquals("displayname", dc.getOwnerDisplayName());
-        dc.setOwnerDisplayName("dn2");
-        assertEquals("dn2", dc.getOwnerDisplayName());
+    public void testGetSetConsumerName() {
+        DeletedConsumer deletedConsumer = new DeletedConsumer();
+
+        // Verify initial state is as we expect
+        assertNull(deletedConsumer.getConsumerName());
+
+        String expectedConsumerName = "test-consumer-name";
+
+        // Update the field, and ensure we're returning a self-ref
+        DeletedConsumer out = deletedConsumer.setConsumerName(expectedConsumerName);
+        assertSame(out, deletedConsumer);
+
+        //Verify final state is as expected
+        assertEquals(expectedConsumerName, deletedConsumer.getConsumerName());
     }
 
     @Test
-    public void key() {
-        assertEquals("key", dc.getOwnerKey());
-        dc.setOwnerKey("key2");
-        assertEquals("key2", dc.getOwnerKey());
+    public void testGetSetOwnerId() {
+        DeletedConsumer deletedConsumer = new DeletedConsumer();
+
+        // Verify initial state is as we expect
+        assertNull(deletedConsumer.getOwnerId());
+
+        String expectedOwnerId = "test-owner-id";
+
+        // Update the field, and ensure we're returning a self-ref
+        DeletedConsumer out = deletedConsumer.setOwnerId(expectedOwnerId);
+        assertSame(out, deletedConsumer);
+
+        //Verify final state is as expected
+        assertEquals(expectedOwnerId, deletedConsumer.getOwnerId());
     }
 
+    @Test
+    public void testGetSetOwnerKey() {
+        DeletedConsumer deletedConsumer = new DeletedConsumer();
 
+        // Verify initial state is as we expect
+        assertNull(deletedConsumer.getOwnerKey());
 
+        String expectedOwnerKey = "test-owner-key";
+
+        // Update the field, and ensure we're returning a self-ref
+        DeletedConsumer out = deletedConsumer.setOwnerKey(expectedOwnerKey);
+        assertSame(out, deletedConsumer);
+
+        //Verify final state is as expected
+        assertEquals(expectedOwnerKey, deletedConsumer.getOwnerKey());
+    }
+
+    @Test
+    public void testGetSetOwnerDisplayName() {
+        DeletedConsumer deletedConsumer = new DeletedConsumer();
+
+        // Verify initial state is as we expect
+        assertNull(deletedConsumer.getOwnerDisplayName());
+
+        String expectedOwnerDisplayName = "test-owner-display-name";
+
+        // Update the field, and ensure we're returning a self-ref
+        DeletedConsumer out = deletedConsumer.setOwnerDisplayName(expectedOwnerDisplayName);
+        assertSame(out, deletedConsumer);
+
+        //Verify final state is as expected
+        assertEquals(expectedOwnerDisplayName, deletedConsumer.getOwnerDisplayName());
+    }
+
+    @Test
+    public void testGetSetPrincipalName() {
+        DeletedConsumer deletedConsumer = new DeletedConsumer();
+
+        // Verify initial state is as we expect
+        assertNull(deletedConsumer.getPrincipalName());
+
+        String expectedPrincipalName = "test-principal-name";
+
+        // Update the field, and ensure we're returning a self-ref
+        DeletedConsumer out = deletedConsumer.setPrincipalName(expectedPrincipalName);
+        assertSame(out, deletedConsumer);
+
+        //Verify final state is as expected
+        assertEquals(expectedPrincipalName, deletedConsumer.getPrincipalName());
+    }
 }

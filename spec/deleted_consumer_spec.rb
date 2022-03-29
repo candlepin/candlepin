@@ -18,7 +18,10 @@ describe 'Deleted Consumer Resource' do
     consumer1.unregister(consumer1.uuid)
 
     deleted_consumers = @cp.get_deleted_consumers(date=date)
-    deleted_consumers.map { |i| i['consumerUuid'] }.should include(uuid)
+    deleted_consumer = deleted_consumers.find { |item| item['consumerUuid'].include?(uuid) }
+    expect(deleted_consumer['consumerUuid']).to eq(uuid)
+    expect(deleted_consumer['consumerName']).to eq(consumername1)
+
   end
 
 end

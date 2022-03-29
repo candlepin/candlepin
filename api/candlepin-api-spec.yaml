@@ -8798,6 +8798,8 @@ components:
               type: string
             consumerUuid:
               type: string
+            consumerName:
+              type: string
             ownerId:
               type: string
             ownerKey:
