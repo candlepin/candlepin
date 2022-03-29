@@ -55,10 +55,13 @@ build_rspec() {
     RSPEC_FILTER=$1
 
     BUILDR_ARGS="rspec"
+    GRADLE_ARGS=""
     if [ ! -z "$RSPEC_FILTER" ]; then
         BUILDR_ARGS="rspec:${RSPEC_FILTER}"
         GRADLE_ARGS="--spec ${RSPEC_FILTER}"
     fi
+
+    GRADLE_ARGS="${GRADLE_ARGS} --no-file"
 
     if [ -f ../gradlew ]; then
         ../gradlew rspec ${GRADLE_ARGS}
