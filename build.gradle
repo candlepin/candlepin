@@ -21,14 +21,14 @@ plugins {
     The Versions plugin is used to provide the dependencyUpdates task which is used
     to look for libraries that have newer versions available.
      */
-    id "com.github.ben-manes.versions" version "0.28.0"
+    id "com.github.ben-manes.versions" version "0.38.0"
     // Openapi version is set in the buildscript block for use in the pom generation as well
-    id "org.openapi.generator" version '5.2.1'
+    id "org.openapi.generator" version '5.4.0'
     id "java"
     id "maven"
     id "war"
     id "checkstyle"
-    id 'org.owasp.dependencycheck' version '6.2.2'
+    id 'org.owasp.dependencycheck' version '7.0.0'
     id "jacoco"
     id "org.sonarqube" version "3.2.0"
 
@@ -58,7 +58,8 @@ ext {
     }
 
     if (!project.findProperty("db_host") ||
-            (project.findProperty("db_host") && "".equals(project.findProperty("db_host")))) {
+        (project.findProperty("db_host") && "".equals(project.findProperty("db_host")))) {
+
         db_host = "localhost"
     }
 
@@ -82,7 +83,7 @@ ext {
     external_broker = "true".equals(project.findProperty("external_broker"))
     hostedtest = "true".equals(project.findProperty("hostedtest"))
     async_scheduler_enabled = !project.findProperty("async_scheduler_enabled") ||
-            "true".equals(project.findProperty("async_scheduler_enabled"))
+        "true".equals(project.findProperty("async_scheduler_enabled"))
 
     generatedMetamodels = "${buildDir}/generated/api/src/gen/java"
 }
@@ -90,20 +91,20 @@ ext {
 ext {
     // Denotes BOM versions
     resteasy_version = "4.4.3.Final"
-    jackson_version = "2.12.3"
-    guice_version = "4.2.3"
+    jackson_version = "2.13.2"
+    guice_version = "5.1.0"
     junit_version = "5.8.2"
 }
 
 dependencies {
     // Commons
-    implementation "commons-codec:commons-codec:1.11"
+    implementation "commons-codec:commons-codec:1.15"
     implementation "commons-collections:commons-collections:3.2.2"
-    implementation "commons-io:commons-io:2.7"
-    implementation "commons-lang:commons-lang:2.5"
+    implementation "commons-io:commons-io:2.11.0"
+    implementation "commons-lang:commons-lang:2.6"
 
     // Collections
-    implementation "com.google.guava:guava:30.1-jre"
+    implementation "com.google.guava:guava:31.1-jre"
 
     // Gettext libraries used for internationalization & translation
     implementation "com.googlecode.gettext-commons:gettext-commons:0.9.8"
@@ -139,11 +140,11 @@ dependencies {
     implementation 'info.picocli:picocli:4.6.3'
 
     // Logging
-    implementation "ch.qos.logback:logback-classic:1.2.9"
+    implementation "ch.qos.logback:logback-classic:1.2.11"
     // Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
     // JCL for example.
-    implementation "org.slf4j:jcl-over-slf4j:1.7.32"
-    implementation "org.slf4j:log4j-over-slf4j:1.7.32"
+    implementation "org.slf4j:jcl-over-slf4j:1.7.36"
+    implementation "org.slf4j:log4j-over-slf4j:1.7.36"
     implementation "net.logstash.logback:logstash-logback-encoder:7.0.1"
 
     // Oauth
@@ -154,45 +155,44 @@ dependencies {
     implementation "org.jboss.resteasy:resteasy-atom-provider:$resteasy_version"
     implementation "org.jboss.resteasy:resteasy-multipart-provider:$resteasy_version"
 
-    implementation "javax.ws.rs:javax.ws.rs-api:2.1"
+    implementation "javax.ws.rs:javax.ws.rs-api:2.1.1"
 
     // Sun jaxb
-    implementation "com.sun.xml.bind:jaxb-impl:2.3.0"
-    implementation "com.sun.xml.bind:jaxb-core:2.3.0"
+    implementation "com.sun.xml.bind:jaxb-impl:3.0.2"
+    implementation "com.sun.xml.bind:jaxb-core:3.0.2"
 
     // Swagger
-    implementation "io.swagger:swagger-annotations:1.5.7"
-    implementation "org.reflections:reflections:0.9.10"
+    implementation "io.swagger:swagger-annotations:1.6.5"
+    implementation "org.reflections:reflections:0.10.2"
 
     // Validator
-    implementation "org.hibernate.validator:hibernate-validator:6.1.5.Final"
-    implementation "org.hibernate.validator:hibernate-validator-annotation-processor:6.1.5.Final"
+    implementation "org.hibernate.validator:hibernate-validator:6.2.3.Final"
+    implementation "org.hibernate.validator:hibernate-validator-annotation-processor:6.2.3.Final"
 
     // Hibernate
-    implementation 'org.hibernate:hibernate-c3p0:5.4.9.Final'
+    implementation 'org.hibernate:hibernate-c3p0:5.4.6.Final'
     // Ehcache (for use with hibernate primarily)
     implementation "org.hibernate:hibernate-jcache:5.4.6.Final"
     implementation "org.ehcache:ehcache:3.8.0"
     implementation "javax.cache:cache-api:1.0.0"
 
     // Artemis server & client
-    implementation "org.apache.activemq:artemis-server:2.20.0"
-    implementation "org.apache.activemq:artemis-stomp-protocol:2.20.0"
+    implementation "org.apache.activemq:artemis-server:2.21.0"
+    implementation "org.apache.activemq:artemis-stomp-protocol:2.21.0"
 
     // Javascript Engine
-    implementation "org.mozilla:rhino:1.7R3"
+    implementation "org.mozilla:rhino:1.7.14"
 
     implementation "org.quartz-scheduler:quartz:2.3.2"
 
     // Keycloak
-    implementation "org.keycloak:keycloak-servlet-filter-adapter:15.0.1"
+    implementation "org.keycloak:keycloak-servlet-filter-adapter:17.0.1"
 
     // Hibernate JPA integration
-    implementation "org.hibernate:hibernate-jpamodelgen:5.4.18.Final"
+    implementation "org.hibernate:hibernate-jpamodelgen:5.6.7.Final"
+    annotationProcessor 'org.hibernate:hibernate-jpamodelgen:5.6.7.Final'
 
-    annotationProcessor 'org.hibernate:hibernate-jpamodelgen:5.4.18.Final'
-
-    checkstyle "com.puppycrawl.tools:checkstyle:8.29"
+    checkstyle "com.puppycrawl.tools:checkstyle:8.36"
     checkstyle "com.github.sevntu-checkstyle:sevntu-checks:1.36.0"
 
     // Use wildcard because this could be called jss4.jar or jss.jar
@@ -202,8 +202,8 @@ dependencies {
 
     // DB Drivers
     runtimeOnly "org.postgresql:postgresql:42.3.3"
-    runtimeOnly "mysql:mysql-connector-java:8.0.20"
-    runtimeOnly "org.mariadb.jdbc:mariadb-java-client:2.3.0"
+    runtimeOnly "mysql:mysql-connector-java:8.0.28"
+    runtimeOnly "org.mariadb.jdbc:mariadb-java-client:3.0.4"
 
     testRuntime "org.hsqldb:hsqldb:2.6.1"
     testRuntimeOnly "org.glassfish:javax.el:3.0.0"
@@ -214,7 +214,7 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-engine:$junit_version"
 
     testImplementation "org.hamcrest:hamcrest-library:2.2"
-    testImplementation "org.mockito:mockito-junit-jupiter:4.3.1"
+    testImplementation "org.mockito:mockito-junit-jupiter:4.4.0"
     testImplementation "com.mattbertolini:liquibase-slf4j:4.0.0"
 }
 
