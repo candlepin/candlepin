@@ -25,10 +25,10 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.model.ContentOverride;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.util.ContentOverrideValidator;
 
 import com.google.inject.Injector;
 
@@ -129,7 +129,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
     private String getLongString() {
         StringBuilder builder = new StringBuilder();
 
-        while (builder.length() < ContentOverrideValidator.MAX_VALUE_LENGTH) {
+        while (builder.length() < ContentOverride.MAX_VALUE_LENGTH) {
             builder.append("longstring");
         }
 

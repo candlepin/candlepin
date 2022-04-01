@@ -48,6 +48,8 @@ public abstract class ContentOverride<T extends ContentOverride, P extends Abstr
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_content_override";
+    public static final int MAX_NAME_AND_LABEL_LENGTH = 255;
+    public static final int MAX_VALUE_LENGTH = 2048;
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -57,7 +59,7 @@ public abstract class ContentOverride<T extends ContentOverride, P extends Abstr
     private String id;
 
     @Column(name = "content_label")
-    @Size(max = 255)
+    @Size(max = MAX_NAME_AND_LABEL_LENGTH)
     @NotNull
     private String contentLabel;
 
@@ -65,7 +67,7 @@ public abstract class ContentOverride<T extends ContentOverride, P extends Abstr
     @NotNull
     private String name;
 
-    @Size(max = 255)
+    @Size(max = MAX_VALUE_LENGTH)
     @NotNull
     private String value;
 

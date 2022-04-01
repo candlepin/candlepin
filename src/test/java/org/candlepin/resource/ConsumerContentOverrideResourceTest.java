@@ -40,6 +40,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentOverride;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.EntitlementCurator;
@@ -233,7 +234,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     private String getLongString() {
         StringBuilder builder = new StringBuilder();
 
-        while (builder.length() < ContentOverrideValidator.MAX_VALUE_LENGTH) {
+        while (builder.length() < ContentOverride.MAX_VALUE_LENGTH) {
             builder.append("longstring");
         }
 
