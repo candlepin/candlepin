@@ -117,6 +117,7 @@ rm -rf %{buildroot}
 ## common
 %{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/%{name}/certs/upstream/
 %{__install} -m 644 config/candlepin/candlepin-redhat-ca.crt %{buildroot}%{_sysconfdir}/%{name}/certs/upstream/
+%{__install} -m 644 config/candlepin/candlepin-redhat-r2-ca.crt %{buildroot}%{_sysconfdir}/%{name}/certs/upstream/
 
 %{__install} -d 755 %{buildroot}%{_sysconfdir}/logrotate.d/
 %{__install} -m 644 config/candlepin/logrotate.conf %{buildroot}%{_sysconfdir}/logrotate.d/%{name}
@@ -218,6 +219,7 @@ fi
 ## If a deployment is managing their own, they will need to restore from the
 ## .rpmsave backup after upgrading the candlepin rpm.
 %config %attr(644, root, root) %{_sysconfdir}/%{name}/certs/upstream/candlepin-redhat-ca.crt
+%config %attr(644, root, root) %{_sysconfdir}/%{name}/certs/upstream/candlepin-redhat-r2-ca.crt
 %config(noreplace) %attr(644,root,root) %{_sysconfdir}/logrotate.d/candlepin
 
 %defattr(644, tomcat, tomcat, 775)
