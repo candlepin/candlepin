@@ -55,6 +55,11 @@ public class DeletedConsumer extends AbstractHibernateObject {
     @NotNull
     private String consumerUuid;
 
+    @Column(name = "consumer_name", length = 255)
+    @Size(max = 255)
+    @NotNull
+    private String consumerName;
+
     /**
      * using the id instead of actual Owner because the owner could be deleted
      * and we still want to keep this record around.
@@ -108,6 +113,15 @@ public class DeletedConsumer extends AbstractHibernateObject {
     public DeletedConsumer setOwnerId(String oid) {
         ownerId = oid;
         return this;
+    }
+
+    public DeletedConsumer setConsumerName(String consumerName) {
+        this.consumerName = consumerName;
+        return this;
+    }
+
+    public String getConsumerName() {
+        return consumerName;
     }
 
     public String getOwnerId() {

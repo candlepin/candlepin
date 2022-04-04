@@ -65,6 +65,7 @@ public class DeletedConsumerTranslator implements ObjectTranslator<DeletedConsum
 
         dest.id(source.getId())
             .consumerUuid(source.getConsumerUuid())
+            .consumerName(source.getConsumerName())
             .ownerId(source.getOwnerId())
             .ownerKey(source.getOwnerKey())
             .ownerDisplayName(source.getOwnerDisplayName())
