@@ -1227,7 +1227,7 @@ public class OwnerResource implements OwnersApi {
 
     @Override
     @Transactional
-    public Stream<PoolDTO> listPools(
+    public Stream<PoolDTO> listOwnerPools(
         @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
         String consumerUuid,
         String activationKeyName,

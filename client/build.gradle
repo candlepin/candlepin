@@ -1,6 +1,6 @@
 plugins {
-    id("org.openapi.generator")
-    id 'java-library'
+    id "org.openapi.generator"
+    id "java-library"
 }
 
 description = "Candlepin Generated Client Library"
@@ -30,6 +30,6 @@ openApiGenerate {
     validateSpec = true
     skipValidateSpec = true
     configOptions = [
-        dateLibrary: "legacy"
+        dateLibrary: "java8"
     ]
 }

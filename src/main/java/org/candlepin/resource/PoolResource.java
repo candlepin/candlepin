@@ -90,7 +90,7 @@ public class PoolResource implements PoolsApi {
     @Override
     @Deprecated
     @SecurityHole
-    public List<PoolDTO> list(String ownerId, String consumerUuid, String productId,
+    public List<PoolDTO> listPools(String ownerId, String consumerUuid, String productId,
         Boolean listAll, String activeOn) {
 
         Principal principal = this.principalProvider.get();

@@ -597,7 +597,7 @@ public class ConsumerResourceCreationTest {
         when(this.principalProvider.get()).thenReturn(p);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
         EnvironmentDTO environmentDTO = new EnvironmentDTO().id("env1");
-        consumer.addEnvironments(environmentDTO);
+        consumer.addEnvironmentsItem(environmentDTO);
         doReturn(true).when(environmentCurator).exists(environmentDTO.getId());
         Environment environment = new Environment();
         environment.setId("env1");
@@ -615,7 +615,7 @@ public class ConsumerResourceCreationTest {
         when(this.principalProvider.get()).thenReturn(p);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
         EnvironmentDTO environmentDTO = new EnvironmentDTO().name("envname1");
-        consumer.addEnvironments(environmentDTO);
+        consumer.addEnvironmentsItem(environmentDTO);
         doReturn("env1").when(environmentCurator).getEnvironmentIdByName(any(), any());
         Environment environment = new Environment();
         environment.setId("env1");
@@ -635,8 +635,8 @@ public class ConsumerResourceCreationTest {
         ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
         EnvironmentDTO environmentDTO1 = new EnvironmentDTO().id("env1");
         EnvironmentDTO environmentDTO2 = new EnvironmentDTO().id("env2");
-        consumer.addEnvironments(environmentDTO1);
-        consumer.addEnvironments(environmentDTO2);
+        consumer.addEnvironmentsItem(environmentDTO1);
+        consumer.addEnvironmentsItem(environmentDTO2);
         doReturn(true).when(environmentCurator).exists(any());
         Environment environment1 = new Environment();
         environment1.setId("env1");
@@ -657,7 +657,7 @@ public class ConsumerResourceCreationTest {
         when(this.principalProvider.get()).thenReturn(p);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
         EnvironmentDTO environmentDTO = new EnvironmentDTO().id("env1");
-        consumer.addEnvironments(environmentDTO);
+        consumer.addEnvironmentsItem(environmentDTO);
 
         assertThrows(BadRequestException.class, () ->
             resource.createConsumer(consumer, USER, owner.getKey(), null, true));

@@ -5513,7 +5513,7 @@ paths:
         https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin
       tags:
         - Owner
-      operationId: listPools
+      operationId: listOwnerPools
       x-java-response:
         type: java.util.stream.Stream
         isContainer: true
@@ -6784,7 +6784,7 @@ paths:
         For more details please visit https://www.candlepinproject.org/docs/candlepin/pagination.html#paginating-results-from-candlepin.
       tags:
         - Pools
-      operationId: list
+      operationId: listPools
       parameters:
         - in: query
           name: owner
