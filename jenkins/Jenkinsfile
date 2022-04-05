@@ -4,13 +4,26 @@ library identifier: 'fh-pipeline-library@master', retriever: modernSCM(
    credentialsId: 'github-api-token-as-username-password'])
 
 pipeline {
-    agent { label 'candlepin' }
+    agent none
     options {
         skipDefaultCheckout true
         timeout(time: 16, unit: 'HOURS')
     }
     stages {
+        stage('Stop Old Builds') {
+            // purely a jenkins step; no env needed
+            agent none
+            steps {
+                script {
+                    // stops all previous running builds
+                    for (int i = 1; i <= (env.BUILD_NUMBER as int); i++) {
+                       milestone ordinal: i
+                    }
+                }
+            }
+        }
         stage('Trust') {
+            agent none
             steps {
                 enforceTrustedApproval("candlepin","rhsm-jenkins-github-app")
             }
