@@ -116,7 +116,7 @@ import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
 
-import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;

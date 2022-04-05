@@ -49,7 +49,7 @@ import org.candlepin.resource.util.EntitlementFinderUtil;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -28,7 +28,7 @@ import org.candlepin.service.model.PermissionBlueprintInfo;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 
 import java.util.Date;
 import java.util.HashSet;

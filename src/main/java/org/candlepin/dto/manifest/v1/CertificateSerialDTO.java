@@ -17,8 +17,8 @@ package org.candlepin.dto.manifest.v1;
 import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.service.model.CertificateSerialInfo;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.math.BigInteger;
 import java.util.Date;

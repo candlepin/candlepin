@@ -17,7 +17,7 @@ package org.candlepin.resource.util;
 import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.model.EntitlementFilterBuilder;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 

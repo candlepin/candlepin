@@ -16,7 +16,7 @@ package org.candlepin.resource.util;
 
 import org.candlepin.exceptions.BadRequestException;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.Date;
 

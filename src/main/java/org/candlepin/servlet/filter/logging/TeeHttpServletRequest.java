@@ -17,7 +17,7 @@ package org.candlepin.servlet.filter.logging;
 import org.candlepin.util.Util;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;

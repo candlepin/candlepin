@@ -25,7 +25,7 @@ import org.candlepin.resource.validation.DTOValidator;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collections;
