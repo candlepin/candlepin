@@ -5,7 +5,7 @@ import org.yaml.snakeyaml.Yaml
 
 buildscript {
     //openapi version has to be set manually in the plugins block as well.
-    ext.openapi_version = '5.2.1'
+    ext.openapi_version = '5.4.0'
 
     repositories {
         mavenCentral()

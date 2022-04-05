@@ -405,9 +405,9 @@ public class ConsumerResourceUpdateTest {
         consumer.addInstalledProduct(new ConsumerInstalledProduct(productB));
 
         ConsumerDTO incoming = new ConsumerDTO();
-        incoming.addInstalledProducts(new ConsumerInstalledProductDTO()
+        incoming.addInstalledProductsItem(new ConsumerInstalledProductDTO()
             .id(productB.getId()).productName(productB.getName()));
-        incoming.addInstalledProducts(new ConsumerInstalledProductDTO()
+        incoming.addInstalledProductsItem(new ConsumerInstalledProductDTO()
             .id(productC.getId()).productName(productC.getName()));
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
@@ -425,9 +425,9 @@ public class ConsumerResourceUpdateTest {
         consumer.addInstalledProduct(new ConsumerInstalledProduct(consumer, productB));
 
         ConsumerDTO incoming = new ConsumerDTO();
-        incoming.addInstalledProducts(new ConsumerInstalledProductDTO()
+        incoming.addInstalledProductsItem(new ConsumerInstalledProductDTO()
             .id(productB.getId()).productName(productB.getName()));
-        incoming.addInstalledProducts(new ConsumerInstalledProductDTO()
+        incoming.addInstalledProductsItem(new ConsumerInstalledProductDTO()
             .id(productC.getId()).productName(productC.getName()));
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
@@ -507,7 +507,7 @@ public class ConsumerResourceUpdateTest {
         updated.setUuid(uuid);
 
         GuestIdDTO expectedGuestId = TestUtil.createGuestIdDTO("Guest 2");
-        updated.addGuestIds(expectedGuestId);
+        updated.addGuestIdsItem(expectedGuestId);
 
         when(this.consumerCurator.getGuestConsumersMap(any(String.class), anySet())).
             thenReturn(new VirtConsumerMap());
@@ -812,13 +812,13 @@ public class ConsumerResourceUpdateTest {
 
         ConsumerDTO updated = new ConsumerDTO();
         updated.setUuid(uuid);
-        updated.putFacts(expectedFactName, expectedFactValue);
+        updated.putFactsItem(expectedFactName, expectedFactValue);
         Product prod = TestUtil.createProduct("Product One");
         ConsumerInstalledProductDTO expectedInstalledProduct =
             new ConsumerInstalledProductDTO().id(prod.getId()).productName(prod.getName());
 
-        updated.addInstalledProducts(expectedInstalledProduct);
-        updated.addGuestIds(expectedGuestId);
+        updated.addInstalledProductsItem(expectedInstalledProduct);
+        updated.addGuestIdsItem(expectedGuestId);
 
         when(this.consumerCurator.getGuestConsumersMap(any(String.class), anySet())).
             thenReturn(new VirtConsumerMap());
@@ -855,7 +855,7 @@ public class ConsumerResourceUpdateTest {
         Owner owner = createOwner();
         OwnerDTO ownerDTO = new OwnerDTO();
         ownerDTO.setId(owner.getId());
-        updated.addEnvironments(translator.translate(changedEnvironment, EnvironmentDTO.class));
+        updated.addEnvironmentsItem(translator.translate(changedEnvironment, EnvironmentDTO.class));
         updated.setOwner(new NestedOwnerDTO());
 
         when(environmentCurator.get(changedEnvironment.getId())).thenReturn(changedEnvironment);
@@ -877,7 +877,7 @@ public class ConsumerResourceUpdateTest {
 
         ConsumerDTO updated = new ConsumerDTO();
         updated.setUuid(uuid);
-        updated.addEnvironments(changedEnvironment);
+        updated.addEnvironmentsItem(changedEnvironment);
 
         Consumer existing = getFakeConsumer();
         existing.setUuid(updated.getUuid());
@@ -1098,7 +1098,7 @@ public class ConsumerResourceUpdateTest {
         OwnerDTO ownerDTO = new OwnerDTO();
         ownerDTO.setId(owner.getId());
 
-        updated.addEnvironments(translator.translate(changedEnvironment, EnvironmentDTO.class));
+        updated.addEnvironmentsItem(translator.translate(changedEnvironment, EnvironmentDTO.class));
         updated.setOwner(new NestedOwnerDTO());
 
         when(environmentCurator.get(changedEnvironment.getId())).thenReturn(changedEnvironment);
@@ -1321,7 +1321,7 @@ public class ConsumerResourceUpdateTest {
 
         EnvironmentDTO changedEnvironment = new EnvironmentDTO().id("42").name("environment");
         ConsumerDTO updated = new ConsumerDTO();
-        updated.addEnvironments(changedEnvironment);
+        updated.addEnvironmentsItem(changedEnvironment);
         Consumer existing = getFakeConsumer();
 
         assertThrows(BadRequestException.class,

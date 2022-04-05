@@ -212,7 +212,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testCreateConsumer() {
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null,
             standardSystemTypeDTO);
-        toSubmit.putFacts(METADATA_NAME, METADATA_VALUE);
+        toSubmit.putFactsItem(METADATA_NAME, METADATA_VALUE);
         ConsumerDTO submitted = consumerResource.createConsumer(
             toSubmit,
             someuser.getUsername(),
@@ -243,7 +243,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
         assertNull(toSubmit.getId());
         toSubmit.setUuid(uuid);
-        toSubmit.putFacts(METADATA_NAME, METADATA_VALUE);
+        toSubmit.putFactsItem(METADATA_NAME, METADATA_VALUE);
 
         ConsumerDTO submitted = consumerResource.createConsumer(toSubmit, null, owner.getKey(), null,
             true);
@@ -259,7 +259,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         ConsumerDTO anotherToSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null,
             standardSystemTypeDTO);
         anotherToSubmit.setUuid(uuid);
-        anotherToSubmit.putFacts(METADATA_NAME, METADATA_VALUE);
+        anotherToSubmit.putFactsItem(METADATA_NAME, METADATA_VALUE);
         anotherToSubmit.setId(null);
         assertThrows(BadRequestException.class, () ->
             consumerResource.createConsumer(anotherToSubmit, null, owner.getKey(), null, true));
@@ -425,7 +425,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     public void testRegisterWithConsumerId() {
         ConsumerDTO toSubmit = createConsumerDTO(CONSUMER_NAME, USER_NAME, null, standardSystemTypeDTO);
         toSubmit.setUuid("1023131");
-        toSubmit.putFacts(METADATA_NAME, METADATA_VALUE);
+        toSubmit.putFactsItem(METADATA_NAME, METADATA_VALUE);
 
         ConsumerDTO submitted = consumerResource.createConsumer(
             toSubmit, null, null, null, true);
@@ -774,7 +774,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Product prod = TestUtil.createProduct("Product One");
         ConsumerInstalledProductDTO updatedInstalledProduct = new ConsumerInstalledProductDTO()
             .productId(prod.getId()).productName(prod.getName());
-        consumer.addInstalledProducts(updatedInstalledProduct);
+        consumer.addInstalledProductsItem(updatedInstalledProduct);
         consumerResource.updateConsumer(consumer.getUuid(), consumer);
 
         Date afterUpdateTimestamp = consumerCurator.findByUuid(consumer.getUuid())
@@ -810,7 +810,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Date modifiedDateOnCreate = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
         ConsumerDTO updatedConsumerDTO = new ConsumerDTO();
-        updatedConsumerDTO.putFacts("FACT", "FACT_VALUE");
+        updatedConsumerDTO.putFactsItem("FACT", "FACT_VALUE");
         consumerResource.updateConsumer(consumer.getUuid(), updatedConsumerDTO);
         Date modifiedTSOnUnnecessaryFactUpdate = consumerCurator.get(consumer.getId())
             .getRHCloudProfileModified();
@@ -818,7 +818,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(modifiedDateOnCreate, modifiedTSOnUnnecessaryFactUpdate);
 
         updatedConsumerDTO = new ConsumerDTO();
-        updatedConsumerDTO.putFacts(CloudProfileFacts.CPU_CORES_PERSOCKET.getFact(), "1");
+        updatedConsumerDTO.putFactsItem(CloudProfileFacts.CPU_CORES_PERSOCKET.getFact(), "1");
         consumerResource.updateConsumer(consumer.getUuid(), updatedConsumerDTO);
         Date modifiedTSOnNecessaryFactUpdate = consumerCurator.get(consumer.getId())
             .getRHCloudProfileModified();
@@ -836,7 +836,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer.setAutoheal(true);
         consumer.setSystemPurposeStatus("test-status");
         consumer.setReleaseVer(new ReleaseVerDTO().releaseVer("test-release-version"));
-        consumer.putFacts("lscpu.model", "78");
+        consumer.putFactsItem("lscpu.model", "78");
         consumerResource.updateConsumer(consumer.getUuid(), consumer);
         Date profileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
@@ -849,8 +849,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer = consumerResource.createConsumer(consumer, null, null, null, true);
         Date profileCreated = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
-        consumer.putFacts("lscpu.model", "78");
-        consumer.putFacts("test-dmi.bios.vendor", "vendorA");
+        consumer.putFactsItem("lscpu.model", "78");
+        consumer.putFactsItem("test-dmi.bios.vendor", "vendorA");
         consumerResource.updateConsumer(consumer.getUuid(), consumer);
         Date profileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 

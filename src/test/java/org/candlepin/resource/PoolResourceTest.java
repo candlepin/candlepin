@@ -124,7 +124,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
 
         assertThrows(ForbiddenException.class, () ->
-            poolResource.list(null, null, null, false, null)
+            poolResource.listPools(null, null, null, false, null)
         );
     }
 
@@ -132,20 +132,20 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testListAll() {
         when(this.principalProvider.get()).thenReturn(setupAdminPrincipal("superadmin"));
 
-        List<PoolDTO> pools = poolResource.list(null, null, null, false, null);
+        List<PoolDTO> pools = poolResource.listPools(null, null, null, false, null);
         assertEquals(3, pools.size());
     }
 
     @Test
     public void testListForOrg() {
         when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
-        List<PoolDTO> pools = poolResource.list(owner1.getId(), null, null,
+        List<PoolDTO> pools = poolResource.listPools(owner1.getId(), null, null,
             false, null);
         assertEquals(2, pools.size());
 
         when(this.principalProvider.get()).thenReturn(setupPrincipal(owner2, Access.ALL));
 
-        pools = poolResource.list(owner2.getId(), null, null, false, null);
+        pools = poolResource.listPools(owner2.getId(), null, null, false, null);
         assertEquals(1, pools.size());
     }
 
@@ -154,10 +154,10 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testListForProduct() {
         when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
 
-        List<PoolDTO> pools = poolResource.list(null, null, product1.getId(),
+        List<PoolDTO> pools = poolResource.listPools(null, null, product1.getId(),
             false, null);
         assertEquals(2, pools.size());
-        pools = poolResource.list(null, null, product2.getId(), false, null);
+        pools = poolResource.listPools(null, null, product2.getId(), false, null);
         assertEquals(1, pools.size());
     }
 
@@ -165,7 +165,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testListForOrgAndProduct() {
         when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
 
-        List<PoolDTO> pools = poolResource.list(owner1.getId(), null, product1.getId(), false,
+        List<PoolDTO> pools = poolResource.listPools(owner1.getId(), null, product1.getId(), false,
             null);
         assertEquals(1, pools.size());
     }
@@ -175,7 +175,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
 
         assertThrows(NotFoundException.class, () ->
-            poolResource.list(owner2.getId(), null, product2.getId(), false, null)
+            poolResource.listPools(owner2.getId(), null, product2.getId(), false, null)
         );
     }
 
@@ -183,7 +183,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testListConsumerAndProductFiltering() {
         when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
 
-        List<PoolDTO> pools = poolResource.list(null, passConsumer.getUuid(),
+        List<PoolDTO> pools = poolResource.listPools(null, passConsumer.getUuid(),
             product1.getId(), false, null);
         assertEquals(1, pools.size());
 
@@ -194,7 +194,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Test
     public void testCannotListPoolsForConsumerInAnotherOwner() {
         when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
-        assertThrows(NotFoundException.class, () -> poolResource.list(null, failConsumer.getUuid(),
+        assertThrows(NotFoundException.class, () -> poolResource.listPools(null, failConsumer.getUuid(),
             product1.getId(), false, null)
         );
     }
@@ -204,7 +204,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     @Test
     public void testListBlocksConsumerOwnerFiltering() {
         when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
-        assertThrows(BadRequestException.class, () -> poolResource.list(owner1.getId(),
+        assertThrows(BadRequestException.class, () -> poolResource.listPools(owner1.getId(),
             passConsumer.getUuid(), product1.getId(), false, null)
         );
     }
@@ -213,7 +213,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testListConsumerFiltering() {
         when(this.principalProvider.get()).thenReturn(
             setupPrincipal(new ConsumerPrincipal(passConsumer, owner1)));
-        List<PoolDTO> pools = poolResource.list(
+        List<PoolDTO> pools = poolResource.listPools(
             null, passConsumer.getUuid(), null, false, null);
         assertEquals(2, pools.size());
 
@@ -225,7 +225,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testListNoSuchOwner() {
         when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
         assertThrows(NotFoundException.class, () ->
-            poolResource.list("-1", null, null, false, null)
+            poolResource.listPools("-1", null, null, false, null)
         );
     }
 
@@ -233,21 +233,21 @@ public class PoolResourceTest extends DatabaseTestFixture {
     public void testListNoSuchConsumer() {
         when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
         assertThrows(NotFoundException.class, () ->
-            poolResource.list(null, "blah", null, false, null)
+            poolResource.listPools(null, "blah", null, false, null)
         );
     }
 
     @Test
     public void testListNoSuchProduct() {
         when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
-        assertEquals(0, poolResource.list(owner1.getId(), null, "boogity", false,
+        assertEquals(0, poolResource.listPools(owner1.getId(), null, "boogity", false,
             null).size());
     }
 
     @Test
     public void ownerAdminCannotListAnotherOwnersPools() {
         when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
-        List<PoolDTO> pools = poolResource.list(owner1.getId(), null, null, false, null);
+        List<PoolDTO> pools = poolResource.listPools(owner1.getId(), null, null, false, null);
         assertEquals(2, pools.size());
 
         setupPrincipal(owner2, Access.ALL);
@@ -255,7 +255,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
         when(this.principalProvider.get()).thenReturn(setupPrincipal(owner2, Access.ALL));
         assertThrows(NotFoundException.class, () ->
-            poolResource.list(owner1.getId(), null, null, false, null)
+            poolResource.listPools(owner1.getId(), null, null, false, null)
         );
     }
 
@@ -265,7 +265,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         when(this.principalProvider.get()).thenReturn(
             setupPrincipal(new ConsumerPrincipal(foreignConsumer, owner2)));
         assertThrows(NotFoundException.class, () ->
-            poolResource.list(null, passConsumer.getUuid(), null, false, null)
+            poolResource.listPools(null, passConsumer.getUuid(), null, false, null)
         );
     }
 
@@ -275,7 +275,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
         when(this.principalProvider.get()).thenReturn(
             setupPrincipal(new ConsumerPrincipal(foreignConsumer, owner2)));
         assertThrows(NotFoundException.class, () ->
-            poolResource.list(owner1.getId(), null, null, false, null)
+            poolResource.listPools(owner1.getId(), null, null, false, null)
         );
     }
 
@@ -285,14 +285,14 @@ public class PoolResourceTest extends DatabaseTestFixture {
         when(this.principalProvider.get()).thenReturn(
             setupPrincipal(new ConsumerPrincipal(passConsumer, owner1)));
 
-        poolResource.list(owner1.getId(), null, null, false, null);
+        poolResource.listPools(owner1.getId(), null, null, false, null);
     }
 
     @Test
     public void testBadActiveOnDate() {
         when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
         assertThrows(BadRequestException.class, () ->
-            poolResource.list(owner1.getId(), null, null, false, "bc")
+            poolResource.listPools(owner1.getId(), null, null, false, "bc")
         );
     }
 
@@ -303,11 +303,11 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
         when(this.principalProvider.get()).thenReturn(setupAdminPrincipal("superadmin"));
 
-        List<PoolDTO> pools = poolResource.list(null, null, null, false, activeOn);
+        List<PoolDTO> pools = poolResource.listPools(null, null, null, false, activeOn);
         assertEquals(3, pools.size());
 
         activeOn = Integer.toString(START_YEAR - 1);
-        pools = poolResource.list(owner1.getId(), null, null, false, activeOn);
+        pools = poolResource.listPools(owner1.getId(), null, null, false, activeOn);
         assertEquals(0, pools.size());
     }
 

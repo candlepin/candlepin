@@ -33,13 +33,13 @@ public class OwnerInfoBuilder {
 
     public OwnerInfoBuilder() {
         ownerInfo = new OwnerInfo();
-        ownerInfo.putConsumerGuestCounts(GUEST, 0);
-        ownerInfo.putConsumerGuestCounts(PHYSICAL, 0);
+        ownerInfo.putConsumerGuestCountsItem(GUEST, 0);
+        ownerInfo.putConsumerGuestCountsItem(PHYSICAL, 0);
     }
 
     public void addTypeTotal(ConsumerType type, int consumers, int entitlements) {
-        ownerInfo.putConsumerCounts(type.getLabel(), consumers);
-        ownerInfo.putEntitlementsConsumedByType(type.getLabel(), entitlements);
+        ownerInfo.putConsumerCountsItem(type.getLabel(), consumers);
+        ownerInfo.putEntitlementsConsumedByTypeItem(type.getLabel(), entitlements);
     }
 
     public OwnerInfo build() {
@@ -51,7 +51,7 @@ public class OwnerInfoBuilder {
         if (count == null) {
             count = 0;
         }
-        ownerInfo.putConsumerTypeCountByPool(type.getLabel(), count + toAdd);
+        ownerInfo.putConsumerTypeCountByPoolItem(type.getLabel(), count + toAdd);
     }
 
     public void addToEnabledConsumerTypeCountByPool(ConsumerType type, int toAdd) {
@@ -59,12 +59,12 @@ public class OwnerInfoBuilder {
         if (count == null) {
             count = 0;
         }
-        ownerInfo.putEnabledConsumerTypeCountByPool(type.getLabel(), count + toAdd);
+        ownerInfo.putEnabledConsumerTypeCountByPoolItem(type.getLabel(), count + toAdd);
     }
 
     public void setConsumerTypesByPool(List<ConsumerType> consumerTypes) {
         for (ConsumerType c : consumerTypes) {
-            ownerInfo.putConsumerTypeCountByPool(c.getLabel(), 0);
+            ownerInfo.putConsumerTypeCountByPoolItem(c.getLabel(), 0);
         }
     }
 
@@ -73,7 +73,7 @@ public class OwnerInfoBuilder {
         ConsumptionTypeCountsDTO typeCounts;
         if (!ownerInfo.getEntitlementsConsumedByFamily().containsKey(family)) {
             typeCounts = new ConsumptionTypeCountsDTO().physical(0).guest(0);
-            ownerInfo.putEntitlementsConsumedByFamily(family, typeCounts);
+            ownerInfo.putEntitlementsConsumedByFamilyItem(family, typeCounts);
         }
         else {
             typeCounts = ownerInfo.getEntitlementsConsumedByFamily().get(family);
@@ -104,18 +104,18 @@ public class OwnerInfoBuilder {
             }
             activePools -= ownerInfo.getConsumerTypeCountByPool().get(key);
         }
-        ownerInfo.putConsumerTypeCountByPool("system", activePools);
+        ownerInfo.putConsumerTypeCountByPoolItem("system", activePools);
     }
 
     public void setGuestCount(Integer count) {
-        ownerInfo.putConsumerGuestCounts(GUEST, count);
+        ownerInfo.putConsumerGuestCountsItem(GUEST, count);
     }
 
     public void setPhysicalCount(Integer count) {
-        ownerInfo.putConsumerGuestCounts(PHYSICAL, count);
+        ownerInfo.putConsumerGuestCountsItem(PHYSICAL, count);
     }
 
     public void setConsumerCountByComplianceStatus(String status, Integer count) {
-        ownerInfo.putConsumerCountsByComplianceStatus(status, count);
+        ownerInfo.putConsumerCountsByComplianceStatusItem(status, count);
     }
 }

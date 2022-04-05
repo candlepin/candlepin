@@ -89,7 +89,7 @@ public class EntitlementTranslator implements ObjectTranslator<Entitlement, Enti
             if (certs != null && !certs.isEmpty()) {
                 for (Certificate cert : certs) {
                     if (cert != null) {
-                        dest.addCertificates(modelTranslator.translate(cert, CertificateDTO.class));
+                        dest.addCertificatesItem(modelTranslator.translate(cert, CertificateDTO.class));
                     }
                 }
             }
