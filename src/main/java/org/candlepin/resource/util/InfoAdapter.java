@@ -369,9 +369,6 @@ public class InfoAdapter {
              */
             @Override
             public Map<String, String> getAttributes() {
-                if (source.getAttributes() == null) {
-                    return null;
-                }
                 return Util.toMap(source.getAttributes());
             }
 

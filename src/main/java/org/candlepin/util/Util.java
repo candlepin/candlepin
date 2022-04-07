@@ -52,15 +52,18 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
+
+
 
 /**
  * Genuinely random utilities.
@@ -584,12 +587,32 @@ public class Util {
         return date != null ? date.toInstant().atOffset(ZoneOffset.UTC) : null;
     }
 
+    /**
+     * Converts a collection of Attribute DTOs to a standard map of strings. If the collection
+     * contains multiple entries for the same attribute name, the last entry in the collection will
+     * be used. Null attributes or attributes with null or empty keys will be silently discarded. If
+     * the provided attribute collection is null, this function will return null.
+     *
+     * @param attributes
+     *  a collection of attributes to convert
+     *
+     * @return
+     *  a map containing the attribute names from the given collection mapped to their respective
+     *  values, or null if the collection is null
+     */
     public static Map<String, String> toMap(Collection<AttributeDTO> attributes) {
-        if (attributes.isEmpty()) {
-            return Collections.emptyMap();
+        if (attributes == null) {
+            return null;
         }
+
+        // Impl note:
+        // At the time of writing, there is a bug/oddity in the collector returned by
+        // Collectors.toMap which disallows null *values*. Since we allow null values, we must
+        // create our own collector here.
         return attributes.stream()
-            .collect(Collectors.toMap(AttributeDTO::getName, AttributeDTO::getValue));
+            .filter(Objects::nonNull)
+            .filter(attr -> attr.getName() != null && !attr.getName().isEmpty())
+            .collect(HashMap::new, (map, attr)->map.put(attr.getName(), attr.getValue()), HashMap::putAll);
     }
 
     public static OffsetDateTime parseOffsetDateTime(DateTimeFormatter formatter, String value) {
