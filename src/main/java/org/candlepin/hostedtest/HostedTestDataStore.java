@@ -35,7 +35,7 @@ import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -16,7 +16,7 @@ package org.candlepin.policy.js.pool;
 
 import org.candlepin.model.Pool;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.LinkedList;
 import java.util.List;

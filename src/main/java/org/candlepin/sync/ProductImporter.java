@@ -20,7 +20,7 @@ import org.candlepin.model.Owner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

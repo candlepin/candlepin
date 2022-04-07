@@ -19,7 +19,7 @@ import org.candlepin.jackson.HateoasInclude;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
 

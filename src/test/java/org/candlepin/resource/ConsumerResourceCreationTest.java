@@ -99,7 +99,7 @@ import org.candlepin.util.ServiceLevelValidator;
 
 import com.google.inject.util.Providers;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

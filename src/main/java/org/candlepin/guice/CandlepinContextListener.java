@@ -38,7 +38,7 @@ import com.google.inject.Stage;
 import com.google.inject.persist.PersistService;
 import com.google.inject.util.Modules;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.dialect.PostgreSQL92Dialect;
 import org.hibernate.event.service.spi.EventListenerRegistry;

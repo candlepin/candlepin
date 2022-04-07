@@ -20,7 +20,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;

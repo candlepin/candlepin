@@ -27,7 +27,7 @@ import org.candlepin.config.MapConfiguration;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.core.ServerResponse;
 import org.jboss.resteasy.mock.MockHttpRequest;

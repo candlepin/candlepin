@@ -18,8 +18,8 @@ import org.candlepin.model.Content;
 import org.candlepin.model.ProductContent;
 import org.candlepin.service.model.ProductContentInfo;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.io.Serializable;
 

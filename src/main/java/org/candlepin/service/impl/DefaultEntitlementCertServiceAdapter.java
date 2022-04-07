@@ -52,7 +52,7 @@ import org.candlepin.util.X509V3ExtensionUtil;
 import com.google.common.collect.Collections2;
 import com.google.inject.Inject;
 
-import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
