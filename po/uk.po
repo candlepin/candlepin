@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-04-07 11:55-0400\n"
-"PO-Revision-Date: 2022-03-24 08:24+0000\n"
+"PO-Revision-Date: 2022-04-07 18:17+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/uk/>\n"
@@ -1818,12 +1818,13 @@ msgid "The following override values are invalid: {0}"
 msgstr "Ці значення перевизначення є некоректними: {0}"
 
 #: src/main/java/org/candlepin/util/ContentOverrideValidator.java:145
-#, fuzzy, java-format
-#| msgid "The following override values are invalid: {0}"
+#, java-format
 msgid ""
 "The following overrides have values longer than the maximum length of {0}: "
 "{1}"
-msgstr "Ці значення перевизначення є некоректними: {0}"
+msgstr ""
+"Ці перевизначення мають значення, які є довшими за максимальну довжину {0}: "
+"{1}"
 
 #: src/main/java/org/candlepin/util/PropertyValidator.java:79
 #, java-format
