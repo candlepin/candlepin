@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-04-07 11:55-0400\n"
-"PO-Revision-Date: 2022-03-25 06:17+0000\n"
+"PO-Revision-Date: 2022-04-07 22:17+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
@@ -1875,12 +1875,11 @@ msgid "The following override values are invalid: {0}"
 msgstr "다음의 덮어쓰기 값은 유효하지 않습니다: {0}"
 
 #: src/main/java/org/candlepin/util/ContentOverrideValidator.java:145
-#, fuzzy, java-format
-#| msgid "The following override values are invalid: {0}"
+#, java-format
 msgid ""
 "The following overrides have values longer than the maximum length of {0}: "
 "{1}"
-msgstr "다음의 덮어쓰기 값은 유효하지 않습니다: {0}"
+msgstr "다음 재정의는 최대 길이보다 긴 값을 갖습니다 {0}: {1}"
 
 #: src/main/java/org/candlepin/util/PropertyValidator.java:79
 #, java-format
