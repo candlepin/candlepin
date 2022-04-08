@@ -18,10 +18,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
+
+import org.candlepin.dto.api.v1.AttributeDTO;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -50,12 +53,17 @@ import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+
 
 /**
  * Test Class for the Util class
@@ -417,5 +425,139 @@ public class UtilTest {
         List<String> preexisting = List.of("A", "B");
         List<String> updated = List.of("A", "C", "B");
         assertTrue(Util.getReorderedItems(preexisting, updated).isEmpty());
+    }
+
+    public static AttributeDTO buildAttributeDTO(String name, String value) {
+        return new AttributeDTO()
+            .name(name)
+            .value(value);
+    }
+
+    @Nested
+    class AttributesDTOToMapTests {
+        @Test
+        public void testToMap() {
+            List<AttributeDTO> attribList = List.of(
+                buildAttributeDTO("test_attrib-1", "test_value"),
+                buildAttributeDTO("test_attrib-2", ""),
+                buildAttributeDTO("test_attrib-3", null));
+
+            Map<String, String> attribMap = Util.toMap(attribList);
+
+            assertNotNull(attribMap);
+            assertEquals(attribList.size(), attribMap.size());
+
+            for (AttributeDTO attrib : attribList) {
+                assertTrue(attribMap.containsKey(attrib.getName()));
+                assertEquals(attrib.getValue(), attribMap.get(attrib.getName()));
+            }
+        }
+
+        @Test
+        public void testToMapHandlesNullCollections() {
+            Map<String, String> attribMap = Util.toMap(null);
+
+            assertNull(attribMap);
+        }
+
+        @Test
+        public void testToMapHandlesEmptyCollections() {
+            Map<String, String> attribMap = Util.toMap(Collections.emptyList());
+
+            assertNotNull(attribMap);
+            assertTrue(attribMap.isEmpty());
+        }
+
+        @Test
+        public void testToMapHandlesDuplicateKeys() {
+            String key = "test_attrib";
+            String valueA = "test_value-A";
+            String valueB = "test_value-B";
+
+            List<AttributeDTO> attribList = List.of(
+                buildAttributeDTO(key, valueA),
+                buildAttributeDTO("test_attrib-2", "some attribute"),
+                buildAttributeDTO(key, valueB));
+
+            Map<String, String> attribMap = Util.toMap(attribList);
+
+            assertNotNull(attribMap);
+            assertEquals(2, attribMap.size());
+
+            assertTrue(attribMap.containsKey(key));
+            assertEquals(valueB, attribMap.get(key));
+        }
+
+        @Test
+        public void testToMapDiscardsNullAttributes() {
+            List<AttributeDTO> attribList = new ArrayList<>();
+            attribList.add(null);
+            attribList.add(buildAttributeDTO("test_attrib-1", "test_value"));
+            attribList.add(null);
+            attribList.add(buildAttributeDTO("test_attrib-2", "another_value"));
+            attribList.add(null);
+
+            Map<String, String> attribMap = Util.toMap(attribList);
+
+            assertNotNull(attribMap);
+            assertEquals(2, attribMap.size());
+
+            for (AttributeDTO attrib : attribList) {
+                if (attrib == null) {
+                    continue;
+                }
+
+                assertTrue(attribMap.containsKey(attrib.getName()));
+                assertEquals(attrib.getValue(), attribMap.get(attrib.getName()));
+            }
+        }
+
+        @Test
+        public void testToMapDiscardsAttributesWithEmptyKeys() {
+            List<AttributeDTO> attribList = List.of(
+                buildAttributeDTO("", "test_value"),
+                buildAttributeDTO("test_attrib-2", "another_value"),
+                buildAttributeDTO("", "dead value"),
+                buildAttributeDTO("test_attrib-3", "a third value"),
+                buildAttributeDTO("", "also discarded"));
+
+            Map<String, String> attribMap = Util.toMap(attribList);
+
+            assertNotNull(attribMap);
+            assertEquals(2, attribMap.size());
+
+            for (AttributeDTO attrib : attribList) {
+                if (attrib.getName().isEmpty()) {
+                    continue;
+                }
+
+                assertTrue(attribMap.containsKey(attrib.getName()));
+                assertEquals(attrib.getValue(), attribMap.get(attrib.getName()));
+            }
+        }
+
+        @Test
+        public void testToMapDiscardsAttributesWithNullKeys() {
+            List<AttributeDTO> attribList = List.of(
+                buildAttributeDTO(null, "test_value"),
+                buildAttributeDTO("test_attrib-2", "another_value"),
+                buildAttributeDTO(null, "dead value"),
+                buildAttributeDTO("test_attrib-3", "a third value"),
+                buildAttributeDTO(null, "also discarded"));
+
+            Map<String, String> attribMap = Util.toMap(attribList);
+
+            assertNotNull(attribMap);
+            assertEquals(2, attribMap.size());
+
+            for (AttributeDTO attrib : attribList) {
+                if (attrib.getName() == null) {
+                    continue;
+                }
+
+                assertTrue(attribMap.containsKey(attrib.getName()));
+                assertEquals(attrib.getValue(), attribMap.get(attrib.getName()));
+            }
+        }
     }
 }
