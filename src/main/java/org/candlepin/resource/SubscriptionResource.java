@@ -14,6 +14,7 @@
  */
 package org.candlepin.resource;
 
+import org.candlepin.auth.Verify;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
@@ -81,7 +82,8 @@ public class SubscriptionResource implements SubscriptionsApi {
     }
 
     @Override
-    public Response activateSubscription(String consumerUuid, String email, String emailLocale) {
+    public Response activateSubscription(@Verify(Consumer.class) String consumerUuid, String email,
+        String emailLocale) {
 
         if (email == null) {
             throw new BadRequestException(i18n.tr("email is required for notification"));
