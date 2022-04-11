@@ -17,10 +17,13 @@ package org.candlepin.policy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
@@ -49,6 +52,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.TreeSet;
 
 
 
@@ -71,6 +75,7 @@ public class SystemPurposeComplianceRulesTest {
         complianceRules = new SystemPurposeComplianceRules(eventSink, consumerCurator, consumerTypeCurator,
                 i18n, poolCurator);
         owner = new Owner("test");
+        owner.setContentAccessMode(String.valueOf(ContentAccessManager.ContentAccessMode.ORG_ENVIRONMENT));
         owner.setId(TestUtil.randomString());
     }
 
@@ -216,6 +221,29 @@ public class SystemPurposeComplianceRulesTest {
         prod1.setAttribute(Product.Attributes.SUPPORT_LEVEL, "my_sla");
         List<Entitlement> ents = new LinkedList<>();
         ents.add(mockEntitlement(consumer, TestUtil.createProduct("Awesome Product"), prod1));
+
+        SystemPurposeComplianceStatus status =
+            complianceRules.getStatus(consumer, ents, null, false);
+
+        assertTrue(status.isCompliant());
+        assertNull(status.getNonCompliantSLA());
+        assertEquals(0, status.getReasons().size());
+    }
+
+    @Test
+    public void testGetStatusWithOwnerHavingNullServiceLevelAndCompliantSLA() {
+        Consumer consumer = mockConsumer();
+        String sla = "test-sla";
+
+        Product prod1 = new Product();
+        prod1.setAttribute(Product.Attributes.SUPPORT_LEVEL, sla);
+        List<Entitlement> ents = new LinkedList<>();
+        ents.add(mockEntitlement(consumer, TestUtil.createProduct("Awesome Product"), prod1));
+
+        Set<String> levels = new TreeSet<>();
+        levels.add("new-SLA-level");
+        doReturn(levels).when(poolCurator)
+            .retrieveServiceLevelsForOwner(any(Owner.class), any(Boolean.class));
 
         SystemPurposeComplianceStatus status =
             complianceRules.getStatus(consumer, ents, null, false);
