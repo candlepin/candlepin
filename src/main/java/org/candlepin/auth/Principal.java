@@ -130,5 +130,4 @@ public abstract class Principal implements Serializable, java.security.Principal
             return "";
         }
     }
-
 }

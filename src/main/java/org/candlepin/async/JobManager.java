@@ -89,7 +89,7 @@ import javax.transaction.Synchronization;
 
 // FIXME: The transaction management here is getting out of hand. The annotations should probably
 // be removed entirely and replaced with explicit transaction management, and the protected methods
-// using them should be reverted to their propery visibility (private).
+// using them should be reverted to their proper visibility (private).
 
 
 /**
@@ -164,9 +164,11 @@ public class JobManager implements ModeChangeListener {
         @Override
         public void execute(org.quartz.JobExecutionContext context) throws org.quartz.JobExecutionException {
             String jobKey = context.getJobDetail().getKey().getName();
+            Principal principal = new JobPrincipal(SystemPrincipal.NAME + "." + jobKey);
+            ResteasyContext.pushContext(Principal.class, principal);
 
             try {
-                log.trace("Queuing job: {}", jobKey);
+                log.trace("Queuing scheduled job: {}", jobKey);
                 this.manager.queueJob(JobConfig.forJob(jobKey));
             }
             catch (JobException e) {
@@ -209,7 +211,7 @@ public class JobManager implements ModeChangeListener {
 
     /**
      * The JobMessageSynchronizer commits or rolls back a messenger transaction upon the completion
-     * of a database tranaction.
+     * of a database transaction.
      */
     private static class JobMessageSynchronizer implements Synchronization {
         /** An array of states that are valid to synchronize against */
