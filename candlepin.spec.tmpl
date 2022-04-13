@@ -232,7 +232,7 @@ fi
 %config(noreplace) %{_sysconfdir}/%{name}/%{name}.conf
 ## log dir needs to be group root or not group writeable
 ## else logroate fails
-%attr(775, tomcat, root) %{_localstatedir}/log/%{name}
+%attr(750, tomcat, tomcat) %{_localstatedir}/log/%{name}
 
 %files selinux
 %defattr(-,root,root,0755)
