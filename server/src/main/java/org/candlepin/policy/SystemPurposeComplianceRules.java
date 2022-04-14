@@ -147,7 +147,8 @@ public class SystemPurposeComplianceRules {
         //fetch SLA of the Owner
         Set<String> levels = poolCurator.retrieveServiceLevelsForOwner(consumer.getOwner(), true);
         boolean slaExempted = false;
-        if (!levels.isEmpty() && levels.contains(consumer.getServiceLevel())) {
+        if (!levels.isEmpty() && !StringUtils.isBlank(consumer.getServiceLevel()) &&
+            levels.contains(consumer.getServiceLevel())) {
                 log.debug("Ignoring due to SLA is layered and exempted true");
                 slaExempted = true;
         }
