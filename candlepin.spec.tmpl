@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.11
+Version: 4.1.12
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,22 @@ fi
 
 #raw
 %changelog
+* Thu Apr 14 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.12-1
+- 2061788: Added null check for service level on new consumer
+  (joshmalbrecht@gmail.com)
+- 2070204: Add verify annotation to activateSubscription (wpoteat@redhat.com)
+- Added the new Candlepin Authority R2 Certificate (joshmalbrecht@gmail.com)
+- Changed entity versions to a 64bit value (crog@redhat.com)
+- Upgrade artemis to 2.20.0 (nmoumoul@redhat.com)
+- Fixed a potential collision with product entity versioning (crog@redhat.com)
+- 2060927: Limit compliance recalculations (ojanus@redhat.com)
+- Separate docker-compose responsibilities (nmoumoul@redhat.com)
+- 2059135: Reduce the facts accepted by the compliance status hasher
+  (ojanus@redhat.com)
+- Upgrade to postgres 42.3.3 (nmoumoul@redhat.com)
+- Fix Sonarqube jenkins task (nmoumoul@redhat.com)
+- Use bugzilla API key instead of username/password (nmoumoul@redhat.com)
+
 * Wed Feb 09 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.11-1
 - Translated using Weblate (Korean) (simmon@nplob.com)
 - Translated using Weblate (Ukrainian) (yurchor@ukr.net)
