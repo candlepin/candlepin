@@ -15,23 +15,22 @@
 package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 
-import org.candlepin.ApiException;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.spec.bootstrap.client.OwnerClient;
+import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.SpecTestFixture;
-import org.candlepin.spec.bootstrap.data.NestedOwnerDTOBuilder;
-import org.candlepin.spec.bootstrap.data.OwnerDTOBuilder;
+import org.candlepin.spec.bootstrap.data.builder.Owners;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class OwnerApiTest extends SpecTestFixture {
+@SpecTest
+class OwnerSpecTest extends SpecTestFixture {
+
     @Test
-    public void shouldCreateOwner() throws Exception {
-        OwnerDTO ownerDTO = new OwnerDTOBuilder().build();
+    void shouldCreateOwner() throws Exception {
+        OwnerDTO ownerDTO = Owners.random();
         OwnerDTO status = getClient(OwnerClient.class).createOwner(ownerDTO);
 
         assertThat(status.getId()).isNotNull();
@@ -44,8 +43,8 @@ public class OwnerApiTest extends SpecTestFixture {
     }
 
     @Test
-    public void shouldCreateScaOwner() throws Exception {
-        OwnerDTO ownerDTO = new OwnerDTOBuilder().scaEnabled().build();
+    void shouldCreateScaOwner() throws Exception {
+        OwnerDTO ownerDTO = Owners.randomSca();
         OwnerDTO status = getClient(OwnerClient.class).createOwner(ownerDTO);
 
         assertThat(status.getId()).isNotNull();
@@ -58,13 +57,11 @@ public class OwnerApiTest extends SpecTestFixture {
     }
 
     @Test
-    public void failsToCreateOwnerWithInvalidParent() {
-        OwnerDTO ownerDTO = new OwnerDTOBuilder()
-            .withParent(new NestedOwnerDTOBuilder().build())
-            .build();
+    void failsToCreateOwnerWithInvalidParent() {
+        OwnerDTO ownerDTO = Owners.random()
+            .parentOwner(Owners.toNested(Owners.random()));
 
-        assertThatThrownBy(() -> getClient(OwnerClient.class).createOwner(ownerDTO))
-            .isInstanceOf(ApiException.class);
+        assertNotFound(() -> getClient(OwnerClient.class).createOwner(ownerDTO));
     }
 
 }

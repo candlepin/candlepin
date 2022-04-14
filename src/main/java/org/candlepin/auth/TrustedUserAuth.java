@@ -15,8 +15,10 @@
 package org.candlepin.auth;
 
 import org.candlepin.auth.permissions.PermissionFactory;
+import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.resteasy.filter.AuthUtil;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.model.UserInfo;
 
 import com.google.inject.Inject;
 
@@ -57,6 +59,11 @@ public class TrustedUserAuth extends UserAuth {
         if (lookupPermsHeader != null && lookupPermsHeader.equals("true")) {
             log.debug("Looking up user permissions from user service.");
             return createPrincipal(username);
+        }
+
+        UserInfo user = this.userServiceAdapter.findByLogin(username);
+        if (user == null) {
+            throw new NotAuthorizedException(i18nProvider.get().tr("User: {0} does not exist!", username));
         }
 
         log.debug("Returning full trusted user principal.");

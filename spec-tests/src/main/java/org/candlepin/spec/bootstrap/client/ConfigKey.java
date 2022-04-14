@@ -15,11 +15,19 @@
 
 package org.candlepin.spec.bootstrap.client;
 
+/**
+ * Specifies all configuration keys used by the spec tests
+ */
 public enum ConfigKey {
-    URL("spec.test.client.url"),
+    HOST("spec.test.client.host"),
+    PORT("spec.test.client.port"),
+    PREFIX("spec.test.client.prefix"),
     USERNAME("spec.test.client.username"),
     PASSWORD("spec.test.client.password"),
-    DEBUG("spec.test.client.debug");
+    DEBUG("spec.test.client.debug"),
+    CONNECT_TIMEOUT("spec.test.client.timeout.connect.sec"),
+    READ_TIMEOUT("spec.test.client.timeout.read.sec"),
+    WRITE_TIMEOUT("spec.test.client.timeout.write.sec");
 
     private final String key;
 

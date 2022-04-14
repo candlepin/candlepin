@@ -65,7 +65,7 @@ describe 'OAuth' do
     username = "trustthisuser"
     res = make_request(oauth_consumer, oauth_secret,
       "/candlepin/owners/#{@owner['key']}",
-      {'cp-user' => username})
+      {'cp-user' => @user.username})
     res.code.should == '200'
   end
 

@@ -13,26 +13,29 @@ description = "Candlepin Spec Tests"
 dependencies {
     implementation project(":client")
 
-    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
-    implementation 'org.slf4j:slf4j-api:1.7.36'
-    implementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    implementation "com.squareup.okhttp3:okhttp:4.9.3"
+    implementation "com.squareup.okhttp3:okhttp-tls:4.9.3"
+    implementation "org.slf4j:slf4j-api:1.7.36"
+    implementation "org.junit.jupiter:junit-jupiter:5.8.2"
+    implementation "org.assertj:assertj-core:3.22.0"
+    implementation "com.fasterxml.jackson.core:jackson-databind:2.13.2.2"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.2"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.2"
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
-    testImplementation 'org.assertj:assertj-core:3.22.0'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.8.2"
+    testImplementation "org.junit.jupiter:junit-jupiter-engine:5.8.2"
 
     checkstyle "com.puppycrawl.tools:checkstyle:8.36"
     checkstyle "com.github.sevntu-checkstyle:sevntu-checks:1.36.0"
 }
 
-test {
-    onlyIf {
-        !project.hasProperty("skipSpec")
-    }
+task spec(type: Test) {
+    description = 'Run Java based spec tests'
+    group = 'Verification'
 
     useJUnitPlatform()
 
-    // TODO We have to propagate the -D params if we want them available in tests
+    // We have to propagate the -D params if we want them available in tests
     System.properties.keys().each { key ->
         def properyKey = key.toString()
         if (properyKey.startsWith("spec.test.client")) {
@@ -42,14 +45,8 @@ test {
 
 }
 
-task spec {
-    description = 'Run Java based spec tests'
-    group = 'Verification'
-    finalizedBy 'test'
-}
-
 // Create a single checkstyle task to make it easier to run both the checkstyleMain & checkstyleTest targets
 task checkstyleSpec(dependsOn: [tasks.checkstyleMain, tasks.checkstyleTest]) {
-    description = 'Run checkstyle for both the Main & Test targets'
-    group = 'Verification'
+    description = "Run checkstyle for both the Main & Test targets"
+    group = "Verification"
 }
