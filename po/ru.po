@@ -1,11 +1,11 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
-# Igor Gorbounov <igor.gorbounov@gmail.com>, 2021.
+# Igor Gorbounov <igor.gorbounov@gmail.com>, 2021, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-04-07 11:55-0400\n"
-"PO-Revision-Date: 2021-10-10 21:05+0000\n"
+"PO-Revision-Date: 2022-04-14 20:53+0000\n"
 "Last-Translator: Igor Gorbounov <igor.gorbounov@gmail.com>\n"
 "Language-Team: Russian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ru/>\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.8\n"
+"X-Generator: Weblate 4.11.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -277,10 +277,8 @@ msgid "Error getting OAuth unit key"
 msgstr "Ошибка при получении ключа OAuth"
 
 #: src/main/java/org/candlepin/auth/SSLAuth.java:103
-#, fuzzy
-#| msgid "Invalid Content-Type {0}"
 msgid "Invalid Certificate Type"
-msgstr "Неправильное значение Content-Type {0}"
+msgstr "Неправильный тип сертификата"
 
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1308
@@ -945,10 +943,8 @@ msgstr ""
 "{0}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1656
-#, fuzzy
-#| msgid "Content does not exist in environment: {0}"
 msgid "Server does not support environments."
-msgstr "Нет содержимого в окружении: {0}"
+msgstr "Сервер не поддерживает окружения."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1669
 #, java-format
@@ -961,16 +957,13 @@ msgid "Environment with name \"{0}\" could not be found."
 msgstr "Не удалось найти среду с именем «{0}»."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1682
-#, fuzzy
-#| msgid "Environment \"{0}\" could not be found."
 msgid "Environment could not be found using provided details."
-msgstr "Не удалось найти среду «{0}»."
+msgstr "Не удалось найти среду с использованием предоставленных сведений."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1687
-#, fuzzy, java-format
-#| msgid "Environment \"{0}\" could not be found."
+#, java-format
 msgid "Environment \"{0}\" specified more than once."
-msgstr "Не удалось найти среду «{0}»."
+msgstr "Среда «{0}» указана более одного раза."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1795
 #, java-format
@@ -1153,10 +1146,8 @@ msgid "Unit \"{0}\" has no subscription for product \"{1}\"."
 msgstr "У модуля «{0}» нет подписки на продукт «{1}»."
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:199
-#, fuzzy
-#| msgid "Quantity value must be greater than 0."
 msgid "Quantity value must be greater than 0"
-msgstr "Количество должно быть больше 0."
+msgstr "Количество должно быть больше 0"
 
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:242
 #, java-format
@@ -1214,10 +1205,8 @@ msgid "One of the content does not exist in the environment anymore: {0}"
 msgstr "Часть данных больше не существует в окружении: {0}"
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:367
-#, fuzzy
-#| msgid "Source and destination units must belong to the same organization"
 msgid "Two or more environments belong to different organizations"
-msgstr "Источник и получатель должны принадлежать одной организации"
+msgstr "Две или более среды принадлежат разным организациям"
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:398
 msgid "No environment specified, or environment lacks owner information"
@@ -1915,12 +1904,13 @@ msgid "The following override values are invalid: {0}"
 msgstr "Следующие значения переопределения недопустимы: {0}"
 
 #: src/main/java/org/candlepin/util/ContentOverrideValidator.java:145
-#, fuzzy, java-format
-#| msgid "The following override values are invalid: {0}"
+#, java-format
 msgid ""
 "The following overrides have values longer than the maximum length of {0}: "
 "{1}"
-msgstr "Следующие значения переопределения недопустимы: {0}"
+msgstr ""
+"Следующие переопределения имеют значения, превышающие максимальную длину {0}:"
+" {1}"
 
 #: src/main/java/org/candlepin/util/PropertyValidator.java:79
 #, java-format
