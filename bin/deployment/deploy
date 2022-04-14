@@ -12,10 +12,12 @@ prepare_classpath() {
     jar xf $(find ${PROJECT_DIR}/build -name 'candlepin*.war' | head -n 1)
     chmod -R 744 ${CP_EXTRACT_DIR}
     cd -
-    export CP_LIQUIBASE_CLASSPATH="${CP_EXTRACT_DIR}/WEB-INF/lib"
+    export CP_EXTRACT_CLASSPATH="${CP_EXTRACT_DIR}/WEB-INF/lib"
 }
 
 gendb() {
+    prepare_classpath
+
     if [ "$USE_MYSQL" == "1" ]; then
         init_mysql_jdbc $APP_DB_NAME
     else
@@ -40,8 +42,6 @@ gendb() {
         MESSAGE="Updating Database"
         CHANGELOG="changelog-update.xml"
     fi
-
-    prepare_classpath
 
     info_msg "$MESSAGE"
     LQCOMMAND="${PROJECT_DIR}/bin/deployment/liquibase.sh --driver=${JDBC_DRIVER} \

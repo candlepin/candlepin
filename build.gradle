@@ -199,7 +199,6 @@ dependencies {
 
     // DB Drivers
     runtimeOnly "org.postgresql:postgresql:42.3.3"
-    runtimeOnly "mysql:mysql-connector-java:8.0.28"
     runtimeOnly "org.mariadb.jdbc:mariadb-java-client:3.0.4"
 
     testRuntime "org.hsqldb:hsqldb:2.6.1"

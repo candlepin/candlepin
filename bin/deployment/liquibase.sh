@@ -19,7 +19,7 @@ MAIN_CLASS=liquibase.integration.commandline.LiquibaseCommandLine
 BASE_FLAGS=""
 BASE_OPTIONS=""
 
-CP_CLASSPATH=${CP_LIQUIBASE_CLASSPATH:-/var/lib/tomcat/webapps/candlepin/WEB-INF/lib}
+CP_CLASSPATH=${CP_EXTRACT_CLASSPATH:-/var/lib/tomcat/webapps/candlepin/WEB-INF/lib}
 CLASSPATH=$(JARS=("$CP_CLASSPATH"/*.jar); IFS=:; echo "${JARS[*]}")
 
 # Set parameters
