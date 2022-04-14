@@ -1028,16 +1028,16 @@ public class ConsumerResource implements ConsumersApi {
             // activation keys have higher priority than those on consumer
             this.updateSystemPurposeData(consumer, consumerToCreate);
 
-            if (keys.size() > 0) {
-                consumerBindUtil.handleActivationKeys(consumerToCreate, keys, owner.isAutobindDisabled());
-            }
-
             // If no service level was specified, and the owner has a default set, use it:
             String csl = consumerToCreate.getServiceLevel();
             if ((csl == null || csl.isEmpty())) {
                 consumerToCreate.setServiceLevel(owner.getDefaultServiceLevel() != null ?
                     owner.getDefaultServiceLevel() :
                     "");
+            }
+
+            if (keys.size() > 0) {
+                consumerBindUtil.handleActivationKeys(consumerToCreate, keys, owner.isAutobindDisabled());
             }
 
             // This should update compliance on consumerToCreate, but not call the curator
