@@ -52,8 +52,10 @@ class Candlepin
       create_trusted_user_client(username)
     elsif not cert.nil?
       create_ssl_client(cert, key)
-    else
+    elsif not username.nil?
       create_basic_client(username, password)
+    else
+      create_no_auth_client
     end
 
     # Prime variables for later population/use
@@ -336,6 +338,10 @@ class Candlepin
     get("/owners/#{owner}")
   end
 
+  def get_owner_with_activation_key(owner, activation_keys)
+    get("/owners/#{owner}", {:owner => owner, :activation_keys => activation_keys})
+  end
+
   # expects an owner key
   def get_owner_info(owner)
     get("/owners/#{owner}/info")
@@ -386,6 +392,20 @@ class Candlepin
     owner['parentOwner'] = parent if !parent.nil?
 
     post('/owners', {}, owner)
+  end
+
+  def create_owner_with_activation_key(key, owner_key, activation_keys, username=nil)
+    owner = {
+      'key' => key,
+      'displayName' => key
+    }
+
+    params = {}
+    params[:owner] = owner_key if owner_key
+    params[:activation_keys] = activation_keys if activation_keys
+    params[:username] = username if username
+
+    post('/owners', params, owner)
   end
 
   def update_owner(owner_key, owner)
@@ -801,14 +821,18 @@ class Candlepin
 
   # This is a legacy registration endpoint
   # (newer subscription-manager clients will not be using it)
-  def create_consumer_in_environments(env_ids, name, type=:system)
+  def create_consumer_in_environments(env_ids, name, type=:system, owner_key=nil, activation_keys=[])
     consumer = {
         :type => {:label => type},
         :name => name
-      }
+    }
 
-      params = {}
-      return post("/environments/#{env_ids}/consumers", params, consumer)
+    params = {}
+    params[:owner] = owner_key unless owner_key.nil?
+    params[:activation_keys] = activation_keys.join(",") if activation_keys.length > 1
+    params[:activation_keys] = activation_keys[0] if activation_keys.length == 1
+
+    return post("/environments/#{env_ids}/consumers", params, consumer)
   end
 
   def get_product_owners(product_ids)
@@ -897,6 +921,11 @@ class Candlepin
 
   def get_product_by_uuid(product_uuid)
     get("/products/#{product_uuid}")
+  end
+
+  def get_product_with_activation_key(owner_key, product_id, activation_keys)
+    get("/products/#{product_id}",
+        {:owner => owner_key, :activation_keys => activation_keys})
   end
 
   def delete_product(owner_key, product_id)
@@ -1760,6 +1789,12 @@ class Candlepin
   def create_basic_client(username=nil, password=nil)
     @client = RestClient::Resource.new(@base_url,
                                        :user => username, :password => password,
+                                       :headers => {:accept_language => @lang},
+                                       :verify_ssl => @verify_ssl)
+  end
+
+  def create_no_auth_client
+    @client = RestClient::Resource.new(@base_url,
                                        :headers => {:accept_language => @lang},
                                        :verify_ssl => @verify_ssl)
   end

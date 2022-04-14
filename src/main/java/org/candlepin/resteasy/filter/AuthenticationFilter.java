@@ -14,6 +14,7 @@
  */
 package org.candlepin.resteasy.filter;
 
+import org.candlepin.auth.ActivationKeyAuth;
 import org.candlepin.auth.AuthProvider;
 import org.candlepin.auth.BasicAuth;
 import org.candlepin.auth.CloudRegistrationAuth;
@@ -29,11 +30,8 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotAuthorizedException;
-import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.resteasy.AnnotationLocator;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import org.jboss.resteasy.core.ResteasyContext;
@@ -45,8 +43,10 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Priority;
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -63,28 +63,23 @@ import javax.ws.rs.ext.Provider;
 @Priority(Priorities.AUTHENTICATION)
 @Provider
 public class AuthenticationFilter implements ContainerRequestFilter {
-    private static Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
+    private static final Logger log = LoggerFactory.getLogger(AuthenticationFilter.class);
 
     @Context
     private HttpServletRequest request;
 
-    private ConsumerCurator consumerCurator;
-    private Injector injector;
-    private Configuration config;
-    private AnnotationLocator annotationLocator;
-    private List<AuthProvider> providers = new ArrayList<>();
+    private final Injector injector;
+    private final Configuration config;
+    private final AnnotationLocator annotationLocator;
+    private final List<AuthProvider> providers = new ArrayList<>();
 
     @Inject
-    public AuthenticationFilter(Configuration config,
-        ConsumerCurator consumerCurator,
-        DeletedConsumerCurator deletedConsumerCurator,
-        Injector injector,
+    public AuthenticationFilter(Configuration config, Injector injector,
         AnnotationLocator annotationLocator) {
 
-        this.consumerCurator = consumerCurator;
-        this.injector = injector;
-        this.config = config;
-        this.annotationLocator = annotationLocator;
+        this.injector = Objects.requireNonNull(injector);
+        this.config = Objects.requireNonNull(config);
+        this.annotationLocator = Objects.requireNonNull(annotationLocator);
 
         setupAuthStrategies();
     }
@@ -126,6 +121,11 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         if (config.getBoolean(ConfigProperties.TRUSTED_AUTHENTICATION)) {
             providers.add(injector.getInstance(TrustedConsumerAuth.class));
             providers.add(injector.getInstance(TrustedUserAuth.class));
+        }
+
+        // activation key
+        if (config.getBoolean(ConfigProperties.ACTIVATION_KEY_AUTHENTICATION)) {
+            providers.add(injector.getInstance(ActivationKeyAuth.class));
         }
     }
 

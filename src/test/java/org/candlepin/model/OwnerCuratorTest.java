@@ -27,7 +27,6 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -41,9 +40,6 @@ import javax.persistence.RollbackException;
 
 
 
-/**
- *
- */
 public class OwnerCuratorTest extends DatabaseTestFixture {
 
     @Test
@@ -373,8 +369,20 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     public void throwsWhenOwnerMissing() {
         String unknownOwnerKey = "test_key";
 
-        Assertions.assertThrows(OwnerNotFoundException.class,
+        assertThrows(OwnerNotFoundException.class,
             () -> this.ownerCurator.getOwnerContentAccess(unknownOwnerKey));
+    }
+
+    @Test
+    void ownerDoesNotExist() {
+        assertFalse(this.ownerCurator.existsByKey("test_key"));
+    }
+
+    @Test
+    void ownerExists() {
+        Owner owner = this.createOwner("test_key");
+
+        assertTrue(this.ownerCurator.existsByKey(owner.getKey()));
     }
 
 }

@@ -14,14 +14,11 @@
  */
 package org.candlepin.resteasy;
 
-import com.google.inject.Injector;
-
 import org.apache.commons.lang3.ArrayUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -30,17 +27,13 @@ import javax.inject.Inject;
  * interfaces, so that we can use SecurityHole and other annotations on generated resource implementations.
  */
 public class AnnotationLocator {
-    private static final Logger log = LoggerFactory.getLogger(AnnotationLocator.class);
 
-    private MethodLocator methodLocator;
-
-    private Injector injector;
+    private final MethodLocator methodLocator;
 
     @Inject
     public AnnotationLocator(MethodLocator methodLocator) {
         // Maintain the insertion order for nice output in debug statement
-        this.methodLocator = methodLocator;
-        this.injector = injector;
+        this.methodLocator = Objects.requireNonNull(methodLocator);
     }
 
     /**

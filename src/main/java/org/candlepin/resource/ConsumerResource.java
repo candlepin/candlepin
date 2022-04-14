@@ -26,8 +26,8 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
+import org.candlepin.auth.ActivationKeyPrincipal;
 import org.candlepin.auth.ConsumerPrincipal;
-import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SecurityHole;
 import org.candlepin.auth.SubResource;
@@ -175,6 +175,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Provider;
@@ -891,8 +892,8 @@ public class ConsumerResource implements ConsumersApi {
     }
 
     @Override
-    @SecurityHole(noAuth = true)
     @Transactional
+    @SecurityHole(activationKey = true)
     public ConsumerDTO createConsumer(ConsumerDTO dto, String userName, String ownerKey,
         String activationKeys, Boolean identityCertCreation) {
 
@@ -946,15 +947,10 @@ public class ConsumerResource implements ConsumersApi {
         // API:registerConsumer
         Set<String> keyStrings = splitKeys(activationKeys);
 
-        // Only let NoAuth principals through if there are activation keys to consider:
-        if ((principal instanceof NoAuthPrincipal) && keyStrings.isEmpty()) {
-            throw new ForbiddenException(i18n.tr("Insufficient permissions"));
-        }
-
         validateOnKeyStrings(keyStrings, owner.getKey(), userName);
 
         // Raise an exception if none of the keys specified exist for this owner.
-        List<ActivationKey> keys = checkActivationKeys(principal, owner, keyStrings);
+        List<ActivationKey> keys = findActivationKeys(principal, owner, keyStrings);
 
         userName = setUserName(consumer, principal, userName);
         checkConsumerName(consumer);
@@ -1064,6 +1060,29 @@ public class ConsumerResource implements ConsumersApi {
         }
     }
 
+    private List<ActivationKey> findActivationKeys(
+        Principal principal, Owner owner, Set<String> keyStrings) {
+        if (keyStrings.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        List<ActivationKey> foundKeys = this.activationKeyCurator.findByKeyNames(owner.getKey(), keyStrings);
+
+        Set<String> found = foundKeys.stream()
+            .map(ActivationKey::getName)
+            .collect(Collectors.toSet());
+
+        if (!(principal instanceof ActivationKeyPrincipal)) {
+            for (String key : keyStrings) {
+                if (!found.contains(key)) {
+                    log.warn("Activation key \"{}\" not found for organization \"{}\".", key, owner.getKey());
+                }
+            }
+        }
+
+        return foundKeys;
+    }
+
     /**
      * Validates the incoming content access mode value and sets it on the destination consumer if
      * necessary.
@@ -1159,26 +1178,6 @@ public class ConsumerResource implements ConsumersApi {
                     i18n.tr("You may not create a manifest consumer via Subscription Manager."));
             }
         }
-    }
-
-    private List<ActivationKey> checkActivationKeys(Principal principal, Owner owner,
-        Set<String> keyStrings) throws BadRequestException {
-        List<ActivationKey> keys = new ArrayList<>();
-        for (String keyString : keyStrings) {
-            ActivationKey key = null;
-            try {
-                key = findKey(keyString, owner);
-                keys.add(key);
-            }
-            catch (NotFoundException e) {
-                log.warn(e.getMessage(), e);
-            }
-        }
-        if ((principal instanceof NoAuthPrincipal) && keys.isEmpty()) {
-            throw new BadRequestException(
-                i18n.tr("None of the activation keys specified exist for this org."));
-        }
-        return keys;
     }
 
     private String setUserName(ConsumerDTO consumer, Principal principal, String userName) {
@@ -1280,17 +1279,6 @@ public class ConsumerResource implements ConsumersApi {
                 log.debug("   {}", activationKey.getName());
             }
         }
-    }
-
-    private ActivationKey findKey(String keyName, Owner owner) {
-        ActivationKey key = activationKeyCurator.getByKeyName(owner, keyName);
-
-        if (key == null) {
-            throw new NotFoundException(i18n.tr("Activation key \"{0}\" not found for organization \"{1}\".",
-                keyName, owner.getKey()));
-        }
-
-        return key;
     }
 
     private void verifyPersonConsumer(ConsumerDTO consumer, ConsumerType type, Owner owner, String username,

@@ -348,7 +348,7 @@ public class EnvironmentResource implements EnvironmentsApi {
     }
 
     @Override
-    @SecurityHole(noAuth = true)
+    @SecurityHole(activationKey = true)
     public ConsumerDTO createConsumerInEnvironment(String envId, ConsumerDTO consumer,
         String userName, String activationKeys) throws BadRequestException {
 
