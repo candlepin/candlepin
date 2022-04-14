@@ -25,6 +25,8 @@ public class SystemPrincipal extends Principal {
      */
     private static final long serialVersionUID = -2122749997316786617L;
 
+    public static final String NAME = "System";
+
     @Override
     public String getType() {
         return "system";
@@ -32,7 +34,7 @@ public class SystemPrincipal extends Principal {
 
     @Override
     public String getName() {
-        return "System";
+        return NAME;
     }
 
     @Override
