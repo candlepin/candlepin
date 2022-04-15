@@ -15,7 +15,7 @@
 
 Name: candlepin
 Version: 3.1.28
-Release: 1%{?dist}
+Release: 4%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -237,6 +237,10 @@ fi
 
 #raw
 %changelog
+* Fri Apr 15 2022 Nikos Moumoulidis <nmoumoul@redhat.com> 3.1.28-4
+- 2069139: Added the new Candlepin Authority R2 Certificate
+  (joshmalbrecht@gmail.com)
+
 * Thu Apr 15 2021 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 3.1.28-1
 - Automatic commit of package [candlepin] release [3.1.27-1].
   (3229038+candlepin-bot@users.noreply.github.com)
