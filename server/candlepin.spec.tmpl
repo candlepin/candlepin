@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.16
+Version: 4.0.17
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -233,6 +233,18 @@ fi
 
 #raw
 %changelog
+* Fri Apr 15 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.17-1
+- 2061787: Added null check for service level on new consumer
+  (joshmalbrecht@gmail.com)
+- 1976152: Update permission on candlepin log directory (wpoteat@redhat.com)
+- Added the new Candlepin Authority R2 Certificate (joshmalbrecht@gmail.com)
+- Changed entity versions to a 64bit value (crog@redhat.com)
+- Upgrade artemis to 2.20.0 (nmoumoul@redhat.com)
+- Fixed a potential collision with product entity versioning (crog@redhat.com)
+- 2044821: Limit compliance recalculations (ojanus@redhat.com)
+- 2059137: Reduce the facts accepted by the compliance status hasher
+  (ojanus@redhat.com)
+
 * Tue Feb 22 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.16-1
 - 1964376: Fix to include products from new entitlements (selected via
   auto-attach or bulk-pool attach) as entitled products for
