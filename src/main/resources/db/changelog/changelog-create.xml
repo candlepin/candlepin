@@ -1262,4 +1262,5 @@
     <include file="db/changelog/20220314130000-64bit_entity_versions.xml"/>
     <include file="db/changelog/20220328090000-accommodate_large_overrides.xml"/>
     <include file="db/changelog/20220329140000-add_consumer_name_to_cp_deleted_consumers.xml"/>
+    <include file="db/changelog/20220329154201-owner-product-key-change.xml"/>
 </databaseChangeLog>

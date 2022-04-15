@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20220329154201-1" author="wpoteat">
+        <addColumn tableName="cp2_owner_products">
+            <column name="product_id" type="VARCHAR(32)"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20220329154201-2" author="wpoteat" dbms="postgresql">
+        <sql>
+            UPDATE cp2_owner_products op
+            SET product_id = prod.product_id
+                FROM cp2_products prod
+                WHERE op.product_uuid = prod.uuid
+        </sql>
+    </changeSet>
+
+    <changeSet id="20220329154201-3" author="wpoteat"  dbms="mysql, mariadb">
+        <sql>
+            UPDATE cp2_owner_products op
+            JOIN cp2_products p ON p.uuid = op.product_uuid
+            SET op.product_id = p.product_id
+        </sql>
+    </changeSet>
+
+    <!-- On MySQL/MariaDB, we need to drop *all* foreign keys before we can drop/add our primary key -->
+    <changeSet id="20220329154201-4" author="wpoteat" dbms="mysql, mariadb">
+        <dropAllForeignKeyConstraints baseTableName="cp2_owner_products"/>
+    </changeSet>
+
+    <changeSet id="20220329154201-5" author="wpoteat">
+        <dropPrimaryKey tableName="cp2_owner_products" constraintName="cp2_owner_products_pk"/>
+        <addPrimaryKey tableName="cp2_owner_products" columnNames="owner_id, product_id"
+            constraintName="cp2_owner_products_pk"/>
+    </changeSet>
+
+    <!-- On MySQL/MariaDB, the primary key is re-established, and we can re-add the foreign keys -->
+    <changeSet id="20220329154201-6" author="wpoteat" dbms="mysql, mariadb">
+        <addForeignKeyConstraint constraintName="cp2_owner_products_fk1" baseTableName="cp2_owner_products"
+            baseColumnNames="owner_id" referencedTableName="cp_owner" referencedColumnNames="id"/>
+        <addForeignKeyConstraint constraintName="cp2_owner_products_fk2" baseTableName="cp2_owner_products"
+            baseColumnNames="product_uuid" referencedTableName="cp2_products" referencedColumnNames="uuid"/>
+    </changeSet>
+
+</databaseChangeLog>

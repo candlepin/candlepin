@@ -499,6 +499,48 @@ describe 'Product Versioning' do
     end
   end
 
+  it "add and remove content without causing db write issues" do
+    owner1 = create_owner random_string('test_owner')
+    contents = []
+    (1..10).each do |i|
+      contents[i] = @cp.create_content(
+        owner1["key"],
+        "content_name#{i}",
+        "content_id#{i}",
+        "content_label#{i}",
+        "content_type#{i}",
+        "content_vendor#{i}")
+    end
+
+    # Add and remove content to see if it causes concurrent update issues on the product
+    prod1 = @cp.create_product(owner1["key"], random_string("product"), random_string("name"))
+    (1..25).each do |w|
+      threads = []
+      (1..10).each do |i|
+        threads[i] = Thread.new do
+          @cp.add_content_to_product(owner1["key"], prod1.id, contents[i].id)
+        end
+      end
+      (1..10).each do |i|
+        threads[i].join
+      end
+      prod1 = @cp.get_product(owner1["key"], prod1.id)
+      expect(prod1['productContent'].size).to eq(10)
+
+      threads = []
+      (1..10).each do |i|
+        threads[i] = Thread.new do
+          @cp.remove_content_from_product(owner1["key"], prod1.id, contents[i].id)
+        end
+      end
+      (1..10).each do |i|
+        threads[i].join
+      end
+      prod1 = @cp.get_product(owner1["key"], prod1.id)
+      expect(prod1['productContent'].size).to eq(0)
+    end
+  end
+
   it 'should support n-tier product versioning for provided products' do
     ntier_versioning_test do |owner, parent_product, product|
       @cp.update_product(owner['key'], parent_product['id'], {

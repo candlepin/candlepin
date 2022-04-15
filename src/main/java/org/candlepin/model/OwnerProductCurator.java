@@ -37,6 +37,8 @@ import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
@@ -57,15 +59,49 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         super(OwnerProduct.class);
     }
 
-    @Transactional
-    public OwnerProduct getOwnerProductByProductId(Owner owner, String productId) {
-        return (OwnerProduct) this.createSecureCriteria()
-            .createAlias("owner", "owner")
-            .createAlias("product", "product")
-            .add(Restrictions.eq("owner.id", owner.getId()))
-            .add(Restrictions.eq("product.id", productId))
-            .uniqueResult();
+    /**
+     * Determines if a productId exists for a given owner while attempting to gain a lock on it
+     * @param owner
+     *  The organization whose product we are looking for
+     * @param productId
+     *  The ID of the product
+     * @param lockMode
+     *  The lock mode to use
+     *
+     * @return
+     *  boolean to show that the product exists and that a lock was achieved
+     */
+    public boolean lockOwnerProduct(Owner owner, String productId, LockModeType lockMode) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
+        if (productId == null || productId.isEmpty()) {
+            throw new IllegalArgumentException("productId is null or empty");
+        }
+
+        if (!(lockMode == LockModeType.PESSIMISTIC_READ || lockMode == LockModeType.PESSIMISTIC_WRITE)) {
+            throw new IllegalArgumentException("Unsupported lock mode: " + lockMode);
+        }
+
+
+        String jpql = "SELECT op FROM OwnerProduct op " +
+            "WHERE op.ownerId = :owner_id AND op.productId = :product_id";
+
+        try {
+            this.getEntityManager()
+                .createQuery(jpql, OwnerProduct.class)
+                .setParameter("owner_id", owner.getId())
+                .setParameter("product_id", productId)
+                .setLockMode(lockMode)
+                .getSingleResult();
+            return true;
+        }
+        catch (NoResultException nre) {
+            return false;
+        }
     }
+
 
     public Product getProductById(Owner owner, String productId) {
         return this.getProductById(owner.getId(), productId);
@@ -107,7 +143,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         //     join objects, so filtering/sorting via CandlepinQuery is incorrect or broken
         //  3. The second query Hibernate performs uses the IN operator without any protection for
         //     the MySQL/MariaDB element limits.
-        String jpql = "SELECT op.owner.id FROM OwnerProduct op WHERE op.product.id = :product_id";
+        String jpql = "SELECT op.ownerId FROM OwnerProduct op WHERE op.productId = :product_id";
 
         List<String> ids = this.getEntityManager()
             .createQuery(jpql, String.class)
@@ -282,16 +318,20 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      */
     @Transactional
     public boolean productExists(Owner owner, String productId) {
-        String jpql = "SELECT count(op) FROM OwnerProduct op " +
-            "WHERE op.owner.id = :owner_id AND op.product.id = :product_id";
+        String jpql = "SELECT op FROM OwnerProduct op " +
+            "WHERE op.ownerId = :owner_id AND op.productId = :product_id";
 
-        long count = (Long) this.getEntityManager()
-            .createQuery(jpql)
-            .setParameter("owner_id", owner.getId())
-            .setParameter("product_id", productId)
-            .getSingleResult();
-
-        return count > 0;
+        try {
+            this.getEntityManager()
+                .createQuery(jpql)
+                .setParameter("owner_id", owner.getId())
+                .setParameter("product_id", productId)
+                .getSingleResult();
+            return true;
+        }
+        catch (NoResultException nre) {
+            return false;
+        }
     }
 
     /**
