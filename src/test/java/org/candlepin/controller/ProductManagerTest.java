@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -43,7 +44,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 
 
@@ -122,7 +125,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
     public void testUpdateProduct(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner", "Test Owner");
@@ -151,7 +154,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
     public void testUpdateProductConvergeWithExisting(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
@@ -182,7 +185,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
     public void testUpdateProductDivergeFromExisting(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
@@ -279,7 +282,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertThrows(IllegalStateException.class, () -> this.productManager.removeProduct(owner, product));
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
     public void testRemoveProductContent(boolean regenCerts) {
         Owner owner = this.createOwner("test-owner", "Test Owner");
@@ -316,7 +319,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         }
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
     public void testRemoveContentFromSharedProduct(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
@@ -394,7 +397,7 @@ public class ProductManagerTest extends DatabaseTestFixture {
         verifyZeroInteractions(this.mockEntCertGenerator);
     }
 
-    @ParameterizedTest
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
     @ValueSource(strings = {"false", "true"})
     public void testAddContentToSharedProduct(boolean regenCerts) {
         Owner owner1 = this.createOwner("test-owner-1", "Test Owner 1");
@@ -686,4 +689,74 @@ public class ProductManagerTest extends DatabaseTestFixture {
         assertEquals(2, output.getProvidedProducts().size());
     }
 
+    @Test
+    public void testCreateProductFiltersNullValuedAttributes() {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        ProductInfo pinfo = mock(ProductInfo.class);
+
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("attrib-1", "value 1");
+        attributes.put("attrib-2", null);
+        attributes.put("attrib-3", "value 3");
+
+        doReturn(attributes).when(pinfo).getAttributes();
+        doReturn("p1").when(pinfo).getId();
+        doReturn("prod1").when(pinfo).getName();
+
+        Product entity = this.productManager.createProduct(owner, pinfo);
+
+        assertNotNull(entity);
+        assertNotNull(entity.getAttributes());
+
+        for (Map.Entry<String, String> entry : attributes.entrySet()) {
+            if (entry.getValue() != null) {
+                assertTrue(entity.hasAttribute(entry.getKey()), "expected attribute is not present: " +
+                    entry.getKey());
+
+                assertEquals(entry.getValue(), entity.getAttributeValue(entry.getKey()));
+            }
+            else {
+                assertFalse(entity.hasAttribute(entry.getKey()), "unexpected attribute is present: " +
+                    entry.getKey());
+            }
+        }
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ValueSource(strings = {"false", "true"})
+    public void testUpdateProductFiltersNullValuedAttributes(boolean regenCerts) {
+        Owner owner = this.createOwner("test-owner", "Test Owner");
+        Product base = TestUtil.createProduct("p1", "prod1");
+        base.setAttributes(Map.of("attrib-1", "original value"));
+        this.createProduct(base, owner);
+
+        ProductInfo pinfo = mock(ProductInfo.class);
+
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("attrib-1", "value 1");
+        attributes.put("attrib-2", null);
+        attributes.put("attrib-3", "value 3");
+
+        doReturn(attributes).when(pinfo).getAttributes();
+        doReturn(base.getId()).when(pinfo).getId();
+        doReturn(base.getName()).when(pinfo).getName();
+
+        Product entity = this.productManager.updateProduct(owner, pinfo, regenCerts);
+
+        assertNotNull(entity);
+        assertNotNull(entity.getAttributes());
+
+        for (Map.Entry<String, String> entry : attributes.entrySet()) {
+            if (entry.getValue() != null) {
+                assertTrue(entity.hasAttribute(entry.getKey()), "expected attribute is not present: " +
+                    entry.getKey());
+
+                assertEquals(entry.getValue(), entity.getAttributeValue(entry.getKey()));
+            }
+            else {
+                assertFalse(entity.hasAttribute(entry.getKey()), "unexpected attribute is present: " +
+                    entry.getKey());
+            }
+        }
+    }
 }

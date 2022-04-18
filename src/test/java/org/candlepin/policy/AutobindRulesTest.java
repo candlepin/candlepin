@@ -313,8 +313,8 @@ public class AutobindRulesTest {
         //only enforce cores on pool 2:
         Product sku2 = mockStackingProduct("prod2", "Test Stack product", "1", "1");
         sku2.setAttribute(Product.Attributes.CORES, "6");
-        sku2.setAttribute(Product.Attributes.RAM, null);
-        sku2.setAttribute(Product.Attributes.SOCKETS, null);
+        sku2.removeAttribute(Product.Attributes.RAM);
+        sku2.removeAttribute(Product.Attributes.SOCKETS);
         sku2.addProvidedProduct(provided);
 
         Pool pool2 = TestUtil.createPool(owner, sku2)

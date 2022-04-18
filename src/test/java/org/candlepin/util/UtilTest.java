@@ -395,8 +395,8 @@ public class UtilTest {
         public void testToMap() {
             List<AttributeDTO> attribList = List.of(
                 buildAttributeDTO("test_attrib-1", "test_value"),
-                buildAttributeDTO("test_attrib-2", ""),
-                buildAttributeDTO("test_attrib-3", null));
+                buildAttributeDTO("test_attrib-2", "test_value-2"),
+                buildAttributeDTO("test_attrib-3", ""));
 
             Map<String, String> attribMap = Util.toMap(attribList);
 
@@ -513,6 +513,31 @@ public class UtilTest {
 
                 assertTrue(attribMap.containsKey(attrib.getName()));
                 assertEquals(attrib.getValue(), attribMap.get(attrib.getName()));
+            }
+        }
+
+        @Test
+        public void testToMapDiscardsAttributesWithNullValues() {
+            List<AttributeDTO> attribList = List.of(
+                buildAttributeDTO("test_attrib-1", "value 1"),
+                buildAttributeDTO("test_attrib-2", null),
+                buildAttributeDTO("test_attrib-3", "value 3"),
+                buildAttributeDTO("test_attrib-4", null),
+                buildAttributeDTO("test_attrib-5", "value 5"));
+
+            Map<String, String> attribMap = Util.toMap(attribList);
+
+            assertNotNull(attribMap);
+            assertEquals(3, attribMap.size());
+
+            for (AttributeDTO attrib : attribList) {
+                if (attrib.getValue() != null) {
+                    assertTrue(attribMap.containsKey(attrib.getName()));
+                    assertEquals(attrib.getValue(), attribMap.get(attrib.getName()));
+                }
+                else {
+                    assertFalse(attribMap.containsKey(attrib.getName()));
+                }
             }
         }
     }
