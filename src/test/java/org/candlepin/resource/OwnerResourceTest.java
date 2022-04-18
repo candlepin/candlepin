@@ -56,6 +56,7 @@ import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductContentDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.v1.UeberCertificateDTO;
@@ -274,21 +275,21 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             this.principalProvider);
     }
 
-    private org.candlepin.dto.api.v1.ProductDTO buildTestProductDTO() {
-        org.candlepin.dto.api.v1.ProductDTO dto = TestUtil.createProductDTO("test_product");
-        dto.getAttributes().add(createAttribute(Product.Attributes.VERSION, "1.0"));
-        dto.getAttributes().add(createAttribute(Product.Attributes.VARIANT, "server"));
-        dto.getAttributes().add(createAttribute(Product.Attributes.TYPE, "SVC"));
-        dto.getAttributes().add(createAttribute(Product.Attributes.ARCHITECTURE, "ALL"));
-
-        return dto;
+    private ProductDTO buildTestProductDTO() {
+        return TestUtil.createProductDTO("test_product")
+            .addAttributesItem(this.createAttribute(Product.Attributes.VERSION, "1.0"))
+            .addAttributesItem(this.createAttribute(Product.Attributes.VARIANT, "server"))
+            .addAttributesItem(this.createAttribute(Product.Attributes.TYPE, "SVC"))
+            .addAttributesItem(this.createAttribute(Product.Attributes.ARCHITECTURE, "ALL"));
     }
 
     private AttributeDTO createAttribute(String name, String value) {
-        return new AttributeDTO().name(name).value(value);
+        return new AttributeDTO()
+            .name(name)
+            .value(value);
     }
 
-    private void addContent(org.candlepin.dto.api.v1.ProductDTO product, ContentDTO dto) {
+    private void addContent(ProductDTO product, ContentDTO dto) {
         if (dto == null || dto.getId() == null) {
             throw new IllegalArgumentException("dto references incomplete content");
         }
@@ -2632,15 +2633,15 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testCreateProductResource() {
         Owner owner = this.createOwner("Example-Corporation");
-        org.candlepin.dto.api.v1.ProductDTO pdto = this.buildTestProductDTO();
+        ProductDTO pdto = this.buildTestProductDTO();
 
         assertNull(this.ownerProductCurator.getProductById(owner.getKey(), pdto.getId()));
 
-        org.candlepin.dto.api.v1.ProductDTO result = this.ownerResource
+        ProductDTO result = this.ownerResource
             .createProductByOwner(owner.getKey(), pdto);
         Product entity = this.ownerProductCurator.getProductById(owner, pdto.getId());
-        org.candlepin.dto.api.v1.ProductDTO expected = this.modelTranslator.translate(entity,
-            org.candlepin.dto.api.v1.ProductDTO.class);
+        ProductDTO expected = this.modelTranslator.translate(entity,
+            ProductDTO.class);
 
         assertNotNull(result);
         assertNotNull(entity);
@@ -2648,20 +2649,88 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testCreateProductWithAttributes() {
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("attrib-1", "value-1");
+        attributes.put("attrib-2", "value-2");
+        attributes.put("attrib-3", "value-3");
+
+        Owner owner = this.createOwner("Test org");
+        ProductDTO pdto = new ProductDTO()
+            .id("test_prod-1")
+            .name("test product 1");
+
+        attributes.forEach((k, v) -> pdto.addAttributesItem(this.createAttribute(k, v)));
+
+        ProductDTO output = this.ownerResource.createProductByOwner(owner.getKey(), pdto);
+
+        assertNotNull(output);
+        assertEquals(pdto.getId(), output.getId());
+        assertEquals(pdto.getName(), output.getName());
+        assertNotNull(output.getAttributes());
+        assertEquals(attributes.size(), output.getAttributes().size());
+
+        for (AttributeDTO attrib : output.getAttributes()) {
+            assertTrue(attributes.containsKey(attrib.getName()));
+            assertEquals(attributes.get(attrib.getName()), attrib.getValue());
+        }
+    }
+
+    @Test
+    public void testCreateProductFiltersUnusableAttributes() {
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("attrib-1", "value-1");
+        attributes.put("attrib-2", "value-2");
+        attributes.put("attrib-3", "value-3");
+        attributes.put("", "dropped");
+        attributes.put("dropped", null);
+
+        Map<String, String> expected = new HashMap<>();
+        expected.put("attrib-1", "value-1");
+        expected.put("attrib-2", "value-2");
+        expected.put("attrib-3", "value-3");
+
+        Owner owner = this.createOwner("Test org");
+        ProductDTO pdto = new ProductDTO()
+            .id("test_prod-1")
+            .name("test product 1");
+
+        attributes.forEach((k, v) -> pdto.addAttributesItem(this.createAttribute(k, v)));
+
+        // Add some dud attributes to ensure filtering is occurring for other types of malformed
+        // attribute data
+        pdto.addAttributesItem(null);
+        pdto.addAttributesItem(this.createAttribute(null, "dropped"));
+
+        ProductDTO output = this.ownerResource.createProductByOwner(owner.getKey(), pdto);
+
+        assertNotNull(output);
+        assertEquals(pdto.getId(), output.getId());
+        assertEquals(pdto.getName(), output.getName());
+        assertNotNull(output.getAttributes());
+        assertEquals(expected.size(), output.getAttributes().size());
+
+        for (AttributeDTO attrib : output.getAttributes()) {
+            assertTrue(expected.containsKey(attrib.getName()));
+            assertEquals(expected.get(attrib.getName()), attrib.getValue());
+        }
+    }
+
+    @Test
     public void testCreateProductWithContent() {
         Owner owner = this.createOwner("Example-Corporation");
         Content content = this.createContent("content-1", "content-1", owner);
-        org.candlepin.dto.api.v1.ProductDTO product = this.buildTestProductDTO();
+        ProductDTO product = this.buildTestProductDTO();
         ContentDTO contentDTO = this.modelTranslator.translate(content, ContentDTO.class);
         addContent(product, contentDTO);
 
         assertNull(this.ownerProductCurator.getProductById(owner.getKey(), product.getId()));
 
-        org.candlepin.dto.api.v1.ProductDTO result = this.ownerResource
+        ProductDTO result = this.ownerResource
             .createProductByOwner(owner.getKey(), product);
         Product entity = this.ownerProductCurator.getProductById(owner, product.getId());
-        org.candlepin.dto.api.v1.ProductDTO expected = this.modelTranslator.translate(entity,
-            org.candlepin.dto.api.v1.ProductDTO.class);
+        ProductDTO expected = this.modelTranslator.translate(entity,
+            ProductDTO.class);
 
         assertNotNull(result);
         assertNotNull(entity);
@@ -2673,16 +2742,92 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testUpdateProductWithAttributes() {
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("attrib-1", "value-1");
+        attributes.put("attrib-2", "value-2");
+        attributes.put("attrib-3", "value-3");
+
+        Owner owner = this.createOwner("Test org");
+        Product existing = this.createProduct("test_prod-1", "test product 1", owner);
+
+        assertNotNull(existing);
+        assertTrue(existing.getAttributes().isEmpty());
+
+        ProductDTO pdto = new ProductDTO()
+            .id(existing.getId());
+
+        attributes.forEach((k, v) -> pdto.addAttributesItem(this.createAttribute(k, v)));
+
+        ProductDTO output = this.ownerResource.updateProductByOwner(owner.getKey(), existing.getId(), pdto);
+
+        assertNotNull(output);
+        assertEquals(existing.getId(), output.getId());
+        assertEquals(existing.getName(), output.getName());
+        assertNotNull(output.getAttributes());
+        assertEquals(attributes.size(), output.getAttributes().size());
+
+        for (AttributeDTO attrib : output.getAttributes()) {
+            assertTrue(attributes.containsKey(attrib.getName()));
+            assertEquals(attributes.get(attrib.getName()), attrib.getValue());
+        }
+    }
+
+    @Test
+    public void testUpdateProductFiltersUnusableAttributes() {
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("attrib-1", "value-1");
+        attributes.put("attrib-2", "value-2");
+        attributes.put("attrib-3", "value-3");
+        attributes.put("", "dropped");
+        attributes.put("dropped", null);
+
+        Map<String, String> expected = new HashMap<>();
+        expected.put("attrib-1", "value-1");
+        expected.put("attrib-2", "value-2");
+        expected.put("attrib-3", "value-3");
+
+        Owner owner = this.createOwner("Test org");
+        Product existing = this.createProduct("test_prod-1", "test product 1", owner);
+
+        assertNotNull(existing);
+        assertTrue(existing.getAttributes().isEmpty());
+
+        ProductDTO pdto = new ProductDTO()
+            .id(existing.getId());
+
+        attributes.forEach((k, v) -> pdto.addAttributesItem(this.createAttribute(k, v)));
+
+        // Add some dud attributes to ensure filtering is occurring for other types of malformed
+        // attribute data
+        pdto.addAttributesItem(null);
+        pdto.addAttributesItem(this.createAttribute(null, "dropped"));
+
+        ProductDTO output = this.ownerResource.updateProductByOwner(owner.getKey(), existing.getId(), pdto);
+
+        assertNotNull(output);
+        assertEquals(existing.getId(), output.getId());
+        assertEquals(existing.getName(), output.getName());
+        assertNotNull(output.getAttributes());
+        assertEquals(expected.size(), output.getAttributes().size());
+
+        for (AttributeDTO attrib : output.getAttributes()) {
+            assertTrue(expected.containsKey(attrib.getName()));
+            assertEquals(expected.get(attrib.getName()), attrib.getValue());
+        }
+    }
+
+    @Test
     public void testUpdateProductWithoutId() {
         Owner owner = this.createOwner("Update-Product-Owner");
-        org.candlepin.dto.api.v1.ProductDTO pdto = this.buildTestProductDTO();
+        ProductDTO pdto = this.buildTestProductDTO();
 
-        org.candlepin.dto.api.v1.ProductDTO product = this.ownerResource
+        ProductDTO product = this.ownerResource
             .createProductByOwner(owner.getKey(), pdto);
-        org.candlepin.dto.api.v1.ProductDTO update = TestUtil.createProductDTO(product.getId());
+        ProductDTO update = TestUtil.createProductDTO(product.getId());
         update.setName(product.getName());
         update.getAttributes().add(createAttribute("attri", "bute"));
-        org.candlepin.dto.api.v1.ProductDTO result = this.ownerResource
+        ProductDTO result = this.ownerResource
             .updateProductByOwner(owner.getKey(), product.getId(), update);
         assertEquals("bute", result.getAttributes().get(0).getValue());
     }
@@ -2690,10 +2835,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testUpdateProductIdMismatch() {
         Owner owner = this.createOwner("Update-Product-Owner");
-        org.candlepin.dto.api.v1.ProductDTO pdto = this.buildTestProductDTO();
-        org.candlepin.dto.api.v1.ProductDTO product = this.ownerResource
+        ProductDTO pdto = this.buildTestProductDTO();
+        ProductDTO product = this.ownerResource
             .createProductByOwner(owner.getKey(), pdto);
-        org.candlepin.dto.api.v1.ProductDTO update = this.buildTestProductDTO();
+        ProductDTO update = this.buildTestProductDTO();
         update.setId("TaylorSwift");
 
         assertThrows(BadRequestException.class, () ->
@@ -2735,7 +2880,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void testUpdateLockedProductFails() {
         Owner owner = this.createOwner("test_owner");
         Product product = this.createProduct("test_product", "test_product", owner);
-        org.candlepin.dto.api.v1.ProductDTO pdto = TestUtil.createProductDTO("test_product", "updated_name");
+        ProductDTO pdto = TestUtil.createProductDTO("test_product", "updated_name");
         product.setLocked(true);
         this.productCurator.merge(product);
 
@@ -2745,8 +2890,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             this.ownerResource.updateProductByOwner(owner.getKey(), pdto.getId(), pdto)
         );
         Product entity = this.ownerProductCurator.getProductById(owner, pdto.getId());
-        org.candlepin.dto.api.v1.ProductDTO expected = this.modelTranslator.translate(entity,
-            org.candlepin.dto.api.v1.ProductDTO.class);
+        ProductDTO expected = this.modelTranslator.translate(entity,
+            ProductDTO.class);
 
         assertNotNull(entity);
         assertNotEquals(expected, pdto);
@@ -2773,10 +2918,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Product entity = this.createProduct("test_product", "test_product", owner);
 
         securityInterceptor.enable();
-        org.candlepin.dto.api.v1.ProductDTO result = this.ownerResource.getProductByOwner(owner.getKey(),
+        ProductDTO result = this.ownerResource.getProductByOwner(owner.getKey(),
             entity.getId());
-        org.candlepin.dto.api.v1.ProductDTO expected = this.modelTranslator.translate(entity,
-            org.candlepin.dto.api.v1.ProductDTO.class);
+        ProductDTO expected = this.modelTranslator.translate(entity,
+            ProductDTO.class);
 
         assertNotNull(result);
         assertEquals(expected, result);
