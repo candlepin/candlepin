@@ -642,6 +642,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             throw new IllegalArgumentException("key is null");
         }
 
+        if (value == null) {
+            throw new IllegalArgumentException("value is null");
+        }
+
         // Impl note:
         // We can't standardize the value at all here; some attributes allow null, some expect
         // empty strings, and others have their own sential values. Unless we make a concerted
@@ -708,7 +712,11 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
         this.entityVersion = null;
 
         if (attributes != null) {
-            this.attributes.putAll(attributes);
+            // Hibernate does not natively support null values in the map, so for the sake of
+            // consistency, reject any attributes that have a null value.
+            attributes.forEach((k, v) -> {
+                this.attributes.put(Objects.requireNonNull(k), Objects.requireNonNull(v));
+            });
         }
 
         return this;

@@ -17,6 +17,7 @@ package org.candlepin.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
@@ -718,5 +719,94 @@ public class ProductTest {
         assertNotEquals(p2.getEntityVersion(), p4.getEntityVersion());
 
         assertNotEquals(p3.getEntityVersion(), p4.getEntityVersion());
+    }
+
+    @Test
+    public void testSetAttribute() {
+        Product prod = new Product();
+
+        Map<String, String> attributes = prod.getAttributes();
+        assertNotNull(attributes);
+        assertTrue(attributes.isEmpty());
+
+        prod.setAttribute("key", "value");
+
+        attributes = prod.getAttributes();
+        assertNotNull(attributes);
+        assertEquals(1, attributes.size());
+        assertEquals("value", attributes.get("key"));
+    }
+
+    @Test
+    public void testSetAttributeAllowsEmptyValues() {
+        Product prod = new Product();
+
+        Map<String, String> attributes = prod.getAttributes();
+        assertNotNull(attributes);
+        assertTrue(attributes.isEmpty());
+
+        prod.setAttribute("key", "");
+
+        attributes = prod.getAttributes();
+        assertNotNull(attributes);
+        assertEquals(1, attributes.size());
+        assertEquals("", attributes.get("key"));
+    }
+
+    @Test
+    public void testSetAttributeDisallowsNullKeys() {
+        Product prod = new Product();
+        assertThrows(IllegalArgumentException.class, () -> prod.setAttribute(null, "value"));
+    }
+
+    @Test
+    public void testSetAttributeDisallowsNullValues() {
+        Product prod = new Product();
+        assertThrows(IllegalArgumentException.class, () -> prod.setAttribute("key", null));
+    }
+
+    @Test
+    public void testSetAttributes() {
+        Product prod = new Product();
+
+        Map<String, String> incoming = Map.of(
+            "attrib-1", "value-1",
+            "attrib-2", "value-2",
+            "attrib-3", "");
+
+        Map<String, String> existing = prod.getAttributes();
+        assertNotNull(existing);
+        assertTrue(existing.isEmpty());
+
+        prod.setAttributes(incoming);
+
+        existing = prod.getAttributes();
+        assertNotNull(existing);
+        assertEquals(incoming.size(), existing.size());
+
+        for (Map.Entry<String, String> attrib : existing.entrySet()) {
+            assertTrue(incoming.containsKey(attrib.getKey()));
+            assertEquals(attrib.getValue(), incoming.get(attrib.getKey()));
+        }
+    }
+
+    @Test
+    public void testSetAttributesDisallowsNullKeys() {
+        Product prod = new Product();
+
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put(null, "some value");
+
+        assertThrows(NullPointerException.class, () -> prod.setAttributes(attributes));
+    }
+
+    @Test
+    public void testSetAttributesDisallowsNullValues() {
+        Product prod = new Product();
+
+        Map<String, String> attributes = new HashMap<>();
+        attributes.put("key", null);
+
+        assertThrows(NullPointerException.class, () -> prod.setAttributes(attributes));
     }
 }
