@@ -796,12 +796,7 @@ public class OwnerResource implements OwnersApi {
         }
 
         if (dto.getAttributes() != null) {
-            if (dto.getAttributes().isEmpty()) {
-                entity.setAttributes(Collections.emptyMap());
-            }
-            else {
-                entity.setAttributes(Util.toMap(dto.getAttributes()));
-            }
+            entity.setAttributes(Util.toMap(dto.getAttributes()));
         }
 
         // Impl note: derived product, provided products, and derived provided products are no longer
