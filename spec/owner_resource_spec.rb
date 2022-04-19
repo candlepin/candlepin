@@ -623,14 +623,18 @@ describe 'Owner Resource' do
     owner_key = random_string("owner")
     @cp.create_owner(owner_key)
 
-    product = create_product(random_string("p1"), random_string("Product1"),
+    product = create_product(random_string("p"), random_string("Product"),
       {
         :owner => owner_key,
-        :attributes => {:usage => "Development", :roles => "Server1,Server2", :addons => "addon1,addon2", :support_level => "mysla",
-                        :support_type => "test_support1"}
+        :attributes => {
+            :usage => "Development",
+            :roles => "Server1,Server2",
+            :addons => "addon1,addon2",
+            :support_level => "mysla",
+            :support_type => "test_support1"}
       }
     )
-    product2 = create_product(random_string("p1"), random_string("Product1"),
+    product2 = create_product(random_string("p"), random_string("Product"),
       {
         :owner => owner_key,
         :attributes => {
@@ -642,8 +646,32 @@ describe 'Owner Resource' do
             :support_type => "test_support2"}
       }
     )
-    create_pool_and_subscription(owner_key, product.id, 10, [], '', '', '', nil, nil, true)
-    create_pool_and_subscription(owner_key, product2.id, 10, [], '', '', '', nil, nil, true)
+    # this will be a product that only has an expired pool
+    product3 = create_product(random_string("p"), random_string("Product"),
+      {
+        :owner => owner_key,
+        :attributes => {
+            :usage => "Exp_Development",
+            :roles => "Exp_Server",
+            :addons => "Exp_addon",
+            :support_type => "Exp_test_support"}
+      }
+    )
+    # this will be a product which has no pool
+    product4 = create_product(random_string("p"), random_string("Product"),
+      {
+        :owner => owner_key,
+        :attributes => {
+            :usage => "No_Development",
+            :roles => "No_Server",
+            :addons => "No_addon",
+            :support_type => "No_test_support"}
+      }
+    )
+    @cp.create_pool(owner_key, product.id, {:quantity=>10, :end_date=>Date.new(2037, 1, 1)})
+    @cp.create_pool(owner_key, product2.id, {:quantity=>10, :end_date=>Date.new(2037, 1, 1)})
+    @cp.create_pool(owner_key, product3.id, {:quantity=>10, :end_date=>Date.new(2000, 1, 1)})
+
     res = @cp.get_owner_syspurpose(owner_key)
     expect(res["owner"]["key"]).to eq(owner_key)
     expect(res["systemPurposeAttributes"]["usage"]).to include("Development")
@@ -655,6 +683,16 @@ describe 'Owner Resource' do
     expect(res["systemPurposeAttributes"]["support_level"]).to_not include("Layered")
     expect(res["systemPurposeAttributes"]["support_type"]).to include("test_support1")
     expect(res["systemPurposeAttributes"]["support_type"]).to include("test_support2")
+
+    expect(res["systemPurposeAttributes"]["usage"]).to_not include("Exp_Development")
+    expect(res["systemPurposeAttributes"]["roles"]).to_not include("Exp_Server")
+    expect(res["systemPurposeAttributes"]["addons"]).to_not include("Exp_addon")
+    expect(res["systemPurposeAttributes"]["support_type"]).to_not include("Exp_test_support")
+    expect(res["systemPurposeAttributes"]["usage"]).to_not include("No_Development")
+    expect(res["systemPurposeAttributes"]["roles"]).to_not include("No_Server")
+    expect(res["systemPurposeAttributes"]["addons"]).to_not include("No_addon")
+    expect(res["systemPurposeAttributes"]["support_type"]).to_not include("No_test_support")
+
   end
 
   it 'user with owner pools permission can see system purpose of the owner products' do

@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import org.candlepin.model.Pool.PoolType;
+import org.candlepin.util.Util;
 
 import com.google.inject.persist.Transactional;
 
@@ -41,7 +42,6 @@ import javax.persistence.LockModeType;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
-
 
 
 /**
@@ -289,6 +289,74 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         return this.cpQueryFactory.<Product>buildQuery();
     }
 
+    /**
+     * Builds a query for fetching the system purpose attributes mapped to the given owner's products
+     *  Will only return attributes for products that are related to unexpired pools.
+     *
+     *
+     * @param owner
+     *  The owner for which to fetch system purpose attributes
+     *
+     * @return
+     *  a map of attributes belonging to the given owner
+     */
+    public Map<String, Set<String>> getSyspurposeAttributesByOwner(Owner owner) {
+        if (owner == null) {
+            return new HashMap<>();
+        }
+        return this.getSyspurposeAttributesByOwner(owner.getId());
+    }
+
+    /**
+     * Builds a query for fetching the system purpose attributes mapped to the given owner's products
+     *  Will only return attributes for products that are related to unexpired pools.
+     *
+     *
+     * @param ownerId
+     *  The owner ID for which to fetch system purpose attributes
+     *
+     * @return
+     *  a map of attributes belonging to the given owner
+     */
+    public Map<String, Set<String>> getSyspurposeAttributesByOwner(String ownerId) {
+        if (ownerId == null) {
+            return new HashMap<>();
+        }
+        String sql =
+            "SELECT DISTINCT a.name, a.value  " +
+            "FROM cp2_product_attributes a " +
+            "JOIN cp_pool b ON a.product_uuid=b.product_uuid " +
+            "AND a.name IN ('usage','roles','addons','support_type') " +
+            "AND b.owner_id=:owner_id " +
+            "AND b.endDate > CURRENT_TIMESTAMP ";
+        List<Object[]> result = this.getEntityManager()
+            .createNativeQuery(sql)
+            .setParameter("owner_id", ownerId)
+            .getResultList();
+
+        sql =
+            "SELECT DISTINCT a.name, a.value " +
+            "FROM cp2_product_attributes a " +
+            "JOIN cp_pool b ON a.product_uuid=b.product_uuid " +
+            "AND name = 'support_level' " +
+            "AND b.owner_id=:owner_id " +
+            "AND b.endDate > CURRENT_TIMESTAMP " +
+            "LEFT OUTER join cp2_product_attributes c ON a.product_uuid=c.product_uuid " +
+            "AND c.name='support_level_exempt' " +
+            "WHERE c.value IS NULL or c.value != 'true'";
+
+        result.addAll(this.getEntityManager()
+            .createNativeQuery(sql)
+            .setParameter("owner_id", ownerId)
+            .getResultList());
+
+        Map<String, Set<String>> attributeMap = new HashMap<>();
+        for (Object[] attMap : result) {
+            attributeMap.computeIfAbsent((String) attMap[0], key -> new HashSet<>())
+                .addAll(Util.toList((String) attMap[1]));
+        }
+        return attributeMap;
+    }
 
     @Transactional
     public long getOwnerCount(Product product) {
