@@ -167,11 +167,11 @@ dependencies {
     implementation "org.hibernate.validator:hibernate-validator-annotation-processor:6.2.3.Final"
 
     // Hibernate
-    implementation 'org.hibernate:hibernate-c3p0:5.4.6.Final'
+    implementation 'org.hibernate:hibernate-c3p0:5.6.7.Final'
     // Ehcache (for use with hibernate primarily)
-    implementation "org.hibernate:hibernate-jcache:5.4.6.Final"
-    implementation "org.ehcache:ehcache:3.8.0"
-    implementation "javax.cache:cache-api:1.0.0"
+    implementation "org.hibernate:hibernate-jcache:5.6.7.Final"
+    implementation "org.ehcache:ehcache:3.10.0"
+    implementation "javax.cache:cache-api:1.1.1"
 
     // Artemis server & client
     implementation "org.apache.activemq:artemis-server:2.21.0"
