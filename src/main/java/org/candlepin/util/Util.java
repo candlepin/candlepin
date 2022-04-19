@@ -610,11 +610,12 @@ public class Util {
 
         // Impl note:
         // At the time of writing, there is a bug/oddity in the collector returned by
-        // Collectors.toMap which disallows null *values*. Since we allow null values, we must
-        // create our own collector here.
+        // Collectors.toMap which disallows null *values*. To retain the underlying
+        // Hibernate behavior, we'll just silently discard attributes with null values.
         return attributes.stream()
             .filter(Objects::nonNull)
             .filter(attr -> attr.getName() != null && !attr.getName().isEmpty())
+            .filter(attr -> attr.getValue() != null)
             .collect(HashMap::new, (map, attr)->map.put(attr.getName(), attr.getValue()), HashMap::putAll);
     }
 
