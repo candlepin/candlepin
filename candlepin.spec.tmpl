@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.0
+Version: 4.2.1
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,96 @@ fi
 
 #raw
 %changelog
+* Tue Apr 19 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.1-1
+- Update translation files (noreply@weblate.org)
+- Revert releasers.conf branch name change (nmoumoul@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Translated using Weblate (Russian) (igor.gorbounov@gmail.com)
+- Translated using Weblate (Korean) (simmon@nplob.com)
+- Translated using Weblate (Ukrainian) (yurchor@ukr.net)
+- Update translation files (noreply@weblate.org)
+- Translated using Weblate (Korean) (simmon@nplob.com)
+- Translated using Weblate (Ukrainian) (yurchor@ukr.net)
+- Update translation files (noreply@weblate.org)
+- Update translation files (noreply@weblate.org)
+- Translated using Weblate (Korean) (simmon@nplob.com)
+- Translated using Weblate (Ukrainian) (yurchor@ukr.net)
+- Update translation files (noreply@weblate.org)
+- 2068274: Product locking for content add/remove (crog@redhat.com)
+- Update cache jars (wpoteat@redhat.com)
+- Added principal name for system generated jobs (joshmalbrecht@gmail.com)
+- Add branch name to releasers config (nmoumoul@redhat.com)
+- ENT-3126: Introduce Activation Key AuthProvider (ojanus@redhat.com)
+- 1976153: Update permission on candlepin log directory (wpoteat@redhat.com)
+- 1972059: Added null check for service level on new consumer
+  (joshmalbrecht@gmail.com)
+- 2069334: Add verify annotation to activateSubscription (wpoteat@redhat.com)
+- 2073015: Fixed a bug in Util.toMap when processing null values
+  (crog@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Added the new Candlepin Authority R2 Certificate (joshmalbrecht@gmail.com)
+- test data: explicitly set entitlement mode for admin & donaldduck owners
+  (ptoscano@redhat.com)
+- Upgrade commons-lang to commons-lang3 (nmoumoul@redhat.com)
+- Add openapi-generator 5.4.0 upgrade accompanying changes
+  (nmoumoul@redhat.com)
+- Added consumer name to cp_deleted_consumer table (joshmalbrecht@gmail.com)
+- Updated several dependencies to their latest available versions
+  (crog@redhat.com)
+- Removed the default-rules (joshmalbrecht@gmail.com)
+- Updated content override accept a long string of overrides - Updated the
+  values column in cp_content_override table to be text.
+  (joshmalbrecht@gmail.com)
+- Make spec test consistent with pause ENT-4800 (wpoteat@redhat.com)
+- Do not login to quay.io to pull images (nmoumoul@redhat.com)
+- Added support for skipping pool creation while processing test data
+  (crog@redhat.com)
+- Removed the matches parameter on entitlement APIs - Removed on consumers and
+  owners APIs (joshmalbrecht@gmail.com)
+- Added support for the Java spec tests to cp-test (crog@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Changed entity versions to a 64bit value (crog@redhat.com)
+- Updated error handling in EntitlementResource.updateEntitlement -
+  EntitlementResource.updateEntitlement now checks if the entitlement quantity
+  is populated before attempting to apply entitlement quantity changes
+  (joshmalbrecht@gmail.com)
+- Update hypervisor id creation to remove collisions (wpoteat@redhat.com)
+- Upgrade artemis to 2.20.0 (nmoumoul@redhat.com)
+- Add the gradle spec task to the task list (nmoumoul@redhat.com)
+- Fixed hostname/address cert generation issues with gen_certs.sh
+  (crog@redhat.com)
+- Fixed a potential collision with product entity versioning (crog@redhat.com)
+- Update MySQL connector to use org.mariadb connector (crog@redhat.com)
+- Upgrade liquibase to 4.8.0 (nmoumoul@redhat.com)
+- Addressed inconsistent test failures (ojanus@redhat.com)
+- ENT-4790: Limit compliance recalculations (ojanus@redhat.com)
+- Reflect JUnit dependency changes from gradle to pom.xml (nmoumoul@redhat.com)
+- Remove unnecessary SpecTest annotation (nmoumoul@redhat.com)
+- Separate docker-compose responsibilities (nmoumoul@redhat.com)
+- Framework for java spec tests (ojanus@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- 2059131: Reduce the facts accepted by the compliance status hasher
+  (ojanus@redhat.com)
+- ENT-3756: Implementation of SCA-by-default for newly created Owners
+  (prakgupt@redhat.com)
+- Updated certificate generation and Tomcat configuration scripts
+  (crog@redhat.com)
+- Update NestedOwnerDTO to include Content Access Mode (wpoteat@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Added support for Fedora 35 to Vagrant (crog@redhat.com)
+- Addressed inconsistent test failures in ConsumerResourceTest
+  (crog@redhat.com)
+- Updated Vagrantfile and Ansible playbooks for general use (crog@redhat.com)
+- Migrate to JUnit5 (ojanus@redhat.com)
+- Update translation files (noreply@weblate.org)
+- Translated using Weblate (Chinese (Simplified) (zh_CN)) (suanand@redhat.com)
+- Translated using Weblate (French) (ljanda@redhat.com)
+
 * Thu Feb 24 2022 Nikos Moumoulidis <nmoumoul@redhat.com> 4.2.0-1
 - 2045066: Changed default identity certificate duration to 5 years
   (crog@redhat.com)
