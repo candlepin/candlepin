@@ -773,21 +773,44 @@ public class ProductManager {
             entity.setMultiplier(update.getMultiplier());
         }
 
-        if (update.getAttributes() != null) {
-            entity.setAttributes(update.getAttributes());
-        }
-
         if (update.getDependentProductIds() != null) {
             entity.setDependentProductIds(update.getDependentProductIds());
         }
 
         // Complicated stuff
+        applyProductAttributeChanges(entity, update);
         applyProductContentChanges(entity, update, contentMap);
         applyDerivedProductChanges(entity, update, productMap);
         applyProvidedProductChanges(entity, update, productMap);
         applyBrandingChanges(entity, update);
 
         return entity;
+    }
+
+    /**
+     * Applies product attributes changes from the given ProductInfo instance to the specified
+     * Product entity. Attributes which have null values will be silently discarded from the
+     * updated attributes.
+     *
+     * @param entity
+     *  the Product entity to update
+     *
+     * @param update
+     *  the ProductInfo instance containing the data with which to update the entity
+     */
+    private static void applyProductAttributeChanges(Product entity, ProductInfo update) {
+        Map<String, String> incoming = update.getAttributes();
+        if (incoming != null) {
+            Map<String, String> filtered = new HashMap<>();
+
+            incoming.forEach((k, v) -> {
+                if (v != null) {
+                    filtered.put(k, v);
+                }
+            });
+
+            entity.setAttributes(filtered);
+        }
     }
 
     /**
