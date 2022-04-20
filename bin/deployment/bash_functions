@@ -174,7 +174,8 @@ init_mysql_jdbc() {
     local password="$DBPASSWORD"
     [ -z "$password" ] && password=''
 
-    select_jdbc_jar "/usr/lib/java/mariadb-java-client.jar" "/usr/share/java/mysql-connector-java.jar"
+    local maria_client_jar=$(find $CP_EXTRACT_CLASSPATH -type f -name "mariadb-java-client*.jar")
+    select_jdbc_jar $maria_client_jar
     evalrc $? "No JDBC jar file available for MariaDB/MySQL"
 
     JDBC_DRIVER="org.mariadb.jdbc.Driver"
