@@ -2349,4 +2349,5 @@
     <include file="db/changelog/20220117152105-add_system_lock_table.xml"/>
     <include file="db/changelog/20211110083000-disallow_duplicate_versioned_entities.xml"/>
     <include file="db/changelog/20220314130000-64bit_entity_versions.xml"/>
+    <include file="db/changelog/20220420165513-drop_pool_derived_product_constraint.xml"/>
 </databaseChangeLog>

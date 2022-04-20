@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
@@ -31,6 +32,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -395,6 +397,29 @@ public class ProductTest {
 
         List<Product> children = List.of(new Product(), new Product(), chain);
         assertThrows(IllegalStateException.class, () -> parent.setProvidedProducts(children));
+    }
+
+    @Test
+    public void testSetProvidedProductsFiltersNullElements() {
+        Product product = new Product();
+        Product child1 = new Product().setId("child1");
+        Product child2 = new Product().setId("child2");
+
+        List<Product> children = new ArrayList<>();
+        children.add(child1);
+        children.add(null);
+        children.add(child2);
+
+        Product output = product.setProvidedProducts(children);
+        assertSame(output, product);
+
+        Collection<Product> providedProducts = product.getProvidedProducts();
+        assertNotNull(providedProducts);
+        assertEquals(2, providedProducts.size());
+
+        assertTrue(providedProducts.contains(child1));
+        assertTrue(providedProducts.contains(child2));
+        assertFalse(providedProducts.contains(null));
     }
 
     private List<Product> buildTestProducts() {
