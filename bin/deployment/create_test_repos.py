@@ -764,6 +764,8 @@ def main():
     if ret == 0:
         pattern = re.compile(r'^ *Keygrip = (.*)$')
         for line in pgp_output:
+            if type(line) == bytes:
+                line = line.decode()
             result = pattern.search(line)
             # When gpg supported key_grip, then preset passphrase has to be used
             if result is not None:
