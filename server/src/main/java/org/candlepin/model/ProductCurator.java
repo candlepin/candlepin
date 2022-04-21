@@ -17,7 +17,6 @@ package org.candlepin.model;
 import org.candlepin.common.config.Configuration;
 import org.candlepin.util.AttributeValidator;
 
-import com.google.common.collect.Iterables;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -32,7 +31,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +38,6 @@ import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.persistence.Cache;
-import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
@@ -178,6 +175,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                 productsNotInCache.add(uuid);
             }
         }
+
         if (productsNotInCache.size() > 0) {
             log.debug("Loading objects that were not already in the cache: " + productsNotInCache.size());
             Session session = this.currentSession();
@@ -199,124 +197,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         }
 
         return products;
-    }
-
-    /**
-     * Loads the set of products from database and triggers all lazy loads.
-     * @param uuids
-     * @return Map of UUID to Product instance
-     */
-    public Map<String, Product> getHydratedProductsByUuid(Set<String> uuids) {
-        Map<String, Product> productsByUuid = new HashMap<>();
-
-        if (uuids != null && !uuids.isEmpty()) {
-            for (Product product : this.listAllByUuids(uuids)) {
-                // Fetching the size on these collections triggers a lazy load of the collections
-                product.getAttributes().size();
-                product.getDependentProductIds().size();
-                for (ProductContent pc : product.getProductContent()) {
-                    pc.getContent().getModifiedProductIds().size();
-                }
-
-                productsByUuid.put(product.getUuid(), product);
-            }
-        }
-
-        return productsByUuid;
-    }
-
-    /**
-     * Fetches the provided and derived provided products for the specified pools, populating the
-     * respective collections in each pool object. The products will be pulled from the product
-     * cache where possible, and the cache will be hydrated with products that must be pulled from
-     * the database.
-     *
-     * @param pools
-     *  A collection of pools for which to fetch provided and derived provided products
-     *
-     * @return
-     *  the number of products cached as a result of this operation
-     */
-    public int hydratePoolProvidedProducts(Iterable<Pool> pools) {
-        int count = 0;
-        if (pools != null && pools.iterator().hasNext()) {
-            EntityManager entityManager = this.getEntityManager();
-
-            // We use these set for both product UUIDs and product instances, once populated
-            Map<String, Set<String>> poolProvidedProducts = new HashMap<>();
-            Map<String, Set<String>> poolDerivedProvidedProducts = new HashMap<>();
-            Map<String, Product> allProducts = new HashMap<>();
-
-            for (Pool pool : pools) {
-                poolProvidedProducts.put(pool.getId(), new HashSet<>());
-                poolDerivedProvidedProducts.put(pool.getId(), new HashSet<>());
-            }
-
-            String ppSql =
-                "SELECT po.id, pp.provided_product_uuid FROM cp2_product_provided_products pp " +
-                "JOIN cp_pool po on po.product_uuid = pp.product_uuid " +
-                "WHERE po.id IN (:poolIds)";
-
-            String dpSql =
-                "SELECT po.id, pp.provided_product_uuid FROM cp2_product_provided_products pp " +
-                "JOIN cp_pool po on po.derived_product_uuid = pp.product_uuid " +
-                "WHERE po.id IN (:poolIds)";
-
-            Query ppUuidQuery = entityManager.createNativeQuery(ppSql);
-            Query dpUuidQuery = entityManager.createNativeQuery(dpSql);
-
-            int blockSize = this.getInBlockSize();
-            for (List<String> block : Iterables.partition(poolProvidedProducts.keySet(), blockSize)) {
-                // Fetch pool provided products...
-                ppUuidQuery.setParameter("poolIds", block);
-
-                for (Object[] row : (List<Object[]>) ppUuidQuery.getResultList()) {
-                    String poolId = (String) row[0];
-                    String productUuid = (String) row[1];
-                    Set<String> ppSet = poolProvidedProducts.get(poolId);
-                    ppSet.add(productUuid);
-                    allProducts.put(productUuid, null);
-                }
-
-                dpUuidQuery.setParameter("poolIds", block);
-
-                for (Object[] row : (List<Object[]>) dpUuidQuery.getResultList()) {
-                    String poolId = (String) row[0];
-                    String productUuid = (String) row[1];
-                    Set<String> dpSet = poolDerivedProvidedProducts.get(poolId);
-                    dpSet.add(productUuid);
-                    allProducts.put(productUuid, null);
-                }
-            }
-
-            // Now go get all the products and hydrate them
-            Set<Product> hydratedProducts = getProductsByUuidCached(allProducts.keySet());
-            for (Product product : hydratedProducts) {
-                allProducts.put(product.getUuid(), product);
-            }
-
-            // Use the UUID sets for each pools provided & derived provided products
-            // to populate the actual product models.
-            for (Pool pool : pools) {
-                Set<Product> providedProducts = new HashSet<>();
-                for (String uuid : poolProvidedProducts.get(pool.getId())) {
-                    providedProducts.add(allProducts.get(uuid));
-                }
-
-                Set<Product> derivedProvidedProducts = new HashSet<>();
-                for (String uuid : poolDerivedProvidedProducts.get(pool.getId())) {
-                    derivedProvidedProducts.add(allProducts.get(uuid));
-                }
-
-                pool.getProduct().setProvidedProducts(providedProducts);
-
-                if (pool.getDerivedProduct() != null) {
-                    pool.getDerivedProduct().setProvidedProducts(derivedProvidedProducts);
-                }
-            }
-        }
-
-        return count;
     }
 
     /**
