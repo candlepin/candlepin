@@ -1415,8 +1415,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             return true;
         }
 
-        if (children != null && children.stream().anyMatch(product -> product.checkForCycle(chain,
-            product.getDerivedProduct(), product.getProvidedProducts()))) {
+        if (children != null && children.stream().anyMatch(product -> product != null &&
+            product.checkForCycle(chain, product.getDerivedProduct(), product.getProvidedProducts()))) {
 
             return true;
         }
@@ -1454,15 +1454,17 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
      * @return A reference to this product.
      */
     public Product setProvidedProducts(Collection<Product> providedProducts) {
+        this.providedProducts = new HashSet<>();
+        this.entityVersion = null;
+
         if (providedProducts != null) {
             this.checkForCycle(null, providedProducts);
-            this.providedProducts = new HashSet<>(providedProducts);
-        }
-        else {
-            this.providedProducts = new HashSet<>();
+
+            providedProducts.stream()
+                .filter(Objects::nonNull)
+                .forEach(this.providedProducts::add);
         }
 
-        this.entityVersion = null;
         return this;
     }
 

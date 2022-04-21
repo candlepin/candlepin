@@ -513,20 +513,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetHydratedProductsByUuid() {
-        Product prod = TestUtil.createProduct("test-label-hydrated", "test-product-name-hydrated");
-        productCurator.create(prod);
-        prod.setAttribute("testattr", "testVal");
-
-        Set<String> uuids = new HashSet<>();
-        uuids.add(prod.getUuid());
-        uuids.add(product.getUuid());
-
-        Map<String, Product> products = productCurator.getHydratedProductsByUuid(uuids);
-        assertEquals(2, products.size());
-    }
-
-    @Test
     public void testPoolProvidedProducts() {
         Set<String> uuids = productCurator.getPoolProvidedProductUuids(pool.getId());
         assertEquals(new HashSet<>(Arrays.asList(providedProduct.getUuid())), uuids);
