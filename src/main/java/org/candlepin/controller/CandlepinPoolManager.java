@@ -2379,17 +2379,6 @@ public class CandlepinPoolManager implements PoolManager {
 
                 this.consumerCurator.flush();
 
-                // Hydrate remaining consumer pools so we can skip some extra work during serialization
-                Set<Pool> poolsToHydrate = new HashSet<>();
-
-                for (Consumer consumer : consumerStackedEnts.keySet()) {
-                    for (Entitlement entitlement : consumer.getEntitlements()) {
-                        poolsToHydrate.add(entitlement.getPool());
-                    }
-                }
-
-                this.productCurator.hydratePoolProvidedProducts(poolsToHydrate);
-
                 // Fire post-unbind events for revoked entitlements
                 log.info("Firing post-unbind events for {} entitlements...", entitlements.size());
                 for (Entitlement entitlement : entitlements) {
