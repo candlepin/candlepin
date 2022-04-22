@@ -215,14 +215,20 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
             String name = m.getDeclaringClass() + "." + m.getName();
             registered.append("\t" + name + "\n");
 
-            if (!m.isAnnotationPresent(Produces.class)) {
+            if (!m.isAnnotationPresent(Produces.class) &&
+                !isAnnotationPresentInInterface(m, Produces.class)) {
                 missingProduces.append("\t" + name + "\n");
             }
 
             if (m.isAnnotationPresent(GET.class) ||
+                isAnnotationPresentInInterface(m, GET.class) ||
                 m.isAnnotationPresent(HEAD.class) ||
+                isAnnotationPresentInInterface(m, HEAD.class) ||
                 m.isAnnotationPresent(DELETE.class) ||
-                m.isAnnotationPresent(Deprecated.class)) {
+                isAnnotationPresentInInterface(m, DELETE.class) ||
+                m.isAnnotationPresent(Deprecated.class) ||
+                isAnnotationPresentInInterface(m, Deprecated.class))
+            {
                 /* Technically GET, HEAD, and DELETE are allowed to have bodies (and therefore would
                  * need a Consumes annotation, but the HTTP 1.1 spec states in section 4.3 that any
                  * such body should be ignored.  See http://stackoverflow.com/a/983458/6124862
@@ -234,7 +240,8 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
                 continue;
             }
 
-            if (!m.isAnnotationPresent(Consumes.class)) {
+            if (!m.isAnnotationPresent(Consumes.class) &&
+                !isAnnotationPresentInInterface(m, Consumes.class)) {
                 missingConsumes.append("\t" + name + "\n");
             }
             else {
@@ -244,8 +251,7 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
                  * at the moment but even if that changes we still want to be explicit
                  * about what we accept.
                  */
-                Consumes consumes = m.getAnnotation(Consumes.class);
-                List<String> mediaTypes = Arrays.asList(consumes.value());
+                List<String> mediaTypes = getConsumesMediaTypesFromMethod(m);
                 if (mediaTypes.contains(MediaType.WILDCARD)) {
                     Annotation[][] allParamAnnotations = m.getParameterAnnotations();
 
@@ -286,7 +292,8 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
         }
 
         if (missingConsumes.length() != 0) {
-            log.warn("The following methods are missing a Consumes annotation:\n{}", missingConsumes);
+            log.info("The following PUT/POST methods are not using a Consumes annotation:\n{}",
+                missingConsumes);
         }
     }
 
@@ -302,5 +309,37 @@ public class ResourceLocatorMap implements Map<Method, ResourceLocator> {
     public synchronized void lock() {
         hasBeenInitialized = true;
         internalMap = ImmutableMap.copyOf(internalMap);
+    }
+
+    static boolean isAnnotationPresentInInterface(Method m, Class<? extends Annotation> annotationClass) {
+        boolean present = false;
+        Class[] ints = m.getDeclaringClass().getInterfaces();
+        for (Class anInt : ints) {
+            try {
+                present = anInt.getMethod(m.getName(),
+                    m.getParameterTypes()).isAnnotationPresent(annotationClass) || present;
+            }
+            catch (NoSuchMethodException nsfe) {
+                // just keep moving. this interface does not declare this method
+            }
+        }
+        return present;
+    }
+
+    static List<String> getConsumesMediaTypesFromMethod(Method m) {
+        Consumes consumes = m.getAnnotation(Consumes.class);
+        List<String> mediaTypes = consumes == null ? new ArrayList<>() :
+            Arrays.asList(consumes.value());
+        Class[] ints = m.getDeclaringClass().getInterfaces();
+        for (Class anInt : ints) {
+            try {
+                mediaTypes.addAll(getConsumesMediaTypesFromMethod(anInt.getMethod(m.getName(),
+                    m.getParameterTypes())));
+            }
+            catch (NoSuchMethodException nsfe) {
+                    // just keep moving. this interface does not declare this method
+            }
+        }
+        return mediaTypes;
     }
 }
