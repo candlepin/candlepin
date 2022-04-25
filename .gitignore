@@ -20,6 +20,7 @@
 .idea
 !.idea/codeStyleSettings.xml
 !.idea/copyright
+.vscode
 dataSources/
 
 # The master checkstyle configuration is in project_conf
@@ -47,6 +48,10 @@ dataSources/
 **/target-eclipse/
 **/bin/qpid/keys
 **/bin/artemis/selinux/build
+**/checks/bin/
+**/common/bin/
+**/server/bin/main/
+**/server/bin/test/
 
 buildconf/builder/config/local
 client.crt
