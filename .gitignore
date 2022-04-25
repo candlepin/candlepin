@@ -20,6 +20,7 @@
 .idea
 !.idea/codeStyleSettings.xml
 !.idea/copyright
+.vscode
 dataSources/
 
 # The master checkstyle configuration is in project_conf
@@ -45,8 +46,11 @@ dataSources/
 **/reports/
 **/target/
 **/target-eclipse/
+**/spec-tests/bin/
 **/bin/qpid/keys
 **/bin/artemis/selinux/build
+**/bin/main/
+**/bin/test/
 **/bin/__init__.py
 ansible/roles
 
