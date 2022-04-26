@@ -149,8 +149,10 @@ init_postgresql_jdbc() {
     local db_name="$1"
     local db_host="${DBHOSTNAME:-localhost}"
 
-    select_jdbc_jar "/usr/share/java/postgresql-jdbc.jar"
-    evalrc $? "No JDBC jar file available for PostgreSQL"
+    if ! select_jdbc_jar "/usr/share/java/postgresql-jdbc.jar"; then
+        err_msg "No JDBC jar file available for PostgreSQL"
+        exit
+    fi
 
     JDBC_DRIVER="org.postgresql.Driver"
     JDBC_URL="jdbc:postgresql://$db_host/$db_name"
@@ -175,8 +177,10 @@ init_mysql_jdbc() {
     [ -z "$password" ] && password=''
 
     local maria_client_jar=$(find $CP_EXTRACT_CLASSPATH -type f -name "mariadb-java-client*.jar")
-    select_jdbc_jar $maria_client_jar
-    evalrc $? "No JDBC jar file available for MariaDB/MySQL"
+    if ! select_jdbc_jar $maria_client_jar; then
+        err_msg "No JDBC jar file available for MariaDB/MySQL"
+        exit
+    fi
 
     JDBC_DRIVER="org.mariadb.jdbc.Driver"
     JDBC_URL="jdbc:mariadb://$db_host/$db_name"
