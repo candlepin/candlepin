@@ -3,13 +3,13 @@ services:
   db:
     # upgrade to 9.6 requires client version 9.4.1211
     # https://stackoverflow.com/questions/38427585/postgresql-error-column-am-amcanorder-doesnt-exist
-    image: ${REGISTRY}/postgres:9.5.9
+    image: ${REGISTRY}/postgres:12
     restart: always
     environment:
       POSTGRES_USER: candlepin
-      #POSTGRES_PASSWORD: candlepin
-      #POSTGRES_DB: candlepin
-      POSTGRES_INITDB_ARGS: "--auth='ident' --auth='trust'"
+      POSTGRES_PASSWORD: ""
+      POSTGRES_DB: candlepin
+      POSTGRES_HOST_AUTH_METHOD: trust
   candlepin:
     image: ${REGISTRY}/candlepin-base
     environment:
