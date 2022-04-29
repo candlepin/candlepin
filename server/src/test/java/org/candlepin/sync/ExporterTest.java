@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -597,6 +598,192 @@ public class ExporterTest {
 
         // Check consumer export has entitlement cert.
         assertTrue(verifyHasEntry(export, "export/entitlement_certificates/123456.pem"));
+
+        // Check consumer export has content access cert.
+        assertTrue(verifyHasEntry(export, "export/content_access_certificates/654321.pem"));
+    }
+
+    @Test
+    public void testGetEntitlementExportWithUnknownSerialId() throws ExportCreationException,
+        IOException, GeneralSecurityException {
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        // Setup consumer
+        Consumer consumer = mock(Consumer.class);
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        ctype.setId("test-ctype");
+        KeyPair keyPair = createKeyPair();
+        doReturn(keyPair).when(consumer).getKeyPair();
+        doReturn("privateKey".getBytes()).when(pki).getPemEncoded(keyPair.getPrivateKey());
+        doReturn("consumer").when(consumer).getUuid();
+        doReturn("consumer_name").when(consumer).getName();
+        doReturn(ctype.getId()).when(consumer).getTypeId();
+        doReturn(ctype).when(ctc).getConsumerType(eq(consumer));
+        doReturn(ctype).when(ctc).get(eq(ctype.getId()));
+
+        doReturn("signature".getBytes()).when(pki).getSHA256WithRSAHash(any(InputStream.class));
+
+        // Setup principal
+        Principal principal = mock(Principal.class);
+        doReturn(principal).when(pprov).get();
+        doReturn("testUser").when(principal).getUsername();
+
+        // Create dummy ent cert
+        EntitlementCertificate entCert = new EntitlementCertificate();
+        CertificateSerial entSerial = new CertificateSerial();
+        entSerial.setId(123456L);
+        entCert.setSerial(entSerial);
+        entCert.setCert("ent-cert");
+        entCert.setKey("ent-cert-key");
+
+        // Create dummy content access cert
+        ContentAccessCertificate cac = new ContentAccessCertificate();
+        CertificateSerial cacSerial = new CertificateSerial();
+        cacSerial.setId(654321L);
+        cac.setSerial(cacSerial);
+        cac.setCert("content-access-cert");
+        cac.setKey("content-access-key");
+
+        doReturn(Arrays.asList(entCert)).when(ecsa).listForConsumer(consumer);
+        doReturn(cac).when(contentAccessManager).getCertificate(consumer);
+
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            translator, contentAccessManager);
+        Set<Long> serials = new HashSet<>();
+        serials.add(12345678910L);
+        File export = e.getEntitlementExport(consumer, serials);
+
+        // Verify
+        assertNotNull(export);
+        assertTrue(export.exists());
+
+        // Check consumer export does not have entitlement cert.
+        assertFalse(verifyHasEntry(export, "export/entitlement_certificates/123456.pem"));
+
+        // Check consumer export does not have content access cert.
+        assertFalse(verifyHasEntry(export, "export/content_access_certificates/654321.pem"));
+    }
+
+    @Test
+    public void testGetEntitlementExportWithValidEntitlementCertSerial() throws ExportCreationException,
+        IOException, GeneralSecurityException {
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        // Setup consumer
+        Consumer consumer = mock(Consumer.class);
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        ctype.setId("test-ctype");
+        KeyPair keyPair = createKeyPair();
+        doReturn(keyPair).when(consumer).getKeyPair();
+        doReturn("privateKey".getBytes()).when(pki).getPemEncoded(keyPair.getPrivateKey());
+        doReturn("consumer").when(consumer).getUuid();
+        doReturn("consumer_name").when(consumer).getName();
+        doReturn(ctype.getId()).when(consumer).getTypeId();
+        doReturn(ctype).when(ctc).getConsumerType(eq(consumer));
+        doReturn(ctype).when(ctc).get(eq(ctype.getId()));
+
+        doReturn("signature".getBytes()).when(pki).getSHA256WithRSAHash(any(InputStream.class));
+
+        // Setup principal
+        Principal principal = mock(Principal.class);
+        doReturn(principal).when(pprov).get();
+        doReturn("testUser").when(principal).getUsername();
+
+        // Create dummy ent cert
+        EntitlementCertificate entCert = new EntitlementCertificate();
+        CertificateSerial entSerial = new CertificateSerial();
+        entSerial.setId(123456L);
+        entCert.setSerial(entSerial);
+        entCert.setCert("ent-cert");
+        entCert.setKey("ent-cert-key");
+
+        // Create dummy content access cert
+        ContentAccessCertificate cac = new ContentAccessCertificate();
+        CertificateSerial cacSerial = new CertificateSerial();
+        cacSerial.setId(654321L);
+        cac.setSerial(cacSerial);
+        cac.setCert("content-access-cert");
+        cac.setKey("content-access-key");
+
+        doReturn(Arrays.asList(entCert)).when(ecsa).listForConsumer(consumer);
+        doReturn(cac).when(contentAccessManager).getCertificate(consumer);
+
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            translator, contentAccessManager);
+        Set<Long> serials = new HashSet<>();
+        serials.add(entSerial.getId());
+        File export = e.getEntitlementExport(consumer, serials);
+
+        // Verify
+        assertNotNull(export);
+        assertTrue(export.exists());
+
+        // Check consumer export has entitlement cert.
+        assertTrue(verifyHasEntry(export, "export/entitlement_certificates/123456.pem"));
+
+        // Check consumer export does not have content access cert.
+        assertFalse(verifyHasEntry(export, "export/content_access_certificates/654321.pem"));
+    }
+
+    @Test
+    public void testGetEntitlementExportWithValidContentAccessCertSerial() throws ExportCreationException,
+        IOException, GeneralSecurityException {
+        config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
+
+        // Setup consumer
+        Consumer consumer = mock(Consumer.class);
+        ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        ctype.setId("test-ctype");
+        KeyPair keyPair = createKeyPair();
+        doReturn(keyPair).when(consumer).getKeyPair();
+        doReturn("privateKey".getBytes()).when(pki).getPemEncoded(keyPair.getPrivateKey());
+        doReturn("consumer").when(consumer).getUuid();
+        doReturn("consumer_name").when(consumer).getName();
+        doReturn(ctype.getId()).when(consumer).getTypeId();
+        doReturn(ctype).when(ctc).getConsumerType(eq(consumer));
+        doReturn(ctype).when(ctc).get(eq(ctype.getId()));
+
+        doReturn("signature".getBytes()).when(pki).getSHA256WithRSAHash(any(InputStream.class));
+
+        // Setup principal
+        Principal principal = mock(Principal.class);
+        doReturn(principal).when(pprov).get();
+        doReturn("testUser").when(principal).getUsername();
+
+        // Create dummy ent cert
+        EntitlementCertificate entCert = new EntitlementCertificate();
+        CertificateSerial entSerial = new CertificateSerial();
+        entSerial.setId(123456L);
+        entCert.setSerial(entSerial);
+        entCert.setCert("ent-cert");
+        entCert.setKey("ent-cert-key");
+
+        // Create dummy content access cert
+        ContentAccessCertificate cac = new ContentAccessCertificate();
+        CertificateSerial cacSerial = new CertificateSerial();
+        cacSerial.setId(654321L);
+        cac.setSerial(cacSerial);
+        cac.setCert("content-access-cert");
+        cac.setKey("content-access-key");
+
+        doReturn(Arrays.asList(entCert)).when(ecsa).listForConsumer(consumer);
+        doReturn(cac).when(contentAccessManager).getCertificate(consumer);
+
+        Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            translator, contentAccessManager);
+        Set<Long> serials = new HashSet<>();
+        serials.add(cacSerial.getId());
+        File export = e.getEntitlementExport(consumer, serials);
+
+        // Verify
+        assertNotNull(export);
+        assertTrue(export.exists());
+
+        // Check consumer export does not have entitlement cert.
+        assertFalse(verifyHasEntry(export, "export/entitlement_certificates/123456.pem"));
 
         // Check consumer export has content access cert.
         assertTrue(verifyHasEntry(export, "export/content_access_certificates/654321.pem"));

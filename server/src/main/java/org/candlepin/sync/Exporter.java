@@ -192,7 +192,7 @@ public class Exporter {
 
             exportMeta(baseDir, null);
             exportEntitlementsCerts(baseDir, consumer, serials, false);
-            exportContentAccessCerts(baseDir, consumer);
+            exportContentAccessCerts(baseDir, consumer, serials);
             return makeArchive(consumer, tmpDir, baseDir);
         }
         catch (IOException e) {
@@ -410,19 +410,25 @@ public class Exporter {
      * Exports content access certificates for a consumer.
      * Consumer must belong to owner with SCA enabled.
      *
+     * @param baseDir
+     *  Base directory path.
+     *
      * @param consumer
      *  Consumer for which content access certificates needs to be exported.
      *
-     * @param baseDir
-     *  Base directory path.
+     * @param serials
+     *  certificate serials used to filter content access certificates.
      *
      * @throws IOException
      *  Throws IO exception if unable to export content access certs for the consumer.
      */
-    private void exportContentAccessCerts(File baseDir, Consumer consumer) throws IOException {
+    private void exportContentAccessCerts(File baseDir, Consumer consumer,
+        Set<Long> serials) throws IOException {
         ContentAccessCertificate contentAccessCert = this.contentAccessManager.getCertificate(consumer);
 
-        if (contentAccessCert != null) {
+        if (contentAccessCert != null &&
+            (serials == null || contentAccessCert.getSerial() == null ||
+            serials.contains(contentAccessCert.getSerial().getId()))) {
             File contentAccessCertDir = new File(baseDir.getCanonicalPath(), "content_access_certificates");
             contentAccessCertDir.mkdir();
 
