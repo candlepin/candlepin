@@ -75,6 +75,7 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.DistributorVersionCurator;
@@ -673,6 +674,24 @@ public class ConsumerResourceTest {
         return toReturn;
     }
 
+    private EntitlementCertificate createEntitlementCertificate(String key, String cert, long serialId) {
+        EntitlementCertificate certificate = new EntitlementCertificate();
+        CertificateSerial expectedSerial = new CertificateSerial(serialId, new Date());
+        certificate.setKeyAsBytes(key.getBytes());
+        certificate.setCertAsBytes(cert.getBytes());
+        certificate.setSerial(expectedSerial);
+        return certificate;
+    }
+
+    private ContentAccessCertificate createContentAccessCertificate(String key, String cert, long serialId) {
+        ContentAccessCertificate certificate = new ContentAccessCertificate();
+        CertificateSerial expectedSerial = new CertificateSerial(serialId, new Date());
+        certificate.setKeyAsBytes(key.getBytes());
+        certificate.setCertAsBytes(cert.getBytes());
+        certificate.setSerial(expectedSerial);
+        return certificate;
+    }
+
     @Test
     public void testNullPerson() {
         Owner owner = this.createOwner();
@@ -852,6 +871,75 @@ public class ConsumerResourceTest {
         );
     }
 
+    @Test
+    public void testGetEntitlementCertificatesWithExistingSerialIdForEntitlementCertificate() {
+        Consumer consumer = createConsumer();
+        doReturn(consumer).when(consumerCurator).verifyAndLookupConsumer(consumer.getId());
+
+        EntitlementCertificate expectedCertificate = createEntitlementCertificate("expected-key",
+            "expected-cert", 18084729L);
+        List<EntitlementCertificate> certificates = new ArrayList<>();
+        certificates.add(createEntitlementCertificate("key-1", "cert-1"));
+        certificates.add(createEntitlementCertificate("key-2", "cert-2"));
+        certificates.add(expectedCertificate);
+        doReturn(certificates).when(entitlementCertServiceAdapter).listForConsumer(any(Consumer.class));
+
+        List<CertificateDTO> actual = consumerResource.getEntitlementCertificates(consumer.getId(),
+            Long.toString(expectedCertificate.getSerial().getId()));
+
+        assertEquals(1, actual.size());
+        CertificateDTO actualCertificate = actual.get(0);
+        assertEquals(expectedCertificate.getId(), actualCertificate.getId());
+        assertEquals(expectedCertificate.getKey(), actualCertificate.getKey());
+        assertEquals(expectedCertificate.getCert(), actualCertificate.getCert());
+        assertEquals(expectedCertificate.getCreated(), actualCertificate.getCreated());
+        assertEquals(expectedCertificate.getUpdated(), actualCertificate.getUpdated());
+
+        assertEquals(expectedCertificate.getSerial().getId(), actualCertificate.getSerial().getId());
+    }
+
+    @Test
+    public void testGetEntitlementCertificatesWithExistingSerialIdForSimpleContentAccessCert() {
+        Consumer consumer = createConsumer();
+        doReturn(consumer).when(consumerCurator).verifyAndLookupConsumer(consumer.getId());
+
+        List<EntitlementCertificate> certificates = new ArrayList<>();
+        certificates.add(createEntitlementCertificate("key-1", "cert-1"));
+        certificates.add(createEntitlementCertificate("key-2", "cert-2"));
+        doReturn(certificates).when(entitlementCertServiceAdapter).listForConsumer(any(Consumer.class));
+
+        ContentAccessCertificate expectedCertificate = createContentAccessCertificate("expected-key",
+            "expected-cert", 18084729L);
+        doReturn(expectedCertificate).when(contentAccessManager).getCertificate(any(Consumer.class));
+
+        List<CertificateDTO> actual = consumerResource.getEntitlementCertificates(consumer.getId(),
+            Long.toString(expectedCertificate.getSerial().getId()));
+
+        assertEquals(1, actual.size());
+        CertificateDTO actualCertificate = actual.get(0);
+        assertEquals(expectedCertificate.getId(), actualCertificate.getId());
+        assertEquals(expectedCertificate.getKey(), actualCertificate.getKey());
+        assertEquals(expectedCertificate.getCert(), actualCertificate.getCert());
+        assertEquals(expectedCertificate.getCreated(), actualCertificate.getCreated());
+        assertEquals(expectedCertificate.getUpdated(), actualCertificate.getUpdated());
+
+        assertEquals(expectedCertificate.getSerial().getId(), actualCertificate.getSerial().getId());
+    }
+
+    @Test
+    public void testGetEntitlementCertificatesWithUnknownSerialId() {
+        Consumer consumer = createConsumer();
+        doReturn(consumer).when(consumerCurator).verifyAndLookupConsumer(consumer.getId());
+        List<EntitlementCertificate> certificates = createEntitlementCertificates();
+        doReturn(certificates).when(entitlementCertServiceAdapter).listForConsumer(any(Consumer.class));
+        ContentAccessCertificate certificate = createContentAccessCertificate(
+            "key-1", "key-2", 18084729L);
+        doReturn(certificate).when(contentAccessManager).getCertificate(any(Consumer.class));
+
+        List<CertificateDTO> actual = consumerResource.getEntitlementCertificates(consumer.getId(), "123456");
+
+        assertEquals(0, actual.size());
+    }
 
     @Test
     void shouldThrowWhenConsumerNotFound() {
