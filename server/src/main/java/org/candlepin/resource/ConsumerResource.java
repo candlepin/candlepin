@@ -85,7 +85,6 @@ import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Environment;
@@ -154,6 +153,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -166,6 +166,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Provider;
 import javax.persistence.OptimisticLockException;
@@ -1864,23 +1866,47 @@ public class ConsumerResource {
         poolManager.regenerateDirtyEntitlements(consumer);
 
         Set<Long> serialSet = this.extractSerials(serials);
+        List<? extends Certificate> entitlementCerts = this.entCertService.listForConsumer(consumer);
+        Certificate caCert = this.contentAccessManager.getCertificate(consumer);
+        Stream<? extends Certificate> certStream = this.buildCertificateStream(entitlementCerts, caCert);
 
-        List<CertificateDTO> returnCerts = new LinkedList<>();
-        List<EntitlementCertificate> allCerts = entCertService.listForConsumer(consumer);
-
-        for (EntitlementCertificate cert : allCerts) {
-            if (serialSet.isEmpty() || serialSet.contains(cert.getSerial().getId())) {
-                returnCerts.add(translator.translate(cert, CertificateDTO.class));
-            }
+        // Check if we should filter certs by the cert serial
+        if (serialSet != null && !serialSet.isEmpty()) {
+            certStream = certStream
+                .filter(cert -> cert.getSerial() != null && serialSet.contains(cert.getSerial().getId()));
         }
 
-        // we want to insert the content access cert to this list if appropriate
-        Certificate cert = this.contentAccessManager.getCertificate(consumer);
-        if (cert != null) {
-            returnCerts.add(translator.translate(cert, CertificateDTO.class));
-        }
+        return certStream.map(this.translator.getStreamMapper(Certificate.class, CertificateDTO.class))
+            .collect(Collectors.toList());
+    }
 
-        return returnCerts;
+    /**
+     * Builds a stream containing all of the certificates in the provided collection, and any
+     * additional certificates that might not be included in the collection (such as the content
+     * access cert). Null elements will be filtered from the resulting stream.
+     *
+     * @param certificates
+     *  a collection of certificates to include in the certificate stream
+     *
+     * @param extraCerts
+     *  any additional certificates to include in the certificate stream
+     *
+     * @return
+     *  a stream containing a combination of all the certificates
+     */
+    private Stream<? extends Certificate> buildCertificateStream(
+        Collection<? extends Certificate> certificates, Certificate... extraCerts) {
+
+        Stream<? extends Certificate> baseCertStream = certificates != null ?
+            certificates.stream() :
+            Stream.empty();
+
+        Stream<? extends Certificate> extraCertStream = extraCerts != null ?
+            Stream.of(extraCerts) :
+            Stream.empty();
+
+        return Stream.concat(baseCertStream, extraCertStream)
+            .filter(Objects::nonNull);
     }
 
     @ApiOperation(notes = "Retrieves the body of the Content Access Certificate for the Consumer",
