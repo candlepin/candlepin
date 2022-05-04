@@ -1614,31 +1614,11 @@ public class OwnerResource implements OwnersApi {
         String ownerKey) {
 
         Owner owner = findOwnerByKey(ownerKey);
-        List<Product> products = ownerProductCurator.getProductsByOwner(owner).list();
-
-        Map<String, Set<String>> dtoMap = new HashMap<>();
-        Arrays.stream(SystemPurposeAttributeType.values())
-            .forEach(x -> dtoMap.put(x.toString(), new LinkedHashSet<>()));
-
-        for (Product p : products) {
-            for (SystemPurposeAttributeType type : SystemPurposeAttributeType.values()) {
-                boolean slaExempt = Boolean.parseBoolean(
-                    p.getAttributeValue(Product.Attributes.SUPPORT_LEVEL_EXEMPT));
-                if (type == SystemPurposeAttributeType.SERVICE_LEVEL && slaExempt) {
-                    continue;
-                }
-                String purposeValue = p.getAttributeValue(type.toString());
-                Set<String> purposes = new LinkedHashSet<>();
-                if (purposeValue != null) {
-                    purposes = new LinkedHashSet<>(Util.toList(purposeValue));
-                }
-                dtoMap.get(type.toString()).addAll(purposes);
-            }
-        }
+        Map<String, Set<String>> attributeMap = ownerProductCurator.getSyspurposeAttributesByOwner(owner);
 
         SystemPurposeAttributesDTO dto = new SystemPurposeAttributesDTO();
         dto.setOwner(translator.translate(owner, NestedOwnerDTO.class));
-        dto.setSystemPurposeAttributes(dtoMap);
+        dto.setSystemPurposeAttributes(attributeMap);
         return dto;
     }
 

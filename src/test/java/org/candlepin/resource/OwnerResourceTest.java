@@ -2005,24 +2005,21 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         when(this.mockOwnerCurator.getByKey(eq(owner.getKey())))
             .thenReturn(owner);
 
-        CandlepinQuery mockQuery = mock(CandlepinQuery.class);
-        when(this.mockOwnerProductCurator.getProductsByOwner(eq(owner)))
-            .thenReturn(mockQuery);
+        Map<String, Set<String>> mockMap = new HashMap<>();
+        when(this.mockOwnerProductCurator.getSyspurposeAttributesByOwner(eq(owner)))
+            .thenReturn(mockMap);
 
-        Product p1 = TestUtil.createProduct();
-        Product p2 = TestUtil.createProduct();
-        Product p3 = TestUtil.createProduct();
+        Set<String> mockAddons = new HashSet<>();
+        mockAddons.add("hello");
+        mockAddons.add("world");
+        mockAddons.add("earth");
+        mockMap.put(SystemPurposeAttributeType.ADDONS.toString(), mockAddons);
 
-        p1.setAttribute(SystemPurposeAttributeType.ADDONS.toString(), "hello, world");
-        p2.setAttribute(SystemPurposeAttributeType.ADDONS.toString(), "hello, earth");
-        p3.setAttribute(SystemPurposeAttributeType.ADDONS.toString(), "earth, world");
-
-        p1.setAttribute(SystemPurposeAttributeType.USAGE.toString(), "production");
-        p2.setAttribute(SystemPurposeAttributeType.USAGE.toString(), "production");
-        p3.setAttribute(SystemPurposeAttributeType.USAGE.toString(), "development");
-
-        List<Product> dummyProducts = new ArrayList<>(Arrays.asList(p1, p2, p3));
-        when(mockQuery.list()).thenReturn(dummyProducts);
+        Set<String> mockUsage = new HashSet<>();
+        mockUsage.add("production");
+        mockUsage.add("production");
+        mockUsage.add("development");
+        mockMap.put(SystemPurposeAttributeType.USAGE.toString(), mockUsage);
 
         SystemPurposeAttributesDTO result = resource.getSyspurpose(owner.getKey());
 
@@ -2036,6 +2033,34 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             .get(SystemPurposeAttributeType.USAGE.toString());
         Set<String> expectedUsage = new HashSet<>(Arrays.asList("production", "development"));
         assertEquals(expectedUsage, usage);
+    }
+
+    @Test
+    public void testReturnNoProductSysPurposeValuesForOwner() throws Exception {
+        Owner owner = TestUtil.createOwner();
+        OwnerResource resource = this.buildOwnerResource();
+        when(this.mockOwnerCurator.getByKey(eq(owner.getKey())))
+                .thenReturn(owner);
+
+        Map<String, Set<String>> mockMap = new HashMap<>();
+        when(this.mockOwnerProductCurator.getSyspurposeAttributesByOwner(eq(owner)))
+                .thenReturn(mockMap);
+        SystemPurposeAttributesDTO result = resource.getSyspurpose(owner.getKey());
+        Map<String, Set<String>> returned = result.getSystemPurposeAttributes();
+        assertEquals(returned, new HashMap<>());
+    }
+
+    @Test
+    public void testReturnProductSysPurposeValuesForNoOwnerForId() throws Exception {
+        OwnerResource resource = this.buildOwnerResource();
+        when(this.mockOwnerCurator.getByKey(any(String.class))).thenReturn(null);
+        assertThrows(NotFoundException.class, () -> resource.getSyspurpose(owner.getKey()));
+    }
+
+    @Test
+    public void testReturnProductSysPurposeValuesForNoOwnerId() throws Exception {
+        OwnerResource resource = this.buildOwnerResource();
+        assertThrows(BadRequestException.class, () -> resource.getSyspurpose(""));
     }
 
     @Test

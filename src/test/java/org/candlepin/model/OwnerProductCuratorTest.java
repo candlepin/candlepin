@@ -28,10 +28,13 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -695,5 +698,106 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
             .collect(Collectors.toList());
 
         this.ownerProductCurator.getProductsByVersions(versions);
+    }
+
+    @Test
+    public void testGetSyspurposeAttributesByOwner() {
+        Owner owner = this.createOwner();
+
+        Product product1 = new Product();
+        product1.setId("test-product-" + TestUtil.randomInt());
+        product1.setName("test-product-" + TestUtil.randomInt());
+        product1.setAttribute(SystemPurposeAttributeType.USAGE.toString(), "usage1a, usage1b");
+        product1.setAttribute(SystemPurposeAttributeType.ADDONS.toString(), "addons1a, addons1b");
+        product1.setAttribute(SystemPurposeAttributeType.ROLES.toString(), "role1a");
+        product1.setAttribute(SystemPurposeAttributeType.SERVICE_LEVEL.toString(), "Standard");
+        this.createProduct(product1);
+        this.createOwnerProductMapping(owner, product1);
+        this.createPool(owner, product1, 10L, new Date(), TestUtil.createDate(2100, 1, 1));
+
+        Product product2 = new Product();
+        product2.setId("test-product-" + TestUtil.randomInt());
+        product2.setName("test-product-" + TestUtil.randomInt());
+        product2.setAttribute(SystemPurposeAttributeType.USAGE.toString(), "usage2a, usage2b");
+        product2.setAttribute(SystemPurposeAttributeType.ADDONS.toString(), "addons2a, addons2b");
+        product2.setAttribute(SystemPurposeAttributeType.ROLES.toString(), "role2a");
+        product2.setAttribute(SystemPurposeAttributeType.SERVICE_LEVEL.toString(), "Layered");
+        product2.setAttribute(Product.Attributes.SUPPORT_LEVEL_EXEMPT, "true");
+        this.createProduct(product2);
+        this.createOwnerProductMapping(owner, product2);
+        this.createPool(owner, product2, 10L, new Date(), TestUtil.createDate(2100, 1, 1));
+
+        // This will be for a product with an expired pool
+        Product product3 = new Product();
+        product3.setId("test-product-" + TestUtil.randomInt());
+        product3.setName("test-product-" + TestUtil.randomInt());
+        product3.setAttribute(SystemPurposeAttributeType.USAGE.toString(), "usage3a, usage3b");
+        product3.setAttribute(SystemPurposeAttributeType.ADDONS.toString(), "addons3a, addons3b");
+        product3.setAttribute(SystemPurposeAttributeType.ROLES.toString(), "role3a");
+        this.createProduct(product3);
+        this.createOwnerProductMapping(owner, product3);
+        this.createPool(owner, product3, 10L, TestUtil.createDate(2000, 1, 1),
+            TestUtil.createDate(2001, 1, 1));
+
+        // This will be for product with no pool
+        Product product4 = new Product();
+        product4.setId("test-product-" + TestUtil.randomInt());
+        product4.setName("test-product-" + TestUtil.randomInt());
+        product4.setAttribute(SystemPurposeAttributeType.USAGE.toString(), "usage4a, usage4b");
+        product4.setAttribute(SystemPurposeAttributeType.ADDONS.toString(), "addons4a, addons4b");
+        product4.setAttribute(SystemPurposeAttributeType.ROLES.toString(), "role4a");
+        this.createProduct(product4);
+        this.createOwnerProductMapping(owner, product4);
+
+        Map<String, Set<String>> expected = new HashMap<>();
+        Set<String> useage = new HashSet<>();
+        useage.add("usage1a");
+        useage.add("usage1b");
+        useage.add("usage2a");
+        useage.add("usage2b");
+        Set<String> addons = new HashSet<>();
+        addons.add("addons1a");
+        addons.add("addons1b");
+        addons.add("addons2a");
+        addons.add("addons2b");
+        Set<String> roles = new HashSet<>();
+        roles.add("role1a");
+        roles.add("role2a");
+        Set<String> support = new HashSet<>();
+        support.add("Standard");
+
+        expected.put(SystemPurposeAttributeType.USAGE.toString(), useage);
+        expected.put(SystemPurposeAttributeType.ADDONS.toString(), addons);
+        expected.put(SystemPurposeAttributeType.ROLES.toString(), roles);
+        expected.put(SystemPurposeAttributeType.SERVICE_LEVEL.toString(), support);
+
+        Map<String, Set<String>> result = this.ownerProductCurator.getSyspurposeAttributesByOwner(owner);
+        assertEquals(result, expected);
+    }
+
+    @Test
+    public void testGetNoSyspurposeAttributesByOwner() {
+        Owner owner = this.createOwner();
+        Map<String, Set<String>> expected = new HashMap<>();
+        Map<String, Set<String>> result = this.ownerProductCurator.getSyspurposeAttributesByOwner(owner);
+        assertEquals(result, expected);
+    }
+
+    @Test
+    public void testGetSyspurposeAttributesNullOwner() {
+        Owner owner = this.createOwner();
+        Map<String, Set<String>> expected = new HashMap<>();
+        Map<String, Set<String>> result =
+            this.ownerProductCurator.getSyspurposeAttributesByOwner((Owner) null);
+        assertEquals(result, expected);
+    }
+
+    @Test
+    public void testGetSyspurposeAttributesNullOwnerId() {
+        Owner owner = this.createOwner();
+        Map<String, Set<String>> expected = new HashMap<>();
+        Map<String, Set<String>> result =
+            this.ownerProductCurator.getSyspurposeAttributesByOwner((String) null);
+        assertEquals(result, expected);
     }
 }
