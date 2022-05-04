@@ -749,19 +749,15 @@ public class EntitlementRules implements Enforcer {
                         notConsumedLocally += entitlement.getQuantity();
                     }
 
-                    if (pool.getQuantity().equals(notConsumedLocally)) {
-                        // getting all pools matching the sub id. Filtering out
-                        // the 'parent'.
-                        List<Pool> pools = subscriptionPoolMap.get(pool.getSubscriptionId());
-                        if (pools != null) {
-                            for (int idex = 0; idex < pools.size(); idex++) {
-                                Pool derivedPool = pools.get(idex);
-                                if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
-                                    poolOperationCallback.setQuantityToPool(derivedPool, 0);
-                                }
-                            }
-                        }
-                    }
+                    // getting all pools matching the sub id. Filtering out
+                    // the 'parent'.
+                    List<Pool> pools = subscriptionPoolMap.getOrDefault(pool.getSubscriptionId(),
+                        new ArrayList<>());
+                    final Long exportCount = notConsumedLocally;
+                    pools.stream()
+                        .filter(thisPool -> thisPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null)
+                        .forEach(thisPool -> poolOperationCallback.setQuantityToPool(thisPool,
+                        pool.getQuantity().equals(exportCount) ? 0 : -1));
                 }
             }
         }
