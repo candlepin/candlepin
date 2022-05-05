@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -61,20 +62,29 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         this.asyncJobCurator.flush();
     }
 
-    private boolean setLastUpdatedTime(AsyncJobStatus job, Date lastUpdated) {
-        String jpql = "UPDATE AsyncJobStatus SET updated = :date WHERE id = :id";
+    /**
+     * Updates the last updated time for the jobs with the specified IDs
+     *
+     * @param lastUpdated
+     *  the last updated time to apply to the jobs
+     *
+     * @param jobIds
+     *  a collection of the IDs of the jobs to be updated
+     */
+    private void setLastUpdatedTime(Date lastUpdated, Collection<String> jobIds) {
+        String jpql = "UPDATE AsyncJobStatus SET updated = :date WHERE id IN :ids";
 
-        int count = this.getEntityManager()
+        // hsqldb doesn't have a limit on in clause size. Because we are only using
+        // this method in testing there should be no need to break into blocks.
+        this.getEntityManager()
             .createQuery(jpql)
             .setParameter("date", lastUpdated)
-            .setParameter("id", job.getId())
+            .setParameter("ids", jobIds)
             .executeUpdate();
-
-        return count > 0;
     }
 
     private AsyncJobStatus createJob(String name, String key, JobState state, Owner owner, String principal,
-        String origin, String executor, String result, Date startTime, Date endTime, Date lastUpdated) {
+        String origin, String executor, String result, Date startTime, Date endTime) {
 
         AsyncJobStatus job = new AsyncJobStatus()
             .setName(name)
@@ -88,16 +98,7 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             .setStartTime(startTime)
             .setEndTime(endTime);
 
-        job = this.asyncJobCurator.create(job);
-
-        if (lastUpdated != null) {
-            assertTrue(this.setLastUpdatedTime(job, lastUpdated));
-            this.asyncJobCurator.refresh(job);
-        }
-
-        this.asyncJobCurator.flush();
-
-        return job;
+        return this.asyncJobCurator.create(job, false);
     }
 
     @Test
@@ -218,7 +219,6 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         }
     }
 
-
     /**
      * Creates a bunch of jobs for the given owners. Used primarily for the tests of the findJobs
      * method.
@@ -228,9 +228,9 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
         Collection<String> executors) {
 
         List<AsyncJobStatus> created = new LinkedList<>();
+        Map<Date, List<String>> jobsToUpdate = new HashMap<>();
         int count = 0;
 
-        Date now = new Date();
         Date d2da = Util.addDaysToDt(-2);
         Date d1da = Util.addDaysToDt(-1);
         Date d1dl = Util.addDaysToDt(1);
@@ -260,35 +260,45 @@ public class AsyncJobStatusCuratorTest extends DatabaseTestFixture {
             executors = Arrays.asList((String) null);
         }
 
+        BiConsumer<AsyncJobStatus, Date> storeResult = (job, lastUpdated) -> {
+            created.add(job);
+            jobsToUpdate.computeIfAbsent(lastUpdated, (key) -> new LinkedList<>())
+                .add(job.getId());
+        };
+
         for (String key : keys) {
             for (JobState state : states) {
                 for (Owner owner : owners) {
                     for (String principal : principals) {
                         for (String origin : origins) {
                             for (String executor : executors) {
-                                created.add(this.createJob("Job-" + ++count, key, state, owner, principal,
-                                    origin, executor, null, null, null, now));
+                                created.add(this.createJob("Job-" + ++count, key, state, owner,
+                                    principal, origin, executor, null, null, null));
 
-                                created.add(this.createJob("Job-" + ++count, key, state, owner, principal,
-                                    origin, executor, null, d2da, null, d2da));
+                                storeResult.accept(this.createJob("Job-" + ++count, key, state, owner,
+                                    principal, origin, executor, null, d2da, null), d2da);
 
-                                created.add(this.createJob("Job-" + ++count, key, state, owner, principal,
-                                    origin, executor, null, d2da, d1da, d1da));
+                                storeResult.accept(this.createJob("Job-" + ++count, key, state, owner,
+                                    principal, origin, executor, null, d2da, d1da), d1da);
 
-                                created.add(this.createJob("Job-" + ++count, key, state, owner, principal,
-                                    origin, executor, null, d1dl, null, d1dl));
+                                storeResult.accept(this.createJob("Job-" + ++count, key, state, owner,
+                                    principal, origin, executor, null, d1dl, null), d1dl);
 
-                                created.add(this.createJob("Job-" + ++count, key, state, owner, principal,
-                                    origin, executor, null, d1dl, d2dl, d2dl));
+                                storeResult.accept(this.createJob("Job-" + ++count, key, state, owner,
+                                    principal, origin, executor, null, d1dl, d2dl), d2dl);
 
-                                created.add(this.createJob("Job-" + ++count, key, state, owner, principal,
-                                    origin, executor, null, d1da, d1dl, d1dl));
+                                storeResult.accept(this.createJob("Job-" + ++count, key, state, owner,
+                                    principal, origin, executor, null, d1da, d1dl), d1dl);
                             }
                         }
                     }
                 }
             }
         }
+
+        jobsToUpdate.forEach(this::setLastUpdatedTime);
+
+        this.asyncJobCurator.refresh(created);
 
         return created;
     }
