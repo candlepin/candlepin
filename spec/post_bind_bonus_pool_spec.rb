@@ -299,6 +299,16 @@ describe 'Post bind bonus pool updates' do
     @cp.get_pool(@unlimited_bonus_pool['id'])['quantity'].should == 0
   end
 
+  it 'should change bonus pool quantity when unlimited virt limited master pool is fully exported and then reduced' do
+    skip("candlepin running in standalone mode") unless is_hosted?
+    entitlement = @satellite_cp.consume_pool(@unlimited_master_pool['id'], {:quantity => 10}).first
+    @cp.get_pool(@unlimited_bonus_pool['id'])['quantity'].should == 0
+
+    # now reduce the entitlement quantity and the bonus pool should update to unlimited quantity. BZ 2078029
+    @cp.update_entitlement({:id => entitlement.id, :quantity => 5})
+    @cp.get_pool(@unlimited_bonus_pool['id'])['quantity'].should == -1
+  end
+
   it 'should not change bonus pool quantity when unlimited virt limited master pool is consumed by non manifest consumer' do
     @guest_cp.consume_pool(@unlimited_master_pool['id'], {:quantity => 1})
     @cp.get_pool(@unlimited_bonus_pool['id'])['quantity'].should == -1
