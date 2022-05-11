@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.12
+Version: 4.1.13
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,21 @@ fi
 
 #raw
 %changelog
+* Wed May 11 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.13-1
+- 2078785: Added filter for fetching SCA certs with cert serial Id
+  (joshmalbrecht@gmail.com)
+- Added configurations for using Visual Studio Code * Added settings to use
+  eclipse-formatter. * Added gitignore entries for generated directories.
+  (joshmalbrecht@gmail.com)
+- 2076954: Fixed null pointer exception while testing products for cycles
+  (crog@redhat.com)
+- 2076658: Fixed attribute storage issue causing version collisions
+  (crog@redhat.com)
+- Fixed a bug in Util.toMap when processing null values (crog@redhat.com)
+- 2075779: Product locking for content add/remove (wpoteat@redhat.com)
+- Revert change in releasers.conf branch name (nmoumoul@redhat.com)
+- Add branch name to releasers config (nmoumoul@redhat.com)
+
 * Thu Apr 14 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.12-1
 - 2061788: Added null check for service level on new consumer
   (joshmalbrecht@gmail.com)
