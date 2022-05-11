@@ -25,5 +25,9 @@ gradlePlugin {
             implementationClass = "Msgfmt"
         }
 
+        pomToolkitPlugin {
+            id = "org.candlepin.gradle.PomToolkit"
+            implementationClass = "PomToolkit"
+        }
     }
 }
