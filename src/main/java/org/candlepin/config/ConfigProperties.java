@@ -149,6 +149,9 @@ public class ConfigProperties {
     // Messaging
     public static final String CPM_PROVIDER = "candlepin.messaging.provider";
 
+    // OCSP stapling
+    public static final String SSL_VERIFY = "candlepin.sslverifystatus";
+
     // TODO:
     // Clean up all the messaging configuration. We have all sorts of prefixes and definitions for
     // common broker options, and stuff which is unique to specific brokers. We should be defining
@@ -400,6 +403,7 @@ public class ConfigProperties {
             // submit one when registering.
             this.put(HIDDEN_RESOURCES, "environments");
             this.put(HIDDEN_CAPABILITIES, "");
+            this.put(SSL_VERIFY, "false");
 
             this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
 

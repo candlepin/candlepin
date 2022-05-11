@@ -38,6 +38,10 @@ candlepin.hidden_resources=
 <% if (candlepin.hidden_capabilities) { %>\
 candlepin.hidden_capabilities=<%= candlepin.hidden_capabilities %>
 
+<% if (candlepin.sslverifystatus_enabled) { %> \
+candlepin.sslverifystatus=true
+<% } %>
+
 <% } %>\
 org.quartz.jobStore.misfireThreshold=60000
 org.quartz.jobStore.useProperties=false

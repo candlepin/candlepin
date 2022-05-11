@@ -239,6 +239,10 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
             capabilities.add(CandlepinCapabilities.CLOUD_REGISTRATION_CAPABILITY);
         }
 
+        if (config.getBoolean(ConfigProperties.SSL_VERIFY, false)) {
+            capabilities.add(CandlepinCapabilities.SSL_VERIFY_CAPABILITY);
+        }
+
         // Remove hidden capabilities
         Set<String> hidden = config.getSet(ConfigProperties.HIDDEN_CAPABILITIES, null);
         if (hidden != null) {
