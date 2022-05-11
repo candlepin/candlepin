@@ -172,6 +172,31 @@ public class CandlepinContextListenerTest {
     }
 
     @Test
+    void sslVerifyCapabilityPresentWhenSslVerifyEnabled() {
+        when(config.getBoolean(eq(ConfigProperties.SSL_VERIFY))).thenReturn(true);
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+
+        CandlepinCapabilities expected = new CandlepinCapabilities();
+        expected.add(CandlepinCapabilities.SSL_VERIFY_CAPABILITY);
+        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void sslVerifyCapabilityAbsentWhenSslVerifyDisabled() {
+        when(config.getBoolean(eq(ConfigProperties.SSL_VERIFY))).thenReturn(false);
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+
+        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
+
+        assertFalse(actual.contains(CandlepinCapabilities.SSL_VERIFY_CAPABILITY),
+            "ssl_verify_status present but not expected");
+    }
+
+    @Test
     public void activeMQDisabled() {
         when(config.getBoolean(eq(ConfigProperties.ACTIVEMQ_ENABLED))).thenReturn(false);
         prepareForInitialization();
