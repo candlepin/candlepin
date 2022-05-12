@@ -17,6 +17,7 @@ package org.candlepin.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -33,8 +34,10 @@ class IdentityCertificateCuratorTest extends DatabaseTestFixture {
     @Test
     public void shouldListOnlyExpiredIdCerts() {
         String idCert = createIdCert().getId();
-        createExpiredIdCert();
-        createExpiredIdCert();
+        String include1 = createExpiredIdCertWithConsumer().getId();
+        String include2 = createExpiredIdCertWithConsumer().getId();
+        String exclude1 = createExpiredIdCertWithUpstreamConsumer().getId();
+        String exclude2 = createExpiredIdCertWithUpstreamConsumer().getId();
 
         List<ExpiredCertificate> expiredCertificates = this.identityCertificateCurator.listAllExpired();
 
@@ -43,6 +46,10 @@ class IdentityCertificateCuratorTest extends DatabaseTestFixture {
             .map(ExpiredCertificate::getCertId)
             .collect(Collectors.toSet());
         assertFalse(expiredCertIds.contains(idCert));
+        assertFalse(expiredCertIds.contains(exclude1));
+        assertFalse(expiredCertIds.contains(exclude2));
+        assertTrue(expiredCertIds.contains(include1));
+        assertTrue(expiredCertIds.contains(include2));
     }
 
     @Test
@@ -73,6 +80,30 @@ class IdentityCertificateCuratorTest extends DatabaseTestFixture {
     private IdentityCertificate createExpiredIdCert() {
         IdentityCertificate idCert = TestUtil.createIdCert(Util.yesterday());
         return saveCert(idCert);
+    }
+
+    private IdentityCertificate createExpiredIdCertWithConsumer() {
+        IdentityCertificate idCert = TestUtil.createIdCert(Util.yesterday());
+        Owner owner = createOwner();
+        Consumer consumer = createConsumer(owner);
+        idCert = saveCert(idCert);
+        consumer.setIdCert(idCert);
+        consumerCurator.update(consumer);
+        return idCert;
+    }
+
+    private IdentityCertificate createExpiredIdCertWithUpstreamConsumer() {
+        IdentityCertificate idCert = TestUtil.createIdCert(Util.yesterday());
+        Owner owner = createOwner();
+        UpstreamConsumer upstream = new UpstreamConsumer();
+        upstream.setUuid(TestUtil.randomString("uuid"));
+        upstream.setName(TestUtil.randomString("upstream"));
+        upstream.setType(createConsumerType());
+        owner.setUpstreamConsumer(upstream);
+        idCert = saveCert(idCert);
+        upstream.setIdCert(idCert);
+        ownerCurator.saveOrUpdate(owner);
+        return idCert;
     }
 
     private IdentityCertificate createIdCert() {
