@@ -285,6 +285,10 @@ public class ConfigProperties {
     // How long (in seconds) to wait for job threads to finish during a graceful Tomcat shutdown
     public static final String ASYNC_JOBS_THREAD_SHUTDOWN_TIMEOUT = "candlepin.async.thread.shutdown.timeout";
 
+    // How many days to allow a product to be orphaned before removing it on the next refresh or
+    // manifest import. Default: 30 days
+    public static final String ORPHANED_ENTITY_GRACE_PERIOD = "candlepin.refresh.orphan_entity_grace_period";
+
     /**
      * Fetches a string representing the prefix for all per-job configuration for the specified job.
      * The job key or class name may be used, but the usage must be consistent.
@@ -485,6 +489,7 @@ public class ConfigProperties {
             // Set the triggerable jobs list
             this.put(ASYNC_JOBS_TRIGGERABLE_JOBS, String.join(", ", ASYNC_JOBS_TRIGGERABLE_JOBS_LIST));
 
+            this.put(ORPHANED_ENTITY_GRACE_PERIOD, "30");
         }
     };
 

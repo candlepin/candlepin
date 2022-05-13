@@ -2356,4 +2356,5 @@
     <include file="db/changelog/20220329140000-add_consumer_name_to_cp_deleted_consumers.xml"/>
     <include file="db/changelog/20220329154201-owner-product-key-change.xml"/>
     <include file="db/changelog/20220420165513-drop_pool_derived_product_constraint.xml"/>
+    <include file="db/changelog/20220517162755-add_owner_product_orphaned_date.xml"/>
 </databaseChangeLog>
