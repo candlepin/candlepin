@@ -15,6 +15,7 @@
 package org.candlepin.model;
 
 import java.io.Serializable;
+import java.time.Instant;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -71,6 +72,10 @@ public class OwnerProduct implements Persisted, Serializable {
     @Column(name = "product_uuid")
     private String productUuid;
 
+    /** The date at which the product became orphaned (unused/flagged for deletion) within the org */
+    @Column(name = "orphaned_date")
+    private Instant orphanedDate;
+
     public OwnerProduct() {
         // Intentionally left empty
     }
@@ -90,16 +95,47 @@ public class OwnerProduct implements Persisted, Serializable {
         return owner;
     }
 
-    public void setOwner(Owner owner) {
+    public OwnerProduct setOwner(Owner owner) {
         this.owner = owner;
+        return this;
     }
 
     public Product getProduct() {
         return product;
     }
 
-    public void setProduct(Product product) {
+    public OwnerProduct setProduct(Product product) {
         this.product = product;
+        return this;
+    }
+
+    /**
+     * Fetches the instant at which this product has been detected as orphaned (or unused) within
+     * the organization represented by this OwnerProduct linkage. If the product is still in use or
+     * otherwise hasn't been detected as an orphan, this method will return null.
+     *
+     * @return
+     *  the instant the product has been orphaned within the organization, or null if the product
+     *  has not yet been flagged for deletion.
+     */
+    public Instant getOrphanedDate() {
+        return this.orphanedDate;
+    }
+
+    /**
+     * Sets or clears the date this product has been orphaned within the organization represented by
+     * this OwnerProduct linkage. If the incoming date is null, any existing date will be cleared.
+     *
+     * @param date
+     *  the date at which this product has been orphaned within the organization, or null to clear
+     *  any existing orphan date
+     *
+     * @return
+     *  a reference to this OwnerProduct instance
+     */
+    public OwnerProduct setOrphanedDate(Instant date) {
+        this.orphanedDate = date;
+        return this;
     }
 
     @Override

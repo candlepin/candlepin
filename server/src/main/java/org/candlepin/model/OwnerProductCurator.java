@@ -26,6 +26,7 @@ import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,6 +38,7 @@ import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
@@ -59,12 +61,40 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
     @Transactional
     public OwnerProduct getOwnerProductByProductId(Owner owner, String productId) {
-        return (OwnerProduct) this.createSecureCriteria()
-            .createAlias("owner", "owner")
-            .createAlias("product", "product")
-            .add(Restrictions.eq("owner.id", owner.getId()))
-            .add(Restrictions.eq("product.id", productId))
-            .uniqueResult();
+        return this.getOwnerProduct(owner.getId(), productId);
+    }
+
+    /**
+     * Fetches the OwnerProduct instance for the given owner ID and product ID. If the specified
+     * product does not exist in the given organization, or either the organization or product do
+     * not exist, this method returns null.
+     *
+     * @param ownerId
+     *  the ID of the organization
+     *
+     * @param productId
+     *  the Red Hat ID of the product
+     *
+     * @return
+     *  the OwnerProduct instance mapping the given owner to the given product, or null if no such
+     *  mapping exists
+     */
+    public OwnerProduct getOwnerProduct(String ownerId, String productId) {
+        String jpql = "SELECT op FROM OwnerProduct op " +
+            "WHERE op.ownerId = :owner_id AND op.product.id = :product_id";
+
+        try {
+            return this.getEntityManager()
+                .createQuery(jpql, OwnerProduct.class)
+                .setParameter("owner_id", ownerId)
+                .setParameter("product_id", productId)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            // Intentionally left empty
+        }
+
+        return null;
     }
 
     public Product getProductById(Owner owner, String productId) {
@@ -564,6 +594,180 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         }
 
         return result;
+    }
+
+    /**
+     * Fetches a mapping of product ID to date it has been orphaned within the given organization.
+     * If a given product does not exist within the organization, it will not have a mapping in the
+     * returned map. If no matching products exist within the org, this method returns an empty map.
+     *
+     * @param owner
+     *  the organization from which orphaned product dates should be fetched
+     *
+     * @param productIds
+     *  a collection of product IDs for which to fetch the orphan date
+     *
+     * @throws IllegalArgumentException
+     *  if owner is null
+     *
+     * @return
+     *  a mapping of product ID to its orphan date within the context of the provided organization
+     */
+    public Map<String, Instant> getOwnerProductOrphanedDates(Owner owner, Collection<String> productIds) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
+        return this.getOwnerProductOrphanedDates(owner.getId(), productIds);
+    }
+
+    /**
+     * Fetches a mapping of product ID to date it has been orphaned within the given organization.
+     * If a given product does not exist within the organization, it will not have a mapping in the
+     * returned map. If no matching products exist within the org, this method returns an empty map.
+     *
+     * @param ownerId
+     *  the ID of the organization from which orphaned product dates should be fetched
+     *
+     * @param productIds
+     *  a collection of product IDs for which to fetch the orphan date
+     *
+     * @throws IllegalArgumentException
+     *  if ownerId is null
+     *
+     * @return
+     *  a mapping of product ID to its orphan date within the context of the provided organization
+     */
+    public Map<String, Instant> getOwnerProductOrphanedDates(String ownerId, Collection<String> productIds) {
+        if (ownerId == null) {
+            throw new IllegalArgumentException("ownerId is null");
+        }
+
+        Map<String, Instant> dates = new HashMap<>();
+
+        if (productIds != null && !productIds.isEmpty()) {
+            String jpql = "SELECT op.product.id, op.orphanedDate FROM OwnerProduct op " +
+                "WHERE op.ownerId = :ownerId " +
+                "  AND op.product.id IN (:productIds)";
+
+            Query query = this.getEntityManager()
+                .createQuery(jpql)
+                .setParameter("ownerId", ownerId);
+
+            for (Collection<String> block : this.partition(productIds)) {
+                query.setParameter("productIds", block)
+                    .getResultList()
+                    .stream()
+                    .forEach(row -> dates.put((String) ((Object[]) row)[0], (Instant) ((Object[]) row)[1]));
+            }
+        }
+
+        return dates;
+    }
+
+    /**
+     * Sets or clears the product orphaned dates for the given products within the provided
+     * organization. If the provided date is null, any existing orphaned date will be cleared.
+     *
+     * @param owner
+     *  the organization in which to set product orphaned dates
+     *
+     * @param productIds
+     *  a collection of IDs of products on which to set the orphaned date
+     *
+     * @param instant
+     *  the new orphaned dates of the given products, or null to clear it
+     *
+     * @throws IllegalArgumentException
+     *  if ownerId is null
+     *
+     * @return
+     *  the number of owner-product references updated as a result of this operation
+     */
+    public int updateOwnerProductOrphanedDates(Owner owner, Collection<String> productIds, Instant instant) {
+        if (owner == null) {
+            throw new IllegalArgumentException("owner is null");
+        }
+
+        return this.updateOwnerProductOrphanedDates(owner.getId(), productIds, instant);
+    }
+
+    /**
+     * Sets or clears the product orphaned dates for the given products within the provided
+     * organization. If the provided date is null, any existing orphaned date will be cleared.
+     *
+     * @param ownerId
+     *  the ID of the organization in which to set product orphaned dates
+     *
+     * @param productIds
+     *  a collection of IDs of products on which to set the orphaned date
+     *
+     * @param instant
+     *  the new orphaned dates of the given products, or null to clear it
+     *
+     * @throws IllegalArgumentException
+     *  if ownerId is null
+     *
+     * @return
+     *  the number of owner-product references updated as a result of this operation
+     */
+    public int updateOwnerProductOrphanedDates(String ownerId, Collection<String> productIds,
+        Instant instant) {
+
+        if (ownerId == null) {
+            throw new IllegalArgumentException("ownerId is null");
+        }
+
+        int updated = 0;
+
+        if (productIds != null && !productIds.isEmpty()) {
+            // Impl note:
+            // The primary key on OwnerProduct is the owner ID and product *UUID*. Since we have
+            // product IDs (that is, *NOT* UUIDs), we need to do a join to figure out which products
+            // we're referencing. Unfortunately, this join causes a problem in that JPQL updates
+            // don't support joins nor subqueries and, worse, Hibernate will still try to do it
+            // anyway [1] and crash out.
+            // To deal with this headache, we first query for all the product UUIDs, and then do
+            // our partitioned update with the fetched UUIDs.
+            //
+            // [1] update cp2_owner_products cross join  set orphaned_date=?
+            //     where owner_id=? and (product_id in (?))
+            Set<String> uuids = new HashSet<>();
+
+            String jpql = "SELECT op.productUuid FROM OwnerProduct op " +
+                "WHERE op.ownerId = :ownerId " +
+                "  AND op.product.id IN (:productIds)";
+
+            TypedQuery<String> uuidQuery = this.getEntityManager()
+                .createQuery(jpql, String.class)
+                .setParameter("ownerId", ownerId);
+
+            for (Collection<String> block : this.partition(productIds)) {
+                List<String> result = uuidQuery.setParameter("productIds", block)
+                    .getResultList();
+
+                uuids.addAll(result);
+            }
+
+            // Do the actual update now that we have our UUIDs
+            if (!uuids.isEmpty()) {
+                jpql = "UPDATE OwnerProduct op SET op.orphanedDate = :date " +
+                    "WHERE op.ownerId = :ownerId " +
+                    "  AND op.productUuid IN (:uuids)";
+
+                Query query = this.getEntityManager()
+                    .createQuery(jpql)
+                    .setParameter("ownerId", ownerId)
+                    .setParameter("date", instant);
+
+                for (Collection<String> block : this.partition(uuids)) {
+                    updated += query.setParameter("uuids", block)
+                        .executeUpdate();
+                }
+            }
+        }
+
+        return updated;
     }
 
     /**
