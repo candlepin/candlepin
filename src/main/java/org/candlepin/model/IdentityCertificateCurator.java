@@ -37,6 +37,7 @@ public class IdentityCertificateCurator extends AbstractHibernateCurator<Identit
 
     /**
      * Lists all expired identity certificates that are not revoked.
+     *  Upstream consumer certificates are not retrieved.
      *
      * @return a list of expired certificates
      */
@@ -44,7 +45,8 @@ public class IdentityCertificateCurator extends AbstractHibernateCurator<Identit
     public List<ExpiredCertificate> listAllExpired() {
         String hql = "SELECT new org.candlepin.model.ExpiredCertificate(c.id, s.id)" +
             " FROM IdentityCertificate c" +
-            " INNER JOIN c.serial s " +
+            " INNER JOIN c.serial s" +
+            " INNER JOIN Consumer con on con.idCert = c.id" +
             " WHERE s.expiration < :nowDate";
 
         Query query = this.getEntityManager().createQuery(hql, ExpiredCertificate.class);
