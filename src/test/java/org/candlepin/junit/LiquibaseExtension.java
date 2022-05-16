@@ -38,8 +38,6 @@ import java.sql.DriverManager;
 import java.sql.Statement;
 import java.util.Collections;
 
-
-
 /**
  * The LiquibaseExtension class performs initialization and teardown of a temporary database for use
  * with unit tests that are backed by a pseudo-mocked database.

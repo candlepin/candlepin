@@ -18,11 +18,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -36,7 +38,8 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
     private Date twoResultsDate;
     private Date oneResultDate;
-
+    private Owner owner;
+    private ConsumerType ct;
 
     @BeforeEach
     @Override
@@ -73,6 +76,11 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
         dc = new DeletedConsumer("klmno", "20", "key", "name");
         dc.setConsumerName("consumerName");
         dcc.create(dc);
+
+        owner = new Owner("test-owner", "Test Owner");
+        owner = ownerCurator.create(owner);
+        ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
+        ct = consumerTypeCurator.create(ct);
     }
 
     @Test
@@ -139,5 +147,31 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
     public void descOrderByOwnerId() {
         DeletedConsumer newest = dcc.findByOwnerId("10").list().get(0);
         assertEquals("fghij", newest.getConsumerUuid());
+    }
+
+    @Test
+    public void testCreateDeletedConsumersWithExistingConsumers() {
+        Consumer consumer1 = new Consumer("consumer-1", "testUser", owner, ct);
+        consumer1 = consumerCurator.create(consumer1);
+        Consumer consumer2 = new Consumer("consumer-2", "testUser", owner, ct);
+        consumer2 = consumerCurator.create(consumer2);
+
+        int actual = dcc.createDeletedConsumers(Arrays
+            .asList(consumer1.getId(), consumer2.getId(), "unknown-id"));
+
+        assertEquals(2, actual);
+        DeletedConsumer deleteConsumer1 = dcc.findByConsumerUuid(consumer1.getUuid());
+        assertEquals(consumer1.getConsumer().getName(), deleteConsumer1.getConsumerName());
+        assertEquals(consumer1.getConsumer().getUuid(), deleteConsumer1.getConsumerUuid());
+        assertEquals(consumer1.getOwner().getId(), deleteConsumer1.getOwnerId());
+        assertEquals(consumer1.getOwner().getDisplayName(), deleteConsumer1.getOwnerDisplayName());
+        assertEquals(consumer1.getOwner().getKey(), deleteConsumer1.getOwnerKey());
+
+        DeletedConsumer deleteConsumer2 = dcc.findByConsumerUuid(consumer2.getUuid());
+        assertEquals(consumer2.getConsumer().getName(), deleteConsumer2.getConsumerName());
+        assertEquals(consumer2.getConsumer().getUuid(), deleteConsumer2.getConsumerUuid());
+        assertEquals(consumer2.getOwner().getId(), deleteConsumer2.getOwnerId());
+        assertEquals(consumer2.getOwner().getDisplayName(), deleteConsumer2.getOwnerDisplayName());
+        assertEquals(consumer2.getOwner().getKey(), deleteConsumer2.getOwnerKey());
     }
 }

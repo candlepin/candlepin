@@ -28,6 +28,7 @@ import org.candlepin.async.tasks.HypervisorHeartbeatUpdateJob;
 import org.candlepin.async.tasks.HypervisorUpdateJob;
 import org.candlepin.async.tasks.ImportJob;
 import org.candlepin.async.tasks.ImportRecordCleanerJob;
+import org.candlepin.async.tasks.InactiveConsumerCleanerJob;
 import org.candlepin.async.tasks.JobCleaner;
 import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.async.tasks.OrphanCleanupJob;
@@ -435,6 +436,7 @@ public class CandlepinModule extends AbstractModule {
         JobManager.registerJob(UndoImportsJob.JOB_KEY, UndoImportsJob.class);
         JobManager.registerJob(UnmappedGuestEntitlementCleanerJob.JOB_KEY,
             UnmappedGuestEntitlementCleanerJob.class);
+        JobManager.registerJob(InactiveConsumerCleanerJob.JOB_KEY, InactiveConsumerCleanerJob.class);
     }
 
     private void configureExporter() {

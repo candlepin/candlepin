@@ -25,6 +25,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.async.tasks.InactiveConsumerCleanerJob;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.exceptions.NotFoundException;
@@ -42,6 +43,8 @@ import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -1406,6 +1409,153 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testGetIdentityCertIdsWithExistingIdentityCerts() {
+        Consumer consumerWithIdCert1 = new Consumer("consumerWithIdCert1", "testUser", owner, ct);
+        consumerWithIdCert1.setIdCert(createIdCert());
+        consumerWithIdCert1 = consumerCurator.create(consumerWithIdCert1);
+        Consumer consumerWithIdCert2 = new Consumer("consumerWithIdCert2", "testUser", owner, ct);
+        consumerWithIdCert2.setIdCert(createIdCert());
+        consumerWithIdCert2 = consumerCurator.create(consumerWithIdCert2);
+        Consumer consumerWithNoIdCert = new Consumer("consumerWithNoIdCert", "testUser", owner, ct);
+        consumerWithNoIdCert = consumerCurator.create(consumerWithNoIdCert);
+
+        List<String> actual = consumerCurator.getIdentityCertIds(Arrays
+            .asList(consumerWithIdCert1.getId(), consumerWithIdCert2.getId(), consumerWithNoIdCert.getId()));
+
+        assertEquals(2, actual.size());
+        assertTrue(actual.contains(consumerWithIdCert1.getIdCert().getId()));
+        assertTrue(actual.contains(consumerWithIdCert2.getIdCert().getId()));
+    }
+
+    @Test
+    public void testGetContentAccessCertIdsWithExistingContentAccessCerts() {
+        Consumer consumerWithCACert1 = new Consumer("consumerWithCACert1", "testUser", owner, ct);
+        consumerWithCACert1.setContentAccessCert(createContentAccessCertificate());
+        consumerWithCACert1 = consumerCurator.create(consumerWithCACert1);
+        Consumer consumerWithCACert2 = new Consumer("consumerWithCACert2", "testUser", owner, ct);
+        consumerWithCACert2.setContentAccessCert(createContentAccessCertificate());
+        consumerWithCACert2 = consumerCurator.create(consumerWithCACert2);
+        Consumer consumerWithNoCACert = new Consumer("consumerWithNoCACert", "testUser", owner, ct);
+        consumerWithNoCACert = consumerCurator.create(consumerWithNoCACert);
+
+        List<String> actual = consumerCurator.getContentAccessCertIds(Arrays
+            .asList(consumerWithCACert1.getId(), consumerWithCACert2.getId(), consumerWithNoCACert.getId()));
+
+        assertEquals(2, actual.size());
+        assertTrue(actual.contains(consumerWithCACert1.getContentAccessCert().getId()));
+        assertTrue(actual.contains(consumerWithCACert2.getContentAccessCert().getId()));
+    }
+
+    @Test
+    public void testGetSerialIdsForCertsWithExistingSerials() {
+        ContentAccessCertificate caCert1 = createContentAccessCertificate();
+        ContentAccessCertificate caCert2 = createContentAccessCertificate();
+        IdentityCertificate idCert1 = createIdCert();
+        IdentityCertificate idCert2 = createIdCert();
+        List<String> caCertIds = Arrays.asList(caCert1.getId(), caCert2.getId(), "unknown-id");
+        List<String> idCertIds = Arrays.asList(idCert1.getId(), idCert2.getId(), "unknown-id");
+
+        List<Long> actual = consumerCurator.getSerialIdsForCerts(caCertIds, idCertIds);
+
+        assertEquals(4, actual.size());
+        assertTrue(actual.contains(caCert1.getSerial().getId()));
+        assertTrue(actual.contains(caCert2.getSerial().getId()));
+        assertTrue(actual.contains(idCert1.getSerial().getId()));
+        assertTrue(actual.contains(idCert2.getSerial().getId()));
+    }
+
+    @Test
+    public void testGetInactiveConsumerIdsWithNullLastCheckedInRetentionDate() {
+        Instant nonCheckedInRetention = Instant.now()
+            .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            consumerCurator.getInactiveConsumerIds(null, nonCheckedInRetention);
+        });
+
+        assertTrue(exception.getMessage().equals("Last checked-in retention date cannot be null."));
+    }
+
+    @Test
+    public void testGetInactiveConsumerIdsWithNullLastUpdatedRetentionDate() {
+        Instant lastCheckedInRetention = Instant.now()
+            .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
+
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            consumerCurator.getInactiveConsumerIds(lastCheckedInRetention, null);
+        });
+
+        assertTrue(exception.getMessage().equals("Last updated retention date cannot be null."));
+    }
+
+    @Test
+    public void testGetInactiveConsumerIdsWithExpiredLastCheckedInDate() {
+        Instant lastCheckedInRetention = Instant.now()
+            .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
+        Instant nonCheckedInRetention = Instant.now()
+            .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
+
+        Consumer inactiveConsumer = new Consumer("inactiveConsumer", "testUser", owner, ct);
+        Instant lastCheckedIn = Instant.ofEpochMilli(lastCheckedInRetention.toEpochMilli() - 86400L);
+        inactiveConsumer.setLastCheckin(Date.from(lastCheckedIn));
+        inactiveConsumer = consumerCurator.create(inactiveConsumer);
+
+        Consumer activeConsumer = new Consumer("activeConsumer", "testUser", owner, ct);
+        Instant activeLastCheckedIn = Instant.ofEpochMilli(lastCheckedInRetention.toEpochMilli() + 86400L);
+        activeConsumer.setLastCheckin(Date.from(activeLastCheckedIn));
+        consumerCurator.create(activeConsumer);
+
+        List<String> actual =
+            consumerCurator.getInactiveConsumerIds(lastCheckedInRetention, nonCheckedInRetention);
+
+        assertEquals(1, actual.size());
+        assertEquals(inactiveConsumer.getId(), actual.get(0));
+    }
+
+    @Test
+    public void testGetInactiveConsumerIdsWithTypeThatHasManifest() {
+        Instant lastCheckedInRetention = Instant.now()
+            .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
+
+        ConsumerType consumerType = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
+        consumerType = consumerTypeCurator.create(consumerType);
+        Consumer consumer = new Consumer("consumer", "testUser", owner, consumerType);
+
+        Instant lastCheckedIn = Instant.now()
+            .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS + 10,
+            ChronoUnit.DAYS);
+
+        consumer.setLastCheckin(Date.from(lastCheckedIn));
+        consumerCurator.create(consumer);
+
+        List<String> actual = consumerCurator.getInactiveConsumerIds(lastCheckedInRetention, Instant.now());
+        assertEquals(0, actual.size());
+    }
+
+    @Test
+    public void testGetInactiveConsumerIdsWithConsumerThatHasExistingEntitlements() {
+        Instant lastCheckedInRetention = Instant.now()
+            .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
+        Instant nonCheckedInRetention = Instant.now()
+            .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
+
+        Consumer consumer = new Consumer("consumer", "testUser", owner, ct);
+        consumer = consumerCurator.create(consumer);
+
+        Product product = this.createProduct("1", "2", owner);
+        Pool pool = createPool(owner, product, 5L, Util.yesterday(), Util.tomorrow());
+        Entitlement ent1 = this.createEntitlement(owner, consumer, pool,
+            createEntitlementCertificate("entkey1", "ecert1"));
+        ent1.setUpdatedOnStart(false);
+        entitlementCurator.create(ent1);
+
+        List<String> actual = consumerCurator.getInactiveConsumerIds(lastCheckedInRetention,
+            nonCheckedInRetention);
+
+        assertEquals(0, actual.size());
+    }
+
+    @Test
     public void testGetConsumerIdsWithStartedEnts() {
         Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
         consumerCurator.create(consumer);
@@ -1520,6 +1670,15 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     private IdentityCertificate createIdCert() {
         IdentityCertificate idCert = TestUtil.createIdCert(TestUtil.createDateOffset(2, 0, 0));
         return saveCert(idCert);
+    }
+
+    private ContentAccessCertificate createContentAccessCertificate() {
+        ContentAccessCertificate certificate = new ContentAccessCertificate();
+        certificate.setKey("crt_key");
+        certificate.setSerial(new CertificateSerial(Util.addDaysToDt(10)));
+        certificate.setCert("cert_1");
+        certificate.setContent("content_1");
+        return saveCert(certificate);
     }
 
     private ContentAccessCertificate createExpiredContentAccessCert(Consumer consumer) {
