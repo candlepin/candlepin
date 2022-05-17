@@ -36,6 +36,8 @@ public class CandlepinCapabilities extends HashSet<String> {
 
     public static final String CLOUD_REGISTRATION_CAPABILITY = "cloud_registration";
 
+    public static final String SSL_VERIFY_CAPABILITY = "ssl_verify_status";
+
     private static CandlepinCapabilities capabilities;
 
 
