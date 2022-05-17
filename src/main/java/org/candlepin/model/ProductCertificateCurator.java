@@ -106,7 +106,7 @@ public class ProductCertificateCurator extends AbstractHibernateCurator<ProductC
         throws GeneralSecurityException, IOException {
         log.debug("Generating cert for product: {}", product);
 
-        KeyPair keyPair = this.pki.generateNewKeyPair();
+        KeyPair keyPair = this.pki.generateKeyPair();
         Set<X509ExtensionWrapper> extensions = this.extensionUtil.productExtensions(product);
 
         BigInteger serial = BigInteger.valueOf(product.getId().hashCode()).abs();

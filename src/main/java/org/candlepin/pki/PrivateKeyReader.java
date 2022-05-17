@@ -21,7 +21,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.PrivateKey;
 import java.util.Map;
 
 /**
@@ -29,15 +29,15 @@ import java.util.Map;
  */
 public interface PrivateKeyReader {
 
-    RSAPrivateKey read(String caKeyPath, String caKeyPassword) throws IOException;
+    PrivateKey read(String caKeyPath, String caKeyPassword) throws IOException;
 
-    RSAPrivateKey read(InputStream keyStream, String password) throws IOException;
+    PrivateKey read(InputStream keyStream, String password) throws IOException;
 
     /**
      * Interface for various private key encoding types
      */
     interface PrivateKeyPemParser {
-        default RSAPrivateKey decode(String pem, String password, Map<String, String> headers)
+        default PrivateKey decode(String pem, String password, Map<String, String> headers)
             throws IOException {
             try (
                 InputStream derStream = new Base64InputStream(
@@ -48,7 +48,7 @@ public interface PrivateKeyReader {
             }
         }
 
-        RSAPrivateKey decode(byte[] der, String password, Map<String, String> headers) throws IOException;
+        PrivateKey decode(byte[] der, String password, Map<String, String> headers) throws IOException;
 
         default char[] getPassword(String password) {
             return (password != null) ? password.toCharArray() : null;

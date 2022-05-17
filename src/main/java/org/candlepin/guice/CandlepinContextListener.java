@@ -27,7 +27,6 @@ import org.candlepin.config.MapConfiguration;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.logging.LoggingConfigurator;
 import org.candlepin.messaging.CPMContextListener;
-import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.resteasy.ResourceLocatorMap;
 
@@ -65,6 +64,8 @@ import javax.cache.CacheManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
+
+
 
 /**
  * Customized Candlepin version of
@@ -108,8 +109,6 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     @Override
     public void contextInitialized(ServletContextEvent sce) {
         log.info("Candlepin initializing context.");
-
-        JSSProviderLoader.addProvider();
 
         I18nManager.getInstance().setDefaultLocale(Locale.US);
         servletContext = sce.getServletContext();

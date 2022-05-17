@@ -2788,31 +2788,22 @@ public class ConsumerResource implements ConsumersApi {
      */
     private IdentityCertificate generateIdCert(Consumer c, boolean regen) {
         IdentityCertificate idCert = null;
-        boolean errored = false;
 
         try {
-            if (regen) {
-                idCert = identityCertService.regenerateIdentityCert(c);
-            }
-            else {
-                idCert = identityCertService.generateIdentityCert(c);
-            }
+            idCert = regen ?
+                identityCertService.regenerateIdentityCert(c) :
+                identityCertService.generateIdentityCert(c);
 
             if (idCert == null) {
-                errored = true;
+                throw new BadRequestException(i18n.tr("Problem regenerating ID cert for unit {0}", c));
             }
         }
         catch (GeneralSecurityException | IOException e) {
             log.error("Problem regenerating ID cert for unit:", e);
-            errored = true;
-        }
-
-        if (errored) {
-            throw new BadRequestException(i18n.tr("Problem regenerating ID cert for unit {0}", c));
+            throw new BadRequestException(i18n.tr("Problem regenerating ID cert for unit {0}", c), e);
         }
 
         log.debug("Generated identity cert: {}", idCert.getSerial());
-
         return idCert;
     }
 

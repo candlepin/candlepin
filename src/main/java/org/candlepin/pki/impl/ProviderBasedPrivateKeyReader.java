@@ -28,7 +28,7 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
-import java.security.interfaces.RSAPrivateKey;
+import java.security.PrivateKey;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.HashMap;
@@ -53,7 +53,7 @@ public abstract class ProviderBasedPrivateKeyReader implements PrivateKeyReader 
     private static final String END = "-----END ";
 
     @Override
-    public RSAPrivateKey read(String caKeyPath, String caKeyPassword) throws IOException {
+    public PrivateKey read(String caKeyPath, String caKeyPassword) throws IOException {
         try (
             FileInputStream fis = new FileInputStream(caKeyPath)
         ) {
@@ -62,7 +62,7 @@ public abstract class ProviderBasedPrivateKeyReader implements PrivateKeyReader 
     }
 
     @Override
-    public RSAPrivateKey read(InputStream keyStream, String password) throws IOException {
+    public PrivateKey read(InputStream keyStream, String password) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(keyStream));
         String line = reader.readLine();
 
@@ -109,7 +109,7 @@ public abstract class ProviderBasedPrivateKeyReader implements PrivateKeyReader 
      * @return the PrivateKey from the PEM file
      * @throws IOException if anything goes wrong
      */
-    protected RSAPrivateKey readPem(String type, BufferedReader reader, String password) throws IOException {
+    protected PrivateKey readPem(String type, BufferedReader reader, String password) throws IOException {
         String line;
         String endMarker = END + type;
         StringBuilder buf = new StringBuilder();
@@ -171,12 +171,12 @@ public abstract class ProviderBasedPrivateKeyReader implements PrivateKeyReader 
      */
     protected static class PKCS8PrivateKeyPemParser implements PrivateKeyPemParser {
         @Override
-        public RSAPrivateKey decode(byte[] der, String password, Map<String, String> headers)
+        public PrivateKey decode(byte[] der, String password, Map<String, String> headers)
             throws IOException {
             try {
                 PKCS8EncodedKeySpec kspec = new PKCS8EncodedKeySpec(der);
                 KeyFactory kf = KeyFactory.getInstance("RSA");
-                return (RSAPrivateKey) kf.generatePrivate(kspec);
+                return kf.generatePrivate(kspec);
             }
             catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
                 throw new IOException("Could not read key", e);
@@ -194,7 +194,7 @@ public abstract class ProviderBasedPrivateKeyReader implements PrivateKeyReader 
      */
     protected static class PKCS8EncryptedPrivateKeyPemParser implements PrivateKeyPemParser {
         @Override
-        public RSAPrivateKey decode(byte[] der, String password, Map<String, String> headers)
+        public PrivateKey decode(byte[] der, String password, Map<String, String> headers)
             throws IOException {
             try {
                 // PBE stands for password based encryption
@@ -204,7 +204,7 @@ public abstract class ProviderBasedPrivateKeyReader implements PrivateKeyReader 
                 Key secret = skf.generateSecret(pbeKeySpec);
                 PKCS8EncodedKeySpec pkcsSpec = encryptedInfo.getKeySpec(secret);
                 KeyFactory kf = KeyFactory.getInstance("RSA");
-                return (RSAPrivateKey) kf.generatePrivate(pkcsSpec);
+                return kf.generatePrivate(pkcsSpec);
             }
             catch (NoSuchAlgorithmException | InvalidKeySpecException | InvalidKeyException e) {
                 throw new IOException("Could not read key", e);

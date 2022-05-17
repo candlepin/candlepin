@@ -123,9 +123,13 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
 
     /**
      * @param id type id
+     *
+     * @return
+     *  a reference to this ConsumerType instance
      */
-    public void setId(String id) {
+    public ConsumerType setId(String id) {
         this.id = id;
+        return this;
     }
 
     /**
@@ -137,9 +141,13 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
 
     /**
      * @param labelIn The label to set.
+     *
+     * @return
+     *  a reference to this ConsumerType instance
      */
-    public void setLabel(String labelIn) {
+    public ConsumerType setLabel(String labelIn) {
         label = labelIn;
+        return this;
     }
 
     public boolean isType(ConsumerTypeEnum type) {
@@ -178,8 +186,9 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
         return this.manifest;
     }
 
-    public void setManifest(boolean manifest) {
+    public ConsumerType setManifest(boolean manifest) {
         this.manifest = manifest;
+        return this;
     }
 
 }

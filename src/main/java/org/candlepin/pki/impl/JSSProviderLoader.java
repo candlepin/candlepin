@@ -16,6 +16,7 @@ package org.candlepin.pki.impl;
 
 import org.apache.commons.lang3.StringUtils;
 import org.mozilla.jss.CertDatabaseException;
+import org.mozilla.jss.CryptoManager;
 import org.mozilla.jss.JSSProvider;
 import org.mozilla.jss.KeyDatabaseException;
 import org.mozilla.jss.crypto.AlreadyInitializedException;
@@ -24,19 +25,29 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.security.GeneralSecurityException;
+import java.security.Provider;
 import java.security.Security;
 import java.util.Arrays;
 
+
+
 /**
+ * Provides initialization logic for JSS via the initialize method,
  * Provides the addProvider() method, which, when called, initializes the JSS CryptoManager (which in turn
  * initializes the NSS DB) and loads the JSS Provider into the JVM.
  */
 public class JSSProviderLoader {
-    private static JSSProvider jssProvider = null;
-    private static final String NSS_DB_LOCATION = "/etc/pki/nssdb";
     private static final Logger log = LoggerFactory.getLogger(JSSProviderLoader.class);
+
+    private static final String NSS_DB_LOCATION = "/etc/pki/nssdb";
+    private static final String PROVIDER_NAME = "Mozilla-JSS";
+
+    private static Provider provider = null;
+
+    private JSSProviderLoader() {
+        throw new UnsupportedOperationException("JSSProviderLoader should not be instantiated");
+    }
 
     /**
      * Code from http://fahdshariff.blogspot.jp/2011/08/changing-java-library-path-at-runtime.html so that we
@@ -83,8 +94,15 @@ public class JSSProviderLoader {
         }
     }
 
-    private JSSProviderLoader() {
-        // static methods only
+    /**
+     * Fetches a string representing the JSS version loaded at runtime. This function should never
+     * return null.
+     *
+     * @return
+     *  JSS version string
+     */
+    public static String getJSSVersion() {
+        return JSSProvider.class.getPackage().getSpecificationVersion();
     }
 
     /**
@@ -96,8 +114,13 @@ public class JSSProviderLoader {
      * InitializationValues class, depending on which JSS version is on the classpath. This is because of
      * breaking changes introduced between JSS 4.4.X (RHEL 7) and 4.5.0+ (RHEL 8).
      */
-    public static void addProvider() {
-        log.debug("Starting call to JSSProviderLoader.addProvider()...");
+    public static synchronized void initialize() {
+        if (provider != null) {
+            return; // Already initialized
+        }
+
+        log.info("Initializing JSS CryptoManager...");
+        log.info("Using JSS v{}", getJSSVersion());
 
         ClassLoader loader = JSSProviderLoader.class.getClassLoader();
 
@@ -107,19 +130,23 @@ public class JSSProviderLoader {
         try {
             // Set values on fields of the InitializationValues object.
             Field noCertDB = ivsClass.getField("noCertDB");
+            Field readOnly = ivsClass.getField("readOnly");
+            Field noModDB = ivsClass.getField("noModDB");
             Field installJSSProvider = ivsClass.getField("installJSSProvider");
             Field initializeJavaOnly = ivsClass.getField("initializeJavaOnly");
+
             noCertDB.set(initializationValuesObject, true);
+            readOnly.set(initializationValuesObject, false);
+            noModDB.set(initializationValuesObject, false);
             installJSSProvider.set(initializationValuesObject, false);
             initializeJavaOnly.set(initializationValuesObject, false);
 
             // Initialize the CryptoManager, which will initialize the nss DB.
-            Class<?> cryptoManagerClass = loader.loadClass("org.mozilla.jss.CryptoManager");
-            Method initialize = cryptoManagerClass.getMethod("initialize", ivsClass);
-            initialize.invoke(null, initializationValuesObject);
+            CryptoManager.class.getMethod("initialize", ivsClass)
+                .invoke(null, initializationValuesObject);
         }
-        catch (ClassNotFoundException | NoSuchMethodException | NoSuchFieldException |
-            InvocationTargetException | IllegalAccessException e) {
+        catch (NoSuchMethodException | NoSuchFieldException | InvocationTargetException |
+            IllegalAccessException e) {
 
             if (e.getCause() instanceof AlreadyInitializedException) {
                 log.warn("CryptoManager was already initialized.");
@@ -134,10 +161,74 @@ public class JSSProviderLoader {
             }
         }
 
-        jssProvider = new JSSProvider();
-        int addProviderReturn = Security.addProvider(jssProvider);
-        log.debug("Finished call to JSSProviderLoader.addProvider(). Returned value: {}",
-            addProviderReturn);
+        // Create a JSS provider to return
+        provider = new JSSProvider();
+
+        // Ensure the provider is not installed on the provider chain
+        if (Security.getProvider(PROVIDER_NAME) != null) {
+            log.warn("JSS security provider installed on provider chain; removing...");
+
+            // Don't pollute the provider space with JSS -- it's broken
+            Security.removeProvider(PROVIDER_NAME);
+        }
+
+        log.info("JSS initialization complete");
+    }
+
+    /**
+     * Fetches the JSS security provider. If JSS has not yet been initialized, and the initialize
+     * argument is true, it will be initialized before fetching the provider. If the initialize
+     * argument is false and JSS is not initialized, this method throws an exception.
+     *
+     * @param initialize
+     *  whether or not to initialize JSS if it has not yet been initialized
+     *
+     * @return
+     *  the JSS security provider
+     */
+    public static synchronized Provider getProvider(boolean initialize) {
+        if (initialize) {
+            initialize();
+        }
+
+        if (provider == null) {
+            throw new IllegalStateException("JSS has not yet been initialized");
+        }
+
+        return provider;
+    }
+
+    /**
+     * Fetches the JSS CryptoManager. If JSS has not yet been initialized, and the initialize
+     * argument is true, it will be initialized before fetching the provider. If the initialize
+     * argument is false and JSS is not initialized, this method throws an exception.
+     *
+     * @param initialize
+     *  whether or not to initialize JSS if it has not yet been initialized
+     *
+     * @throws JSSLoaderException
+     *  if the CryptoManager cannot be fetched
+     *
+     * @return
+     *  the JSS crypto manager
+     */
+    public static synchronized CryptoManager getCryptoManager(boolean initialize) {
+        if (initialize) {
+            initialize();
+        }
+
+        try {
+            // Impl note:
+            // This is necessary due to how we load JSS: The NotInitializedException moves packages
+            // between versions (v4.5), and since we can't bind to a specific version, we can't
+            // hard-code the invocation of this function, nor the required exception handling
+            // surrounding it.
+            return (CryptoManager) CryptoManager.class.getMethod("getInstance")
+                .invoke(null);
+        }
+        catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new JSSLoaderException("Unable to fetch CryptoManager", e);
+        }
     }
 
     /*
@@ -147,8 +238,7 @@ public class JSSProviderLoader {
      * - the 4.5.Z+ version of the class for RHEL 8+
      */
     private static Object getInitializationValuesObject(ClassLoader loader) {
-        String jssVersionStr = JSSProvider.class.getPackage().getSpecificationVersion();
-        log.info("Using JSS version {}", jssVersionStr);
+        String jssVersionStr = getJSSVersion();
 
         float jssVersion;
         // Get the X.Y out of the version, even if it is in the format X.Y.Z

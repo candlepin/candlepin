@@ -15,6 +15,9 @@
 package org.candlepin.pki.impl;
 
 import org.candlepin.config.Configuration;
+import org.candlepin.model.Consumer;
+import org.candlepin.model.KeyPairData;
+import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
@@ -23,11 +26,17 @@ import org.candlepin.pki.X509ExtensionWrapper;
 import com.google.common.base.Charsets;
 
 import org.apache.commons.codec.binary.Base64OutputStream;
+import org.mozilla.jss.CryptoManager;
 import org.mozilla.jss.asn1.ASN1Util;
 import org.mozilla.jss.asn1.ASN1Value;
 import org.mozilla.jss.asn1.InvalidBERException;
 import org.mozilla.jss.asn1.OCTET_STRING;
 import org.mozilla.jss.asn1.UTF8String;
+import org.mozilla.jss.crypto.CryptoToken;
+import org.mozilla.jss.crypto.KeyPairAlgorithm;
+import org.mozilla.jss.crypto.KeyPairGenerator;
+import org.mozilla.jss.crypto.TokenException;
+import org.mozilla.jss.crypto.TokenRuntimeException;
 import org.mozilla.jss.netscape.security.extensions.ExtendedKeyUsageExtension;
 import org.mozilla.jss.netscape.security.extensions.NSCertTypeExtension;
 import org.mozilla.jss.netscape.security.util.BitArray;
@@ -58,48 +67,162 @@ import org.mozilla.jss.netscape.security.x509.X500Name;
 import org.mozilla.jss.netscape.security.x509.X509CertImpl;
 import org.mozilla.jss.netscape.security.x509.X509CertInfo;
 import org.mozilla.jss.netscape.security.x509.X509Key;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.security.Key;
+import java.security.KeyException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.Provider;
+import java.security.PublicKey;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Set;
 
+import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import javax.inject.Inject;
+
+
 
 /**
  * PKI utility that uses the JSS crypto provider
  */
 public class JSSPKIUtility extends ProviderBasedPKIUtility {
-    private static final byte[] LINE_SEPARATOR = String.format("%n").getBytes();
-    private static final String SIGNING_ALG_ID = "SHA256withRSA";
-    private static final String CERTIFICATE_PEM_NAME = "CERTIFICATE";
+    private static final Logger log = LoggerFactory.getLogger(JSSPKIUtility.class);
+
+    private static final String KEY_ALGORITHM = "RSA";
+    public static final int KEY_SIZE = 4096;
+
+    public static final byte[] LINE_SEPARATOR = String.format("%n").getBytes();
+    public static final String SIGNING_ALG_ID = "SHA256withRSA";
+
+    public static final String CERTIFICATE_PEM_NAME = "CERTIFICATE";
 
     // Note that using RSA PRIVATE KEY instead of PRIVATE KEY will indicate this is
     // a PKCS1 format instead of a PKCS8.
     public static final String PRIVATE_KEY_PEM_NAME = "PRIVATE KEY";
 
+    /**
+     * PublicKey implementation that guarantees access to its format and encoding
+     */
+    private static class InsecurePublicKey implements PublicKey {
+
+        private final String algorithm;
+        private final byte[] encoded;
+        private final String format;
+
+        public InsecurePublicKey(PublicKey impl, byte[] encoded, String format) {
+            this.algorithm = impl.getAlgorithm();
+            this.encoded = Objects.requireNonNull(encoded);
+            this.format = Objects.requireNonNull(format);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getAlgorithm() {
+            return this.algorithm;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public byte[] getEncoded() {
+            return this.encoded;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getFormat() {
+            return this.format;
+        }
+    }
+
+    /**
+     * PrivateKey implementation that guarantees access to its format and encoding
+     */
+    private static class InsecurePrivateKey implements PrivateKey {
+
+        private final String algorithm;
+        private final byte[] encoded;
+        private final String format;
+
+        public InsecurePrivateKey(PrivateKey impl, byte[] encoded, String format) {
+            this.algorithm = impl.getAlgorithm();
+            this.encoded = Objects.requireNonNull(encoded);
+            this.format = Objects.requireNonNull(format);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getAlgorithm() {
+            return this.algorithm;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public byte[] getEncoded() {
+            return this.encoded;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getFormat() {
+            return this.format;
+        }
+    }
+
+
+    private final KeyPairDataCurator keypairDataCurator;
+
+
     @Inject
-    public JSSPKIUtility(CertificateReader reader, SubjectKeyIdentifierWriter writer, Configuration config) {
+    public JSSPKIUtility(CertificateReader reader, SubjectKeyIdentifierWriter writer, Configuration config,
+        KeyPairDataCurator keypairDataCurator) {
+
         super(reader, writer, config);
+
+        this.keypairDataCurator = keypairDataCurator;
     }
 
     @Override
     public X509Certificate createX509Certificate(String dn, Set<X509ExtensionWrapper> extensions,
         Set<X509ByteExtensionWrapper> byteExtensions, Date startDate, Date endDate, KeyPair clientKeyPair,
         BigInteger serialNumber, String alternateName) throws IOException {
+
+        // Ensure JSS is properly initialized before attempting any operations with it
+        JSSProviderLoader.initialize();
 
         X509CertInfo certInfo = new X509CertInfo();
         try {
@@ -141,8 +264,12 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
 
             X509CertImpl certImpl = new X509CertImpl(certInfo);
             certImpl.sign(reader.getCaKey(), SIGNING_ALG_ID);
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            return (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certImpl.getEncoded()));
+
+            // Impl note:
+            // The reencoding here is necessary to get cert extensions to register. If we return the
+            // X509CertImpl instance above, the encoding will be correct, and the cert will be
+            // valid, it just won't have any extensions present in the object.
+            return new X509CertImpl(certImpl.getEncoded());
         }
         catch (GeneralSecurityException e) {
             throw new RuntimeException("Could not create X.509 certificate", e);
@@ -258,7 +385,7 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
     }
 
     /**
-     * Calculate the KeyIdentifier for an RSAPublicKey and place it in an AuthorityKeyIdentifier extension.
+     * Calculate the KeyIdentifier for a public key and place it in an AuthorityKeyIdentifier extension.
      *
      * Java encodes RSA public keys using the SubjectPublicKeyInfo type described in RFC 5280.
      * <pre>
@@ -273,14 +400,15 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
      *
      * A KeyIdentifier is a SHA-1 digest of the subjectPublicKey bit string from the ASN.1 above.
      *
-     * @param key the RSAPublicKey to use
+     * @param key the public key to use
      * @return an AuthorityKeyIdentifierExtension based on the key
      * @throws IOException if we can't construct a MessageDigest object.
      */
-    public static AuthorityKeyIdentifierExtension buildAuthorityKeyIdentifier(RSAPublicKey key)
+    public static AuthorityKeyIdentifierExtension buildAuthorityKeyIdentifier(PublicKey key)
         throws IOException {
         try {
-            MessageDigest d = MessageDigest.getInstance("SHA-1");
+            Provider provider = JSSProviderLoader.getProvider(true);
+            MessageDigest d = MessageDigest.getInstance("SHA-1", provider);
 
             byte[] encodedKey = key.getEncoded();
 
@@ -317,7 +445,7 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
         if (ski == null) {
             /* If the SubjectPublicKey extension isn't available, we can calculate the value ourselves
              * from the certificate's public key. */
-            return buildAuthorityKeyIdentifier((RSAPublicKey) caCert.getPublicKey());
+            return buildAuthorityKeyIdentifier(caCert.getPublicKey());
         }
 
         /* RFC 5280 section 4.2.1.1 is a bit odd.  It states the AuthorityKeyIdentifier MAY contain
@@ -334,15 +462,12 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
         return new AuthorityKeyIdentifierExtension(ki, null, null);
     }
 
-    private byte[] getPemEncoded(byte[] der, String type) throws IOException {
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            writePemEncoded(der, out, type);
-            return out.toByteArray();
-        }
-    }
-
     @Override
     public byte[] getPemEncoded(X509Certificate cert) throws IOException {
+        if (cert == null) {
+            throw new IllegalArgumentException("cert is null");
+        }
+
         try {
             return getPemEncoded(cert.getEncoded(), CERTIFICATE_PEM_NAME);
         }
@@ -352,12 +477,24 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
     }
 
     @Override
-    public byte[] getPemEncoded(RSAPrivateKey key) throws IOException {
+    public byte[] getPemEncoded(PrivateKey key) throws IOException {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
         try {
-            return getPemEncoded(key.getEncoded(), PRIVATE_KEY_PEM_NAME);
+            byte[] encoded = this.getKeyEncoding(key);
+            return this.getPemEncoded(encoded, PRIVATE_KEY_PEM_NAME);
         }
         catch (Exception e) {
             throw new IOException("Could not encode key", e);
+        }
+    }
+
+    private byte[] getPemEncoded(byte[] der, String type) throws IOException {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            writePemEncoded(der, out, type);
+            return out.toByteArray();
         }
     }
 
@@ -371,4 +508,295 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
         b64Out.flush();
         out.write(("-----END " + type + "-----\n").getBytes(Charsets.UTF_8));
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public KeyPair generateKeyPair() throws KeyException {
+        try {
+            CryptoManager manager = JSSProviderLoader.getCryptoManager(true);
+            CryptoToken token = manager.getInternalKeyStorageToken();
+            KeyPairGenerator kpgen = token.getKeyPairGenerator(KeyPairAlgorithm.fromString(KEY_ALGORITHM));
+
+            kpgen.temporaryPairs(true);
+            kpgen.sensitivePairs(true);
+            kpgen.extractablePairs(true); // probably extraneous; does nothing in FIPS mode
+            kpgen.initialize(KEY_SIZE);
+
+            KeyPair keypair = kpgen.genKeyPair();
+            return this.buildInsecureKeyPair(keypair);
+        }
+        catch (NoSuchAlgorithmException | TokenException | TokenRuntimeException e) {
+            throw new KeyException(e);
+        }
+    }
+
+    /**
+     * Rebuilds an "insecure" KeyPair instance from another KeyPair instance. The returned KeyPair
+     * will allow fetching the encoded form of both the public and private key.
+     *
+     * @param keypair
+     *  the keypair to rebuild
+     *
+     * @return
+     *  a keypair which allows extracting the encoded form of both the public and private key
+     */
+    private KeyPair buildInsecureKeyPair(KeyPair keypair) throws KeyException {
+        return this.buildInsecureKeyPair(keypair.getPublic(), keypair.getPrivate());
+    }
+
+    /**
+     * Builds an "insecure" KeyPair instance from the provided public and private keys. The returned
+     * KeyPair will allow fetching the encoded form of both the public and private key.
+     *
+     * @param publicKey
+     *  the public key to use to build the insecure keypair
+     *
+     * @param privateKey
+     *  the private key to use to build the insecure keypair
+     *
+     * @return
+     *  a keypair which allows extracting the encoded form of both the public and private key
+     */
+    private KeyPair buildInsecureKeyPair(PublicKey publicKey, PrivateKey privateKey)
+        throws KeyException {
+
+        byte[] pubEncoded = publicKey.getEncoded();
+        byte[] privEncoded = this.getKeyEncoding(privateKey);
+
+        PublicKey insecurePub = new InsecurePublicKey(publicKey, pubEncoded, publicKey.getFormat());
+        PrivateKey insecurePriv = new InsecurePrivateKey(privateKey, privEncoded, "PKCS#8");
+
+        return new KeyPair(insecurePub, insecurePriv);
+    }
+
+    /**
+     * Fetches the encoded form of the specified private key
+     *
+     * @param privateKey
+     *  the private key from which to fetch the encoded form
+     *
+     * @return
+     *  the encoded form of the given private key
+     */
+    private byte[] getKeyEncoding(PrivateKey privateKey) throws KeyException {
+        byte[] unwrapped = privateKey.getEncoded();
+
+        if (unwrapped != null) {
+            return unwrapped;
+        }
+
+        try {
+            String algorithm = "AES";
+            String transformation = "AES/CBC/PKCS5Padding";
+            int blockSize = 16; // bytes
+            int keySize = 256; // bits
+
+            Provider provider = JSSProviderLoader.getProvider(true);
+
+            KeyGenerator keygen = KeyGenerator.getInstance(algorithm, provider);
+            keygen.init(keySize);
+
+            SecretKey skey = keygen.generateKey();
+            IvParameterSpec ivspec = new IvParameterSpec(new byte[blockSize]);
+            Arrays.fill(ivspec.getIV(), (byte) blockSize);
+
+            Cipher cipher = Cipher.getInstance(transformation, provider);
+            cipher.init(Cipher.WRAP_MODE, skey, ivspec);
+
+            byte[] wrapped = cipher.wrap(privateKey);
+
+            cipher = Cipher.getInstance(transformation, provider);
+            cipher.init(Cipher.DECRYPT_MODE, skey, ivspec);
+
+            unwrapped = cipher.doFinal(wrapped);
+        }
+        catch (Exception e) {
+            throw new KeyException(e);
+        }
+
+        return unwrapped;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public KeyPair getConsumerKeyPair(Consumer consumer) throws KeyException {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        KeyPairData kpdata = consumer.getKeyPairData();
+        KeyPair keypair = null;
+
+        if (kpdata == null) {
+            // no key data, create new and persist
+            keypair = this.generateKeyPair();
+
+            kpdata = new KeyPairData()
+                .setPublicKeyData(keypair.getPublic().getEncoded())
+                .setPrivateKeyData(keypair.getPrivate().getEncoded());
+
+            kpdata = this.keypairDataCurator.create(kpdata, false);
+            consumer.setKeyPairData(kpdata);
+        }
+        else {
+            // Try to process as PKCS8 data
+            keypair = this.processAsPKCS8(kpdata);
+
+            // If output is null, it's not PKCS8 data, try to process it as a Java-serialized object
+            if (keypair == null) {
+                log.info("Key pair does not appear to be PKCS8 data; attempting Java deserialization...");
+                keypair = this.processAsJSO(kpdata);
+
+                // If output is still null here, the key is malformed, so we should generate
+                // a new one
+                if (keypair == null) {
+                    log.warn("Malformed key data found for consumer {}, generating new key pair", consumer);
+                    keypair = this.generateKeyPair();
+                }
+
+                // In either case, we need to update the the key pair data associated with the
+                // consumer so we can avoid this conversion in the future.
+                kpdata.setPublicKeyData(keypair.getPublic().getEncoded());
+                kpdata.setPrivateKeyData(keypair.getPrivate().getEncoded());
+
+                kpdata = this.keypairDataCurator.merge(kpdata);
+                consumer.setKeyPairData(kpdata);
+            }
+        }
+
+        return keypair;
+    }
+
+    /**
+     * Attempts to process the given keypair data as if the keys are PKCS8 formatted. If the key
+     * pair data is incomplete or invalid, this method returns null.
+     *
+     * @param kpdata
+     *  the key pair data to process
+     *
+     * @return
+     *  a KeyPair consisting of the keys from the provided key pair data, or null if the key pair
+     *  data could not be processed
+     */
+    private KeyPair processAsPKCS8(KeyPairData kpdata) {
+        try {
+            PublicKey publicKey = this.generatePublicKey(kpdata.getPublicKeyData(), KEY_ALGORITHM);
+            PrivateKey privateKey = this.generatePrivateKey(kpdata.getPrivateKeyData(), KEY_ALGORITHM);
+
+            return this.buildInsecureKeyPair(publicKey, privateKey);
+        }
+        catch (GeneralSecurityException e) {
+            // If any exception occurred, the keys are either malformed or not PKCS8 keys
+            log.debug("Unexpected exception occurred while parsing key data: ", e);
+            return null;
+        }
+    }
+
+    /**
+     * Attempts to process the given keypair data as if the keys are Java-serialized key objects. If
+     * the key pair data is incomplete or invalid, this method returns null.
+     *
+     * @param kpdata
+     *  the key pair data to process
+     *
+     * @return
+     *  a KeyPair consisting of the keys from the provided key pair data, or null if the key pair
+     *  data could not be processed
+     */
+    private KeyPair processAsJSO(KeyPairData kpdata) {
+        try {
+            PublicKey publicKey = this.deserializeKey(kpdata.getPublicKeyData(), PublicKey.class);
+            PrivateKey privateKey = this.deserializeKey(kpdata.getPrivateKeyData(), PrivateKey.class);
+
+            return this.buildInsecureKeyPair(publicKey, privateKey);
+        }
+        catch (GeneralSecurityException | ClassNotFoundException | IOException e) {
+            // If any exception occurred, the keys are either malformed, not Java-serialized key
+            // objects, or something that doesn't allow extracting key data
+            log.debug("Unexpected exception occurred while deserializing key data: ", e);
+            return null;
+        }
+    }
+
+    /**
+     * Deserializes the given byte array into an object of the specified class. If the data provided
+     * cannot be deserialized into the given class, this method throws an exception.
+     *
+     * @param bytes
+     *  the data to deserialize
+     *
+     * @param keyClass
+     *  the key class to which the data should be deserialized
+     *
+     * @throws IOException
+     *  if the key data is malformed, invalid, or otherwise cannot be deserialized to the specified
+     *  class
+     *
+     * @return
+     *  an instance of the given key class representing the key data provided
+     */
+    private <T extends Key> T deserializeKey(byte[] bytes, Class<T> keyClass)
+        throws ClassNotFoundException, IOException {
+
+        if (bytes == null) {
+            throw new IOException("no data to deserialize");
+        }
+
+        try (ObjectInputStream ostream = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
+            Object obj = ostream.readObject();
+
+            if (!keyClass.isInstance(obj)) {
+                throw new IOException("incorrect object parsed from key data: " + obj.getClass());
+            }
+
+            return (T) obj;
+        }
+    }
+
+    /**
+     * Generates a PublicKey instance from the provided key data and algorithm.
+     *
+     * @param keydata
+     *  the X509 encoded public key data from which to generate a PublicKey instance
+     *
+     * @param algorithm
+     *  the algorithm used to generate the key
+     *
+     * @return
+     *  a PublicKey instance
+     */
+    private PublicKey generatePublicKey(byte[] keydata, String algorithm)
+        throws NoSuchAlgorithmException, InvalidKeySpecException {
+
+        KeyFactory factory = KeyFactory.getInstance(algorithm, JSSProviderLoader.getProvider(true));
+        X509EncodedKeySpec spec = new X509EncodedKeySpec(keydata, algorithm);
+
+        return factory.generatePublic(spec);
+    }
+
+    /**
+     * Generates a PrivateKey instance from the provided key data and algorithm.
+     *
+     * @param keydata
+     *  the PKCS8 private key data from which to generate a PrivateKey instance
+     *
+     * @param algorithm
+     *  the algorithm used to generate the key
+     *
+     * @return
+     *  a PrivateKey instance
+     */
+    private PrivateKey generatePrivateKey(byte[] keydata, String algorithm)
+        throws NoSuchAlgorithmException, InvalidKeySpecException {
+
+        KeyFactory factory = KeyFactory.getInstance(algorithm, JSSProviderLoader.getProvider(true));
+        PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keydata, algorithm);
+
+        return factory.generatePrivate(spec);
+    }
+
 }

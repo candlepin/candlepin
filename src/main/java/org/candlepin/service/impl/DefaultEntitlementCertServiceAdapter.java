@@ -32,7 +32,6 @@ import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.KeyPairCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -83,7 +82,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private final PKIUtility pki;
     private final X509ExtensionUtil extensionUtil;
     private final X509V3ExtensionUtil v3extensionUtil;
-    private final KeyPairCurator keyPairCurator;
     private final CertificateSerialCurator serialCurator;
     private final OwnerCurator ownerCurator;
     private final EntitlementCurator entCurator;
@@ -97,7 +95,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         X509ExtensionUtil extensionUtil,
         X509V3ExtensionUtil v3extensionUtil,
         EntitlementCertificateCurator entCertCurator,
-        KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
         OwnerCurator ownerCurator,
         EntitlementCurator entCurator, I18n i18n,
@@ -109,7 +106,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         this.extensionUtil = extensionUtil;
         this.v3extensionUtil = v3extensionUtil;
         this.entCertCurator = entCertCurator;
-        this.keyPairCurator = keyPairCurator;
         this.serialCurator = serialCurator;
         this.ownerCurator = ownerCurator;
         this.entCurator = entCurator;
@@ -362,7 +358,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
 
         log.debug("Generating entitlement cert for entitlements");
-        KeyPair keyPair = keyPairCurator.getConsumerKeyPair(consumer);
+        KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
         byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
 
         Map<String, CertificateSerial> serialMap = new HashMap<>();

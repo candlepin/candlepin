@@ -57,7 +57,6 @@ public class UeberCertificateGenerator {
 
     private UniqueIdGenerator idGenerator;
     private PKIUtility pki;
-    private KeyPairCurator keyPairCurator;
     private CertificateSerialCurator serialCurator;
     private X509ExtensionUtil extensionUtil;
     private OwnerCurator ownerCurator;
@@ -70,7 +69,6 @@ public class UeberCertificateGenerator {
         UniqueIdGenerator idGenerator,
         PKIUtility pki,
         X509ExtensionUtil extensionUtil,
-        KeyPairCurator keyPairCurator,
         CertificateSerialCurator serialCurator,
         OwnerCurator ownerCurator,
         UeberCertificateCurator ueberCertCurator,
@@ -79,7 +77,6 @@ public class UeberCertificateGenerator {
 
         this.idGenerator = idGenerator;
         this.pki = pki;
-        this.keyPairCurator = keyPairCurator;
         this.serialCurator = serialCurator;
         this.extensionUtil = extensionUtil;
         this.ownerCurator = ownerCurator;
@@ -117,7 +114,7 @@ public class UeberCertificateGenerator {
         CertificateSerial serial = new CertificateSerial(ueberCertData.getEndDate());
         serialCurator.create(serial);
 
-        KeyPair keyPair = keyPairCurator.getKeyPair();
+        KeyPair keyPair = this.pki.generateKeyPair();
         byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
         X509Certificate x509Cert =
             createX509Certificate(ueberCertData, BigInteger.valueOf(serial.getId()), keyPair);

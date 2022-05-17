@@ -297,6 +297,7 @@ public class TestingModules {
             bind(PKIUtility.class).to(JSSPKIUtility.class).asEagerSingleton();
             bind(PrivateKeyReader.class).to(JSSPrivateKeyReader.class);
             bind(CertificateReader.class).to(CertificateReaderForTesting.class).asEagerSingleton();
+
             bind(SubscriptionServiceAdapter.class).to(ImportSubscriptionServiceAdapter.class);
             bind(OwnerServiceAdapter.class).to(DefaultOwnerServiceAdapter.class);
             bind(EntitlementCertServiceAdapter.class).to(StubEntitlementCertServiceAdapter.class);

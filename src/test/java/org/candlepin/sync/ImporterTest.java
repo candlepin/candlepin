@@ -143,7 +143,7 @@ public class ImporterTest {
     private String mockJsPath;
 
     static {
-        JSSProviderLoader.addProvider();
+        JSSProviderLoader.initialize();
     }
 
     @BeforeEach

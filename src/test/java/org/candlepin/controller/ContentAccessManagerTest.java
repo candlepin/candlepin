@@ -55,7 +55,7 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.KeyPairCurator;
+import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
@@ -112,7 +112,7 @@ public class ContentAccessManagerTest {
     private Configuration config;
 
     @Mock private EventSink mockEventSink;
-    @Mock private KeyPairCurator mockKeyPairCurator;
+    @Mock private KeyPairDataCurator mockKeyPairDataCurator;
     @Mock private CertificateSerialCurator mockCertSerialCurator;
     @Mock private ConsumerCurator mockConsumerCurator;
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
@@ -140,6 +140,8 @@ public class ContentAccessManagerTest {
             testingKeyPair = new JcaPEMKeyConverter().getKeyPair((PEMKeyPair) reader.readObject());
         }
         assertNotNull(testingKeyPair);
+        assertNotNull(testingKeyPair.getPrivate());
+        assertNotNull(testingKeyPair.getPrivate().getEncoded());
     }
 
     @BeforeEach
@@ -149,7 +151,8 @@ public class ContentAccessManagerTest {
         PrivateKeyReader keyReader = new JSSPrivateKeyReader();
         CertificateReader certReader = new CertificateReader(this.config, keyReader);
         SubjectKeyIdentifierWriter keyIdWriter = new DefaultSubjectKeyIdentifierWriter();
-        this.pkiUtility = spy(new JSSPKIUtility(certReader, keyIdWriter, this.config));
+        this.pkiUtility = spy(new JSSPKIUtility(certReader, keyIdWriter, this.config,
+            this.mockKeyPairDataCurator));
 
         this.objMapper = new ObjectMapper();
         this.x509V3ExtensionUtil = spy(new X509V3ExtensionUtil(this.config, this.mockEntitlementCurator,
@@ -162,7 +165,7 @@ public class ContentAccessManagerTest {
         doAnswer(new PersistSimulator<>()).when(this.mockConsumerCurator).merge(any(Consumer.class));
         doAnswer(new PersistSimulator<>()).when(this.mockContentAccessCertCurator)
             .create(any(ContentAccessCertificate.class));
-        doReturn(this.testingKeyPair).when(this.mockKeyPairCurator).getConsumerKeyPair(any(Consumer.class));
+        doReturn(this.testingKeyPair).when(this.pkiUtility).getConsumerKeyPair(any(Consumer.class));
 
         doAnswer(iom -> {
             CertificateSerial serial = iom.getArgument(0);
@@ -196,20 +199,16 @@ public class ContentAccessManagerTest {
         }
     }
 
-    private ContentAccessManager createManager() {
+    private ContentAccessManager createManager(PKIUtility pkiUtil) {
         return new ContentAccessManager(
-            this.config, this.pkiUtility, this.x509V3ExtensionUtil, this.mockContentAccessCertCurator,
-            this.mockKeyPairCurator, this.mockCertSerialCurator, this.mockOwnerCurator,
-            this.mockOwnerContentCurator, this.mockConsumerCurator, this.mockConsumerTypeCurator,
-            this.mockEnvironmentCurator, this.mockContentAccessCertCurator, this.mockEventSink);
+            this.config, pkiUtil, this.x509V3ExtensionUtil, this.mockContentAccessCertCurator,
+            this.mockCertSerialCurator, this.mockOwnerCurator, this.mockOwnerContentCurator,
+            this.mockConsumerCurator, this.mockConsumerTypeCurator, this.mockEnvironmentCurator,
+            this.mockContentAccessCertCurator, this.mockEventSink);
     }
 
-    private ContentAccessManager createManager(PKIUtility mockPkiUtility) {
-        return new ContentAccessManager(
-            this.config, mockPkiUtility, this.x509V3ExtensionUtil, this.mockContentAccessCertCurator,
-            this.mockKeyPairCurator, this.mockCertSerialCurator, this.mockOwnerCurator,
-            this.mockOwnerContentCurator, this.mockConsumerCurator, this.mockConsumerTypeCurator,
-            this.mockEnvironmentCurator, this.mockContentAccessCertCurator, this.mockEventSink);
+    private ContentAccessManager createManager() {
+        return this.createManager(this.pkiUtility);
     }
 
     private Owner mockOwner() {
@@ -602,7 +601,8 @@ public class ContentAccessManagerTest {
         String expectedPath = "/sca/" + owner.getKey();
 
         ContentAccessManager manager = this.createManager();
-        manager.getCertificate(consumer);
+        ContentAccessCertificate output = manager.getCertificate(consumer);
+        assertNotNull(output);
 
         this.verifyContainerContentPath(expectedPath);
     }
@@ -621,7 +621,8 @@ public class ContentAccessManagerTest {
         String expectedPath = "/" + owner.getKey() + "/" + environment.getName();
 
         ContentAccessManager manager = this.createManager();
-        manager.getCertificate(consumer);
+        ContentAccessCertificate output = manager.getCertificate(consumer);
+        assertNotNull(output);
 
         this.verifyContainerContentPath(expectedPath);
     }
@@ -640,7 +641,8 @@ public class ContentAccessManagerTest {
         String expectedPrefix = "/" + owner.getKey() + "/" + environment.getName();
 
         ContentAccessManager manager = this.createManager();
-        manager.getCertificate(consumer);
+        ContentAccessCertificate output = manager.getCertificate(consumer);
+        assertNotNull(output);
 
         this.verifyContainerContentPath(expectedPrefix);
     }
