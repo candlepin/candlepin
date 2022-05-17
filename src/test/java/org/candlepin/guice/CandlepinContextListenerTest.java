@@ -169,6 +169,35 @@ public class CandlepinContextListenerTest {
     }
 
     @Test
+    void sslVerifyCapabilityPresentWhenSslVerifyEnabled() {
+        this.config.setProperty(ConfigProperties.SSL_VERIFY, "true");
+
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+
+        CandlepinCapabilities expected = new CandlepinCapabilities();
+        expected.add(CandlepinCapabilities.SSL_VERIFY_CAPABILITY);
+
+        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void sslVerifyCapabilityAbsentWhenSslVerifyDisabled() {
+        this.config.setProperty(ConfigProperties.SSL_VERIFY, "false");
+
+        prepareForInitialization();
+        listener.contextInitialized(evt);
+
+        CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
+
+        assertFalse(actual.contains(CandlepinCapabilities.SSL_VERIFY_CAPABILITY),
+            "ssl_verify_status present but not expected");
+    }
+
+
+    @Test
     void cloudregCapabilityPresentWhenCloudRegistrationEnabled() {
         this.config.setProperty(ConfigProperties.CLOUD_AUTHENTICATION, "true");
 
