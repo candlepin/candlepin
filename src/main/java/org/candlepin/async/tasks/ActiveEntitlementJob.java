@@ -21,10 +21,12 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
+import org.candlepin.util.Transactional;
 
 import com.google.inject.Inject;
 
 import java.util.List;
+import java.util.Objects;
 
 
 
@@ -37,35 +39,47 @@ public class ActiveEntitlementJob implements AsyncJob {
     public static final String JOB_NAME = "Active Entitlement";
     public static final String DEFAULT_SCHEDULE = "0 0 0/1 * * ?"; // Every hour
 
-    private ConsumerCurator consumerCurator;
-    private ComplianceRules complianceRules;
-    private SystemPurposeComplianceRules systemPurposeComplianceRules;
+    private final ConsumerCurator consumerCurator;
+    private final ComplianceRules complianceRules;
+    private final SystemPurposeComplianceRules systemPurposeComplianceRules;
 
     @Inject
     public ActiveEntitlementJob(ConsumerCurator consumerCurator, ComplianceRules complianceRules,
         SystemPurposeComplianceRules systemPurposeComplianceRules) {
 
-        this.consumerCurator = consumerCurator;
-        this.complianceRules = complianceRules;
-        this.systemPurposeComplianceRules = systemPurposeComplianceRules;
+        this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.complianceRules = Objects.requireNonNull(complianceRules);
+        this.systemPurposeComplianceRules = Objects.requireNonNull(systemPurposeComplianceRules);
     }
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        List<String> ids = consumerCurator.getConsumerIdsWithStartedEnts();
-
-        if (ids != null && !ids.isEmpty()) {
-            for (String id : ids) {
-                Consumer c = consumerCurator.get(id);
-                complianceRules.getStatus(c);
-                systemPurposeComplianceRules.getStatus(c, c.getEntitlements(), null, true);
+        Transactional transaction = this.consumerCurator.transactional((args) -> {
+            if (args == null || args.length != 1) {
+                throw new IllegalArgumentException("Unexpected value received for arguments: " + args);
             }
 
-            context.setJobResult("Entitlement status updated for consumers: %s", ids);
+            Consumer consumer = (Consumer) args[0];
+
+            this.complianceRules.getStatus(consumer);
+            this.systemPurposeComplianceRules.getStatus(consumer, consumer.getEntitlements(), null, true);
+
+            return null;
+        });
+
+        List<String> consumerIds = this.consumerCurator.getConsumerIdsWithStartedEnts();
+
+        if (consumerIds != null && !consumerIds.isEmpty()) {
+            consumerIds.stream()
+                .map(id -> this.consumerCurator.get(id))
+                .filter(Objects::nonNull)
+                .forEach(transaction::execute);
+
+            context.setJobResult("Entitlement status updated for %d consumers: %s", consumerIds.size(),
+                consumerIds);
         }
         else {
             context.setJobResult("No consumers with entitlements pending activation found");
         }
-
     }
 }

@@ -51,7 +51,9 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
     private Product prod;
 
     @BeforeEach
-    public void setUp() {
+    public void init() throws Exception {
+        super.init(false);
+
         owner = new Owner("test-owner", "Test Owner");
         owner = ownerCurator.create(owner);
         owner.setContentAccessMode("entitlement");
@@ -80,7 +82,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
 
         JobExecutionContext context = mock(JobExecutionContext.class);
         job.execute(context);
-        consumerCurator.flush();
+
         consumerCurator.refresh(consumer);
         assertEquals("valid", consumer.getEntitlementStatus());
 
