@@ -3,6 +3,7 @@ plugins {
     id "checkstyle"
     id "com.adarshr.test-logger"
 }
+apply from: "../dependencies.gradle"
 
 repositories {
     mavenCentral()
@@ -13,20 +14,20 @@ description = "Candlepin Spec Tests"
 dependencies {
     implementation project(":client")
 
-    implementation "com.squareup.okhttp3:okhttp:4.9.3"
-    implementation "com.squareup.okhttp3:okhttp-tls:4.9.3"
-    implementation "org.slf4j:slf4j-api:1.7.36"
-    implementation "org.junit.jupiter:junit-jupiter:5.8.2"
-    implementation "org.assertj:assertj-core:3.22.0"
-    implementation "com.fasterxml.jackson.core:jackson-databind:2.13.2.2"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.2"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.2"
+    implementation libraries["okhttp"]
+    implementation libraries["okhttpTls"]
+    implementation libraries["slf4j"]
+    implementation libraries["junitApi"]
+    implementation libraries["slf4j"]
+    implementation libraries["jacksonDatabind"]
+    implementation libraries["jacksonJdk8"]
+    implementation libraries["jacksonJsr310"]
+    implementation libraries["assertj"]
 
-    testImplementation "org.junit.jupiter:junit-jupiter-api:5.8.2"
-    testImplementation "org.junit.jupiter:junit-jupiter-engine:5.8.2"
+    testRuntimeOnly libraries["junitEngine"]
 
-    checkstyle "com.puppycrawl.tools:checkstyle:8.36"
-    checkstyle "com.github.sevntu-checkstyle:sevntu-checks:1.36.0"
+    checkstyle libraries["checkstyle"]
+    checkstyle libraries["checkstyleSevntu"]
 }
 
 task spec(type: Test) {

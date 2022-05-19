@@ -1,42 +1,33 @@
 import groovy.text.GStringTemplateEngine
 import org.yaml.snakeyaml.Yaml
 
-buildscript {
-    //openapi version has to be set manually in the plugins block as well.
-    ext.openapi_version = '5.4.0'
-
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath group: 'org.yaml', name: 'snakeyaml', version: '1.30'
-    }
-}
-
 plugins {
-    id "nebula.lint" version "17.7.0"
+    id "nebula.lint"
     /*
     The Versions plugin is used to provide the dependencyUpdates task which is used
     to look for libraries that have newer versions available.
      */
-    id "com.github.ben-manes.versions" version "0.38.0"
+    id "com.github.ben-manes.versions"
     // Openapi version is set in the buildscript block for use in the pom generation as well
-    id "org.openapi.generator" version '5.4.0'
+    id "org.openapi.generator"
     id "java"
     id "maven-publish"
     id "war"
     id "checkstyle"
-    id 'org.owasp.dependencycheck' version '7.0.0'
+    id "org.owasp.dependencycheck"
     id "jacoco"
-    id "org.sonarqube" version "3.3"
-    id "com.adarshr.test-logger" version "3.2.0"
+    id "org.sonarqube"
+    id "com.adarshr.test-logger"
+
 
     // The following are plugins are plugins we wrote in the buildSrc folder
-    id 'org.candlepin.gradle.gettext'
-    id 'org.candlepin.gradle.msgfmt'
+    id "org.candlepin.gradle.gettext"
+    id "org.candlepin.gradle.msgfmt"
     id "org.candlepin.gradle.SpecVersion"
     id "org.candlepin.gradle.PomToolkit"
 }
+
+apply from: "dependencies.gradle"
 
 group = "org.candlepin"
 
@@ -97,120 +88,120 @@ ext {
 
 dependencies {
     // Commons
-    implementation "commons-codec:commons-codec:1.15"
-    implementation "commons-collections:commons-collections:3.2.2"
-    implementation "commons-io:commons-io:2.11.0"
-    implementation "org.apache.commons:commons-lang3:3.12.0"
+    implementation libraries["commonsCodec"]
+    implementation libraries["commonsCollections"]
+    implementation libraries["commonsIo"]
+    implementation libraries["commonsLang"]
 
     // Collections
-    implementation "com.google.guava:guava:31.1-jre"
+    implementation libraries["guava"]
 
     // Gettext libraries used for internationalization & translation
-    implementation "com.googlecode.gettext-commons:gettext-commons:0.9.8"
+    implementation libraries["gettext"]
 
     // Guice Libraries
-    implementation "com.google.inject.extensions:guice-assistedinject:$guice_version"
-    implementation "com.google.inject.extensions:guice-servlet:$guice_version"
-    implementation "com.google.inject.extensions:guice-persist:$guice_version"
+    implementation libraries["guiceAssistedInject"]
+    implementation libraries["guiceServlet"]
+    implementation libraries["guicePersist"]
 
     // Jackson
-    implementation "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:$jackson_version"
-    implementation "com.fasterxml.jackson.module:jackson-module-jsonSchema:$jackson_version"
+    implementation libraries["jacksonJaxrs"]
+    implementation libraries["jacksonJsonSchema"]
+    implementation libraries["jacksonHibernate"]
+    implementation libraries["jacksonJdk8"]
+    implementation libraries["jacksonJsr310"]
+    implementation libraries["jacksonYaml"]
+    implementation libraries["jacksonXml"]
 
     // Bean validation API is explicitly added to this version
     // This is a transitive dependency of
     // com.fasterxml.jackson.module:jackson-module-jsonSchema
-    implementation "javax.validation:validation-api:2.0.1.Final"
-
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5:$jackson_version"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$jackson_version"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$jackson_version"
-    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jackson_version"
-    implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:$jackson_version"
+    implementation libraries["javaxValidation"]
 
     // Javax
-    implementation "org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.2.Final"
-    implementation "javax.annotation:javax.annotation-api:1.3.2"
+    implementation libraries["hibernate"]
+    implementation libraries["javaxAnnotation"]
 
     // Liquibase
-    implementation "org.liquibase:liquibase-core:4.9.1"
-    implementation 'info.picocli:picocli:4.6.3'
+    implementation libraries["liquibase"]
+    implementation libraries["picocli"]
 
     // Logging
-    implementation "ch.qos.logback:logback-classic:1.2.11"
+    implementation libraries["logback"]
     // Artifacts that bridge other logging frameworks to slf4j. Mime4j uses
     // JCL for example.
-    implementation "org.slf4j:jcl-over-slf4j:1.7.36"
-    implementation "org.slf4j:log4j-over-slf4j:1.7.36"
-    implementation "net.logstash.logback:logstash-logback-encoder:7.0.1"
+    implementation libraries["jclOverSlf4j"]
+    implementation libraries["log4jOverSlf4j"]
+    implementation libraries["logstash"]
 
     // Oauth
-    implementation "net.oauth.core:oauth-provider:20100527"
+    implementation libraries["oauth"]
 
     // Resteasy
-    implementation "org.jboss.resteasy:resteasy-guice:$resteasy_version"
-    implementation "org.jboss.resteasy:resteasy-atom-provider:$resteasy_version"
-    implementation "org.jboss.resteasy:resteasy-multipart-provider:$resteasy_version"
+    implementation libraries["resteasyGuice"]
+    implementation libraries["resteasyAtom"]
+    implementation libraries["resteasyMultipart"]
 
-    implementation "javax.ws.rs:javax.ws.rs-api:2.1.1"
+    implementation libraries["javaxRs"]
 
     // Sun jaxb
-    implementation "com.sun.xml.bind:jaxb-impl:3.0.2"
-    implementation "com.sun.xml.bind:jaxb-core:3.0.2"
+    implementation libraries["jaxb"]
+    implementation libraries["jaxbCore"]
 
     // Swagger
-    implementation "io.swagger:swagger-annotations:1.6.6"
+    implementation libraries["swagger"]
 
     // Validator
-    implementation "org.hibernate.validator:hibernate-validator:6.2.3.Final"
-    implementation "org.hibernate.validator:hibernate-validator-annotation-processor:6.2.3.Final"
+    implementation libraries["hibernateValidator"]
+    implementation libraries["hibernateValidatorProcessor"]
 
     // Hibernate
-    implementation 'org.hibernate:hibernate-c3p0:5.6.7.Final'
+    implementation libraries["hibernateC3p0"]
     // Ehcache (for use with hibernate primarily)
-    implementation "org.hibernate:hibernate-jcache:5.6.7.Final"
-    implementation "org.ehcache:ehcache:3.10.0"
-    implementation "javax.cache:cache-api:1.1.1"
+    implementation libraries["hibernateJcache"]
+    implementation libraries["ehcache"]
+    implementation libraries["javaxCache"]
 
     // Artemis server & client
-    implementation "org.apache.activemq:artemis-server:2.21.0"
-    implementation "org.apache.activemq:artemis-stomp-protocol:2.21.0"
+    implementation libraries["artemisServer"]
+    implementation libraries["artemisStomp"]
 
     // Javascript Engine
-    implementation "org.mozilla:rhino:1.7.14"
+    implementation libraries["rhino"]
 
-    implementation "org.quartz-scheduler:quartz:2.3.2"
+    implementation libraries["quartz"]
 
     // Keycloak
-    implementation "org.keycloak:keycloak-servlet-filter-adapter:17.0.1"
+    implementation libraries["keycloak"]
 
     // Hibernate JPA integration
-    implementation "org.hibernate:hibernate-jpamodelgen:5.6.7.Final"
-    annotationProcessor 'org.hibernate:hibernate-jpamodelgen:5.6.7.Final'
+    implementation libraries["hibernateJpamodelgen"]
+    annotationProcessor libraries["hibernateJpamodelgenProcessor"]
 
-    checkstyle "com.puppycrawl.tools:checkstyle:8.36"
-    checkstyle "com.github.sevntu-checkstyle:sevntu-checks:1.36.0"
+    checkstyle libraries["checkstyle"]
+    checkstyle libraries["checkstyleSevntu"]
 
     // Use wildcard because this could be called jss4.jar or jss.jar
     // (depending on if we are before Fedora35/RHEL9 or after)
     providedCompile fileTree(dir: '/usr/lib64/jss', include: '*.jar')
-    providedCompile "javax.servlet:servlet-api:2.5"
+    providedCompile libraries["javaxServlet"]
 
     // DB Drivers
-    runtimeOnly "org.postgresql:postgresql:42.3.3"
-    runtimeOnly "org.mariadb.jdbc:mariadb-java-client:3.0.4"
+    runtimeOnly libraries["postgresql"]
+    runtimeOnly libraries["mariadb"]
 
-    testRuntimeOnly "org.hsqldb:hsqldb:2.6.1"
-    testRuntimeOnly "org.glassfish:javax.el:3.0.0"
+    testRuntimeOnly libraries["hsqldb"]
+    testRuntimeOnly libraries["javaxEl"]
 
     // Core testing libraries
     // Junit 5
-    testImplementation "org.junit.jupiter:junit-jupiter-params:$junit_version"
-    testImplementation "org.junit.jupiter:junit-jupiter-engine:$junit_version"
+    testImplementation libraries["junitApi"]
+    testImplementation libraries["junitParams"]
+    testRuntimeOnly libraries["junitEngine"]
 
-    testImplementation "org.hamcrest:hamcrest-library:2.2"
-    testImplementation "org.mockito:mockito-junit-jupiter:4.4.0"
-    testImplementation "com.mattbertolini:liquibase-slf4j:4.0.0"
+    testImplementation libraries["hamcrest"]
+    testImplementation libraries["mockitoJunit"]
+    testImplementation libraries["liquibaseSlf4j"]
 }
 
 // Copy the resources to the main classes directory so that the
