@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    target-branch: "master"
+    ignore:
+      - dependency-name: "org.jboss.resteasy"
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    target-branch: "master"
+    ignore:
+      - dependency-name: "org.jboss.resteasy"
