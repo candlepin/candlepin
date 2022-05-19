@@ -205,7 +205,7 @@ dependencies {
     runtimeOnly "mysql:mysql-connector-java:8.0.20"
     runtimeOnly "org.mariadb.jdbc:mariadb-java-client:2.3.0"
 
-    testRuntime "org.hsqldb:hsqldb:2.6.1"
+    testRuntimeOnly "org.hsqldb:hsqldb:2.6.1"
     testRuntimeOnly "org.glassfish:javax.el:3.0.0"
 
     // Core testing libraries
@@ -401,6 +401,7 @@ clean.doFirst {
 // substitute the version & release in the version.properties used by the status resource at runtime
 processResources {
     from("src/main/resources") {
+        duplicatesStrategy = "include"
         include "version.properties"
         expand([version: project.getVersion(), release: project.findProperty("release")])
     }
@@ -531,7 +532,7 @@ publishing {
                     configurations.providedCompile.dependencies,
                     configurations.runtimeOnly.dependencies,
                     configurations.testImplementation.dependencies,
-                    configurations.testRuntime.dependencies
+                    configurations.testRuntimeOnly.dependencies
                 )
 
                 PomToolkit.generateRepositories(asNode())
