@@ -1,6 +1,4 @@
 import groovy.text.GStringTemplateEngine
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat
-import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.yaml.snakeyaml.Yaml
 
 buildscript {
@@ -31,7 +29,7 @@ plugins {
     id 'org.owasp.dependencycheck' version '7.0.0'
     id "jacoco"
     id "org.sonarqube" version "3.3"
-
+    id "com.adarshr.test-logger" version "3.2.0"
 
     // The following are plugins are plugins we wrote in the buildSrc folder
     id 'org.candlepin.gradle.gettext'
@@ -202,7 +200,7 @@ dependencies {
     runtimeOnly "org.postgresql:postgresql:42.3.3"
     runtimeOnly "org.mariadb.jdbc:mariadb-java-client:3.0.4"
 
-    testRuntime "org.hsqldb:hsqldb:2.6.1"
+    testRuntimeOnly "org.hsqldb:hsqldb:2.6.1"
     testRuntimeOnly "org.glassfish:javax.el:3.0.0"
 
     // Core testing libraries
@@ -329,39 +327,26 @@ test {
             '-XX:+HeapDumpOnOutOfMemoryError'
     ]
 
-    testLogging {
-        // set options for log level LIFECYCLE
-        events TestLogEvent.FAILED,
-            TestLogEvent.PASSED,
-            TestLogEvent.SKIPPED
-            // TestLogEvent.STANDARD_OUT
-        exceptionFormat TestExceptionFormat.FULL
-        showExceptions true
-        showCauses true
-        showStackTraces true
+}
 
-        // set options for log level DEBUG and INFO
-        debug {
-            events TestLogEvent.STARTED,
-                TestLogEvent.FAILED,
-                TestLogEvent.PASSED,
-                TestLogEvent.SKIPPED,
-                TestLogEvent.STANDARD_ERROR,
-                TestLogEvent.STANDARD_OUT
-            exceptionFormat TestExceptionFormat.FULL
-        }
-        info.events = debug.events
-        info.exceptionFormat = debug.exceptionFormat
-
-        afterSuite { desc, result ->
-            if (!desc.parent) { // will match the outermost suite
-                def output = "Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
-                def startItem = "|  ", endItem = "  |"
-                def repeatLength = startItem.length() + output.length() + endItem.length()
-                println("\n" + ("-" * repeatLength) + "\n" + startItem + output + endItem + "\n" + ("-" * repeatLength))
-            }
-        }
-    }
+testlogger {
+    theme 'standard'
+    showExceptions true
+    showStackTraces true
+    showFullStackTraces project.hasProperty("full")
+    showCauses true
+    slowThreshold 2000
+    showSummary true
+    showSimpleNames false
+    showPassed true
+    showSkipped true
+    showFailed true
+    showOnlySlow false
+    showStandardStreams project.hasProperty("full")
+    showPassedStandardStreams false
+    showSkippedStandardStreams false
+    showFailedStandardStreams project.hasProperty("full")
+    logLevel 'lifecycle'
 }
 
 jacocoTestReport {
@@ -396,6 +381,7 @@ clean.doFirst {
 // substitute the version & release in the version.properties used by the status resource at runtime
 processResources {
     from("src/main/resources") {
+        duplicatesStrategy = "include"
         include "version.properties"
         expand([version: project.getVersion(), release: project.findProperty("release")])
     }
@@ -526,7 +512,7 @@ publishing {
                     configurations.providedCompile.dependencies,
                     configurations.runtimeOnly.dependencies,
                     configurations.testImplementation.dependencies,
-                    configurations.testRuntime.dependencies
+                    configurations.testRuntimeOnly.dependencies
                 )
 
                 PomToolkit.generateRepositories(asNode())
