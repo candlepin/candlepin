@@ -37,6 +37,14 @@ import com.google.inject.Stage;
 import com.google.inject.persist.PersistService;
 import com.google.inject.util.Modules;
 
+import liquibase.Liquibase;
+import liquibase.database.Database;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.LiquibaseException;
+import liquibase.resource.ClassLoaderResourceAccessor;
+import liquibase.resource.ResourceAccessor;
+
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.dialect.PostgreSQL92Dialect;
@@ -51,6 +59,7 @@ import org.xnap.commons.i18n.I18nManager;
 
 import java.io.File;
 import java.nio.charset.Charset;
+import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -64,7 +73,6 @@ import javax.cache.CacheManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
-
 
 
 /**
@@ -127,6 +135,9 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         servletContext.setAttribute(CONFIGURATION_NAME, config);
         setCapabilities(config);
         log.debug("Candlepin stored config on context.");
+
+        // check state of database against liquibase changelogs
+        checkDbChangelog();
 
         // set things up BEFORE calling the super class' initialize method.
         super.contextInitialized(sce);
@@ -351,4 +362,62 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
+    /**
+     * Check the state of the database in regards to the application of changesets via Liquibase.
+     *
+     * The number of changesets not applied will be logged at error level.
+     *
+     * @throws RuntimeException if there are missing changesets or a LiqubaseException
+     */
+    protected void checkDbChangelog() {
+        try {
+            Liquibase liquibase = getLiquibase();
+            List unrunChangesets = liquibase.listUnrunChangeSets(null, null);
+            if (!unrunChangesets.isEmpty()) {
+                log.error("The database is missing {} Liquibase changeset(s). Please update the database.",
+                    unrunChangesets.size());
+                log.error("Aborting Candlepin initialization ...");
+                throw new RuntimeException("The database is missing Liquibase changeset(s).");
+            }
+        }
+        catch (LiquibaseException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Initializes the connection to the database and a Liquibase object for detection of the state
+     *  of the database compared to the liquibase changeset list.
+     *
+     * @return Liquibase initialized for the changeset comparison
+     * @throws RuntimeException if there is an issue with establishing the Liquibase object
+     */
+    protected Liquibase getLiquibase() {
+        Liquibase liquibase = null;
+        try {
+            // this ensures that the driver class has been loaded
+            Class.forName(config.getString("jpa.config.hibernate.connection.driver_class"))
+                .getDeclaredConstructor().newInstance();
+            Connection connection = DriverManager.getConnection(
+                config.getString("jpa.config.hibernate.connection.url"),
+                config.getString("jpa.config.hibernate.connection.username"),
+                config.getString("jpa.config.hibernate.connection.password"));
+            JdbcConnection jdbcConnection = new JdbcConnection(connection);
+            Database database =
+                DatabaseFactory.getInstance().findCorrectDatabaseImplementation(jdbcConnection);
+            ResourceAccessor accessor = new ClassLoaderResourceAccessor();
+            liquibase = new Liquibase("WEB-INF/classes/db/changelog/changelog-update.xml",
+                accessor, database);
+        }
+        catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+        catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        catch (LiquibaseException e) {
+            throw new RuntimeException(e);
+        }
+        return liquibase;
+    }
 }

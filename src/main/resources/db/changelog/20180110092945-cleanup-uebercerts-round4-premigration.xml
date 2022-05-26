@@ -80,7 +80,7 @@
             value="delete c from cp_consumer c where c.name = 'ueber_cert_consumer';" />
 
     <changeSet id="20180110092945-1" author="vrjain">
-        <preConditions onFail="MARK_RAN">
+        <preConditions onSqlOutput="TEST"  onFail="MARK_RAN">
             <and>
                 <tableExists tableName="cp_subscription" />
                 <columnExists tableName="cp_pool" columnName="productname" />

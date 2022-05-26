@@ -25,7 +25,7 @@
     </changeSet>
 
     <changeSet id="20150401140006-3" author="crog">
-        <preConditions onSqlOutput="TEST" onFail="CONTINUE">
+        <preConditions onSqlOutput="TEST" onFail="MARK_RAN">
             <changeSetExecuted
                 changeLogFile="20150401140006-add-pool-type-to-db.xml"
                 id="20150401140006-2"
