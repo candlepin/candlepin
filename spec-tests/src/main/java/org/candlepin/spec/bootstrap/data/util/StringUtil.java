@@ -13,20 +13,19 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.spec.bootstrap.data;
+package org.candlepin.spec.bootstrap.data.util;
 
 import java.util.Random;
 
-public class Util {
+public final class StringUtil {
 
     private static final Random RANDOM = new Random();
 
-    protected Util() {
-        // prevents calls from subclass
+    private StringUtil() {
         throw new UnsupportedOperationException();
     }
 
-    public static String randomString(String prefix) {
+    public static String random(String prefix) {
         return prefix + "-" + System.nanoTime() + "-" + RANDOM.nextInt(100000);
     }
 

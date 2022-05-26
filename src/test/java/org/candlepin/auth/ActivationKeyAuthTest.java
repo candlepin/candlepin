@@ -69,7 +69,7 @@ class ActivationKeyAuthTest {
 
     @Test
     void wrongMethodIsRejected() {
-        var auth = createActivationKeyAuth();
+        ActivationKeyAuth auth = createActivationKeyAuth();
 
         Principal principal = auth.getPrincipal(request);
 
@@ -79,7 +79,7 @@ class ActivationKeyAuthTest {
 
     @Test
     void keysAreRequired() {
-        var auth = createActivationKeyAuth();
+        ActivationKeyAuth auth = createActivationKeyAuth();
         addQueryParam("owner", TEST_OWNER);
 
         Principal principal = auth.getPrincipal(request);
@@ -89,7 +89,7 @@ class ActivationKeyAuthTest {
 
     @Test
     void shouldFailOnMissingOwner() {
-        var auth = createActivationKeyAuth();
+        ActivationKeyAuth auth = createActivationKeyAuth();
         addQueryParam("activation_keys", "testkey");
 
         assertThrows(BadRequestException.class, () -> auth.getPrincipal(request));
@@ -97,7 +97,7 @@ class ActivationKeyAuthTest {
 
     @Test
     void specifiedOwnerMustExist() {
-        var auth = createActivationKeyAuth();
+        ActivationKeyAuth auth = createActivationKeyAuth();
         addQueryParam("owner", TEST_OWNER);
         addQueryParam("activation_keys", "testkey");
 
@@ -106,7 +106,7 @@ class ActivationKeyAuthTest {
 
     @Test
     void cannotSpecifyKeysAndUsernameAtOnce() {
-        var auth = createActivationKeyAuth();
+        ActivationKeyAuth auth = createActivationKeyAuth();
         addQueryParam("owner", TEST_OWNER);
         addQueryParam("activation_keys", "testkey");
         addQueryParam("username", "testUser");
@@ -116,7 +116,7 @@ class ActivationKeyAuthTest {
 
     @Test
     void noKeysFound() {
-        var auth = createActivationKeyAuth();
+        ActivationKeyAuth auth = createActivationKeyAuth();
         addQueryParam("owner", TEST_OWNER);
         addQueryParam("activation_keys", "testkey");
         mockOwner(TEST_OWNER);
@@ -126,7 +126,7 @@ class ActivationKeyAuthTest {
 
     @Test
     void shouldSucceedForNewConsumer() {
-        var auth = createActivationKeyAuth();
+        ActivationKeyAuth auth = createActivationKeyAuth();
         addQueryParam("owner", TEST_OWNER);
         addQueryParam("activation_keys", "testkey");
         mockOwner(TEST_OWNER);
@@ -139,7 +139,7 @@ class ActivationKeyAuthTest {
 
     @Test
     void shouldSucceedForNewConsumerInEnv() {
-        var auth = createActivationKeyAuth();
+        ActivationKeyAuth auth = createActivationKeyAuth();
         addQueryParam("owner", TEST_OWNER);
         addQueryParam("activation_keys", "testkey");
         addPathParam("env_id", "testenv");

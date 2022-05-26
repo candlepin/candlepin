@@ -315,8 +315,6 @@ msgfmt {
 }
 
 test {
-    doFirst{ project.ext.skipSpec = "true" }
-
     useJUnitPlatform ()
 
     // Sometimes causes out of memory on vagrant

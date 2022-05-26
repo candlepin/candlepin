@@ -13,19 +13,21 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.spec.bootstrap.data;
+package org.candlepin.spec.bootstrap.client;
 
-import org.candlepin.dto.api.v1.NestedOwnerDTO;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-public class NestedOwnerDTOBuilder {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    // todo add withers
-
-    public NestedOwnerDTO build() {
-        NestedOwnerDTO owner = new NestedOwnerDTO();
-        owner.setKey(Util.randomString("test_owner"));
-        owner.displayName(Util.randomString("Test Owner"));
-        // todo fill in rest of the data
-        return owner;
-    }
+@Tag("spec")
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@ExtendWith(ExceptionWrappingExtension.class)
+public @interface SpecTest {
 }

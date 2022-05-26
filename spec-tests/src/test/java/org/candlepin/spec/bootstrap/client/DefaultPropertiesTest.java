@@ -18,18 +18,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 
-
-public class DefaultPropertiesTest {
+class DefaultPropertiesTest {
 
     private final DefaultProperties properties = new DefaultProperties();
 
     @Test
-    public void canReadDefault() throws IOException {
-        assertThat(this.properties.get().containsKey("spec.test.client.url")).isTrue();
-        assertThat(this.properties.get().containsKey("spec.test.client.username")).isTrue();
-        assertThat(this.properties.get().containsKey("spec.test.client.unknown")).isFalse();
+    void canReadDefault() {
+        assertThat(this.properties.get())
+            .containsKey("spec.test.client.host")
+            .containsKey("spec.test.client.port")
+            .containsKey("spec.test.client.prefix")
+            .containsKey("spec.test.client.username")
+            .containsKey("spec.test.client.password")
+            .containsKey("spec.test.client.debug")
+            .doesNotContainKey("spec.test.client.unknown");
     }
 
 }

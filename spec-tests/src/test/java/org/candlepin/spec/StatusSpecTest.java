@@ -19,21 +19,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.dto.api.v1.StatusDTO;
 import org.candlepin.resource.StatusApi;
-import org.candlepin.spec.bootstrap.client.SpecTestFixture;
+import org.candlepin.spec.bootstrap.client.ApiClients;
+import org.candlepin.spec.bootstrap.client.SpecTest;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
 
 /**
  * Test the /status resource
  */
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class StatusApiTest extends SpecTestFixture {
+@SpecTest
+class StatusSpecTest {
 
     @Test
-    public void retrievesServerStatus() throws Exception {
-        StatusApi api = new StatusApi(apiClientFactory.createClient());
+    void retrievesServerStatus() throws Exception {
+        StatusApi api = ApiClients.noAuth().status();
         StatusDTO status = api.status();
 
         assertEquals("NORMAL", status.getMode());

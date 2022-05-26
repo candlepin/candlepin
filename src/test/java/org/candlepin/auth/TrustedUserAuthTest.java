@@ -87,10 +87,11 @@ public class TrustedUserAuthTest {
 
     @Test
     public void normalTrustedAuth() throws Exception {
+        User u = new User(USERNAME, "pass");
+        when(userService.findByLogin(eq(USERNAME))).thenReturn(u);
         headerMap.add(TrustedUserAuth.USER_HEADER, USERNAME);
         TrustedUserPrincipal p = (TrustedUserPrincipal) auth.getPrincipal(request);
         verify(userService, never()).validateUser(any(String.class), any(String.class));
-        verify(userService, never()).findByLogin(any(String.class));
         assertTrue(p.hasFullAccess());
     }
 

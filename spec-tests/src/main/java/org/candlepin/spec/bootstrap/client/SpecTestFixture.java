@@ -50,7 +50,7 @@ public abstract class SpecTestFixture {
     private <O> O createClient(Class<O> clientClass)  {
         switch (clientClass.getName()) {
             case "org.candlepin.spec.bootstrap.client.OwnerClient":
-                return (O) new OwnerClient(apiClientFactory.createClient());
+                return (O) new OwnerClient(apiClientFactory.createAdminClient());
             default:
                 return null;
         }
