@@ -1639,11 +1639,6 @@ public class ConsumerResource implements ConsumersApi {
             return false;
         }
 
-        if (!environments.isEmpty() &&
-            this.config.getString(ConfigProperties.HIDDEN_RESOURCES).contains("environments")) {
-            throw new BadRequestException(i18n.tr("Server does not support environments."));
-        }
-
         boolean changesMade = false;
         List<String> validatedEnvIds = new ArrayList<>();
 

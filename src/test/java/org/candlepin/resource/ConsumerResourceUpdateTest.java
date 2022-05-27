@@ -45,7 +45,6 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.EntitlementCertificateGenerator;
@@ -1313,18 +1312,5 @@ public class ConsumerResourceUpdateTest {
         assertEquals(existing.getEnvironmentIds().get(2), env4.getId());
         assertEquals(existing.getEnvironmentIds().get(3), env11.getId());
         assertEquals(existing.getEnvironmentIds().get(4), env111.getId());
-    }
-
-    @Test
-    public void updateConsumerWithEnvironmentWhileEnvironmentResourceHiddenThrowsException() {
-        this.config.setProperty(ConfigProperties.HIDDEN_RESOURCES, "environments");
-
-        EnvironmentDTO changedEnvironment = new EnvironmentDTO().id("42").name("environment");
-        ConsumerDTO updated = new ConsumerDTO();
-        updated.addEnvironmentsItem(changedEnvironment);
-        Consumer existing = getFakeConsumer();
-
-        assertThrows(BadRequestException.class,
-            () -> resource.updateConsumer(existing.getUuid(), updated));
     }
 }
