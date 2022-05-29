@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-04-17 03:01-0400\n"
+"POT-Creation-Date: 2022-05-29 03:01-0400\n"
 "PO-Revision-Date: 2014-11-18 12:27-0500\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Marathi <sshedmak@redhat.com>\n"
@@ -255,7 +255,7 @@ msgstr "ॲक्टिवेशन किज्सह वापरकर्त�
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/auth/BasicAuth.java:74
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3088
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3102
 msgid "Invalid Credentials"
 msgstr "अवैध श्रेय"
 
@@ -306,6 +306,14 @@ msgstr ""
 #| msgid "Invalid Credentials"
 msgid "Invalid Certificate Type"
 msgstr "अवैध श्रेय"
+
+# translation auto-copied from project Candlepin, version master, document
+# keys
+#: src/main/java/org/candlepin/auth/TrustedUserAuth.java:66
+#, fuzzy, java-format
+#| msgid "Organization {0} does not exist."
+msgid "User: {0} does not exist!"
+msgstr "संस्था {0} अस्तित्वात नाही."
 
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1296
@@ -427,7 +435,7 @@ msgstr ""
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} हे {1} करीता वैध मूल्य नाही"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1065
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1092
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "समवर्ती सुधारणामुळे विनंती अपयशी, कृपया पुन्हा प्रयत्न करा."
 
@@ -444,10 +452,10 @@ msgid "Unit with ID \"{0}\" could not be found."
 msgstr ""
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:492
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1839
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1912
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1951
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1994
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1819
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1892
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1931
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1974
 #, java-format
 msgid "Product with ID \"{0}\" could not be found."
 msgstr ""
@@ -456,14 +464,14 @@ msgstr ""
 msgid "No rules file found in the database"
 msgstr "डाटाबेसमध्ये rules फाइल आढळले नाही"
 
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:95
+#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:92
 #, java-format
 msgid "Unable to find an owner with key: {0}"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:107
+#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:104
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr "मालक {0} करीता ueber सर्ट निर्माण करतेवेळी अडचण आढळली"
@@ -936,37 +944,37 @@ msgid "Consumer with UUID {0} was already deleted."
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2030
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3087
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3101
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "{0} {1} ची नोंदणी अशक्य कारण: {2}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2103
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2126
 msgid "Content access mode does not allow this request."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2116
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2139
 msgid "Cannot retrieve content access certificate"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2163
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2186
 msgid "Unable to create entitlement certificate archive"
 msgstr "एंटाइटलमेंट प्रमाणपत्र आर्काइव्ह निर्माण करणे अशक्य"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2228
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2251
 msgid "Cannot bind by multiple parameters."
 msgstr "एकापेक्षाजास्त घटकांसह बाईंड करणे अशक्य."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2232
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2255
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "स्वयं-बांधणी करताना प्रमाण निश्चित करणे अशक्य."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2330
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2643
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2353
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2666
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:428
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:262
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:292
@@ -975,30 +983,30 @@ msgstr "स्वयं-बांधणी करताना प्रमाण
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1360
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1504
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1581
-#: src/main/java/org/candlepin/resource/OwnerResource.java:2084
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2064
 #, java-format
 msgid "An unexpected exception occurred while scheduling job \"{0}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2365
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2388
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2371
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2394
 #, java-format
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
 "the hypervisor autobind setting."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2412
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2435
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2453
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2535
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2476
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2558
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:175
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:192
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:221
@@ -1008,47 +1016,48 @@ msgstr ""
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2550
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2573
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2566
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2589
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2610
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2633
 msgid "Unable to create export archive"
 msgstr "एक्सपोर्ट साठा निर्माण करणे अशक्य"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2788
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2798
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2803
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "युनिट {0} करिता ID सर्ट पुन्हा निर्माण करतेवेळी अडचण"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2822
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2836
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0} सह प्रणाली वर्च्युअल अतिथी नाही."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2896
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2910
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3024
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3038
 msgid "Please supply a valid guest id"
 msgstr "कृपया वैध अतिथी id द्या"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3040
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3054
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
 msgstr "json मधील अतिथी ID \"{0}\" मार्ग अतिथी ID \"{1}\" सह जुळत नाही"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:3071
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:3085
 #, java-format
 msgid "Guest with UUID {0} could not be found."
 msgstr ""
@@ -1382,72 +1391,72 @@ msgstr "एक्सपोर्ट आर्काइव्ह वाचते�
 msgid "Error storing uploaded archive for asynchronous processing."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1690
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1670
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1746
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1726
 msgid "Unknown conflict to force"
 msgstr "फोर्सकरीता अपरिचीत मतभेद"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1814
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1794
 #, java-format
 msgid "Owner with key \"{0}\" was not found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1868
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1848
 msgid "Only numeric product IDs are allowed."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1899
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1879
 #, java-format
 msgid "Contradictory ids in update request: {0}, {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1917
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1956
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1999
-#: src/main/java/org/candlepin/resource/OwnerResource.java:2047
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1897
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1936
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1979
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2027
 #, java-format
 msgid "product \"{0}\" is locked"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:2052
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2032
 #, java-format
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more "
 "subscriptions"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:2058
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2038
 #, java-format
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more products"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:2112
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2092
 #, java-format
 msgid "Content with ID \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:2163
-#: src/main/java/org/candlepin/resource/OwnerResource.java:2218
-#: src/main/java/org/candlepin/resource/OwnerResource.java:2235
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2143
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2198
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2215
 #, java-format
 msgid "content \"{0}\" is locked"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:2245
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2225
 msgid "Owners must be created with a valid key"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:2254
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2234
 msgid "The default service level cannot be specified during owner creation"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:2292
-#: src/main/java/org/candlepin/resource/OwnerResource.java:2304
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2272
+#: src/main/java/org/candlepin/resource/OwnerResource.java:2284
 #, java-format
 msgid "Could not create the Owner: {0}"
 msgstr "मालक: {0} निर्माण करणे अशक्य"
@@ -1675,7 +1684,7 @@ msgstr "संस्था"
 msgid "{0} with id {1} could not be found."
 msgstr "{0} , id {1} सह आढळले नाही."
 
-#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:318
+#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:314
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
