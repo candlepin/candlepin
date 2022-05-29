@@ -2,13 +2,14 @@
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021, 2022.
 # Nikos Moumoulidis <nmoumoul@redhat.com>, 2020. #zanata, 2021.
 # Sundeep Anand <suanand@redhat.com>, 2021, 2022.
+# Pino Toscano <ptoscano@redhat.com>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-04-17 03:01-0400\n"
-"PO-Revision-Date: 2022-02-15 11:16+0000\n"
-"Last-Translator: Sundeep Anand <suanand@redhat.com>\n"
+"PO-Revision-Date: 2022-05-26 13:01+0000\n"
+"Last-Translator: Pino Toscano <ptoscano@redhat.com>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
 "candlepin/master/fr/>\n"
 "Language: fr\n"
@@ -16,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n > 1;\n"
-"X-Generator: Weblate 4.10.1\n"
+"X-Generator: Weblate 4.12.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -494,7 +495,7 @@ msgstr ""
 "consommé."
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:133
-#, java-format
+#, fuzzy, java-format
 msgid ""
 "The requested add-on \"{0}\" is not provided by a currently consumed "
 "subscription."
@@ -512,7 +513,7 @@ msgstr ""
 "abonnement actuellement consommé."
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:204
-#, java-format
+#, fuzzy, java-format
 msgid ""
 "The requested usage preference \"{0}\" is not provided by a currently "
 "consumed subscription."
@@ -1063,14 +1064,14 @@ msgstr ""
 "Exception inattendue \"{0}\" lors de la programmation de la tâche \"{0}\""
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2365
-#, java-format
+#, fuzzy, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 "Requête auto-attach ignorée. L'organisation \"{0}\" a déjà la fonction auto-"
 "attach désactivée."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2371
-#, java-format
+#, fuzzy, java-format
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
 "the hypervisor autobind setting."
@@ -1412,14 +1413,14 @@ msgid "Unable to find parent owner: {0}"
 msgstr "Impossible de trouver un propriétaire parent : {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:934
-#, java-format
+#, fuzzy, java-format
 msgid "Content access mode list contains an unsupported mode: {0}"
 msgstr ""
 "La liste des modes d'accès au contenu contient un mode non pris en charge : "
 "{0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:954
-#, java-format
+#, fuzzy, java-format
 msgid ""
 "Content access mode is not present in the content access mode list for this "
 "org: {0}"
