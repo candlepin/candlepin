@@ -625,18 +625,4 @@ public class ConsumerResourceCreationTest {
         consumer = resource.createConsumer(consumer, USER, owner.getKey(), null, true);
         assertEquals(2, consumer.getEnvironments().size());
     }
-
-    @Test
-    public void registerWithEnvironmentWhileEnvironmentResourceHiddenThrowsException() {
-        config.setProperty(ConfigProperties.HIDDEN_RESOURCES, "environments");
-
-        Principal p = new TrustedUserPrincipal("anyuser");
-        when(this.principalProvider.get()).thenReturn(p);
-        ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
-        EnvironmentDTO environmentDTO = new EnvironmentDTO().id("env1");
-        consumer.addEnvironmentsItem(environmentDTO);
-
-        assertThrows(BadRequestException.class, () ->
-            resource.createConsumer(consumer, USER, owner.getKey(), null, true));
-    }
 }
