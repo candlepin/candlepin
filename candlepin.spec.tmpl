@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.1
+Version: 4.2.2
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,43 @@ fi
 
 #raw
 %changelog
+* Mon May 30 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.2-1
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Undo disallow consumer with env when resource hidden (nmoumoul@redhat.com)
+- ENT-4613: Migrate Identity and Authorization spec (ojanus@redhat.com)
+- Setup test-logger plugin (ojanus@redhat.com)
+- Update Gradle Wrapper to 7.4.2 (ojanus@redhat.com)
+- ActiveEntitlementJob now operates transactionally (crog@redhat.com)
+- Changed Maven plugin to maven-publish for Gradle 7+  * Updated pom.xml
+  generation to use maven-publish plugin (joshmalbrecht@gmail.com)
+- Updated key pair storage to no longer store Java-serialized key objects
+  (crog@redhat.com)
+- 2084516: CertificateCleanupJob fails with foreign key constraint violation
+  (wpoteat@redhat.com)
+- 2083612: Add ssl_verify capability based on config (wpoteat@redhat.com)
+- 2078029: Unlimited bonus pool quantity adjustment after manifest change
+  (wpoteat@redhat.com)
+- adding agent to bugzilla-refrenge stage (jmolet@redhat.com)
+- Optimize hibernate use in AsyncJobStatusCuratorTest (bcourt@redhat.com)
+- 1962572: Filter list of available system purpose values (wpoteat@redhat.com)
+- 2078780: Added filter for fetching SCA certs with cert serial Id
+  (joshmalbrecht@gmail.com)
+- Update postgresql container to use version 12 (wpoteat@redhat.com)
+- 2070159: Update resource locator annotation warnings (wpoteat@redhat.com)
+- Added error handling for select_jdbc_jar function (joshmalbrecht@gmail.com)
+- Added configurations for using Visual Studio Code * Added settings to use
+  eclipse-formatter. * Added gitignore entries for generated directories.
+  (joshmalbrecht@gmail.com)
+- 2076952: Fixed null pointer exception while testing products for cycles
+  (crog@redhat.com)
+- Fix issue with deploy script, when Python 3 is used (jhnidek@redhat.com)
+- Removed mysql-connector-java from gradle dependencies.
+  (joshmalbrecht@gmail.com)
+- 2075587: Fixed attribute storage issue causing version collisions
+  (crog@redhat.com)
+- adding milestones to abort previous builds (jmolet@redhat.com)
+
 * Tue Apr 19 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.1-1
 - Update translation files (noreply@weblate.org)
 - Revert releasers.conf branch name change (nmoumoul@redhat.com)
