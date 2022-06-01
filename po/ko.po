@@ -2,21 +2,22 @@
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021.
 # simmon <simmon@nplob.com>, 2021, 2022.
 # Sundeep Anand <suanand@redhat.com>, 2021.
+# Pino Toscano <ptoscano@redhat.com>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-01-23 02:00-0500\n"
-"PO-Revision-Date: 2022-01-23 16:16+0000\n"
-"Last-Translator: simmon <simmon@nplob.com>\n"
+"PO-Revision-Date: 2022-06-01 10:15+0000\n"
+"Last-Translator: Pino Toscano <ptoscano@redhat.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
-"candlepin/master/ko/>\n"
+"candlepin/candlepin-4-1-hotfix/ko/>\n"
 "Language: ko\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.10.1\n"
+"X-Generator: Weblate 4.12.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -322,7 +323,7 @@ msgid "Auto-attach is disabled for owner \"{0}\"{1}."
 msgstr "소유자 \"{0}\"{1}의 자동 연결이 비활성화되어 있습니다."
 
 #: src/main/java/org/candlepin/controller/Entitler.java:236
-#, java-format
+#, fuzzy, java-format
 msgid "Auto-attach is disabled for owner \"{0}\"."
 msgstr "소유자 \"{0}\"{1}의 자동 연결이 비활성화되어 있습니다."
 
