@@ -1,0 +1,103 @@
+// By keeping dependencies in this file, they get picked up by dependabot reliably
+// inspired by mockito's gradle structure, which dependabot uses as a test case
+
+// Repeating repositories here allows dependabot to use them to check for updates
+buildscript {
+    repositories {
+        mavenCentral()
+        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url "https://packages.confluent.io/maven/" }
+        maven { url "https://repo.jenkins-ci.org/public/" }
+        maven { url "https://repository.jboss.org/nexus/content/groups/public/" }
+        maven { url "https://oauth.googlecode.com/svn/code/maven/" }
+        maven { url "https://awood.fedorapeople.org/ivy/candlepin/" }
+        maven { url "https://barnabycourt.fedorapeople.org/repo/candlepin/" }
+    }
+}
+
+ext {
+    libraries = [:]
+    plugins = []
+}
+
+// these are the plugin artifact IDs, which can be found on plugins.gradle.org
+// buildSrc/build.gradle adds them to the gradle classpath
+ext.plugins = [
+    "com.adarshr:gradle-test-logger-plugin:3.2.0",
+    "com.github.ben-manes:gradle-versions-plugin:0.38.0",
+    "com.netflix.nebula:gradle-lint-plugin:17.7.0",
+    "org.openapitools:openapi-generator-gradle-plugin:5.3.0",
+    "org.owasp:dependency-check-gradle:7.0.0",
+    "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.3",
+]
+
+libraries["artemisServer"] = "org.apache.activemq:artemis-server:2.21.0"
+libraries["artemisStomp"] = "org.apache.activemq:artemis-stomp-protocol:2.21.0"
+libraries["assertj"] = 'org.assertj:assertj-core:3.22.0'
+libraries["checkstyle"] = "com.puppycrawl.tools:checkstyle:8.36"
+libraries["checkstyleSevntu"] = "com.github.sevntu-checkstyle:sevntu-checks:1.36.0"
+libraries["commonsCodec"] = "commons-codec:commons-codec:1.15"
+libraries["commonsCollections"] = "commons-collections:commons-collections:3.2.2"
+libraries["commonsIo"] = "commons-io:commons-io:2.11.0"
+libraries["commonsLang"] = "org.apache.commons:commons-lang3:3.12.0"
+libraries["ehcache"] = "org.ehcache:ehcache:3.10.0"
+libraries["gettext"] = "com.googlecode.gettext-commons:gettext-commons:0.9.8"
+libraries["gson"] = "com.google.code.gson:gson:2.9.0"
+libraries["gsonfire"] = "io.gsonfire:gson-fire:1.8.5"
+libraries["guava"] = "com.google.guava:guava:31.1-jre"
+libraries["guiceAssistedInject"] = "com.google.inject.extensions:guice-assistedinject:5.1.0"
+libraries["guicePersist"] = "com.google.inject.extensions:guice-persist:5.1.0"
+libraries["guiceServlet"] = "com.google.inject.extensions:guice-servlet:5.1.0"
+libraries["hamcrest"] = "org.hamcrest:hamcrest-library:2.2"
+libraries["hibernate"] = "org.hibernate.javax.persistence:hibernate-jpa-2.1-api:1.0.2.Final"
+libraries["hibernateC3p0"] = "org.hibernate:hibernate-c3p0:5.6.7.Final"
+libraries["hibernateJcache"] = "org.hibernate:hibernate-jcache:5.6.7.Final"
+libraries["hibernateJpamodelgen"] = "org.hibernate:hibernate-jpamodelgen:5.6.7.Final"
+libraries["hibernateJpamodelgenProcessor"] = "org.hibernate:hibernate-jpamodelgen:5.6.7.Final"
+libraries["hibernateValidator"] = "org.hibernate.validator:hibernate-validator:6.2.3.Final"
+libraries["hibernateValidatorProcessor"] = "org.hibernate.validator:hibernate-validator-annotation-processor:6.2.3.Final"
+libraries["hsqldb"] = "org.hsqldb:hsqldb:2.6.1"
+libraries["javaxEl"] = "org.glassfish:javax.el:3.0.0"
+libraries["jacksonDatabind"] = "com.fasterxml.jackson.core:jackson-databind:2.13.2.2"
+libraries["jacksonHibernate"] = "com.fasterxml.jackson.datatype:jackson-datatype-hibernate5:2.13.2"
+libraries["jacksonJaxrs"] = "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.13.2"
+libraries["jacksonJdk8"] = "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.2"
+libraries["jacksonJsonSchema"] = "com.fasterxml.jackson.module:jackson-module-jsonSchema:2.13.2"
+libraries["jacksonJsr310"] = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.2"
+libraries["jacksonXml"] = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.2"
+libraries["jacksonYaml"] = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.2"
+libraries["javaxAnnotation"] = "javax.annotation:javax.annotation-api:1.3.2"
+libraries["javaxCache"] = "javax.cache:cache-api:1.1.1"
+libraries["javaxRs"] = "javax.ws.rs:javax.ws.rs-api:2.1.1"
+libraries["javaxServlet"] = "javax.servlet:servlet-api:2.5"
+libraries["javaxValidation"] = "javax.validation:validation-api:2.0.1.Final"
+libraries["jaxb"] = "com.sun.xml.bind:jaxb-impl:3.0.2"
+libraries["jaxbCore"] = "com.sun.xml.bind:jaxb-core:3.0.2"
+libraries["jclOverSlf4j"] = "org.slf4j:jcl-over-slf4j:1.7.36"
+libraries["junit"] = "org.junit.jupiter:junit-jupiter:5.8.2"
+libraries["junitApi"] = "org.junit.jupiter:junit-jupiter-api:5.8.2"
+libraries["junitEngine"] = "org.junit.jupiter:junit-jupiter-engine:5.8.2"
+libraries["junitParams"] = "org.junit.jupiter:junit-jupiter-params:5.8.2"
+libraries["keycloak"] = "org.keycloak:keycloak-servlet-filter-adapter:17.0.1"
+libraries["liquibase"] = "org.liquibase:liquibase-core:4.9.1"
+libraries["liquibaseSlf4j"] = "com.mattbertolini:liquibase-slf4j:4.0.0"
+libraries["log4jOverSlf4j"] = "org.slf4j:log4j-over-slf4j:1.7.36"
+libraries["logback"] = "ch.qos.logback:logback-classic:1.2.11"
+libraries["logstash"] = "net.logstash.logback:logstash-logback-encoder:7.0.1"
+libraries["mariadb"] = "org.mariadb.jdbc:mariadb-java-client:3.0.4"
+libraries["mockitoJunit"] = "org.mockito:mockito-junit-jupiter:4.4.0"
+libraries["oauth"] = "net.oauth.core:oauth-provider:20100527"
+libraries["okhttp"] = "com.squareup.okhttp3:okhttp:4.9.3"
+libraries["okhttpInterceptor"] = "com.squareup.okhttp3:logging-interceptor:4.9.3"
+libraries["okhttpTls"] = "com.squareup.okhttp3:okhttp-tls:4.9.3"
+libraries["openapi"] = "org.openapitools:openapi-generator:5.3.0"
+libraries["picocli"] = "info.picocli:picocli:4.6.3"
+libraries["postgresql"] = "org.postgresql:postgresql:42.3.3"
+libraries["quartz"] = "org.quartz-scheduler:quartz:2.3.2"
+libraries["resteasyAtom"] = "org.jboss.resteasy:resteasy-atom-provider:4.4.3.Final"
+libraries["resteasyGuice"] = "org.jboss.resteasy:resteasy-guice:4.4.3.Final"
+libraries["resteasyMultipart"] = "org.jboss.resteasy:resteasy-multipart-provider:4.4.3.Final"
+libraries["rhino"] = "org.mozilla:rhino:1.7.14"
+libraries["slf4j"] = "org.slf4j:slf4j-api:1.7.36"
+libraries["spotbugs"] = "com.github.spotbugs:spotbugs-annotations:4.6.0"
+libraries["swagger"] = "io.swagger:swagger-annotations:1.6.6"
