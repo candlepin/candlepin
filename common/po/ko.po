@@ -3,13 +3,14 @@
 # simmon <simmon@nplob.com>, 2021, 2022.
 # Sundeep Anand <suanand@redhat.com>, 2021.
 # 김인수 <simmon@nplob.com>, 2022.
+# Pino Toscano <ptoscano@redhat.com>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-01-20 07:07-0500\n"
-"PO-Revision-Date: 2022-05-12 04:18+0000\n"
-"Last-Translator: 김인수 <simmon@nplob.com>\n"
+"PO-Revision-Date: 2022-06-01 10:14+0000\n"
+"Last-Translator: Pino Toscano <ptoscano@redhat.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-0-hotfix/ko/>\n"
 "Language: ko\n"
@@ -17,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.12.1\n"
+"X-Generator: Weblate 4.12.2\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -449,7 +450,7 @@ msgid "Auto-attach is disabled for owner \"{0}\"{1}."
 msgstr "소유자 \"{0}\"{1}의 자동 연결이 비활성화되어 있습니다."
 
 #: server/src/main/java/org/candlepin/controller/Entitler.java:236
-#, java-format
+#, fuzzy, java-format
 msgid "Auto-attach is disabled for owner \"{0}\"."
 msgstr "소유자 \"{0}\"{1}의 자동 연결이 비활성화되어 있습니다."
 
