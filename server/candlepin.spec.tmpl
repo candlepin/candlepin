@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.17
+Version: 4.0.18
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -233,6 +233,17 @@ fi
 
 #raw
 %changelog
+* Thu Jun 02 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.18-1
+- 2084518: CertificateCleanupJob fails with foreign key constraint violation
+  (wpoteat@redhat.com)
+- 2084569: Add ssl_verify capability based on config (wpoteat@redhat.com)
+- 2078784: Added filter for fetching SCA certs with cert serial Id
+  (joshmalbrecht@gmail.com)
+- 2076955: Fixed null pointer exception while testing products for cycles
+  (crog@redhat.com)
+- 2076659: Fixed attribute storage issue causing version collisions
+  (crog@redhat.com)
+
 * Fri Apr 15 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.17-1
 - 2061787: Added null check for service level on new consumer
   (joshmalbrecht@gmail.com)
