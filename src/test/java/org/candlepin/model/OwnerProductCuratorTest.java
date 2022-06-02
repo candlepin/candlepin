@@ -24,7 +24,12 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -36,6 +41,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 
@@ -799,5 +805,468 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Map<String, Set<String>> result =
             this.ownerProductCurator.getSyspurposeAttributesByOwner((String) null);
         assertEquals(result, expected);
+    }
+
+    private Product createProduct() {
+        String id = "test_product-" + TestUtil.randomInt();
+
+        Product product = new Product()
+            .setId(id)
+            .setName(id);
+
+        return this.productCurator.create(product);
+    }
+
+    private List<OwnerProduct> buildOwnerProductData(List<Owner> owners, List<Product> products) {
+        Instant last = Instant.now();
+        List<OwnerProduct> output = new ArrayList<>();
+
+        for (Owner owner : owners) {
+            for (Product product : products) {
+                OwnerProduct op = new OwnerProduct(owner, product)
+                    .setOrphanedDate(last);
+
+                this.ownerProductCurator.create(op, false);
+                output.add(op);
+
+                last = last.minusSeconds(300);
+            }
+        }
+
+        this.ownerProductCurator.flush();
+
+        return output;
+    }
+
+    @Test
+    public void testGetOwnerProduct() {
+        Owner owner = this.createOwner();
+        Product product = this.createProduct();
+
+        OwnerProduct result = this.ownerProductCurator.getOwnerProduct(owner.getId(), product.getId());
+        assertNull(result);
+
+        OwnerProduct expected = new OwnerProduct()
+            .setOwner(owner)
+            .setProduct(product);
+
+        this.ownerProductCurator.create(expected, true);
+        this.ownerProductCurator.clear();
+
+        result = this.ownerProductCurator.getOwnerProduct(owner.getId(), product.getId());
+        assertNotNull(result);
+        assertNotNull(result.getOwner());
+        assertNotNull(result.getProduct());
+
+        assertEquals(owner, result.getOwner());
+        assertEquals(product, result.getProduct());
+    }
+
+    @Test
+    public void testGetOwnerProductHandlesInvalidIds() {
+        Owner owner = this.createOwner();
+        Product product = this.createProduct();
+        OwnerProduct expected = new OwnerProduct()
+            .setOwner(owner)
+            .setProduct(product);
+
+        this.ownerProductCurator.create(expected, true);
+        this.ownerProductCurator.clear();
+
+
+        OwnerProduct result = this.ownerProductCurator.getOwnerProduct(owner.getId(), "invalid_product_id");
+        assertNull(result);
+
+        result = this.ownerProductCurator.getOwnerProduct("invalid_owner_id", product.getId());
+        assertNull(result);
+
+        result = this.ownerProductCurator.getOwnerProduct("invalid_owner_id", "invalid_product_id");
+        assertNull(result);
+    }
+
+    @Test
+    public void testGetOwnerProductHandlesNullIds() {
+        Owner owner = this.createOwner();
+        Product product = this.createProduct();
+        OwnerProduct expected = new OwnerProduct()
+            .setOwner(owner)
+            .setProduct(product);
+
+        this.ownerProductCurator.create(expected, true);
+        this.ownerProductCurator.clear();
+
+
+        OwnerProduct result = this.ownerProductCurator.getOwnerProduct(owner.getId(), null);
+        assertNull(result);
+
+        result = this.ownerProductCurator.getOwnerProduct(null, product.getId());
+        assertNull(result);
+
+        result = this.ownerProductCurator.getOwnerProduct(null, null);
+        assertNull(result);
+    }
+
+    @Test
+    public void testGetOwnerProductOrphanedDates() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+        Product product3 = this.createProduct();
+
+        List<OwnerProduct> ownerProducts = this.buildOwnerProductData(List.of(owner1, owner2, owner3),
+            List.of(product1, product2, product3));
+
+        List<Product> expectedProducts = List.of(product2, product3);
+
+        Map<String, Instant> expected = ownerProducts.stream()
+            .filter(op -> op.getOwner().equals(owner2))
+            .filter(op -> expectedProducts.contains(op.getProduct()))
+            .collect(Collectors.toMap(op -> op.getProduct().getId(), op -> op.getOrphanedDate()));
+
+        this.ownerProductCurator.clear();
+
+        Map<String, Instant> output = this.ownerProductCurator.getOwnerProductOrphanedDates(owner2,
+            List.of(product2.getId(), product3.getId()));
+
+        assertNotNull(output);
+        assertEquals(expected.size(), output.size());
+
+        for (Map.Entry<String, Instant> entry : expected.entrySet()) {
+            assertTrue(output.containsKey(entry.getKey()));
+            assertEquals(entry.getValue(), output.get(entry.getKey()));
+        }
+
+        for (Map.Entry<String, Instant> entry : output.entrySet()) {
+            assertTrue(expected.containsKey(entry.getKey()));
+            assertEquals(entry.getValue(), expected.get(entry.getKey()));
+        }
+    }
+
+    @Test
+    public void testGetOwnerProductOrphanedDatesIncludesProductsWithNullDates() {
+        Owner owner = this.createOwner();
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+
+        OwnerProduct op1 = new OwnerProduct(owner, product1);
+        OwnerProduct op2 = new OwnerProduct(owner, product2)
+            .setOrphanedDate(Instant.now());
+
+        this.ownerProductCurator.create(op1);
+        this.ownerProductCurator.create(op2);
+        this.ownerProductCurator.flush();
+
+        Map<String, Instant> output = this.ownerProductCurator.getOwnerProductOrphanedDates(owner,
+            List.of(product1.getId(), product2.getId()));
+
+        assertNotNull(output);
+        assertEquals(2, output.size());
+
+        assertTrue(output.containsKey(product1.getId()));
+        assertNull(output.get(product1.getId()));
+
+        assertTrue(output.containsKey(product2.getId()));
+        assertEquals(op2.getOrphanedDate(), output.get(product2.getId()));
+    }
+
+    @Test
+    public void testGetOwnerProductOrphanedDatesIgnoresInvalidProductIds() {
+        Owner owner = this.createOwner();
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+
+        OwnerProduct op1 = new OwnerProduct(owner, product1);
+        OwnerProduct op2 = new OwnerProduct(owner, product2)
+            .setOrphanedDate(Instant.now());
+
+        this.ownerProductCurator.create(op1);
+        this.ownerProductCurator.create(op2);
+        this.ownerProductCurator.flush();
+
+        Map<String, Instant> output = this.ownerProductCurator.getOwnerProductOrphanedDates(owner,
+            List.of(product1.getId(), product2.getId(), "bad_product_id"));
+
+        assertNotNull(output);
+        assertEquals(2, output.size());
+
+        assertTrue(output.containsKey(product1.getId()));
+        assertNull(output.get(product1.getId()));
+
+        assertTrue(output.containsKey(product2.getId()));
+        assertEquals(op2.getOrphanedDate(), output.get(product2.getId()));
+    }
+
+    @Test
+    public void testGetOwnerProductOrphanedDateRequiresOwner() {
+        assertThrows(IllegalArgumentException.class, () ->
+            this.ownerProductCurator.getOwnerProductOrphanedDates((Owner) null, List.of("a", "b", "c")));
+    }
+
+    @Test
+    public void testGetOwnerProductOrphanedDatesByOwnerId() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+        Product product3 = this.createProduct();
+
+        List<OwnerProduct> ownerProducts = this.buildOwnerProductData(List.of(owner1, owner2, owner3),
+            List.of(product1, product2, product3));
+
+        List<Product> expectedProducts = List.of(product2, product3);
+
+        Map<String, Instant> expected = ownerProducts.stream()
+            .filter(op -> op.getOwner().equals(owner2))
+            .filter(op -> expectedProducts.contains(op.getProduct()))
+            .collect(Collectors.toMap(op -> op.getProduct().getId(), op -> op.getOrphanedDate()));
+
+        this.ownerProductCurator.clear();
+
+        Map<String, Instant> output = this.ownerProductCurator.getOwnerProductOrphanedDates(owner2.getId(),
+            List.of(product2.getId(), product3.getId()));
+
+        assertNotNull(output);
+        assertEquals(expected.size(), output.size());
+
+        for (Map.Entry<String, Instant> entry : expected.entrySet()) {
+            assertTrue(output.containsKey(entry.getKey()));
+            assertEquals(entry.getValue(), output.get(entry.getKey()));
+        }
+
+        for (Map.Entry<String, Instant> entry : output.entrySet()) {
+            assertTrue(expected.containsKey(entry.getKey()));
+            assertEquals(entry.getValue(), expected.get(entry.getKey()));
+        }
+    }
+
+    @Test
+    public void testGetOwnerProductOrphanedDatesByOwnerIdIncludesProductsWithNullDates() {
+        Owner owner = this.createOwner();
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+
+        OwnerProduct op1 = new OwnerProduct(owner, product1);
+        OwnerProduct op2 = new OwnerProduct(owner, product2)
+            .setOrphanedDate(Instant.now());
+
+        this.ownerProductCurator.create(op1);
+        this.ownerProductCurator.create(op2);
+        this.ownerProductCurator.flush();
+
+        Map<String, Instant> output = this.ownerProductCurator.getOwnerProductOrphanedDates(owner.getId(),
+            List.of(product1.getId(), product2.getId()));
+
+        assertNotNull(output);
+        assertEquals(2, output.size());
+
+        assertTrue(output.containsKey(product1.getId()));
+        assertNull(output.get(product1.getId()));
+
+        assertTrue(output.containsKey(product2.getId()));
+        assertEquals(op2.getOrphanedDate(), output.get(product2.getId()));
+    }
+
+    @Test
+    public void testGetOwnerProductOrphanedDatesByOwnerIdIgnoresInvalidProductIds() {
+        Owner owner = this.createOwner();
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+
+        OwnerProduct op1 = new OwnerProduct(owner, product1);
+        OwnerProduct op2 = new OwnerProduct(owner, product2)
+            .setOrphanedDate(Instant.now());
+
+        this.ownerProductCurator.create(op1);
+        this.ownerProductCurator.create(op2);
+        this.ownerProductCurator.flush();
+
+        Map<String, Instant> output = this.ownerProductCurator.getOwnerProductOrphanedDates(owner.getId(),
+            List.of(product1.getId(), product2.getId(), "bad_product_id"));
+
+        assertNotNull(output);
+        assertEquals(2, output.size());
+
+        assertTrue(output.containsKey(product1.getId()));
+        assertNull(output.get(product1.getId()));
+
+        assertTrue(output.containsKey(product2.getId()));
+        assertEquals(op2.getOrphanedDate(), output.get(product2.getId()));
+    }
+
+    @Test
+    public void testGetOwnerProductOrphanedDateByOwnerIdRequiresOwnerId() {
+        assertThrows(IllegalArgumentException.class, () ->
+            this.ownerProductCurator.getOwnerProductOrphanedDates((String) null, List.of("a", "b", "c")));
+    }
+
+    public static Stream<Arguments> productOrphanedDatesProvider() {
+        return Stream.of(
+            Arguments.of(Instant.now().plusSeconds(5000)),
+            Arguments.of((Instant) null));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("productOrphanedDatesProvider")
+    public void testUpdateOwnerProductOrphanedDates(Instant update) {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+        Product product3 = this.createProduct();
+
+        List<OwnerProduct> ownerProducts = this.buildOwnerProductData(List.of(owner1, owner2, owner3),
+            List.of(product1, product2, product3));
+
+        List<Product> expectedProducts = List.of(product2, product3);
+        List<OwnerProduct> expected = ownerProducts.stream()
+            .filter(op -> op.getOwner().equals(owner2))
+            .filter(op -> expectedProducts.contains(op.getProduct()))
+            .collect(Collectors.toList());
+
+        this.ownerProductCurator.clear();
+
+        int output = this.ownerProductCurator.updateOwnerProductOrphanedDates(owner2,
+            List.of(product2.getId(), product3.getId()), update);
+
+        assertEquals(2, output);
+
+        for (OwnerProduct op : ownerProducts) {
+            OwnerProduct refreshed = this.ownerProductCurator
+                .getOwnerProduct(op.getOwner().getId(), op.getProduct().getId());
+            assertNotNull(refreshed);
+
+            if (expected.contains(op)) {
+                assertEquals(update, refreshed.getOrphanedDate());
+            }
+            else {
+                assertEquals(op.getOrphanedDate(), refreshed.getOrphanedDate());
+            }
+        }
+    }
+
+    @Test
+    public void testUpdateOwnerProductOrphanedDatesIgnoresInvalidProductIds() {
+        Owner owner = this.createOwner();
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+
+        OwnerProduct op1 = new OwnerProduct(owner, product1);
+        OwnerProduct op2 = new OwnerProduct(owner, product2)
+            .setOrphanedDate(Instant.now());
+
+        this.ownerProductCurator.create(op1);
+        this.ownerProductCurator.create(op2);
+        this.ownerProductCurator.flush();
+        this.ownerProductCurator.clear();
+
+        Instant update = Instant.now().plusSeconds(5000);
+
+        int count = this.ownerProductCurator.updateOwnerProductOrphanedDates(owner,
+            List.of(product1.getId(), "bad_product_id", "another_bad_id"), update);
+
+        assertEquals(1, count);
+
+        OwnerProduct refreshedOp1 = this.ownerProductCurator
+            .getOwnerProduct(op1.getOwner().getId(), op1.getProduct().getId());
+        assertNotNull(refreshedOp1);
+        assertEquals(update, refreshedOp1.getOrphanedDate());
+
+        OwnerProduct refreshedOp2 = this.ownerProductCurator
+            .getOwnerProduct(op2.getOwner().getId(), op2.getProduct().getId());
+        assertNotNull(refreshedOp2);
+        assertEquals(op2.getOrphanedDate(), refreshedOp2.getOrphanedDate());
+    }
+
+    @Test
+    @SuppressWarnings("indentation")
+    public void testUpdateOwnerProductOrphanedDatesRequiresOwner() {
+        assertThrows(IllegalArgumentException.class, () ->
+            this.ownerProductCurator.updateOwnerProductOrphanedDates((Owner) null, List.of("a", "b", "c"),
+                Instant.now()));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("productOrphanedDatesProvider")
+    public void testUpdateOwnerProductByOwnerIdOrphanedDates(Instant update) {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+        Product product3 = this.createProduct();
+
+        List<OwnerProduct> ownerProducts = this.buildOwnerProductData(List.of(owner1, owner2, owner3),
+            List.of(product1, product2, product3));
+
+        List<Product> expectedProducts = List.of(product2, product3);
+        List<OwnerProduct> expected = ownerProducts.stream()
+            .filter(op -> op.getOwner().equals(owner2))
+            .filter(op -> expectedProducts.contains(op.getProduct()))
+            .collect(Collectors.toList());
+
+        this.ownerProductCurator.clear();
+
+        int output = this.ownerProductCurator.updateOwnerProductOrphanedDates(owner2.getId(),
+            List.of(product2.getId(), product3.getId()), update);
+
+        assertEquals(2, output);
+
+        for (OwnerProduct op : ownerProducts) {
+            OwnerProduct refreshed = this.ownerProductCurator
+                .getOwnerProduct(op.getOwner().getId(), op.getProduct().getId());
+            assertNotNull(refreshed);
+
+            if (expected.contains(op)) {
+                assertEquals(update, refreshed.getOrphanedDate());
+            }
+            else {
+                assertEquals(op.getOrphanedDate(), refreshed.getOrphanedDate());
+            }
+        }
+    }
+
+    @Test
+    public void testUpdateOwnerProductByOwnerIdOrphanedDatesIgnoresInvalidProductIds() {
+        Owner owner = this.createOwner();
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+
+        OwnerProduct op1 = new OwnerProduct(owner, product1);
+        OwnerProduct op2 = new OwnerProduct(owner, product2)
+            .setOrphanedDate(Instant.now());
+
+        this.ownerProductCurator.create(op1);
+        this.ownerProductCurator.create(op2);
+        this.ownerProductCurator.flush();
+        this.ownerProductCurator.clear();
+
+        Instant update = Instant.now().plusSeconds(5000);
+
+        int count = this.ownerProductCurator.updateOwnerProductOrphanedDates(owner.getId(),
+            List.of(product1.getId(), "bad_product_id", "another_bad_id"), update);
+
+        assertEquals(1, count);
+
+        OwnerProduct refreshedOp1 = this.ownerProductCurator
+            .getOwnerProduct(op1.getOwner().getId(), op1.getProduct().getId());
+        assertNotNull(refreshedOp1);
+        assertEquals(update, refreshedOp1.getOrphanedDate());
+
+        OwnerProduct refreshedOp2 = this.ownerProductCurator
+            .getOwnerProduct(op2.getOwner().getId(), op2.getProduct().getId());
+        assertNotNull(refreshedOp2);
+        assertEquals(op2.getOrphanedDate(), refreshedOp2.getOrphanedDate());
+    }
+
+    @Test
+    @SuppressWarnings("indentation")
+    public void testUpdateOwnerByOwnerIdProductOrphanedDatesRequiresOwner() {
+        assertThrows(IllegalArgumentException.class, () ->
+            this.ownerProductCurator.updateOwnerProductOrphanedDates((String) null, List.of("a", "b", "c"),
+                Instant.now()));
     }
 }
