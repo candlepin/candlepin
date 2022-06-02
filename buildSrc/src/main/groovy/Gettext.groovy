@@ -89,22 +89,13 @@ class Gettext implements Plugin<Project> {
             group = 'verification'
             doLast {
                 def po_files = new FileNameFinder().getFileNames("${extension.keys_project_dir}/po/", '*.po')
-                // Search for all lines that start with msgstr that contain an unescaped single quote.
-                def regex = ~/^msgstr(.*([^'])'([^']).*)/
-                def failed = false
                 po_files.each {
-                    def line_number = 1
-                    new File(it).eachLine { line ->
-                        def matcher = regex.matcher(line)
-                        while (matcher.find()) {
-                            println(String.format("Found unescaped single quote in %s line %s: %s",it, line_number, matcher.group(1)))
-                            failed = true
-                        }
-                        line_number++
+                    def msgfmt_args = ['-o', '/dev/null', '-c', it]
+                    project.exec {
+                        executable "msgfmt"
+                        args msgfmt_args
+                        workingDir project.getRootDir()
                     }
-                }
-                if (failed) {
-                    throw new GradleException("failed validating translation files")
                 }
             }
         }
