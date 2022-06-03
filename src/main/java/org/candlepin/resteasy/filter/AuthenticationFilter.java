@@ -38,6 +38,7 @@ import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -72,14 +73,16 @@ public class AuthenticationFilter implements ContainerRequestFilter {
     private final Configuration config;
     private final AnnotationLocator annotationLocator;
     private final List<AuthProvider> providers = new ArrayList<>();
+    private final I18n i18n;
 
     @Inject
     public AuthenticationFilter(Configuration config, Injector injector,
-        AnnotationLocator annotationLocator) {
+        AnnotationLocator annotationLocator, I18n i18n) {
 
         this.injector = Objects.requireNonNull(injector);
         this.config = Objects.requireNonNull(config);
         this.annotationLocator = Objects.requireNonNull(annotationLocator);
+        this.i18n = Objects.requireNonNull(i18n);
 
         setupAuthStrategies();
     }
@@ -164,10 +167,10 @@ public class AuthenticationFilter implements ContainerRequestFilter {
                 principal = new NoAuthPrincipal();
             }
             else if (!config.getBoolean(ConfigProperties.AUTH_OVER_HTTP) && !request.isSecure()) {
-                throw new BadRequestException("Please use SSL when accessing protected resources");
+                throw new BadRequestException(i18n.tr("Please use SSL when accessing protected resources"));
             }
             else {
-                throw new NotAuthorizedException("Invalid credentials.");
+                throw new NotAuthorizedException(i18n.tr("Invalid Credentials"));
             }
         }
 
