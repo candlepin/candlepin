@@ -220,7 +220,8 @@ public class CandlepinPoolManager implements PoolManager {
         Owner resolvedOwner = this.resolveOwner(owner);
         log.info("Refreshing pools for owner: {}", resolvedOwner);
 
-        RefreshWorker refresher = this.refreshWorkerProvider.get();
+        RefreshWorker refresher = this.refreshWorkerProvider.get()
+            .setOrphanedEntityGracePeriod(this.config.getInt(ConfigProperties.ORPHANED_ENTITY_GRACE_PERIOD));
 
         log.debug("Fetching subscriptions from adapter...");
         refresher.addSubscriptions(subAdapter.getSubscriptions(resolvedOwner.getKey()));
