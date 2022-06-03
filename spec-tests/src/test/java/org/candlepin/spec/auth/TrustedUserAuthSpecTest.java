@@ -16,8 +16,8 @@
 package org.candlepin.spec.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
-import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertUnauthorized;
 
 import org.candlepin.ApiException;
 import org.candlepin.dto.api.v1.OwnerDTO;
@@ -46,11 +46,20 @@ class TrustedUserAuthSpecTest {
     }
 
     @Test
-    @DisplayName("trusted user must exist")
+    @DisplayName("trusted user must exist when lookup permissions header set")
     void trustedUserMustExist() {
+        OwnerApi client = ApiClients.trustedUser("unknown_user", true).owners();
+
+        assertBadRequest(() -> client.createOwner(Owners.random()));
+    }
+
+    @Test
+    @DisplayName("trusted user does not need to exist")
+    void trustedUserDoesNotNeedToExist() throws ApiException {
         OwnerApi client = ApiClients.trustedUser("unknown_user").owners();
 
-        assertUnauthorized(() -> client.createOwner(Owners.random()));
+        OwnerDTO createdOwner = client.createOwner(Owners.random());
+        assertThat(createdOwner).isNotNull();
     }
 
     @Test
