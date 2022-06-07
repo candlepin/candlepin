@@ -61,6 +61,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.xnap.commons.i18n.I18n;
 
 import java.lang.reflect.Method;
 
@@ -78,6 +79,7 @@ import javax.ws.rs.container.ResourceInfo;
 public class AuthenticationFilterTest extends DatabaseTestFixture {
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private Injector injector;
+    @Inject private I18n i18n;
 
     @Mock private HttpServletRequest mockHttpServletRequest;
     @Mock private ContainerRequestContext mockRequestContext;
@@ -141,7 +143,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         methodLocator.init();
         AnnotationLocator annotationLocator = new AnnotationLocator(methodLocator);
         interceptor = new AuthenticationFilter(config, consumerCurator, deletedConsumerCurator, injector,
-            annotationLocator);
+            annotationLocator, this.i18n);
         interceptor.setHttpServletRequest(mockHttpServletRequest);
 
         return interceptor;
@@ -425,7 +427,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         doReturn(mockPrincipal).when(mockProvider).getPrincipal(any(HttpRequest.class));
 
         AuthenticationFilter interceptor = new AuthenticationFilter(this.config, this.consumerCurator,
-            this.deletedConsumerCurator, mockInjector, this.annotationLocator);
+            this.deletedConsumerCurator, mockInjector, this.annotationLocator, this.i18n);
 
         mockReq.header("Authorization", "Bearer FAKE_CLOUD_AUTH_TOKEN");
         interceptor.filter(this.getContext());
