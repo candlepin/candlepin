@@ -102,7 +102,7 @@
     </changeSet>
 
     <changeSet id="20140408160212-4" author="ckozak">
-        <preConditions onSqlOutput="TEST" onFail="CONTINUE">
+        <preConditions onSqlOutput="TEST" onFail="MARK_RAN">
             <changeSetExecuted
                 changeLogFile="20140408160212-add-pool-source-sub-table.xml"
                 id="20140408160212-3"
@@ -132,7 +132,7 @@
     </changeSet>
 
     <changeSet id="20140408160212-5" author="ckozak">
-        <preConditions onSqlOutput="TEST" onFail="CONTINUE">
+        <preConditions onSqlOutput="TEST" onFail="MARK_RAN">
             <changeSetExecuted
                 changeLogFile="20140408160212-add-pool-source-sub-table.xml"
                 id="20140408160212-4"

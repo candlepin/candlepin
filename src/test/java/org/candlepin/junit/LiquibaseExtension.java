@@ -87,6 +87,10 @@ public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, 
         this("db/changelog/changelog-testing.xml");
     }
 
+    public Liquibase getLiquibase() {
+        return this.liquibase;
+    }
+
     private File setupTempDirectory() throws IOException {
         Path tmp = Files.createTempDirectory(HSQLDB_DIR_PREFIX);
         System.setProperty(HSQLDB_DIR_PROPERTY, tmp.toString());
