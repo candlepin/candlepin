@@ -301,7 +301,7 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "certificate_id")
-    private SubscriptionsCertificate cert;
+    private Certificate cert;
 
     @OneToOne
     @JoinColumn(name = "cdn_id")
@@ -1257,11 +1257,11 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         return this;
     }
 
-    public SubscriptionsCertificate getCertificate() {
+    public Certificate getCertificate() {
         return this.cert;
     }
 
-    public Pool setCertificate(SubscriptionsCertificate cert) {
+    public Pool setCertificate(Certificate cert) {
         this.cert = cert;
         return this;
     }

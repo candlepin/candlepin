@@ -29,6 +29,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -90,11 +91,13 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
     @NotNull
     private Pool pool;
 
-    // Not positive this should be mapped here, not all entitlements will have
-    // certificates.
-    @OneToMany(mappedBy = "entitlement", cascade = CascadeType.ALL)
+    @OneToMany
+    @JoinTable(
+        name = "cp_entitlement_certificates",
+        joinColumns = {@JoinColumn(name = "entitlement_id", insertable = false, updatable = false)},
+        inverseJoinColumns = {@JoinColumn(name = "certificate_id")})
     @BatchSize(size = 100)
-    private Set<EntitlementCertificate> certificates = new HashSet<>();
+    private Set<Certificate> certificates = new HashSet<>();
 
 
     private Integer quantity;
@@ -273,28 +276,29 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
         this.quantity = quantity;
     }
 
-    public Set<EntitlementCertificate> getCertificates() {
+    public Set<Certificate> getCertificates() {
         return certificates;
     }
 
-    public void setCertificates(Set<EntitlementCertificate> certificates) {
+    public void setCertificates(Set<Certificate> certificates) {
         this.certificates = new HashSet<>();
 
         if (certificates != null) {
-            for (EntitlementCertificate cert : certificates) {
+            for (Certificate cert : certificates) {
                 this.addCertificate(cert);
             }
         }
     }
 
-    public void addCertificate(EntitlementCertificate certificate) {
+    public Entitlement addCertificate(Certificate certificate) {
         if (certificate != null) {
-            certificate.setEntitlement(this);
-            certificates.add(certificate);
+            this.certificates.add(certificate);
         }
+
+        return this;
     }
 
-    public boolean removeCertificate(EntitlementCertificate certificate) {
+    public boolean removeCertificate(Certificate certificate) {
         return this.certificates.remove(certificate);
     }
 

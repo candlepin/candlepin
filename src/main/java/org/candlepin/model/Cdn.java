@@ -71,7 +71,7 @@ public class Cdn extends AbstractHibernateObject implements CdnInfo {
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "certificate_id")
-    private CdnCertificate cert;
+    private Certificate cert;
 
     public Cdn() {
         // Intentionally left empty
@@ -82,23 +82,24 @@ public class Cdn extends AbstractHibernateObject implements CdnInfo {
      * @param name
      * @param url
      */
-    public Cdn(String label, String name, String url) {
-        this(label, name, url, null);
-    }
+    // public Cdn(String label, String name, String url) {
+    //     this(label, name, url, null);
+    // }
 
-    public Cdn(String label, String name, String url, CdnCertificate cert) {
-        this.label = label;
-        this.name = name;
-        this.url = url;
-        this.cert = cert;
-    }
+    // public Cdn(String label, String name, String url, Certificate cert) {
+    //     this.label = label;
+    //     this.name = name;
+    //     this.url = url;
+    //     this.cert = cert;
+    // }
 
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public Cdn setId(String id) {
         this.id = id;
+        return this;
     }
 
     /**
@@ -109,8 +110,9 @@ public class Cdn extends AbstractHibernateObject implements CdnInfo {
         return label;
     }
 
-    public void setLabel(String label) {
+    public Cdn setLabel(String label) {
         this.label = label;
+        return this;
     }
 
     /**
@@ -121,8 +123,9 @@ public class Cdn extends AbstractHibernateObject implements CdnInfo {
         return name;
     }
 
-    public void setName(String name) {
+    public Cdn setName(String name) {
         this.name = name;
+        return this;
     }
 
     /**
@@ -133,20 +136,22 @@ public class Cdn extends AbstractHibernateObject implements CdnInfo {
         return url;
     }
 
-    public void setUrl(String url) {
+    public Cdn setUrl(String url) {
         this.url = url;
+        return this;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public CdnCertificate getCertificate() {
+    public Certificate getCertificate() {
         return cert;
     }
 
-    public void setCertificate(CdnCertificate cert) {
+    public Cdn setCertificate(Certificate cert) {
         this.cert = cert;
+        return this;
     }
 
     public String toString() {

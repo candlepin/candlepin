@@ -16,10 +16,10 @@ package org.candlepin.controller;
 
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
+import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
-import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -107,7 +107,7 @@ public class EntitlementCertificateGenerator {
      *  A map of generated entitlement certificates, indexed by pool ID
      */
     @Transactional
-    public Map<String, EntitlementCertificate> generateEntitlementCertificates(Consumer consumer,
+    public Map<String, Certificate> generateEntitlementCertificates(Consumer consumer,
         Map<String, Product> products, Map<String, PoolQuantity> poolQuantities,
         Map<String, Entitlement> entitlements, boolean save) {
 
@@ -137,7 +137,7 @@ public class EntitlementCertificateGenerator {
      *  The newly generate entitlement certificate
      */
     @Transactional
-    public EntitlementCertificate generateEntitlementCertificate(Pool pool, Entitlement entitlement) {
+    public Certificate generateEntitlementCertificate(Pool pool, Entitlement entitlement) {
         Map<String, Product> products = new HashMap<>();
         Map<String, Entitlement> entitlements = new HashMap<>();
         Map<String, PoolQuantity> poolQuantities = new HashMap<>();
@@ -163,7 +163,7 @@ public class EntitlementCertificateGenerator {
      *  The newly generate entitlement certificate
      */
     @Transactional
-    public EntitlementCertificate generateEntitlementCertificate(Pool pool, Entitlement entitlement,
+    public Certificate generateEntitlementCertificate(Pool pool, Entitlement entitlement,
         boolean updateEntitlement) {
 
         Map<String, Product> products = new HashMap<>();
@@ -342,9 +342,7 @@ public class EntitlementCertificateGenerator {
      *  be regenerated on-demand
      */
     @Transactional
-    public void regenerateCertificatesOf(String environmentId, Collection<String> contentIds,
-        boolean lazy) {
-
+    public void regenerateCertificatesOf(String environmentId, Collection<String> contentIds, boolean lazy) {
         List<String> entsToRegen = entitlementCurator
             .listEntitlementIdByEnvironmentAndContent(environmentId, contentIds);
         log.info("Found {} certificates to regenerate.", entsToRegen.size());

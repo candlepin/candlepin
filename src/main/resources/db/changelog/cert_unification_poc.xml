@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <!-- Include definitions for cert.type, timestamp.type, etc. -->
+    <include file="db/changelog/datatypes.xml"/>
+
+    <changeSet id="cert_unification_poc" author="crog">
+
+        <createTable tableName="cp_certificates">
+            <column name="id" type="VARCHAR(32)">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_certificates_pkey"/>
+            </column>
+
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+
+            <column name="type" type="int" defaultValue="0">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="serial" type="NUMERIC(40,0)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="certificate" type="${cert.type}">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="private_key" type="${blob.type}">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="payload" type="${blob.type}"/>
+
+            <column name="expiration" type="${blob.type}">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="revoked" type="boolean" defaultValue="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="cp_certificates" indexName="cp_certificates_idx_type" unique="false">
+            <column name="type"/>
+        </createIndex>
+
+        <!-- maybe a type+serial index as well? -->
+
+        <createIndex tableName="cp_certificates" indexName="cp_certificates_idx_serial" unique="true">
+            <column name="serial"/>
+        </createIndex>
+
+
+
+
+
+        <createTable tableName="cp_entitlement_certificates">
+            <column name="entitlement_id" type="VARCHAR(32)"/>
+            <column name="certificate_id" type="VARCHAR(32)"/>
+        </createTable>
+
+        <addPrimaryKey tableName="cp_entitlement_certificates" columnNames="entitlement_id, certificate_id"
+            constraintName="cp_ent_certs_pkey"/>
+
+        <addForeignKeyConstraint
+            baseTableName="cp_entitlement_certificates"
+            baseColumnNames="entitlement_id"
+            constraintName="cp_ent_certs_fk_ent"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_entitlement"/>
+
+        <addForeignKeyConstraint
+            baseTableName="cp_entitlement_certificates"
+            baseColumnNames="certificate_id"
+            constraintName="cp_ent_certs_fk_cert"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="CASCADE"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_certificates"/>
+
+        <createIndex tableName="cp_entitlement_certificates" indexName="cp_ent_certs_idx_ent">
+            <column name="entitlement_id"/>
+        </createIndex>
+
+
+
+        <addColumn tableName="cp2_products">
+            <column name="certificate_id" type="VARCHAR(32)"/>
+        </addColumn>
+
+        <addForeignKeyConstraint
+            baseTableName="cp2_products"
+            baseColumnNames="certificate_id"
+            constraintName="cp2_products_fk_cert"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="SET NULL"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_certificates"/>
+
+
+        <addColumn tableName="cp_owner">
+            <column name="ueber_cert_id" type="VARCHAR(32)"/>
+        </addColumn>
+
+        <addForeignKeyConstraint
+            baseTableName="cp_owner"
+            baseColumnNames="ueber_cert_id"
+            constraintName="cp_owner_fk_cert"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="SET NULL"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_certificates"/>
+
+
+
+        <!-- rename old cert columns and point them to the new table -->
+        <dropForeignKeyConstraint baseTableName="cp_pool" constraintName="cp_pool_fk4"/>
+        <addForeignKeyConstraint
+            baseTableName="cp_pool"
+            baseColumnNames="certificate_id"
+            constraintName="cp_pool_fk_cert"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="SET NULL"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_certificates"/>
+
+
+        <dropForeignKeyConstraint baseTableName="cp_consumer" constraintName="fk58205388a0b39916"/>
+        <renameColumn tableName="cp_consumer"
+            oldColumnName="consumer_idcert_id" newColumnName="identity_cert_id"
+            columnDataType="VARCHAR(32)"/>
+
+        <addForeignKeyConstraint
+            baseTableName="cp_consumer"
+            baseColumnNames="identity_cert_id"
+            constraintName="cp_consumer_fk_id_cert"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="SET NULL"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_certificates"/>
+
+        <dropForeignKeyConstraint baseTableName="cp_consumer" constraintName="fk_cont_acc_cert"/>
+        <renameColumn tableName="cp_consumer"
+            oldColumnName="cont_acc_cert_id" newColumnName="content_access_cert_id"
+            columnDataType="VARCHAR(32)"/>
+
+        <addForeignKeyConstraint
+            baseTableName="cp_consumer"
+            baseColumnNames="content_access_cert_id"
+            constraintName="cp_consumer_fk_cont_access"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="SET NULL"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_certificates"/>
+
+
+        <dropForeignKeyConstraint baseTableName="cp_upstream_consumer" constraintName="fk54b0f288a0b39916"/>
+        <renameColumn tableName="cp_upstream_consumer"
+            oldColumnName="consumer_idcert_id" newColumnName="identity_cert_id"
+            columnDataType="VARCHAR(32)"/>
+
+        <addForeignKeyConstraint
+            baseTableName="cp_upstream_consumer"
+            baseColumnNames="identity_cert_id"
+            constraintName="cp_upstream_consumer_fk_id_cert"
+            deferrable="false"
+            initiallyDeferred="false"
+            onDelete="SET NULL"
+            onUpdate="NO ACTION"
+            referencedColumnNames="id"
+            referencedTableName="cp_certificates"/>
+
+
+        <!--
+            Drop the old tables so we can identify areas of the code that reference them and update them
+            accordingly.
+
+            Note: Don't actually do this in the real thing. Migrate the data and leave it to simmer for
+            a few patches and *then* remove it
+        -->
+
+        <dropTable tableName="cp2_product_certificates"/>
+        <dropTable tableName="cp_cdn_certificate"/>
+        <dropTable tableName="cp_certificate"/>
+        <dropTable tableName="cp_cont_access_cert"/>
+        <dropTable tableName="cp_ent_certificate"/>
+        <dropTable tableName="cp_id_cert"/>
+        <dropTable tableName="cp_ueber_cert"/>
+        <dropTable tableName="cp_cert_serial"/>
+
+    </changeSet>
+
+</databaseChangeLog>

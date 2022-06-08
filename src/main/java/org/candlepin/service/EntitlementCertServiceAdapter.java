@@ -15,8 +15,8 @@
 package org.candlepin.service;
 
 import org.candlepin.model.Consumer;
+import org.candlepin.model.Certificate;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 
@@ -41,7 +41,7 @@ public interface EntitlementCertServiceAdapter {
      * @throws IOException thrown if there's a problem reading the cert.
      * @throws GeneralSecurityException thrown security problem
      */
-    EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product)
+    Certificate generateEntitlementCert(Entitlement entitlement, Product product)
         throws GeneralSecurityException, IOException;
 
     /**
@@ -60,7 +60,7 @@ public interface EntitlementCertServiceAdapter {
      * @throws IOException thrown if there's a problem reading the cert.
      * @throws GeneralSecurityException thrown security problem
      */
-    Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
+    Map<String, Certificate> generateEntitlementCerts(Consumer consumer,
         Map<String, PoolQuantity> poolQuantityMap, Map<String, Entitlement> entitlements,
         Map<String, Product> products, boolean save)
         throws GeneralSecurityException, IOException;
@@ -71,7 +71,7 @@ public interface EntitlementCertServiceAdapter {
      * @param consumer
      * @return All entitlement certs for this consumer.
      */
-    List<EntitlementCertificate> listForConsumer(Consumer consumer);
+    List<Certificate> listForConsumer(Consumer consumer);
 
     /**
      * Return a list of all entitlement certificate serial ids for a given consumer.
@@ -79,5 +79,5 @@ public interface EntitlementCertServiceAdapter {
      * @param consumer
      * @return All entitlement cert serial ids for this consumer.
      */
-    List<Long> listEntitlementSerialIds(Consumer consumer);
+    List<BigInteger> listEntitlementSerials(Consumer consumer);
 }

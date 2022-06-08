@@ -17,13 +17,13 @@ package org.candlepin.controller;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
-import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.PoolCurator;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import java.util.Arrays;
+
 
 /**
  * Manages Cdn entity operations.
@@ -31,15 +31,14 @@ import java.util.Arrays;
 public class CdnManager {
 
     private CdnCurator cdnCurator;
-    private CertificateSerialCurator certSerialCurator;
+    private CertificateCurator certificateCurator;
     private PoolCurator poolCurator;
 
     @Inject
-    public CdnManager(CdnCurator cdnCurator, PoolCurator poolCurator,
-        CertificateSerialCurator certSerialCurator) {
-        this.cdnCurator = cdnCurator;
-        this.certSerialCurator = certSerialCurator;
-        this.poolCurator = poolCurator;
+    public CdnManager(CdnCurator cdnCurator, PoolCurator poolCurator, CertificateCurator certificateCurator) {
+        this.cdnCurator = Objects.requireNonNull(cdnCurator);
+        this.certificateCurator = Objects.requireNonNull(certificateCurator);
+        this.poolCurator = Objects.requireNonNull(poolCurator);
     }
 
     /**
@@ -50,13 +49,12 @@ public class CdnManager {
      */
     @Transactional
     public Cdn createCdn(Cdn cdn) {
-        // Need to persist the certificate serial since by default
-        // we do not cascade persist.
-        CdnCertificate cert = cdn.getCertificate();
-        if (cert != null && cert.getSerial() != null) {
-            certSerialCurator.create(cert.getSerial());
-        }
-        return cdnCurator.create(cdn);
+        // Certificate certificate = cdn.getCertificate();
+        // if (certificate != null) {
+        //     this.certificateCurator.create(certificate, false);
+        // }
+
+        return this.cdnCurator.create(cdn);
     }
 
     /**
@@ -66,12 +64,12 @@ public class CdnManager {
      */
     @Transactional
     public void updateCdn(Cdn cdn) {
-        CdnCertificate cert = cdn.getCertificate();
-        if (cert != null && cert.getSerial() != null) {
-            // No need to flush here since updating the Cdn will.
-            certSerialCurator.saveOrUpdateAll(Arrays.asList(cert.getSerial()), false, false);
-        }
-        cdnCurator.update(cdn);
+        // Certificate certificate = cdn.getCertificate();
+        // if (certificate != null) {
+        //     this.certificateCurator.update(certificate, false);
+        // }
+
+        this.cdnCurator.update(cdn);
     }
 
     /**
@@ -81,7 +79,7 @@ public class CdnManager {
      */
     @Transactional
     public void deleteCdn(Cdn cdn) {
-        poolCurator.removeCdn(cdn);
-        cdnCurator.delete(cdn);
+        this.poolCurator.removeCdn(cdn);
+        this.cdnCurator.delete(cdn);
     }
 }

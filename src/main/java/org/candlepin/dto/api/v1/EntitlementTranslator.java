@@ -19,7 +19,6 @@ import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Pool;
 import org.candlepin.util.Util;
 
@@ -84,7 +83,7 @@ public class EntitlementTranslator implements ObjectTranslator<Entitlement, Enti
             Consumer consumer = source.getConsumer();
             dest.setConsumer(createNestedConsumer(consumer));
 
-            Set<EntitlementCertificate> certs = source.getCertificates();
+            Set<Certificate> certs = source.getCertificates();
 
             if (certs != null && !certs.isEmpty()) {
                 for (Certificate cert : certs) {

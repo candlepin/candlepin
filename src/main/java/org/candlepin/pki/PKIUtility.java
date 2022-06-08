@@ -78,4 +78,6 @@ public interface PKIUtility {
      *  the KeyPair instance containing the public and private keys for the specified consumer
      */
     KeyPair getConsumerKeyPair(Consumer consumer) throws KeyException;
+
+    BigInteger generateCertificateSerial();
 }

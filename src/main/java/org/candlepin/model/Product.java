@@ -58,6 +58,7 @@ import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -66,6 +67,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
@@ -265,6 +267,12 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     @ManyToOne
     @JoinColumn(name = "derived_product_uuid", nullable = true)
     private Product derivedProduct;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "certificate_id", nullable = true)
+    private Certificate certificate;
+
+
 
     public Product() {
         this.attributes = new HashMap<>();
@@ -1519,4 +1527,14 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
         return this;
     }
+
+
+    // public Certificate getCertificate() {
+    //     return this.certificate;
+    // }
+
+    // public Product setCertificate(Certificate certificate) {
+    //     this.certificate = certificate;
+    //     return this;
+    // }
 }

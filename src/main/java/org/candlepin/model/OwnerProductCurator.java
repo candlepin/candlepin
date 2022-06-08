@@ -107,7 +107,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         return this.getProductById(owner.getId(), productId);
     }
 
-    @Transactional
     public Product getProductById(String ownerId, String productId) {
         return (Product) this.createSecureCriteria()
             .createAlias("owner", "owner")
@@ -118,7 +117,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .uniqueResult();
     }
 
-    @Transactional
     public Product getProductByIdUsingOwnerKey(String ownerKey, String productId) {
         return (Product) this.createSecureCriteria()
             .createAlias("owner", "owner")

@@ -33,19 +33,16 @@ import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.AsyncJobStatus;
-import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Content;
-import org.candlepin.model.ContentAccessCertificate;
-import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.resource.util.EntitlementEnvironmentFilter;
 import org.candlepin.resource.util.EnvironmentUpdates;
@@ -74,6 +71,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 
 
+
 /**
  * REST API for managing Environments.
  */
@@ -92,11 +90,12 @@ public class EnvironmentResource implements EnvironmentsApi {
     private final JobManager jobManager;
     private final DTOValidator validator;
     private final ContentAccessManager contentAccessManager;
-    private final CertificateSerialCurator certificateSerialCurator;
-    private final IdentityCertificateCurator identityCertificateCurator;
-    private final ContentAccessCertificateCurator contentAccessCertificateCurator;
+    private final CertificateCurator certificateCurator;
     private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
     private final EntitlementCertificateGenerator entCertGenerator;
+
+    // private final ContentAccessCertificateCurator contentAccessCertificateCurator;
+    // private final IdentityCertificateCurator identityCertificateCurator;
 
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
@@ -104,10 +103,8 @@ public class EnvironmentResource implements EnvironmentsApi {
         PoolManager poolManager, ConsumerCurator consumerCurator, OwnerContentCurator ownerContentCurator,
         RdbmsExceptionTranslator rdbmsExceptionTranslator, ModelTranslator translator,
         JobManager jobManager, DTOValidator validator, ContentAccessManager contentAccessManager,
-        CertificateSerialCurator certificateSerialCurator,
-        IdentityCertificateCurator identityCertificateCurator,
-        ContentAccessCertificateCurator contentAccessCertificateCurator,
-        EntitlementCurator entCurator, EntitlementCertificateGenerator entCertGenerator) {
+        CertificateCurator certificateCurator, EntitlementCurator entCurator,
+        EntitlementCertificateGenerator entCertGenerator) {
 
         this.envCurator = Objects.requireNonNull(envCurator);
         this.i18n = Objects.requireNonNull(i18n);
@@ -121,10 +118,8 @@ public class EnvironmentResource implements EnvironmentsApi {
         this.jobManager = Objects.requireNonNull(jobManager);
         this.validator = Objects.requireNonNull(validator);
         this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
-        this.certificateSerialCurator = Objects.requireNonNull(certificateSerialCurator);
-        this.identityCertificateCurator = Objects.requireNonNull(identityCertificateCurator);
-        this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
-        this.entCertGenerator = entCertGenerator;
+        this.certificateCurator = Objects.requireNonNull(certificateCurator);
+        this.entCertGenerator = Objects.requireNonNull(entCertGenerator);
         this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(entCurator, envContentCurator);
     }
 

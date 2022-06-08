@@ -28,6 +28,7 @@ import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -37,7 +38,6 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.ValidationResult;
@@ -243,8 +243,8 @@ public class EntitlementResource implements EntitlementsApi {
             );
         }
 
-        SubscriptionsCertificate cert = ent.getPool().getCertificate();
-        return cert.getCert() + cert.getKey();
+        Certificate cert = ent.getPool().getCertificate();
+        return cert.getCertificateAsString() + cert.getPrivateKeyAsString();
     }
 
     @Override

@@ -16,11 +16,13 @@ package org.candlepin.resource;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
-import org.candlepin.model.CandlepinQuery;
-import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateCurator;
 
 import com.google.inject.Inject;
+
+import java.math.BigInteger;
+import java.util.stream.Stream;
 
 
 
@@ -28,26 +30,40 @@ import com.google.inject.Inject;
  * CertificateSerialResource
  */
 public class CertificateSerialResource implements SerialsApi {
-    private CertificateSerialCurator certificateSerialCurator;
+    private CertificateCurator certificateCurator;
     private ModelTranslator translator;
 
     @Inject
-    public CertificateSerialResource(CertificateSerialCurator certificateSerialCurator,
-        ModelTranslator translator) {
+    public CertificateSerialResource(CertificateCurator certificateCurator, ModelTranslator translator) {
+        this.certificateCurator = Objects.requireNonNull(certificateCurator);
+        this.translator = Objects.requireNonNull(translator);
+    }
 
-        this.certificateSerialCurator = certificateSerialCurator;
-        this.translator = translator;
+    private BigInteger convertSerial(String serial) {
+        try {
+            return new BigInteger(serial);
+        }
+        catch (NumberFormatException exception) {
+            throw new BadRequestException("Invalid serial format"); // TODO: This needs to be translated
+        }
     }
 
     @Override
-    public CertificateSerialDTO getCertificateSerial(Long serialId) {
-        CertificateSerial serial = this.certificateSerialCurator.get(serialId);
-        return this.translator.translate(serial, CertificateSerialDTO.class);
+    public CertificateSerialDTO getCertificateSerial(String serial) {
+        BigInteger converted = this.convertSerial(serial);
+        Certificate certificate = this.certificateCurator.getBySerial(converted);
+
+        if (certificate == null) {
+            throw new NotFoundException("no such serial: " + serial); // TODO: this needs to be translated
+        }
+
+        return this.translator.translate(certificate, CertificateSerialDTO.class);
     }
 
     @Override
-    public CandlepinQuery<CertificateSerialDTO> getCertificateSerials() {
-        CandlepinQuery<CertificateSerial> query = this.certificateSerialCurator.listAll();
-        return this.translator.translateQuery(query, CertificateSerialDTO.class);
+    public Stream<CertificateSerialDTO> getCertificateSerials() {
+        return this.certificateCurator.list()
+            .stream()
+            .map(this.translator.getStreamMapper(Certificate.class, CertificateSerialDTO.class));
     }
 }

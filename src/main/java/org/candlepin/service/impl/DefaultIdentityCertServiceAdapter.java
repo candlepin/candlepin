@@ -14,11 +14,9 @@
  */
 package org.candlepin.service.impl;
 
-import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.IdentityCertServiceAdapter;
 
@@ -34,31 +32,35 @@ import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
+
+
 
 /**
  * DefaultIdentityCertServiceAdapter
  */
-public class DefaultIdentityCertServiceAdapter implements
-    IdentityCertServiceAdapter {
-    private PKIUtility pki;
-    private static Logger log =
-        LoggerFactory.getLogger(DefaultIdentityCertServiceAdapter.class);
-    private IdentityCertificateCurator idCertCurator;
-    private CertificateSerialCurator serialCurator;
-    private Function<Date, Date> endDateGenerator;
+public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAdapter {
+    private static Logger log = LoggerFactory.getLogger(DefaultIdentityCertServiceAdapter.class);
 
-    @SuppressWarnings("unchecked")
+    private final PKIUtility pki;
+    private final CertificateCurator certificateCurator;
+    private final Function<Date, Date> endDateGenerator;
+
     @Inject
-    public DefaultIdentityCertServiceAdapter(PKIUtility pki,
-        IdentityCertificateCurator identityCertCurator,
-        CertificateSerialCurator serialCurator,
+    @SuppressWarnings("unchecked")
+    public DefaultIdentityCertServiceAdapter(PKIUtility pki, CertificateCurator certificateCurator,
         @Named("endDateGenerator") Function endDtGen) {
-        this.pki = pki;
-        this.idCertCurator = identityCertCurator;
-        this.serialCurator = serialCurator;
-        this.endDateGenerator = endDtGen;
+
+        this.pki = Objects.requireNonNull(pki);
+        this.certificateCurator = Objects.requireNonNull(certificateCurator);
+        this.endDateGenerator = Objects.requireNonNull(endDtGen); // Why did we abstract this out like this?
+    }
+
+    private Certificate resolveCertificate(Certificate certificate) {
+        return certificate != null ? this.certificateCurator.get(certificate.getId()) : null;
     }
 
     @Override
@@ -68,83 +70,67 @@ public class DefaultIdentityCertServiceAdapter implements
             return;
         }
 
-        IdentityCertificate certificate = idCertCurator.get(consumer.getIdCert().getId());
+        Certificate certificate = this.resolveCertificate(consumer.getIdCert());
         if (certificate != null) {
-            idCertCurator.delete(certificate);
+            this.certificateCurator.delete(certificate);
         }
     }
 
     @Override
-    public IdentityCertificate generateIdentityCert(Consumer consumer)
+    public Certificate generateIdentityCert(Consumer consumer)
         throws GeneralSecurityException, IOException {
 
-        if (log.isDebugEnabled()) {
-            log.debug("Generating identity cert for consumer: {}", consumer.getUuid());
-        }
+        log.debug("Generating identity cert for consumer: {}", consumer.getUuid());
 
-        IdentityCertificate certificate = null;
-
-        if (consumer.getIdCert() != null) {
-            certificate = idCertCurator.get(consumer.getIdCert().getId());
-        }
-
-        if (certificate != null) {
-            return certificate;
-        }
-
-        return generate(consumer);
+        Certificate certificate = this.resolveCertificate(consumer.getIdCert());
+        return certificate != null ? certificate : this.generateIdentityCertificate(consumer);
     }
 
     @Override
-    public IdentityCertificate regenerateIdentityCert(Consumer consumer)
+    public Certificate regenerateIdentityCert(Consumer consumer)
         throws GeneralSecurityException, IOException {
 
-        IdentityCertificate certificate = null;
-
-        if (consumer.getIdCert() != null) {
-            certificate = idCertCurator.get(consumer.getIdCert().getId());
-        }
+        Certificate certificate = this.resolveCertificate(consumer.getIdCert());
 
         if (certificate != null) {
             consumer.setIdCert(null);
-            idCertCurator.delete(certificate);
+            this.certificateCurator.delete(certificate);
         }
 
-        return generate(consumer);
+        return this.generateIdentityCertificate(consumer);
     }
 
-    private IdentityCertificate generate(Consumer consumer)
-        throws GeneralSecurityException, IOException {
-        Calendar cal = Calendar.getInstance();
-        cal.add(Calendar.HOUR, -1);
-        Date startDate = cal.getTime();
+    private Certificate generate(Consumer consumer) throws GeneralSecurityException, IOException {
+        Instant startDate = Instant.now()
+            .truncateTo(ChronoUnit.HOURS)
+            .minus(1, ChronoUnit.HOURS);
+
         Date endDate = this.endDateGenerator.apply(new Date());
 
-        CertificateSerial serial = new CertificateSerial(endDate);
-        // We need the sequence generated id before we create the EntitlementCertificate,
-        // otherwise we could have used cascading create
-        serialCurator.create(serial);
-
-        String dn = createDN(consumer);
-        IdentityCertificate identityCert = new IdentityCertificate();
+        BigInteger serial = this.pki.generateCertificateSerial();
         KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
-        X509Certificate x509cert = pki.createX509Certificate(dn, null, null,
-            startDate, endDate, keyPair, BigInteger.valueOf(serial.getId()),
-            consumer.getName());
+        X509Certificate x509Cert = this.pki.createX509Certificate(this.createDN(consumer), null, null,
+            Date.from(startDate), endDate, keyPair, serial, consumer.getName());
 
-        identityCert.setCert(new String(pki.getPemEncoded(x509cert)));
-        identityCert.setKey(new String(pki.getPemEncoded(keyPair.getPrivate())));
-        identityCert.setSerial(serial);
-        consumer.setIdCert(identityCert);
+        Certificate certificate = new Certificate()
+            .setType(Certificate.Type.IDENTITY)
+            .setSerial(serial)
+            .setCertificate(this.pki.getPemEncoded(x509Cert))
+            .setPrivateKey(this.pki.getPemEncoded(keyPair.getPrivate()))
+            // Start date?
+            .setExpiration(x509Cert.getNotAfter().toInstant());
 
-        return idCertCurator.create(identityCert);
+        this.certificateCurator.create(certificate);
+        consumer.setIdCert(certificate);
+
+        return certificate;
     }
 
     private String createDN(Consumer consumer) {
-        StringBuilder sb = new StringBuilder("CN=");
-        sb.append(consumer.getUuid());
-        sb.append(", O=");
-        sb.append(consumer.getOwner().getKey());
-        return sb.toString();
+        return new StringBuilder("CN=")
+            .append(consumer.getUuid())
+            .append(", O=")
+            .append(consumer.getOwner().getKey())
+            .toString();
     }
 }

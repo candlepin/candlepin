@@ -39,6 +39,7 @@ import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TimeZone;
 
@@ -55,38 +56,36 @@ public class UeberCertificateGenerator {
 
     private static final Logger log = LoggerFactory.getLogger(UeberCertificateGenerator.class);
 
-    private UniqueIdGenerator idGenerator;
-    private PKIUtility pki;
-    private CertificateSerialCurator serialCurator;
-    private X509ExtensionUtil extensionUtil;
-    private OwnerCurator ownerCurator;
-    private UeberCertificateCurator ueberCertCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private I18n i18n;
+    private final UniqueIdGenerator idGenerator;
+    private final PKIUtility pki;
+    private final X509ExtensionUtil extensionUtil;
+    private final OwnerCurator ownerCurator;
+    private final CertificateCurator certificateCurator;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final I18n i18n;
 
     @Inject
     public UeberCertificateGenerator(
         UniqueIdGenerator idGenerator,
         PKIUtility pki,
         X509ExtensionUtil extensionUtil,
-        CertificateSerialCurator serialCurator,
         OwnerCurator ownerCurator,
-        UeberCertificateCurator ueberCertCurator,
+        CertificateCurator certificateCurator,
         ConsumerTypeCurator consumerTypeCurator,
         I18n i18n) {
 
-        this.idGenerator = idGenerator;
-        this.pki = pki;
-        this.serialCurator = serialCurator;
-        this.extensionUtil = extensionUtil;
-        this.ownerCurator = ownerCurator;
-        this.ueberCertCurator = ueberCertCurator;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.i18n = i18n;
+        this.idGenerator = Objects.requireNonNull(idGenerator);
+        this.pki = Objects.requireNonNull(pki);
+        this.serialCurator = Objects.requireNonNull(serialCurator);
+        this.extensionUtil = Objects.requireNonNull(extensionUtil);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.certificateCurator = Objects.requireNonNull(certificateCurator);
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
+        this.i18n = Objects.requireNonNull(i18n);
     }
 
     @Transactional
-    public UeberCertificate generate(String ownerKey, Principal principal) {
+    public Certificate generate(String ownerKey, Principal principal) {
         Owner owner = this.ownerCurator.getByKey(ownerKey);
         if (owner == null) {
             throw new NotFoundException(i18n.tr("Unable to find an owner with key: {0}", ownerKey));
@@ -106,27 +105,25 @@ public class UeberCertificateGenerator {
         }
     }
 
-    private UeberCertificate generateUeberCert(Owner owner, String generatedByUsername) throws Exception {
+    private Certificate generateUeberCert(Owner owner, String generatedByUsername) throws Exception {
         ConsumerType ueberCertType = this.consumerTypeCurator.getByLabel(UEBER_CERT_CONSUMER_TYPE, true);
-
         UeberCertData ueberCertData = new UeberCertData(owner, generatedByUsername, ueberCertType);
 
-        CertificateSerial serial = new CertificateSerial(ueberCertData.getEndDate());
-        serialCurator.create(serial);
-
+        BigInteger serial = this.pki.generateCertificateSerial();
         KeyPair keyPair = this.pki.generateKeyPair();
-        byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
-        X509Certificate x509Cert =
-            createX509Certificate(ueberCertData, BigInteger.valueOf(serial.getId()), keyPair);
+        X509Certificate x509Cert = this.createX509Certificate(ueberCertData, serial, keypair);
 
-        UeberCertificate ueberCert = new UeberCertificate();
-        ueberCert.setSerial(serial);
-        ueberCert.setKeyAsBytes(pemEncodedKeyPair);
-        ueberCert.setOwner(owner);
-        ueberCert.setCert(new String(this.pki.getPemEncoded(x509Cert)));
-        ueberCert.setCreated(ueberCertData.getStartDate());
-        ueberCert.setUpdated(ueberCertData.getStartDate());
-        ueberCertCurator.create(ueberCert);
+        Certificate ueberCert = new Certificate()
+            .setType(Certificate.Type.UEBER)
+            .setSerial(serial)
+            .setCertificate(this.pki.getPemEncoded(x509Cert))
+            .setPrivateKeyData(this.pki.getPemEncoded(keyPair.getPrivate()))
+            .setExpiration(x509Cert.getNotAfter().toInstant())
+            .setCreated(ueberCertData.getStartDate())
+            .setUpdated(ueberCertData.getStartDate()); // Why are we explicitly setting the dates here?
+
+        this.ueberCertCurator.create(ueberCert);
+        owner.setUeberCert(ueberCert);
 
         return ueberCert;
     }

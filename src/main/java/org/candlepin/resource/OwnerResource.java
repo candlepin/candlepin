@@ -46,6 +46,7 @@ import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ActivationKeyPoolDTO;
 import org.candlepin.dto.api.v1.ActivationKeyProductDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.v1.ContentAccessDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
@@ -58,7 +59,6 @@ import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.OwnerInfo;
 import org.candlepin.dto.api.v1.PoolDTO;
-import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.SubscriptionDTO;
@@ -74,6 +74,8 @@ import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
+import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
@@ -99,14 +101,11 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SystemPurposeAttributeType;
-import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
@@ -219,7 +218,7 @@ public class OwnerResource implements OwnersApi {
     private UniqueIdGenerator idGenerator;
     private ContentManager contentManager;
     private ProductManager productManager;
-    private ProductCertificateCurator productCertCurator;
+    private CertificateCurator certificateCurator;
     private ProductCurator productCurator;
     private PrincipalProvider principalProvider;
 
@@ -258,7 +257,7 @@ public class OwnerResource implements OwnersApi {
         UniqueIdGenerator idGenerator,
         ContentManager contentManager,
         ProductManager productManager,
-        ProductCertificateCurator productCertCurator,
+        CertificateCurator certificateCurator,
         ProductCurator productCurator,
         PrincipalProvider principalProvider) {
 
@@ -295,7 +294,7 @@ public class OwnerResource implements OwnersApi {
         this.idGenerator = idGenerator;
         this.contentManager = contentManager;
         this.productManager = productManager;
-        this.productCertCurator = productCertCurator;
+        this.certificateCurator = certificateCurator;
         this.productCurator = productCurator;
         this.principalProvider = principalProvider;
     }
@@ -1843,7 +1842,7 @@ public class OwnerResource implements OwnersApi {
 
     @Override
     @Transactional
-    public ProductCertificateDTO getProductCertificateByOwner(String ownerKey, String productId) {
+    public CertificateDTO getProductCertificateByOwner(String ownerKey, String productId) {
         if (!productId.matches("\\d+")) {
             throw new BadRequestException(i18n.tr("Only numeric product IDs are allowed."));
         }
@@ -1851,8 +1850,8 @@ public class OwnerResource implements OwnersApi {
         Owner owner = this.getOwnerByKey(ownerKey);
         Product product = this.fetchProduct(owner, productId);
 
-        ProductCertificate productCertificate = this.productCertCurator.getCertForProduct(product);
-        return this.translator.translate(productCertificate, ProductCertificateDTO.class);
+        Certificate certificate = this.certificateCurator.getProductCertificate(product, true);
+        return this.translator.translate(productCertificate, CertificateDTO.class);
     }
 
     @Override

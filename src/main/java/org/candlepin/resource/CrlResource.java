@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource;
 
-import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.CertificateCurator;
 
 import com.google.inject.Inject;
 
@@ -23,16 +23,16 @@ import java.util.Objects;
 
 public class CrlResource implements CrlApi {
 
-    private final CertificateSerialCurator certificateSerialCurator;
+    private final CertificateCurator certificateCurator;
 
     @Inject
-    public CrlResource(CertificateSerialCurator certificateSerialCurator) {
-        this.certificateSerialCurator = Objects.requireNonNull(certificateSerialCurator);
+    public CrlResource(CertificateCurator certificateCurator) {
+        this.certificateCurator = Objects.requireNonNull(certificateCurator);
     }
 
     @Override
     public List<Long> getCurrentCrl() {
-        return certificateSerialCurator.listNonExpiredRevokedSerialIds();
+        return this.certificateCurator.getNonExpiredRevokedSerials();
     }
 
 }

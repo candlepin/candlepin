@@ -14,9 +14,9 @@
  */
 package org.candlepin.service.impl;
 
+import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.EntitlementCertificate;
-import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 
 import java.util.List;
@@ -31,11 +31,11 @@ import java.util.List;
  */
 public abstract class BaseEntitlementCertServiceAdapter implements EntitlementCertServiceAdapter {
 
-    protected EntitlementCertificateCurator entCertCurator;
+    protected CertificateCurator certificateCurator;
 
     @Override
-    public List<EntitlementCertificate> listForConsumer(Consumer consumer) {
-        return entCertCurator.listForConsumer(consumer);
+    public List<Certificate> listForConsumer(Consumer consumer) {
+        return this.certificateCurator.listForConsumer(consumer);
     }
 
 }

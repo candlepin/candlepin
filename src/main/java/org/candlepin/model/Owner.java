@@ -126,6 +126,10 @@ public class Owner extends AbstractHibernateObject<Owner>
     @Size(max = 32)
     private String logLevel;
 
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "ueber_cert_id")
+    private Certificate ueberCert;
+
     /**
      * When set, autobind will be disabled no matter if it is set on the Consumer or not.
      *
@@ -684,5 +688,15 @@ public class Owner extends AbstractHibernateObject<Owner>
      */
     public Owner syncLastContentUpdate() {
         return this.setLastContentUpdate(new Date());
+    }
+
+
+    public Certificate getUeberCertificate() {
+        return this.ueberCert;
+    }
+
+    public Owner setUeberCertificate(Certificate ueberCert) {
+        this.ueberCert = ueberCert;
+        return this;
     }
 }

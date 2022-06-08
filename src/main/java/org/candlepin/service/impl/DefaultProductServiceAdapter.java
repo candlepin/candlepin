@@ -14,10 +14,10 @@
  */
 package org.candlepin.service.impl;
 
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.CertificateInfo;
@@ -27,6 +27,7 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import java.util.Collection;
+import java.util.Objects;
 
 
 
@@ -35,16 +36,15 @@ import java.util.Collection;
  */
 public class DefaultProductServiceAdapter implements ProductServiceAdapter {
 
-    private OwnerProductCurator ownerProductCurator;
-    private ProductCertificateCurator prodCertCurator;
+    private final OwnerProductCurator ownerProductCurator;
+    private final CertificateCurator certificateCurator;
 
     @Inject
     public DefaultProductServiceAdapter(OwnerProductCurator ownerProductCurator,
-        ProductCertificateCurator prodCertCurator, ContentCurator contentCurator,
-        UniqueIdGenerator idGenerator) {
+        CertificateCurator certificateCurator, ContentCurator contentCurator, UniqueIdGenerator idGenerator) {
 
-        this.ownerProductCurator = ownerProductCurator;
-        this.prodCertCurator = prodCertCurator;
+        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
+        this.certificateCurator = Objects.requireNonNull(certificateCurator);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class DefaultProductServiceAdapter implements ProductServiceAdapter {
         // a separate service?
 
         Product entity = this.ownerProductCurator.getProductByIdUsingOwnerKey(ownerKey, productId);
-        return entity != null ? this.prodCertCurator.getCertForProduct(entity) : null;
+        return entity != null ? this.certificateCurator.getProductCertificate(entity, true) : null;
     }
 
     @Override

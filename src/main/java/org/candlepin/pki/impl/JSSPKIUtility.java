@@ -799,4 +799,13 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
         return factory.generatePrivate(spec);
     }
 
+    @Override
+    public BigInteger generateCertificateSerial() {
+        UUID uuid = UUID.randomUUID();
+
+        this.serial = BigInteger.valueOf(uuid.getMostSignificantBits())
+            .shiftLeft(32)
+            .or(BigInteger.valueOf(uuid.getLeastSignificantBits()));
+    }
+
 }

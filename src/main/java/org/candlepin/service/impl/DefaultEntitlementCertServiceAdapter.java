@@ -19,16 +19,14 @@ import org.candlepin.config.Configuration;
 import org.candlepin.controller.util.ContentPrefix;
 import org.candlepin.controller.util.EntitlementContentPrefix;
 import org.candlepin.controller.util.PromotedContent;
-import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
-import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
@@ -82,7 +80,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private final PKIUtility pki;
     private final X509ExtensionUtil extensionUtil;
     private final X509V3ExtensionUtil v3extensionUtil;
-    private final CertificateSerialCurator serialCurator;
+    private final CertificateCurator certificateCurator;
     private final OwnerCurator ownerCurator;
     private final EntitlementCurator entCurator;
     private final I18n i18n;
@@ -94,10 +92,10 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     public DefaultEntitlementCertServiceAdapter(PKIUtility pki,
         X509ExtensionUtil extensionUtil,
         X509V3ExtensionUtil v3extensionUtil,
-        EntitlementCertificateCurator entCertCurator,
-        CertificateSerialCurator serialCurator,
+        CertificateCurator certificateCurator,
         OwnerCurator ownerCurator,
-        EntitlementCurator entCurator, I18n i18n,
+        EntitlementCurator entCurator,
+        I18n i18n,
         Configuration config,
         ConsumerTypeCurator consumerTypeCurator,
         EnvironmentCurator environmentCurator) {
@@ -105,8 +103,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         this.pki = pki;
         this.extensionUtil = extensionUtil;
         this.v3extensionUtil = v3extensionUtil;
-        this.entCertCurator = entCertCurator;
-        this.serialCurator = serialCurator;
+        this.certificateCurator = certificateCurator;
         this.ownerCurator = ownerCurator;
         this.entCurator = entCurator;
         this.i18n = i18n;
@@ -119,7 +116,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     // NOTE: we use entitlement here, but it version does not...
     // NOTE: we can get consumer from entitlement.getConsumer()
     @Override
-    public EntitlementCertificate generateEntitlementCert(Entitlement entitlement, Product product)
+    public Certificate generateEntitlementCert(Entitlement entitlement, Product product)
         throws GeneralSecurityException, IOException {
 
         Map<String, Entitlement> entitlements = new HashMap<>();
@@ -130,14 +127,14 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         Map<String, Product> products = new HashMap<>();
         products.put(entitlement.getPool().getId(), product);
 
-        Map<String, EntitlementCertificate> result = generateEntitlementCerts(entitlement.getConsumer(),
+        Map<String, Certificate> result = generateEntitlementCerts(entitlement.getConsumer(),
             poolQuantities, entitlements, products, true);
 
         return result.get(entitlement.getPool().getId());
     }
 
     @Override
-    public Map<String, EntitlementCertificate> generateEntitlementCerts(Consumer consumer,
+    public Map<String, Certificate> generateEntitlementCerts(Consumer consumer,
         Map<String, PoolQuantity> poolQuantities, Map<String, Entitlement> entitlements,
         Map<String, Product> products, boolean save)
         throws GeneralSecurityException, IOException {
@@ -348,7 +345,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
      * @return entitlementCerts the respective entitlement certs indexed by pool
      *         id
      */
-    private Map<String, EntitlementCertificate> doEntitlementCertGeneration(Consumer consumer,
+    private Map<String, Certificate> doEntitlementCertGeneration(Consumer consumer,
         Map<String, Product> productMap,
         Map<String, PoolQuantity> poolQuantities,
         Map<String, Entitlement> entitlements,
@@ -359,16 +356,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
         log.debug("Generating entitlement cert for entitlements");
         KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
-        byte[] pemEncodedKeyPair = pki.getPemEncoded(keyPair.getPrivate());
 
-        Map<String, CertificateSerial> serialMap = new HashMap<>();
-        for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
-            serialMap.put(entry.getKey(), new CertificateSerial(entry.getValue().getPool().getEndDate()));
-        }
-
-        // Serials need to be saved to get generated ID.
-        log.debug("Persisting new certificate serials");
-        serialCurator.saveOrUpdateAll(serialMap.values(), false, false);
         Set<Pool> entitledPools = poolQuantities.values().stream()
             .map(PoolQuantity::getPool)
             .collect(Collectors.toSet());
@@ -378,11 +366,10 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         PromotedContent promotedContent = new PromotedContent(contentPrefix)
             .withAll(environments);
 
-        Map<String, EntitlementCertificate> entitlementCerts = new HashMap<>();
+        Map<String, Certificate> entitlementCerts = new HashMap<>();
         for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
             Pool pool = entry.getValue().getPool();
             Entitlement ent = entitlements.get(entry.getKey());
-            CertificateSerial serial = serialMap.get(entry.getKey());
             Product product = productMap.get(entry.getKey());
 
             log.info("Generating entitlement cert for pool: {} quantity: {} entitlement id: {}",
@@ -403,12 +390,16 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             List<org.candlepin.model.dto.Product> productModels = v3extensionUtil.createProducts(product,
                 products, promotedContent, consumer, pool, entitledPools);
 
-            X509Certificate x509Cert = createX509Certificate(consumer, owner, pool, ent,
-                product, products, productModels,
-                BigInteger.valueOf(serial.getId()), keyPair, promotedContent, entitledPools);
+            X509Certificate x509Cert = createX509Certificate(consumer, owner, pool, ent, product, products,
+                productModels, this.pki.generateCertificateSerial(), keyPair, promotedContent, entitledPools);
 
-            log.debug("Getting PEM encoded cert.");
-            String pem = new String(this.pki.getPemEncoded(x509Cert));
+            // Build cert container, and populate it with the bits we have
+            Certificate cert = new Certificate()
+                .setType(Certificate.Type.ENTITLEMENT)
+                .setSerial(x509Cert.getSerialNumber())
+                .setCertificate(this.pki.getPemEncoded(x509Cert))
+                .setPrivateKey(this.pki.getPemEncoded(keyPair.getPrivate()))
+                .setExpiration(x509Cert.getNotAfter().toInstant());
 
             if (shouldGenerateV3(consumer)) {
                 log.debug("Generating v3 entitlement data");
@@ -425,48 +416,17 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
                 signature += Util.toBase64(bytes);
                 signature += "-----END RSA SIGNATURE-----\n";
 
-                pem += payload + signature;
+                cert.setPayload(payload + signature);
             }
 
-            // Build a skeleton cert as part of the entitlement processing.
-            EntitlementCertificate cert = new EntitlementCertificate();
-            cert.setKeyAsBytes(pemEncodedKeyPair);
-            cert.setCert(pem);
+            log.debug("Generated entitlement certificate: {}", cert);
+
             if (save) {
-                cert.setEntitlement(ent);
-            }
-
-            if (log.isDebugEnabled()) {
-                log.debug("Generated cert serial number: {}", serial.getId());
-                log.debug("Key: {}", cert.getKey());
-                log.debug("Cert: {}", cert.getCert());
+                this.certificateCurator.create(cert, false);
+                ent.addCertificate(cert);
             }
 
             entitlementCerts.put(entry.getKey(), cert);
-        }
-
-        // Now that the serials have been saved, update the newly created
-        // certs with their serials and add them to the entitlements.
-        for (Entry<String, PoolQuantity> entry : poolQuantities.entrySet()) {
-            CertificateSerial nextSerial = serialMap.get(entry.getKey());
-            if (nextSerial == null) {
-                // This should never happen, but checking to be safe.
-                throw new RuntimeException(
-                    "Certificate serial not found for entitlement during cert generation.");
-            }
-
-            EntitlementCertificate nextCert = entitlementCerts.get(entry.getKey());
-            if (nextCert == null) {
-                // This should never happen, but checking to be safe.
-                throw new RuntimeException(
-                    "Entitlement certificate not found for entitlement during cert generation");
-            }
-
-            nextCert.setSerial(nextSerial);
-            if (save) {
-                Entitlement ent = entitlements.get(entry.getKey());
-                ent.addCertificate(nextCert);
-            }
         }
 
         if (save) {
@@ -481,7 +441,8 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
         return "CN=" + ent.getId() + ", O=" + owner.getKey();
     }
 
-    public List<Long> listEntitlementSerialIds(Consumer consumer) {
-        return serialCurator.listEntitlementSerialIds(consumer);
+    @Override
+    public List<BigInteger> listEntitlementSerialIds(Consumer consumer) {
+        return this.certificateCurator.listEntitlementSerials(consumer);
     }
 }

@@ -22,17 +22,17 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 
 import com.google.inject.Inject;
@@ -55,7 +55,7 @@ public class ProductResource implements ProductsApi {
     private static final Logger log = LoggerFactory.getLogger(ProductResource.class);
     private final ProductCurator productCurator;
     private final OwnerCurator ownerCurator;
-    private final ProductCertificateCurator productCertCurator;
+    private final CertificateCurator certificateCurator;
     private final Configuration config;
     private final I18n i18n;
     private final ModelTranslator translator;
@@ -63,11 +63,11 @@ public class ProductResource implements ProductsApi {
 
     @Inject
     public ProductResource(ProductCurator productCurator, OwnerCurator ownerCurator,
-        ProductCertificateCurator productCertCurator, Configuration config, I18n i18n,
+        CertificateCurator certificateCurator, Configuration config, I18n i18n,
         ModelTranslator translator, JobManager jobManager) {
 
         this.productCurator = Objects.requireNonNull(productCurator);
-        this.productCertCurator = Objects.requireNonNull(productCertCurator);
+        this.certificateCurator = Objects.requireNonNull(certificateCurator);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.config = Objects.requireNonNull(config);
         this.i18n = Objects.requireNonNull(i18n);
@@ -109,13 +109,14 @@ public class ProductResource implements ProductsApi {
 
     @Override
     @SecurityHole
-    public ProductCertificateDTO getProductCertificate(String productUuid) {
+    public CertificateDTO getProductCertificate(String productUuid) {
         // TODO:
         // Should this be enabled globally? This will create a cert if it hasn't yet been created.
 
         Product product = this.fetchProduct(productUuid);
-        ProductCertificate productCertificate = this.productCertCurator.getCertForProduct(product);
-        return this.translator.translate(productCertificate, ProductCertificateDTO.class);
+        Certificate productCertificate = this.certificateCurator.getProductCertificate(product, true);
+
+        return this.translator.translate(productCertificate, CertificateDTO.class);
     }
 
     @Override

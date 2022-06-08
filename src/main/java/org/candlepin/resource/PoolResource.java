@@ -31,13 +31,13 @@ import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
+import org.candlepin.model.Certificate;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
-import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
@@ -257,8 +257,8 @@ public class PoolResource implements PoolsApi {
     }
 
     /**
-     * Retrieves the pool certificate for the given ID. If the pool
-     * cannot be found or does not have a certificate, this method throws a NotFoundException.
+     * Retrieves the pool certificate for the given ID. If the pool cannot be found or does not have a
+     * certificate, this method throws a NotFoundException.
      *
      * @param poolId
      *  The pool ID for which to retrieve a subscription certificate
@@ -269,18 +269,15 @@ public class PoolResource implements PoolsApi {
      * @return
      *  the certificate associated with the specified pool
      */
-    protected SubscriptionsCertificate getPoolCertificate(String poolId) {
+    protected Certificate getPoolCertificate(String poolId) {
         Pool pool = poolManager.get(poolId);
 
         if (pool == null) {
-            throw new NotFoundException(i18n.tr(
-                "Pool with ID \"{0}\" could not be found.", poolId));
+            throw new NotFoundException(i18n.tr("Pool with ID \"{0}\" could not be found.", poolId));
         }
 
         if (pool.getCertificate() == null) {
-            throw new NotFoundException(
-                i18n.tr("A certificate was not found for pool \"{0}\"", poolId)
-            );
+            throw new NotFoundException(i18n.tr("A certificate was not found for pool \"{0}\"", poolId));
         }
 
         return pool.getCertificate();
@@ -288,17 +285,15 @@ public class PoolResource implements PoolsApi {
 
     @Override
     public Object getSubCert(String poolId) {
+        Certificate cert = this.getPoolCertificate(poolId);
 
         HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);
+        MediaType mediaType = httpRequest != null ?
+            httpRequest.getHttpHeaders().getMediaType() :
+            null;
 
-        MediaType mediaType = httpRequest == null ? null :
-            httpRequest.getHttpHeaders().getMediaType();
-
-        if (mediaType != null && mediaType.equals(MediaType.TEXT_PLAIN_TYPE)) {
-            SubscriptionsCertificate cert = this.getPoolCertificate(poolId);
-            return cert.getCert() + cert.getKey();
-        }
-
-        return this.translator.translate(this.getPoolCertificate(poolId), CertificateDTO.class);
+        return mediaType != null && mediaType.equals(MediaType.TEXT_PLAIN_TYPE) ?
+            cert.getCertificateAsString() + cert.getPrivateKeyAsString() :
+            this.translator.translate(cert, CertificateDTO.class);
     }
 }

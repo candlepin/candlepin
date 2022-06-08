@@ -66,8 +66,8 @@ public class UpstreamConsumer extends AbstractHibernateObject<UpstreamConsumer> 
     private String name;
 
     @OneToOne
-    @JoinColumn(name = "consumer_idcert_id")
-    private IdentityCertificate idCert;
+    @JoinColumn(name = "cp_upstream_consumer")
+    private Certificate idCert;
 
     @ManyToOne
     @JoinColumn(nullable = false)
@@ -144,11 +144,11 @@ public class UpstreamConsumer extends AbstractHibernateObject<UpstreamConsumer> 
     }
 
     @HateoasArrayExclude
-    public IdentityCertificate getIdCert() {
+    public Certificate getIdCert() {
         return idCert;
     }
 
-    public void setIdCert(IdentityCertificate idCert) {
+    public void setIdCert(Certificate idCert) {
         this.idCert = idCert;
     }
 

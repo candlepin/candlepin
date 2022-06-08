@@ -179,12 +179,12 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * not stored in the database.
      */
     @OneToOne
-    @JoinColumn(name = "consumer_idcert_id")
-    private IdentityCertificate idCert;
+    @JoinColumn(name = "identity_cert_id")
+    private Certificate idCert;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cont_acc_cert_id")
-    private ContentAccessCertificate contentAccessCert;
+    @JoinColumn(name = "content_access_cert_id")
+    private Certificate contentAccessCert;
 
     // Reference to the ConsumerType by ID
     @Column(name = "type_id")
@@ -360,11 +360,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     @HateoasArrayExclude
-    public IdentityCertificate getIdCert() {
+    public Certificate getIdCert() {
         return idCert;
     }
 
-    public void setIdCert(IdentityCertificate idCert) {
+    public void setIdCert(Certificate idCert) {
         this.idCert = idCert;
     }
 

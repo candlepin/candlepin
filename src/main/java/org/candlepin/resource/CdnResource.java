@@ -25,7 +25,7 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
-import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.Certificate;
 
 import com.google.inject.Inject;
 
@@ -121,38 +121,32 @@ public class CdnResource implements CdnApi {
             entity.setUrl(dto.getUrl());
         }
 
-        if (dto.getCertificate() != null) {
-            CertificateDTO certDTO = dto.getCertificate();
-            CdnCertificate cdnCert;
+        CertificateDTO certDTO = dto.getCertificate();
+        if (certDTO != null) {
+            CertificateSerialDTO certSerialDTO = certDTO.getSerial();
 
-            if (certDTO.getKey() != null && certDTO.getCert() != null) {
-                cdnCert = new CdnCertificate();
-                cdnCert.setCert(certDTO.getCert());
-                cdnCert.setKey(certDTO.getKey());
-
-                if (certDTO.getSerial() != null) {
-                    CertificateSerialDTO certSerialDTO = certDTO.getSerial();
-                    CertificateSerial certSerial = new CertificateSerial();
-
-                    OffsetDateTime expiration = certSerialDTO.getExpiration();
-                    certSerial.setExpiration(expiration != null ?
-                        new Date(expiration.toInstant().toEpochMilli()) : null);
-
-                    if (certSerialDTO.getSerial() != null) {
-                        certSerial.setSerial(Long.valueOf(certSerialDTO.getSerial()));
-                    }
-
-                    if (certSerialDTO.getRevoked() != null) {
-                        certSerial.setRevoked(certSerialDTO.getRevoked());
-                    }
-
-                    cdnCert.setSerial(certSerial);
-                }
-                entity.setCertificate(cdnCert);
+            if (certSerialDTO == null) {
+                throw new BadRequestException(i18n.tr("CDN certificate is missing serial information"));
             }
-            else {
-                throw new BadRequestException(i18n.tr("cdn certificate has null key or cert."));
+
+            if (certDTO.getCert() == null || certDTO.getKey() == null) {
+                throw new BadRequestException(i18n.tr("CDN certificate is missing a certificate and/or " +
+                    "private key"));
             }
+
+            // TODO:
+            // So much of this translation assumes the serial object is well-formed and populated,
+            // which is a dangerous assumption to make. This will 500 if anything isn't as expected.
+
+            Certificate cdnCert = new Certificate()
+                .setType(Certificate.Type.CDN)
+                .setSerial(BigInteger.valueOf(certSerialDTO.getSerial())) // This explodes if the serial is null
+                .setCertificate(certDTO.getCert())
+                .setPrivateKey(certDTO.getKey())
+                .setExpiration(certSerialDTO.getExpiration().toInstant()) // also explodes if the field is null
+                .setRevoked(certSerialDTO.getRevoked()); // Still exploding here
+
+            entity.setCertificate(cdnCert);
         }
     }
 
@@ -160,8 +154,7 @@ public class CdnResource implements CdnApi {
         Cdn cdn = curator.getByLabel(label);
 
         if (cdn == null) {
-            throw new NotFoundException(i18n.tr("No such content delivery network: {0}",
-                label));
+            throw new NotFoundException(i18n.tr("No such content delivery network: {0}", label));
         }
         return cdn;
     }
