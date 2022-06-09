@@ -151,7 +151,7 @@ public class CdnResource implements CdnApi {
                 entity.setCertificate(cdnCert);
             }
             else {
-                throw new BadRequestException(i18n.tr("cdn certificate has null key or cert."));
+                throw new BadRequestException(i18n.tr("CDN certificate has null key or cert."));
             }
         }
     }
