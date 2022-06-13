@@ -598,49 +598,122 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             return;
         }
 
+        // TODO:
         // Should we step through the UUID map and verify that it doesn't try to map anything weird,
         // (like a UUID to itself), or define multiple remappings?
 
-        Session session = this.currentSession();
+        this.updateOwnerProductJoinTable(owner, productUuidMap);
+        this.updateOwnerProductPools(owner, productUuidMap);
+        this.updateOwnerProductActivationKeys(owner, productUuidMap);
 
-        Map<String, Object> criteria = new HashMap<>();
-        Map<Object, Object> uuidMap = Map.class.cast(productUuidMap);
-        criteria.put("product_uuid", productUuidMap.keySet());
-        criteria.put("owner_id", owner.getId());
+        // Looks like we don't need to do anything with product certificates, since we generate
+        // them on request. By leaving them alone, they'll be generated as needed and we save some
+        // overhead here.
+    }
 
-        // Owner products
-        int count = this.bulkSQLUpdate(OwnerProduct.DB_TABLE, "product_uuid", uuidMap, criteria);
+    /**
+     * Part of the updateOwnerProductReferences operation; updates the owner to product join table.
+     * See updateOwnerProductReferences for additional details.
+     *
+     * @param owner
+     * @param productUuidMap
+     */
+    private void updateOwnerProductJoinTable(Owner owner, Map<String, String> productUuidMap) {
+        String sql = "UPDATE " + OwnerProduct.DB_TABLE + " SET product_uuid = :updated " +
+            "WHERE product_uuid = :current AND owner_id = :owner_id";
+
+        Query query = this.getEntityManager()
+            .createNativeQuery(sql)
+            .setParameter("owner_id", owner.getId());
+
+        int count = 0;
+        for (Map.Entry<String, String> entry : productUuidMap.entrySet()) {
+            count += query.setParameter("current", entry.getKey())
+                .setParameter("updated", entry.getValue())
+                .executeUpdate();
+        }
 
         log.debug("{} owner-product relations updated", count);
+    }
 
-        // pool->product
-        count = this.bulkSQLUpdate(Pool.DB_TABLE, "product_uuid", uuidMap, criteria);
+    /**
+     * Part of the updateOwnerProductReferences operation; updates the pools table.
+     * See updateOwnerProductReferences for additional details.
+     *
+     * @param owner
+     * @param productUuidMap
+     */
+    private void updateOwnerProductPools(Owner owner, Map<String, String> productUuidMap) {
+        String sql = "UPDATE " + Pool.DB_TABLE + " SET product_uuid = :updated " +
+            "WHERE product_uuid = :current AND owner_id = :owner_id";
+
+        Query query = this.getEntityManager()
+            .createNativeQuery(sql)
+            .setParameter("owner_id", owner.getId());
+
+        int count = 0;
+        for (Map.Entry<String, String> entry : productUuidMap.entrySet()) {
+            count += query.setParameter("current", entry.getKey())
+                .setParameter("updated", entry.getValue())
+                .executeUpdate();
+        }
 
         log.debug("{} pools updated", count);
+    }
 
+    /**
+     * Part of the updateOwnerProductReferences operation; updates the activation key to product
+     * join table. See updateOwnerProductReferences for additional details.
+     *
+     * @param owner
+     * @param productUuidMap
+     */
+    private void updateOwnerProductActivationKeys(Owner owner, Map<String, String> productUuidMap) {
+        EntityManager entityManager = this.getEntityManager();
 
-        // Activation key products
-        String sql = "SELECT id FROM cp_activation_key WHERE owner_id = :ownerId";
+        String sql = "SELECT key.id, prod.uuid FROM ActivationKey key JOIN key.products prod " +
+            "WHERE key.owner.id = :owner_id " +
+            "  AND prod.uuid IN (:product_uuids)";
 
-        List<String> ids = session.createSQLQuery(sql)
-            .setParameter("ownerId", owner.getId())
-            .list();
+        Query query = entityManager.createQuery(sql)
+            .setParameter("owner_id", owner.getId());
 
-        if (ids != null && !ids.isEmpty()) {
-            criteria.clear();
-            criteria.put("product_uuid", productUuidMap.keySet());
-            criteria.put("key_id", ids);
+        Map<String, Set<String>> keyMap = new HashMap<>();
+        for (List<String> block : this.partition(productUuidMap.keySet())) {
+            List<Object> rows = query.setParameter("product_uuids", block)
+                .getResultList();
 
-            count = this.bulkSQLUpdate("cp2_activation_key_products", "product_uuid", uuidMap, criteria);
-            log.debug("{} activation keys updated", count);
+            for (Object row : rows) {
+                String keyid = (String) ((Object[]) row)[0];
+                String uuid = (String) ((Object[]) row)[1];
+
+                keyMap.computeIfAbsent(uuid, key -> new HashSet<>())
+                    .add(keyid);
+            }
         }
-        else {
-            log.debug("0 activation keys updated");
+
+        int count = 0;
+        if (!keyMap.isEmpty()) {
+            sql = "UPDATE cp2_activation_key_products SET product_uuid = :updated " +
+                "WHERE key_id = :key_id AND product_uuid = :current";
+
+            query = entityManager.createNativeQuery(sql);
+
+            for (Map.Entry<String, Set<String>> entry : keyMap.entrySet()) {
+                String cUuid = entry.getKey();
+                String uUuid = productUuidMap.get(cUuid);
+
+                query.setParameter("current", cUuid)
+                    .setParameter("updated", uUuid);
+
+                for (String keyid : entry.getValue()) {
+                    count += query.setParameter("key_id", keyid)
+                        .executeUpdate();
+                }
+            }
         }
 
-        // product certificates
-        // Looks like we don't need to do anything here, since we generate them on request. By
-        // leaving them alone, they'll be generated as needed and we save some overhead here.
+        log.debug("{} activation keys updated", count);
     }
 
     /**
