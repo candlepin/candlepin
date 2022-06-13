@@ -720,6 +720,47 @@ public class ConsumerResourceTest {
     }
 
     @Test
+    public void testUserNoOwnerSetup() {
+        Owner owner = this.createOwner();
+        UserPrincipal up = mock(UserPrincipal.class);
+        when(up.getOwnerKeys()).thenReturn(new ArrayList<>());
+        assertThrows(BadRequestException.class, () -> consumerResource.setupOwner(up, null));
+    }
+
+    @Test
+    public void testUserOneOwnerSetup() {
+        Owner owner = this.createOwner();
+        UserPrincipal up = mock(UserPrincipal.class);
+        when(up.getOwnerKeys()).thenReturn(List.of(owner.getKey()));
+        when(up.canAccess(eq(owner), any(SubResource.class), any(Access.class))).thenReturn(true);
+        assertEquals(owner, consumerResource.setupOwner(up, null));
+    }
+
+    @Test
+    public void testUserManyOwnerNoPrimarySetup() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
+        UserPrincipal up = mock(UserPrincipal.class);
+        when(up.getOwnerKeys()).thenReturn(List.of(owner1.getKey(), owner2.getKey(), owner3.getKey()));
+        when(up.getPrimaryOwner()).thenReturn(null);
+        when(up.canAccess(eq(owner2), any(SubResource.class), any(Access.class))).thenReturn(true);
+        assertThrows(BadRequestException.class, () -> consumerResource.setupOwner(up, null));
+    }
+
+    @Test
+    public void testUserManyOwnerPrimarySetup() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Owner owner3 = this.createOwner();
+        UserPrincipal up = mock(UserPrincipal.class);
+        when(up.getOwnerKeys()).thenReturn(List.of(owner1.getKey(), owner2.getKey(), owner3.getKey()));
+        when(up.getPrimaryOwner()).thenReturn(owner2);
+        when(up.canAccess(eq(owner2), any(SubResource.class), any(Access.class))).thenReturn(true);
+        assertEquals(owner2, consumerResource.setupOwner(up, null));
+    }
+
+    @Test
     public void testGetComplianceStatusList() {
         Owner owner = this.createOwner();
         Consumer c = this.createConsumer(owner);

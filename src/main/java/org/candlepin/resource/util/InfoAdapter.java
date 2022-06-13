@@ -607,6 +607,14 @@ public class InfoAdapter {
              * {@inheritDoc}
              */
             @Override
+            public OwnerInfo getPrimaryOwner() {
+                return null;
+            }
+
+            /**
+             * {@inheritDoc}
+             */
+            @Override
             public Collection<? extends RoleInfo> getRoles() {
                 return null;
             }

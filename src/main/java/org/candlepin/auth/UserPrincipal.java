@@ -18,6 +18,7 @@ import org.candlepin.auth.permissions.AsyncJobStatusPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.UserUserPermission;
 import org.candlepin.model.Owner;
+import org.candlepin.service.model.OwnerInfo;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -30,6 +31,7 @@ public class UserPrincipal extends Principal {
 
     private String username;
     private boolean admin;
+    private OwnerInfo primaryOwner;
 
     /**
      * Create a user principal
@@ -37,8 +39,19 @@ public class UserPrincipal extends Principal {
      * @param username
      */
     public UserPrincipal(String username, Collection<Permission> permissions, boolean admin) {
+        this(username, permissions, admin, null);
+    }
+
+    /**
+     * Create a user principal
+     *
+     * @param username
+     */
+    public UserPrincipal(String username, Collection<Permission> permissions, boolean admin,
+        OwnerInfo primaryOwner) {
         this.username = username;
         this.admin = admin;
+        this.primaryOwner = primaryOwner;
 
         if (permissions != null) {
             this.permissions.addAll(permissions);
@@ -132,6 +145,13 @@ public class UserPrincipal extends Principal {
         }
 
         return owners;
+    }
+
+    /**
+     * @return the primary owner this principal has some level of access to.
+     */
+    public OwnerInfo getPrimaryOwner() {
+        return this.primaryOwner;
     }
 
     @Override

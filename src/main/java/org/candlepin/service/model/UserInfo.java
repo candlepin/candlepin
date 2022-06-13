@@ -82,6 +82,13 @@ public interface UserInfo extends ServiceAdapterModel {
     Boolean isSuperAdmin();
 
     /**
+     * Determines which of the owners related to this user is the designated primary
+     *
+     * @return OwnerInfo the primary owner
+     */
+    OwnerInfo getPrimaryOwner();
+
+    /**
      * Fetches a collection of roles for this user. If the roles have not yet been set, this method
      * returns null. If this user does not have any roles, this method returns an empty collection.
      *
