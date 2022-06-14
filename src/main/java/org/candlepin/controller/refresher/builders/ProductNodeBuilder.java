@@ -70,7 +70,15 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
         ProductInfo sourceEntity = importedEntity != null ? importedEntity : existingEntity;
 
         // Add provided products
+        // Impl note: children collections use "null" to indicate no change in the children, so we
+        // need to fall back to the existing entity if our source entity has a null children
+        // collection. Also note that this will doubly-assign the local entity's collection in
+        // some cases, but that's okay.
         Collection<? extends ProductInfo> providedProducts = sourceEntity.getProvidedProducts();
+        if (providedProducts == null && existingEntity != null) {
+            providedProducts = existingEntity.getProvidedProducts();
+        }
+
         if (providedProducts != null) {
             for (ProductInfo provided : providedProducts) {
                 EntityNode<Product, ProductInfo> child = factory.
@@ -89,6 +97,9 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
 
         // Add content nodes
         Collection<? extends ProductContentInfo> productContent = sourceEntity.getProductContent();
+        if (productContent == null && existingEntity != null) {
+            productContent = existingEntity.getProductContent();
+        }
 
         // Product content processing is a bit... weird. We don't care about the join object for
         // our purposes here. It will be properly updated accordingly when we apply updates later.
