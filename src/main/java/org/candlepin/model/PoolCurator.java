@@ -1159,7 +1159,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     public List<Pool> getSubPoolsForStackIds(Consumer consumer, Collection<String> stackIds) {
         return consumer != null ?
             this.getSubPoolsForStackIds(Arrays.asList(consumer), stackIds) :
-            new ArrayList<>();
+            (new ArrayList<>());
     }
 
     /**

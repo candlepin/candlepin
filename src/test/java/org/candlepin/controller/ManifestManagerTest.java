@@ -110,8 +110,8 @@ public class ManifestManagerTest {
 
     protected Consumer createMockConsumer(Owner owner, boolean manifestDistributor) {
         ConsumerType type = manifestDistributor ?
-            new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN) :
-            new ConsumerType("test-consumer-type-" + TestUtil.randomInt());
+            (new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN)) :
+            (new ConsumerType("test-consumer-type-" + TestUtil.randomInt()));
         type.setId("test-ctype-" + TestUtil.randomInt());
 
         Consumer consumer = new Consumer("TestConsumer" + TestUtil.randomInt(), "User", owner, type)

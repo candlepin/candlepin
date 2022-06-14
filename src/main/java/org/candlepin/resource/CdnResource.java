@@ -136,7 +136,7 @@ public class CdnResource implements CdnApi {
 
                     OffsetDateTime expiration = certSerialDTO.getExpiration();
                     certSerial.setExpiration(expiration != null ?
-                        new Date(expiration.toInstant().toEpochMilli()) : null);
+                        (new Date(expiration.toInstant().toEpochMilli())) : null);
 
                     if (certSerialDTO.getSerial() != null) {
                         certSerial.setSerial(Long.valueOf(certSerialDTO.getSerial()));

@@ -343,8 +343,8 @@ public class LinkHeaderResponseFilterTest {
         ResteasyContext.pushContext(Page.class, page);
 
         mockReq = MockHttpRequest.create("GET",
-                new URI("/candlepin/resource?order=asc&page=1&per_page=10"),
-                new URI("https://example.com"));
+            new URI("/candlepin/resource?order=asc&page=1&per_page=10"),
+            new URI("https://example.com"));
         when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
         when(mockResponseContext.getHeaders()).thenReturn(map);
@@ -381,8 +381,8 @@ public class LinkHeaderResponseFilterTest {
         ResteasyContext.pushContext(Page.class, page);
 
         mockReq = MockHttpRequest.create("GET",
-                new URI("/candlepin/resource?order=asc&page=2&per_page=10"),
-                new URI("https://localhost:8443"));
+            new URI("/candlepin/resource?order=asc&page=2&per_page=10"),
+            new URI("https://localhost:8443"));
         when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
         when(mockResponseContext.getHeaders()).thenReturn(map);

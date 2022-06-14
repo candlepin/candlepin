@@ -106,7 +106,7 @@ public class PoolResource implements PoolsApi {
 
         Date activeOnDate = activeOn != null ?
             ResourceDateParser.parseDateString(activeOn) :
-            new Date();
+            (new Date());
 
         Consumer c = null;
         String oId = null;

@@ -289,7 +289,7 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
 
         Content updatedEntity = existingEntity != null ?
             (Content) existingEntity.clone() :
-            new Content().setLocked(true);
+            (new Content().setLocked(true));
 
         // Ensure the RH content ID is set properly
         updatedEntity.setId(sourceEntity.getId());

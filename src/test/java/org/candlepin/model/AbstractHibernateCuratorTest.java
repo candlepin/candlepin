@@ -916,7 +916,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
         List<Permission> plist = permissions != null && permissions.length > 0 ?
             Arrays.asList(permissions) :
-            new LinkedList<>();
+            (new LinkedList<>());
 
         doReturn(superAdmin).when(principal).hasFullAccess();
         doReturn(plist).when(principal).getPermissions();

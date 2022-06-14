@@ -166,7 +166,7 @@ public class GuestMigration {
 
     private List<GuestId> getRemovedGuestIds(Consumer existingConsumer, List<GuestId> incomingIds) {
         List<GuestId> existingIds = (existingConsumer.getGuestIds() == null) ? new ArrayList<>() :
-            new ArrayList<>(existingConsumer.getGuestIds());
+            (new ArrayList<>(existingConsumer.getGuestIds()));
 
         if (incomingIds == null) {
             incomingIds = new ArrayList<>();
@@ -181,7 +181,7 @@ public class GuestMigration {
 
     private List<GuestId> getAddedGuestIds(Consumer existingConsumer, List<GuestId> incomingIds) {
         List<GuestId> existingIds = (existingConsumer.getGuestIds() == null) ? new ArrayList<>() :
-            new ArrayList<>(existingConsumer.getGuestIds());
+            (new ArrayList<>(existingConsumer.getGuestIds()));
 
         if (incomingIds == null) {
             incomingIds = new ArrayList<>();
