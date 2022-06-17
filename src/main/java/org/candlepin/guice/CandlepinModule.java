@@ -200,9 +200,9 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import javax.cache.CacheManager;
 import javax.inject.Provider;
-import javax.validation.MessageInterpolator;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
 
 
 

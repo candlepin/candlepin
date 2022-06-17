@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.validation.MessageInterpolator;
+import jakarta.validation.MessageInterpolator;
 
 
 
@@ -41,33 +41,33 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
     static {
         HashMap<String, ValidationMessage> msgs = new HashMap<>();
 
-        msgs.put("{javax.validation.constraints.AssertFalse.message}",
+        msgs.put("{jakarta.validation.constraints.AssertFalse.message}",
             new ValidationMessage(I18n.marktr("must be false")));
-        msgs.put("{javax.validation.constraints.AssertTrue.message}",
+        msgs.put("{jakarta.validation.constraints.AssertTrue.message}",
             new ValidationMessage(I18n.marktr("must be true")));
-        msgs.put("{javax.validation.constraints.DigitsMax.message}",
+        msgs.put("{jakarta.validation.constraints.DigitsMax.message}",
             new ValidationMessage(I18n.marktr("must be less than or equal to {0}"), "value"));
-        msgs.put("{javax.validation.constraints.DigitsMin.message}",
+        msgs.put("{jakarta.validation.constraints.DigitsMin.message}",
             new ValidationMessage(I18n.marktr("must be greater than or equal to {0}"), "value"));
-        msgs.put("{javax.validation.constraints.Digits.message}",
+        msgs.put("{jakarta.validation.constraints.Digits.message}",
             new ValidationMessage(I18n.marktr(
                 "numeric value out of bounds (<{integer} digits>.<{fraction} digits> expected)"),
                 "integer", "fraction"));
-        msgs.put("{javax.validation.constraints.Future.message}",
+        msgs.put("{jakarta.validation.constraints.Future.message}",
             new ValidationMessage(I18n.marktr("must be in the future")));
-        msgs.put("{javax.validation.constraints.Max.message}",
+        msgs.put("{jakarta.validation.constraints.Max.message}",
             new ValidationMessage(I18n.marktr("must be less than or equal to {0}"), "value"));
-        msgs.put("{javax.validation.constraints.Min.message}",
+        msgs.put("{jakarta.validation.constraints.Min.message}",
             new ValidationMessage(I18n.marktr("must be greater than or equal to {0}"), "value"));
-        msgs.put("{javax.validation.constraints.NotNull.message}",
+        msgs.put("{jakarta.validation.constraints.NotNull.message}",
             new ValidationMessage(I18n.marktr("may not be null")));
-        msgs.put("{javax.validation.constraints.Null.message}",
+        msgs.put("{jakarta.validation.constraints.Null.message}",
             new ValidationMessage(I18n.marktr("must be null")));
-        msgs.put("{javax.validation.constraints.Past.message}",
+        msgs.put("{jakarta.validation.constraints.Past.message}",
             new ValidationMessage(I18n.marktr("must be in the past")));
-        msgs.put("{javax.validation.constraints.Pattern.message}",
+        msgs.put("{jakarta.validation.constraints.Pattern.message}",
             new ValidationMessage(I18n.marktr("must match \"{regexp}\""), "regexp"));
-        msgs.put("{javax.validation.constraints.Size.message}",
+        msgs.put("{jakarta.validation.constraints.Size.message}",
             new ValidationMessage(I18n.marktr("size must be between {0} and {1}"), "min", "max"));
         msgs.put("{org.hibernate.validator.constraints.CreditCardNumber.message}",
             new ValidationMessage(I18n.marktr("invalid credit card number")));

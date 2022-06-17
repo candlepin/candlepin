@@ -23,7 +23,7 @@ import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 
 import java.util.Properties;
 
-import javax.validation.ValidatorFactory;
+import jakarta.validation.ValidatorFactory;
 
 /**
  * ValidationListenerFactory

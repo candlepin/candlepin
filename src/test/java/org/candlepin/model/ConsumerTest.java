@@ -39,7 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolationException;
 
 public class ConsumerTest extends DatabaseTestFixture {
 

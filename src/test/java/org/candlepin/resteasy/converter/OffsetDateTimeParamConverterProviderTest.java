@@ -28,7 +28,7 @@ import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.Locale;
 
-import javax.validation.constraints.Pattern;
+import jakarta.validation.constraints.Pattern;
 import javax.ws.rs.ext.ParamConverter;
 
 

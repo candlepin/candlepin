@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 import java.util.Map;
 
 import javax.persistence.RollbackException;
-import javax.validation.ValidationException;
+import jakarta.validation.ValidationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;

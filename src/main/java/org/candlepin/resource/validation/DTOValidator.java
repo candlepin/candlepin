@@ -22,12 +22,12 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 
 
 /**
@@ -46,7 +46,7 @@ public class DTOValidator {
 
     /**
      * Performs validation of the DTO's fields (and their fields, thus validating the whole DTO tree) based
-     * on the {@link javax.validation.constraints} annotations set on the them (such as {@link NotNull} and
+     * on the {@link jakarta.validation.constraints} annotations set on the them (such as {@link NotNull} and
      *  {@link Size}).
      *
      * @param dto the DTO object to validate

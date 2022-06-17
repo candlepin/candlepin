@@ -116,7 +116,7 @@ dependencies {
     // Bean validation API is explicitly added to this version
     // This is a transitive dependency of
     // com.fasterxml.jackson.module:jackson-module-jsonSchema
-    implementation libraries["javaxValidation"]
+    implementation libraries["jakartaValidation"]
 
     // Javax
     implementation libraries["hibernate"]

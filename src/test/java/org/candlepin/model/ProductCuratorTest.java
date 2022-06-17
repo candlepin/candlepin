@@ -53,7 +53,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
-import javax.validation.ConstraintViolationException;
+import jakarta.validation.ConstraintViolationException;
 
 public class ProductCuratorTest extends DatabaseTestFixture {
     private static Logger log = LoggerFactory.getLogger(ProductCuratorTest.class);

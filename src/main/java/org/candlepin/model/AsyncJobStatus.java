@@ -40,7 +40,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 import javax.persistence.Version;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 
 
