@@ -81,7 +81,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-import javax.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 
 
 public class PoolManagerFunctionalTest extends DatabaseTestFixture {

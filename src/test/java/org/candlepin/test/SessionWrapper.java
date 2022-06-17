@@ -77,6 +77,10 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
+/*
+ * TODO: Port these to jakarta.persistence once we migrate to hibernate 6.x.
+ *  Because we need compile time compatibility here, we can't port them yet.
+ */
 import javax.persistence.EntityGraph;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.FlushModeType;

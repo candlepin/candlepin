@@ -119,7 +119,7 @@ dependencies {
     implementation libraries["javaxValidation"]
 
     // Javax
-    implementation libraries["hibernate"]
+    implementation libraries["jakartaPersistence"]
     implementation libraries["javaxAnnotation"]
 
     // Liquibase
@@ -176,7 +176,7 @@ dependencies {
 
     // Hibernate JPA integration
     implementation libraries["hibernateJpamodelgen"]
-    annotationProcessor libraries["hibernateJpamodelgenProcessor"]
+    annotationProcessor libraries["hibernateJpamodelgen"]
 
     checkstyle libraries["checkstyle"]
     checkstyle libraries["checkstyleSevntu"]

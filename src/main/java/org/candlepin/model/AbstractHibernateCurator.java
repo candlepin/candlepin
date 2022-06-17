@@ -61,18 +61,18 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.LockModeType;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.OptimisticLockException;
-import javax.persistence.TransactionRequiredException;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.From;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.NonUniqueResultException;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
 
 
@@ -370,7 +370,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
     }
 
-    private javax.persistence.criteria.Order createPagingOrder(Root<?> root, PageRequest p) {
+    private jakarta.persistence.criteria.Order createPagingOrder(Root<?> root, PageRequest p) {
         String sortBy = (p.getSortBy() == null) ? AbstractHibernateObject.DEFAULT_SORT_FIELD : p.getSortBy();
         PageRequest.Order order = (p.getOrder() == null) ? PageRequest.DEFAULT_ORDER : p.getOrder();
         CriteriaBuilder criteriaBuilder = this.entityManager.get().getCriteriaBuilder();
@@ -1573,7 +1573,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 .setLockMode(lockMode)
                 .getSingleResult();
         }
-        catch (javax.persistence.NoResultException e) {
+        catch (jakarta.persistence.NoResultException e) {
             SystemLock lock = new SystemLock()
                 .setId(lockName);
 
@@ -1700,10 +1700,10 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return
      *  a list of order instances to sort the query results
      */
-    protected List<javax.persistence.criteria.Order> buildJPAQueryOrder(CriteriaBuilder criteriaBuilder,
+    protected List<jakarta.persistence.criteria.Order> buildJPAQueryOrder(CriteriaBuilder criteriaBuilder,
         Root<?> root, QueryArguments<?> queryArguments) {
 
-        List<javax.persistence.criteria.Order> orderList = new ArrayList<>();
+        List<jakarta.persistence.criteria.Order> orderList = new ArrayList<>();
 
         if (queryArguments != null && queryArguments.getOrder() != null) {
             for (QueryArguments.Order order : queryArguments.getOrder()) {

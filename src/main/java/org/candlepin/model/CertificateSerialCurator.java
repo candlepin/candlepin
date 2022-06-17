@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import javax.inject.Singleton;
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 
 

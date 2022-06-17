@@ -59,7 +59,7 @@ import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 
 

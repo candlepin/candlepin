@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Singleton;
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 
 @Singleton

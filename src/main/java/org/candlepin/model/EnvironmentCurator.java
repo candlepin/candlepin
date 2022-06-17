@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Singleton;
-import javax.persistence.NoResultException;
-import javax.persistence.Query;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.Query;
 
 
 @Singleton

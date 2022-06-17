@@ -64,7 +64,7 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.TypedQuery;
 
 
 /**
@@ -1266,7 +1266,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 "  AND ss2.subscription_sub_key != 'master' " +
                 "  AND ss1.pool_id IN (:pool_ids)";
 
-            javax.persistence.Query query = this.getEntityManager().createNativeQuery(sql);
+            jakarta.persistence.Query query = this.getEntityManager().createNativeQuery(sql);
 
             for (List<String> block : this.partition(poolIds)) {
                 query.setParameter("pool_ids", block);
@@ -1654,7 +1654,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             "WHERE pool.id IN (:pool_ids)";
 
         if (poolIds != null && !poolIds.isEmpty()) {
-            javax.persistence.Query query = this.getEntityManager()
+            jakarta.persistence.Query query = this.getEntityManager()
                 .createNativeQuery(sql);
 
             for (List<String> block : this.partition(poolIds)) {
@@ -1717,7 +1717,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             "WHERE pool.id IN (:pool_ids)";
 
         if (poolIds != null && !poolIds.isEmpty()) {
-            javax.persistence.Query query = this.getEntityManager()
+            jakarta.persistence.Query query = this.getEntityManager()
                 .createNativeQuery(sql);
 
             for (List<String> block : this.partition(poolIds)) {
@@ -1878,7 +1878,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                 ") ec ON ec.consumer_id = ss.sourceconsumer_id AND ec.stack_id = ss.sourcestackid " +
                 "WHERE ec.entitlement_id IS NULL";
 
-            javax.persistence.Query query = this.getEntityManager()
+            jakarta.persistence.Query query = this.getEntityManager()
                 .createNativeQuery(sql)
                 .setParameter("stackid_attrib_name", Product.Attributes.STACKING_ID);
 
@@ -1892,7 +1892,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             sql += ") ec ON ec.consumer_id = ss.sourceconsumer_id AND ec.stack_id = ss.sourcestackid " +
                 "WHERE ec.entitlement_id IS NULL";
 
-            javax.persistence.Query query = this.getEntityManager()
+            jakarta.persistence.Query query = this.getEntityManager()
                 .createNativeQuery(sql)
                 .setParameter("stackid_attrib_name", Product.Attributes.STACKING_ID);
 

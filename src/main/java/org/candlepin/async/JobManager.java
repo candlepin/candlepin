@@ -81,8 +81,8 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import javax.persistence.EntityTransaction;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.PersistenceException;
 import javax.transaction.Status;
 import javax.transaction.Synchronization;
 

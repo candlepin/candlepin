@@ -22,7 +22,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.inject.Singleton;
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 /**
  * IdentityCertificateCurator

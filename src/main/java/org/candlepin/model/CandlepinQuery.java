@@ -22,7 +22,7 @@ import org.hibernate.criterion.Order;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.persistence.LockModeType;
+import jakarta.persistence.LockModeType;
 
 
 

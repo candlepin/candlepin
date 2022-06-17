@@ -35,8 +35,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import javax.persistence.PersistenceException;
-import javax.persistence.RollbackException;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.RollbackException;
 
 
 

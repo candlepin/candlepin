@@ -25,7 +25,7 @@ import java.sql.Blob;
 import java.util.Date;
 
 import javax.inject.Singleton;
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 /**
  * Provides DB management for stored manifest archive files.

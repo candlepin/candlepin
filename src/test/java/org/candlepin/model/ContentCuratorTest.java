@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 
 

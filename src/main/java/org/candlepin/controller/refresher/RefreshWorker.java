@@ -52,8 +52,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 
-import javax.persistence.EntityTransaction;
-import javax.persistence.LockModeType;
+import jakarta.persistence.EntityTransaction;
+import jakarta.persistence.LockModeType;
 
 
 

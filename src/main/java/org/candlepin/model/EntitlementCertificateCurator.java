@@ -30,7 +30,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Singleton;
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 
 
@@ -70,7 +70,7 @@ public class EntitlementCertificateCurator extends AbstractHibernateCurator<Enti
     @Transactional
     public void delete(EntitlementCertificate cert) {
         // make sure to delete it! else get ready to face
-        // javax.persistence.EntityNotFoundException('deleted entity passed to persist')
+        // jakarta.persistence.EntityNotFoundException('deleted entity passed to persist')
         cert.getEntitlement().removeCertificate(cert);
         super.delete(cert);
     }
@@ -128,7 +128,7 @@ public class EntitlementCertificateCurator extends AbstractHibernateCurator<Enti
         // If we don't set the flush mode here, we will trigger inserts on any pending new
         // entitlement certificates, on top of potentially catching certs we don't intend
         // to pick up.
-        selector.setFlushMode(javax.persistence.FlushModeType.COMMIT);
+        selector.setFlushMode(jakarta.persistence.FlushModeType.COMMIT);
 
         // Get certificate and serial IDs...
         for (List<String> block : this.partition(entitlementIds)) {

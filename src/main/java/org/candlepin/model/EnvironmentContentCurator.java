@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.inject.Singleton;
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 
 /**

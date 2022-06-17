@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.inject.Singleton;
-import javax.persistence.NoResultException;
+import jakarta.persistence.NoResultException;
 
 
 

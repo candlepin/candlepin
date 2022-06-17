@@ -46,6 +46,7 @@ import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.dialect.PostgreSQL92Dialect;
 import org.hibernate.event.service.spi.EventListenerRegistry;
@@ -70,7 +71,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import javax.cache.CacheManager;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 

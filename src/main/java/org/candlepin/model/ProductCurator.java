@@ -37,9 +37,9 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Singleton;
-import javax.persistence.Cache;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
+import org.hibernate.Cache;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 
 
 

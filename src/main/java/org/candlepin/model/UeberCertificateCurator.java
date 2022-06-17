@@ -19,7 +19,7 @@ import com.google.inject.Inject;
 import java.util.List;
 
 import javax.inject.Singleton;
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 /**
  * UeberCertificateCurator

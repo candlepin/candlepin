@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.inject.Singleton;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 /**
  * OwnerInfoCurator

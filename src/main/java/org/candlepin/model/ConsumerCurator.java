@@ -59,19 +59,19 @@ import java.util.stream.Collectors;
 
 import javax.inject.Provider;
 import javax.inject.Singleton;
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import javax.persistence.PersistenceException;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.MapJoin;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 
 
 
@@ -410,7 +410,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     public Collection<Consumer> findByUuidsAndOwner(Collection<String> uuids, String ownerId) {
         Set<Consumer> consumers = new HashSet<>();
 
-        javax.persistence.Query query = this.getEntityManager()
+        jakarta.persistence.Query query = this.getEntityManager()
             .createQuery("SELECT c FROM Consumer c WHERE c.ownerId = :oid AND c.uuid IN (:uuids)")
             .setParameter("oid", ownerId);
 
@@ -1067,7 +1067,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit());
 
             String querySql = "SELECT C.uuid FROM Consumer C WHERE C.uuid IN (:uuids)";
-            javax.persistence.Query query = this.getEntityManager().createQuery(querySql);
+            jakarta.persistence.Query query = this.getEntityManager().createQuery(querySql);
 
             for (List<String> block : Iterables.partition(consumerUuids, blockSize)) {
                 existingUuids.addAll(query.setParameter("uuids", block).getResultList());

@@ -14,6 +14,7 @@
  */
 package org.candlepin.guice;
 
+import jakarta.persistence.EntityManager;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.JobMessageDispatcher;
 import org.candlepin.async.JobMessageReceiver;
@@ -231,6 +232,7 @@ public class CandlepinModule extends AbstractModule {
 
         bind(ResolverUtil.class);
         bind(GuestMigration.class);
+        bind(EntityManager.class);
 
         // Endpoint resource
         resources();

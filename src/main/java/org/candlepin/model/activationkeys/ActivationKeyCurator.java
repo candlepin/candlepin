@@ -30,7 +30,7 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Singleton;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.TypedQuery;
 
 
 @Singleton

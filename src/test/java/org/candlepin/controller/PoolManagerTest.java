@@ -128,7 +128,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import javax.inject.Provider;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 
 

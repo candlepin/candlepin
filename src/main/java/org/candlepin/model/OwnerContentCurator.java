@@ -35,9 +35,9 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Singleton;
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+import jakarta.persistence.TypedQuery;
 
 
 
