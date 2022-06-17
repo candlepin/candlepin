@@ -66,8 +66,11 @@ libraries["jacksonJsonSchema"] = "com.fasterxml.jackson.module:jackson-module-js
 libraries["jacksonJsr310"] = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.3"
 libraries["jacksonXml"] = "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.13.3"
 libraries["jacksonYaml"] = "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.3"
+// jakarta.annotation used for candlepin server, but javax.annotation is needed for java spec tests
+// until openapi-generator's 'jaxrs-spec' generator is moved to jakarta
+// (see https://github.com/OpenAPITools/openapi-generator/issues/12603)
+libraries["jakartaAnnotation"] = "jakarta.annotation:jakarta.annotation-api:2.1.0"
 libraries["javaxAnnotation"] = "javax.annotation:javax.annotation-api:1.3.2"
-libraries["javaxCache"] = "javax.cache:cache-api:1.1.1"
 libraries["javaxRs"] = "javax.ws.rs:javax.ws.rs-api:2.1.1"
 libraries["javaxServlet"] = "javax.servlet:servlet-api:2.5"
 libraries["javaxValidation"] = "javax.validation:validation-api:2.0.1.Final"

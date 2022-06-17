@@ -118,9 +118,9 @@ dependencies {
     // com.fasterxml.jackson.module:jackson-module-jsonSchema
     implementation libraries["javaxValidation"]
 
-    // Javax
+    // Javax / Jakarta
     implementation libraries["hibernate"]
-    implementation libraries["javaxAnnotation"]
+    implementation libraries["jakartaAnnotation"]
 
     // Liquibase
     implementation libraries["liquibase"]
@@ -160,7 +160,6 @@ dependencies {
     // Ehcache (for use with hibernate primarily)
     implementation libraries["hibernateJcache"]
     implementation libraries["ehcache"]
-    implementation libraries["javaxCache"]
 
     // Artemis server & client
     implementation libraries["artemisServer"]

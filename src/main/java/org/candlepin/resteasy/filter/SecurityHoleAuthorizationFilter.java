@@ -27,7 +27,7 @@ import org.xnap.commons.i18n.I18n;
 import java.lang.reflect.Method;
 import java.util.Objects;
 
-import javax.annotation.Priority;
+import jakarta.annotation.Priority;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.ws.rs.Priorities;

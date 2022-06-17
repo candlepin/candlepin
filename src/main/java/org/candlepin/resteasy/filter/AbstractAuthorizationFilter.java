@@ -30,7 +30,7 @@ import org.xnap.commons.i18n.I18n;
 import java.io.IOException;
 import java.lang.reflect.Method;
 
-import javax.annotation.Priority;
+import jakarta.annotation.Priority;
 import javax.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Priorities;

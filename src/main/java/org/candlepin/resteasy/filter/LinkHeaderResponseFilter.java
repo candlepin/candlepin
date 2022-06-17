@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Map.Entry;
 
-import javax.annotation.Priority;
+import jakarta.annotation.Priority;
 import javax.servlet.ServletContext;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
