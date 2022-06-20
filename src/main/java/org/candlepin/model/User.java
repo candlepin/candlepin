@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.UserInfo;
 import org.candlepin.util.Util;
 
@@ -31,6 +32,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
@@ -77,20 +79,29 @@ public class User extends AbstractHibernateObject implements UserInfo {
     @NotNull
     private boolean superAdmin;
 
+    @Transient
+    private OwnerInfo primaryOwner;
+
+
     public User() {
         this.roles = new HashSet<>();
     }
 
     public User(String login, String password) {
-        this(login, password, false);
+        this(login, password, false, null);
     }
 
     public User(String login, String password, boolean superAdmin) {
+        this(login, password, superAdmin, null);
+    }
+
+    public User(String login, String password, boolean superAdmin, OwnerInfo primaryOwner) {
         this();
 
         this.username = login;
         this.hashedPassword = Util.hash(password);
         this.superAdmin = superAdmin;
+        this.primaryOwner = primaryOwner;
     }
 
     /**
@@ -221,6 +232,26 @@ public class User extends AbstractHibernateObject implements UserInfo {
      */
     public User setSuperAdmin(boolean superAdmin) {
         this.superAdmin = superAdmin;
+        return this;
+    }
+
+    /**
+     * Determines which of the owners related to this user is the designated primary
+     *
+     * @return OwnerInfo the primary owner
+     */
+    public OwnerInfo getPrimaryOwner() {
+        return this.primaryOwner;
+    }
+
+
+    /**
+     * @param primaryOwner the owner related to this user that is the designated primary
+     *
+     * @return a reference to this User
+     */
+    public User setPrimaryOwner(OwnerInfo primaryOwner) {
+        this.primaryOwner = primaryOwner;
         return this;
     }
 

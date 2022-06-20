@@ -137,6 +137,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.UserInfo;
 import org.candlepin.sync.ExportCreationException;
 import org.candlepin.util.ContentOverrideValidator;
@@ -1326,7 +1327,7 @@ public class ConsumerResource implements ConsumersApi {
      * Throws exception if the owner does not exist, or the user has more or less than 1 owner, or
      * if the user does not have permission to register on this owner.
      */
-    private Owner setupOwner(Principal principal, String ownerKey) {
+    protected Owner setupOwner(Principal principal, String ownerKey) {
         // If no owner was specified, try to assume based on which owners the principal has admin rights for.
         // If more than one, we have to error out.
 
@@ -1343,10 +1344,15 @@ public class ConsumerResource implements ConsumersApi {
             List<String> ownerKeys = ((UserPrincipal) principal).getOwnerKeys();
 
             if (ownerKeys.size() != 1) {
-                throw new BadRequestException(i18n.tr("You must specify an organization for new units."));
+                OwnerInfo primary = ((UserPrincipal) principal).getPrimaryOwner();
+                if (primary == null) {
+                    throw new BadRequestException(i18n.tr("You must specify an organization for new units."));
+                }
+                ownerKey = primary.getKey();
             }
-
-            ownerKey = ownerKeys.get(0);
+            else {
+                ownerKey = ownerKeys.get(0);
+            }
         }
 
         createOwnerIfNeeded(principal);

@@ -58,8 +58,9 @@ public abstract class UserAuth implements AuthProvider {
         // that can do permission checking without creating piles of objects that we just throw away
         // without ever using them in the general case.
         return user.isSuperAdmin() != null && user.isSuperAdmin() ?
-            new UserPrincipal(username, null, true) :
-            new UserPrincipal(username, this.permissionFactory.createUserPermissions(user), false);
+            new UserPrincipal(username, null, true, user.getPrimaryOwner()) :
+            new UserPrincipal(username, this.permissionFactory.createUserPermissions(user), false,
+                user.getPrimaryOwner());
     }
 
 }
