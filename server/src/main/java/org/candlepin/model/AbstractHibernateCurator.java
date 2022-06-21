@@ -1200,6 +1200,13 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * number of actual changes made is significant to the caller, the criteria should also include
      * the keySet from the given values.
      *
+     * @deprecated
+     *  The performance benefits this method provides have been surpassed by general improvements to
+     *  both Candlepin itself and Hibernate. While this made sense at the time it was written, it is
+     *  no longer more performant than even a simple approach of firing off several single-row
+     *  updates, and comes with a host of restrictions and gotchas. No new code should be using this
+     *  method, and existing code should be updated to drop use it as it is updated.
+     *
      * @param table
      *  The name of the table to update
      *
@@ -1216,6 +1223,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      * @return
      *  the number of rows updated as a result of this query
      */
+    @Deprecated
     protected int bulkSQLUpdate(String table, String column, Map<Object, Object> values,
         Map<String, Object> criteria) {
 
