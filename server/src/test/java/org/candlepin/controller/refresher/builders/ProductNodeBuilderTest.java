@@ -559,6 +559,60 @@ public class ProductNodeBuilderTest {
     }
 
     @Test
+    public void testBuildNodeForUpdatedEntityWithNullContent() {
+        // A null value for the provided products collection indicates "no change", which means
+        // we should fall back to the existing entity for building children nodes
+        String id = "test_id";
+
+        Owner owner = TestUtil.createOwner();
+        Product existing = TestUtil.createProduct(id, "existing");
+        Content content1 = TestUtil.createContent("c1");
+        Content content2 = TestUtil.createContent("c2");
+
+        ProductInfo imported = spy(TestUtil.createProduct(id, "imported"));
+
+        existing.addContent(content1, true);
+        existing.addContent(content2, true);
+
+        // Products can't typically return null, so we'll force it here.
+        doReturn(null).when(imported).getProductContent();
+
+        EntityNode cnode1 = this.mockEntityNode(owner, Content.class, content1.getId(), content1, null);
+        EntityNode cnode2 = this.mockEntityNode(owner, Content.class, content2.getId(), content2, null);
+
+        this.productMapper.addExistingEntity(existing);
+        this.productMapper.addImportedEntity(imported);
+
+        ProductNodeBuilder builder = this.buildNodeBuilder();
+
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
+            owner, id);
+
+        assertNotNull(output);
+        assertEquals(id, output.getEntityId());
+        assertEquals(owner, output.getOwner());
+
+        // The entity class on the node and builder should be the same, non-null value
+        assertNotNull(output.getEntityClass());
+        assertEquals(builder.getEntityClass(), output.getEntityClass());
+
+        // Check that our children content nodes were created
+        assertEquals(0, output.getParentNodes().count());
+
+        // With both an existing and imported entity, the imported entity typically has priority,
+        // but in the case of a "no change" collection, we should fall back to the existing entity's
+        // provided product collection instead
+        List<EntityNode<?, ?>> childrenNodes = output.getChildrenNodes()
+            .collect(Collectors.toList());
+
+        assertEquals(2, childrenNodes.size());
+        assertThat(childrenNodes, hasItems(cnode1, cnode2));
+
+        // Ensure that the children were created using the node factory and not an internal method
+        verify(this.mockNodeFactory, times(2)).buildNode(eq(owner), eq(Content.class), anyString());
+    }
+
+    @Test
     public void testBuildNodeForUpdatedEntityWithProvidedProducts() {
         String id = "test_id";
 
@@ -593,7 +647,7 @@ public class ProductNodeBuilderTest {
         assertNotNull(output.getEntityClass());
         assertEquals(builder.getEntityClass(), output.getEntityClass());
 
-        // Check that our children content nodes were created
+        // Check that our children product nodes were created
         assertEquals(0, output.getParentNodes().count());
 
         // With both an existing and imported entity, we expect the children on the imported entity
@@ -603,6 +657,61 @@ public class ProductNodeBuilderTest {
 
         assertEquals(2, childrenNodes.size());
         assertThat(childrenNodes, hasItems(pnode2, pnode3));
+
+        // Ensure that the children were created using the node factory and not an internal method
+        verify(this.mockNodeFactory, times(2)).buildNode(eq(owner), eq(Product.class), anyString());
+    }
+
+    @Test
+    public void testBuildNodeForUpdatedEntityWithNullProvidedProducts() {
+        // A null value for the provided products collection indicates "no change", which means
+        // we should fall back to the existing entity for building children nodes
+
+        String id = "test_id";
+
+        Owner owner = TestUtil.createOwner();
+        Product existing = TestUtil.createProduct(id, "existing");
+        Product provided1 = TestUtil.createProduct("provided1");
+        Product provided2 = TestUtil.createProduct("provided2");
+
+        ProductInfo imported = spy(TestUtil.createProduct(id, "imported"));
+
+        existing.addProvidedProduct(provided1);
+        existing.addProvidedProduct(provided2);
+
+        // Products can't typically return null, so we'll force it here.
+        doReturn(null).when(imported).getProvidedProducts();
+
+        EntityNode pnode1 = this.mockEntityNode(owner, Product.class, provided1.getId(), provided1, null);
+        EntityNode pnode2 = this.mockEntityNode(owner, Product.class, provided2.getId(), provided2, null);
+
+        this.productMapper.addExistingEntity(existing);
+        this.productMapper.addImportedEntity(imported);
+
+        ProductNodeBuilder builder = this.buildNodeBuilder();
+
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, this.productMapper,
+            owner, id);
+
+        assertNotNull(output);
+        assertEquals(id, output.getEntityId());
+        assertEquals(owner, output.getOwner());
+
+        // The entity class on the node and builder should be the same, non-null value
+        assertNotNull(output.getEntityClass());
+        assertEquals(builder.getEntityClass(), output.getEntityClass());
+
+        // Check that our children product nodes were created
+        assertEquals(0, output.getParentNodes().count());
+
+        // With both an existing and imported entity, the imported entity typically has priority,
+        // but in the case of a "no change" collection, we should fall back to the existing entity's
+        // provided product collection instead
+        List<EntityNode<?, ?>> childrenNodes = output.getChildrenNodes()
+            .collect(Collectors.toList());
+
+        assertEquals(2, childrenNodes.size());
+        assertThat(childrenNodes, hasItems(pnode1, pnode2));
 
         // Ensure that the children were created using the node factory and not an internal method
         verify(this.mockNodeFactory, times(2)).buildNode(eq(owner), eq(Product.class), anyString());
