@@ -21,7 +21,6 @@ import static org.mockito.Mockito.*;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.config.DatabaseConfigFactory;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -30,18 +29,14 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -66,13 +61,6 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
     private static class TestHibernateCurator<E extends Persisted> extends AbstractHibernateCurator<E> {
         public TestHibernateCurator(Class entityClass) {
             super(entityClass);
-        }
-
-        @Override
-        public int bulkSQLUpdate(String table, String column, Map<Object, Object> values,
-            Map<String, Object> criteria) {
-
-            return super.bulkSQLUpdate(table, column, values, criteria);
         }
 
         @Override
@@ -112,280 +100,6 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
         this.injectMembers(this.testContentCurator);
         this.injectMembers(this.testEnvironmentCurator);
         this.injectMembers(this.testOwnerProductCurator);
-    }
-
-    @Test
-    public void testBulkSQLUpdate() throws Exception {
-        Cdn c1 = this.createCdn("c1", "http://url1.com");
-        Cdn c2 = this.createCdn("c2", "http://url2.com");
-        Cdn c3 = this.createCdn("c3", "http://url3.com");
-
-        Map<Object, Object> values = new HashMap<>();
-        values.put("c1", "c1updated");
-        values.put("c2", "c2updated");
-        values.put("content ?", "should not exist");
-
-        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "name", values, null);
-
-        // Note:
-        // This looks like it should be 2, and technically that's what's happening here, but with
-        // the way the bulk updater works, even the non-matching columns are getting updated to
-        // themselves.
-        assertEquals(3, result);
-
-        this.getEntityManager().refresh(c1);
-        this.getEntityManager().refresh(c2);
-        this.getEntityManager().refresh(c3);
-
-        assertEquals("c1updated", c1.getName());
-        assertEquals("c2updated", c2.getName());
-        assertEquals("c3", c3.getName());
-    }
-
-    @Test
-    public void testBulkSQLUpdateSingleUpdate() throws Exception {
-
-        Cdn c1 = this.createCdn("c1", "http://url1.com");
-        Cdn c2 = this.createCdn("c2", "http://url2.com");
-        Cdn c3 = this.createCdn("c3", "http://url3.com");
-
-        Map<Object, Object> values = new HashMap<>();
-        values.put("http://url1.com", "http://url1Updated.com");
-
-        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "url", values, null);
-
-        assertEquals(1, result);
-
-        this.getEntityManager().refresh(c1);
-        this.getEntityManager().refresh(c2);
-        this.getEntityManager().refresh(c3);
-
-        assertEquals("http://url1Updated.com", c1.getUrl());
-        assertEquals("http://url2.com", c2.getUrl());
-        assertEquals("http://url3.com", c3.getUrl());
-    }
-
-    @Test
-    public void testBulkSQLUpdateSingleUpdateNoChange() throws Exception {
-        Cdn c1 = this.createCdn("c1", "http://url1.com");
-        Cdn c2 = this.createCdn("c2", "http://url2.com");
-        Cdn c3 = this.createCdn("c3", "http://url3.com");
-
-        Map<Object, Object> values = new HashMap<>();
-        values.put("content B", "update 1");
-
-        int result = this.cdnCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
-
-        assertEquals(0, result);
-
-        this.getEntityManager().refresh(c1);
-        this.getEntityManager().refresh(c2);
-        this.getEntityManager().refresh(c3);
-
-        assertEquals("c1", c1.getName());
-        assertEquals("c2", c2.getName());
-        assertEquals("c3", c3.getName());
-    }
-
-    @Test
-    public void testBulkSQLUpdateWithEmptyValues() throws Exception {
-        Cdn c1 = this.createCdn("c1", "http://url1.com");
-        Cdn c2 = this.createCdn("c2", "http://url2.com");
-        Cdn c3 = this.createCdn("c3", "http://url3.com");
-
-        Map<Object, Object> values = new HashMap<>();
-
-        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "name", values, null);
-
-        assertEquals(0, result);
-
-        this.getEntityManager().refresh(c1);
-        this.getEntityManager().refresh(c2);
-        this.getEntityManager().refresh(c3);
-
-        assertEquals("c1", c1.getName());
-        assertEquals("c2", c2.getName());
-        assertEquals("c3", c3.getName());
-    }
-
-    @Test
-    public void testBulkSQLUpdateWithSingleCriteria() {
-        Cdn c1 = this.createCdn("c1", "http://url1.com");
-        Cdn c2 = this.createCdn("c2", "http://url2.com");
-        Cdn c3 = this.createCdn("c3", "http://url3.com");
-
-        Map<Object, Object> values = new HashMap<>();
-        values.put("c1", "c1a");
-        values.put("c2", "c2a");
-        values.put("c4", "c4a");
-
-        Map<String, Object> criteria = new HashMap<>();
-        criteria.put("name", values.keySet());
-
-        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "name", values, criteria);
-
-        // Unlike the base test where the result count is 3, this filters by only the values we
-        // intend to update, so it should be 2.
-        assertEquals(2, result);
-
-        this.getEntityManager().refresh(c1);
-        this.getEntityManager().refresh(c2);
-        this.getEntityManager().refresh(c3);
-
-        assertEquals("c1a", c1.getName());
-        assertEquals("c2a", c2.getName());
-        assertEquals("c3", c3.getName());
-    }
-
-    @Test
-    public void testBulkSQLUpdateWithMultipleCriteria() {
-        Cdn c1 = this.createCdn("c1", "http://url1.com");
-        Cdn c2 = this.createCdn("c2", "http://url2.com");
-        Cdn c3 = this.createCdn("c3", "http://url3.com");
-
-        Map<Object, Object> values = new HashMap<>();
-        values.put("c1", "update 1");
-        values.put("c2", "update 2");
-        values.put("content ?", "should not exist");
-
-        Map<String, Object> criteria = new HashMap<>();
-        criteria.put("name", values.keySet());
-        criteria.put("id", c2.getId());
-
-        int result = this.cdnCurator.bulkSQLUpdate(Cdn.DB_TABLE, "name", values, criteria);
-
-        // Unlike the base test where the result count is 3, this filters by only the values we
-        // intend to update, so it should be 1.
-        assertEquals(1, result);
-
-        this.getEntityManager().refresh(c1);
-        this.getEntityManager().refresh(c2);
-        this.getEntityManager().refresh(c3);
-
-        assertEquals("c1", c1.getName());
-        assertEquals("update 2", c2.getName());
-        assertEquals("c3", c3.getName());
-    }
-
-    protected Stream<Object[]> largeValueSetSizes() {
-        int caseBlockSize = getConfigForParameters().getInt(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE);
-
-        return Stream.of(
-            new Object[] { (int) (caseBlockSize), 0 },
-            new Object[] { (int) (caseBlockSize + 1), 0 },
-            new Object[] { (int) (caseBlockSize * 1.5), 0 },
-            new Object[] { (int) (caseBlockSize * 1.5 + 1), 0 },
-            new Object[] { (int) (caseBlockSize * 2), 0 },
-            new Object[] { (int) (caseBlockSize * 2 + 1), 0 },
-            new Object[] { (int) (caseBlockSize * 2.5), 0 },
-            new Object[] { (int) (caseBlockSize * 2.5 + 1), 0 },
-            new Object[] { (int) (caseBlockSize * 3), 0 },
-            new Object[] { (int) (caseBlockSize * 3 + 1), 0 },
-            new Object[] { (int) (caseBlockSize * 3.5), 0 },
-            new Object[] { (int) (caseBlockSize * 3.5 + 1), 0 },
-
-            new Object[] { (int) (caseBlockSize), 1 },
-            new Object[] { (int) (caseBlockSize + 1), 1 },
-            new Object[] { (int) (caseBlockSize * 1.5), 1 },
-            new Object[] { (int) (caseBlockSize * 1.5 + 1), 1 },
-            new Object[] { (int) (caseBlockSize * 2), 1 },
-            new Object[] { (int) (caseBlockSize * 2 + 1), 1 },
-            new Object[] { (int) (caseBlockSize * 2.5), 1 },
-            new Object[] { (int) (caseBlockSize * 2.5 + 1), 1 },
-            new Object[] { (int) (caseBlockSize * 3), 1 },
-            new Object[] { (int) (caseBlockSize * 3 + 1), 1 },
-            new Object[] { (int) (caseBlockSize * 3.5), 1 },
-            new Object[] { (int) (caseBlockSize * 3.5 + 1), 1 }
-        );
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
-    @MethodSource("largeValueSetSizes")
-    public void testBulkSQLUpdateWithLargeValueSets(int count, int skip) {
-        Owner owner = this.createOwner();
-
-        for (int i = 1; i <= count; ++i) {
-            this.createContent("c" + i, "content-" + i, owner);
-        }
-
-        Map<Object, Object> values = new LinkedHashMap<>();
-
-        for (int i = 1; i <= count; ++i) {
-            // We want every odd value to be unaffected, but we still want a fake update entry
-            // for the query
-            values.put("content-" + (i % 2 == skip ? i : "X" + i), "update-" + i);
-        }
-
-        int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, null);
-        assertEquals(count, result);
-
-        testContentCurator.clear();
-
-        for (int i = 1; i <= count; ++i) {
-            Content content = this.ownerContentCurator.getContentById(owner, "c" + i);
-
-            if (i % 2 == skip) {
-                assertEquals("update-" + i, content.getName());
-            }
-            else {
-                assertEquals("content-" + i, content.getName());
-            }
-        }
-    }
-
-    protected Object[] largeValueSetAndCriteriaSizes() {
-        List<Object[]> entries = new LinkedList<>();
-
-        // Declaring these as variables because the constant names are loooooooong
-        int caseBlockSize = getConfigForParameters().getInt(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE);
-        int inBlockSize = getConfigForParameters().getInt(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE);
-
-        for (float multi = 1; multi < 4.0f; multi += 0.5) {
-            entries.add(new Object[] { (int) (caseBlockSize * multi), (int) (inBlockSize * multi) });
-            entries.add(new Object[] { (int) (caseBlockSize * multi + 1), (int) (inBlockSize * multi + 1) });
-        }
-
-        return entries.toArray();
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
-    @MethodSource("largeValueSetAndCriteriaSizes")
-    public void testBulkSQLUpdateWithLargeValueSetAndCriteriaList(int valueCount, int criteriaListSize) {
-        Owner owner = this.createOwner();
-
-        Map<Object, Object> values = new HashMap<>();
-
-        for (int i = 1; i <= valueCount; ++i) {
-            this.createContent("c" + i, "content-" + i, owner);
-
-            // We want every odd value to be unaffected, but we still want a fake update entry
-            // for the query
-            values.put("content-" + (i % 2 == 0 ? i : "X" + i), "update-" + i);
-        }
-
-        Map<String, Object> criteria = new HashMap<>();
-        List<String> valueList = new LinkedList<>();
-        criteria.put("name", valueList);
-
-        for (int i = 1; i <= criteriaListSize; ++i) {
-            valueList.add("content-" + (i % 2 == 0 ? i : "X" + i));
-        }
-
-        int result = this.testContentCurator.bulkSQLUpdate(Content.DB_TABLE, "name", values, criteria);
-        assertEquals(valueCount / 2, result);
-
-        testContentCurator.clear();
-
-        for (int i = 1; i <= valueCount; ++i) {
-            Content content = this.ownerContentCurator.getContentById(owner, "c" + i);
-
-            if (i % 2 == 0) {
-                assertEquals("update-" + i, content.getName());
-            }
-            else {
-                assertEquals("content-" + i, content.getName());
-            }
-        }
     }
 
     @Test

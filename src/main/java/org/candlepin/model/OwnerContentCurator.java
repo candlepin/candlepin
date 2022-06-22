@@ -428,46 +428,92 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             return;
         }
 
-        Session session = this.currentSession();
+        this.updateOwnerContentJoinTable(owner, contentUuidMap);
+        this.updateOwnerContentEnvironments(owner, contentUuidMap);
+    }
 
-        // FIXME: remove usage of bulkSQLUpdate. While it's a clever use of an SQL CASE to avoid
-        // a ton of individual update statements, it still runs over the parameter limit in some
-        // circumstances and the job could be better done with a temporary table and a couple
-        // join-updates.
+    /**
+     * Part of the updateOwnerContentReferences operation; updates the owner to content join table.
+     * See updateOwnerContentReferences for additional details.
+     *
+     * @param owner
+     * @param contentUuidMap
+     */
+    private void updateOwnerContentJoinTable(Owner owner, Map<String, String> contentUuidMap) {
+        String sql = "UPDATE " + OwnerContent.DB_TABLE + " SET content_uuid = :updated " +
+            "WHERE content_uuid = :current AND owner_id = :owner_id";
 
-        for (Map<String, String> block : this.partitionMap(contentUuidMap)) {
-            Map<String, Object> criteria = new HashMap<>();
-            Map<Object, Object> uuidMap = Map.class.cast(block);
-            criteria.put("content_uuid", block.keySet());
-            criteria.put("owner_id", owner.getId());
+        Query query = this.getEntityManager()
+            .createNativeQuery(sql)
+            .setParameter("owner_id", owner.getId());
 
-            // owner content
-            int count = this.bulkSQLUpdate(OwnerContent.DB_TABLE, "content_uuid", uuidMap, criteria);
-            log.info("{} owner-content relations updated", count);
+        int count = 0;
+        for (Map.Entry<String, String> entry : contentUuidMap.entrySet()) {
+            count += query.setParameter("current", entry.getKey())
+                .setParameter("updated", entry.getValue())
+                .executeUpdate();
+        }
 
-            // environment content
-            String jpql = "SELECT e.id FROM Environment e WHERE e.owner.id = :owner_id";
+        log.debug("{} owner-content relations updated", count);
+    }
 
-            List<String> envIds = this.getEntityManager()
-                .createQuery(jpql, String.class)
-                .setParameter("owner_id", owner.getId())
+    /**
+     * Part of the updateOwnerContentReferences operation; updates the owner to content join table.
+     * See updateOwnerContentReferences for additional details.
+     *
+     * @param owner
+     * @param contentUuidMap
+     */
+    private void updateOwnerContentEnvironments(Owner owner, Map<String, String> contentUuidMap) {
+        EntityManager entityManager = this.getEntityManager();
+
+        String jpql = "SELECT env.id, content.uuid FROM EnvironmentContent ec " +
+            "JOIN ec.content content " +
+            "JOIN ec.environment env " +
+            "WHERE env.owner.id = :owner_id " +
+            "  AND content.uuid IN (:content_uuids)";
+
+        Query query = entityManager.createQuery(jpql)
+            .setParameter("owner_id", owner.getId());
+
+        Map<String, Set<String>> envMap = new HashMap<>();
+        for (List<String> block : this.partition(contentUuidMap.keySet())) {
+            List<Object> rows = query.setParameter("content_uuids", block)
                 .getResultList();
 
-            count = 0;
-            if (envIds != null && !envIds.isEmpty()) {
-                for (List<String> envBlock : this.partition(envIds)) {
-                    criteria.clear();
-                    criteria.put("environment_id", envBlock);
-                    criteria.put("content_uuid", block.keySet());
+            for (Object row : rows) {
+                String envid = (String) ((Object[]) row)[0];
+                String uuid = (String) ((Object[]) row)[1];
 
-                    count += this.bulkSQLUpdate(EnvironmentContent.DB_TABLE, "content_uuid", uuidMap,
-                        criteria);
+                envMap.computeIfAbsent(uuid, key -> new HashSet<>())
+                    .add(envid);
+            }
+        }
+
+        int count = 0;
+        if (!envMap.isEmpty()) {
+            String sql = "UPDATE cp2_environment_content SET content_uuid = :updated " +
+                "WHERE environment_id = :env_id AND content_uuid = :current";
+
+            query = entityManager.createNativeQuery(sql);
+
+            for (Map.Entry<String, Set<String>> entry : envMap.entrySet()) {
+                String cUuid = entry.getKey();
+                String uUuid = contentUuidMap.get(cUuid);
+
+                query.setParameter("current", cUuid)
+                    .setParameter("updated", uUuid);
+
+                for (String envid : entry.getValue()) {
+                    count += query.setParameter("env_id", envid)
+                        .executeUpdate();
                 }
             }
-
-            log.info("{} environment-content relations updated", count);
         }
+
+        log.debug("{} environment-content relations updated", count);
     }
+
 
     /**
      * Removes the content references currently pointing to the specified content for the given
