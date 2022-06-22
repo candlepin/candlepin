@@ -15,7 +15,7 @@
 
 Name: candlepin
 Version: 4.0.18
-Release: 1%{?dist}
+Release: 2%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -233,6 +233,12 @@ fi
 
 #raw
 %changelog
+* Wed Jun 22 2022 Nikos Moumoulidis <nmoumoul@redhat.com> 4.0.18-2
+- Fix issue with owner-product mapping during refresh/import (crog@redhat.com)
+- Fixed JDBC packet size overrun in updateOwnerProductReferences
+  (crog@redhat.com)
+- Translate few strings. (jhnidek@redhat.com)
+
 * Thu Jun 02 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.18-1
 - 2084518: CertificateCleanupJob fails with foreign key constraint violation
   (wpoteat@redhat.com)
