@@ -7,17 +7,7 @@ module HostedTest
   # a lot of problems when it comes to product and content mapping. Hosted test resources should be
   # entirely upstream, and not rely on, nor require, anything downstream for proper functionality.
 
-  def is_hostedtest_alive?
-    if @@hostedtest_alive.nil?
-      begin
-        @@hostedtest_alive = @cp.get('/hostedtest/alive', {}, 'text/plain', true)
-      rescue RestClient::ResourceNotFound
-        @@hostedttest_alive = false
-      end
-    end
-    return @@hostedtest_alive
-  end
-
+  # DEPRECATED: STOP USING THESE BROKEN VERSIONS OF THE HOSTED TEST STUFF
   def create_hostedtest_subscription(owner_key, product_id, quantity=1, params={})
     provided_products = params[:provided_products] || []
     start_date = params[:start_date] || DateTime.now
@@ -62,42 +52,8 @@ module HostedTest
     if params[:derived_provided_products]
       subscription['derivedProduct']['providedProducts'] = params[:derived_provided_products].collect { |pid| {'id' => pid} }
     end
-    return @cp.post("/hostedtest/subscriptions", {}, subscription)
-  end
 
-  def update_hostedtest_subscription(subscription)
-    id = subscription.id
-    return @cp.put("/hostedtest/subscriptions/#{id}", {}, subscription)
-  end
-
-  def get_all_hostedtest_subscriptions()
-    return @cp.get('/hostedtest/subscriptions/')
-  end
-
-  def get_hostedtest_subscription(id)
-    return @cp.get("/hostedtest/subscriptions/#{id}")
-  end
-
-  def delete_hostedtest_subscription(id)
-    return @cp.delete("/hostedtest/subscriptions/#{id}", {}, nil, true)
-  end
-
-  def clear_upstream_data()
-    @cp.delete('/hostedtest', {}, nil, true)
-  end
-
-  def is_hosted?
-    if @@hosted_mode.nil?
-      @@hosted_mode = ! @cp.get_status()['standalone']
-    end
-    return @@hosted_mode
-  end
-
-  def is_standalone?
-    if @@hosted_mode.nil?
-      @@hosted_mode = ! @cp.get_status()['standalone']
-    end
-    return !@@hosted_mode
+    create_upstream_subscription(nil, owner_key, subscription)
   end
 
   def ensure_hostedtest_resource()
@@ -109,11 +65,7 @@ module HostedTest
 
   def add_batch_content_to_product(owner_key, product_id, content_ids, enabled=true)
     if is_hosted?
-      data = {}
-      content_ids.each do |id|
-        data[id] = enabled
-      end
-      @cp.post("/hostedtest/products/#{product_id}/batch_content", {}, data)
+      add_batch_content_to_product_upstream(product_id, content_ids, enabled)
     else
       @cp.add_batch_content_to_product(owner_key, product_id, content_ids, true)
     end
@@ -121,7 +73,7 @@ module HostedTest
 
   def add_content_to_product(owner_key, product_id, content_id, enabled=true)
     if is_hosted?
-      @cp.post("/hostedtest/products/#{product_id}/content/#{content_id}", {:enabled => enabled})
+      add_content_to_product_upstream(product_id, content_id, enabled)
     else
       @cp.add_content_to_product(owner_key, product_id, content_id, true)
     end
@@ -142,7 +94,7 @@ module HostedTest
       product[:relies_on] = params[:relies_on] if params[:relies_on]
       product[:providedProducts] = params[:providedProducts] if params[:providedProducts]
 
-      @cp.put("/hostedtest/products/#{product_id}", {}, product)
+      update_upstream_product(product_id, product)
     else
       @cp.update_product(owner_key, product_id, params)
     end
@@ -185,10 +137,11 @@ module HostedTest
   # Lets users be agnostic of what mode we are in, standalone or hosted.
   # if we are running in hosted mode, delete the upstream subscription and refresh pools.
   # else, simply delete the pool
+  # DEPRECATED, DO NOT CALL FOR NEW CODE
   def delete_pool_and_subscription(pool)
     if is_hosted?
       ensure_hostedtest_resource
-      delete_hostedtest_subscription(pool.subscriptionId)
+      delete_upstream_subscription(pool.subscriptionId)
       @cp.refresh_pools(pool['owner']['key'])
     else
       @cp.delete_pool(pool.id)
@@ -202,10 +155,11 @@ module HostedTest
   # to update the upstream entity.
   #
   # input is always a pool, but the out may be either a subscription or a pool
+  # DEPRECATED, DO NOT CALL FOR NEW CODE
   def get_pool_or_subscription(pool)
     if is_hosted?
       ensure_hostedtest_resource
-      return get_hostedtest_subscription(pool.subscriptionId)
+      return get_upstream_subscription(pool.subscriptionId)
     else
       return pool
     end
@@ -218,10 +172,11 @@ module HostedTest
   # to update the upstream entity.
   #
   # input may be either a subscription or a pool, and there is no output
+  # DEPRECATED, DO NOT CALL FOR NEW CODE
   def update_pool_or_subscription(subOrPool, refresh=true)
     if is_hosted?
       ensure_hostedtest_resource
-      update_hostedtest_subscription(subOrPool)
+      update_upstream_subscription(subOrPool['id'], subOrPool)
       active_on = case subOrPool.startDate
         when String then Date.strptime(subOrPool.startDate, "%Y-%m-%d")+1
         when Date then subOrPool.startDate+1
@@ -240,11 +195,12 @@ module HostedTest
   # a re-resolve of products, owners, etc.
   #
   # input is alwasy a pool, and there is no output
+  # DEPRECATED, DO NOT CALL FOR NEW CODE
   def refresh_upstream_subscription(pool)
     if is_hosted?
       ensure_hostedtest_resource
-      sub = get_hostedtest_subscription(pool.subscriptionId)
-      update_hostedtest_subscription(sub)
+      sub = get_upstream_subscription(pool.subscriptionId)
+      update_upstream_subscription(sub['id'], sub)
       @cp.refresh_pools(pool['owner']['key'])
     end
   end
@@ -253,6 +209,7 @@ module HostedTest
   # a specific subscription ID. (we often want to verify what pool was used,
   # but the pools are created indirectly after a refresh so it's hard to
   # locate a specific reference without this)
+  # DEPRECATED, DO NOT CALL FOR NEW CODE
   def find_main_pool(owner_key, sub_id, activeon=nil, return_normal)
     pools = @cp.list_owner_pools(owner_key, {:activeon => activeon})
     pools.each do |pool|
@@ -278,15 +235,37 @@ module HostedTest
     "#{prefix}#{suffix}"
   end
 
-  def cleanup_subscriptions
-    if is_hosted?
-      ensure_hostedtest_resource
-      delete_all_hostedtest_subscriptions
-    end
+  # TODO: Delete everything above this
+  ############################################################################################################
+
+  def clear_upstream_data()
+    @cp.delete('/hostedtest', {}, nil, true)
   end
 
-  # TODO: Delete everything above this
+  def is_hosted?
+    if @@hosted_mode.nil?
+      @@hosted_mode = ! @cp.get_status()['standalone']
+    end
+    return @@hosted_mode
+  end
 
+  def is_standalone?
+    if @@hosted_mode.nil?
+      @@hosted_mode = ! @cp.get_status()['standalone']
+    end
+    return !@@hosted_mode
+  end
+
+  def is_hostedtest_alive?
+    if @@hostedtest_alive.nil?
+      begin
+        @@hostedtest_alive = @cp.get('/hostedtest/alive', {}, 'text/plain', true)
+      rescue RestClient::ResourceNotFound
+        @@hostedttest_alive = false
+      end
+    end
+    return @@hostedtest_alive
+  end
 
   def create_upstream_owner(owner_key)
     owner = {
@@ -327,7 +306,10 @@ module HostedTest
       raise "Attempting to create a subscription without a product"
     end
 
-    return @cp.post('hostedtest/subscriptions', {}, subscription)
+    # TODO: We're defaulting to creating children on creation to maintain existing behavior
+    # form ancient tests. When the hosted tests are ported to Java, this behavior should not
+    # be retained as the default.
+    return @cp.post('hostedtest/subscriptions', {'create_children' => 'true'}, subscription)
   end
 
   def list_upstream_subscriptions()
@@ -356,7 +338,10 @@ module HostedTest
     # Forcefully set critical identifiers
     subscription['id'] = subscription_id
 
-    return @cp.put("/hostedtest/subscriptions/#{subscription_id}", {}, subscription)
+    # TODO: We're defaulting to creating children on creation to maintain existing behavior
+    # form ancient tests. When the hosted tests are ported to Java, this behavior should not
+    # be retained as the default.
+    return @cp.put("/hostedtest/subscriptions/#{subscription_id}", {'create_children' => 'true'}, subscription)
   end
 
   def delete_upstream_subscription(subscription_id)
@@ -496,6 +481,7 @@ module HostedTest
     content_ids.each do |id|
       data[id] = enabled
     end
+
     @cp.post("/hostedtest/products/#{product_id}/content", {}, data)
   end
 
