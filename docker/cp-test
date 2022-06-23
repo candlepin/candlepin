@@ -487,6 +487,7 @@ if [ "$DEPLOY" == "1" ]; then
     # We generate custom.yaml to enable the
     # cloud auth property.
     # This is valid only for hosted mode.
+
     if [ "$CLOUD_AUTH_SPEC" == "1" ] && [ "$HOSTED" == "1" ]; then
         if [ "$CP_NEW_STRUCTURE" == false ]; then
             python $PROJECT_DIR/bin/generate_custom_yaml.py $PROJECT_DIR

@@ -1,5 +1,5 @@
 FROM $INTERNAL_REGISTRY/centos:7
-MAINTAINER Nikos Moumoulidis <nmoumoul@redhat.com>
+LABEL author="Nikos Moumoulidis <nmoumoul@redhat.com>"
 
 ENV LANG en_US.UTF-8
 

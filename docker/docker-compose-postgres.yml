@@ -9,7 +9,7 @@ services:
       POSTGRES_DB: candlepin
       POSTGRES_HOST_AUTH_METHOD: trust
   candlepin:
-    image: ${REGISTRY}/candlepin-base
+    image: ${REGISTRY}/candlepin-base-cs8
     environment:
       USING_POSTGRES: "true"
       DBHOSTNAME: db
