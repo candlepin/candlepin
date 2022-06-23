@@ -131,6 +131,8 @@ public class OwnerManager {
             }
         }
 
+        this.consumerCurator.flush();
+
         for (ActivationKey key : activationKeyCurator.listByOwner(owner)) {
             log.info("Deleting activation key: {}", key);
             activationKeyCurator.delete(key);
