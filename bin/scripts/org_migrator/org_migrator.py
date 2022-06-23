@@ -18,6 +18,9 @@ import cp_connectors as cp
 LOGLVL_TRACE = 5
 logging.addLevelName(LOGLVL_TRACE, 'TRACE')
 
+IN_OPERATOR_LIMIT = 10000
+
+
 def build_logger(name, msg_format):
     """Builds and configures our logger"""
 
@@ -108,8 +111,11 @@ def validate_column_names(table, columns):
 def boolean_converter(columns, chain=None):
     def convert_row(col_names, row):
         for col in columns:
-            idx = col_names.index(col)
-            row[idx] = bool(row[idx])
+            try:
+                idx = col_names.index(col)
+                row[idx] = bool(row[idx])
+            except ValueError:
+                pass
 
         if callable(chain):
             row = chain(col_names, row)
@@ -130,6 +136,49 @@ def base64_decoder(columns, chain=None):
         return row
     return decode_row
 
+def fetch_product_uuids(db, org_id):
+    """Fetches all of the product UUIDs referenced by the given organization, mapped to their relative priority"""
+
+    # Impl note: since we store the fetched UUIDs in a map, we're implicitly deduplicating at the
+    # logic layer, so it's not critical we only select distinct UUIDs with these queries. Further,
+    # our second query must be partitioned and repeatedly executed, eliminating the value of any
+    # DB-level deduplication feature anyway.
+    product_uuid_query = 'SELECT op.product_uuid FROM cp2_owner_products op WHERE op.owner_id = %s ' + \
+        'UNION ' + \
+        'SELECT pool.product_uuid FROM cp_pool pool WHERE pool.owner_id = %s ' + \
+        'UNION ' + \
+        'SELECT akp.product_uuid FROM cp_activation_key ak JOIN cp2_activation_key_products akp ON akp.key_id = ak.id WHERE ak.owner_id = %s'
+
+    children_uuid_query = 'SELECT p.derived_product_uuid AS product_uuid FROM cp2_products p WHERE p.derived_product_uuid IS NOT NULL AND p.uuid IN (%s) ' + \
+        'UNION ' + \
+        'SELECT pp.provided_product_uuid AS product_uuid FROM cp2_product_provided_products pp WHERE pp.product_uuid IN (%s)'
+
+    def process_cursor(cursor, uuids, children_uuids, tier):
+        for row in cursor:
+            uuids[row[0]] = tier
+            children_uuids.append(row[0])
+
+    uuids = {}
+    children_uuids = []
+    tier = 0
+
+    # Fetch top-level product UUIDs
+    with db.execQuery(product_uuid_query, (org_id, org_id, org_id)) as cursor:
+        process_cursor(cursor, uuids, children_uuids, tier)
+
+    # Fetch children UUIDs
+    while children_uuids:
+        # We have to partition this to avoid hitting the IN-operator size limit
+        block_size = IN_OPERATOR_LIMIT // 2
+        partitioned = [children_uuids[i:i + block_size] for i in range(0, len(children_uuids), block_size)]
+        children_uuids = []
+        tier = tier + 1
+
+        for block in partitioned:
+            with db.execQuery(children_uuid_query, (block, block)) as cursor:
+                process_cursor(cursor, uuids, children_uuids, tier)
+
+    return uuids
 
 
 class ModelManager(object):
@@ -143,10 +192,10 @@ class ModelManager(object):
         self._exported = False
 
     def do_export(self):
-        raise NotImplementedError("Not yet implemented")
+        raise NotImplementedError("Not yet implemented: %s.do_export" % (type(self).__name__))
 
     def do_import(self):
-        raise NotImplementedError("Not yet implemented")
+        raise NotImplementedError("Not yet implemented: %s.do_import" % (type(self).__name__))
 
     def depends_on(self):
         return []
@@ -179,6 +228,31 @@ class ModelManager(object):
     def _export_query(self, file, table, query, params=()):
         with self.db.execQuery(query, params) as cursor:
             self._write_cursor_to_json(file, table, cursor)
+
+    def _export_partitioned_query(self, file, table, query, plist, block_size=IN_OPERATOR_LIMIT, sort=None):
+        """
+        Exports the result of a query to the specified file. The query must have a single parameter,
+        and it must be the right operand of an IN operator.
+        """
+
+        output = {
+            'table':        table,
+            'columns':      [],
+            'column_types': [],
+            'rows':         []
+        }
+
+        for block in [plist[i:i + block_size] for i in range(0, len(plist), block_size)]:
+            with self.db.execQuery(query, (block,)) as cursor:
+                output['columns'] = get_cursor_columns(self.db, cursor)
+                output['column_types'] = get_cursor_column_types(self.db, cursor),
+                output['rows'].extend(cursor)
+
+        if callable(sort):
+            sort(output['rows'])
+
+        self.archive.writestr('{table}.json'.format(table=output['table']), jsonify(output))
+        log.debug('Exported %d rows for table: %s', len(output['rows']), table)
 
     def _bulk_insert(self, table, columns, rows, row_hook=None):
         validate_column_names(table, columns)
@@ -300,32 +374,47 @@ class ContentManager(ModelManager):
         if self.exported:
             return True
 
-        content_query = 'SELECT DISTINCT * FROM ' + \
-            '(SELECT c.* FROM cp2_content c ' + \
-            'JOIN cp2_owner_content oc ON oc.content_uuid = c.uuid AND oc.owner_id = %s ' + \
-            'UNION ' + \
-            'SELECT c.* FROM cp2_content c ' + \
-            'JOIN cp2_product_content pc ON pc.content_uuid = c.uuid  ' + \
-            'JOIN cp2_owner_products op ON op.product_uuid = pc.product_uuid AND op.owner_id = %s ' + \
-            'UNION ' + \
-            'SELECT c.* FROM cp2_content c ' + \
-            'JOIN cp2_environment_content ec ON ec.content_uuid = c.uuid ' + \
-            'JOIN cp_environment e ON ec.environment_id = e.id AND e.owner_id = %s) AS content'
+        # Due to the recursive nature of products in 4.0+, content must first be identified by UUID
+        # from the various places it could be referenced (even if those references are outside of the
+        # target org), and then fetched via UUID as a partitioned query
 
-        cmp_query = 'SELECT DISTINCT * FROM ' + \
-            '(SELECT cmp.* FROM cp2_content_modified_products cmp ' + \
-            'JOIN cp2_owner_content oc ON oc.content_uuid = cmp.content_uuid AND oc.owner_id = %s ' + \
-            'UNION ' + \
-            'SELECT cmp.* FROM cp2_content_modified_products cmp ' + \
-            'JOIN cp2_product_content pc ON pc.content_uuid = cmp.content_uuid  ' + \
-            'JOIN cp2_owner_products op ON op.product_uuid = pc.product_uuid AND op.owner_id = %s ' + \
-            'UNION ' + \
-            'SELECT cmp.* FROM cp2_content_modified_products cmp ' + \
-            'JOIN cp2_environment_content ec ON ec.content_uuid = cmp.content_uuid ' + \
-            'JOIN cp_environment e ON ec.environment_id = e.id AND e.owner_id = %s) AS content'
+        # Content references references:
+        #   - cp2_environment_content.content_uuid
+        #   - cp2_owner_products.content_uuid
+        #   - cp2_product_content.content_uuid
+        #
+        # Product tables
+        # - cp2_content
+        # - cp2_content_modified_products
 
-        self._export_query('cp2_content.json', 'cp2_content', content_query, (self.org_id, self.org_id, self.org_id,))
-        self._export_query('cp2_content_modified_products.json', 'cp2_content_modified_products', cmp_query, (self.org_id, self.org_id, self.org_id,))
+        content_uuids = set()
+
+        content_uuid_query1 = 'SELECT oc.content_uuid FROM cp2_owner_content oc WHERE oc.owner_id = %s' + \
+            'UNION ' + \
+            'SELECT ec.content_uuid FROM cp2_environment_content ec JOIN cp_environment e on e.id = ec.environment_id WHERE e.owner_id = %s'
+
+        content_uuid_query2 = 'SELECT pc.content_uuid FROM cp2_product_content pc WHERE pc.product_uuid IN (%s)'
+
+        # Pull content UUIDs from referencing tables
+        with self.db.execQuery(content_uuid_query1, (self.org_id, self.org_id)) as cursor:
+            for row in cursor:
+                content_uuids.add(row[0])
+
+        product_uuids = list(fetch_product_uuids(self.db, self.org_id).keys())
+        block_size = IN_OPERATOR_LIMIT
+        for block in [product_uuids[i:i + block_size] for i in range(0, len(product_uuids), block_size)]:
+            with self.db.execQuery(content_uuid_query2, (block,)) as cursor:
+                for row in cursor:
+                    content_uuids.add(row[0])
+
+        # Convert UUID set to a list so we can chunk it properly
+        content_uuids = list(content_uuids)
+
+        # Export content for fetched UUIDs
+        self._export_partitioned_query('cp2_content.json', 'cp2_content', 'SELECT c.* FROM cp2_content c WHERE c.uuid IN (%s)', content_uuids)
+        self._export_partitioned_query('cp2_content_modified_products.json', 'cp2_content_modified_products', 'SELECT cmp.* FROM cp2_content_modified_products cmp WHERE cmp.content_uuid IN (%s)', content_uuids)
+
+        # Export owner-content mapping
         self._export_query('cp2_owner_content.json', 'cp2_owner_content', 'SELECT * FROM cp2_owner_content WHERE owner_id=%s', (self.org_id,))
 
         self._exported = True
@@ -336,8 +425,8 @@ class ContentManager(ModelManager):
             return True
 
         result = self._import_json('cp2_content.json')
-        result = result and self._import_json('cp2_owner_content.json')
         result = result and self._import_json('cp2_content_modified_products.json')
+        result = result and self._import_json('cp2_owner_content.json')
 
         self._imported = result
         return result
@@ -355,56 +444,45 @@ class ProductManager(ModelManager):
         if self.exported:
             return True
 
-        # Product exporting is recursive as of CP4.0, due to the derived mapping. We can skip it for the
-        # provided product mapping, since that's a separate table which we can populate last, but derived
-        # products force us to pull product info in the order in which it is referenced.
-        with self.db.execQuery('SELECT p.* FROM cp2_products p JOIN cp2_owner_products op ON op.product_uuid = p.uuid WHERE op.owner_id = %s', (self.org_id,)) as cursor:
-            columns = get_cursor_columns(self.db, cursor)
-            column_types = get_cursor_column_types(self.db, cursor)
+        # Due to various bugs or bad database linkage, products can come from a number of places (listed
+        # below). Due to this, we need to check all of these places for references within the org, and
+        # then recursively sift through the products we've pulled to check for children products
+        #
+        # Product references:
+        #   - cp2_activation_key_products.product_uuid
+        #   - cp2_owner_products.product_uuid
+        #   - cp_pool.product_uuid
+        #
+        # Recursive references:
+        #   - cp2_products.derived_product_uuid
+        #   - cp2_product_provided_products.provided_product_uuid
+        #
+        # Product tables
+        # - cp2_products
+        # - cp2_product_dependent_products
+        # - cp2_product_attributes
+        # - cp2_product_branding
+        # - cp2_product_certificates
+        # - cp2_product_content
+        # - cp2_product_provided_products
 
-            uuid_idx = columns.index('uuid')
-            derived_uuid_idx = columns.index('derived_product_uuid')
+        # Fetch product UUIDs
+        uuid_map = fetch_product_uuids(self.db, self.org_id)
+        product_uuids = list(uuid_map.keys())
 
-            products = { row[uuid_idx]: row for row in cursor }
-
-        ordered = []
-        insertion_order = {}
-
-        def insert_row(row):
-            if row[uuid_idx] in insertion_order:
-                # Row already inserted; skip it
-                return
-
-            if row[derived_uuid_idx] is not None:
-                child_row = products[row[derived_uuid_idx]]
-
-                if child_row is None:
-                    raise Exception("Malformed product definition: product '%s' references non-existent or non-owner product '%s'" % (row[uuid_idx], row[derived_uuid_idx]))
-
-                insert_row(child_row)
-
-            ordered.append(row)
-            insertion_order[row[uuid_idx]] = len(ordered)
-
-        for key, row in products.items():
-            insert_row(row)
-
-        output = {
-            'table':        'cp2_products',
-            'columns':      columns,
-            'column_types': column_types,
-            'rows':         ordered
-        }
-
-        self.archive.writestr('{table}.json'.format(table=output['table']), jsonify(output))
+        # Fetch actual products from our UUID collection
+        # self._export_partitioned_query('cp2_products.json', 'cp2_products', 'SELECT * FROM cp2_products WHERE uuid IN (%s)', product_uuids, IN_OPERATOR_LIMIT, lambda products: log.debug("Products? %s" % (products,)))
+        self._export_partitioned_query('cp2_products.json', 'cp2_products', 'SELECT * FROM cp2_products WHERE uuid IN (%s)', product_uuids, IN_OPERATOR_LIMIT, lambda products: products.sort(reverse=True, key=lambda product: uuid_map[product[0]]))
 
         # Grab ancillary product tables
-        self._export_query('cp2_product_attributes.json', 'cp2_product_attributes', 'SELECT pa.* FROM cp2_product_attributes pa JOIN cp2_owner_products op ON op.product_uuid = pa.product_uuid WHERE op.owner_id = %s', (self.org_id,))
-        self._export_query('cp2_product_certificates.json', 'cp2_product_certificates', 'SELECT pc.* FROM cp2_product_certificates pc JOIN cp2_owner_products op ON op.product_uuid = pc.product_uuid WHERE op.owner_id = %s', (self.org_id,))
-        self._export_query('cp2_product_content.json', 'cp2_product_content', 'SELECT pc.* FROM cp2_product_content pc JOIN cp2_owner_products op ON op.product_uuid = pc.product_uuid WHERE op.owner_id = %s', (self.org_id,))
+        self._export_partitioned_query('cp2_product_attributes.json', 'cp2_product_attributes', 'SELECT pa.* FROM cp2_product_attributes pa WHERE pa.product_uuid IN (%s)', product_uuids)
+        self._export_partitioned_query('cp2_product_certificates.json', 'cp2_product_certificates', 'SELECT pc.* FROM cp2_product_certificates pc WHERE pc.product_uuid IN (%s)', product_uuids)
+        self._export_partitioned_query('cp2_product_content.json', 'cp2_product_content', 'SELECT pc.* FROM cp2_product_content pc WHERE pc.product_uuid IN (%s)', product_uuids)
+        self._export_partitioned_query('cp2_product_branding.json', 'cp2_product_branding', 'SELECT pb.* FROM cp2_product_branding pb WHERE pb.product_uuid IN (%s)', product_uuids)
+        self._export_partitioned_query('cp2_product_provided_products.json', 'cp2_product_provided_products', 'SELECT ppp.* FROM cp2_product_provided_products ppp WHERE ppp.product_uuid IN (%s)', product_uuids)
+
+        # Grab owner-product mappings
         self._export_query('cp2_owner_products.json', 'cp2_owner_products', 'SELECT * FROM cp2_owner_products WHERE owner_id=%s', (self.org_id,))
-        self._export_query('cp2_product_branding.json', 'cp2_product_branding', 'SELECT pb.* FROM cp2_product_branding pb JOIN cp2_owner_products op ON op.product_uuid = pb.product_uuid WHERE op.owner_id = %s', (self.org_id,))
-        self._export_query('cp2_product_provided_products.json', 'cp2_product_provided_products', 'SELECT ppp.* FROM cp2_product_provided_products ppp JOIN cp2_owner_products op ON op.product_uuid = ppp.product_uuid WHERE op.owner_id = %s', (self.org_id,))
 
         self._exported = True
         return True
@@ -439,7 +517,6 @@ class EnvironmentManager(ModelManager):
 
         self._export_query('cp_environment.json', 'cp_environment', 'SELECT * FROM cp_environment WHERE owner_id=%s', (self.org_id,))
         self._export_query('cp2_environment_content.json', 'cp2_environment_content', 'SELECT ec.* FROM cp2_environment_content ec JOIN cp_environment e ON ec.environment_id = e.id WHERE e.owner_id=%s', (self.org_id,))
-        self._export_query('cp_owner_env_content_access.json', 'cp_owner_env_content_access', 'SELECT eca.* FROM cp_owner_env_content_access eca JOIN cp_environment e ON eca.environment_id = e.id WHERE e.owner_id=%s', (self.org_id,))
 
         self._exported = True
         return True
@@ -450,7 +527,6 @@ class EnvironmentManager(ModelManager):
 
         result = self._import_json('cp_environment.json')
         result = result and self._import_json('cp2_environment_content.json')
-        result = result and self._import_json('cp_owner_env_content_access.json')
 
         self._imported = result
         return result
@@ -958,16 +1034,17 @@ def main():
             with (db.start_transaction(readonly=False)) as transaction:
                 if importer.execute():
                     transaction.commit()
-                    log.info('Task complete! Shutting down...')
+                    log.info('Import from file \'%s\' completed successfully', options.file)
                 else:
                     transaction.rollback()
-                    log.error("Import task failed. Shutting down...")
+                    log.error("Import task failed.")
 
         elif options.act_export:
-            org_id = resolve_org(db, args[0])
+            org_key = args[0]
+            org_id = resolve_org(db, org_key)
 
             if org_id is not None:
-                log.info('Resolved org "%s" to org ID: %s', args[0], org_id)
+                log.info('Resolved org "%s" to org ID: %s', org_key, org_id)
 
                 exporter = OrgExporter(db, options.file, org_id, False)
 
@@ -975,12 +1052,12 @@ def main():
                 with(db.start_transaction(readonly=True)) as transaction:
                     if exporter.execute():
                         transaction.commit()
-                        log.info('Task complete! Shutting down...')
+                        log.info('Data for organization \'%s\' successfully exported to file: %s', org_key, options.file)
                     else:
                         transaction.rollback()
-                        log.error("Import task failed. Shutting down...")
+                        log.error("Export task failed.")
             else:
-                log.error("No such org: %s", args[0])
+                log.error("Export failed; No such org: %s", org_key)
 
         elif options.act_list:
             print("Available orgs: %s" % (list_orgs(db)))
