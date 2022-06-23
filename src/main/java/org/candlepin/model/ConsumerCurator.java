@@ -30,16 +30,17 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
-import org.hibernate.Query;
 import org.hibernate.ReplicationMode;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -179,8 +180,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     @Inject private EntitlementCurator entitlementCurator;
     @Inject private ConsumerTypeCurator consumerTypeCurator;
+    @Inject private ContentAccessCertificateCurator contentAccessCertificateCurator;
+    @Inject private CertificateSerialCurator certificateSerialCurator;
     @Inject private DeletedConsumerCurator deletedConsumerCurator;
     @Inject private FactValidator factValidator;
+    @Inject private IdentityCertificateCurator identityCertificateCurator;
+
     @Inject private Provider<HostCache> cachedHostsProvider;
     @Inject private PrincipalProvider principalProvider;
 
@@ -1002,6 +1007,154 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
+     * Retrieves the identity Certificate ids for the provided consumer ids.
+     *
+     * @param consumerIds - ids of the {@link Consumer}s.
+     * @return identity Certificate ids.
+     */
+    public List<String> getIdentityCertIds(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String retrieveIdCertsHql = "SELECT idCert.id FROM Consumer WHERE id IN (:consumerIds)";
+        List<String> idCertIds = entityManager.get()
+            .createQuery(retrieveIdCertsHql)
+            .setParameter("consumerIds", consumerIds)
+            .getResultList();
+
+        return idCertIds.stream()
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves the content access certificate ids for provided consumer ids.
+     *
+     * @param consumerIds - ids of the {@link Consumer}s.
+     * @return content access certificate ids.
+     */
+    public List<String> getContentAccessCertIds(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        String retrieveScaCertsHql = "SELECT contentAccessCert.id FROM Consumer WHERE id IN (:consumerIds)";
+        List<String> caCertIds = entityManager.get()
+            .createQuery(retrieveScaCertsHql)
+            .setParameter("consumerIds", consumerIds)
+            .getResultList();
+
+        return caCertIds.stream()
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * Retrieves all the serial ids for provided {@link ContentAccessCertificate} ids
+     * and {@link IdentityCertificate} ids.
+     *
+     * @param caCertIds - ids of content access certificates.
+     * @param idCertIds - ids of identity certificates.
+     * @return serial ids.
+     */
+    public List<Long> getSerialIdsForCerts(Collection<String> caCertIds, Collection<String> idCertIds) {
+        List<Long> serialIds = new ArrayList<>();
+        if (caCertIds != null && !caCertIds.isEmpty()) {
+            String caCertHql =
+                "SELECT ca.serial.id " +
+                "FROM ContentAccessCertificate ca " +
+                "WHERE ca.id IN (:certIds)";
+
+            List<Long> caCertSerialIds = entityManager.get()
+                .createQuery(caCertHql)
+                .setParameter("certIds", caCertIds)
+                .getResultList();
+
+            serialIds.addAll(caCertSerialIds.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()));
+        }
+
+        if (idCertIds != null && !idCertIds.isEmpty()) {
+            String idCertHql =
+                "SELECT idcert.serial.id " +
+                "FROM IdentityCertificate idcert " +
+                "WHERE idcert.id IN (:certIds)";
+
+            List<Long> idCertSerialIds = entityManager.get()
+                .createQuery(idCertHql)
+                .setParameter("certIds", idCertIds)
+                .getResultList();
+
+            serialIds.addAll(idCertSerialIds.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()));
+        }
+
+        return serialIds;
+    }
+
+    /**
+     * Deletes {@link Consumer}s based on the provided consumer ids.
+     *
+     * @param consumerIds - ids of the consumers to delete.
+     * @return the number of consumer that were deleted.
+     */
+    public int deleteConsumers(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return 0;
+        }
+
+        entityManager.get()
+            .createQuery("DELETE Consumer WHERE id IN (:consumerIds)")
+            .setParameter("consumerIds", consumerIds)
+            .executeUpdate();
+
+        return consumerIds.size();
+    }
+
+    /**
+     * Retrieves the Ids for inactive {@link Consumer}s based on the provided last checked in retention
+     * date and the last updated retention date. Consumers are considered inactive if the have a checked
+     * in date and that date is older than the provided checked in retention date, or the consumer's update
+     * date is older than the provided last update retention date. Also, the consumer must not have any
+     * attached entitlements and must have a non-manifest type to be considered inactive.
+     *
+     * @param lastCheckedInRetention
+     *  - consumers that have not checked in before this date are considered inactive.
+     * @param lastUpdatedRetention
+     *  - if the consumer has no checked in date, then the consumers that have an update date older than
+     *    the provided retention date is considered inactive.
+     * @return a list of Ids for inactive {@link Consumer}s.
+     */
+    public List<String> getInactiveConsumerIds(Instant lastCheckedInRetention, Instant lastUpdatedRetention) {
+        if (lastCheckedInRetention == null) {
+            throw new IllegalArgumentException("Last checked-in retention date cannot be null.");
+        }
+
+        if (lastUpdatedRetention == null) {
+            throw new IllegalArgumentException("Last updated retention date cannot be null.");
+        }
+
+        String hql =
+            "SELECT consumer.id " +
+            "FROM Consumer consumer " +
+            "JOIN ConsumerType type ON type.id=consumer.typeId " +
+            "LEFT JOIN Entitlement ent ON ent.consumer.id=consumer.id " +
+            "WHERE ((consumer.lastCheckin < :lastCheckedInRetention) " +
+            "    OR (consumer.lastCheckin IS NULL AND consumer.updated < :nonCheckedInRetention)) " +
+            "AND ent.consumer.id IS NULL " +
+            "AND type.manifest = 'N'";
+
+        return entityManager.get()
+            .createQuery(hql)
+            .setParameter("lastCheckedInRetention", Date.from(lastCheckedInRetention))
+            .setParameter("nonCheckedInRetention", Date.from(lastUpdatedRetention))
+            .getResultList();
+    }
+
+    /**
      * @param hypervisorIds list of unique hypervisor identifiers
      * @param ownerId Org namespace to search
      * @return Consumer that matches the given
@@ -1602,5 +1755,4 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         return updated;
     }
-
 }

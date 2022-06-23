@@ -14,11 +14,17 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.auth.Principal;
+import org.candlepin.guice.PrincipalProvider;
+
+import com.google.inject.Inject;
+
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
+import java.util.Collection;
 import java.util.Date;
 
 import javax.inject.Singleton;
@@ -30,6 +36,8 @@ import javax.inject.Singleton;
  */
 @Singleton
 public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedConsumer> {
+
+    @Inject private PrincipalProvider principalProvider;
 
     public DeletedConsumerCurator() {
         super(DeletedConsumer.class);
@@ -66,6 +74,28 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
         return ((Long) currentSession().createCriteria(DeletedConsumer.class)
             .add(Restrictions.eq("consumerUuid", uuid))
             .setProjection(Projections.rowCount()).uniqueResult()).intValue();
+    }
+
+    public int createDeletedConsumers(Collection<String> consumerIds) {
+        if (consumerIds == null || consumerIds.isEmpty()) {
+            return 0;
+        }
+
+        Principal principal = this.principalProvider.get();
+        String deletedConsumersStatement =
+            "INSERT INTO DeletedConsumer (id, created, updated, consumerUuid, ownerId, " +
+            "ownerDisplayName, ownerKey, principalName, consumerName) " +
+            "SELECT consumer.id, NOW(), NOW(), consumer.uuid, consumer.ownerId, owner.displayName, " +
+            "owner.key, :principalName, consumer.name " +
+            "FROM Consumer consumer " +
+            "JOIN Owner owner on owner.id=consumer.ownerId " +
+            "WHERE consumer.id IN (:consumerIds)";
+
+        return entityManager.get()
+            .createQuery(deletedConsumersStatement)
+            .setParameter("principalName", principal == null ? null : principal.getName())
+            .setParameter("consumerIds", consumerIds)
+            .executeUpdate();
     }
 
     @SuppressWarnings("unchecked")

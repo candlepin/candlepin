@@ -23,6 +23,8 @@ import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
+import java.time.OffsetDateTime;
+
 public final class Consumers {
 
     private Consumers() {
@@ -42,6 +44,8 @@ public final class Consumers {
 
         private String name = null;
         private NestedOwnerDTO owner = null;
+        private ConsumerTypeDTO type = null;
+        private OffsetDateTime lastCheckin = null;
 
         public Builder withName(String name) {
             this.name = name;
@@ -53,8 +57,18 @@ public final class Consumers {
             return this;
         }
 
+        public Builder withType(ConsumerTypeDTO type) {
+            this.type = type;
+            return this;
+        }
+
         public Builder withOwner(OwnerDTO owner) {
             this.owner = Owners.toNested(owner);
+            return this;
+        }
+
+        public Builder withLastCheckin(OffsetDateTime lastCheckin) {
+            this.lastCheckin = lastCheckin;
             return this;
         }
 
@@ -64,9 +78,19 @@ public final class Consumers {
             if (this.owner != null) {
                 consumer.setOwner(this.owner);
             }
-            ConsumerTypeDTO type = new ConsumerTypeDTO();
-            type.label("system");
-            consumer.type(type);
+            if (this.type != null) {
+                consumer.setType(this.type);
+            }
+            else {
+                ConsumerTypeDTO type = new ConsumerTypeDTO();
+                type.label("system");
+                consumer.type(type);
+            }
+
+            if (lastCheckin != null) {
+                consumer.setLastCheckin(this.lastCheckin);
+            }
+
             consumer.putFactsItem("system.certificate_version", "3.3");
             // TODO: fill in rest of the data
             return consumer;

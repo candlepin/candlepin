@@ -46,6 +46,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
@@ -141,6 +142,7 @@ public class DatabaseTestFixture {
     @Inject protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Inject protected CertificateSerialCurator certSerialCurator;
     @Inject protected ContentCurator contentCurator;
+    @Inject protected DeletedConsumerCurator deletedConsumerCurator;
     @Inject protected EntitlementCurator entitlementCurator;
     @Inject protected EntitlementCertificateCurator entitlementCertificateCurator;
     @Inject protected EnvironmentCurator environmentCurator;

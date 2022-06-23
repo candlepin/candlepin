@@ -21,6 +21,7 @@ import org.candlepin.async.tasks.ActiveEntitlementJob;
 import org.candlepin.async.tasks.CertificateCleanupJob;
 import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
 import org.candlepin.async.tasks.ImportRecordCleanerJob;
+import org.candlepin.async.tasks.InactiveConsumerCleanerJob;
 import org.candlepin.async.tasks.JobCleaner;
 import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.async.tasks.OrphanCleanupJob;
@@ -282,7 +283,8 @@ public class ConfigProperties {
         JobCleaner.JOB_KEY,
         ManifestCleanerJob.JOB_KEY,
         OrphanCleanupJob.JOB_KEY,
-        UnmappedGuestEntitlementCleanerJob.JOB_KEY
+        UnmappedGuestEntitlementCleanerJob.JOB_KEY,
+        InactiveConsumerCleanerJob.JOB_KEY
     };
 
     // How long (in seconds) to wait for job threads to finish during a graceful Tomcat shutdown
@@ -489,6 +491,8 @@ public class ConfigProperties {
                 OrphanCleanupJob.DEFAULT_SCHEDULE);
             this.put(jobConfig(UnmappedGuestEntitlementCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 UnmappedGuestEntitlementCleanerJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(InactiveConsumerCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                ConfigProperties.ASYNC_JOBS_MANUAL_SCHEDULE);
 
             // Set the triggerable jobs list
             this.put(ASYNC_JOBS_TRIGGERABLE_JOBS, String.join(", ", ASYNC_JOBS_TRIGGERABLE_JOBS_LIST));
@@ -496,5 +500,4 @@ public class ConfigProperties {
             this.put(ORPHANED_ENTITY_GRACE_PERIOD, "30");
         }
     };
-
 }

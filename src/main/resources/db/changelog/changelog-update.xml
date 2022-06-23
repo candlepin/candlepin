@@ -175,4 +175,5 @@
     <include file="db/changelog/20220420165513-drop_pool_derived_product_constraint.xml"/>
     <include file="db/changelog/20220517162755-add_owner_product_orphaned_date.xml"/>
     <include file="db/changelog/20220621122940-add_pool_product_index.xml"/>
+    <include file="db/changelog/20220613000000-add_delete_cascade_to_consumer_fks.xml"/>
 </databaseChangeLog>

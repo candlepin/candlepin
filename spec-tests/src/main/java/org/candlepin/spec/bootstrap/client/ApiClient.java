@@ -19,7 +19,11 @@ import org.candlepin.resource.ActivationKeyApi;
 import org.candlepin.resource.AdminApi;
 import org.candlepin.resource.CdnApi;
 import org.candlepin.resource.ConsumerTypeApi;
+import org.candlepin.resource.DeletedConsumerApi;
+import org.candlepin.resource.EntitlementsApi;
+import org.candlepin.resource.JobsApi;
 import org.candlepin.resource.OwnerApi;
+import org.candlepin.resource.OwnerProductApi;
 import org.candlepin.resource.PoolsApi;
 import org.candlepin.resource.ProductsApi;
 import org.candlepin.resource.RolesApi;
@@ -65,6 +69,10 @@ public class ApiClient {
         return new ConsumerAPI(this.client, MAPPER);
     }
 
+    public DeletedConsumerApi deletedConsumers() {
+        return new DeletedConsumerApi(this.client);
+    }
+
     public ConsumerTypeApi consumerTypes() {
         return new ConsumerTypeApi(this.client);
     }
@@ -95,6 +103,18 @@ public class ApiClient {
 
     public UsersApi users() {
         return new UsersApi(this.client);
+    }
+
+    public OwnerProductApi ownerProducts() {
+        return new OwnerProductApi(this.client);
+    }
+
+    public EntitlementsApi entitlements() {
+        return new EntitlementsApi(this.client);
+    }
+
+    public JobsApi jobs() {
+        return new JobsApi(this.client);
     }
 
 }

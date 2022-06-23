@@ -2842,7 +2842,7 @@ paths:
     get:
       description: Retrieves a list of deleted consumers by deletion date or all. List returned is the deleted Consumers.
       tags:
-        - Consumer
+        - DeletedConsumer
       operationId: listByDate
       parameters:
         - in: query
