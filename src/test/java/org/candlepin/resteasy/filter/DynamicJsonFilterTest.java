@@ -62,8 +62,8 @@ public class DynamicJsonFilterTest {
     @Test
     public void testNoFilters() throws Exception {
         mockReq = MockHttpRequest.create("GET",
-                new URI("/candlepin/status"),
-                new URI("http://localhost"));
+            new URI("/candlepin/status"),
+            new URI("http://localhost"));
         when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 
         interceptor.filter(mockRequestContext);

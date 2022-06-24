@@ -108,7 +108,7 @@ public class ActivationKeyTranslator implements ObjectTranslator<ActivationKey, 
         // Set release version
         Release release = source.getReleaseVer();
         ReleaseVerDTO releaseDTO = release != null ?
-            new ReleaseVerDTO().releaseVer(release.getReleaseVer()) : null;
+            (new ReleaseVerDTO().releaseVer(release.getReleaseVer())) : null;
         dest.releaseVer(releaseDTO);
 
         // Set addons

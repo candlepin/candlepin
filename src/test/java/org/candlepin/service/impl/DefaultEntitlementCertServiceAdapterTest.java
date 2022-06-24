@@ -1144,7 +1144,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         Set<X509ExtensionWrapper> extensions =
             certServiceAdapter.prepareV1Extensions(products, pool, consumer, entitlement.getQuantity(),
-            new PromotedContent(prefix("")), new HashSet<>());
+                new PromotedContent(prefix("")), new HashSet<>());
         Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
         Map<String, String> extMap = getEncodedContentMap(extensions);
 

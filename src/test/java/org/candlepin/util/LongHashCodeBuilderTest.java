@@ -59,8 +59,8 @@ public class LongHashCodeBuilderTest {
     @ParameterizedTest(name = "{displayName} [{index}]: {0}")
     @ValueSource(longs = { Long.MIN_VALUE, -2, 0, 2, Long.MAX_VALUE - 1 })
     public void testProvidedInitialValueMustBeOdd(long initialValue) {
-        assertThrows(IllegalArgumentException.class, () ->
-            new LongHashCodeBuilder(initialValue, SAFE_MULTIPLIER));
+        assertThrows(IllegalArgumentException.class,
+            () -> new LongHashCodeBuilder(initialValue, SAFE_MULTIPLIER));
     }
 
     @ParameterizedTest(name = "{displayName} [{index}]: {0}")

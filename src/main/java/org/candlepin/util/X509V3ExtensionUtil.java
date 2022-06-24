@@ -339,7 +339,7 @@ public class X509V3ExtensionUtil extends X509Util {
         }
         // If none exist, use null strings
         return resultBranding != null ? resultBranding :
-            new Branding(null, productId, null, null);
+            (new Branding(null, productId, null, null));
     }
 
     /*

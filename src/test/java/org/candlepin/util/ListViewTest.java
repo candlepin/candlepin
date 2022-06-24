@@ -231,8 +231,8 @@ public class ListViewTest extends SetViewTest {
         int expectedPrevIndex = offset > -1 ? offset - 1 : -1;
         List found = new LinkedList();
         List expected = offset > -1 ?
-            new LinkedList(((List) this.source).subList(0, offset)) :
-            new LinkedList(this.source);
+            (new LinkedList(((List) this.source).subList(0, offset))) :
+            (new LinkedList(this.source));
 
         while (iterator.hasPrevious()) {
             assertEquals(expectedPrevIndex--, iterator.previousIndex());

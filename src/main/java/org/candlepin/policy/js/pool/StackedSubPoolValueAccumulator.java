@@ -50,7 +50,7 @@ public class StackedSubPoolValueAccumulator {
     private void updateEldest(Entitlement nextStacked) {
         // if the date is null, must be a entitlement about to be created
         Date createdDate = (nextStacked.getCreated() == null) ?
-            new Date() : nextStacked.getCreated();
+            (new Date()) : nextStacked.getCreated();
 
         if (eldest == null || createdDate.before(eldest.getCreated())) {
             eldest = nextStacked;
@@ -88,7 +88,7 @@ public class StackedSubPoolValueAccumulator {
         if (nextStacked.getPool().hasMergedAttribute(Product.Attributes.VIRT_LIMIT)) {
             // if the date is null, must be a entitlement about to be created
             Date createdDate = (nextStacked.getCreated() == null) ?
-                new Date() : nextStacked.getCreated();
+                (new Date()) : nextStacked.getCreated();
             if (eldestWithVirtLimit == null ||
                 createdDate.before(eldestWithVirtLimit.getCreated())) {
                 eldestWithVirtLimit = nextStacked;

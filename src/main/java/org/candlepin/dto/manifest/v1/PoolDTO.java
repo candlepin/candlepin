@@ -1084,7 +1084,7 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
      */
     public Set<ProvidedProductDTO> getDerivedProvidedProducts() {
         return this.derivedProvidedProducts != null ?
-            new SetView<>(this.derivedProvidedProducts) : null;
+            (new SetView<>(this.derivedProvidedProducts)) : null;
     }
 
     /**

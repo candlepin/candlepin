@@ -165,7 +165,7 @@ public class ComplianceStatusDTO extends CandlepinDTO<ComplianceStatusDTO> {
 
     public Map<String, Set<EntitlementDTO>> getPartiallyCompliantProducts() {
         return this.partiallyCompliantProducts != null ?
-            new MapView<>(this.partiallyCompliantProducts) : null;
+            (new MapView<>(this.partiallyCompliantProducts)) : null;
     }
 
     public ComplianceStatusDTO setPartiallyCompliantProducts(Map<String, Set<EntitlementDTO>> entMap) {
@@ -210,7 +210,7 @@ public class ComplianceStatusDTO extends CandlepinDTO<ComplianceStatusDTO> {
 
     public Map<String, DateRange> getProductComplianceDateRanges() {
         return this.productComplianceDateRanges != null ?
-            new MapView<>(this.productComplianceDateRanges) :
+            (new MapView<>(this.productComplianceDateRanges)) :
             null;
     }
 

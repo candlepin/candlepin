@@ -521,7 +521,7 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
 
         Product updatedEntity = existingEntity != null ?
             (Product) existingEntity.clone() :
-            new Product().setLocked(true);
+            (new Product().setLocked(true));
 
         // Ensure the RH product ID is set properly
         updatedEntity.setId(node.getEntityId());
