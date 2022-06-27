@@ -139,7 +139,7 @@ describe 'Autobind Disabled On Owner' do
     job['resultData'].should == "org.candlepin.async.JobExecutionException: Auto-attach is disabled for owner #{@owner['key']}."
   end
 
-  it 'fails to heal entire org if content access is org_environment' do
+  it 'fails to heal entire org if simple content access is used' do
     # org_environment mode cannot be set via API in standalone mode
     skip("candlepin running in standalone mode") if not is_hosted?
 

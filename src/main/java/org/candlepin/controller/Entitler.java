@@ -218,7 +218,7 @@ public class Entitler {
             owner.isUsingSimpleContentAccess())) {
 
             String caMessage = owner.isUsingSimpleContentAccess() ?
-                " because of the content access mode setting" : "";
+                " because simple content access is enabled" : "";
 
             String hypMessage = owner.isAutobindHypervisorDisabled() ?
                 " because of the hypervisor autobind setting" : "";
