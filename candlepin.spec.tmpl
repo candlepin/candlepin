@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.2
+Version: 4.2.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,115 @@ fi
 
 #raw
 %changelog
+* Tue Jun 28 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.3-1
+- Upgrade to openapi-generator 6.0.0 (wpoteat@redhat.com)
+- Fix maven transitive dependency resolution issue (nmoumoul@redhat.com)
+- 2097670: Update messages to use 'simple content access' (wpoteat@redhat.com)
+- Bump keycloak-servlet-filter-adapter from 18.0.1 to 18.0.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Document how to run Java spec tests (nmoumoul@redhat.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- Update checkstyle jars and correct issues (wpoteat@redhat.com)
+- Bump artemis-stomp-protocol from 2.23.0 to 2.23.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis-server from 2.23.0 to 2.23.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Added new inactive consumer cleanup job (joshmalbrecht@gmail.com)
+- Fix issue with owner-product mapping during refresh/import (crog@redhat.com)
+- Added an index on the product_uuid column of cp_pool (crog@redhat.com)
+- Disable default test task in spec-test module (ojanus@redhat.com)
+- Fixed JDBC packet size overrun when updating owner-entity references
+  (crog@redhat.com)
+- Bump artemis-stomp-protocol from 2.22.0 to 2.23.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump liquibase-core from 4.11.0 to 4.12.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Add primary owner support (wpoteat@redhat.com)
+- Bump keycloak-servlet-filter-adapter from 18.0.0 to 18.0.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis-server from 2.22.0 to 2.23.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump logging-interceptor from 4.9.3 to 4.10.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump dependency-check-gradle from 7.1.0.1 to 7.1.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump okhttp-tls from 4.9.3 to 4.10.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump okhttp from 4.9.3 to 4.10.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Bump postgresql from 42.3.6 to 42.4.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Fix spelling of the word 'CDN' in translated message (nmoumoul@redhat.com)
+- Bump jackson-datatype-hibernate5 from 2.13.2 to 2.13.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump mockito-junit-jupiter from 4.4.0 to 4.6.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson-dataformat-yaml from 2.13.2 to 2.13.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump logstash-logback-encoder from 7.0.1 to 7.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson-module-jsonSchema from 2.13.2 to 2.13.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jaxb-core from 3.0.2 to 4.0.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson-jaxrs-json-provider from 2.13.2 to 2.13.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jaxb-impl from 3.0.2 to 4.0.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump liquibase-core from 4.9.1 to 4.11.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump postgresql from 42.3.3 to 42.3.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson-dataformat-xml from 2.13.2 to 2.13.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump keycloak-servlet-filter-adapter from 17.0.1 to 18.0.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump hibernate-jpamodelgen from 5.6.7.Final to 5.6.9.Final
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis-stomp-protocol from 2.21.0 to 2.22.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Bump artemis-server from 2.21.0 to 2.22.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump spotbugs-annotations from 4.6.0 to 4.7.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson-datatype-jsr310 from 2.13.2 to 2.13.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump liquibase-slf4j from 4.0.0 to 4.1.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- 2076914: Translate few strings. (jhnidek@redhat.com)
+- 1993223: Stop Candlepin initialization if database is not updated
+  (wpoteat@redhat.com)
+- Bump assertj-core from 3.22.0 to 3.23.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump gradle-versions-plugin from 0.38.0 to 0.42.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump mariadb-java-client from 3.0.4 to 3.0.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Added grace period for product deletion during refresh/import
+  (crog@redhat.com)
+- Remove maven from dependabot config (nmoumoul@redhat.com)
+- Bump dependency-check-gradle from 7.0.0 to 7.1.0.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson-databind from 2.13.2.2 to 2.13.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jackson-datatype-jdk8 from 2.13.2 to 2.13.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Don't lookup trusted user when lookup header is missing (nmoumoul@redhat.com)
+- Translated using Weblate (Ukrainian) (yurchor@ukr.net)
+- Update translation files (noreply@weblate.org)
+- Translated using Weblate (Korean) (simmon@nplob.com)
+- Translated using Weblate (Russian) (ptoscano@redhat.com)
+- Translated using Weblate (German) (joachim.philipp@gmail.com)
+- Increase spec client timeout for better debugging (nmoumoul@redhat.com)
+- ENT-4812: Add dependabot configuration (ojanus@redhat.com)
+- Use msgfmt to validate the .po files (wpoteat@redhat.com)
+
 * Mon May 30 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.2-1
 - i18n: po/keys.pot template is updated (3229038+candlepin-
   bot@users.noreply.github.com)
