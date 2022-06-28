@@ -2381,7 +2381,8 @@ public class ConsumerResource implements ConsumersApi {
             catch (AutobindDisabledForOwnerException e) {
                 if (owner.isUsingSimpleContentAccess()) {
                     log.debug("Ignoring request to auto-attach. " +
-                        "It is disabled for org \"{}\" because of the content access mode setting."
+                        "Attaching subscriptions is disabled for org \"{}\" " +
+                        "because simple content access is enabled."
                         , owner.getKey(), e);
                     return Response.status(Response.Status.OK).build();
                 }
@@ -2429,7 +2430,7 @@ public class ConsumerResource implements ConsumersApi {
 
             if (owner.isUsingSimpleContentAccess()) {
                 log.debug("Organization \"{}\" has auto-attach disabled because " +
-                    "of the content access mode setting.", owner.getKey());
+                    "simple content access is enabled.", owner.getKey());
                 return Collections.emptyList();
             }
             else {
