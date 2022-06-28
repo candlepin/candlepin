@@ -18,6 +18,7 @@ dependencies {
     implementation libraries["javaxAnnotation"]
     implementation libraries["spotbugs"]
     implementation libraries["gsonfire"]
+    implementation libraries["javaxRs"]
 }
 
 sourceSets.main.java.srcDirs = ["${buildDir}/generated/src/main/java"]
@@ -33,4 +34,5 @@ openApiGenerate {
     configOptions = [
         dateLibrary: "java8"
     ]
+    templateDir = "$rootDir/client/buildSrc/src/main/resources/templates"
 }
