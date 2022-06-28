@@ -107,6 +107,17 @@ class PomToolkit implements Plugin<Project> {
         createProfileNode(profilesNode, 'build-with-jss5-plus', '/usr/lib64/jss/jss.jar', '5.0.0')
     }
 
+    public static void generateDependencyManagement(Node parent) {
+        def depManagementNode = parent.appendNode('dependencyManagement')
+        def depsNode = depManagementNode.appendNode('dependencies')
+        /* This is to avoid issue https://groups.google.com/g/ehcache-users/c/U1bO6QArswQ where ehcache has set a
+         * version range for the jaxb-runtime dependency, and maven is trying to resolve all transitive depencency
+         * versions in that range and failing due to some of them pointing to insecure maven repos.
+         *
+         * The solution here is to pin the jaxb-runtime lib to a specific version.
+         */
+        createDependencyNode(depsNode, 'org.glassfish.jaxb', 'jaxb-runtime', '2.3.6', null, null)
+    }
 
     private static void createDependencyNode(Node parentNode, String groupId, String artifactId, String version, String scope, String systemPath) {
         if (groupId) {
