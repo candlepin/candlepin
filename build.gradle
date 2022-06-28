@@ -507,6 +507,7 @@ publishing {
                 PomToolkit.generateRepositories(asNode())
                 PomToolkit.generateBuild(asNode())
                 PomToolkit.generateProfiles(asNode())
+                PomToolkit.generateDependencyManagement(asNode())
             }
         }
     }
