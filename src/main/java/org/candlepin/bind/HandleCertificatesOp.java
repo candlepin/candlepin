@@ -15,9 +15,9 @@
 package org.candlepin.bind;
 
 import org.candlepin.controller.EntitlementCertificateGenerator;
+import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
-import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
@@ -41,18 +41,18 @@ import java.util.Map;
 public class HandleCertificatesOp implements BindOperation {
 
     private EntitlementCertificateGenerator ecGenerator;
-    private EntitlementCertificateCurator ecCurator;
-    private EntitlementCurator eCurator;
-    private Map<String, EntitlementCertificate> certs;
+    private CertificateCurator certificateCurator;
+    private EntitlementCurator entitlementCurator;
+    private Map<String, Certificate> certs;
     private Collection<String> modifyingEnts;
 
     @Inject
-    public HandleCertificatesOp(EntitlementCertificateGenerator ecGenerator, EntitlementCertificateCurator
-        ecCurator, EntitlementCurator eCurator) {
+    public HandleCertificatesOp(EntitlementCertificateGenerator ecGenerator, CertificateCurator
+        certificateCurator, EntitlementCurator entitlementCurator) {
 
         this.ecGenerator = ecGenerator;
-        this.ecCurator = ecCurator;
-        this.eCurator = eCurator;
+        this.certificateCurator = certificateCurator;
+        this.entitlementCurator = entitlementCurator;
     }
 
     /**
@@ -78,7 +78,8 @@ public class HandleCertificatesOp implements BindOperation {
             context.getEntitlementMap(),
             false);
 
-        modifyingEnts = this.eCurator.getDependentEntitlementIdsForPools(context.getConsumer(), poolIds);
+        modifyingEnts = this.entitlementCurator
+            .getDependentEntitlementIdsForPools(context.getConsumer(), poolIds);
 
         return true;
     }
@@ -90,13 +91,14 @@ public class HandleCertificatesOp implements BindOperation {
     @Override
     public boolean execute(BindContext context) {
         Map<String, Entitlement> ents = context.getEntitlementMap();
+
         for (Entitlement ent: ents.values()) {
-            EntitlementCertificate cert = certs.get(ent.getPool().getId());
+            Certificate cert = certs.get(ent.getPool().getId());
             ent.addCertificate(cert);
-            cert.setEntitlement(ent);
         }
-        ecCurator.saveAll(certs.values(), false, false);
-        eCurator.saveOrUpdateAll(ents.values(), false, false);
+
+        this.certificateCurator.saveAll(certs.values(), false, false);
+        this.entitlementCurator.saveOrUpdateAll(ents.values(), false, false);
         this.ecGenerator.regenerateCertificatesByEntitlementIds(modifyingEnts, true);
         return true;
     }

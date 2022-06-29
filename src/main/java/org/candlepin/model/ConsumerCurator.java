@@ -235,7 +235,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         consumer.setTypeId(consumer.getTypeId());
 
-        IdentityCertificate idCert = consumer.getIdCert();
+        Certificate idCert = consumer.getIdCert();
         this.currentSession().replicate(idCert.getSerial(), ReplicationMode.EXCEPTION);
         this.currentSession().replicate(idCert, ReplicationMode.EXCEPTION);
 

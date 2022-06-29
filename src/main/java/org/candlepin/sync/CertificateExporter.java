@@ -27,8 +27,8 @@ public class CertificateExporter {
 
     void exportCertificate(Certificate cert, File file) throws IOException {
         try (FileWriter writer = new FileWriter(file)) {
-            writer.write(cert.getCert());
-            writer.write(cert.getKey());
+            writer.write(cert.getCertificateAsString());
+            writer.write(cert.getPrivateKeyAsString());
         }
         catch (IOException ioExp) {
             throw new IOException("Error occurred while exporting certificates", ioExp);

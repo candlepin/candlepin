@@ -18,6 +18,10 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Certificate;
 
+import java.math.BigInteger;
+import java.time.Instant;
+import java.util.Date;
+
 
 
 /**
@@ -58,15 +62,20 @@ public class CertificateTranslator extends TimestampedEntityTranslator<Certifica
         dest = super.populate(translator, source, dest);
 
         dest.setId(source.getId());
-        dest.setKey(source.getKey());
-        dest.setCertificate(source.getCert());
+        dest.setCert(source.getCertificateAsString());
+        dest.setKey(source.getPrivateKeyAsString());
 
-        if (translator != null) {
-            dest.setSerial(translator.translate(source.getSerial(), CertificateSerialDTO.class));
+        CertificateSerialDTO serial = dest.getSerialDTO();
+        if (serial == null) {
+            serial = new CertificateSerialDTO();
+            dest.setSerialDTO(serial);
         }
-        else {
-            dest.setSerial(null);
-        }
+
+        serial.setSerial(source.getSerial());
+        serial.setRevoked(source.isRevoked());
+
+        Instant expiration = source.getExpiration();
+        serial.setExpiration(expiration != null ? Date.from(expiration) : null);
 
         return dest;
     }

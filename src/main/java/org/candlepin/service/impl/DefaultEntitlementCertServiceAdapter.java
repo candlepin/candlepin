@@ -80,7 +80,6 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     private final PKIUtility pki;
     private final X509ExtensionUtil extensionUtil;
     private final X509V3ExtensionUtil v3extensionUtil;
-    private final CertificateCurator certificateCurator;
     private final OwnerCurator ownerCurator;
     private final EntitlementCurator entCurator;
     private final I18n i18n;
@@ -431,7 +430,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
 
         if (save) {
             log.info("Persisting certs.");
-            entCertCurator.saveOrUpdateAll(entitlementCerts.values(), false, false);
+            this.certificateCurator.saveOrUpdateAll(entitlementCerts.values(), false, false);
         }
 
         return entitlementCerts;
@@ -442,7 +441,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
     }
 
     @Override
-    public List<BigInteger> listEntitlementSerialIds(Consumer consumer) {
+    public List<BigInteger> listEntitlementSerials(Consumer consumer) {
         return this.certificateCurator.listEntitlementSerials(consumer);
     }
 }

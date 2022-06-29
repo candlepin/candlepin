@@ -17,6 +17,7 @@ package org.candlepin.async.tasks;
 import org.candlepin.async.AsyncJob;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.model.Certificate;
 import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.ConsumerCurator;
 
@@ -62,7 +63,7 @@ public class CertificateCleanupJob implements AsyncJob {
             count);
 
         log.debug(result);
-        context.setResult(result);
+        context.setJobResult(result);
     }
 
 }

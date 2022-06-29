@@ -70,8 +70,9 @@ public abstract class AbstractHibernateObject<T extends AbstractHibernateObject>
         return created;
     }
 
-    public void setCreated(Date created) {
+    public T setCreated(Date created) {
         this.created = created;
+        return (T) this;
     }
 
     @JsonInclude(Include.NON_NULL)
@@ -79,8 +80,9 @@ public abstract class AbstractHibernateObject<T extends AbstractHibernateObject>
         return updated;
     }
 
-    public void setUpdated(Date updated) {
+    public T setUpdated(Date updated) {
         this.updated = updated;
+        return (T) this;
     }
 
     /**

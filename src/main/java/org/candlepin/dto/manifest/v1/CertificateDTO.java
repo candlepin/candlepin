@@ -17,10 +17,15 @@ package org.candlepin.dto.manifest.v1;
 import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.service.model.CertificateInfo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import java.math.BigInteger;
+import java.time.Instant;
+import java.util.Date;
 
 
 
@@ -73,23 +78,67 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> impl
     }
 
     @Override
+    @JsonIgnore
+    public byte[] getPrivateKey() {
+        return this.key != null ? this.key.getBytes() : null;
+    }
+
     @JsonProperty("cert")
-    public String getCertificate() {
+    public String getCert() {
         return this.cert;
     }
 
-    public CertificateDTO setCertificate(String cert) {
+    @JsonProperty("cert")
+    public CertificateDTO setCert(String cert) {
         this.cert = cert;
         return this;
     }
 
-    public CertificateSerialDTO getSerial() {
+    @Override
+    @JsonIgnore
+    public byte[] getCertificate() {
+        return this.cert != null ? this.cert.getBytes() : null;
+    }
+
+    @Override
+    @JsonIgnore
+    public byte[] getPayload() {
+        // We didn't make this distiction before, so we'll never have a payload here
+        return null;
+    }
+
+    @JsonProperty("serial")
+    public CertificateSerialDTO getSerialDTO() {
         return this.serial;
     }
 
-    public CertificateDTO setSerial(CertificateSerialDTO serial) {
+    @JsonProperty("serial")
+    public CertificateDTO setSerialDTO(CertificateSerialDTO serial) {
         this.serial = serial;
         return this;
+    }
+
+    @Override
+    @JsonIgnore
+    public BigInteger getSerial() {
+        return this.serial != null ? this.serial.getSerial() : null;
+    }
+
+    @Override
+    @JsonIgnore
+    public Boolean isRevoked() {
+        return this.serial != null ? this.serial.isRevoked() : false;
+    }
+
+    @Override
+    @JsonIgnore
+    public Instant getExpiration() {
+        if (this.serial == null) {
+            return null;
+        }
+
+        Date expiration = this.serial.getExpiration();
+        return expiration != null ? expiration.toInstant() : null;
     }
 
     /**
@@ -97,10 +146,8 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> impl
      */
     @Override
     public String toString() {
-        CertificateSerialDTO serial = this.getSerial();
-
-        return String.format("CertificateDTO [id: %s, key: %s, serial id: %s]",
-                this.getId(), this.getKey(), serial != null ? serial.getId() : null);
+        return String.format("CertificateDTO [id: %s, key: %s, serial: %s]",
+            this.getId(), this.getKey(), this.getSerial());
     }
 
     /**
@@ -118,8 +165,8 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> impl
             EqualsBuilder builder = new EqualsBuilder()
                 .append(this.getId(), that.getId())
                 .append(this.getKey(), that.getKey())
-                .append(this.getCertificate(), that.getCertificate())
-                .append(this.getSerial(), that.getSerial());
+                .append(this.getCert(), that.getCert())
+                .append(this.getSerialDTO(), that.getSerialDTO());
 
             return builder.isEquals();
         }
@@ -136,8 +183,8 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> impl
             .append(super.hashCode())
             .append(this.getId())
             .append(this.getKey())
-            .append(this.getCertificate())
-            .append(this.getSerial());
+            .append(this.getCert())
+            .append(this.getSerialDTO());
 
         return builder.toHashCode();
     }
@@ -149,8 +196,8 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> impl
     public CertificateDTO clone() {
         CertificateDTO copy = super.clone();
 
-        CertificateSerialDTO serial = this.getSerial();
-        copy.setSerial(serial != null ? serial.clone() : null);
+        CertificateSerialDTO serial = this.getSerialDTO();
+        copy.setSerialDTO(serial != null ? serial.clone() : null);
 
         return copy;
     }
@@ -164,8 +211,8 @@ public class CertificateDTO extends TimestampedCandlepinDTO<CertificateDTO> impl
 
         this.setId(source.getId());
         this.setKey(source.getKey());
-        this.setCertificate(source.getCertificate());
-        this.setSerial(source.getSerial());
+        this.setCert(source.getCert());
+        this.setSerialDTO(source.getSerialDTO());
 
         return this;
     }

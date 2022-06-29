@@ -21,9 +21,12 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.List;
 import java.util.Map;
+
+
 
 /**
  * Interface to the Certificate Service.

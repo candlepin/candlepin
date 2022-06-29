@@ -36,6 +36,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Objects;
 
 
 
@@ -83,7 +84,7 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
         log.debug("Generating identity cert for consumer: {}", consumer.getUuid());
 
         Certificate certificate = this.resolveCertificate(consumer.getIdCert());
-        return certificate != null ? certificate : this.generateIdentityCertificate(consumer);
+        return certificate != null ? certificate : this.generate(consumer);
     }
 
     @Override
@@ -97,12 +98,12 @@ public class DefaultIdentityCertServiceAdapter implements IdentityCertServiceAda
             this.certificateCurator.delete(certificate);
         }
 
-        return this.generateIdentityCertificate(consumer);
+        return this.generate(consumer);
     }
 
     private Certificate generate(Consumer consumer) throws GeneralSecurityException, IOException {
         Instant startDate = Instant.now()
-            .truncateTo(ChronoUnit.HOURS)
+            .truncatedTo(ChronoUnit.HOURS)
             .minus(1, ChronoUnit.HOURS);
 
         Date endDate = this.endDateGenerator.apply(new Date());

@@ -2162,7 +2162,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/CertificateSerialDTO'
+                  type: string
         400:
           description: Cannot retrieve content access certificate
           content:
@@ -2824,6 +2824,9 @@ paths:
         - Certificate Revocation List
       description: Retrieves the list of all revoked certificate serial ids that are not expired
       operationId: getCurrentCrl
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
       security: []
       responses:
         200:
@@ -2833,8 +2836,7 @@ paths:
               schema:
                 type: array
                 items:
-                  type: integer
-                  format: int64
+                  type: string
         default:
           $ref: '#/components/responses/default'
 
@@ -6115,7 +6117,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductCertificateDTO'
+                $ref: '#/components/schemas/CertificateDTO'
         400:
           description: Only numeric product IDs are allowed
           content:
@@ -6603,7 +6605,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UeberCertificateDTO'
+                $ref: '#/components/schemas/CertificateDTO'
         404:
           description: |
             An owner could not be found using the provided key
@@ -6641,7 +6643,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UeberCertificateDTO'
+                $ref: '#/components/schemas/CertificateDTO'
         400:
           description: Problem generating ueber cert for an owner
           content:
@@ -6763,7 +6765,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ProductCertificateDTO'
+                $ref: '#/components/schemas/CertificateDTO'
         404:
           description: Product not found
           content:
@@ -7668,7 +7670,7 @@ paths:
         - CertificateSerial
       operationId: getCertificateSerials
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       responses:
@@ -7696,8 +7698,7 @@ paths:
           description: The ID of the certificate serial to retrieve
           required: true
           schema:
-            type: integer
-            format: int64
+            type: string
       responses:
         200:
           description: ''
@@ -8337,11 +8338,9 @@ components:
         - type: object
           properties:
             id:
-              type: integer
-              format: int64
+              type: string
             serial:
-              type: integer
-              format: int64
+              type: string
             expiration:
               type: string
               format: date-time
@@ -9273,17 +9272,6 @@ components:
           $ref: "#/components/schemas/ContentDTO"
         enabled:
           type: boolean
-
-    ProductCertificateDTO:
-      description: DTO representing product certificates presented to the API
-      allOf:
-        - $ref: '#/components/schemas/TimestampedEntity'
-        - type: object
-          properties:
-            key:
-              type: string
-            cert:
-              type: string
 
     ProductDTO:
       description: DTO representing the product data exposed to the API

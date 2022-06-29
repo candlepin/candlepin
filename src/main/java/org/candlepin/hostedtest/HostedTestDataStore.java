@@ -16,11 +16,9 @@ package org.candlepin.hostedtest;
 
 import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
-import org.candlepin.model.CdnCertificate;
-import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.Certificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
@@ -39,6 +37,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -176,7 +175,7 @@ public class HostedTestDataStore {
         sdata.setUpstreamPoolId(sinfo.getUpstreamPoolId());
         sdata.setUpstreamEntitlementId(sinfo.getUpstreamEntitlementId());
         sdata.setUpstreamConsumerId(sinfo.getUpstreamConsumerId());
-        sdata.setCertificate(this.convertSubscriptionCertificate(sinfo.getCertificate()));
+        sdata.setCertificate(this.convertCertificate(sinfo.getCertificate()));
         sdata.setCdn(this.convertCdn(sinfo.getCdn()));
 
         // Update mappings
@@ -254,7 +253,7 @@ public class HostedTestDataStore {
             sdata.setUpstreamConsumerId(sinfo.getUpstreamConsumerId());
         }
 
-        sdata.setCertificate(this.convertSubscriptionCertificate(sinfo.getCertificate()));
+        sdata.setCertificate(this.convertCertificate(sinfo.getCertificate()));
 
         sdata.setCdn(this.convertCdn(sinfo.getCdn()));
 
@@ -908,12 +907,11 @@ public class HostedTestDataStore {
                 throw new IllegalArgumentException("Cdn lacks a name: " + cinfo);
             }
 
-            Cdn cdata = new Cdn();
-
-            cdata.setName(cinfo.getName());
-            cdata.setLabel(cinfo.getLabel());
-            cdata.setUrl(cinfo.getUrl());
-            cdata.setCertificate(this.convertCdnCertificate(cinfo.getCertificate()));
+            Cdn cdata = new Cdn()
+                .setName(cinfo.getName())
+                .setLabel(cinfo.getLabel())
+                .setUrl(cinfo.getUrl())
+                .setCertificate(this.convertCertificate(cinfo.getCertificate()));
 
             return cdata;
         }
@@ -921,56 +919,29 @@ public class HostedTestDataStore {
         return null;
     }
 
-    protected CdnCertificate convertCdnCertificate(CertificateInfo cinfo) {
-        if (cinfo != null) {
-            CdnCertificate cert = new CdnCertificate();
-
-            if (cinfo.getKey() != null) {
-                cert.setKey(cinfo.getKey());
-            }
-            cert.setCert(cinfo.getCertificate());
-
-            if (cinfo.getSerial() != null) {
-                CertificateSerialInfo serialInfo = cinfo.getSerial();
-                CertificateSerial serial = new CertificateSerial();
-
-                serial.setSerial(serialInfo.getSerial());
-                serial.setRevoked(serialInfo.isRevoked());
-                serial.setExpiration(serialInfo.getExpiration());
-
-                cert.setSerial(serial);
-            }
-
-            return cert;
+    protected Certificate convertCertificate(CertificateInfo cinfo) {
+        if (cinfo == null) {
+            return null;
         }
 
-        return null;
-    }
+        Certificate cert = new Certificate()
+            .setCreated(cinfo.getCreated())
+            .setUpdated(cinfo.getUpdated())
+            .setSerial(cinfo.getSerial())
+            .setCertificate(cinfo.getCertificate())
+            .setPrivateKey(cinfo.getPrivateKey());
 
-    protected SubscriptionsCertificate convertSubscriptionCertificate(CertificateInfo cinfo) {
-        if (cinfo != null) {
-            SubscriptionsCertificate cert = new SubscriptionsCertificate();
-
-            if (cinfo.getKey() != null) {
-                cert.setKey(cinfo.getKey());
-            }
-            cert.setCert(cinfo.getCertificate());
-
-            if (cinfo.getSerial() != null) {
-                CertificateSerialInfo serialInfo = cinfo.getSerial();
-                CertificateSerial serial = new CertificateSerial();
-
-                serial.setSerial(serialInfo.getSerial());
-                serial.setRevoked(serialInfo.isRevoked());
-                serial.setExpiration(serialInfo.getExpiration());
-
-                cert.setSerial(serial);
-            }
-
-            return cert;
+        Boolean revoked = cinfo.isRevoked();
+        if (revoked != null) {
+            cert.setRevoked(revoked.booleanValue());
         }
 
-        return null;
+        Instant expiration = cinfo.getExpiration();
+        if (expiration != null) {
+            cert.setExpiration(expiration);
+        }
+
+        return cert;
     }
 
 

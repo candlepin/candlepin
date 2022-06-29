@@ -25,7 +25,6 @@ import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
-import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.ProductCurator;
@@ -51,17 +50,15 @@ import java.util.Map;
 public class EntitlementImporter {
     private static Logger log = LoggerFactory.getLogger(EntitlementImporter.class);
 
-    private CertificateSerialCurator csCurator;
-    private CdnCurator cdnCurator;
     private I18n i18n;
+    private CdnCurator cdnCurator;
     private ProductCurator productCurator;
     private EntitlementCurator entitlementCurator;
     private ModelTranslator translator;
 
-    public EntitlementImporter(CertificateSerialCurator csCurator, CdnCurator cdnCurator, I18n i18n,
-        ProductCurator productCurator, EntitlementCurator entitlementCurator, ModelTranslator translator) {
+    public EntitlementImporter(I18n i18n, CdnCurator cdnCurator, ProductCurator productCurator,
+        EntitlementCurator entitlementCurator, ModelTranslator translator) {
 
-        this.csCurator = csCurator;
         this.cdnCurator = cdnCurator;
         this.i18n = i18n;
         this.productCurator = productCurator;

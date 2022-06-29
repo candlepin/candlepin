@@ -106,7 +106,6 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SystemPurposeAttributeType;
-import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -201,7 +200,6 @@ public class OwnerResource implements OwnersApi {
     private PoolManager poolManager;
     private OwnerManager ownerManager;
     private EntitlementCurator entitlementCurator;
-    private UeberCertificateCurator ueberCertCurator;
     private UeberCertificateGenerator ueberCertGenerator;
     private EnvironmentCurator envCurator;
     private CalculatedAttributesUtil calculatedAttributesUtil;
@@ -239,7 +237,6 @@ public class OwnerResource implements OwnersApi {
         OwnerInfoCurator ownerInfoCurator,
         ImportRecordCurator importRecordCurator,
         EntitlementCurator entitlementCurator,
-        UeberCertificateCurator ueberCertCurator,
         UeberCertificateGenerator ueberCertGenerator,
         EnvironmentCurator envCurator,
         CalculatedAttributesUtil calculatedAttributesUtil,
@@ -276,7 +273,6 @@ public class OwnerResource implements OwnersApi {
         this.ownerManager = ownerManager;
         this.eventAdapter = eventAdapter;
         this.entitlementCurator = entitlementCurator;
-        this.ueberCertCurator = ueberCertCurator;
         this.ueberCertGenerator = ueberCertGenerator;
         this.envCurator = envCurator;
         this.calculatedAttributesUtil = calculatedAttributesUtil;
@@ -1652,24 +1648,26 @@ public class OwnerResource implements OwnersApi {
     }
 
     @Override
-    public UeberCertificateDTO createUeberCertificate(
+    public CertificateDTO createUeberCertificate(
         @Verify(Owner.class) String ownerKey) {
-        Principal principal = this.principalProvider.get();
-        UeberCertificate ueberCert = ueberCertGenerator.generate(ownerKey, principal);
 
-        return this.translator.translate(ueberCert, UeberCertificateDTO.class);
+        Principal principal = this.principalProvider.get();
+        // Why is this in the generator? It's offloading all the API exception handling to the backend.
+        Certificate ueberCert = this.ueberCertGenerator.generate(ownerKey, principal);
+
+        return this.translator.translate(ueberCert, CertificateDTO.class);
     }
 
     @Override
-    public UeberCertificateDTO getUeberCertificate(@Verify(Owner.class) String ownerKey) {
+    public CertificateDTO getUeberCertificate(@Verify(Owner.class) String ownerKey) {
         Owner owner = this.findOwnerByKey(ownerKey);
-        UeberCertificate ueberCert = ueberCertCurator.findForOwner(owner);
+        Certificate ueberCert = owner.getUeberCertificate();
         if (ueberCert == null) {
             throw new NotFoundException(i18n.tr(
-            "uber certificate for owner {0} was not found. Please generate one.", owner.getKey()));
+                "uber certificate for owner {0} was not found. Please generate one.", owner.getKey()));
         }
 
-        return this.translator.translate(ueberCert, UeberCertificateDTO.class);
+        return this.translator.translate(ueberCert, CertificateDTO.class);
     }
 
     @Override
@@ -1677,8 +1675,8 @@ public class OwnerResource implements OwnersApi {
 
         Owner owner = this.findOwnerByKey(ownerKey);
         UpstreamConsumer consumer = owner.getUpstreamConsumer();
-        UpstreamConsumerDTOArrayElement dto =
-            this.translator.translate(consumer, UpstreamConsumerDTOArrayElement.class);
+        UpstreamConsumerDTOArrayElement dto = this.translator
+            .translate(consumer, UpstreamConsumerDTOArrayElement.class);
 
         // returning as a list for future proofing. today we support one, but
         // users of this api want to protect against having to change their code
@@ -1851,7 +1849,7 @@ public class OwnerResource implements OwnersApi {
         Product product = this.fetchProduct(owner, productId);
 
         Certificate certificate = this.certificateCurator.getProductCertificate(product, true);
-        return this.translator.translate(productCertificate, CertificateDTO.class);
+        return this.translator.translate(certificate, CertificateDTO.class);
     }
 
     @Override

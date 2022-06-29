@@ -94,9 +94,6 @@ public class EnvironmentResource implements EnvironmentsApi {
     private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
     private final EntitlementCertificateGenerator entCertGenerator;
 
-    // private final ContentAccessCertificateCurator contentAccessCertificateCurator;
-    // private final IdentityCertificateCurator identityCertificateCurator;
-
     @Inject
     public EnvironmentResource(EnvironmentCurator envCurator, I18n i18n,
         EnvironmentContentCurator envContentCurator, ConsumerResource consumerResource,
@@ -120,6 +117,7 @@ public class EnvironmentResource implements EnvironmentsApi {
         this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
         this.certificateCurator = Objects.requireNonNull(certificateCurator);
         this.entCertGenerator = Objects.requireNonNull(entCertGenerator);
+
         this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(entCurator, envContentCurator);
     }
 
@@ -154,6 +152,7 @@ public class EnvironmentResource implements EnvironmentsApi {
     }
 
     @Override
+    @Transactional
     public void deleteEnvironment(@Verify(Environment.class) String envId) {
         Environment environment = envCurator.get(envId);
         if (environment == null) {
@@ -211,25 +210,23 @@ public class EnvironmentResource implements EnvironmentsApi {
             log.info("No consumers found for deletion with environment: {}", environment);
             return;
         }
+
         // Cleanup all consumers and their entitlements:
         log.info("Deleting consumers in environment {}", environment);
 
-        List<Long> serialsToRevoke = new ArrayList<>(consumers.size());
-        List<String> idCertsToDelete = new ArrayList<>(consumers.size());
-        List<String> caCertsToDelete = new ArrayList<>(consumers.size());
+        Set<String> certsToRevoke = new HashSet<>(consumers.size());
 
         for (Consumer consumer : consumers) {
             log.info("Deleting consumer: {}", consumer);
 
-            IdentityCertificate idCert = consumer.getIdCert();
+            Certificate idCert = consumer.getIdCert();
             if (idCert != null) {
-                idCertsToDelete.add(idCert.getId());
-                serialsToRevoke.add(idCert.getSerial().getId());
+                certsToRevoke.add(idCert.getId());
             }
-            ContentAccessCertificate contentAccessCert = consumer.getContentAccessCert();
-            if (contentAccessCert != null) {
-                caCertsToDelete.add(contentAccessCert.getId());
-                serialsToRevoke.add(contentAccessCert.getSerial().getId());
+
+            Certificate caCert = consumer.getContentAccessCert();
+            if (caCert != null) {
+                certsToRevoke.add(caCert.getId());
             }
 
             // We're about to delete these consumers; no need to regen/dirty their dependent
@@ -238,14 +235,8 @@ public class EnvironmentResource implements EnvironmentsApi {
             this.consumerCurator.delete(consumer);
         }
 
-        int deletedCerts = this.identityCertificateCurator.deleteByIds(idCertsToDelete);
-        log.debug("Deleted {} identity certificates", deletedCerts);
-
-        int deletedCerts1 = this.contentAccessCertificateCurator.deleteByIds(caCertsToDelete);
-        log.debug("Deleted {} content access certificates", deletedCerts1);
-
-        int revokedSerials = this.certificateSerialCurator.revokeByIds(serialsToRevoke);
-        log.debug("Revoked {} certificate serials", revokedSerials);
+        int revokedCerts = this.certificateCurator.revokeCertificates(certsToRevoke);
+        log.debug("Revoked {} certificate serials", revokedCerts);
     }
 
     @Override

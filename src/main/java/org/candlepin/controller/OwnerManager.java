@@ -15,6 +15,7 @@
 package org.candlepin.controller;
 
 import org.candlepin.audit.EventSink;
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.EnvironmentCurator;
@@ -29,7 +30,6 @@ import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.service.OwnerServiceAdapter;
@@ -67,7 +67,7 @@ public class OwnerManager {
     private OwnerProductCurator ownerProductCurator;
     private OwnerContentCurator ownerContentCurator;
     private OwnerCurator ownerCurator;
-    private UeberCertificateCurator uberCertificateCurator;
+    private CertificateCurator certificateCurator;
     private OwnerServiceAdapter ownerServiceAdapter;
     private EventSink sink;
 
@@ -81,7 +81,7 @@ public class OwnerManager {
         OwnerProductCurator ownerProductCurator,
         OwnerContentCurator ownerContentCurator,
         OwnerCurator ownerCurator,
-        UeberCertificateCurator uberCertificateCurator,
+        CertificateCurator certificateCurator,
         OwnerServiceAdapter ownerServiceAdapter,
         EventSink sink) {
 
@@ -94,7 +94,7 @@ public class OwnerManager {
         this.ownerProductCurator = ownerProductCurator;
         this.ownerContentCurator = ownerContentCurator;
         this.ownerCurator = ownerCurator;
-        this.uberCertificateCurator = uberCertificateCurator;
+        this.certificateCurator = certificateCurator;
         this.ownerServiceAdapter = ownerServiceAdapter;
         this.sink = sink;
     }
@@ -141,7 +141,7 @@ public class OwnerManager {
 
         // Delete the ueber certificate for this owner, if one exists.
         log.debug("Deleting uber certificate for owner: {}", owner);
-        this.uberCertificateCurator.deleteForOwner(owner);
+        this.certificateCurator.revokeUeberCertificate(owner);
 
         for (Pool p : poolManager.listPoolsByOwner(owner)) {
             log.info("Deleting pool: {}", p);

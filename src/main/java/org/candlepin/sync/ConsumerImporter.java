@@ -14,18 +14,18 @@
  */
 package org.candlepin.sync;
 
+import org.candlepin.dto.manifest.v1.CertificateDTO;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.pki.PKIUtility;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -35,25 +35,28 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Objects;
+
+
 
 /**
  * ConsumerImporter
  */
 public class ConsumerImporter {
-    private static Logger log = LoggerFactory.getLogger(ConsumerImporter.class);
+    private static final Logger log = LoggerFactory.getLogger(ConsumerImporter.class);
 
-    private OwnerCurator curator;
-    private IdentityCertificateCurator idCertCurator;
     private I18n i18n;
-    private CertificateSerialCurator serialCurator;
+    private OwnerCurator ownerCurator;
+    private CertificateCurator certificateCurator;
+    private PKIUtility pkiutil;
 
-    public ConsumerImporter(OwnerCurator curator, IdentityCertificateCurator idCertCurator, I18n i18n,
-        CertificateSerialCurator serialCurator) {
+    public ConsumerImporter(I18n i18n, OwnerCurator ownerCurator, CertificateCurator certificateCurator,
+        PKIUtility pkiutil) {
 
-        this.curator = curator;
-        this.idCertCurator = idCertCurator;
-        this.i18n = i18n;
-        this.serialCurator = serialCurator;
+        this.i18n = Objects.requireNonNull(i18n);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.certificateCurator = Objects.requireNonNull(certificateCurator);
+        this.pkiutil = Objects.requireNonNull(pkiutil);
     }
 
     public ConsumerDTO createObject(ObjectMapper mapper, Reader reader) throws IOException {
@@ -61,7 +64,7 @@ public class ConsumerImporter {
     }
 
     public void store(Owner owner, ConsumerDTO consumer, ConflictOverrides forcedConflicts,
-        IdentityCertificate idcert) throws SyncDataFormatException {
+        CertificateDTO idcert) throws SyncDataFormatException {
 
         if (consumer.getUuid() == null) {
             throw new SyncDataFormatException(
@@ -69,7 +72,7 @@ public class ConsumerImporter {
         }
 
         // Make sure no other owner is already using this upstream UUID:
-        Owner alreadyUsing = curator.getByUpstreamUuid(consumer.getUuid());
+        Owner alreadyUsing = this.ownerCurator.getByUpstreamUuid(consumer.getUuid());
         if (alreadyUsing != null && !alreadyUsing.getKey().equals(owner.getKey())) {
             log.error("Cannot import manifest for org: {}", owner.getKey());
             log.error("Upstream distributor {} already in used by org: {}",
@@ -102,16 +105,12 @@ public class ConsumerImporter {
          * potential conflicts with a serial that came from somewhere else. This is consistent with
          * importing entitlement certs (as subscription certs).
          */
+        Certificate identityCert = null;
         if (idcert != null) {
-            CertificateSerial cs = new CertificateSerial();
-            cs.setExpiration(idcert.getSerial().getExpiration());
-            cs.setUpdated(idcert.getSerial().getUpdated());
-            cs.setCreated(idcert.getSerial().getCreated());
-            serialCurator.create(cs);
+            identityCert = ImporterUtils.populateEntity(new Certificate(), idcert)
+                .setSerial(this.pkiutil.generateCertificateSerial());
 
-            idcert.setId(null);
-            idcert.setSerial(cs);
-            idCertCurator.create(idcert);
+            this.certificateCurator.create(identityCert);
         }
 
         // create an UpstreamConsumer from the imported ConsumerDto
@@ -127,11 +126,11 @@ public class ConsumerImporter {
             ownerToUse, type, consumer.getUuid());
         uc.setWebUrl(consumer.getUrlWeb());
         uc.setApiUrl(consumer.getUrlApi());
-        uc.setIdCert(idcert);
+        uc.setIdCert(identityCert);
         uc.setContentAccessMode(consumer.getContentAccessMode());
         owner.setUpstreamConsumer(uc);
 
-        curator.merge(owner);
+        this.ownerCurator.merge(owner);
     }
 
     /**
@@ -198,11 +197,11 @@ public class ConsumerImporter {
 
             if (pdto.getId() != null) {
                 // look up by ID
-                parent = this.curator.get(pdto.getId());
+                parent = this.ownerCurator.get(pdto.getId());
             }
             else if (pdto.getKey() != null) {
                 // look up by key
-                parent = this.curator.getByKey(pdto.getKey());
+                parent = this.ownerCurator.getByKey(pdto.getKey());
             }
 
             if (parent == null) {

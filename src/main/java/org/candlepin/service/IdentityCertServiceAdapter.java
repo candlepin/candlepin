@@ -15,7 +15,7 @@
 package org.candlepin.service;
 
 import org.candlepin.model.Consumer;
-import org.candlepin.model.IdentityCertificate;
+import org.candlepin.model.Certificate;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -35,8 +35,7 @@ public interface IdentityCertServiceAdapter {
      * @throws IOException if there is a file system problem
      * @throws GeneralSecurityException if there is a violation of policy
      */
-    IdentityCertificate generateIdentityCert(Consumer consumer)
-        throws GeneralSecurityException, IOException;
+    Certificate generateIdentityCert(Consumer consumer) throws GeneralSecurityException, IOException;
 
     /**
      * Regenerates the identity certificate for the given consumer.
@@ -46,8 +45,7 @@ public interface IdentityCertServiceAdapter {
      * @throws IOException if there is a file system problem
      * @throws GeneralSecurityException if there is a violation of policy
      */
-    IdentityCertificate regenerateIdentityCert(Consumer consumer)
-        throws GeneralSecurityException, IOException;
+    Certificate regenerateIdentityCert(Consumer consumer) throws GeneralSecurityException, IOException;
 
     /**
      * Deletes the certificate associated with the consumer

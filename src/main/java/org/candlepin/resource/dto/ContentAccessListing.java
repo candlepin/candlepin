@@ -14,17 +14,20 @@
  */
 package org.candlepin.resource.dto;
 
+import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+
 
 /**
  * ContentAccessListing class dto for return data for content access API
  */
 public class ContentAccessListing {
     private Date lastUpdate;
-    private Map<Long, List<String>> content = new HashMap<>();
+    private Map<BigInteger, List<String>> content = new HashMap<>();
 
     public ContentAccessListing setLastUpdate(Date lastUpdate) {
         this.lastUpdate = lastUpdate;
@@ -35,12 +38,12 @@ public class ContentAccessListing {
         return this.lastUpdate;
     }
 
-    public ContentAccessListing setContentListing(Long serial, List<String> contentListing) {
+    public ContentAccessListing setContentListing(BigInteger serial, List<String> contentListing) {
         this.content.put(serial, contentListing);
         return this;
     }
 
-    public Map<Long, List<String>> getContentListing() {
+    public Map<BigInteger, List<String>> getContentListing() {
         return this.content;
     }
 }

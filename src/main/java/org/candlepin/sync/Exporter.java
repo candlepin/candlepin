@@ -22,16 +22,14 @@ import org.candlepin.dto.manifest.v1.CertificateDTO;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
+import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
@@ -58,6 +56,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -105,14 +104,23 @@ public class Exporter {
     private SyncUtils syncUtils;
 
     @Inject
-    public Exporter(ConsumerTypeCurator consumerTypeCurator, OwnerCurator ownerCurator, MetaExporter meta,
-        ConsumerExporter consumerExporter, ConsumerTypeExporter consumerType,
+    public Exporter(ConsumerTypeCurator consumerTypeCurator,
+        OwnerCurator ownerCurator,
+        MetaExporter meta,
+        ConsumerExporter consumerExporter,
+        ConsumerTypeExporter consumerType,
         RulesExporter rules,
-        EntitlementCertServiceAdapter entCertAdapter, ProductExporter productExporter,
-        ProductServiceAdapter productAdapter, ProductCertExporter productCertExporter,
-        EntitlementCurator entitlementCurator, EntitlementExporter entExporter,
-        PKIUtility pki, Configuration config, ExportRules exportRules,
-        PrincipalProvider principalProvider, DistributorVersionCurator distVerCurator,
+        EntitlementCertServiceAdapter entCertAdapter,
+        ProductExporter productExporter,
+        ProductServiceAdapter productAdapter,
+        ProductCertExporter productCertExporter,
+        EntitlementCurator entitlementCurator,
+        EntitlementExporter entExporter,
+        PKIUtility pki,
+        Configuration config,
+        ExportRules exportRules,
+        PrincipalProvider principalProvider,
+        DistributorVersionCurator distVerCurator,
         DistributorVersionExporter distVerExporter,
         CdnCurator cdnCurator,
         CdnExporter cdnExporter,
@@ -181,7 +189,7 @@ public class Exporter {
         }
     }
 
-    public File getEntitlementExport(Consumer consumer, Set<Long> serials) throws ExportCreationException {
+    public File getEntitlementExport(Consumer consumer, Set<BigInteger> serials) throws ExportCreationException {
         // TODO: need to delete tmpDir (which contains the archive,
         // which we need to return...)
         try {
@@ -381,26 +389,31 @@ public class Exporter {
         }
     }
 
-    private void exportEntitlementsCerts(File baseDir, Consumer consumer,
-        Set<Long> serials, boolean manifest)
-        throws IOException {
+    private void exportEntitlementsCerts(File baseDir, Consumer consumer, Set<BigInteger> serials,
+        boolean manifest) throws IOException {
 
         File entCertDir = new File(baseDir.getCanonicalPath(), "entitlement_certificates");
         entCertDir.mkdir();
 
-        for (EntitlementCertificate cert : entCertAdapter.listForConsumer(consumer)) {
-            if (manifest && !this.exportRules.canExport(cert.getEntitlement())) {
+        CertificateExporter certExporter = new CertificateExporter();
+
+        for (Entitlement entitlement : this.entitlementCurator.listByConsumer(consumer)) {
+            if (manifest && !this.exportRules.canExport(entitlement)) {
                 log.debug("Skipping export of entitlement cert with product: {}",
-                    cert.getEntitlement().getPool().getProductId());
+                    entitlement.getPool().getProductId());
 
                 continue;
             }
 
-            if ((serials == null) || (serials.contains(cert.getSerial().getId()))) {
-                log.debug("Exporting entitlement certificate: {}", cert.getSerial());
-                File file = new File(entCertDir.getCanonicalPath(), cert.getSerial().getId() + ".pem");
+            // TODO: FIXME: This is hitting the n+1 query problem. Actually fix this with a proper
+            // query going forward.
+            for (Certificate cert : entitlement.getCertificates()) {
+                if (serials == null || serials.contains(cert.getSerial())) {
+                    log.debug("Exporting entitlement certificate: {}", cert);
+                    File file = new File(entCertDir.getCanonicalPath(), cert.getSerial() + ".pem");
 
-                new CertificateExporter().exportCertificate(cert, file);
+                    certExporter.exportCertificate(cert, file);
+                }
             }
         }
     }
@@ -421,22 +434,25 @@ public class Exporter {
      * @throws IOException
      *  Throws IO exception if unable to export content access certs for the consumer.
      */
-    private void exportContentAccessCerts(File baseDir, Consumer consumer,
-        Set<Long> serials) throws IOException {
-        ContentAccessCertificate contentAccessCert = this.contentAccessManager.getCertificate(consumer);
+    private void exportContentAccessCerts(File baseDir, Consumer consumer, Set<BigInteger> serials)
+        throws IOException {
 
-        if (contentAccessCert != null &&
-            (serials == null || contentAccessCert.getSerial() == null ||
-            serials.contains(contentAccessCert.getSerial().getId()))) {
-            File contentAccessCertDir = new File(baseDir.getCanonicalPath(), "content_access_certificates");
-            contentAccessCertDir.mkdir();
-
-            log.debug("Exporting content access certificate: {}", contentAccessCert.getSerial());
-            File file = new File(contentAccessCertDir.getCanonicalPath(),
-                contentAccessCert.getSerial().getId() + ".pem");
-
-            new CertificateExporter().exportCertificate(contentAccessCert, file);
+        Certificate cacert = this.contentAccessManager.getCertificate(consumer);
+        if (cacert == null) {
+            return;
         }
+
+        // Only export it if we're not filtering, or the cacert is included in the targeted certs
+        if (serials != null && !serials.contains(cacert.getSerial())) {
+            return;
+        }
+
+        File contentAccessCertDir = new File(baseDir.getCanonicalPath(), "content_access_certificates");
+        contentAccessCertDir.mkdir();
+
+        log.debug("Exporting content access certificate: {}", cacert.getSerial());
+        File file = new File(contentAccessCertDir.getCanonicalPath(), cacert.getSerial() + ".pem");
+        new CertificateExporter().exportCertificate(cacert, file);
     }
 
     private void exportIdentityCertificate(File baseDir, Consumer consumer)
@@ -445,10 +461,10 @@ public class Exporter {
         File idcertdir = new File(baseDir.getCanonicalPath(), "upstream_consumer");
         idcertdir.mkdir();
 
-        IdentityCertificate cert = consumer.getIdCert();
+        Certificate cert = consumer.getIdCert();
 
         // paradigm dictates this should go in an exporter.export method
-        File file = new File(idcertdir.getCanonicalPath(), cert.getSerial().getId() + ".json");
+        File file = new File(idcertdir.getCanonicalPath(), cert.getSerial() + ".json");
         try (FileWriter writer = new FileWriter(file)) {
             mapper.writeValue(writer, this.translator.translate(cert, CertificateDTO.class));
         }
@@ -456,6 +472,7 @@ public class Exporter {
 
     private void exportEntitlements(File baseDir, Consumer consumer)
         throws IOException, ExportCreationException {
+
         File entCertDir = new File(baseDir.getCanonicalPath(), "entitlements");
         entCertDir.mkdir();
 

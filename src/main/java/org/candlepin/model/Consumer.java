@@ -370,11 +370,11 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
     @HateoasArrayExclude
     @XmlTransient
-    public ContentAccessCertificate getContentAccessCert() {
+    public Certificate getContentAccessCert() {
         return contentAccessCert;
     }
 
-    public void setContentAccessCert(ContentAccessCertificate contentAccessCert) {
+    public void setContentAccessCert(Certificate contentAccessCert) {
         this.contentAccessCert = contentAccessCert;
     }
 

@@ -37,7 +37,7 @@
 
             <column name="payload" type="${blob.type}"/>
 
-            <column name="expiration" type="${blob.type}">
+            <column name="expiration" type="${timestamp.type}">
                 <constraints nullable="false"/>
             </column>
 

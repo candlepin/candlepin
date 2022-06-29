@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2017 Red Hat, Inc.
+ * Copyright (c) 2009 - 2022 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -16,21 +16,24 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
-import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.Certificate;
 import org.candlepin.util.Util;
 
+import java.math.BigInteger;
+
+
+
 /**
- * The CertificateSerialTranslator provides translation from CertificateSerial model objects to
- * CertificateSerialDTOs
+ * The CertificateSerialTranslator provides translation from Certificate model objects to
+ * CertificateSerialDTOs for the API endpoints
  */
-public class CertificateSerialTranslator implements ObjectTranslator<CertificateSerial,
-    CertificateSerialDTO> {
+public class CertificateSerialTranslator implements ObjectTranslator<Certificate, CertificateSerialDTO> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public CertificateSerialDTO translate(CertificateSerial source) {
+    public CertificateSerialDTO translate(Certificate source) {
         return this.translate(null, source);
     }
 
@@ -38,7 +41,7 @@ public class CertificateSerialTranslator implements ObjectTranslator<Certificate
      * {@inheritDoc}
      */
     @Override
-    public CertificateSerialDTO translate(ModelTranslator translator, CertificateSerial source) {
+    public CertificateSerialDTO translate(ModelTranslator translator, Certificate source) {
         return source != null ? this.populate(translator, source, new CertificateSerialDTO()) : null;
     }
 
@@ -46,30 +49,33 @@ public class CertificateSerialTranslator implements ObjectTranslator<Certificate
      * {@inheritDoc}
      */
     @Override
-    public CertificateSerialDTO populate(CertificateSerial source, CertificateSerialDTO dest) {
-        return this.populate(null, source, dest);
+    public CertificateSerialDTO populate(Certificate source, CertificateSerialDTO destination) {
+        return this.populate(null, source, destination);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public CertificateSerialDTO populate(ModelTranslator translator, CertificateSerial source,
+    public CertificateSerialDTO populate(ModelTranslator translator, Certificate source,
         CertificateSerialDTO dest) {
+
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
 
         if (dest == null) {
-            throw new IllegalArgumentException("dest is null");
+            throw new IllegalArgumentException("destination is null");
         }
 
         dest.id(source.getId())
-            .serial(source.getSerial() == null ? null : source.getSerial().longValue())
             .created(Util.toDateTime(source.getCreated()))
             .updated(Util.toDateTime(source.getUpdated()))
             .expiration(Util.toDateTime(source.getExpiration()))
             .revoked(source.isRevoked());
+
+        BigInteger serial = source.getSerial();
+        dest.serial(serial != null ? serial.toString() : null);
 
         return dest;
     }

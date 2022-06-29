@@ -946,8 +946,8 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     // TODO: watch out for performance. Should we limit the certificates
     // retrieved?
     @SuppressWarnings("unchecked")
-    public List<EntitlementCertificate> retrieveEntCertsOfPoolsWithSourceEntitlement(String entId) {
-        return currentSession().createCriteria(EntitlementCertificate.class)
+    public List<Certificate> retrieveEntCertsOfPoolsWithSourceEntitlement(String entId) {
+        return currentSession().createCriteria(Certificate.class)
             .createCriteria("entitlement")
             .createCriteria("pool")
             .createCriteria("sourceEntitlement")

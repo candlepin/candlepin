@@ -264,7 +264,7 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
         return certificate == null || certificate.getSerial() == null ||
             certificate.getId() == null || certificate.getId().isEmpty() ||
             certificate.getKey() == null || certificate.getKey().isEmpty() ||
-            certificate.getCertificate() == null || certificate.getCertificate().isEmpty();
+            certificate.getCert() == null || certificate.getCert().isEmpty();
     }
 
     /**

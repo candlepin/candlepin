@@ -18,8 +18,11 @@ import org.candlepin.model.CertificateCurator;
 
 import com.google.inject.Inject;
 
-import java.util.List;
+import java.math.BigInteger;
 import java.util.Objects;
+import java.util.stream.Stream;
+
+
 
 public class CrlResource implements CrlApi {
 
@@ -31,8 +34,10 @@ public class CrlResource implements CrlApi {
     }
 
     @Override
-    public List<Long> getCurrentCrl() {
-        return this.certificateCurator.getNonExpiredRevokedSerials();
+    public Stream<String> getCurrentCrl() {
+        return this.certificateCurator.getNonExpiredRevokedSerials()
+            .stream()
+            .map(BigInteger::toString);
     }
 
 }

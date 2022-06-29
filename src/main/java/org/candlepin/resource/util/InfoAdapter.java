@@ -53,6 +53,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+
+
 
 /**
  * Represents the adapters class to convert the DTOs object into
@@ -658,46 +662,59 @@ public class InfoAdapter {
         return new CertificateInfo() {
 
             @Override
-            public CertificateSerialInfo getSerial() {
-                return source.getSerial() != null ? certificateSerialInfoAdapter(source.getSerial()) : null;
+            public Date getCreated() {
+                return null;
             }
 
             @Override
-            public String getKey() {
-                return source.getKey();
+            public Date getUpdated() {
+                return null;
             }
-
-            @Override
-            public String getCertificate() {
-                return source.getCert();
-            }
-        };
-    }
-
-    /**
-     * This method adapts the CertificateSerialDTO
-     * into CertificateSerialInfo object.
-     *
-     * @param source CertificateSerialDTO object
-     *
-     * @return CertificateSerialInfo object
-     */
-    public static CertificateSerialInfo certificateSerialInfoAdapter(CertificateSerialDTO source) {
-        return new CertificateSerialInfo() {
 
             @Override
             public BigInteger getSerial() {
-                return BigInteger.valueOf(source.getSerial());
+                CertificateSerialDTO csdto = source.getSerial();
+
+                if (csdto != null) {
+                    String serial = csdto.getSerial();
+                    return serial != null ? new BigInteger(serial) : null;
+                }
+
+                return null;
+            }
+
+            @Override
+            public byte[] getPrivateKey() {
+                String key = source.getKey();
+                return key != null ? key.getBytes() : null;
+            }
+
+            @Override
+            public byte[] getCertificate() {
+                String cert = source.getCert();
+                return cert != null ? cert.getBytes() : null;
+            }
+
+            @Override
+            public byte[] getPayload() {
+                return null;
+            }
+
+            @Override
+            public Instant getExpiration() {
+                CertificateSerialDTO csdto = source.getSerial();
+                if (csdto != null) {
+                    OffsetDateTime expiration = csdto.getExpiration();
+                    return expiration != null ? expiration.toInstant() : null;
+                }
+
+                return null;
             }
 
             @Override
             public Boolean isRevoked() {
-                return source.getRevoked();
-            }
-
-            @Override
-            public Date getExpiration() {
-                return Util.toDate(source.getExpiration());
+                CertificateSerialDTO csdto = source.getSerial();
+                return csdto != null ? csdto.getRevoked() : null;
             }
         };
     }

@@ -14,11 +14,14 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.service.model.CertificateInfo;
+
 import org.hibernate.annotations.GenericGenerator;
 
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -27,21 +30,27 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 
-// Something something not-a-cert, db container for x509 cert, private key, and payload
+
+/**
+ * Something something not-a-cert, db container for x509 cert, private key, and payload. Write a
+ * better version of this.
+ */
 @Entity
 @Table(name = Certificate.DB_TABLE)
-public class Certificate extends AbstractHibernateObject<Certificate> {
+public class Certificate extends AbstractHibernateObject<Certificate> implements CertificateInfo {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_certificates";
 
     public static enum Type {
         UNKNOWN,
+        CDN,
         CONTENT_ACCESS,
         ENTITLEMENT,
         IDENTITY,
         PRODUCT,
-        UEBER
+        UEBER,
+        UPSTREAM_ENTITLEMENT
 
         // We could put handy things in here like "revocable" or ... actually that's probably all.
     }
@@ -167,25 +176,38 @@ public class Certificate extends AbstractHibernateObject<Certificate> {
     }
 
     public Certificate setExpiration(Instant expiration) {
-        if (expiriation == null) {
-            throw new IllegalArgumentException("expiriation is null");
+        if (expiration == null) {
+            throw new IllegalArgumentException("expiration is null");
         }
 
-        this.expiriation = expiriation;
+        this.expiration = expiration;
         return this;
     }
 
-    public boolean isExpired() {
-        return this.expiration != null ? this.expiration.before(Instant.now()) : false;
+    public Certificate setExpiration(Date expiration) {
+        if (expiration == null) {
+            throw new IllegalArgumentException("expiration is null");
+        }
+
+        return this.setExpiration(expiration.toInstant());
     }
 
-    public boolean isRevoked() {
+    public boolean isExpired() {
+        return this.expiration != null ? this.expiration.isBefore(Instant.now()) : false;
+    }
+
+    public Boolean isRevoked() {
         return this.revoked;
     }
 
     public Certificate setRevoked(boolean revoked) {
         this.revoked = revoked;
         return this;
+    }
+
+    public Certificate setRevoked(Boolean revoked) {
+        // Safe auto-unboxing
+        return revoked != null ? this.setRevoked(revoked.booleanValue()) : this;
     }
 
     @Override

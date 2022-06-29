@@ -16,12 +16,14 @@ package org.candlepin.resource;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
+import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.CertificateCurator;
 
 import com.google.inject.Inject;
 
 import java.math.BigInteger;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 
@@ -52,11 +54,6 @@ public class CertificateSerialResource implements SerialsApi {
     public CertificateSerialDTO getCertificateSerial(String serial) {
         BigInteger converted = this.convertSerial(serial);
         Certificate certificate = this.certificateCurator.getBySerial(converted);
-
-        if (certificate == null) {
-            throw new NotFoundException("no such serial: " + serial); // TODO: this needs to be translated
-        }
-
         return this.translator.translate(certificate, CertificateSerialDTO.class);
     }
 

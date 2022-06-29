@@ -47,6 +47,9 @@ import java.util.TimeZone;
 
 /**
  * UeberCertificateGenerator
+ *
+ * TODO: Rename this to UeberCertificateManager or UeberCertificateController and move it to
+ * org.candlepin.controller
  */
 public class UeberCertificateGenerator {
     private static final String UEBER_CERT_CONSUMER_TYPE = "uebercert";
@@ -76,7 +79,6 @@ public class UeberCertificateGenerator {
 
         this.idGenerator = Objects.requireNonNull(idGenerator);
         this.pki = Objects.requireNonNull(pki);
-        this.serialCurator = Objects.requireNonNull(serialCurator);
         this.extensionUtil = Objects.requireNonNull(extensionUtil);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.certificateCurator = Objects.requireNonNull(certificateCurator);
@@ -95,7 +97,7 @@ public class UeberCertificateGenerator {
 
         try {
             // There can only be one ueber certificate per owner, so delete the existing and regenerate it.
-            this.ueberCertCurator.deleteForOwner(owner);
+            this.certificateCurator.revokeUeberCertificate(owner);
             return  this.generateUeberCert(owner, principal.getUsername());
         }
         catch (Exception e) {
@@ -109,27 +111,30 @@ public class UeberCertificateGenerator {
         ConsumerType ueberCertType = this.consumerTypeCurator.getByLabel(UEBER_CERT_CONSUMER_TYPE, true);
         UeberCertData ueberCertData = new UeberCertData(owner, generatedByUsername, ueberCertType);
 
-        BigInteger serial = this.pki.generateCertificateSerial();
-        KeyPair keyPair = this.pki.generateKeyPair();
-        X509Certificate x509Cert = this.createX509Certificate(ueberCertData, serial, keypair);
+        KeyPair keypair = this.pki.generateKeyPair();
+        X509Certificate x509Cert = this.createX509Certificate(ueberCertData, keypair);
+
+        byte[] certpem = this.pki.getPemEncoded(x509Cert);
+        byte[] pkeypem = this.pki.getPemEncoded(keypair.getPrivate());
 
         Certificate ueberCert = new Certificate()
             .setType(Certificate.Type.UEBER)
-            .setSerial(serial)
-            .setCertificate(this.pki.getPemEncoded(x509Cert))
-            .setPrivateKeyData(this.pki.getPemEncoded(keyPair.getPrivate()))
+            .setSerial(x509Cert.getSerialNumber())
+            .setCertificate(certpem)
+            .setPrivateKey(pkeypem)
             .setExpiration(x509Cert.getNotAfter().toInstant())
             .setCreated(ueberCertData.getStartDate())
             .setUpdated(ueberCertData.getStartDate()); // Why are we explicitly setting the dates here?
 
-        this.ueberCertCurator.create(ueberCert);
-        owner.setUeberCert(ueberCert);
+        this.certificateCurator.create(ueberCert);
+        owner.setUeberCertificate(ueberCert);
 
         return ueberCert;
     }
 
-    private X509Certificate createX509Certificate(UeberCertData data, BigInteger serialNumber,
-        KeyPair keyPair) throws GeneralSecurityException, IOException {
+    private X509Certificate createX509Certificate(UeberCertData data, KeyPair keyPair)
+        throws GeneralSecurityException, IOException {
+
         Set<X509ExtensionWrapper> extensions = new LinkedHashSet<>();
         extensions.addAll(extensionUtil.productExtensions(data.getProduct()));
         extensions.addAll(extensionUtil.contentExtensions(data.getProduct().getProductContent(),
@@ -146,9 +151,12 @@ public class UeberCertificateGenerator {
         }
 
         String dn = "O=" + data.getOwner().getKey();
+        BigInteger serial = this.pki.generateCertificateSerial();
+
         Set<X509ByteExtensionWrapper> byteExtensions = new LinkedHashSet<>();
-        return this.pki.createX509Certificate(dn, extensions, byteExtensions,  data.getStartDate(),
-            data.getEndDate(), keyPair, serialNumber, null);
+
+        return this.pki.createX509Certificate(dn, extensions, byteExtensions, data.getStartDate(),
+            data.getEndDate(), keyPair, serial, null);
     }
 
     /**

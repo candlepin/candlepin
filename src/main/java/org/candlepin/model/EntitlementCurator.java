@@ -969,17 +969,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
     private void deleteImpl(Entitlement entity) {
         log.debug("Deleting entitlement: {}", entity);
-        EntityManager entityManager = this.getEntityManager();
-
-        if (entity.getCertificates() != null) {
-            log.debug("certs.size = {}", entity.getCertificates().size());
-
-            for (EntitlementCertificate cert : entity.getCertificates()) {
-                entityManager.remove(cert);
-            }
-        }
-
-        entityManager.remove(entity);
+        this.getEntityManager().remove(entity);
     }
 
     @Transactional
@@ -992,13 +982,6 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
     @Transactional
     public Entitlement replicate(Entitlement ent) {
-        for (EntitlementCertificate ec : ent.getCertificates()) {
-            ec.setEntitlement(ent);
-            CertificateSerial cs = ec.getSerial();
-            if (cs != null) {
-                this.currentSession().replicate(cs, ReplicationMode.EXCEPTION);
-            }
-        }
         this.currentSession().replicate(ent, ReplicationMode.EXCEPTION);
 
         return ent;

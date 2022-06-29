@@ -15,9 +15,10 @@
 package org.candlepin.sync;
 
 import org.candlepin.dto.manifest.v1.CdnDTO;
+import org.candlepin.dto.manifest.v1.CertificateDTO;
 import org.candlepin.model.Cdn;
-import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
+import org.candlepin.model.Certificate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -100,11 +101,13 @@ public class CdnImporter {
         entity.setUpdated(dto.getUpdated());
         entity.setCreated(dto.getCreated());
 
-        if (dto.getCertificate() != null) {
-            CdnCertificate cdnCert = new CdnCertificate();
-            ImporterUtils.populateEntity(cdnCert, dto.getCertificate());
-            cdnCert.setId(dto.getId());
-            entity.setCertificate(cdnCert);
+        CertificateDTO certDto = dto.getCertificate();
+        if (certDto != null) {
+            Certificate cert = ImporterUtils.populateEntity(new Certificate(), certDto)
+                .setType(Certificate.Type.CDN)
+                .setId(dto.getId());
+
+            entity.setCertificate(cert);
         }
     }
 }

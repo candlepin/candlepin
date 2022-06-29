@@ -29,15 +29,14 @@ import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.RefreshWorker;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
-import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
-import org.candlepin.model.CertificateSerial;
+import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -50,7 +49,6 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
-import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
@@ -91,6 +89,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -129,7 +128,7 @@ public class CandlepinPoolManager implements PoolManager {
     private final EntitlementCurator entitlementCurator;
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
-    private final EntitlementCertificateCurator entitlementCertificateCurator;
+    private final CertificateCurator certificateCurator;
     private final EntitlementCertificateGenerator ecGenerator;
     private final ComplianceRules complianceRules;
     private final SystemPurposeComplianceRules systemPurposeComplianceRules;
@@ -161,7 +160,7 @@ public class CandlepinPoolManager implements PoolManager {
         EntitlementCurator entitlementCurator,
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
-        EntitlementCertificateCurator entitlementCertCurator,
+        CertificateCurator certificateCurator,
         EntitlementCertificateGenerator ecGenerator,
         ComplianceRules complianceRules,
         SystemPurposeComplianceRules systemPurposeComplianceRules,
@@ -186,7 +185,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.enforcer = Objects.requireNonNull(enforcer);
         this.poolRules = Objects.requireNonNull(poolRules);
-        this.entitlementCertificateCurator = Objects.requireNonNull(entitlementCertCurator);
+        this.certificateCurator = Objects.requireNonNull(certificateCurator);
         this.ecGenerator = Objects.requireNonNull(ecGenerator);
         this.complianceRules = Objects.requireNonNull(complianceRules);
         this.systemPurposeComplianceRules = Objects.requireNonNull(systemPurposeComplianceRules);
@@ -881,6 +880,39 @@ public class CandlepinPoolManager implements PoolManager {
         }
     }
 
+    private Certificate translateCertificateInfo(CertificateInfo cinfo) {
+        if (cinfo == null) {
+            return null;
+        }
+
+        // Impl note:
+        // We don't set the ID or serial here, as we generate the ID automagically, and the
+        // serial is currently implemented as an alias for the ID.
+
+        // TODO: FIXME:
+        // Shouldn't we just be using the serial of the cert given? Seems rather pointless
+        // to be throwing it out and generating a new one if we go through the trouble of
+        // trying to make it globally unique.
+
+        Certificate cert = new Certificate()
+            .setCreated(cinfo.getCreated())
+            .setUpdated(cinfo.getUpdated())
+            .setCertificate(cinfo.getCertificate())
+            .setPrivateKey(cinfo.getPrivateKey());
+
+        Boolean revoked = cinfo.isRevoked();
+        if (revoked != null) {
+            cert.setRevoked(revoked.booleanValue());
+        }
+
+        Instant expiration = cinfo.getExpiration();
+        if (expiration != null) {
+            cert.setExpiration(expiration);
+        }
+
+        return cert;
+    }
+
     /**
      * Builds a pool instance from the given subscription, using the specified owner and products
      * for resolution.
@@ -895,7 +927,6 @@ public class CandlepinPoolManager implements PoolManager {
      * @param owner
      *  The owner the pool will be assigned to
      */
-    @SuppressWarnings("checkstyle:methodlength")
     private Pool convertToMasterPoolImpl(SubscriptionInfo sub, Owner owner, Map<String, Product> productMap) {
         if (sub == null) {
             throw new IllegalArgumentException("subscription is null");
@@ -950,27 +981,9 @@ public class CandlepinPoolManager implements PoolManager {
                 cdn.setUrl(cinfo.getUrl());
 
                 // More cert stuff...
-                if (cinfo.getCertificate() != null) {
-                    CertificateInfo certInfo = cinfo.getCertificate();
-                    CdnCertificate cert = new CdnCertificate();
-
-                    cert.setKey(certInfo.getKey());
-                    cert.setCert(certInfo.getCertificate());
-
-                    if (certInfo.getSerial() != null) {
-                        CertificateSerialInfo serialInfo = certInfo.getSerial();
-                        CertificateSerial serial = new CertificateSerial();
-
-                        // Impl note:
-                        // We don't set the ID or serial here, as we generate the ID automagically,
-                        // and the serial is currently implemented as an alias for the ID.
-
-                        serial.setRevoked(serialInfo.isRevoked());
-                        serial.setExpiration(serialInfo.getExpiration());
-
-                        cert.setSerial(serial);
-                    }
-
+                CertificateInfo cdnCert = cinfo.getCertificate();
+                if (cdnCert != null) {
+                    Certificate cert = this.translateCertificateInfo(cdnCert);
                     cdn.setCertificate(cert);
                 }
             }
@@ -979,31 +992,12 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Resolve subscription certificate
-        if (sub.getCertificate() != null) {
+        CertificateInfo upstreamEntitlementCert = sub.getCertificate();
+        if (upstreamEntitlementCert != null) {
             // FIXME: This is probably incorrect. We're blindly copying the cert info to new
             // certificate objects, as this was effectively what we were doing before, but it seems
             // a tad dangerous.
-
-            CertificateInfo certInfo = sub.getCertificate();
-            SubscriptionsCertificate cert = new SubscriptionsCertificate();
-
-            cert.setKey(certInfo.getKey());
-            cert.setCert(certInfo.getCertificate());
-
-            if (certInfo.getSerial() != null) {
-                CertificateSerialInfo serialInfo = certInfo.getSerial();
-                CertificateSerial serial = new CertificateSerial();
-
-                // Impl note:
-                // We don't set the ID or serial here, as we generate the ID automagically, and the
-                // serial is currently implemented as an alias for the ID.
-
-                serial.setRevoked(serialInfo.isRevoked());
-                serial.setExpiration(serialInfo.getExpiration());
-
-                cert.setSerial(serial);
-            }
-
+            Certificate cert = this.translateCertificateInfo(upstreamEntitlementCert);
             pool.setCertificate(cert);
         }
 
@@ -2278,10 +2272,10 @@ public class CandlepinPoolManager implements PoolManager {
             if (!entitlements.isEmpty()) {
                 log.info("Revoking {} entitlements...", entitlements.size());
                 this.entitlementCurator.unlinkEntitlements(entitlements);
-                this.entitlementCertificateCurator.deleteByEntitlementIds(entitlementIds);
+                this.certificateCurator.revokeEntitlementCertificates(entitlementIds);
                 this.entitlementCurator.batchDeleteByIds(entitlementIds);
                 this.entitlementCurator.flush();
-                this.entitlementCurator.batchDetach(entitlements);
+                // this.entitlementCurator.batchDetach(entitlements);
                 log.info("Entitlements successfully revoked");
             }
             else {

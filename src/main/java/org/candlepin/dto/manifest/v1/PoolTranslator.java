@@ -17,11 +17,11 @@ package org.candlepin.dto.manifest.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Branding;
+import org.candlepin.model.Certificate;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.SubscriptionsCertificate;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -134,7 +134,7 @@ public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
             Owner owner = source.getOwner();
             dest.setOwner(owner != null ? modelTranslator.translate(owner, OwnerDTO.class) : null);
 
-            SubscriptionsCertificate subCertificate = source.getCertificate();
+            Certificate subCertificate = source.getCertificate();
             dest.setCertificate(subCertificate != null ?
                 modelTranslator.translate(subCertificate, CertificateDTO.class) : null);
 

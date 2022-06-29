@@ -21,16 +21,14 @@ import org.candlepin.controller.util.ContentPrefix;
 import org.candlepin.controller.util.PromotedContent;
 import org.candlepin.controller.util.ScaContainerContentPrefix;
 import org.candlepin.controller.util.ScaContentPrefix;
-import org.candlepin.model.CertificateSerial;
-import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.Certificate;
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ContentAccessCertificate;
-import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
@@ -44,6 +42,7 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.util.OIDUtil;
+import org.candlepin.util.Interval;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
@@ -61,6 +60,9 @@ import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -191,15 +193,15 @@ public class ContentAccessManager {
 
     private final Configuration config;
     private final PKIUtility pki;
-    private final CertificateSerialCurator serialCurator;
+    private final X509V3ExtensionUtil v3extensionUtil;
+
+    private final CertificateCurator certificateCurator;
     private final OwnerCurator ownerCurator;
     private final OwnerContentCurator ownerContentCurator;
-    private final ContentAccessCertificateCurator contentAccessCertificateCurator;
-    private final X509V3ExtensionUtil v3extensionUtil;
     private final ConsumerCurator consumerCurator;
     private final ConsumerTypeCurator consumerTypeCurator;
     private final EnvironmentCurator environmentCurator;
-    private final ContentAccessCertificateCurator contentAccessCertCurator;
+
     private final EventSink eventSink;
     private final boolean standalone;
 
@@ -208,27 +210,25 @@ public class ContentAccessManager {
         Configuration config,
         PKIUtility pki,
         X509V3ExtensionUtil v3extensionUtil,
-        ContentAccessCertificateCurator contentAccessCertificateCurator,
-        CertificateSerialCurator serialCurator,
+        CertificateCurator certificateCurator,
         OwnerCurator ownerCurator,
         OwnerContentCurator ownerContentCurator,
         ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
         EnvironmentCurator environmentCurator,
-        ContentAccessCertificateCurator contentAccessCertCurator,
         EventSink eventSink) {
 
         this.config = Objects.requireNonNull(config);
         this.pki = Objects.requireNonNull(pki);
-        this.contentAccessCertificateCurator = Objects.requireNonNull(contentAccessCertificateCurator);
-        this.serialCurator = Objects.requireNonNull(serialCurator);
         this.v3extensionUtil = Objects.requireNonNull(v3extensionUtil);
+
+        this.certificateCurator = Objects.requireNonNull(certificateCurator);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
-        this.contentAccessCertCurator = Objects.requireNonNull(contentAccessCertCurator);
+
         this.eventSink = Objects.requireNonNull(eventSink);
         this.standalone = this.config.getBoolean(ConfigProperties.STANDALONE, true);
     }
@@ -240,7 +240,7 @@ public class ContentAccessManager {
      *
      * @return Client entitlement certificates
      */
-    public ContentAccessCertificate getCertificate(Consumer consumer) {
+    public Certificate getCertificate(Consumer consumer) {
         // TODO: FIXME: Redesign all of this.
 
         // Ensure the org is in SCA mode and the consumer is able to process the cert we'll be
@@ -251,17 +251,17 @@ public class ContentAccessManager {
         }
 
         try {
-            ContentAccessCertificate result = this.consumerCurator.<ContentAccessCertificate>transactional()
+            Certificate result = this.consumerCurator.<Certificate>transactional()
                 .allowExistingTransactions()
                 .onRollback(status -> log.error("Rolling back SCA cert (re)generation transaction"))
                 .execute(args -> {
-                    ContentAccessCertificate existing = consumer.getContentAccessCert();
+                    Certificate existing = consumer.getContentAccessCert();
                     return existing == null ?
-                        createNewScaCertificate(consumer, owner) :
-                        updateScaCertificate(consumer, owner, existing);
+                        this.createCACertificate(owner, consumer) :
+                        this.updateCACertificate(owner, consumer, existing);
                 });
 
-            return this.wrap(result);
+            return result;
         }
         catch (Exception e) {
             log.error("Unexpected exception occurred while fetching SCA certificate for consumer: {}",
@@ -271,112 +271,85 @@ public class ContentAccessManager {
         return null;
     }
 
-    private ContentAccessCertificate createNewScaCertificate(Consumer consumer, Owner owner)
+    private Certificate createCACertificate(Owner owner, Consumer consumer)
         throws IOException, GeneralSecurityException {
-        log.info("Generating new SCA certificate for consumer: \"{}\"", consumer.getUuid());
-        Validity oneYearValidity = Validity.oneYear();
-        CertificateSerial serial = createSerial(oneYearValidity);
 
-        KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
-        byte[] pemEncodedKeyPair = this.pki.getPemEncoded(keyPair.getPrivate());
+        log.info("Generating new CA certificate for consumer: \"{}\"", consumer.getUuid());
 
-        ContentAccessCertificate existing = new ContentAccessCertificate();
-        existing.setSerial(serial);
-        existing.setKeyAsBytes(pemEncodedKeyPair);
-        existing.setConsumer(consumer);
+        KeyPair keypair = this.pki.getConsumerKeyPair(consumer);
+        X509Certificate x509cert = this.createX509Cert(owner, consumer, keypair);
+        String payload = this.createPayloadAndSignature(owner, consumer);
 
-        existing.setCert(createX509Cert(consumer, owner, serial, keyPair, oneYearValidity));
-        existing.setContent(this.createPayloadAndSignature(owner, consumer));
-        ContentAccessCertificate savedCert = this.contentAccessCertificateCurator.create(existing);
-        consumer.setContentAccessCert(savedCert);
+        byte[] pkeypem = this.pki.getPemEncoded(keypair.getPrivate());
+        byte[] certpem = this.pki.getPemEncoded(x509cert);
+
+        Certificate cacert = new Certificate()
+            .setType(Certificate.Type.CONTENT_ACCESS)
+            .setSerial(x509cert.getSerialNumber())
+            .setPrivateKey(pkeypem)
+            .setCertificate(certpem)
+            .setPayload(payload)
+            .setExpiration(x509cert.getNotAfter().toInstant());
+
+        cacert = this.certificateCurator.create(cacert);
+
+        consumer.setContentAccessCert(cacert);
         this.consumerCurator.merge(consumer);
-        return savedCert;
+
+        return cacert;
     }
 
-    private ContentAccessCertificate updateScaCertificate(Consumer consumer, Owner owner,
-        ContentAccessCertificate existing) throws GeneralSecurityException, IOException {
-        Date now = new Date();
-        Date expiration = existing.getSerial().getExpiration();
-        boolean isX509CertExpired = expiration.before(now);
+    private Certificate updateCACertificate(Owner owner, Consumer consumer, Certificate existing)
+        throws GeneralSecurityException, IOException {
 
-        if (isX509CertExpired) {
-            Validity oneYearValidity = Validity.oneYear();
-            KeyPair keyPair = this.pki.getConsumerKeyPair(consumer);
-            this.serialCurator.revokeById(existing.getSerial().getId());
-            CertificateSerial serial = createSerial(oneYearValidity);
-            existing.setSerial(serial);
-            existing.setCert(createX509Cert(consumer, owner, serial, keyPair, oneYearValidity));
-            this.contentAccessCertificateCurator.saveOrUpdate(existing);
+        Certificate output = existing;
+
+        if (existing.isExpired()) {
+            log.info("Existing CA certificate has expired; generating a new one for consumer: {}",
+                consumer.getUuid());
+
+            // We don't need to delete the existing cert if it's expired; cert cleanup will deal
+            // with it
+
+            output = this.createCACertificate(owner, consumer);
+        }
+        else {
+            // Check if the payload is still valid
+            Date lastContentUpdate = owner.getLastContentUpdate();
+
+            if (lastContentUpdate.after(existing.getUpdated())) {
+                log.info("Org content has updated; updating CA certificate payload for consumer: {}",
+                    consumer.getUuid());
+
+                String payload = this.createPayloadAndSignature(owner, consumer);
+                existing.setPayload(payload);
+
+                output = this.certificateCurator.merge(existing);
+            }
         }
 
-        Date contentUpdate = owner.getLastContentUpdate();
-        boolean shouldUpdateContent = !contentUpdate.before(existing.getUpdated());
-        if (shouldUpdateContent || isX509CertExpired) {
-            existing.setContent(this.createPayloadAndSignature(owner, consumer));
-            this.contentAccessCertificateCurator.saveOrUpdate(existing);
-        }
-
-        return existing;
+        return output;
     }
 
-    private ContentAccessCertificate wrap(ContentAccessCertificate cert) {
-        ContentAccessCertificate result = new ContentAccessCertificate();
-        result.setCert(cert.getCert() + cert.getContent());
-        result.setCreated(cert.getCreated());
-        result.setUpdated(cert.getUpdated());
-        result.setId(cert.getId());
-        result.setConsumer(cert.getConsumer());
-        result.setKey(cert.getKey());
-        result.setSerial(cert.getSerial());
-        return result;
+    private Interval buildCAValidityInterval() {
+        Instant start = Instant.now()
+            .truncatedTo(ChronoUnit.HOURS)
+            .minus(1, ChronoUnit.HOURS);
+
+        Instant end = OffsetDateTime.now()
+            .plus(1, ChronoUnit.DAYS)
+            .truncatedTo(ChronoUnit.DAYS)
+            .plus(1, ChronoUnit.YEARS)
+            .toInstant();
+
+        return Interval.between(start, end);
     }
 
-    /**
-     * Represents a duration of certificate validity
-     */
-    private static class Validity {
-        private final Date start;
-        private final Date end;
-
-        public Validity(Date start, Date end) {
-            this.start = start;
-            this.end = end;
-        }
-
-        /**
-         * Create a validity duration of one year starting from one hour in the past.
-         */
-        public static Validity oneYear() {
-            Calendar cal = Calendar.getInstance();
-            cal.add(Calendar.HOUR, -1);
-            Date start = cal.getTime();
-            cal.add(Calendar.YEAR, 1);
-            Date end = cal.getTime();
-            return new Validity(start, end);
-        }
-
-        public Date start() {
-            return this.start;
-        }
-
-        public Date end() {
-            return this.end;
-        }
-
-    }
-
-    private CertificateSerial createSerial(Validity validity) {
-        CertificateSerial serial = new CertificateSerial(validity.end());
-        // We need the sequence generated id before we create the Certificate,
-        // otherwise we could have used cascading create
-        serialCurator.create(serial);
-        return serial;
-    }
-
-    private String createX509Cert(Consumer consumer, Owner owner, CertificateSerial serial,
-        KeyPair keyPair, Validity validity) throws GeneralSecurityException, IOException {
+    private X509Certificate createX509Cert(Owner owner, Consumer consumer, KeyPair keypair)
+        throws GeneralSecurityException, IOException {
 
         log.info("Generating X509 certificate for consumer \"{}\"...", consumer.getUuid());
+
         // fake a product dto as a container for the org content
         org.candlepin.model.dto.Product container = new org.candlepin.model.dto.Product();
         List<org.candlepin.model.dto.Content> dtoContents = new ArrayList<>();
@@ -397,11 +370,14 @@ public class ContentAccessManager {
         Set<X509ExtensionWrapper> extensions = prepareV3Extensions();
         Set<X509ByteExtensionWrapper> byteExtensions = prepareV3ByteExtensions(container);
 
-        X509Certificate x509Cert = this.pki.createX509Certificate(
-            createDN(consumer, owner), extensions, byteExtensions, validity.start(),
-            validity.end(), keyPair, BigInteger.valueOf(serial.getId()), null);
-        byte[] encodedCert = this.pki.getPemEncoded(x509Cert);
-        return new String(encodedCert);
+        Interval validity = this.buildCAValidityInterval();
+        Date startDate = Date.from(validity.getStart());
+        Date endDate = Date.from(validity.getEnd());
+
+        BigInteger serial = this.pki.generateCertificateSerial();
+
+        return this.pki.createX509Certificate(this.createDN(consumer, owner), extensions, byteExtensions,
+            startDate, endDate, keypair, serial, null);
     }
 
     private Content getContent(ContentPrefix prefix, String environmentId) {
@@ -577,17 +553,21 @@ public class ContentAccessManager {
             }
 
             // Check cert properties
-            ContentAccessCertificate cert = consumer.getContentAccessCert();
+            Certificate cert = consumer.getContentAccessCert();
             if (cert == null) {
                 return true;
             }
 
             // The date provided by the client does not preserve milliseconds, so we need to round down
             // the dates preserved on the server by removing milliseconds for a proper date comparison
-            Date certUpdatedDate = Util.roundDownToSeconds(cert.getUpdated());
-            Date certExpirationDate = Util.roundDownToSeconds(cert.getSerial().getExpiration());
-            return date.before(certUpdatedDate) ||
-                date.after(certExpirationDate);
+            Instant target = date.toInstant();
+
+            Instant certUpdatedDate = cert.getUpdated().toInstant()
+                .truncatedTo(ChronoUnit.SECONDS);
+            Instant certExpirationDate = cert.getExpiration()
+                .truncatedTo(ChronoUnit.SECONDS);
+
+            return target.isBefore(certUpdatedDate) || target.isAfter(certExpirationDate);
         }
 
         return false;
@@ -596,7 +576,7 @@ public class ContentAccessManager {
     @Transactional
     public void removeContentAccessCert(Consumer consumer) {
         if (consumer.getContentAccessCert() != null) {
-            this.contentAccessCertificateCurator.delete(consumer.getContentAccessCert());
+            this.certificateCurator.delete(consumer.getContentAccessCert());
             consumer.setContentAccessCert(null);
         }
     }
@@ -695,7 +675,7 @@ public class ContentAccessManager {
 
             this.syncOwnerLastContentUpdate(owner);
             if (isTurningOffSca(updatedMode, currentMode)) {
-                this.contentAccessCertCurator.deleteForOwner(owner);
+                this.certificateCurator.revokeOwnerContentAccessCertificates(owner);
             }
             this.eventSink.emitOwnerContentAccessModeChanged(owner);
 

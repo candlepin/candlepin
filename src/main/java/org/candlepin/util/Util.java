@@ -41,6 +41,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -589,6 +590,16 @@ public class Util {
      */
     public static OffsetDateTime toDateTime(Date date) {
         return date != null ? date.toInstant().atOffset(ZoneOffset.UTC) : null;
+    }
+
+    /*
+     * Translates a given date into an OffsetDateTime with UTC timezone.
+     *
+     * @return
+     *  OffsetDateTime or null if the given date is null
+     */
+    public static OffsetDateTime toDateTime(Instant instant) {
+        return instant != null ? instant.atOffset(ZoneOffset.UTC) : null;
     }
 
     /**

@@ -19,6 +19,10 @@ import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Certificate;
 import org.candlepin.util.Util;
 
+import java.math.BigInteger;
+
+
+
 /**
  * The CertificateTranslator provides translation from Certificate model objects to
  * CertificateDTOs for the API endpoints
@@ -63,13 +67,36 @@ public class CertificateTranslator implements ObjectTranslator<Certificate, Cert
         }
 
 
+        String cert = source.getCertificateAsString();
+        String payload = source.getPayloadAsString();
+        StringBuilder combined = new StringBuilder();
+
+        if (cert != null) {
+            combined.append(cert);
+        }
+
+        if (payload != null) {
+            combined.append(payload);
+        }
+
         dest.id(source.getId())
-            .key(source.getKey())
             .created(Util.toDateTime(source.getCreated()))
             .updated(Util.toDateTime(source.getUpdated()))
-            .cert(source.getCert())
-            .serial(translator != null ?
-            translator.translate(source.getSerial(), CertificateSerialDTO.class) : null);
+            .key(source.getPrivateKeyAsString())
+            .cert(combined.toString());
+
+        CertificateSerialDTO serialDto = dest.getSerial();
+        if (serialDto == null) {
+            serialDto = new CertificateSerialDTO();
+            dest.setSerial(serialDto);
+        }
+
+        BigInteger serial = source.getSerial();
+        serialDto.serial(serial != null ? serial.toString() : null)
+            .created(Util.toDateTime(source.getCreated()))
+            .updated(Util.toDateTime(source.getUpdated()))
+            .expiration(Util.toDateTime(source.getExpiration()))
+            .revoked(source.isRevoked());
 
         return dest;
     }

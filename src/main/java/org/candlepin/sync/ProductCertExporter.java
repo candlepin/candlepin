@@ -14,7 +14,7 @@
  */
 package org.candlepin.sync;
 
-import org.candlepin.model.ProductCertificate;
+import org.candlepin.model.Certificate;
 import org.candlepin.service.model.CertificateInfo;
 
 import java.io.FileWriter;
@@ -25,12 +25,10 @@ import java.io.IOException;
  */
 public class ProductCertExporter {
 
-    public void export(FileWriter writer, ProductCertificate productCert) throws IOException {
-        writer.write(productCert.getCert());
-    }
-
     public void export(FileWriter writer, CertificateInfo productCert) throws IOException {
-        writer.write(productCert.getCertificate());
+        String certString = new String(productCert.getCertificate());
+
+        writer.write(certString);
     }
 
 }

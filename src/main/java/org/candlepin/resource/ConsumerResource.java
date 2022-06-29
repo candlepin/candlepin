@@ -88,7 +88,6 @@ import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ContentAccessCertificate;
 import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.DistributorVersion;
@@ -102,7 +101,6 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.HypervisorId;
-import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -159,8 +157,11 @@ import org.xnap.commons.i18n.I18n;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -661,17 +662,21 @@ public class ConsumerResource implements ConsumersApi {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
 
         if (consumer != null) {
-            IdentityCertificate idcert = consumer.getIdCert();
+            Certificate idcert = consumer.getIdCert();
 
+            // Check if the identity cert is nearing expiration
             if (idcert != null) {
-                Date expire = idcert.getSerial().getExpiration();
                 int days = config.getInt(ConfigProperties.IDENTITY_CERT_EXPIRY_THRESHOLD, 90);
-                Date futureExpire = Util.addDaysToDt(days);
-                // if expiration is within 90 days, regenerate it
-                log.debug("Threshold [{}] expires on [{}] futureExpire [{}]", days, expire, futureExpire);
 
-                if (expire.before(futureExpire)) {
-                    log.info("Regenerating identity certificate for consumer: {}, expiry: {}", uuid, expire);
+                Instant threshold = idcert.getExpiration()
+                    .truncatedTo(ChronoUnit.DAYS)
+                    .minus(days, ChronoUnit.DAYS);
+
+                log.debug("Checking if identity cert is nearing expiration for consumer: {}", consumer);
+                log.debug("  Cert expiration: {}, threshold: {}", idcert.getExpiration(), threshold);
+
+                if (threshold.isBefore(Instant.now())) {
+                    log.info("Regenerating identity certificate for consumer: {}", consumer);
                     consumer = this.regenerateIdentityCertificate(consumer);
                 }
             }
@@ -1016,7 +1021,7 @@ public class ConsumerResource implements ConsumersApi {
             }
 
             if (identityCertCreation) {
-                IdentityCertificate idCert = generateIdCert(consumerToCreate, false);
+                Certificate idCert = this.generateIdCert(consumerToCreate, false);
                 consumerToCreate.setIdCert(idCert);
             }
 
@@ -1541,8 +1546,8 @@ public class ConsumerResource implements ConsumersApi {
             changesMade = true;
             // get the new name into the id cert if we are using the cert
             if (isIdCert) {
-                IdentityCertificate ic = generateIdCert(toUpdate, true);
-                toUpdate.setIdCert(ic);
+                Certificate idcert = this.generateIdCert(toUpdate, true);
+                toUpdate.setIdCert(idcert);
             }
         }
 
@@ -2049,6 +2054,7 @@ public class ConsumerResource implements ConsumersApi {
      */
     public List<CertificateDTO> getEntitlementCertificates(@Verify(Consumer.class) String consumerUuid,
         String serials) {
+
         log.debug("Getting client certificates for consumer: {}", consumerUuid);
 
         // UpdateConsumerCheckIn
@@ -2067,15 +2073,14 @@ public class ConsumerResource implements ConsumersApi {
         revokeOnGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
 
-        Set<Long> serialSet = this.extractSerials(serials);
         List<? extends Certificate> entitlementCerts = this.entCertService.listForConsumer(consumer);
         Certificate caCert = this.contentAccessManager.getCertificate(consumer);
         Stream<? extends Certificate> certStream = this.buildCertificateStream(entitlementCerts, caCert);
 
         // Check if we should filter certs by the cert serial
-        if (serialSet != null && !serialSet.isEmpty()) {
-            certStream = certStream
-                .filter(cert -> cert.getSerial() != null && serialSet.contains(cert.getSerial().getId()));
+        Set<BigInteger> includedSerials = this.extractSerials(serials);
+        if (includedSerials != null) {
+            certStream = certStream.filter(cert -> includedSerials.contains(cert.getSerial()));
         }
 
         return certStream.map(this.translator.getStreamMapper(Certificate.class, CertificateDTO.class))
@@ -2129,21 +2134,17 @@ public class ConsumerResource implements ConsumersApi {
                 .build();
         }
 
-        ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
-        if (cac == null) {
+        Certificate cacert = this.contentAccessManager.getCertificate(consumer);
+        if (cacert == null) {
             throw new BadRequestException(i18n.tr("Cannot retrieve content access certificate"));
         }
 
-        String cert = cac.getCert();
-        String certificate = cert.substring(0, cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
-        String json = cert.substring(cert.indexOf("-----BEGIN ENTITLEMENT DATA-----\n"));
-        List<String> pieces = new ArrayList<>();
-        pieces.add(certificate);
-        pieces.add(json);
+        List<String> pieces = List.of(cacert.getCertificateAsString(), cacert.getPayloadAsString());
 
+        // TODO: Convert this to a translator thing
         ContentAccessListing result = new ContentAccessListing()
-            .setContentListing(cac.getSerial().getId(), pieces)
-            .setLastUpdate(cac.getUpdated());
+            .setContentListing(cacert.getSerial(), pieces)
+            .setLastUpdate(cacert.getUpdated());
 
         return Response.ok(result, MediaType.APPLICATION_JSON)
             .build();
@@ -2161,16 +2162,11 @@ public class ConsumerResource implements ConsumersApi {
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
         revokeOnGuestMigration(consumer);
-        Set<Long> serialSet = this.extractSerials(serials);
-        // filtering requires a null set, so make this null if it is
-        // empty
-        if (serialSet.isEmpty()) {
-            serialSet = null;
-        }
 
-        File archive;
+        Set<BigInteger> serialSet = this.extractSerials(serials);
+
         try {
-            archive = manifestManager.generateEntitlementArchive(consumer, serialSet);
+            File archive = manifestManager.generateEntitlementArchive(consumer, serialSet);
             response.addHeader("Content-Disposition", "attachment; filename=" +
                 archive.getName());
 
@@ -2182,17 +2178,20 @@ public class ConsumerResource implements ConsumersApi {
         }
     }
 
-    private Set<Long> extractSerials(String serials) {
-        Set<Long> serialSet = new HashSet<>();
+    private Set<BigInteger> extractSerials(String serials) {
+        Set<BigInteger> output = null;
+
         if (serials != null && !serials.isEmpty()) {
             log.debug("Requested serials: {}", serials);
-            for (String s : serials.split(",")) {
-                log.debug("   {}", s);
-                serialSet.add(Long.valueOf(s));
+            output = new HashSet<>();
+
+            for (String serial : serials.split(",")) {
+                log.debug("   {}", serial);
+                output.add(new BigInteger(serial));
             }
         }
 
-        return serialSet;
+        return output;
     }
 
     private Set<String> splitKeys(String activationKeyString) {
@@ -2205,26 +2204,31 @@ public class ConsumerResource implements ConsumersApi {
 
     @Wrapped(element = "serials")
     @UpdateConsumerCheckIn
-    public List<CertificateSerialDTO> getEntitlementCertificateSerials(
+    public List<String> getEntitlementCertificateSerials(
         @Verify(Consumer.class) String consumerUuid) {
+
         log.debug("Getting client certificate serials for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         revokeOnGuestMigration(consumer);
         poolManager.regenerateDirtyEntitlements(consumer);
 
-        List<CertificateSerialDTO> allCerts = new LinkedList<>();
-        for (Long id : entCertService.listEntitlementSerialIds(consumer)) {
-            allCerts.add(new CertificateSerialDTO().serial(id));
+
+        List<String> output = new ArrayList<>();
+
+        List<BigInteger> entitlementCertSerials = this.entCertService.listEntitlementSerials(consumer);
+        if (entitlementCertSerials != null) {
+            entitlementCertSerials.stream()
+                .map(BigInteger::toString)
+                .forEach(output::add);
         }
 
-        // add content access cert if needed
-        ContentAccessCertificate cac = this.contentAccessManager.getCertificate(consumer);
-        if (cac != null) {
-            allCerts.add(new CertificateSerialDTO().serial(cac.getSerial().getId()));
+        Certificate cacert = this.contentAccessManager.getCertificate(consumer);
+        if (cacert != null) {
+            output.add(cacert.getSerial().toString());
         }
 
-        return allCerts;
+        return output;
     }
 
     private void validateBindArguments(String poolIdString, Integer quantity,
@@ -2759,8 +2763,8 @@ public class ConsumerResource implements ConsumersApi {
             .getEventBuilder(Target.CONSUMER, Type.MODIFIED)
             .setEventData(consumer);
 
-        IdentityCertificate ic = generateIdCert(consumer, true);
-        consumer.setIdCert(ic);
+        Certificate idcert = this.generateIdCert(consumer, true);
+        consumer.setIdCert(idcert);
         consumerCurator.update(consumer);
         sink.queueEvent(eventBuilder.setEventData(consumer).buildEvent());
         return consumer;
@@ -2781,8 +2785,8 @@ public class ConsumerResource implements ConsumersApi {
      * @param regen if true, forces a regen of the certificate.
      * @return an IdentityCertificate object
      */
-    private IdentityCertificate generateIdCert(Consumer c, boolean regen) {
-        IdentityCertificate idCert = null;
+    private Certificate generateIdCert(Consumer c, boolean regen) {
+        Certificate idCert = null;
 
         try {
             idCert = regen ?

@@ -27,15 +27,13 @@ import org.candlepin.dto.manifest.v1.DistributorVersionDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.CdnCurator;
-import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
-import org.candlepin.model.IdentityCertificate;
-import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.ImportUpstreamConsumer;
@@ -134,11 +132,10 @@ public class Importer {
     private final ObjectMapper mapper;
     private final RulesImporter rulesImporter;
     private final OwnerCurator ownerCurator;
-    private final IdentityCertificateCurator idCertCurator;
+    private final CertificateCurator certificateCurator;
     private final PoolManager poolManager;
     private final PKIUtility pki;
     private final ExporterMetadataCurator expMetaCurator;
-    private final CertificateSerialCurator csCurator;
     private final CdnCurator cdnCurator;
     private final EventSink sink;
     private final I18n i18n;
@@ -152,8 +149,8 @@ public class Importer {
 
     @Inject
     public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
-        RulesImporter rulesImporter, OwnerCurator ownerCurator, IdentityCertificateCurator idCertCurator,
-        PoolManager pm, PKIUtility pki, ExporterMetadataCurator emc, CertificateSerialCurator csc,
+        RulesImporter rulesImporter, OwnerCurator ownerCurator, CertificateCurator certificateCurator,
+        PoolManager pm, PKIUtility pki, ExporterMetadataCurator emc,
         EventSink sink, I18n i18n, DistributorVersionCurator distVerCurator, CdnCurator cdnCurator,
         SyncUtils syncUtils, ImportRecordCurator importRecordCurator,
         SubscriptionReconciler subscriptionReconciler, EntitlementCurator entitlementCurator,
@@ -163,13 +160,12 @@ public class Importer {
         this.productCurator = Objects.requireNonNull(productCurator);
         this.rulesImporter = Objects.requireNonNull(rulesImporter);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
-        this.idCertCurator = Objects.requireNonNull(idCertCurator);
+        this.certificateCurator = Objects.requireNonNull(certificateCurator);
         this.poolManager = Objects.requireNonNull(pm);
         this.syncUtils = Objects.requireNonNull(syncUtils);
         this.mapper = Objects.requireNonNull(syncUtils.getObjectMapper());
         this.pki = Objects.requireNonNull(pki);
         this.expMetaCurator = Objects.requireNonNull(emc);
-        this.csCurator = Objects.requireNonNull(csc);
         this.sink = Objects.requireNonNull(sink);
         this.i18n = Objects.requireNonNull(i18n);
         this.distVerCurator = Objects.requireNonNull(distVerCurator);
@@ -625,16 +621,14 @@ public class Importer {
     protected ConsumerDTO importConsumer(Owner owner, File consumerFile, File[] upstreamConsumer,
         ConflictOverrides forcedConflicts, Meta meta) throws IOException, SyncDataFormatException {
 
-        IdentityCertificate idcert = null;
+        CertificateDTO idcert = null;
+
         for (File uc : upstreamConsumer) {
             if (uc.getName().endsWith(".json")) {
-                log.debug("Import upstream consumeridentity certificate: {}", uc.getName());
+                log.debug("Import upstream consumer identity certificate: {}", uc.getName());
 
                 try (Reader reader = new FileReader(uc)) {
-                    CertificateDTO dtoCert = mapper.readValue(reader, CertificateDTO.class);
-                    idcert = new IdentityCertificate();
-                    ImporterUtils.populateEntity(idcert, dtoCert);
-                    idcert.setId(dtoCert.getId());
+                    idcert = this.mapper.readValue(reader, CertificateDTO.class);
                 }
             }
             else {
@@ -642,7 +636,8 @@ public class Importer {
             }
         }
 
-        ConsumerImporter importer = new ConsumerImporter(ownerCurator, idCertCurator, i18n, csCurator);
+        ConsumerImporter importer = new ConsumerImporter(this.i18n, this.ownerCurator,
+            this.certificateCurator, this.pki);
         ConsumerDTO consumer = null;
 
         try (Reader reader = new FileReader(consumerFile)) {
@@ -695,8 +690,8 @@ public class Importer {
 
         log.debug("Importing entitlements for owner: {}", owner);
 
-        EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator, i18n, productCurator,
-            entitlementCurator, translator);
+        EntitlementImporter importer = new EntitlementImporter(this.i18n, this.cdnCurator,
+            this.productCurator, this.entitlementCurator, this.translator);
         Map<String, ProductDTO> productsById = new HashMap<>();
 
         for (ProductDTO product : products) {

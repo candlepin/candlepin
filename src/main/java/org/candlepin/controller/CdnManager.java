@@ -15,13 +15,15 @@
 package org.candlepin.controller;
 
 import org.candlepin.model.Cdn;
-import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
+import org.candlepin.model.Certificate;
 import org.candlepin.model.CertificateCurator;
 import org.candlepin.model.PoolCurator;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
+
+import java.util.Objects;
 
 
 
@@ -49,10 +51,10 @@ public class CdnManager {
      */
     @Transactional
     public Cdn createCdn(Cdn cdn) {
-        // Certificate certificate = cdn.getCertificate();
-        // if (certificate != null) {
-        //     this.certificateCurator.create(certificate, false);
-        // }
+        Certificate certificate = cdn.getCertificate();
+        if (certificate != null) {
+            this.certificateCurator.create(certificate, false);
+        }
 
         return this.cdnCurator.create(cdn);
     }
@@ -64,10 +66,10 @@ public class CdnManager {
      */
     @Transactional
     public void updateCdn(Cdn cdn) {
-        // Certificate certificate = cdn.getCertificate();
-        // if (certificate != null) {
-        //     this.certificateCurator.update(certificate, false);
-        // }
+        Certificate certificate = cdn.getCertificate();
+        if (certificate != null) {
+            this.certificateCurator.merge(certificate);
+        }
 
         this.cdnCurator.update(cdn);
     }

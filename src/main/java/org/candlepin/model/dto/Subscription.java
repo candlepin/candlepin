@@ -15,12 +15,12 @@
 package org.candlepin.model.dto;
 
 import org.candlepin.model.Cdn;
+import org.candlepin.model.Certificate;
 import org.candlepin.model.Eventful;
 import org.candlepin.model.Named;
 import org.candlepin.model.Owned;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
-import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.service.model.SubscriptionInfo;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -63,7 +63,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
     private String upstreamPoolId;
     private String upstreamEntitlementId;
     private String upstreamConsumerId;
-    private SubscriptionsCertificate cert;
+    private Certificate cert;
     private Cdn cdn;
 
 
@@ -309,11 +309,11 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         return upstreamConsumerId;
     }
 
-    public SubscriptionsCertificate getCertificate() {
+    public Certificate getCertificate() {
         return cert;
     }
 
-    public void setCertificate(SubscriptionsCertificate c) {
+    public void setCertificate(Certificate c) {
         cert = c;
     }
 

@@ -14,6 +14,10 @@
  */
 package org.candlepin.service.model;
 
+import java.math.BigInteger;
+import java.time.Instant;
+import java.util.Date;
+
 
 
 /**
@@ -25,20 +29,15 @@ package org.candlepin.service.model;
  */
 public interface CertificateInfo extends ServiceAdapterModel {
 
-    /**
-     * Fetches the serial of this certificate. If the serial has not been set, this method returns
-     * null.
-     *
-     * @deprecated
-     *  This method may be refactored or removed entirely when the backing certificate model is
-     *  reexamined and potentially normalized. This method should be properly implemented, but
-     *  building functionality around it is not advised.
-     *
-     * @return
-     *  the serial of this certificate, or null if the serial has not been set
-     */
-    @Deprecated
-    CertificateSerialInfo getSerial();
+    // TODO: FIXME: Convert these to return Instants ASAP
+    Date getCreated();
+    Date getUpdated();
+
+    // may not actually be important at this tier -- should be able to discern the type from
+    // actual usage or what it's attached to
+    // String getType();
+
+    BigInteger getSerial();
 
     /**
      * Fetches this certificate's key as PEM-encoded string. If the key has not been set, this
@@ -47,7 +46,7 @@ public interface CertificateInfo extends ServiceAdapterModel {
      * @return
      *  the key for this certificate, or null if the key has not been set
      */
-    String getKey();
+    byte[] getPrivateKey();
 
     /**
      * Fetches a PEM-encoded x509 certificate as a string. If the certificate has not been set, this
@@ -56,6 +55,12 @@ public interface CertificateInfo extends ServiceAdapterModel {
      * @return
      *  a PEM-encoded x509 certificate, or null if the certificate has not been set
      */
-    String getCertificate();
+    byte[] getCertificate();
+
+    byte[] getPayload();
+
+    Instant getExpiration();
+
+    Boolean isRevoked();
 
 }

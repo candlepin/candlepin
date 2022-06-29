@@ -23,7 +23,6 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
-import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.Certificate;
 
@@ -31,8 +30,11 @@ import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
 
+import java.math.BigInteger;
 import java.time.OffsetDateTime;
 import java.util.Date;
+
+
 
 /**
  * CdnResource
@@ -140,11 +142,18 @@ public class CdnResource implements CdnApi {
 
             Certificate cdnCert = new Certificate()
                 .setType(Certificate.Type.CDN)
-                .setSerial(BigInteger.valueOf(certSerialDTO.getSerial())) // This explodes if the serial is null
                 .setCertificate(certDTO.getCert())
-                .setPrivateKey(certDTO.getKey())
-                .setExpiration(certSerialDTO.getExpiration().toInstant()) // also explodes if the field is null
-                .setRevoked(certSerialDTO.getRevoked()); // Still exploding here
+                .setPrivateKey(certDTO.getKey());
+
+            if (certSerialDTO.getSerial() != null) {
+                cdnCert.setSerial(new BigInteger(certSerialDTO.getSerial()));
+            }
+
+            if (certSerialDTO.getExpiration() != null) {
+                cdnCert.setExpiration(certSerialDTO.getExpiration().toInstant());
+            }
+
+            cdnCert.setRevoked(certSerialDTO.getRevoked() != null ? certSerialDTO.getRevoked() : false);
 
             entity.setCertificate(cdnCert);
         }

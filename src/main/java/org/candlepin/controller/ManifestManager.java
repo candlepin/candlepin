@@ -58,6 +58,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
@@ -395,7 +396,7 @@ public class ManifestManager {
      * @return an archive to the specified consumer's entitlements.
      * @throws ExportCreationException if the archive could not be created.
      */
-    public File generateEntitlementArchive(Consumer consumer, Set<Long> serials)
+    public File generateEntitlementArchive(Consumer consumer, Set<BigInteger> serials)
         throws ExportCreationException {
 
         log.debug("Getting client certificate zip file for consumer: {}", consumer.getUuid());

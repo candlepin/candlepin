@@ -35,7 +35,7 @@ public abstract class BaseEntitlementCertServiceAdapter implements EntitlementCe
 
     @Override
     public List<Certificate> listForConsumer(Consumer consumer) {
-        return this.certificateCurator.listForConsumer(consumer);
+        return this.certificateCurator.getEntitlementCertificatesForConsumer(consumer);
     }
 
 }

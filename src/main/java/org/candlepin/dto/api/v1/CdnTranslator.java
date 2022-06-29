@@ -17,7 +17,7 @@ package org.candlepin.dto.api.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.model.Cdn;
-import org.candlepin.model.CdnCertificate;
+import org.candlepin.model.Certificate;
 import org.candlepin.util.Util;
 
 /**
@@ -53,7 +53,7 @@ public class CdnTranslator implements ObjectTranslator<Cdn, CdnDTO> {
      * {@inheritDoc}
      */
     @Override
-    public CdnDTO populate(ModelTranslator modelTranslator, Cdn source, CdnDTO dest) {
+    public CdnDTO populate(ModelTranslator translator, Cdn source, CdnDTO dest) {
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
@@ -70,10 +70,9 @@ public class CdnTranslator implements ObjectTranslator<Cdn, CdnDTO> {
             .url(source.getUrl());
 
         // Process nested objects if we have a model translator to use to the translation...
-        if (modelTranslator != null) {
-            CdnCertificate cndCert = source.getCertificate();
-            dest.setCertificate(cndCert != null ?
-                modelTranslator.translate(cndCert, CertificateDTO.class) : null);
+        if (translator != null) {
+            Certificate cert = source.getCertificate();
+            dest.setCertificate(cert != null ? translator.translate(cert, CertificateDTO.class) : null);
         }
 
         return dest;

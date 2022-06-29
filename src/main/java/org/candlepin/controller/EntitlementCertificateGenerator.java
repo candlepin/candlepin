@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -63,7 +64,7 @@ import java.util.stream.Collectors;
 public class EntitlementCertificateGenerator {
     private static final Logger log = LoggerFactory.getLogger(EntitlementCertificateGenerator.class);
 
-    private final EntitlementCertificateCurator entitlementCertificateCurator;
+    private final CertificateCurator certificateCurator;
     private final EntitlementCertServiceAdapter entCertServiceAdapter;
     private final ContentAccessManager contentAccessManager;
     private final OwnerCurator ownerCurator;
@@ -74,12 +75,12 @@ public class EntitlementCertificateGenerator {
 
 
     @Inject
-    public EntitlementCertificateGenerator(EntitlementCertificateCurator entitlementCertificateCurator,
+    public EntitlementCertificateGenerator(CertificateCurator certificateCurator,
         EntitlementCertServiceAdapter entCertServiceAdapter, EntitlementCurator entitlementCurator,
         PoolCurator poolCurator, EventSink eventSink, EventFactory eventFactory,
         ContentAccessManager contentAccessManager, OwnerCurator ownerCurator) {
 
-        this.entitlementCertificateCurator = entitlementCertificateCurator;
+        this.certificateCurator = certificateCurator;
         this.entCertServiceAdapter = entCertServiceAdapter;
         this.contentAccessManager = contentAccessManager;
         this.ownerCurator = ownerCurator;
@@ -235,21 +236,30 @@ public class EntitlementCertificateGenerator {
     private void regenerateCertificatesImpl(Iterable<Entitlement> entitlements) {
         if (entitlements != null) {
             Set<String> entIds = new HashSet<>();
+            List<Certificate> certificates = new ArrayList<>();
+
+            for (Entitlement entitlement : entitlements) {
+                entIds.add(entitlement.getId());
+            }
+
+            // Clear the old certs before we save so we don't end up in a weird state
+            int count = this.certificateCurator.revokeEntitlementCertificates(entIds);
+            log.debug("{} old entitlement certificates revoked", count);
+            entIds.clear();
 
             for (Entitlement entitlement : entitlements) {
                 try {
                     // Generate new cert
-                    EntitlementCertificate generated = this.generateEntitlementCertificate(
-                        entitlement.getPool(), entitlement, false);
+                    Certificate generated = this.generateEntitlementCertificate(entitlement.getPool(),
+                        entitlement, false);
 
                     // Apply to the entitlement
                     entitlement.setDirty(false);
                     entitlement.setCertificates(Collections.singleton(generated));
+                    certificates.add(generated);
 
                     // send entitlement changed event.
                     this.eventSink.queueEvent(this.eventFactory.entitlementChanged(entitlement));
-
-                    entIds.add(entitlement.getId());
                 }
                 catch (CertificateSizeException cse) {
                     // Uh oh... do nothing for now.
@@ -257,11 +267,8 @@ public class EntitlementCertificateGenerator {
                 }
             }
 
-            // Clear the old certs before we save so we don't end up in a weird state
-            int count = this.entitlementCertificateCurator.deleteByEntitlementIds(entIds);
-            log.debug("{} old entitlement certificates deleted", count);
-
             // Save everything
+            this.certificateCurator.saveOrUpdateAll(certificates, false, false);
             this.entitlementCurator.saveOrUpdateAll(entitlements, false, false);
         }
     }

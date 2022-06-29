@@ -96,6 +96,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -803,9 +804,28 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
     public BigInteger generateCertificateSerial() {
         UUID uuid = UUID.randomUUID();
 
-        this.serial = BigInteger.valueOf(uuid.getMostSignificantBits())
-            .shiftLeft(32)
-            .or(BigInteger.valueOf(uuid.getLeastSignificantBits()));
+        byte[] msbBytes = this.convertLongToBytes(uuid.getMostSignificantBits());
+        byte[] lsbBytes = this.convertLongToBytes(uuid.getLeastSignificantBits());
+
+        BigInteger msb = new BigInteger(1, msbBytes);
+        BigInteger lsb = new BigInteger(1, lsbBytes);
+
+        return msb.shiftLeft(64).or(lsb);
+    }
+
+    private byte[] convertLongToBytes(long value) {
+        byte[] bytes = new byte[8];
+
+        bytes[0] = (byte) ((value >>> 56) & 0xFF);
+        bytes[1] = (byte) ((value >>> 48) & 0xFF);
+        bytes[2] = (byte) ((value >>> 40) & 0xFF);
+        bytes[3] = (byte) ((value >>> 32) & 0xFF);
+        bytes[4] = (byte) ((value >>> 24) & 0xFF);
+        bytes[5] = (byte) ((value >>> 16) & 0xFF);
+        bytes[6] = (byte) ((value >>> 8) & 0xFF);
+        bytes[7] = (byte) (value & 0xFF);
+
+        return bytes;
     }
 
 }

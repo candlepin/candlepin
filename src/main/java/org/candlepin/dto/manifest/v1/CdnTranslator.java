@@ -17,7 +17,9 @@ package org.candlepin.dto.manifest.v1;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Cdn;
-import org.candlepin.model.CdnCertificate;
+import org.candlepin.model.Certificate;
+
+
 
 /**
  * The CdnTranslator provides translation from Cdn model objects to CdnDTOs as used by the
@@ -63,7 +65,7 @@ public class CdnTranslator extends TimestampedEntityTranslator<Cdn, CdnDTO> {
 
         // Process nested objects if we have a model translator to use to the translation...
         if (modelTranslator != null) {
-            CdnCertificate cndCert = source.getCertificate();
+            Certificate cndCert = source.getCertificate();
             dest.setCertificate(cndCert != null ?
                 modelTranslator.translate(cndCert, CertificateDTO.class) : null);
         }

@@ -18,7 +18,6 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.TimestampedEntityTranslator;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 
@@ -75,7 +74,7 @@ public class EntitlementTranslator extends TimestampedEntityTranslator<Entitleme
             Pool pool = source.getPool();
             dest.setPool(pool != null ? modelTranslator.translate(pool, PoolDTO.class) : null);
 
-            Set<EntitlementCertificate> certs = source.getCertificates();
+            Set<Certificate> certs = source.getCertificates();
             if (certs != null && !certs.isEmpty()) {
                 for (Certificate cert : certs) {
                     if (cert != null) {
