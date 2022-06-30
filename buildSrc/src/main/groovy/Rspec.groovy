@@ -71,7 +71,7 @@ class Rspec extends DefaultTask {
         // Use --pattern to match the name of the spec file for the spec argument
         if (spec){
             rspec_args.add("--pattern")
-            rspec_args.add("**/${spec}*_spec.rb")
+            rspec_args.add("**/${spec}*.rb")
         }
 
         // use -e to match the name of a specific test within the matched spec files

@@ -136,9 +136,8 @@ Spec tests are written in Ruby using RSpec, but we are in the process of migrati
 
 To run Ruby spec tests:
 * `./gradlew rspec` runs all RSpec tests serially
-* `./gradlew rspec --spec my_file_name --test 'my test name'`  
-  runs `my test name` in the `my_file_name_spec.rb` file  
-  (note that the `_spec.rb` suffix *must* be excluded).
+* `./gradlew rspec --spec my_file_name_spec --test 'my test name'`  
+  runs `my test name` in the `my_file_name_spec.rb` file.
 
 To run Java spec tests:
 * `./gradlew spec` runs all Java tests serially
