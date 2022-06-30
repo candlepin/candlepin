@@ -140,6 +140,7 @@ class DBConnector(object):
     @contextmanager
     def execQuery(self, query, parameters=()):
         cursor = None
+        (query, parameters) = self._convert_list_params(query, parameters)
 
         with self.cursor() as cursor:
             cursor.execute(query, parameters)
@@ -147,6 +148,7 @@ class DBConnector(object):
 
     def execUpdate(self, query, parameters=()):
         cursor = None
+        (query, parameters) = self._convert_list_params(query, parameters)
 
         try:
             with self.cursor() as cursor:
@@ -158,6 +160,19 @@ class DBConnector(object):
             self.rollback()
             raise error
 
+    def _convert_list_params(self, query, parameters=()):
+        uquery = query
+        uparams = list(parameters)
+        index = len(query) + 1
+
+        for i in range(len(parameters) - 1, -1, -1):
+            index = uquery.rindex('%s', 0, index)
+
+            if type(uparams[i]) in (list, set, tuple):
+                uquery = uquery[0:index] + ', '.join(['%s'] * len(uparams[i])) + uquery[index + 2:]
+                uparams[i:i + 1] = uparams[i]
+
+        return (uquery, tuple(uparams))
 
 
 class PSQLConnector(DBConnector):

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+ * Copyright (c) 2009 - 2022 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
  * version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -17,11 +17,11 @@ package org.candlepin.hostedtest;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.dto.api.v1.SubscriptionDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ProductContent;
+import org.candlepin.model.dto.Subscription;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.ContentInfo;
@@ -30,7 +30,8 @@ import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
-import com.google.inject.persist.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -42,6 +43,7 @@ import java.util.Map.Entry;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -59,6 +61,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Path("/hostedtest")
 public class HostedTestResource {
+    private static final Logger log = LoggerFactory.getLogger(HostedTestResource.class);
 
     @Inject
     private HostedTestDataStore datastore;
@@ -79,98 +82,141 @@ public class HostedTestResource {
     }
 
     /**
-     * Creates or updates all of the subobjects referenced by the given subscription.
-     *
-     * @deprecated
-     *  This method is a shim to work with the existing "hosted" spec tests that create
-     *  subscriptions and its subobjects from the raw JSON provided. In the future, this should be
-     *  more well-formed and require that objects are created explicitly rather than implicitly.
+     * Creates or updates all of the children entities referenced by the given subscription.
      *
      * @param subscription
-     *  The subscription for which to create or update subobjects.
+     *  The subscription for which to create or update children entities
      */
-    @Deprecated
-    protected void createSubscriptionObjects(SubscriptionInfo subscription) {
+    private void createSubscriptionChildren(SubscriptionInfo subscription) {
         if (subscription == null) {
             throw new IllegalArgumentException("subscription is null");
+        }
+
+        // Impl note: this *must* be a LinkedHashMap to ensure that products going into it are
+        // iterated in the same order to ensure we create children before their parents.
+        Map<String, ProductInfo> pmap = new LinkedHashMap<>();
+        Map<String, ContentInfo> cmap = new HashMap<>();
+
+        ProductInfo product = subscription.getProduct();
+
+        this.mapProduct(product, pmap, cmap);
+
+        log.debug("Creating {} children entities for subscription {}", (pmap.size() + cmap.size()),
+            subscription.getId());
+
+        this.persistMappedProducts(pmap);
+        this.persistMappedContent(cmap);
+    }
+
+    /**
+     * Creates or updates all of the children entities referenced by the given product.
+     *
+     * @param product
+     *  The product for which to create or update children entities
+     */
+    private void createProductChildren(ProductInfo product) {
+        if (product == null) {
+            throw new IllegalArgumentException("product is null");
         }
 
         Map<String, ProductInfo> pmap = new LinkedHashMap<>();
         Map<String, ContentInfo> cmap = new HashMap<>();
 
-        this.addProductsToMap(subscription.getProduct(), pmap);
+        this.mapProduct(product, pmap, cmap);
 
-        for (ProductInfo product : pmap.values()) {
-            this.addContentToMap(product.getProductContent(), cmap);
-        }
+        // Remove the our root product from the map so the caller can control how it's persisted
+        pmap.remove(product.getId());
 
-        // Create content...
-        for (ContentInfo content : cmap.values()) {
-            if (this.datastore.getContent(content.getId()) != null) {
-                this.datastore.updateContent(content.getId(), content);
-            }
-            else {
-                this.datastore.createContent(content);
-            }
-        }
+        log.debug("Creating {} children entities for product {}", (pmap.size() + cmap.size()),
+            product.getId());
 
-        // Create products...
-        for (ProductInfo product : pmap.values()) {
-            if (this.datastore.getProduct(product.getId()) != null) {
-                this.datastore.updateProduct(product.getId(), product);
-            }
-            else {
-                this.datastore.createProduct(product);
-            }
-        }
+        this.persistMappedProducts(pmap);
+        this.persistMappedContent(cmap);
     }
 
-    private void addProductsToMap(ProductInfo product, Map<String, ProductInfo> pmap) {
-        if (product != null) {
-            if (product.getId() == null || product.getId().matches("\\A\\s*\\z")) {
-                throw new BadRequestException("product has a null or empty product ID: " + product);
-            }
-
-            pmap.put(product.getId(), product);
-            addProductsToMap(product.getDerivedProduct(), pmap);
-            addProductsToMap(product.getProvidedProducts(), pmap);
-        }
-    }
-
-    private void addProductsToMap(Collection<? extends ProductInfo> products, Map<String, ProductInfo> pmap) {
-        if (products != null) {
-            for (ProductInfo product : products) {
-                if (product == null) {
-                    throw new BadRequestException("product collection contains a null product");
-                }
-
-                this.addProductsToMap(product, pmap);
-            }
-        }
-    }
-
-    private void addContentToMap(Collection<? extends ProductContentInfo> content,
+    private void mapProduct(ProductInfo pinfo, Map<String, ProductInfo> pmap,
         Map<String, ContentInfo> cmap) {
 
-        if (content != null) {
-            for (ProductContentInfo pcdata : content) {
-                if (pcdata != null) {
-                    ContentInfo cdata = pcdata.getContent();
+        if (pinfo == null) {
+            return;
+        }
 
-                    if (cdata == null) {
-                        throw new BadRequestException("product contains a null content: " + pcdata);
-                    }
+        if (pinfo.getId() == null || pinfo.getId().matches("\\A\\s*\\z")) {
+            throw new BadRequestException("product has a null or empty product ID: " + pinfo);
+        }
 
-                    if (cdata.getId() == null || cdata.getId().matches("\\A\\s*\\z")) {
-                        throw new BadRequestException("content has a null or empty content ID: " + cdata);
-                    }
+        this.mapProduct(pinfo.getDerivedProduct(), pmap, cmap);
 
-                    cmap.put(cdata.getId(), cdata);
+        Collection<? extends ProductInfo> providedProducts = pinfo.getProvidedProducts();
+        if (providedProducts != null) {
+            for (ProductInfo provided : providedProducts) {
+                if (provided == null) {
+                    throw new BadRequestException("provided products collection contains a null product");
                 }
+            }
+
+            providedProducts.forEach(provided -> this.mapProduct(provided, pmap, cmap));
+        }
+
+        Collection<? extends ProductContentInfo> productContent = pinfo.getProductContent();
+        if (productContent != null) {
+            for (ProductContentInfo pcinfo : productContent) {
+                if (pcinfo == null) {
+                    continue;
+                }
+
+                ContentInfo cinfo = pcinfo.getContent();
+
+                if (cinfo == null) {
+                    throw new BadRequestException("product contains a null content: " + pcinfo);
+                }
+
+                if (cinfo.getId() == null || cinfo.getId().matches("\\A\\s*\\z")) {
+                    throw new BadRequestException("content has a null or empty content ID: " + cinfo);
+                }
+
+                cmap.put(cinfo.getId(), cinfo);
+            }
+        }
+
+        pmap.put(pinfo.getId(), pinfo);
+    }
+
+    private void persistMappedProducts(Map<String, ProductInfo> pmap) {
+        for (ProductInfo pinfo : pmap.values()) {
+            if (this.datastore.getProduct(pinfo.getId()) != null) {
+                log.debug("Updating child product: {}", pinfo.getId());
+                this.datastore.updateProduct(pinfo.getId(), pinfo);
+            }
+            else {
+                log.debug("Creating child product: {}", pinfo.getId());
+                this.datastore.createProduct(pinfo);
             }
         }
     }
 
+    private void persistMappedContent(Map<String, ContentInfo> cmap) {
+        for (ContentInfo cinfo : cmap.values()) {
+            if (this.datastore.getContent(cinfo.getId()) != null) {
+                log.debug("Updating child content: {}", cinfo.getId());
+                this.datastore.updateContent(cinfo.getId(), cinfo);
+            }
+            else {
+                log.debug("Creating child content: {}", cinfo.getId());
+                this.datastore.createContent(cinfo);
+            }
+        }
+    }
+
+
+    /**
+     * Deletes all data currently maintained by the backing adapter.
+     */
+    @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
+    public void clearData() {
+        this.datastore.clearData();
+    }
 
     /**
      * Creates a new owner from the subscription JSON provided. Any UUID
@@ -192,19 +238,23 @@ public class HostedTestResource {
         }
 
         // Create owner object...
-        return this.datastore.createOwner(InfoAdapter.ownerInfoAdapter(owner));
+        OwnerInfo ownerInfo = this.datastore.createOwner(InfoAdapter.ownerInfoAdapter(owner));
+
+        return ownerInfo;
     }
 
     // TODO: Add remaining owner CRUD operations as needed
-
-
 
     /**
      * Creates a new subscription from the subscription JSON provided. Any UUID
      * provided in the JSON will be ignored when creating the new subscription.
      *
-     * @param subscriptionDTO
-     *  A Subscription object built from the JSON provided in the request
+     * @param createChildren
+     *  whether or not children entities in the provided subscription data should be automatically
+     *  created or updated before creating the new subscription
+     *
+     * @param subscription
+     *  the subscription data to use to create the new subscription
      *
      * @return
      *  The newly created Subscription object
@@ -213,23 +263,37 @@ public class HostedTestResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/subscriptions")
-    public SubscriptionInfo createSubscription(SubscriptionDTO subscriptionDTO) {
+    public SubscriptionInfo createSubscription(
+        @QueryParam("create_children") @DefaultValue("false") boolean createChildren,
+        Subscription subscription) {
+
+        if (subscription == null) {
+            throw new BadRequestException("no subscription data provided");
+        }
+
+        if (subscription.getProduct() == null) {
+            throw new BadRequestException("subscription lacks a product: " + subscription);
+        }
+
         // Generate an ID if necessary
-        if (subscriptionDTO.getId() == null || subscriptionDTO.getId().matches("\\A\\s*\\z")) {
-            subscriptionDTO.setId(this.idGenerator.generateId());
+        if (subscription.getId() == null || subscription.getId().matches("\\A\\s*\\z")) {
+            subscription.setId(this.idGenerator.generateId());
         }
 
-        if (this.datastore.getSubscription(subscriptionDTO.getId()) != null) {
-            throw new ConflictException("subscription already exists: " + subscriptionDTO.getId());
+        if (this.datastore.getSubscription(subscription.getId()) != null) {
+            throw new ConflictException("subscription already exists: " + subscription.getId());
         }
-
-        SubscriptionInfo subscription = InfoAdapter.subscriptionInfoAdapter(subscriptionDTO);
 
         // Create the subobjects first
-        this.createSubscriptionObjects(subscription);
+        if (createChildren) {
+            log.debug("Persisting children received on subscription {}", subscription.getId());
+            this.createSubscriptionChildren(subscription);
+        }
 
         // Create subscription object...
-        return this.datastore.createSubscription(subscription);
+        SubscriptionInfo sinfo = this.datastore.createSubscription(subscription);
+
+        return sinfo;
     }
 
     /**
@@ -265,13 +329,18 @@ public class HostedTestResource {
     /**
      * Updates the specified subscription with the provided subscription data.
      *
-     * @param subscriptionId the ID of the subscription to update
-     * @param subscriptionDTO
-     *        A Subscription object built from the JSON provided in the request;
-     *        contains the data to use
-     *        to update the specified subscription
+     * @param subscriptionId
+     *  the ID of the subscription to update
+     *
+     * @param createChildren
+     *  whether or not children entities in the provided subscription data should be automatically
+     *  created or updated before applying the subscription changes
+     *
+     * @param subscription
+     *  the subscription data to use to update the specified subscription
+     *
      * @return
-     *         The updated Subscription object
+     *  the updated subscription
      */
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
@@ -279,9 +348,10 @@ public class HostedTestResource {
     @Path("/subscriptions/{subscription_id}")
     public SubscriptionInfo updateSubscription(
         @PathParam("subscription_id") String subscriptionId,
-        SubscriptionDTO subscriptionDTO) {
+        @QueryParam("create_children") @DefaultValue("false") boolean createChildren,
+        Subscription subscription) {
 
-        if (subscriptionDTO == null) {
+        if (subscription == null) {
             throw new BadRequestException("no subscription data provided");
         }
 
@@ -289,24 +359,16 @@ public class HostedTestResource {
             throw new NotFoundException("subscription does not yet exist: " + subscriptionId);
         }
 
-        SubscriptionInfo subscription = InfoAdapter.subscriptionInfoAdapter(subscriptionDTO);
-
-        // Create/Update sub objects
-        this.createSubscriptionObjects(subscription);
+        // Create/Update sub objects, if necessary
+        if (createChildren) {
+            log.debug("Persisting children received on subscription {}", subscription.getId());
+            this.createSubscriptionChildren(subscription);
+        }
 
         // Update subscription
         return this.datastore.updateSubscription(subscriptionId, subscription);
     }
 
-    /**
-     * Deletes the specified subscription.
-     *
-     * @param subscriptionId
-     *        The id of the subscription to delete
-     * @return
-     *         True if the subscription was deleted successfully; false
-     *         otherwise
-     */
     @DELETE
     @Path("/subscriptions/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
@@ -314,20 +376,157 @@ public class HostedTestResource {
         return this.datastore.deleteSubscription(subscriptionId) != null;
     }
 
-    /**
-     * Deletes all data currently maintained by the backing adapter.
-     */
-    @DELETE
+    @GET
+    @Path("/products")
     @Produces(MediaType.APPLICATION_JSON)
-    public void clearData() {
-        this.datastore.clearData();
+    public Collection<? extends ProductInfo> listProducts() {
+        return this.datastore.listProducts();
+    }
+
+    @GET
+    @Path("/products/{product_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ProductInfo getProduct(@PathParam("product_id") String productId) {
+        ProductInfo pinfo = this.datastore.getProduct(productId);
+
+        if (pinfo == null) {
+            throw new NotFoundException("product does not exist: " + productId);
+        }
+
+        return pinfo;
+    }
+
+    @POST
+    @Path("/products")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public ProductInfo createProduct(
+        @QueryParam("create_children") @DefaultValue("false") boolean createChildren,
+        ProductDTO product) {
+
+        if (product == null) {
+            throw new BadRequestException("product is null");
+        }
+
+        if (product.getId() == null || product.getId().isEmpty()) {
+            throw new BadRequestException("product lacks a product ID: " + product);
+        }
+
+        if (this.datastore.getProduct(product.getId()) != null) {
+            throw new ConflictException("product already exists: " + product.getId());
+        }
+
+        if (createChildren) {
+            log.debug("Persisting children received on product {}", product.getId());
+            this.createProductChildren(InfoAdapter.productInfoAdapter(product));
+        }
+
+        return this.datastore.createProduct(InfoAdapter.productInfoAdapter(product));
+    }
+
+    @PUT
+    @Path("/products/{product_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public ProductInfo updateProduct(
+        @PathParam("product_id") String productId,
+        @QueryParam("create_children") @DefaultValue("false") boolean createChildren,
+        ProductDTO product) {
+
+        if (product == null) {
+            throw new BadRequestException("product update is null");
+        }
+
+        if (this.datastore.getProduct(productId) == null) {
+            throw new NotFoundException("product does not yet exist: " + productId);
+        }
+
+        if (createChildren) {
+            log.debug("Persisting children received on product {}", product.getId());
+            this.createProductChildren(InfoAdapter.productInfoAdapter(product));
+        }
+
+        return this.datastore.updateProduct(productId, InfoAdapter.productInfoAdapter(product));
+    }
+
+    @DELETE
+    @Path("/products/{product_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public boolean deleteProduct(@PathParam("product_id") String productId) {
+        return this.datastore.deleteProduct(productId) != null;
+    }
+
+
+    @GET
+    @Path("/content")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Collection<? extends ContentInfo> listContent() {
+        return this.datastore.listContent();
+    }
+
+    @GET
+    @Path("/content/{content_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ContentInfo getContent(@PathParam("content_id") String contentId) {
+        ContentInfo cinfo = this.datastore.getContent(contentId);
+
+        if (cinfo == null) {
+            throw new NotFoundException("content does not exist: " + contentId);
+        }
+
+        return cinfo;
+    }
+
+    @POST
+    @Path("/content")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public ContentInfo createContent(ContentDTO content) {
+        if (content == null) {
+            throw new BadRequestException("content is null");
+        }
+
+        if (content.getId() == null || content.getId().isEmpty()) {
+            throw new BadRequestException("content lacks a content ID: " + content);
+        }
+
+        if (this.datastore.getContent(content.getId()) != null) {
+            throw new ConflictException("content already exists: " + content.getId());
+        }
+
+        return this.datastore.createContent(InfoAdapter.contentInfoAdapter(content));
+    }
+
+    @PUT
+    @Path("/content/{content_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public ContentInfo updateContent(
+        @PathParam("content_id") String contentId,
+        ContentDTO content) {
+
+        if (content == null) {
+            throw new BadRequestException("content update is null");
+        }
+
+        if (this.datastore.getContent(contentId) == null) {
+            throw new NotFoundException("content does not yet exist: " + contentId);
+        }
+
+        return this.datastore.updateContent(contentId, InfoAdapter.contentInfoAdapter(content));
+    }
+
+    @DELETE
+    @Path("/content/{content_id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public boolean deleteContent(@PathParam("content_id") String contentId) {
+        return this.datastore.deleteContent(contentId) != null;
     }
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/products/{product_id}/content")
-    @Transactional
     public ProductInfo addContentToProduct(
         @PathParam("product_id") String productId,
         Map<String, Boolean> contentMap) {
@@ -361,7 +560,6 @@ public class HostedTestResource {
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
     @Path("/products/{product_id}/content/{content_id}")
-    @Transactional
     public ProductInfo addContentToProduct(
         @PathParam("product_id") String productId,
         @PathParam("content_id") String contentId,
@@ -398,149 +596,6 @@ public class HostedTestResource {
     public ProductInfo removeContentFromProduct(@PathParam("product_id") String productId,
         @PathParam("content_id") String contentId) {
 
-        return this.removeContentFromProduct(productId, Collections.singletonList(contentId));
+        return this.removeContentFromProduct(productId, Collections.<String>singletonList(contentId));
     }
-
-    @GET
-    @Path("/products")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
-    public Collection<? extends ProductInfo> listProducts() {
-        return this.datastore.listProducts();
-    }
-
-    @GET
-    @Path("/products/{product_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
-    public ProductInfo getProduct(@PathParam("product_id") String productId) {
-        ProductInfo pinfo = this.datastore.getProduct(productId);
-
-        if (pinfo == null) {
-            throw new NotFoundException("product does not exist: " + productId);
-        }
-
-        return pinfo;
-    }
-
-    @POST
-    @Path("/products")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Transactional
-    public ProductInfo createProduct(ProductDTO product) {
-        if (product == null) {
-            throw new BadRequestException("product is null");
-        }
-
-        if (product.getId() == null || product.getId().isEmpty()) {
-            throw new BadRequestException("product lacks a product ID: " + product);
-        }
-
-        if (this.datastore.getProduct(product.getId()) != null) {
-            throw new ConflictException("product already exists: " + product.getId());
-        }
-
-        return this.datastore.createProduct(InfoAdapter.productInfoAdapter(product));
-    }
-
-    @PUT
-    @Path("/products/{product_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Transactional
-    public ProductInfo updateProduct(
-        @PathParam("product_id") String productId,
-        ProductDTO update) {
-
-        if (update == null) {
-            throw new BadRequestException("product update is null");
-        }
-
-        if (this.datastore.getProduct(productId) == null) {
-            throw new NotFoundException("product does not yet exist: " + productId);
-        }
-
-        return this.datastore.updateProduct(productId, InfoAdapter.productInfoAdapter(update));
-    }
-
-    @DELETE
-    @Path("/products/{product_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public boolean deleteProduct(@PathParam("product_id") String productId) {
-        return this.datastore.deleteProduct(productId) != null;
-    }
-
-
-    @GET
-    @Path("/content")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
-    public Collection<? extends ContentInfo> listContent() {
-        return this.datastore.listContent();
-    }
-
-    @GET
-    @Path("/content/{content_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Transactional
-    public ContentInfo getContent(@PathParam("content_id") String contentId) {
-        ContentInfo cinfo = this.datastore.getContent(contentId);
-
-        if (cinfo == null) {
-            throw new NotFoundException("content does not exist: " + contentId);
-        }
-
-        return cinfo;
-    }
-
-    @POST
-    @Path("/content")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Transactional
-    public ContentInfo createContent(ContentDTO content) {
-        if (content == null) {
-            throw new BadRequestException("content is null");
-        }
-
-        if (content.getId() == null || content.getId().isEmpty()) {
-            throw new BadRequestException("content lacks a content ID: " + content);
-        }
-
-        if (this.datastore.getContent(content.getId()) != null) {
-            throw new ConflictException("content already exists: " + content.getId());
-        }
-
-        return this.datastore.createContent(InfoAdapter.contentInfoAdapter(content));
-    }
-
-    @PUT
-    @Path("/content/{content_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Transactional
-    public ContentInfo updateContent(
-        @PathParam("content_id") String contentId,
-        ContentDTO update) {
-
-        if (update == null) {
-            throw new BadRequestException("content update is null");
-        }
-
-        if (this.datastore.getContent(contentId) == null) {
-            throw new NotFoundException("content does not yet exist: " + contentId);
-        }
-
-        return this.datastore.updateContent(contentId, InfoAdapter.contentInfoAdapter(update));
-    }
-
-    @DELETE
-    @Path("/content/{content_id}")
-    @Produces(MediaType.APPLICATION_JSON)
-    public boolean deleteContent(@PathParam("content_id") String contentId) {
-        return this.datastore.deleteContent(contentId) != null;
-    }
-
-
 }
