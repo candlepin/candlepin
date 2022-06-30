@@ -15,7 +15,7 @@ require 'json'
 require 'digest'
 require 'zlib'
 
-require_relative "../client/ruby/candlepin_api"
+require_relative "../../client/ruby/candlepin_api"
 
 
 
