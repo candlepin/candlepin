@@ -24,6 +24,9 @@ import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.service.model.SubscriptionInfo;
 
 import com.fasterxml.jackson.annotation.JsonFilter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty.Access;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -37,7 +40,6 @@ import java.util.Date;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 
 
@@ -159,16 +161,19 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         this.product = product;
     }
 
+    @JsonProperty(access = Access.READ_ONLY)
     public Collection<ProductData> getProvidedProducts() {
         ProductData product = this.getProduct();
         return product != null ? product.getProvidedProducts() : null;
     }
 
+    @JsonProperty(access = Access.READ_ONLY)
     public ProductData getDerivedProduct() {
         ProductData product = this.getProduct();
         return product != null ? product.getDerivedProduct() : null;
     }
 
+    @JsonProperty(access = Access.READ_ONLY)
     public Collection<ProductData> getDerivedProvidedProducts() {
         ProductData derived = this.getDerivedProduct();
         return derived != null ? derived.getProvidedProducts() : null;
@@ -345,7 +350,7 @@ public class Subscription extends CandlepinDTO implements Owned, Named, Eventful
         return !StringUtils.isBlank(virtLimit) && !"0".equals(virtLimit);
     }
 
-    @XmlTransient
+    @JsonIgnore
     public String getName() {
         if (getProduct() != null) {
             return getProduct().getName();
