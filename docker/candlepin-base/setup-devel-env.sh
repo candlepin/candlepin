@@ -14,30 +14,18 @@ export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION
 yum install -y epel-release
 
 PACKAGES=(
-    gcc
     gettext
     git
     hostname
     java-11-openjdk-devel
     java-$JAVA_VERSION-openjdk-devel
     jss
-    libxml2-python
-    liquibase
     mariadb
-    mysql-connector-java
-    mariadb-java-client
     openssl
-    postgresql
-    postgresql-jdbc
     python-pip
-    qpid-proton-c
-    qpid-proton-c-devel
-    rpmlint
     rsyslog
-    tig
-    tmux
     tomcat
-    vim-enhanced
+    which
     wget
     createrepo_c
     rpm-build
@@ -54,7 +42,7 @@ yum install -y ${PACKAGES[@]}
 # therefore we must build it
 if ! type pg_isready 2> /dev/null; then
   yum install -y centos-release-scl
-  yum install -y yum install rh-postgresql96
+  yum install -y yum install rh-postgresql12
 fi
 
 # Setup for autoconf:

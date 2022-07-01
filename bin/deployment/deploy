@@ -340,8 +340,6 @@ fi
 if [ "$USE_MYSQL" == "1" ]; then
     DATABASE_SERVER="-Pdatabase_server=mysql"
 else
-    # "development" is the default buildr environment.  It has been aliased to the postgresql environment
-    # in profiles.yaml
     DATABASE_SERVER="-Pdatabase_server=postgres"
 fi
 
