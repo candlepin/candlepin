@@ -149,7 +149,8 @@ init_postgresql_jdbc() {
     local db_name="$1"
     local db_host="${DBHOSTNAME:-localhost}"
 
-    if ! select_jdbc_jar "/usr/share/java/postgresql-jdbc.jar"; then
+    local postgresql_jdbc_jar=$(find $CP_EXTRACT_CLASSPATH -type f -name "postgresql*.jar")
+    if ! select_jdbc_jar $postgresql_jdbc_jar; then
         err_msg "No JDBC jar file available for PostgreSQL"
         exit
     fi

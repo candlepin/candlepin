@@ -47,7 +47,6 @@ dataSources/
 **/target/
 **/target-eclipse/
 **/spec-tests/bin/
-**/bin/qpid/keys
 **/bin/artemis/selinux/build
 **/bin/main/
 **/bin/test/

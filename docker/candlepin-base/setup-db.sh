@@ -33,7 +33,7 @@ setup_mysql() {
 
 setup_postgres() {
     # if pg_is ready isn't there source the scl version
-    command -v pg_isready 2> /dev/null || source scl_source enable rh-postgresql96 || true
+    command -v pg_isready 2> /dev/null || source scl_source enable rh-postgresql12 || true
     retry 20 "postgres" pg_isready -h db
 }
 

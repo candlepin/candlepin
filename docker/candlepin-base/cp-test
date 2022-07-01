@@ -299,7 +299,6 @@ while getopts ":dtRqrHulskib:c:a:vj:n" opt; do
         s  ) LAUNCHSHELL="1";;
         b  ) BUILDR_TASK="${OPTARG}";;
         c  ) CHECKOUT="${OPTARG}";;
-        q  ) QPID="1";;
         v  ) VERBOSE="1";;
         j  ) JAVA_VERSION="${OPTARG}";;
         i  ) TRANSLATE="1";;
@@ -453,26 +452,6 @@ if [ "$UNITTEST" -gt 0 ]; then
     done
 fi
 
-
-# Qpid is not supported in newer Candlepin versions.
-if [ "$QPID" == "1" ]; then
-    if [ -d "$PROJECT_DIR/bin/qpid" ]; then
-        echo "Setting up Qpid"
-
-        pushd "$PROJECT_DIR/bin/qpid"
-
-        # Do a cleanup
-        ./configure-qpid.sh -c
-        # Reconfigure
-        ./configure-qpid.sh
-
-        popd
-    else
-        echo "Qpid not configured for project: $PROJECT"
-        unset QPID
-    fi
-fi
-
 if [ "$DEPLOY" == "1" ]; then
     echo "Deploying candlepin..."
     CLEAN_CP=1
@@ -500,10 +479,6 @@ if [ "$DEPLOY" == "1" ]; then
 
     if [ "$VERBOSE" == "1" ]; then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -v"
-    fi
-
-    if [ "$QPID" == "1" ]; then
-        DEPLOY_FLAGS="$DEPLOY_FLAGS -q"
     fi
 
     DEPLOY_FLAGS="${DEPLOY_FLAGS}${EX_ARGS}"
