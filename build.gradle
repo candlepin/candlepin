@@ -419,6 +419,7 @@ task apiJar(type: Jar) {
             'auth',
             'config',
             'controller',
+            'exceptions',
             'jackson',
             'model',
             'pki',
