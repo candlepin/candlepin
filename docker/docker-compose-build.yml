@@ -3,8 +3,15 @@
 version: '3'
 services:
   candlepin-base:
-    build: candlepin-base/
+    build:
+      dockerfile: ./candlepin-base/Dockerfile
+      context: .
     image: ${REGISTRY}/candlepin-base
+  candlepin-base-cs8:
+    build:
+      dockerfile: ./candlepin-base-cs8/Dockerfile
+      context: .
+    image: ${REGISTRY}/candlepin-base-cs8
 networks:
   default:
     driver: bridge

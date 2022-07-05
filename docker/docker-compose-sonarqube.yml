@@ -1,7 +1,7 @@
 version: '3.3'
 services:
   candlepin:
-    image: ${REGISTRY}/candlepin-base
+    image: ${REGISTRY}/candlepin-base-cs8
     ports:
       - "8443:8443"
       - "8080:8080"
