@@ -1,4 +1,4 @@
-FROM quay.io/repository/candlepin/centos:7
+FROM quay.io/centos/centos:centos7
 LABEL author="Chris Rog <crog@redhat.com>"
 
 ENV LANG en_US.UTF-8
