@@ -10,7 +10,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-06-12 03:01-0400\n"
-"PO-Revision-Date: 2022-06-13 02:18+0000\n"
+"PO-Revision-Date: 2022-07-08 10:19+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.12.2\n"
+"X-Generator: Weblate 4.13\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -605,7 +605,7 @@ msgstr "이 장치 유형은 풀 ID ''{1} ''를 연결하는 것을 허용하지
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:155
 #, java-format
 msgid "Multi-entitlement not supported for pool with ID \"{1}\"."
-msgstr "풀 ID ''{1} ''에 대해 여러 인타이틀먼트가 지원되지 않습니다."
+msgstr "ID ''{1} '인 풀을 위해 다중-자격이 지원되지 않습니다."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:157
 #, java-format
@@ -720,8 +720,7 @@ msgstr "제품 ''{1}''에 대한 서브스크립션을 연결 할 수 없습니�
 #, java-format
 msgid ""
 "Insufficient pool quantity available for adjustment to entitlement \"{1}\"."
-msgstr ""
-"인타이틀먼트 ''{1}''에 사용 조정할 수 있는 풀 수량이 충분하지 않습니다."
+msgstr "자격 ''{1}''에 조정을 위해 사용 할 수 있는 불충분한 풀 수량."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:211
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:213
