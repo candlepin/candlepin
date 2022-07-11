@@ -1394,6 +1394,21 @@ describe 'Consumer Resource' do
     @cp.get_consumer(consumer['uuid'])['entitlementCount'].should == 0
   end
 
+  it 'TESTING: is a constraint violation thrown from ContentAccessManager.getCertificate' do
+    testOwner = @cp.create_owner(random_string('test_owner333'), {'contentAccessMode' => "entitlement"})
+
+    consumer = @user1.register(random_string("meow"))
+    consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
+    prod = create_product(random_string("product"), random_string("product"), {:owner => @testOwner['key']})
+
+    env = @cp.create_environment(@owner1['key'], random_string("env_id"), random_string("env_name"))
+    consumer_client.update_consumer({:environment => {:name => env.name}})
+
+    @cp.get_consumer_cert_serials(consumer['uuid'])
+    @cp.get_consumer_cert_serials(consumer['uuid'])
+
+  end
+
   it 'concurrent unregister should return 404 or 410 when consumer is deleted by another request' do
     consumer = @user1.register(random_string("a_test_consumer"))
     consumer_client = Candlepin.new(nil, nil, consumer['idCert']['cert'], consumer['idCert']['key'])
@@ -1468,5 +1483,4 @@ describe 'Consumer Resource Consumer Fact Filter Tests' do
     consumers.length.should == 1
     consumers[0]['uuid'].should == odd_consumer['uuid']
   end
-
 end
