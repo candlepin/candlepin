@@ -30,11 +30,11 @@ import java.util.stream.Collectors;
 /**
  * Extension of generated {@link ConsumerApi} to provide more convenient overrides of generated methods.
  */
-public class ConsumerAPI extends ConsumerApi {
+public class ConsumerClient extends ConsumerApi {
 
     private final ObjectMapper mapper;
 
-    public ConsumerAPI(ApiClient client, ObjectMapper mapper) {
+    public ConsumerClient(ApiClient client, ObjectMapper mapper) {
         super(client);
         this.mapper = mapper;
     }

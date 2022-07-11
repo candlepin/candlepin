@@ -48,7 +48,7 @@ class TrustedUserAuthSpecTest {
     @Test
     @DisplayName("trusted user must exist when lookup permissions header set")
     void trustedUserMustExist() {
-        OwnerApi client = ApiClients.trustedUser("unknown_user", true).owners();
+        OwnerApi client = ApiClients.trustedUser("unknown_user").owners();
 
         assertBadRequest(() -> client.createOwner(Owners.random()));
     }
@@ -56,7 +56,7 @@ class TrustedUserAuthSpecTest {
     @Test
     @DisplayName("trusted user does not need to exist")
     void trustedUserDoesNotNeedToExist() throws ApiException {
-        OwnerApi client = ApiClients.trustedUser("unknown_user").owners();
+        OwnerApi client = ApiClients.trustedUser("unknown_user", false).owners();
 
         OwnerDTO createdOwner = client.createOwner(Owners.random());
         assertThat(createdOwner).isNotNull();
@@ -66,7 +66,7 @@ class TrustedUserAuthSpecTest {
     @DisplayName("trusted user can access admin endpoint")
     void trustedUserHasFullAccess() throws ApiException {
         UserDTO user = UserUtil.createUser(client, owner);
-        OwnerApi client = ApiClients.trustedUser(user.getUsername()).owners();
+        OwnerApi client = ApiClients.trustedUser(user.getUsername(), false).owners();
 
         OwnerDTO createdOwner = client.createOwner(Owners.random());
         assertThat(createdOwner).isNotNull();
@@ -76,7 +76,7 @@ class TrustedUserAuthSpecTest {
     @DisplayName("trusted user cannot access admin endpoint")
     void trustedUserHasLimitedAccess() throws ApiException {
         UserDTO user = UserUtil.createUser(client, owner);
-        OwnerApi userClient = ApiClients.trustedUser(user.getUsername(), true).owners();
+        OwnerApi userClient = ApiClients.trustedUser(user.getUsername()).owners();
 
         assertForbidden(() -> userClient.createOwner(Owners.random()));
     }

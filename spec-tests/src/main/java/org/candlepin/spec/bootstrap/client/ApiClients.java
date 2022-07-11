@@ -15,6 +15,7 @@
 package org.candlepin.spec.bootstrap.client;
 
 import org.candlepin.dto.api.v1.CertificateDTO;
+import org.candlepin.dto.api.v1.ConsumerDTO;
 
 /**
  * Static factory created for easy selection of appropriate authentication method.
@@ -48,7 +49,7 @@ public final class ApiClients {
     }
 
     public static ApiClient trustedUser(String username) {
-        return new ApiClient(CLIENT_FACTORY.createTrustedUserClient(username, false));
+        return new ApiClient(CLIENT_FACTORY.createTrustedUserClient(username, true));
     }
 
     public static ApiClient trustedUser(String username, boolean lookupPermissions) {
@@ -58,6 +59,13 @@ public final class ApiClients {
     public static ApiClient ssl(CertificateDTO cert) {
         String certificate = cert.getCert() + cert.getKey();
         return new ApiClient(CLIENT_FACTORY.createSslClient(certificate));
+    }
+
+    public static ApiClient ssl(ConsumerDTO consumer) {
+        if (consumer == null || consumer.getIdCert() == null) {
+            throw new IllegalArgumentException("Expected consumer with identity certificate but got null.");
+        }
+        return ssl(consumer.getIdCert());
     }
 
 }

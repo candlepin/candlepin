@@ -15,25 +15,29 @@
 
 package org.candlepin.spec.bootstrap.data.builder;
 
-import org.candlepin.dto.api.v1.ActivationKeyDTO;
-import org.candlepin.dto.api.v1.NestedOwnerDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.spec.bootstrap.data.util.StringUtil;
+import org.candlepin.dto.api.v1.AttributeDTO;
 
-public final class ActivationKeys {
+public enum ProductAttributes {
+    Usage("usage"),
+    Roles("roles"),
+    Addons("addons"),
+    SupportLevel("support_level"),
+    SupportLevelExempt("support_level_exempt"),
+    SupportType("support_type");
 
-    private ActivationKeys() {
-        throw new UnsupportedOperationException();
+    private final String key;
+    ProductAttributes(String key) {
+        this.key = key;
     }
 
-    public static ActivationKeyDTO random(OwnerDTO owner) {
-        return random(Owners.toNested(owner));
+    public String key() {
+        return this.key;
     }
 
-    public static ActivationKeyDTO random(NestedOwnerDTO owner) {
-        return new ActivationKeyDTO()
-            .owner(owner)
-            .name(StringUtil.random("test_activation_key"));
+    public AttributeDTO withValue(String value) {
+        return new AttributeDTO()
+            .name(this.key)
+            .value(value);
     }
 
 }

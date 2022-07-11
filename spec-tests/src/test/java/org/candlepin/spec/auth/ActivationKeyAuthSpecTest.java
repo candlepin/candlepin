@@ -51,7 +51,7 @@ class ActivationKeyAuthSpecTest {
     static void beforeAll() throws ApiException {
         ApiClient userClient = ApiClients.admin();
         owner = userClient.owners().createOwner(Owners.random());
-        ActivationKeyDTO testActivationKey = ActivationKeys.builder().withOwner(owner).build();
+        ActivationKeyDTO testActivationKey = ActivationKeys.random(owner);
         activationKey = userClient.owners().createActivationKey(owner.getKey(), testActivationKey);
     }
 
@@ -95,7 +95,7 @@ class ActivationKeyAuthSpecTest {
         ConsumerApi client = ApiClients.noAuth().consumers();
 
         assertBadRequest(() -> client.createConsumer(
-            Consumers.random(), null, null, activationKey.getName(), true));
+            Consumers.random(null), null, null, activationKey.getName(), true));
     }
 
     @Test
@@ -104,7 +104,7 @@ class ActivationKeyAuthSpecTest {
         ConsumerApi client = ApiClients.noAuth().consumers();
 
         assertUnauthorized(() -> client.createConsumer(
-            Consumers.random(), null, "some_owner", activationKey.getName(), true));
+            Consumers.random(null), null, "some_owner", activationKey.getName(), true));
     }
 
     @Test
@@ -113,7 +113,7 @@ class ActivationKeyAuthSpecTest {
         ConsumerApi client = ApiClients.noAuth().consumers();
 
         assertUnauthorized(() -> client.createConsumer(
-            Consumers.random(), null, owner.getKey(), null, true));
+            Consumers.random(null), null, owner.getKey(), null, true));
     }
 
     @Test
@@ -122,7 +122,7 @@ class ActivationKeyAuthSpecTest {
         ConsumerApi client = ApiClients.noAuth().consumers();
 
         assertBadRequest(() -> client.createConsumer(
-            Consumers.random(), "username", owner.getKey(), activationKey.getName(), true));
+            Consumers.random(null), "username", owner.getKey(), activationKey.getName(), true));
     }
 
     @Test
@@ -132,7 +132,7 @@ class ActivationKeyAuthSpecTest {
         String activationKeys = toKeyString("some_key", "some_other_key");
 
         assertUnauthorized(() -> client.createConsumer(
-            Consumers.random(), null, owner.getKey(), activationKeys, true));
+            Consumers.random(null), null, owner.getKey(), activationKeys, true));
     }
 
     @Test
@@ -142,7 +142,7 @@ class ActivationKeyAuthSpecTest {
         String activationKeys = toKeyString(activationKey.getName(), "some_key");
 
         ConsumerDTO consumer = client.createConsumer(
-            Consumers.random(), null, owner.getKey(), activationKeys, true);
+            Consumers.random(null), null, owner.getKey(), activationKeys, true);
 
         assertThat(consumer).isNotNull();
     }

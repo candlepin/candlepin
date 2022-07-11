@@ -13,27 +13,18 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.spec.bootstrap.data.builder;
+package org.candlepin.spec.bootstrap.data.util;
 
-import org.candlepin.dto.api.v1.ActivationKeyDTO;
-import org.candlepin.dto.api.v1.NestedOwnerDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.spec.bootstrap.data.util.StringUtil;
+import java.time.OffsetDateTime;
 
-public final class ActivationKeys {
+public final class DateUtil {
 
-    private ActivationKeys() {
+    private DateUtil() {
         throw new UnsupportedOperationException();
     }
 
-    public static ActivationKeyDTO random(OwnerDTO owner) {
-        return random(Owners.toNested(owner));
-    }
-
-    public static ActivationKeyDTO random(NestedOwnerDTO owner) {
-        return new ActivationKeyDTO()
-            .owner(owner)
-            .name(StringUtil.random("test_activation_key"));
+    public static OffsetDateTime tomorrow() {
+        return OffsetDateTime.now().plusDays(1);
     }
 
 }

@@ -13,10 +13,27 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.spec.bootstrap.client;
+package org.candlepin.spec.bootstrap.data.builder;
 
-import org.candlepin.ApiException;
+import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 
-public interface SpecTestClient {
-    void cleanup() throws ApiException;
+public enum ConsumerTypes {
+    Candlepin("candlepin"),
+    Hypervisor("hypervisor"),
+    System("system");
+
+    private final String label;
+
+    ConsumerTypes(String label) {
+        this.label = label;
+    }
+
+    public String label() {
+        return this.label;
+    }
+
+    public ConsumerTypeDTO value() {
+        return new ConsumerTypeDTO().label(this.label);
+    }
+
 }

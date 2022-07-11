@@ -5611,6 +5611,30 @@ paths:
             type: array
             items:
               type: string
+        - name: page
+          in: query
+          description: Number of a page to return
+          schema:
+            type: integer
+            example: 2
+        - name: per_page
+          in: query
+          description: Number of items to return per page
+          schema:
+            type: integer
+            example: 10
+        - name: sort_by
+          in: query
+          description: Property to use for ordering
+          schema:
+            type: string
+            example: name
+        - name: order
+          in: query
+          description: Direction of ordering
+          schema:
+            type: string
+            example: asc
       security: []
       responses:
         200:

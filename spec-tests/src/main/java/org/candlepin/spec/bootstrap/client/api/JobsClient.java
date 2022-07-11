@@ -13,7 +13,7 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.spec.bootstrap.client;
+package org.candlepin.spec.bootstrap.client.api;
 
 import org.candlepin.ApiClient;
 import org.candlepin.ApiException;
@@ -42,10 +42,9 @@ public class JobsClient extends JobsApi {
      * @param jobId - Id of the job to wait for.
      * @return the status of the job or null if the job has timed out.
      * @throws ApiException
-     * @throws InterruptedException
      */
     public AsyncJobStatusDTO waitForJobToComplete(String jobId)
-        throws ApiException, InterruptedException {
+        throws ApiException {
         return waitForJobToComplete(jobId, DEFAULT_TIMEOUT_MILLISECONDS);
     }
 
@@ -56,10 +55,9 @@ public class JobsClient extends JobsApi {
      * @param timeout - max duration in milliseconds to wait for the job to finish.
      * @return the status of the job or null if the job has timed out.
      * @throws ApiException
-     * @throws InterruptedException
      */
     public AsyncJobStatusDTO waitForJobToComplete(String jobId, long timeout)
-        throws ApiException, InterruptedException {
+        throws ApiException {
         if (jobId == null || jobId.length() == 0) {
             throw new IllegalArgumentException("Job Id must not be null or empty.");
         }
@@ -83,7 +81,12 @@ public class JobsClient extends JobsApi {
             }
 
             // Wait before trying again
-            Thread.sleep(1000);
+            try {
+                Thread.sleep(1000);
+            }
+            catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             elapsedMilliseconds = System.currentTimeMillis() - startTime;
         }
 
