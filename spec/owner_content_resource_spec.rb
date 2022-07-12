@@ -124,4 +124,11 @@ describe 'Owner Content Resource' do
     # Verify the serial has changed (the entitlement has been regenerated)
     original_serial.should_not == new_serial
   end
+
+  it 'should throw exception while inserting product without name' do
+
+    lambda {
+      @cp.create_product('test-product', nil, {:multiplier => 4})
+    }.should raise_exception(RestClient::BadRequest)
+  end
 end

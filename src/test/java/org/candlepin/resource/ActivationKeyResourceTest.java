@@ -53,7 +53,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.inject.Inject;
-import javax.validation.ConstraintViolationException;
 
 /**
  * ActivationKeyResourceTest
@@ -372,44 +371,6 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testValidationUpdateWithNullProductId() {
-        ActivationKey key = new ActivationKey();
-        key.setOwner(owner);
-        key.setName("dd");
-        activationKeyCurator.create(key);
-
-        assertNotNull(key.getId());
-
-        ActivationKeyDTO update = new ActivationKeyDTO();
-        Set<ActivationKeyProductDTO> products = new HashSet<>();
-        products.add(new ActivationKeyProductDTO().productId(null));
-        update.products(products);
-
-        assertThrows(ConstraintViolationException.class, () ->
-            activationKeyResource.updateActivationKey(key.getId(), update)
-        );
-    }
-
-    @Test
-    public void testValidationUpdateWithEmptyProductId() {
-        ActivationKey key = new ActivationKey();
-        key.setOwner(owner);
-        key.setName("dd");
-        activationKeyCurator.create(key);
-
-        assertNotNull(key.getId());
-
-        ActivationKeyDTO update = new ActivationKeyDTO();
-        Set<ActivationKeyProductDTO> products = new HashSet<>();
-        products.add(new ActivationKeyProductDTO().productId(""));
-        update.products(products);
-
-        assertThrows(ConstraintViolationException.class, () ->
-            activationKeyResource.updateActivationKey(key.getId(), update)
-        );
-    }
-
-    @Test
     public void testValidationUpdateWithNullProduct() {
         ActivationKey key = new ActivationKey();
         key.setOwner(owner);
@@ -423,45 +384,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         products.add(null);
         update.products(products);
 
-        assertThrows(IllegalArgumentException.class, () ->
-            activationKeyResource.updateActivationKey(key.getId(), update)
-        );
-    }
-
-    @Test
-    public void testValidationUpdateWithNullPoolId() {
-        ActivationKey key = new ActivationKey();
-        key.setOwner(owner);
-        key.setName("dd");
-        activationKeyCurator.create(key);
-
-        assertNotNull(key.getId());
-
-        ActivationKeyDTO update = new ActivationKeyDTO();
-        Set<ActivationKeyPoolDTO> pools = new HashSet<>();
-        pools.add(new ActivationKeyPoolDTO().poolId(null));
-        update.pools(pools);
-
-        assertThrows(ConstraintViolationException.class, () ->
-            activationKeyResource.updateActivationKey(key.getId(), update)
-        );
-    }
-
-    @Test
-    public void testValidationUpdateWithEmptyPoolId() {
-        ActivationKey key = new ActivationKey();
-        key.setOwner(owner);
-        key.setName("dd");
-        activationKeyCurator.create(key);
-
-        assertNotNull(key.getId());
-
-        ActivationKeyDTO update = new ActivationKeyDTO();
-        Set<ActivationKeyPoolDTO> pools = new HashSet<>();
-        pools.add(new ActivationKeyPoolDTO().poolId(""));
-        update.pools(pools);
-
-        assertThrows(ConstraintViolationException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             activationKeyResource.updateActivationKey(key.getId(), update)
         );
     }
@@ -480,83 +403,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         pools.add(null);
         update.pools(pools);
 
-        assertThrows(IllegalArgumentException.class, () ->
-            activationKeyResource.updateActivationKey(key.getId(), update)
-        );
-    }
-
-    @Test
-    public void testValidationUpdateWithNullContentOverrideName() {
-        ActivationKey key = new ActivationKey();
-        key.setOwner(owner);
-        key.setName("dd");
-        activationKeyCurator.create(key);
-
-        assertNotNull(key.getId());
-
-        ActivationKeyDTO update = new ActivationKeyDTO();
-        Set<ContentOverrideDTO> contentOverrideDTOS = new HashSet<>();
-        contentOverrideDTOS.add(new ContentOverrideDTO().name(null).contentLabel("a label"));
-        update.contentOverrides(contentOverrideDTOS);
-
-        assertThrows(ConstraintViolationException.class, () ->
-            activationKeyResource.updateActivationKey(key.getId(), update)
-        );
-    }
-
-    @Test
-    public void testValidationUpdateWithEmptyContentOverrideName() {
-        ActivationKey key = new ActivationKey();
-        key.setOwner(owner);
-        key.setName("dd");
-        activationKeyCurator.create(key);
-
-        assertNotNull(key.getId());
-
-        ActivationKeyDTO update = new ActivationKeyDTO();
-        Set<ContentOverrideDTO> contentOverrideDTOS = new HashSet<>();
-        contentOverrideDTOS.add(new ContentOverrideDTO().name("").contentLabel("a label"));
-        update.contentOverrides(contentOverrideDTOS);
-
-        assertThrows(ConstraintViolationException.class, () ->
-            activationKeyResource.updateActivationKey(key.getId(), update)
-        );
-    }
-
-    @Test
-    public void testValidationUpdateWithNullContentOverrideLabel() {
-        ActivationKey key = new ActivationKey();
-        key.setOwner(owner);
-        key.setName("dd");
-        activationKeyCurator.create(key);
-
-        assertNotNull(key.getId());
-
-        ActivationKeyDTO update = new ActivationKeyDTO();
-        Set<ContentOverrideDTO> contentOverrideDTOS = new HashSet<>();
-        contentOverrideDTOS.add(new ContentOverrideDTO().name("a name").contentLabel(null));
-        update.contentOverrides(contentOverrideDTOS);
-
-        assertThrows(ConstraintViolationException.class, () ->
-            activationKeyResource.updateActivationKey(key.getId(), update)
-        );
-    }
-
-    @Test
-    public void testValidationUpdateWithEmptyContentOverrideLabel() {
-        ActivationKey key = new ActivationKey();
-        key.setOwner(owner);
-        key.setName("dd");
-        activationKeyCurator.create(key);
-
-        assertNotNull(key.getId());
-
-        ActivationKeyDTO update = new ActivationKeyDTO();
-        Set<ContentOverrideDTO> contentOverrideDTOS = new HashSet<>();
-        contentOverrideDTOS.add(new ContentOverrideDTO().name("a name").contentLabel(""));
-        update.contentOverrides(contentOverrideDTOS);
-
-        assertThrows(ConstraintViolationException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             activationKeyResource.updateActivationKey(key.getId(), update)
         );
     }
@@ -575,7 +422,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         contentOverrideDTOS.add(null);
         update.contentOverrides(contentOverrideDTOS);
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             activationKeyResource.updateActivationKey(key.getId(), update)
         );
     }

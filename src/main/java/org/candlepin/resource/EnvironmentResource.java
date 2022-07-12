@@ -352,7 +352,6 @@ public class EnvironmentResource implements EnvironmentsApi {
     public ConsumerDTO createConsumerInEnvironment(String envId, ConsumerDTO consumer,
         String userName, String activationKeys) throws BadRequestException {
 
-        this.validator.validateConstraints(consumer);
         this.validator.validateCollectionElementsNotNull(consumer::getInstalledProducts,
             consumer::getGuestIds, consumer::getCapabilities);
 

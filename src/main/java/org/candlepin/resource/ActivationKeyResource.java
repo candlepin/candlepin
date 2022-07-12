@@ -141,7 +141,6 @@ public class ActivationKeyResource implements ActivationKeysApi {
     @Override
     public ActivationKeyDTO updateActivationKey(@Verify(ActivationKey.class) String activationKeyId,
         ActivationKeyDTO update) {
-        dtoValidator.validateConstraints(update);
         dtoValidator.validateCollectionElementsNotNull(update::getProducts, update::getPools,
             update::getContentOverrides);
 

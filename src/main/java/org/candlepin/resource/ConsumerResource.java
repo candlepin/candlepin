@@ -162,6 +162,8 @@ import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -898,7 +900,6 @@ public class ConsumerResource implements ConsumersApi {
     public ConsumerDTO createConsumer(ConsumerDTO dto, String userName, String ownerKey,
         String activationKeys, Boolean identityCertCreation) {
 
-        this.validator.validateConstraints(dto);
         this.validator.validateCollectionElementsNotNull(dto::getInstalledProducts,
             dto::getGuestIds, dto::getCapabilities);
         Principal principal = this.principalProvider.get();
@@ -1444,7 +1445,6 @@ public class ConsumerResource implements ConsumersApi {
     @Transactional
     @UpdateConsumerCheckIn
     public void updateConsumer(@Verify(Consumer.class) String uuid, ConsumerDTO dto) {
-        this.validator.validateConstraints(dto);
         this.validator.validateCollectionElementsNotNull(dto::getInstalledProducts,
             dto::getGuestIds, dto::getCapabilities);
 
@@ -2118,14 +2118,22 @@ public class ConsumerResource implements ConsumersApi {
     }
 
     @Override
-    public Response getContentAccessBody(@Verify(Consumer.class) String consumerUuid, OffsetDateTime since) {
+    public Response getContentAccessBody(@Verify(Consumer.class) String consumerUuid, String sinceDate) {
         log.debug("Getting content access certificate for consumer: {}", consumerUuid);
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+        OffsetDateTime since = null;
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
         if (!owner.isUsingSimpleContentAccess()) {
             throw new BadRequestException(i18n.tr("Content access mode does not allow this request."));
         }
+
+        if (sinceDate != null) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss z");
+            ZonedDateTime zonedDateTime = ZonedDateTime.parse(sinceDate, formatter);
+            since = zonedDateTime.toOffsetDateTime();
+        }
+
 
         if (!this.contentAccessManager.hasCertChangedSince(consumer, since != null ?
             Util.toDate(since) : new Date(0))) {

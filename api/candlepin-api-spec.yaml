@@ -1021,8 +1021,9 @@ paths:
           description: Modified date. Accepted format EEE, dd MMM yyyy HH:mm:ss z
           schema:
             type: string
-            format: date-time
-            pattern: EEE, dd MMM yyyy HH:mm:ss z
+#            FIXME It wont work on older version resteasy validation.
+#            format: date-time
+#            pattern: EEE, dd MMM yyyy HH:mm:ss z
       responses:
         200:
           description: A successful operation.
@@ -8648,11 +8649,9 @@ components:
         - type: object
           required:
             - id
-            - uuid
           properties:
             uuid:
               type: string
-              minLength: 1
               example: "ff808081554a3e4101554a3e9033005d"
             id:
               type: string
@@ -8712,16 +8711,11 @@ components:
       allOf:
         - $ref: '#/components/schemas/TimestampedEntity'
         - type: object
-          required:
-            - name
-            - contentLabel
           properties:
             name:
               type: string
-              minLength: 1
             contentLabel:
               type: string
-              minLength: 1
             value:
               type: string
               maxLength: 2048

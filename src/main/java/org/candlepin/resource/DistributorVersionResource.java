@@ -124,7 +124,6 @@ public class DistributorVersionResource implements DistributorVersionsApi {
 
     @Override
     public DistributorVersionDTO create(DistributorVersionDTO dto) {
-        this.validator.validateConstraints(dto);
         this.validator.validateCollectionElementsNotNull(dto::getCapabilities);
         DistributorVersion existing = curator.findByName(dto.getName());
         if (existing != null) {
@@ -139,7 +138,6 @@ public class DistributorVersionResource implements DistributorVersionsApi {
 
     @Override
     public DistributorVersionDTO update(String id, DistributorVersionDTO dto) {
-        this.validator.validateConstraints(dto);
         this.validator.validateCollectionElementsNotNull(dto::getCapabilities);
 
         DistributorVersion existing = verifyAndLookupDistributorVersion(id);

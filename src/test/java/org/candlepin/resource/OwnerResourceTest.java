@@ -1184,24 +1184,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testValidationCreateWithNullProductId() {
-        NestedOwnerDTO nestedOwnerDTO = new NestedOwnerDTO();
-        nestedOwnerDTO.key(owner.getKey());
-
-        ActivationKeyDTO key = new ActivationKeyDTO()
-            .owner(nestedOwnerDTO)
-            .name("dd");
-
-        Set<ActivationKeyProductDTO> products = new HashSet<>();
-        products.add(new ActivationKeyProductDTO().productId(null));
-        key.products(products);
-
-        assertThrows(javax.validation.ConstraintViolationException.class, () ->
-            this.ownerResource.createActivationKey(owner.getKey(), key)
-        );
-    }
-
-    @Test
     public void testValidationCreateActivationKeyWithEmptyProductId() {
         NestedOwnerDTO nestedOwnerDTO = new NestedOwnerDTO();
         nestedOwnerDTO.key(owner.getKey());
@@ -1214,7 +1196,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         products.add(new ActivationKeyProductDTO().productId(""));
         key.products(products);
 
-        assertThrows(javax.validation.ConstraintViolationException.class, () ->
+        assertThrows(IllegalArgumentException.class, () ->
             this.ownerResource.createActivationKey(owner.getKey(), key)
         );
     }
@@ -1232,7 +1214,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         products.add(null);
         key.products(products);
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             this.ownerResource.createActivationKey(owner.getKey(), key)
         );
     }
@@ -1250,7 +1232,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         pools.add(new ActivationKeyPoolDTO().poolId(null));
         key.pools(pools);
 
-        assertThrows(javax.validation.ConstraintViolationException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             this.ownerResource.createActivationKey(owner.getKey(), key)
         );
     }
@@ -1268,7 +1250,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         pools.add(new ActivationKeyPoolDTO().poolId(""));
         key.pools(pools);
 
-        assertThrows(javax.validation.ConstraintViolationException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             this.ownerResource.createActivationKey(owner.getKey(), key)
         );
     }
@@ -1286,7 +1268,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         pools.add(null);
         key.pools(pools);
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             this.ownerResource.createActivationKey(owner.getKey(), key)
         );
     }
@@ -1304,7 +1286,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         contentOverrideDTOS.add(new ContentOverrideDTO().name(null).contentLabel("a label"));
         key.contentOverrides(contentOverrideDTOS);
 
-        assertThrows(javax.validation.ConstraintViolationException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             this.ownerResource.createActivationKey(owner.getKey(), key)
         );
     }
@@ -1322,7 +1304,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         contentOverrideDTOS.add(new ContentOverrideDTO().name("").contentLabel("a label"));
         key.contentOverrides(contentOverrideDTOS);
 
-        assertThrows(javax.validation.ConstraintViolationException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             this.ownerResource.createActivationKey(owner.getKey(), key)
         );
     }
@@ -1340,7 +1322,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         contentOverrideDTOS.add(new ContentOverrideDTO().name("a name").contentLabel(null));
         key.contentOverrides(contentOverrideDTOS);
 
-        assertThrows(javax.validation.ConstraintViolationException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             this.ownerResource.createActivationKey(owner.getKey(), key)
         );
     }
@@ -1358,7 +1340,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         contentOverrideDTOS.add(new ContentOverrideDTO().name("a name").contentLabel(""));
         key.contentOverrides(contentOverrideDTOS);
 
-        assertThrows(javax.validation.ConstraintViolationException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             this.ownerResource.createActivationKey(owner.getKey(), key)
         );
     }
@@ -1376,7 +1358,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         contentOverrideDTOS.add(null);
         key.contentOverrides(contentOverrideDTOS);
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             this.ownerResource.createActivationKey(owner.getKey(), key)
         );
     }

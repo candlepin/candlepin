@@ -141,6 +141,7 @@ dependencies {
     implementation libraries["resteasyGuice"]
     implementation libraries["resteasyAtom"]
     implementation libraries["resteasyMultipart"]
+    implementation libraries["resteasyValidator"]
 
     implementation libraries["javaxRs"]
 

@@ -326,16 +326,15 @@ describe 'Activation Keys' do
     @activation_key['products'] = []
     @activation_key['contentOverrides'] = [{:contentLabel => 'hello', :name => nil, :value => '123' }]
 
+    output = @cp.update_activation_key(@activation_key)
+    output['products'].should eq(@activation_key['products'])
+    output['name'].should eq(@activation_key['name'])
+
+    @activation_key['contentOverrides'] = [nil]
     lambda {
       @cp.update_activation_key(@activation_key)
     }.should raise_exception(RestClient::BadRequest)
 
-
-    @activation_key['contentOverrides'] = [{:contentLabel => nil, :name => 'value', :value => '123' }]
-
-    lambda {
-      @cp.update_activation_key(@activation_key)
-    }.should raise_exception(RestClient::BadRequest)
   end
 
   it 'should list activation keys with populated entity collections' do
