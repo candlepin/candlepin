@@ -116,6 +116,17 @@ cert_from_pkcs12() {
     fi
 }
 
+select_jdbc_jar() {
+    for jar in "$@"
+    do
+        if [ -f "$jar" ]; then
+            JDBC_JAR="$jar"
+            return 0
+        fi
+    done
+    return 1
+}
+
 recreate_postgresql() {
     local db_name="$1"
     local db_user="${2:-$db_name}"
@@ -136,8 +147,12 @@ recreate_postgresql() {
 init_postgresql_jdbc() {
     local db_name="$1"
     local db_host="${DBHOSTNAME:-localhost}"
+    local postgresql_jdbc_jar=$(find $CP_EXTRACT_CLASSPATH -type f -name "postgresql*.jar")
+    if ! select_jdbc_jar $postgresql_jdbc_jar; then
+        err_msg "No JDBC jar file available for PostgreSQL"
+        exit
+    fi
     JDBC_DRIVER="org.postgresql.Driver"
-    JDBC_JAR="/usr/share/java/postgresql-jdbc.jar"
     JDBC_URL="jdbc:postgresql://$db_host/$db_name"
 }
 
@@ -158,8 +173,14 @@ init_mysql_jdbc() {
     local db_host="${DBHOSTNAME:-localhost}"
     local password="$DBPASSWORD"
     [ -z "$password" ] && password=''
+
+    local mysql_client_jar=$(find $CP_EXTRACT_CLASSPATH -type f -name "mysql-connector-java*.jar")
+    if ! select_jdbc_jar $mysql_client_jar; then
+        err_msg "No JDBC jar file available for MariaDB/MySQL"
+        exit
+    fi
+
     JDBC_DRIVER="com.mysql.jdbc.Driver"
-    JDBC_JAR="/usr/share/java/mysql-connector-java.jar"
     JDBC_URL="jdbc:mysql://$db_host/$db_name"
 
     # Change once the mariadb-java-client RPM is available in EPEL
