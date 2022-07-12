@@ -148,10 +148,11 @@ recreate_postgresql() {
 init_postgresql_jdbc() {
     local db_name="$1"
     local db_host="${DBHOSTNAME:-localhost}"
-
-    select_jdbc_jar "/usr/share/java/postgresql-jdbc.jar"
-    evalrc $? "No JDBC jar file available for PostgreSQL"
-
+    local postgresql_jdbc_jar=$(find $CP_EXTRACT_CLASSPATH -type f -name "postgresql*.jar")
+    if ! select_jdbc_jar $postgresql_jdbc_jar; then
+        err_msg "No JDBC jar file available for PostgreSQL"
+        exit
+    fi
     JDBC_DRIVER="org.postgresql.Driver"
     JDBC_URL="jdbc:postgresql://$db_host/$db_name"
 }
@@ -173,10 +174,11 @@ init_mysql_jdbc() {
     local db_host="${DBHOSTNAME:-localhost}"
     local password="$DBPASSWORD"
     [ -z "$password" ] && password=''
-
-    select_jdbc_jar "/usr/lib/java/mariadb-java-client.jar" "/usr/share/java/mysql-connector-java.jar"
-    evalrc $? "No JDBC jar file available for MariaDB/MySQL"
-
+    local mysql_client_jar=$(find $CP_EXTRACT_CLASSPATH -type f -name "mysql-connector-java*.jar")
+    if ! select_jdbc_jar $mysql_client_jar; then
+        err_msg "No JDBC jar file available for MariaDB/MySQL"
+        exit
+    fi
     JDBC_DRIVER="com.mysql.cj.jdbc.Driver"
     JDBC_URL="jdbc:mysql://$db_host/$db_name"
 
