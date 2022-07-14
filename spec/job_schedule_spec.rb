@@ -5,44 +5,6 @@ describe 'Scheduled Jobs' do
 
   include CandlepinMethods
 
-  it 'should not schedule arbitrary tasks' do
-    lambda {
-      job = @cp.trigger_job('MySQLInjectionJob')
-    }.should raise_exception(RestClient::Forbidden)
-  end
-
-  it 'should not schedule non cron tasks' do
-    lambda {
-      job = @cp.trigger_job('UndoImportsJob')
-    }.should raise_exception(RestClient::Forbidden)
-  end
-
-  it 'should schedule cron tasks irrespective of the case' do
-    job = @cp.trigger_job('ExpiredPoolsCleanupJob')
-    expect(job['state']).to eq('CREATED')
-
-    wait_for_job(job['id'], 15)
-  end
-
-  it 'should purge expired pools' do
-    @owner = create_owner random_string 'test_owner'
-    @monitoring_prod = create_product(nil, 'monitoring', :attributes => { 'variant' => "Satellite Starter Pack" })
-
-    now = DateTime.now
-    pool = @cp.create_pool(@owner['key'], @monitoring_prod.id, {
-      :quantity => 6,
-      :start_date => now - 20,
-      :end_date => now - 10
-    });
-    #verify pool exists before
-    @cp.get_pool(pool['id']).should_not be_nil
-    job = @cp.trigger_job('ExpiredPoolsCleanupJob')
-    wait_for_job(job['id'], 15)
-    lambda {
-      pool = @cp.get_pool(pool['id'])
-    }.should raise_exception(RestClient::ResourceNotFound)
-  end
-
   it 'should purge import records' do
     skip("candlepin running in hosted mode") if is_hosted?
 
