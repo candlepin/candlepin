@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.3
+Version: 4.2.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,31 @@ fi
 
 #raw
 %changelog
+* Mon Jul 18 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.4-1
+- Migrate product_resource_spec to java - Moved the product_resource_spec.rb to
+  ProductResourceSpecTest.java - Removed product_resource_spec.rb - Updated GET
+  /products/subscriptions return type to array in api spec yaml
+  (joshmalbrecht@gmail.com)
+- Bump hibernate-jpamodelgen from 5.6.9.Final to 5.6.10.Final
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Fix centos7 container image url (nmoumoul@redhat.com)
+- Introduce candlepin-base-cs8 image using CS8 - Update jenkins build to use
+  new image except for mysql tests (joshmalbrecht@gmail.com)
+- Include the 'exceptions' package in the api jar (nmoumoul@redhat.com)
+- Remove status rspec test since it is ported to Java (nmoumoul@redhat.com)
+- Remove qpid leftovers & unneeded rpm deps from container - Use postgresql
+  jdbc from the java deps instead of the rpm. - Remove a number of unneeded rpm
+  dependencies. - Use pg_isready from postgres 12 instead of 9.6. - Remove all
+  qpid leftovers (in the container image and out). (nmoumoul@redhat.com)
+- Fix include path error in the upstream data injector (crog@redhat.com)
+- Bump mariadb-java-client from 3.0.5 to 3.0.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Stop adding '_spec' suffix in rspec file pattern matching
+  (nmoumoul@redhat.com)
+- Bump spotbugs-annotations from 4.7.0 to 4.7.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Update diagnostic tooling for Candlepin 4.x model changes (crog@redhat.com)
+
 * Tue Jun 28 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.3-1
 - Upgrade to openapi-generator 6.0.0 (wpoteat@redhat.com)
 - Fix maven transitive dependency resolution issue (nmoumoul@redhat.com)

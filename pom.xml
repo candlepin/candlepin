@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.candlepin</groupId>
   <artifactId>candlepin</artifactId>
-  <version>4.2.3</version>
+  <version>4.2.4</version>
   <packaging>war</packaging>
   <description>The Candlepin Entitlement Engine</description>
   <licenses>
@@ -28,7 +28,7 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-jpamodelgen</artifactId>
-      <version>5.6.7.Final</version>
+      <version>5.6.10.Final</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -298,7 +298,7 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-jpamodelgen</artifactId>
-      <version>5.6.9.Final</version>
+      <version>5.6.10.Final</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -316,7 +316,7 @@
     <dependency>
       <groupId>org.mariadb.jdbc</groupId>
       <artifactId>mariadb-java-client</artifactId>
-      <version>3.0.5</version>
+      <version>3.0.6</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
