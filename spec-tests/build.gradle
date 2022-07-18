@@ -23,6 +23,7 @@ dependencies {
     implementation libraries["jacksonJdk8"]
     implementation libraries["jacksonJsr310"]
     implementation libraries["assertj"]
+    implementation libraries["commonsCodec"]
 
     testRuntimeOnly libraries["junitEngine"]
 
