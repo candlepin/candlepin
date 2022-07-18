@@ -119,12 +119,12 @@ public class ProductResource implements ProductsApi {
     }
 
     @Override
-    public Stream<OwnerDTO> getProductOwners(List<String> productUuids) {
-        if (productUuids.isEmpty()) {
+    public Stream<OwnerDTO> getProductOwners(List<String> productIds) {
+        if (productIds.isEmpty()) {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
         }
 
-        Set<Owner> owners = this.ownerCurator.getOwnersWithProducts(productUuids);
+        Set<Owner> owners = this.ownerCurator.getOwnersWithProducts(productIds);
 
         return owners.stream().map(
             this.translator.getStreamMapper(Owner.class, OwnerDTO.class));
@@ -132,9 +132,9 @@ public class ProductResource implements ProductsApi {
 
     @Override
     public Stream<AsyncJobStatusDTO> refreshPoolsForProducts(
-        List<String> productUuids, Boolean lazyRegen) {
+        List<String> productIds, Boolean lazyRegen) {
 
-        if (productUuids.isEmpty()) {
+        if (productIds.isEmpty()) {
             throw new BadRequestException(i18n.tr("No product IDs specified"));
         }
 
@@ -160,7 +160,7 @@ public class ProductResource implements ProductsApi {
             }
         };
 
-        return this.ownerCurator.getOwnersWithProducts(productUuids)
+        return this.ownerCurator.getOwnersWithProducts(productIds)
             .stream()
             .map(jobConfigMapper)
             .map(jobQueueMapper)

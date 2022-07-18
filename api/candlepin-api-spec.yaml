@@ -7103,7 +7103,7 @@ paths:
       parameters:
         - in: query
           name: product
-          description: Multiple product UUIDs
+          description: Multiple product Ids
           required: true
           schema:
             type: array
@@ -7115,7 +7115,7 @@ paths:
       security: []
       responses:
         200:
-          description: A product certificate
+          description: Owners for the provided product Ids
           content:
             application/json:
               schema:
@@ -7143,7 +7143,7 @@ paths:
       parameters:
         - in: query
           name: product
-          description: Multiple product UUIDs
+          description: Multiple product Ids
           required: true
           schema:
             type: array
@@ -7166,7 +7166,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AsyncJobStatusDTO'
+                type: array
+                items:
+                  $ref: '#/components/schemas/AsyncJobStatusDTO'
         400:
           description: No product IDs specified
           content:
