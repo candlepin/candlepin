@@ -15,27 +15,32 @@
 
 package org.candlepin.spec.bootstrap.data.builder;
 
-import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.dto.api.v1.SubscriptionDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
+import java.time.OffsetDateTime;
+
 /**
- * Class meant to provide fully randomized instances of Content.
+ * Class meant to provide fully randomized instances of Subscription.
  *
  * Individual tests can then modify the instance according to their needs.
  */
-public final class Contents {
+public final class Subscriptions {
 
-    private Contents() {
+    private Subscriptions() {
         throw new UnsupportedOperationException();
     }
 
-    public static ContentDTO random() {
-        return new ContentDTO()
-            .id(StringUtil.random("cid"))
-            .name(StringUtil.random("cname"))
-            .label(StringUtil.random("clabel"))
-            .type(StringUtil.random("ctype"))
-            .vendor(StringUtil.random("cvendor"));
+    public static SubscriptionDTO random(OwnerDTO owner, ProductDTO product) {
+        return new SubscriptionDTO()
+            .id(StringUtil.random("test_sub"))
+            .owner(Owners.toNested(owner))
+            .product(product)
+            .quantity(10L)
+            .startDate(OffsetDateTime.now())
+            .endDate(OffsetDateTime.now().plusYears(1));
     }
 
 }

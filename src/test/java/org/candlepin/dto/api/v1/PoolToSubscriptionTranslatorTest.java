@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.shim.ContentDataTranslator;
+import org.candlepin.dto.shim.ContentInfoTranslator;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.Certificate;
@@ -36,7 +36,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SubscriptionsCertificate;
-import org.candlepin.model.dto.ContentData;
+import org.candlepin.service.model.ContentInfo;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -63,7 +63,7 @@ public class PoolToSubscriptionTranslatorTest extends
         modelTranslator.registerTranslator(new CdnTranslator(), Cdn.class, CdnDTO.class);
         modelTranslator.registerTranslator(
             new CertificateSerialTranslator(), CertificateSerial.class, CertificateSerialDTO.class);
-        modelTranslator.registerTranslator(new ContentDataTranslator(), ContentData.class, ContentDTO.class);
+        modelTranslator.registerTranslator(new ContentInfoTranslator(), ContentInfo.class, ContentDTO.class);
         modelTranslator.registerTranslator(
             new CertificateTranslator(), Certificate.class, CertificateDTO.class);
         modelTranslator.registerTranslator(

@@ -21,6 +21,7 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.model.dto.ContentData;
+import org.candlepin.service.model.ContentInfo;
 
 import java.util.Arrays;
 
@@ -29,26 +30,26 @@ import java.util.Arrays;
 /**
  * Test suite for the UpstreamConsumerTranslator class
  */
-public class ContentDataTranslatorTest extends
-    AbstractTranslatorTest<ContentData, ContentDTO, ContentDataTranslator> {
+public class ContentInfoTranslatorTest extends
+    AbstractTranslatorTest<ContentInfo, ContentDTO, ContentInfoTranslator> {
 
-    protected ContentDataTranslator translator = new ContentDataTranslator();
+    protected ContentInfoTranslator translator = new ContentInfoTranslator();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
-        modelTranslator.registerTranslator(this.translator, ContentData.class, ContentDTO.class);
+        modelTranslator.registerTranslator(this.translator, ContentInfo.class, ContentDTO.class);
     }
 
     @Override
-    protected ContentDataTranslator initObjectTranslator() {
+    protected ContentInfoTranslator initObjectTranslator() {
         return this.translator;
     }
 
     @Override
-    protected ContentData initSourceObject() {
+    protected ContentInfo initSourceObject() {
         ContentData source = new ContentData();
 
-        source.setUuid("test_value");
+        source.setUuid(null);
         source.setId("test_value");
         source.setType("test_value");
         source.setLabel("test_value");
@@ -73,12 +74,11 @@ public class ContentDataTranslatorTest extends
     }
 
     @Override
-    protected void verifyOutput(ContentData source, ContentDTO dto, boolean childrenGenerated) {
+    protected void verifyOutput(ContentInfo source, ContentDTO dto, boolean childrenGenerated) {
         if (source != null) {
             // This DTO does not have any nested objects, so we don't need to worry about the
             // childrenGenerated flag
 
-            assertEquals(source.getUuid(), dto.getUuid());
             assertEquals(source.getId(), dto.getId());
             assertEquals(source.getType(), dto.getType());
             assertEquals(source.getLabel(), dto.getLabel());
@@ -89,7 +89,7 @@ public class ContentDataTranslatorTest extends
             assertEquals(source.getReleaseVersion(), dto.getReleaseVer());
             assertEquals(source.getGpgUrl(), dto.getGpgUrl());
             assertEquals(source.getMetadataExpiration(), dto.getMetadataExpire());
-            assertEquals(source.getModifiedProductIds(), dto.getModifiedProductIds());
+            assertEquals(source.getRequiredProductIds(), dto.getModifiedProductIds());
             assertEquals(source.getArches(), dto.getArches());
         }
         else {

@@ -23,16 +23,17 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.BrandingTranslator;
-import org.candlepin.dto.api.v1.BrandingTranslatorTest;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
-import org.candlepin.model.dto.ContentData;
-import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
+import org.candlepin.service.model.BrandingInfo;
+import org.candlepin.service.model.ContentInfo;
+import org.candlepin.service.model.ProductContentInfo;
+import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -46,28 +47,27 @@ import java.util.Set;
 /**
  * Test suite for the UpstreamConsumerTranslator class
  */
-public class ProductDataTranslatorTest extends
-    AbstractTranslatorTest<ProductData, ProductDTO, ProductDataTranslator> {
+public class ProductInfoTranslatorTest extends
+    AbstractTranslatorTest<ProductInfo, ProductDTO, ProductInfoTranslator> {
 
-    protected ContentDataTranslator contentTranslator = new ContentDataTranslator();
-    protected ProductDataTranslator productTranslator = new ProductDataTranslator();
+    protected ContentInfoTranslator contentTranslator = new ContentInfoTranslator();
+    protected ProductInfoTranslator productTranslator = new ProductInfoTranslator();
     protected BrandingTranslator brandingTranslator = new BrandingTranslator();
 
-    protected ContentDataTranslatorTest contentDataTranslatorTest = new ContentDataTranslatorTest();
-    protected BrandingTranslatorTest productBrandingTranslatorTest =
-        new BrandingTranslatorTest();
+    protected ContentInfoTranslatorTest contentDataTranslatorTest = new ContentInfoTranslatorTest();
+    protected BrandingInfoTranslatorTest brandingTranslatorTest = new BrandingInfoTranslatorTest();
 
     @Override
     protected void initModelTranslator(ModelTranslator modelTranslator) {
-        modelTranslator.registerTranslator(this.contentTranslator, ContentData.class, ContentDTO.class);
-        modelTranslator.registerTranslator(this.productTranslator, ProductData.class, ProductDTO.class);
+        modelTranslator.registerTranslator(this.contentTranslator, ContentInfo.class, ContentDTO.class);
+        modelTranslator.registerTranslator(this.productTranslator, ProductInfo.class, ProductDTO.class);
         modelTranslator.registerTranslator(this.brandingTranslator, Branding.class, BrandingDTO.class);
 
-        this.productBrandingTranslatorTest.initModelTranslator(modelTranslator);
+        this.brandingTranslatorTest.initModelTranslator(modelTranslator);
     }
 
     @Override
-    protected ProductDataTranslator initObjectTranslator() {
+    protected ProductInfoTranslator initObjectTranslator() {
         return this.productTranslator;
     }
 
@@ -85,7 +85,7 @@ public class ProductDataTranslatorTest extends
         depProdIds.add("dep_prod_2");
         depProdIds.add("dep_prod_3");
 
-        source.setUuid("test_uuid");
+        source.setUuid(null);
         source.setId("test_id");
         source.setName("test_name");
         source.setMultiplier(10L);
@@ -101,7 +101,7 @@ public class ProductDataTranslatorTest extends
         }
 
         Set<Branding> brandingSet = new HashSet<>();
-        brandingSet.add(this.productBrandingTranslatorTest.initSourceObject());
+        brandingSet.add((Branding) this.brandingTranslatorTest.initSourceObject());
         source.setBranding(brandingSet);
 
         for (int i = 0; i < 3; ++i) {
@@ -126,28 +126,25 @@ public class ProductDataTranslatorTest extends
     }
 
     @Override
-    public void verifyOutput(ProductData source, ProductDTO dto, boolean childrenGenerated) {
+    public void verifyOutput(ProductInfo source, ProductDTO dto, boolean childrenGenerated) {
         if (source != null) {
-            assertEquals(source.getUuid(), dto.getUuid());
             assertEquals(source.getId(), dto.getId());
             assertEquals(source.getName(), dto.getName());
             assertEquals(source.getMultiplier(), dto.getMultiplier());
             assertEquals(source.getAttributes(), Util.toMap(dto.getAttributes()));
             assertEquals(source.getDependentProductIds(), dto.getDependentProductIds());
-            assertEquals(source.getHref(), dto.getHref());
 
             if (childrenGenerated) {
                 assertNotNull(dto.getProductContent());
 
-                for (ProductContentData pc : source.getProductContent()) {
+                for (ProductContentInfo pc : source.getProductContent()) {
                     for (ProductContentDTO pcdto : dto.getProductContent()) {
-                        ContentData content = pc.getContent();
+                        ContentInfo content = pc.getContent();
                         ContentDTO cdto = pcdto.getContent();
 
                         assertNotNull(cdto);
-                        assertNotNull(cdto.getUuid());
 
-                        if (cdto.getUuid().equals(content.getUuid())) {
+                        if (cdto.getId().equals(content.getId())) {
                             assertEquals(pc.isEnabled(), pcdto.getEnabled());
 
                             // Pass the content off to the ContentTranslatorTest to verify it
@@ -158,15 +155,14 @@ public class ProductDataTranslatorTest extends
 
                 assertNotNull(dto.getBranding());
                 assertEquals(dto.getBranding().size(), source.getBranding().size());
-                for (Branding brandingSource : source.getBranding()) {
+                for (BrandingInfo brandingSource : source.getBranding()) {
                     for (BrandingDTO brandingDTO : dto.getBranding()) {
 
                         assertNotNull(brandingDTO);
                         assertNotNull(brandingDTO.getProductId());
 
                         if (brandingDTO.getProductId().equals(brandingSource.getProductId())) {
-                            this.productBrandingTranslatorTest.verifyOutput(brandingSource, brandingDTO,
-                                true);
+                            this.brandingTranslatorTest.verifyOutput(brandingSource, brandingDTO, true);
                         }
                     }
                 }

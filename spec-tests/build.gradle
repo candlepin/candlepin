@@ -39,6 +39,7 @@ test {
 task spec(type: Test) {
     description = 'Run Java based spec tests'
     group = 'Verification'
+    outputs.upToDateWhen { false }
 
     useJUnitPlatform()
 

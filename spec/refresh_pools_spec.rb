@@ -466,7 +466,7 @@ describe 'Refresh Pools' do
     product_id = random_string(nil, true)
     product = create_upstream_product(product_id)
 
-    add_content_to_product_upstream(product_id, content_id)
+    product = add_content_to_product_upstream(product_id, content_id)
 
     sub_id = random_string('test_subscription')
     create_upstream_subscription(sub_id, owner_key, {:product => product})
@@ -529,7 +529,7 @@ describe 'Refresh Pools' do
     product_id = random_string(nil, true)
     product = create_upstream_product(product_id)
 
-    add_content_to_product_upstream(product_id, content_id)
+    product = add_content_to_product_upstream(product_id, content_id)
 
     sub_id = random_string('test_subscription')
     create_upstream_subscription(sub_id, owner_key, { :product => product })
@@ -1233,7 +1233,7 @@ describe 'Refresh Pools' do
       :providedProducts => [prov_product]
     })
 
-    add_content_to_product_upstream(product.id, content_id1, false)
+    product = add_content_to_product_upstream(product.id, content_id1, false)
 
     sub_id = random_string('test_subscription_1')
     sub = create_upstream_subscription(sub_id, owner_key, {
@@ -1279,9 +1279,8 @@ describe 'Refresh Pools' do
 
     expect(concat_serials(entitlement, bonus_entitlement)).to eq(serial_concat)
 
-    # Yield to encapsulating test, applying any change it may have made
-    sub = yield(owner, sub)
-    update_upstream_subscription(sub.id, sub)
+    # Yield to encapsulating test
+    yield(owner, sub)
 
     # verify serial does not change on content update request that does not regenerate cert
     entitlement = @cp.get_entitlement(entitlement['id'])
@@ -1306,8 +1305,6 @@ describe 'Refresh Pools' do
       content = subscription['product']['productContent'].first['content']
       content.modifiedProductIds = [product_id2]
       update_upstream_content(content.id, content)
-
-      subscription
     }
   end
 
@@ -1316,11 +1313,9 @@ describe 'Refresh Pools' do
       product_id2 = random_string(nil, true)
       product2 = create_upstream_product(product_id2, { :name => 'test_prod_2' })
 
-      content = subscription['providedProducts'][0]['productContent'][0]['content']
+      content = subscription['product']['providedProducts'].first['productContent'].first['content']
       content.modifiedProductIds = [product_id2]
       update_upstream_content(content.id, content)
-
-      subscription
     }
   end
 
@@ -1329,11 +1324,9 @@ describe 'Refresh Pools' do
       product_id2 = random_string(nil, true)
       product2 = create_upstream_product(product_id2, { :name => 'test_prod_2' })
 
-      content = subscription['derivedProvidedProducts'][0]['productContent'][0]['content']
+      content = subscription['product']['derivedProduct']['providedProducts'].first['productContent'].first['content']
       content.modifiedProductIds = [product_id2]
       update_upstream_content(content.id, content)
-
-      subscription
     }
   end
 
@@ -1366,9 +1359,10 @@ describe 'Refresh Pools' do
 
       add_content_to_product_upstream(prov_product.id, content_id)
 
-      subscription['product']['providedProducts'].push(prov_product)
+      product = subscription['product']
+      product['providedProducts'].push(prov_product)
 
-      subscription
+      update_upstream_product(product.id, product)
     }
 
     prov_product = json_body['products'].find {|p| p['id'] == prov_product_id}
@@ -1377,8 +1371,9 @@ describe 'Refresh Pools' do
 
   it 'regenerates entitlements when provided product is removed' do
     json_body, main_product = test_entitlement_regeneration { |owner, subscription|
-      subscription['product']['providedProducts'] = []
-      subscription
+      product = subscription['product']
+      product['providedProducts'] = []
+      update_upstream_product(product.id, product)
     }
 
     json_body['products'].size.should == 1
@@ -1389,8 +1384,6 @@ describe 'Refresh Pools' do
       content = subscription['product']['productContent'].first['content']
       content.label = 'shakeItOff'
       update_upstream_content(content.id, content)
-
-      subscription
     }
 
     product_json = json_body['products'].find {|p| p['id'] == main_product['id']}
@@ -1402,8 +1395,6 @@ describe 'Refresh Pools' do
       content = subscription['product']['productContent'].first['content']
       content.releaseVer = 'badBlood'
       update_upstream_content(content.id, content)
-
-      subscription
     }
 
     # releasever is not in json
@@ -1414,8 +1405,6 @@ describe 'Refresh Pools' do
       content = subscription['product']['productContent'].first['content']
       content.vendor = 'blankSpace'
       update_upstream_content(content.id, content)
-
-      subscription
     }
 
     product_json = json_body['products'].find {|p| p['id'] == main_product['id']}
@@ -1435,10 +1424,6 @@ describe 'Refresh Pools' do
       })
 
       add_content_to_product_upstream(product.id, content.id)
-
-      # Need to return the updated, upstream subscription here so we don't risk clobbering the addition.
-      # We shouldn't, anyway, but there's no need to risk it unnecessarily.
-      get_upstream_subscription(subscription.id)
     }
 
     product_json = json_body['products'].find {|p| p['id'] == main_product['id']}
@@ -1454,10 +1439,6 @@ describe 'Refresh Pools' do
       content = product['productContent'].first['content']
 
       remove_content_from_product_upstream(product.id, content.id)
-
-      # Need to return the updated, upstream subscription here so we don't risk clobbering the removal.
-      # We shouldn't, anyway, but there's no need to risk it unnecessarily.
-      get_upstream_subscription(subscription.id)
     }
 
     product_json = json_body['products'].find {|p| p['id'] == main_product['id']}

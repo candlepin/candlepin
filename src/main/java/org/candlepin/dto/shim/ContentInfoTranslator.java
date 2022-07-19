@@ -17,9 +17,10 @@ package org.candlepin.dto.shim;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.model.dto.ContentData;
+import org.candlepin.service.model.ContentInfo;
 import org.candlepin.util.Util;
 
+import java.util.Collection;
 import java.util.HashSet;
 
 
@@ -27,13 +28,13 @@ import java.util.HashSet;
  * The ContentDataTranslator provides translation from ContentData DTO objects to the new
  * ContentDTOs (API)
  */
-public class ContentDataTranslator implements ObjectTranslator<ContentData, ContentDTO> {
+public class ContentInfoTranslator implements ObjectTranslator<ContentInfo, ContentDTO> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ContentDTO translate(ContentData source) {
+    public ContentDTO translate(ContentInfo source) {
         return this.translate(null, source);
     }
 
@@ -41,7 +42,7 @@ public class ContentDataTranslator implements ObjectTranslator<ContentData, Cont
      * {@inheritDoc}
      */
     @Override
-    public ContentDTO translate(ModelTranslator translator, ContentData source) {
+    public ContentDTO translate(ModelTranslator translator, ContentInfo source) {
         return source != null ? this.populate(translator, source, new ContentDTO()) : null;
     }
 
@@ -49,7 +50,7 @@ public class ContentDataTranslator implements ObjectTranslator<ContentData, Cont
      * {@inheritDoc}
      */
     @Override
-    public ContentDTO populate(ContentData source, ContentDTO destination) {
+    public ContentDTO populate(ContentInfo source, ContentDTO destination) {
         return this.populate(null, source, destination);
     }
 
@@ -57,7 +58,7 @@ public class ContentDataTranslator implements ObjectTranslator<ContentData, Cont
      * {@inheritDoc}
      */
     @Override
-    public ContentDTO populate(ModelTranslator translator, ContentData source, ContentDTO dest) {
+    public ContentDTO populate(ModelTranslator translator, ContentInfo source, ContentDTO dest) {
         if (source == null) {
             throw new IllegalArgumentException("source is null");
         }
@@ -66,8 +67,8 @@ public class ContentDataTranslator implements ObjectTranslator<ContentData, Cont
             throw new IllegalArgumentException("dest is null");
         }
 
-        dest.uuid(source.getUuid())
-            .id(source.getId())
+        dest.id(source.getId())
+            .uuid(null)
             .type(source.getType())
             .label(source.getLabel())
             .name(source.getName())
@@ -79,9 +80,16 @@ public class ContentDataTranslator implements ObjectTranslator<ContentData, Cont
             .updated(Util.toDateTime(source.getUpdated()))
             .gpgUrl(source.getGpgUrl())
             .metadataExpire(source.getMetadataExpiration())
-            .modifiedProductIds(new HashSet<>(source.getModifiedProductIds()))
+            .modifiedProductIds(toSet(source.getRequiredProductIds()))
             .arches(source.getArches());
 
         return dest;
+    }
+
+    private HashSet<String> toSet(Collection<String> modifiedProductIds) {
+        if (modifiedProductIds == null) {
+            return new HashSet<>();
+        }
+        return new HashSet<>(modifiedProductIds);
     }
 }
