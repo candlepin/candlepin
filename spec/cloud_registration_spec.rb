@@ -13,16 +13,22 @@ describe 'Cloud Registration' do
         skip("cloud registration is not enabled") unless @cp.is_capability_present("cloud_registration")
     end
 
-    def generate_token(org)
+    def generate_token(org, params={})
         create_upstream_owner(org)
 
         # Test note: At the time of writing, the testing cloud registration adapter does not care
         # at all about the type or signature, and assumes the metadata is the owner key in question.
-        token = @cp.get_cloud_registration_token({
+        token_info = {
             :type => "test_type",
             :metadata => org,
             :signature => "test_signature"
-        })
+        }
+
+        params.each do |key, value|
+            token_info[key] = value
+        end
+
+        token = @cp.get_cloud_registration_token(token_info)
 
         return token
     end
@@ -47,4 +53,10 @@ describe 'Cloud Registration' do
             @cp.get_cloud_registration_token(nil)
         }.to raise_exception(RestClient::BadRequest)
     end
+
+    it "allows registration with an empty signature" do
+        token = generate_token("test_org", {:signature => ""})
+        expect(token).to_not be_nil
+    end
+
 end
