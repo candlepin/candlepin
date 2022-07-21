@@ -29,4 +29,17 @@ public final class StringUtil {
         return prefix + "-" + System.nanoTime() + "-" + RANDOM.nextInt(100000);
     }
 
+    /**
+     * Generates a random suffix of 7 characters or fewer.
+     *
+     * @param base
+     *  The base string to concatenate to the generated suffix
+     *
+     * @return
+     *  the provided base string concatenated with a randomly generated suffix
+     */
+    public static String randomSuffix(String base) {
+        return base + "-" + RANDOM.nextInt(100000);
+    }
+
 }
