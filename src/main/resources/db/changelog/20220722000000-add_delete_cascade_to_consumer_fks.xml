@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20220722000000-1" author="jalbrech">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="cp_content_tags_consumer_fk"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="cp_consumer_content_tags" constraintName="cp_content_tags_consumer_fk"/>
+    </changeSet>
+
+    <changeSet id="20220722000000-2" author="jalbrech">
+        <addForeignKeyConstraint baseTableName="cp_consumer_content_tags"
+            baseColumnNames="consumer_id"
+            referencedTableName="cp_consumer"
+            referencedColumnNames="id"
+            constraintName="fk_cp_content_tags_consumer"
+            onDelete="CASCADE" />
+    </changeSet>
+
+    <changeSet id="20220722000000-3" author="jalbrech">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="fk278ce810390317d"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="cp_consumer_facts" constraintName="fk278ce810390317d"/>
+    </changeSet>
+
+    <changeSet id="20220722000000-4" author="jalbrech">
+        <addForeignKeyConstraint baseTableName="cp_consumer_facts"
+            baseColumnNames="cp_consumer_id"
+            referencedTableName="cp_consumer"
+            referencedColumnNames="id"
+            constraintName="fk_cp_consumer_facts_consumer"
+            onDelete="CASCADE" />
+    </changeSet>
+
+    <changeSet id="20220722000000-5" author="jalbrech">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="fk_cnsmr_capability_cnsmr"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="cp_consumer_capability" constraintName="fk_cnsmr_capability_cnsmr"/>
+    </changeSet>
+
+    <changeSet id="20220722000000-6" author="jalbrech">
+        <addForeignKeyConstraint baseTableName="cp_consumer_capability"
+            baseColumnNames="consumer_id"
+            referencedTableName="cp_consumer"
+            referencedColumnNames="id"
+            constraintName="fk_consumer_capability_consumer"
+            onDelete="CASCADE" />
+    </changeSet>
+
+    <changeSet id="20220722000000-7" author="jalbrech">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="fk_consumer_guests"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="cp_consumer_guests" constraintName="fk_consumer_guests"/>
+    </changeSet>
+
+    <changeSet id="20220722000000-8" author="jalbrech">
+        <addForeignKeyConstraint baseTableName="cp_consumer_guests"
+            baseColumnNames="consumer_id"
+            referencedTableName="cp_consumer"
+            referencedColumnNames="id"
+            constraintName="fk_consumer_guests_consumer"
+            onDelete="CASCADE" />
+    </changeSet>
+
+    <changeSet id="20220722000000-9" author="jalbrech">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="fk_installed_product"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="cp_installed_products" constraintName="fk_installed_product"/>
+    </changeSet>
+
+    <changeSet id="20220722000000-10" author="jalbrech">
+        <addForeignKeyConstraint baseTableName="cp_installed_products"
+            baseColumnNames="consumer_id"
+            referencedTableName="cp_consumer"
+            referencedColumnNames="id"
+            constraintName="fk_installed_products_consumer"
+            onDelete="CASCADE" />
+    </changeSet>
+
+    <changeSet id="20220722000000-11" author="jalbrech">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="fk_guest_attribute"/>
+        </preConditions>
+        <dropForeignKeyConstraint baseTableName="cp_consumer_guests_attributes" constraintName="fk_guest_attribute"/>
+    </changeSet>
+
+    <changeSet id="20220722000000-12" author="jalbrech">
+        <addForeignKeyConstraint baseTableName="cp_consumer_guests_attributes"
+            baseColumnNames="cp_consumer_guest_id"
+            referencedTableName="cp_consumer_guests"
+            referencedColumnNames="id"
+            constraintName="fk_consumer_guests_attributes_consumer_guests"
+            onDelete="CASCADE" />
+    </changeSet>
+</databaseChangeLog>
