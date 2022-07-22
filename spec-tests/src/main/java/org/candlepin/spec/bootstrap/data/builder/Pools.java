@@ -15,25 +15,32 @@
 
 package org.candlepin.spec.bootstrap.data.builder;
 
-import org.candlepin.dto.api.v1.ActivationKeyDTO;
-import org.candlepin.dto.api.v1.NestedOwnerDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.spec.bootstrap.data.util.StringUtil;
+import org.candlepin.dto.api.v1.PoolDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
 
-public final class ActivationKeys {
+import java.time.OffsetDateTime;
 
-    private ActivationKeys() {
+/**
+ * Class meant to provide fully randomized instances of pool.
+ *
+ * Individual tests can then modify the instance according to their needs.
+ */
+public final class Pools {
+
+    private Pools() {
         throw new UnsupportedOperationException();
     }
 
-    public static ActivationKeyDTO random(OwnerDTO owner) {
-        return random(Owners.toNested(owner));
+    public static PoolDTO random() {
+        return new PoolDTO()
+            .startDate(OffsetDateTime.now())
+            .endDate(OffsetDateTime.now().plusYears(10))
+            .quantity(10L);
     }
 
-    public static ActivationKeyDTO random(NestedOwnerDTO owner) {
-        return new ActivationKeyDTO()
-            .owner(owner)
-            .name(StringUtil.random("test_activation_key"));
+    public static PoolDTO random(ProductDTO product) {
+        return random()
+            .productId(product.getId());
     }
 
 }

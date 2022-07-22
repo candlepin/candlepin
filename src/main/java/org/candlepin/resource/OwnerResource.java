@@ -1235,7 +1235,11 @@ public class OwnerResource implements OwnersApi {
         Boolean addFuture,
         Boolean onlyFuture,
         OffsetDateTime after,
-        List<String> poolIds) {
+        List<String> poolIds,
+        Integer page,
+        Integer perPage,
+        String sortBy,
+        String order) {
 
         Principal principal = this.principalProvider.get();
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
@@ -1300,16 +1304,16 @@ public class OwnerResource implements OwnersApi {
             poolFilters.addIdFilters(poolIds);
         }
 
-        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(
+        Page<List<Pool>> poolPage = poolManager.listAvailableEntitlementPools(
             c, key, owner.getId(), productId, subscriptionId, afterDate == null ? activeOnDate : null,
             listAll, poolFilters, pageRequest, addFuture, onlyFuture, afterDate);
 
-        List<Pool> poolList = page.getPageData();
+        List<Pool> poolList = poolPage.getPageData();
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
         calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOnDate);
 
         // Store the page for the LinkHeaderResponseFilter
-        ResteasyContext.pushContext(Page.class, page);
+        ResteasyContext.pushContext(Page.class, poolPage);
 
         return poolList.stream()
             .map(this.translator.getStreamMapper(Pool.class, PoolDTO.class));

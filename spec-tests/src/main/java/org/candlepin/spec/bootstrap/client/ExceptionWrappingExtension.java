@@ -73,7 +73,7 @@ public class ExceptionWrappingExtension implements TestExecutionExceptionHandler
             ApiException exception = (ApiException) throwable;
             if (exception.getCause() != null) {
                 // Handle failed request
-                throw new RuntimeException(exception.getMessage(), exception);
+                throw new RuntimeException(exception.getCause().getMessage(), exception);
             }
             else {
                 // Handle fail response

@@ -15,13 +15,13 @@
 
 package org.candlepin.spec.jobs;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertGone;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.ApiException;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
-import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.DeletedConsumerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
@@ -32,9 +32,9 @@ import org.candlepin.resource.OwnerApi;
 import org.candlepin.resource.OwnerProductApi;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
-import org.candlepin.spec.bootstrap.client.JobsClient;
 import org.candlepin.spec.bootstrap.client.SpecTest;
-import org.candlepin.spec.bootstrap.client.SpecTestFixture;
+import org.candlepin.spec.bootstrap.client.api.JobsClient;
+import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
@@ -50,7 +50,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @SpecTest
-public class InactiveConsumerCleanerJobSpecTest extends SpecTestFixture {
+public class InactiveConsumerCleanerJobSpecTest {
 
     private static final String JOB_KEY = "InactiveConsumerCleanerJob";
     private static final int DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS = 397;
@@ -70,7 +70,7 @@ public class InactiveConsumerCleanerJobSpecTest extends SpecTestFixture {
         deletedConsumerApi = client.deletedConsumers();
         ownerApi = client.owners();
         ownerProductApi = client.ownerProducts();
-        jobsClient = getClient(JobsClient.class);
+        jobsClient = client.jobs();
 
         if (owner == null) {
             owner = ownerApi.createOwner(Owners.random());
@@ -85,31 +85,16 @@ public class InactiveConsumerCleanerJobSpecTest extends SpecTestFixture {
         Instant activeTime = Instant.now()
             .minus(DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS - 10, ChronoUnit.DAYS);
 
-        ConsumerDTO inactiveConsumer = new Consumers.Builder()
-            .withOwner(owner)
-            .withLastCheckin(inactiveTime.atOffset(ZoneOffset.UTC))
-            .build();
-
-        ConsumerTypeDTO manifestType = new ConsumerTypeDTO();
-        manifestType.setManifest(true);
-        manifestType.setLabel("candlepin");
-        ConsumerDTO consumerWithManifest = new Consumers.Builder()
-            .withOwner(owner)
-            .withType(manifestType)
-            .withLastCheckin(inactiveTime.atOffset(ZoneOffset.UTC))
-            .build();
-        ConsumerDTO consumerWithEntitlement = new Consumers.Builder()
-            .withOwner(owner)
-            .withLastCheckin(inactiveTime.atOffset(ZoneOffset.UTC))
-            .build();
-        ConsumerDTO activeConsumer = new Consumers.Builder()
-            .withOwner(owner)
-            .withLastCheckin(activeTime.atOffset(ZoneOffset.UTC))
-            .build();
-        ConsumerDTO activeConsumer2 = new Consumers.Builder()
-            .withOwner(owner)
-            .withLastCheckin(activeTime.atOffset(ZoneOffset.UTC))
-            .build();
+        ConsumerDTO inactiveConsumer = Consumers.random(owner)
+            .lastCheckin(inactiveTime.atOffset(ZoneOffset.UTC));
+        ConsumerDTO consumerWithManifest = Consumers.random(owner, ConsumerTypes.Candlepin)
+            .lastCheckin(inactiveTime.atOffset(ZoneOffset.UTC));
+        ConsumerDTO consumerWithEntitlement = Consumers.random(owner)
+            .lastCheckin(inactiveTime.atOffset(ZoneOffset.UTC));
+        ConsumerDTO activeConsumer = Consumers.random(owner)
+            .lastCheckin(activeTime.atOffset(ZoneOffset.UTC));
+        ConsumerDTO activeConsumer2 = Consumers.random(owner)
+            .lastCheckin(activeTime.atOffset(ZoneOffset.UTC));
 
         inactiveConsumer = consumerApi.createConsumer(inactiveConsumer, null, owner.getKey(), null, false);
         consumerWithManifest = consumerApi
@@ -131,7 +116,8 @@ public class InactiveConsumerCleanerJobSpecTest extends SpecTestFixture {
         // Verify that the inactive consumer has been moved to the deleted_consumers table.
         List<DeletedConsumerDTO> deletedConsumers = deletedConsumerApi
             .listByDate(inactiveConsumer.getCreated().toString());
-        assertEquals(1, deletedConsumers.size());
+        // Assert that other tests might have created an inactive consumer
+        assertThat(deletedConsumers).hasSizeGreaterThanOrEqualTo(1);
         assertEquals(inactiveConsumer.getUuid(), deletedConsumers.get(0).getConsumerUuid());
         assertEquals(inactiveConsumer.getName(), deletedConsumers.get(0).getConsumerName());
         assertEquals(inactiveConsumer.getOwner().getId(), deletedConsumers.get(0).getOwnerId());

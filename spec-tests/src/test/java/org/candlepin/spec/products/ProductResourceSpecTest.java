@@ -27,11 +27,11 @@ import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.resource.OwnerApi;
 import org.candlepin.resource.OwnerProductApi;
 import org.candlepin.resource.ProductsApi;
+import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
-import org.candlepin.spec.bootstrap.client.JobsClient;
 import org.candlepin.spec.bootstrap.client.SpecTest;
-import org.candlepin.spec.bootstrap.client.SpecTestFixture;
+import org.candlepin.spec.bootstrap.client.api.JobsClient;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
@@ -49,7 +49,7 @@ import java.util.HashSet;
 import java.util.List;
 
 @SpecTest
-public class ProductResourceSpecTest extends SpecTestFixture {
+public class ProductResourceSpecTest {
     private ProductsApi productsApi;
     private OwnerApi ownerApi;
     private OwnerProductApi ownerProductApi;
@@ -66,12 +66,12 @@ public class ProductResourceSpecTest extends SpecTestFixture {
     private String p6ProductId;
 
     @BeforeAll
-    public void beforeAll() throws Exception {
+    public void beforeAll() {
         ApiClient client = ApiClients.admin();
         productsApi = client.products();
         ownerApi = client.owners();
         ownerProductApi = client.ownerProducts();
-        jobsClient = getClient(JobsClient.class);
+        jobsClient = client.jobs();
     }
 
     @Test
@@ -107,8 +107,8 @@ public class ProductResourceSpecTest extends SpecTestFixture {
         assertEquals(0, productsApi.getProductOwners(Arrays.asList("UnknownProductId")).size());
     }
 
-    // TODO: Add OnlyInHosted annotation and uncomment when ENT-4612 is completed
-    //@Test
+    @Test
+    @OnlyInHosted
     @DisplayName("refreshes pools for orgs owning products")
     public void refreshPoolsForOrgsOwningProducts() throws Exception {
         setupOrgProductsAndPools();

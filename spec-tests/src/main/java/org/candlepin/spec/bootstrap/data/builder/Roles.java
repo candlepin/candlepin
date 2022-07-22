@@ -28,7 +28,7 @@ public final class Roles {
         throw new UnsupportedOperationException();
     }
 
-    public static RoleDTO admin(OwnerDTO owner) {
+    public static RoleDTO all(OwnerDTO owner) {
         return createRole(owner, "ALL");
     }
 

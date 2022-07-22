@@ -24,22 +24,38 @@ import org.candlepin.resource.UsersApi;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.data.builder.Roles;
 
+import org.jetbrains.annotations.NotNull;
+
 public final class UserUtil {
 
     private UserUtil() {
         throw new UnsupportedOperationException();
     }
 
+    public static UserDTO createAdminUser(ApiClient client, OwnerDTO owner) throws ApiException {
+        return createUsers(client, true, Roles.all(owner));
+    }
+
     public static UserDTO createUser(ApiClient client, OwnerDTO owner) throws ApiException {
+        return createUsers(client, false, Roles.all(owner));
+    }
+
+    public static UserDTO createReadOnlyUser(ApiClient client, OwnerDTO owner) throws ApiException {
+        return createUsers(client, false, Roles.readOnly(owner));
+    }
+
+    @NotNull
+    private static UserDTO createUsers(
+        ApiClient client, boolean superAdmin, RoleDTO role) throws ApiException {
         RolesApi roles = client.roles();
         UsersApi usersClient = client.users();
         UserDTO user = new UserDTO()
             .username(StringUtil.random("test_user"))
             .password("password")
-            .superAdmin(false);
+            .superAdmin(superAdmin);
         usersClient.createUser(user);
-        RoleDTO role = roles.createRole(Roles.admin(owner));
-        roles.addUserToRole(role.getName(), user.getUsername());
+        RoleDTO userRole = roles.createRole(role);
+        roles.addUserToRole(userRole.getName(), user.getUsername());
 
         return user;
     }

@@ -21,24 +21,33 @@ import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
+/**
+ * Class meant to provide fully randomized instances of owner.
+ *
+ * Individual tests can then modify the instance according to their needs.
+ */
 public final class Owners {
+
+    private static final String ACCESS_MODE_LIST = "org_environment,entitlement";
+    private static final String ENT_ACCESS_MODE = "entitlement";
+    private static final String SCA_ACCESS_MODE = "org_environment";
 
     private Owners() {
         throw new UnsupportedOperationException();
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
-
     public static OwnerDTO random() {
-        return new Builder().build();
+        // todo fill in rest of the data
+        return new OwnerDTO()
+            .key(StringUtil.random("test_owner"))
+            .displayName(StringUtil.random("Test Owner"))
+            .contentAccessMode(ENT_ACCESS_MODE)
+            .contentAccessModeList(ACCESS_MODE_LIST);
     }
 
     public static OwnerDTO randomSca() {
-        return new Builder()
-            .scaEnabled()
-            .build();
+        return random()
+            .contentAccessMode(SCA_ACCESS_MODE);
     }
 
     public static NestedOwnerDTO toNested(OwnerDTO owner) {
@@ -47,46 +56,6 @@ public final class Owners {
             .id(owner.getId())
             .displayName(owner.getDisplayName())
             .contentAccessMode(owner.getContentAccessMode());
-    }
-
-    public static class Builder {
-
-        private NestedOwnerDTO parent = null;
-        private String contentAccessMode = "entitlement";
-        private String contentAccessModeList = "entitlement";
-
-        // withers...
-        public Builder withContentAccess(String contentAccessMode) {
-            this.contentAccessMode = contentAccessMode;
-            return this;
-        }
-
-        public Builder withContentAccessList(String contentAccessModeList) {
-            this.contentAccessModeList = contentAccessModeList;
-            return this;
-        }
-
-        public Builder scaEnabled() {
-            this.withContentAccess("org_environment")
-                .withContentAccessList("org_environment,entitlement");
-            return this;
-        }
-
-        public Builder withParent(NestedOwnerDTO parentOwner) {
-            this.parent = parentOwner;
-            return this;
-        }
-
-        public OwnerDTO build() {
-            OwnerDTO owner = new OwnerDTO();
-            owner.setKey(StringUtil.random("test_owner"));
-            owner.displayName(StringUtil.random("Test Owner"));
-            owner.setContentAccessMode(this.contentAccessMode);
-            owner.setContentAccessModeList(this.contentAccessModeList);
-            owner.setParentOwner(this.parent);
-            // todo fill in rest of the data
-            return owner;
-        }
     }
 
 }
