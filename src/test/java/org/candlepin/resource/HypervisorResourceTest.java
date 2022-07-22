@@ -209,7 +209,6 @@ public class HypervisorResourceTest {
             modelTranslator,
             this.jobManager,
             this.dtoValidator,
-            this.guestIdCurator,
             this.principalProvider,
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,

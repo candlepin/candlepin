@@ -49,7 +49,7 @@ import javax.ws.rs.Path;
  * various resources Candlepin exposes. This list will be filtered based on the
  * permissions of the caller.
  */
-public class RootResource implements DefaultApi {
+public class RootResource implements RootApi {
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)

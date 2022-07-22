@@ -46,7 +46,7 @@ import javax.ws.rs.core.Response.Status;
 /**
  * SubscriptionResource
  */
-public class SubscriptionResource implements SubscriptionsApi {
+public class SubscriptionResource implements SubscriptionApi {
     private static Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
 
     private final SubscriptionServiceAdapter subService;

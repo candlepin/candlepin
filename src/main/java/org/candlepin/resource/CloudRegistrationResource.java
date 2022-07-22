@@ -37,7 +37,7 @@ import java.util.Objects;
 /**
  * End point(s) for cloud registration token generation
  */
-public class CloudRegistrationResource implements CloudApi {
+public class CloudRegistrationResource implements CloudRegistrationApi {
     private final CloudRegistrationAuth cloudRegistrationAuth;
     private final I18n i18n;
     private final DTOValidator validator;

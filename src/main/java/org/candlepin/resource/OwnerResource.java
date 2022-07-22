@@ -18,13 +18,11 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.HealEntireOrgJob;
-import org.candlepin.async.tasks.RefreshPoolsForProductJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.async.tasks.UndoImportsJob;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
-import org.candlepin.audit.EventAdapter;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
@@ -35,12 +33,10 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
-import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.OwnerContentAccess;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.v1.ActivationKeyPoolDTO;
@@ -48,7 +44,6 @@ import org.candlepin.dto.api.v1.ActivationKeyProductDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.v1.ContentAccessDTO;
-import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
@@ -58,7 +53,6 @@ import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.OwnerInfo;
 import org.candlepin.dto.api.v1.PoolDTO;
-import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.SubscriptionDTO;
@@ -78,7 +72,6 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EntitlementFilterBuilder;
@@ -90,7 +83,6 @@ import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.OwnerNotFoundException;
@@ -99,10 +91,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProductCertificateCurator;
-import org.candlepin.model.ProductContent;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SystemPurposeAttributeType;
@@ -118,11 +106,8 @@ import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementFinderUtil;
-import org.candlepin.resource.util.InfoAdapter;
-import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.OwnerServiceAdapter;
-import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.sync.ConflictOverrides;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.sync.SyncDataFormatException;
@@ -153,8 +138,6 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -169,7 +152,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -177,7 +159,7 @@ import javax.ws.rs.core.MultivaluedMap;
 /**
  * Owner Resource
  */
-public class OwnerResource implements OwnersApi {
+public class OwnerResource implements OwnerApi {
 
     private static Logger log = LoggerFactory.getLogger(OwnerResource.class);
 
@@ -194,7 +176,6 @@ public class OwnerResource implements OwnersApi {
     private I18n i18n;
     private EventSink sink;
     private EventFactory eventFactory;
-    private EventAdapter eventAdapter;
     private ManifestManager manifestManager;
     private ExporterMetadataCurator exportCurator;
     private ImportRecordCurator importRecordCurator;
@@ -209,18 +190,11 @@ public class OwnerResource implements OwnersApi {
     private ContentOverrideValidator contentOverrideValidator;
     private ServiceLevelValidator serviceLevelValidator;
     private Configuration config;
-    private ResolverUtil resolverUtil;
     private ConsumerTypeValidator consumerTypeValidator;
     private OwnerProductCurator ownerProductCurator;
     private ModelTranslator translator;
     private JobManager jobManager;
     private DTOValidator validator;
-    private OwnerContentCurator ownerContentCurator;
-    private UniqueIdGenerator idGenerator;
-    private ContentManager contentManager;
-    private ProductManager productManager;
-    private ProductCertificateCurator productCertCurator;
-    private ProductCurator productCurator;
     private PrincipalProvider principalProvider;
 
     @Inject
@@ -231,7 +205,6 @@ public class OwnerResource implements OwnersApi {
         I18n i18n,
         EventSink sink,
         EventFactory eventFactory,
-        EventAdapter eventAdapter,
         ContentAccessManager contentAccessManager,
         ManifestManager manifestManager,
         PoolManager poolManager,
@@ -248,18 +221,11 @@ public class OwnerResource implements OwnersApi {
         ServiceLevelValidator serviceLevelValidator,
         OwnerServiceAdapter ownerService,
         Configuration config,
-        ResolverUtil resolverUtil,
         ConsumerTypeValidator consumerTypeValidator,
         OwnerProductCurator ownerProductCurator,
         ModelTranslator translator,
         JobManager jobManager,
         DTOValidator validator,
-        OwnerContentCurator ownerContentCurator,
-        UniqueIdGenerator idGenerator,
-        ContentManager contentManager,
-        ProductManager productManager,
-        ProductCertificateCurator productCertCurator,
-        ProductCurator productCurator,
         PrincipalProvider principalProvider) {
 
         this.ownerCurator = ownerCurator;
@@ -275,7 +241,6 @@ public class OwnerResource implements OwnersApi {
         this.poolManager = poolManager;
         this.manifestManager = manifestManager;
         this.ownerManager = ownerManager;
-        this.eventAdapter = eventAdapter;
         this.entitlementCurator = entitlementCurator;
         this.ueberCertCurator = ueberCertCurator;
         this.ueberCertGenerator = ueberCertGenerator;
@@ -285,18 +250,11 @@ public class OwnerResource implements OwnersApi {
         this.serviceLevelValidator = serviceLevelValidator;
         this.ownerService = ownerService;
         this.config = config;
-        this.resolverUtil = resolverUtil;
         this.consumerTypeValidator = consumerTypeValidator;
         this.ownerProductCurator = ownerProductCurator;
         this.translator = translator;
         this.jobManager = jobManager;
         this.validator = validator;
-        this.ownerContentCurator = ownerContentCurator;
-        this.idGenerator = idGenerator;
-        this.contentManager = contentManager;
-        this.productManager = productManager;
-        this.productCertCurator = productCertCurator;
-        this.productCurator = productCurator;
         this.principalProvider = principalProvider;
     }
 
@@ -1219,26 +1177,15 @@ public class OwnerResource implements OwnersApi {
         return (int) this.consumerCurator.getConsumerCount(queryArgs);
     }
 
-    @Override
     @Transactional
+    @Override
     public Stream<PoolDTO> listOwnerPools(
         @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
-        String consumerUuid,
-        String activationKeyName,
-        String productId,
-        String subscriptionId,
-        Boolean listAll,
-        OffsetDateTime activeOn,
-        List<String> matches,
-        List<KeyValueParamDTO> attrFilters,
-        Boolean addFuture,
-        Boolean onlyFuture,
-        OffsetDateTime after,
-        List<String> poolIds,
-        Integer page,
-        Integer perPage,
-        String sortBy,
-        String order) {
+        String consumerUuid, String activationKeyName,
+        String productId, String subscriptionId, Boolean listAll, OffsetDateTime activeOn,
+        List<String> matches, List<KeyValueParamDTO> attrFilters, Boolean addFuture, Boolean onlyFuture,
+        OffsetDateTime after, List<String> poolIds, Integer page, Integer perPage,
+        String sortBy, String order) {
 
         Principal principal = this.principalProvider.get();
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
@@ -1798,200 +1745,6 @@ public class OwnerResource implements OwnersApi {
         return owner;
     }
 
-    /**
-     * Retrieves a Product instance for the product with the specified id. If no matching product
-     * could be found, this method throws an exception.
-     *
-     * @param owner
-     *  The organization
-     *
-     * @param productId
-     *  The ID of the product to retrieve
-     *
-     * @throws NotFoundException
-     *  if no matching product could be found with the specified id
-     *
-     * @return
-     *  the Product instance for the product with the specified id
-     */
-    protected Product fetchProduct(Owner owner, String productId) {
-        Product product = this.ownerProductCurator.getProductById(owner, productId);
-        if (product == null) {
-            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
-        }
-
-        return product;
-    }
-
-    @Override
-    public CandlepinQuery<ProductDTO> getProductsByOwner(@Verify(Owner.class) String ownerKey,
-        List<String> productIds) {
-        Owner owner = this.getOwnerByKey(ownerKey);
-        CandlepinQuery<Product> query = productIds != null && !productIds.isEmpty() ?
-            this.ownerProductCurator.getProductsByIds(owner, productIds) :
-            this.ownerProductCurator.getProductsByOwner(owner);
-
-        return this.translator.translateQuery(query, ProductDTO.class);
-    }
-
-    @Override
-    public ProductDTO getProductByOwner(@Verify(Owner.class) String ownerKey, String productId) {
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
-
-        return this.translator.translate(product, ProductDTO.class);
-    }
-
-    @Override
-    @Transactional
-    public ProductCertificateDTO getProductCertificateByOwner(String ownerKey, String productId) {
-        if (!productId.matches("\\d+")) {
-            throw new BadRequestException(i18n.tr("Only numeric product IDs are allowed."));
-        }
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
-
-        ProductCertificate productCertificate = this.productCertCurator.getCertForProduct(product);
-        return this.translator.translate(productCertificate, ProductCertificateDTO.class);
-    }
-
-    @Override
-    @Transactional
-    public ProductDTO createProductByOwner(String ownerKey, ProductDTO dto) {
-        this.validator.validateCollectionElementsNotNull(
-            dto::getBranding, dto::getDependentProductIds, dto::getProductContent);
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product entity = productManager.createProduct(owner, InfoAdapter.productInfoAdapter(dto));
-
-        return this.translator.translate(entity, ProductDTO.class);
-    }
-
-    @Override
-    @Transactional
-    public ProductDTO updateProductByOwner(String ownerKey, String productId, ProductDTO update) {
-        if (StringUtils.isEmpty(update.getId())) {
-            update.setId(productId);
-        }
-        else if (!StringUtils.equals(update.getId(), productId)) {
-            throw new BadRequestException(
-                i18n.tr("Contradictory ids in update request: {0}, {1}", productId, update.getId())
-            );
-        }
-
-        this.validator.validateCollectionElementsNotNull(
-            update::getBranding, update::getDependentProductIds, update::getProductContent);
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-
-        // Lock the owner_product while we are doing the update for this org.
-        // This is done in order to prevent collisions in updates on different parts of the product.
-        if (!this.ownerProductCurator.lockOwnerProduct(owner, productId, LockModeType.PESSIMISTIC_WRITE)) {
-            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
-        }
-        Product existing = this.ownerProductCurator.getProductById(owner, productId);
-
-        if (existing.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", existing.getId()));
-        }
-
-        Product updated = this.productManager.updateProduct(owner, InfoAdapter.productInfoAdapter(update),
-            true);
-
-        return this.translator.translate(updated, ProductDTO.class);
-    }
-
-    /**
-     * Creates an new, unmanaged product instance using the Red Hat product ID and content of the
-     * given product entity.
-     *
-     * @param entity
-     *  the product instance from which to copy the Red Hat product ID and content
-     *
-     * @return
-     *  an unmanaged product instance
-     */
-    private Product buildProductForBatchContentChange(Product entity) {
-        // Impl note: we need to fully clone the object to ensure we don't make any changes to any
-        // other fields; or we need to create a new product implementation that returns the correct
-        // no-change value for every other field.
-        return (Product) entity.clone();
-    }
-
-    @Override
-    @Transactional
-    public ProductDTO addBatchContent(String ownerKey, String productId, Map<String, Boolean> contentMap) {
-        Owner owner = this.getOwnerByKey(ownerKey);
-
-        // Lock the owner_product while we are doing the update for this org
-        // This is done in order to prevent collisions in updates on different parts of the product
-        if (!this.ownerProductCurator.lockOwnerProduct(owner, productId, LockModeType.PESSIMISTIC_WRITE)) {
-            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
-        }
-        Product product = this.ownerProductCurator.getProductById(owner, productId);
-
-        if (product.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
-        }
-
-        Product update = this.buildProductForBatchContentChange(product);
-
-        boolean changed = false;
-        for (Map.Entry<String, Boolean> entry : contentMap.entrySet()) {
-            Content content = this.fetchContent(owner, entry.getKey());
-            boolean enabled = entry.getValue() != null ?
-                entry.getValue() :
-                ProductContent.DEFAULT_ENABLED_STATE;
-
-            changed |= update.addContent(content, enabled);
-        }
-
-        if (changed) {
-            product = this.productManager.updateProduct(owner, update, true);
-        }
-
-        return this.translator.translate(product, ProductDTO.class);
-    }
-
-    @Override
-    @Transactional
-    public ProductDTO addContent(String ownerKey, String productId, String contentId, Boolean enabled) {
-        // Package the params up and pass it off to our batch method
-        Map<String, Boolean> contentMap = Collections.singletonMap(contentId, enabled);
-        return this.addBatchContent(ownerKey, productId, contentMap);
-    }
-
-    @Override
-    @Transactional
-    public ProductDTO removeBatchContent(String ownerKey, String productId, List<String> contentIds) {
-        Owner owner = this.getOwnerByKey(ownerKey);
-
-        // Lock the owner_product while we are doing the update for this org
-        // This is done in order to prevent collisions in updates on different parts of the product
-        if (!this.ownerProductCurator.lockOwnerProduct(owner, productId, LockModeType.PESSIMISTIC_WRITE)) {
-            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
-        }
-        Product product = this.ownerProductCurator.getProductById(owner, productId);
-
-        if (product.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
-        }
-
-        Product update = this.buildProductForBatchContentChange(product);
-
-        boolean changed = false;
-        for (String contentId : contentIds) {
-            changed |= update.removeContent(contentId);
-        }
-
-        if (changed) {
-            product = this.productManager.updateProduct(owner, update, true);
-        }
-
-        return this.translator.translate(product, ProductDTO.class);
-    }
-
     public boolean removeContent(ProductDTO product, Set<String> contentIds) {
         if (contentIds == null) {
             throw new IllegalArgumentException("contentId is null");
@@ -2008,216 +1761,6 @@ public class OwnerResource implements OwnersApi {
 
         return originalSize != updatedContents.size();
     }
-
-    @Override
-    @Transactional
-    public ProductDTO removeContent(String ownerKey, String productId, String contentId) {
-        // Package up the params and pass it to our bulk operation
-        return this.removeBatchContent(ownerKey, productId, Collections.singletonList(contentId));
-    }
-
-    @Override
-    @Transactional
-    public void deleteProductByOwner(String ownerKey, String productId) {
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
-
-        if (product.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
-        }
-
-        if (this.productCurator.productHasSubscriptions(owner, product)) {
-            throw new BadRequestException(i18n.tr(
-                "Product \"{0}\" cannot be deleted while referenced by one or more subscriptions",
-                productId));
-        }
-
-        if (this.productCurator.productHasParentProducts(owner, product)) {
-            throw new BadRequestException(i18n.tr(
-                "Product \"{0}\" cannot be deleted while referenced by one or more products",
-                productId));
-        }
-
-        this.productManager.removeProduct(owner, product);
-    }
-
-    @Override
-    @Transactional
-    public AsyncJobStatusDTO refreshPoolsForProduct(String ownerKey, String productId, Boolean lazyRegen) {
-        if (config.getBoolean(ConfigProperties.STANDALONE)) {
-            log.warn("Ignoring refresh pools request due to standalone config.");
-            return null;
-        }
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
-        JobConfig config = RefreshPoolsForProductJob.createJobConfig()
-            .setProduct(product)
-            .setLazy(lazyRegen);
-
-        try {
-            AsyncJobStatus status = jobManager.queueJob(config);
-            return this.translator.translate(status, AsyncJobStatusDTO.class);
-        }
-        catch (JobException e) {
-            String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
-                config.getJobKey());
-            log.error(errmsg, e);
-            throw new IseException(errmsg, e);
-        }
-    }
-
-    /**
-     * Retrieves the content entity with the given content ID for the specified owner. If a
-     * matching entity could not be found, this method throws a NotFoundException.
-     *
-     * @param owner
-     *  The owner in which to search for the content
-     *
-     * @param contentId
-     *  The Red Hat ID of the content to retrieve
-     *
-     * @throws NotFoundException
-     *  If a content with the specified Red Hat ID could not be found
-     *
-     * @return
-     *  the content entity with the given owner and content ID
-     */
-    protected Content fetchContent(Owner owner, String contentId) {
-        Content content = this.ownerContentCurator.getContentById(owner, contentId);
-
-        if (content == null) {
-            throw new NotFoundException(
-                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
-            );
-        }
-
-        return content;
-    }
-
-    @Override
-    public CandlepinQuery<ContentDTO> listOwnerContent(@Verify(Owner.class) String ownerKey) {
-        final Owner owner = this.getOwnerByKey(ownerKey);
-        CandlepinQuery<Content> query = this.ownerContentCurator.getContentByOwner(owner);
-        return this.translator.translateQuery(query, ContentDTO.class);
-    }
-
-    @Override
-    public ContentDTO getOwnerContent(
-        @Verify(Owner.class) String ownerKey, String contentId) {
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Content content = this.fetchContent(owner, contentId);
-
-        return this.translator.translate(content, ContentDTO.class);
-    }
-
-    /**
-     * Creates or merges the given Content object.
-     *
-     * @param owner
-     *  The owner for which to create the new content
-     *
-     * @param content
-     *  The content to create or merge
-     *
-     * @return
-     *  the newly created and/or merged Content object.
-     */
-    private Content createContentImpl(Owner owner, ContentDTO content) {
-        // TODO: check if arches have changed ??
-
-        Content entity = null;
-
-        if (content.getId() == null || content.getId().trim().length() == 0) {
-            content.setId(this.idGenerator.generateId());
-
-            entity = this.contentManager.createContent(owner, InfoAdapter.contentInfoAdapter(content));
-        }
-        else {
-            Content existing = this.ownerContentCurator.getContentById(owner, content.getId());
-
-            if (existing != null) {
-                if (existing.isLocked()) {
-                    throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
-                }
-
-                entity = this.contentManager.updateContent(owner, InfoAdapter.contentInfoAdapter(content),
-                    true);
-            }
-            else {
-                entity = this.contentManager.createContent(owner, InfoAdapter.contentInfoAdapter(content));
-            }
-        }
-
-        return entity;
-    }
-
-    @Override
-    @Transactional
-    public ContentDTO createContent(String ownerKey, ContentDTO content) {
-        this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Content entity = this.createContentImpl(owner, content);
-
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
-
-        return this.translator.translate(entity, ContentDTO.class);
-    }
-
-    @Override
-    @Transactional
-    public Collection<ContentDTO> createBatchContent(String ownerKey, List<ContentDTO> contents) {
-        for (ContentDTO content : contents) {
-            this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
-        }
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-
-        List<ContentDTO> output = contents.stream()
-            .map(content -> this.createContentImpl(owner, content))
-            .map(this.translator.getStreamMapper(Content.class, ContentDTO.class))
-            .collect(Collectors.toList());
-
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
-
-        return output;
-    }
-
-    @Override
-    @Transactional
-    public ContentDTO updateContent(String ownerKey, String contentId, ContentDTO content) {
-        this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
-
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Content existing = this.fetchContent(owner, contentId);
-
-        if (existing.isLocked()) {
-            throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
-        }
-
-        Content updated = this.contentManager
-            .updateContent(owner, InfoAdapter.contentInfoAdapter(content), true);
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
-
-        return this.translator.translate(updated, ContentDTO.class);
-    }
-
-    @Override
-    @Transactional
-    public void remove(String ownerKey, String contentId) {
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Content content = this.fetchContent(owner, contentId);
-
-        if (content.isLocked()) {
-            throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", content.getId()));
-        }
-
-        this.contentManager.removeContent(owner, content, true);
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
-    }
-
     private Owner createOwnerFromDTO(OwnerDTO ownerDTO) {
         // Verify that we have an owner key (as required)
         if (StringUtils.isBlank(ownerDTO.getKey())) {

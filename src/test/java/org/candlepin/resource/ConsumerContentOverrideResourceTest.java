@@ -175,7 +175,6 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             this.modelTranslator,
             this.jobManager,
             this.dtoValidator,
-            this.guestIdCurator,
             this.principalProvider,
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,

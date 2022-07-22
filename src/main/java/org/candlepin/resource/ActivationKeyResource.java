@@ -62,7 +62,7 @@ import java.util.regex.Pattern;
 /**
  * ActivationKeyResource
  */
-public class ActivationKeyResource implements ActivationKeysApi {
+public class ActivationKeyResource implements ActivationKeyApi {
     private static final Logger log = LoggerFactory.getLogger(ActivationKeyResource.class);
     private static final Pattern AK_CHAR_FILTER = Pattern.compile("^[a-zA-Z0-9_-]+$");
 

@@ -27,7 +27,7 @@ import com.google.inject.Inject;
 /**
  * CertificateSerialResource
  */
-public class CertificateSerialResource implements SerialsApi {
+public class CertificateSerialResource implements CertificateSerialApi {
     private CertificateSerialCurator certificateSerialCurator;
     private ModelTranslator translator;
 

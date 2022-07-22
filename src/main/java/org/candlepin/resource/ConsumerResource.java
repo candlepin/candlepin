@@ -59,7 +59,6 @@ import org.candlepin.dto.api.v1.DeleteResult;
 import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
-import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
 import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
@@ -100,7 +99,6 @@ import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
-import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.InvalidOrderKeyException;
@@ -109,7 +107,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Release;
-import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.paging.Page;
@@ -191,7 +188,7 @@ import javax.ws.rs.core.Response;
 /**
  * API Gateway for Consumers
  */
-public class ConsumerResource implements ConsumersApi {
+public class ConsumerResource implements ConsumerApi {
     private static final Logger log = LoggerFactory.getLogger(ConsumerResource.class);
 
     /** The maximum number of consumers to return per list or find request */
@@ -230,7 +227,6 @@ public class ConsumerResource implements ConsumersApi {
     private final ModelTranslator translator;
     private final JobManager jobManager;
     private final DTOValidator validator;
-    private final GuestIdCurator guestIdCurator;
     private final PrincipalProvider principalProvider;
     private final ContentOverrideValidator coValidator;
     private final ConsumerContentOverrideCurator ccoCurator;
@@ -274,7 +270,6 @@ public class ConsumerResource implements ConsumersApi {
         ModelTranslator translator,
         JobManager jobManager,
         DTOValidator validator,
-        GuestIdCurator guestIdCurator,
         PrincipalProvider principalProvider,
         ContentOverrideValidator coValidator,
         ConsumerContentOverrideCurator ccoCurator,
@@ -314,7 +309,6 @@ public class ConsumerResource implements ConsumersApi {
         this.translator = Objects.requireNonNull(translator);
         this.jobManager = Objects.requireNonNull(jobManager);
         this.validator = Objects.requireNonNull(validator);
-        this.guestIdCurator = Objects.requireNonNull(guestIdCurator);
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.coValidator = Objects.requireNonNull(coValidator);
         this.ccoCurator = Objects.requireNonNull(ccoCurator);
@@ -2938,49 +2932,7 @@ public class ConsumerResource implements ConsumersApi {
         return null;
     }
 
-    @Override
-    @RootResource.LinkedResource
-    public CandlepinQuery<GuestIdDTOArrayElement> getGuestIds(@Verify(Consumer.class) String consumerUuid) {
-        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
-        return translator.translateQuery(guestIdCurator.listByConsumer(consumer),
-            GuestIdDTOArrayElement.class);
-    }
 
-    @Override
-    public GuestIdDTO getGuestId(@Verify(Consumer.class) String consumerUuid, String guestId) {
-        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
-        GuestId result = validateGuestId(
-            guestIdCurator.findByConsumerAndId(consumer, guestId), guestId);
-        return translator.translate(result, GuestIdDTO.class);
-    }
-
-    /**
-     * Populates the specified entity with data from the provided DTO.
-     *
-     * @param guestId
-     *  The entity instance to populate
-     *
-     * @param dto
-     *  The DTO containing the data with which to populate the entity
-     *
-     * @throws IllegalArgumentException
-     *  if either entity or dto are null
-     */
-    protected void populateEntity(GuestId guestId, GuestIdDTO dto) {
-        if (guestId == null) {
-            throw new IllegalArgumentException("the guestId model entity is null");
-        }
-
-        if (dto == null) {
-            throw new IllegalArgumentException("the guestId dto is null");
-        }
-
-        guestId.setId(dto.getId());
-        guestId.setGuestId(dto.getGuestId());
-        if (dto.getAttributes() != null) {
-            guestId.setAttributes(dto.getAttributes());
-        }
-    }
 
     /**
      * Populates the specified entities with data from the provided guestIds.
@@ -3008,109 +2960,6 @@ public class ConsumerResource implements ConsumersApi {
                 continue;
             }
             entities.add(new GuestId(guestId));
-        }
-    }
-
-    @Override
-    public void updateGuests(@Verify(Consumer.class) String consumerUuid, List<GuestIdDTO> guestIdDTOs) {
-        Consumer toUpdate = consumerCurator.findByUuid(consumerUuid);
-
-        // Create a skeleton consumer for consumerResource.performConsumerUpdates
-        ConsumerDTO consumer = new ConsumerDTO();
-        consumer.setGuestIds(guestIdDTOs);
-
-        Set<String> allGuestIds = new HashSet<>();
-        for (GuestIdDTO gid : consumer.getGuestIds()) {
-            allGuestIds.add(gid.getGuestId());
-        }
-        VirtConsumerMap guestConsumerMap = consumerCurator.getGuestConsumersMap(
-            toUpdate.getOwnerId(), allGuestIds);
-
-        GuestMigration guestMigration = migrationProvider.get().buildMigrationManifest(consumer, toUpdate);
-        if (performConsumerUpdates(consumer, toUpdate, guestMigration)) {
-
-            if (guestMigration.isMigrationPending()) {
-                guestMigration.migrate();
-            }
-            else {
-                consumerCurator.update(toUpdate);
-            }
-        }
-    }
-
-    @Override
-    public void updateGuest(
-        @Verify(Consumer.class) String consumerUuid, String guestId, GuestIdDTO updatedDTO) {
-
-        // I'm not sure this can happen
-        if (guestId == null || guestId.isEmpty()) {
-            throw new BadRequestException(
-                i18n.tr("Please supply a valid guest id"));
-        }
-
-        if (updatedDTO == null) {
-            // If they're not sending attributes, we can get the guestId from the url
-            updatedDTO = new GuestIdDTO().guestId(guestId);
-        }
-
-        // Allow the id to be left out in this case, we can use the path param
-        if (updatedDTO.getGuestId() == null) {
-            updatedDTO.setGuestId(guestId);
-        }
-
-        // If the guest uuids do not match, something is wrong
-        if (!guestId.equalsIgnoreCase(updatedDTO.getGuestId())) {
-            throw new BadRequestException(
-                i18n.tr("Guest ID in json \"{0}\" does not match path guest ID \"{1}\"",
-                    updatedDTO.getGuestId(), guestId));
-        }
-
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        GuestId guestIdEntity = new GuestId();
-        populateEntity(guestIdEntity, updatedDTO);
-        guestIdEntity.setConsumer(consumer);
-        GuestId toUpdate = guestIdCurator.findByGuestIdAndOrg(guestId, consumer.getOwnerId());
-        if (toUpdate != null) {
-            guestIdEntity.setId(toUpdate.getId());
-        }
-        guestIdCurator.merge(guestIdEntity);
-    }
-
-    @Override
-    public void deleteGuest(@Verify(Consumer.class) String consumerUuid, String guestId, Boolean unregister) {
-        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        GuestId toDelete = validateGuestId(guestIdCurator.findByConsumerAndId(consumer, guestId), guestId);
-
-        if (unregister) {
-            Principal principal = (this.principalProvider == null ? null : this.principalProvider.get());
-            unregisterConsumer(toDelete, principal);
-        }
-
-        sink.queueEvent(eventFactory.guestIdDeleted(toDelete));
-        guestIdCurator.delete(toDelete);
-    }
-
-    private GuestId validateGuestId(GuestId guest, String guestUuid) {
-        if (guest == null) {
-            throw new NotFoundException(i18n.tr("Guest with UUID {0} could not be found.", guestUuid));
-        }
-
-        return guest;
-    }
-
-    private void unregisterConsumer(GuestId guest, Principal principal) {
-        Consumer guestConsumer = consumerCurator.findByVirtUuid(guest.getGuestId(),
-            guest.getConsumer().getOwnerId());
-        if (guestConsumer != null) {
-            if ((principal == null) || principal.canAccess(guestConsumer, SubResource.NONE, Access.ALL)) {
-                deleteConsumer(guestConsumer.getUuid());
-            }
-            else {
-                ConsumerType type = this.consumerTypeCurator.get(guestConsumer.getTypeId());
-
-                throw new ForbiddenException(i18n.tr("Cannot unregister {0} {1} because: {2}",
-                    type, guestConsumer.getName(), i18n.tr("Invalid Credentials")));
-            }
         }
     }
 }

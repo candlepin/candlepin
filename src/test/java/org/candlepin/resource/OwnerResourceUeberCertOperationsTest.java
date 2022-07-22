@@ -82,12 +82,12 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         this.principalProvider = mock(PrincipalProvider.class);
 
         or = new OwnerResource(
-            ownerCurator, null, consumerCurator, i18n, null, null, null, null,
+            ownerCurator, null, consumerCurator, i18n, null, null, null,
             null, poolManager, null, null,
             null, null, entitlementCurator,
             ueberCertCurator, ueberCertGenerator, null,  null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null, null, this.modelTranslator, this.jobManager,
-            null, null, null, null, null, null, null, this.principalProvider);
+            serviceLevelValidator, null, null, null, null, this.modelTranslator, this.jobManager,
+            null, this.principalProvider);
     }
 
     @Test

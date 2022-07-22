@@ -25,7 +25,7 @@ import com.google.inject.Inject;
 /**
  * DeletedConsumerResource
  */
-public class DeletedConsumerResource implements DeletedConsumersApi {
+public class DeletedConsumerResource implements DeletedConsumerApi {
     private DeletedConsumerCurator deletedConsumerCurator;
     private ModelTranslator translator;
 
