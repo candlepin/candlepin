@@ -8404,7 +8404,6 @@ components:
           minLength: 1
         signature:
           type: string
-          minLength: 1
 
     ConsumerDTO:
       description: Represents a consumer
