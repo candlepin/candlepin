@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.18
+Version: 4.0.19
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -233,6 +233,18 @@ fi
 
 #raw
 %changelog
+* Mon Jul 25 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.19-1
+- Use jdbc jars from java dependencies instead of rpm (nmoumoul@redhat.com)
+- Added support for skipping pool creation while processing test data
+  (crog@redhat.com)
+- Updated diagnostic tooling for Candlepin 4.0 model changes (crog@redhat.com)
+- Fixed JDBC packet size overrun in updateOwnerProductReferences
+  (crog@redhat.com)
+- Fix issue with owner-product mapping during refresh/import (crog@redhat.com)
+- Translate few strings. (jhnidek@redhat.com)
+- 2069165: Added grace period for product deletion during refresh/import
+  (crog@redhat.com)
+
 * Thu Jun 02 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.18-1
 - 2084518: CertificateCleanupJob fails with foreign key constraint violation
   (wpoteat@redhat.com)
