@@ -26,7 +26,7 @@ ext.plugins = [
     "com.adarshr:gradle-test-logger-plugin:3.2.0",
     "com.github.ben-manes:gradle-versions-plugin:0.42.0",
     "com.netflix.nebula:gradle-lint-plugin:17.7.0",
-    "org.openapitools:openapi-generator-gradle-plugin:6.0.0",
+    "org.openapitools:openapi-generator-gradle-plugin:6.0.1",
     "org.owasp:dependency-check-gradle:7.1.1",
     "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.3",
 ]
@@ -90,7 +90,7 @@ libraries["oauth"] = "net.oauth.core:oauth-provider:20100527"
 libraries["okhttp"] = "com.squareup.okhttp3:okhttp:4.10.0"
 libraries["okhttpInterceptor"] = "com.squareup.okhttp3:logging-interceptor:4.10.0"
 libraries["okhttpTls"] = "com.squareup.okhttp3:okhttp-tls:4.10.0"
-libraries["openapi"] = "org.openapitools:openapi-generator:6.0.0"
+libraries["openapi"] = "org.openapitools:openapi-generator:6.0.1"
 libraries["picocli"] = "info.picocli:picocli:4.6.3"
 libraries["postgresql"] = "org.postgresql:postgresql:42.4.0"
 libraries["quartz"] = "org.quartz-scheduler:quartz:2.3.2"
