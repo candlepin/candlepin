@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.13
+Version: 4.1.14
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,31 @@ fi
 
 #raw
 %changelog
+* Mon Jul 25 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.14-1
+- Removed length requirement on cloud registration signature (crog@redhat.com)
+- Use jdbc jars from java dependencies instead of rpm (nmoumoul@redhat.com)
+- Added support for skipping pool creation while processing test data
+  (crog@redhat.com)
+- Update diagnostic tooling for Candlepin 4.x model changes (crog@redhat.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- Fixed JDBC packet size overrun when updating owner-entity references
+  (crog@redhat.com)
+- Fix issue with owner-product mapping during refresh/import (crog@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Translate few strings. (jhnidek@redhat.com)
+- 2069160: Added grace period for product deletion during refresh/import
+  (crog@redhat.com)
+- Use msgfmt to validate the .po files (wpoteat@redhat.com)
+- Translated using Weblate (Russian) (ptoscano@redhat.com)
+- Translated using Weblate (German) (joachim.philipp@gmail.com)
+- Translated using Weblate (Russian) (igor.gorbounov@gmail.com)
+- adding agent to bugzilla-refrenge stage (jmolet@redhat.com)
+- adding milestones to abort previous builds (jmolet@redhat.com)
+- 2084517: CertificateCleanupJob fails with foreign key constraint violation
+  (wpoteat@redhat.com)
+- 2084574: Add ssl_verify capability based on config (wpoteat@redhat.com)
+
 * Wed May 11 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.13-1
 - 2078785: Added filter for fetching SCA certs with cert serial Id
   (joshmalbrecht@gmail.com)
