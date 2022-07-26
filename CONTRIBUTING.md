@@ -143,6 +143,8 @@ To run Java spec tests:
 * `./gradlew spec --tests org.candlepin.spec.StatusSpec*` runs only the spec  
    tests matched by the given package/class and wildcard(s).
 
+[More information on Java spec tests](/spec-tests/README.md#Contributing)
+
 ### Liquibase
 * `buildr "changeset:my changeset name"`  
   Much like the `rspec` task, the `changeset` task is followed by a  
