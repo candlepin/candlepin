@@ -511,7 +511,7 @@ public class OwnerResource implements OwnersApi {
         if (product == null) {
             throw new BadRequestException(
                 i18n.tr("Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
-                product, owner.getKey()));
+                    product, owner.getKey()));
         }
 
         return product;
@@ -932,7 +932,7 @@ public class OwnerResource implements OwnersApi {
                 }
                 catch (IllegalArgumentException e) {
                     throw new BadRequestException(this.i18n.tr("Content access mode list contains " +
-                    "an unsupported mode: {0}", mode), e);
+                        "an unsupported mode: {0}", mode), e);
                 }
             }
         }
@@ -1049,7 +1049,6 @@ public class OwnerResource implements OwnersApi {
     @Override
     public ActivationKeyDTO createActivationKey(@Verify(Owner.class) String ownerKey,
         ActivationKeyDTO dto) {
-        validator.validateConstraints(dto);
         validator.validateCollectionElementsNotNull(dto::getContentOverrides, dto::getPools,
             dto::getProducts);
 
@@ -1062,7 +1061,7 @@ public class OwnerResource implements OwnersApi {
         if (!keyMatcher.matches()) {
             throw new BadRequestException(
                 i18n.tr("The activation key name \"{0}\" must be alphanumeric or " +
-                "include the characters \"-\" or \"_\"", dto.getName()));
+                    "include the characters \"-\" or \"_\"", dto.getName()));
         }
 
         if (dto.getContentOverrides() != null) {
@@ -1074,7 +1073,7 @@ public class OwnerResource implements OwnersApi {
         if (activationKeyCurator.getByKeyName(owner, dto.getName()) != null) {
             throw new BadRequestException(
                 i18n.tr("The activation key name \"{0}\" is already in use for owner {1}",
-                dto.getName(), ownerKey));
+                    dto.getName(), ownerKey));
         }
 
         serviceLevelValidator.validate(owner.getId(), dto.getServiceLevel());
@@ -1372,7 +1371,6 @@ public class OwnerResource implements OwnersApi {
     public PoolDTO createPool(@Verify(Owner.class) String ownerKey, PoolDTO inputPoolDTO) {
         log.info("Creating custom pool for owner {}: {}", ownerKey, inputPoolDTO);
 
-        this.validator.validateConstraints(inputPoolDTO);
         this.validator.validateCollectionElementsNotNull(
             inputPoolDTO::getDerivedProvidedProducts, inputPoolDTO::getProvidedProducts);
 
@@ -1415,7 +1413,6 @@ public class OwnerResource implements OwnersApi {
     public void updatePool(@Verify(Owner.class) String ownerKey,
         PoolDTO newPoolDTO) {
 
-        this.validator.validateConstraints(newPoolDTO);
         this.validator.validateCollectionElementsNotNull(
             newPoolDTO::getDerivedProvidedProducts, newPoolDTO::getProvidedProducts);
 
@@ -1431,7 +1428,7 @@ public class OwnerResource implements OwnersApi {
         if (currentPool.getOwner() == null || !ownerKey.equals(currentPool.getOwner().getKey())) {
             throw new NotFoundException(
                 i18n.tr("Pool \"{0}\" does not belong to the specified owner \"{1}\"",
-                currentPool.getId(), ownerKey));
+                    currentPool.getId(), ownerKey));
         }
 
         // Verify the pool type is one that allows modifications
@@ -1581,9 +1578,8 @@ public class OwnerResource implements OwnersApi {
                 return this.translator.translate(job, AsyncJobStatusDTO.class);
             }
             catch (JobException e) {
-                String errmsg =
-                    this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
-                    config.getJobKey());
+                String errmsg = this.i18n.tr(
+                    "An unexpected exception occurred while scheduling job \"{0}\"", config.getJobKey());
                 log.error(errmsg, e);
                 throw new IseException(errmsg, e);
             }
@@ -1671,7 +1667,7 @@ public class OwnerResource implements OwnersApi {
         UeberCertificate ueberCert = ueberCertCurator.findForOwner(owner);
         if (ueberCert == null) {
             throw new NotFoundException(i18n.tr(
-            "uber certificate for owner {0} was not found. Please generate one.", owner.getKey()));
+                "uber certificate for owner {0} was not found. Please generate one.", owner.getKey()));
         }
 
         return this.translator.translate(ueberCert, UeberCertificateDTO.class);
@@ -1710,10 +1706,10 @@ public class OwnerResource implements OwnersApi {
              * creation date.
              */
             if (overrideConflicts[0].equalsIgnoreCase("true")) {
-                overrideConflicts = new String [] {"MANIFEST_OLD"};
+                overrideConflicts = new String[]{"MANIFEST_OLD"};
             }
             else if (overrideConflicts[0].equalsIgnoreCase("false")) {
-                overrideConflicts = new String [] {};
+                overrideConflicts = new String[]{};
             }
         }
         if (log.isDebugEnabled()) {
@@ -1746,7 +1742,8 @@ public class OwnerResource implements OwnersApi {
                 break;
             }
         }
-        return new UploadMetadata(part.getBody(new GenericType<File>() {}), filename);
+        return new UploadMetadata(part.getBody(new GenericType<File>() {
+        }), filename);
     }
 
     /**
@@ -1862,7 +1859,6 @@ public class OwnerResource implements OwnersApi {
     @Override
     @Transactional
     public ProductDTO createProductByOwner(String ownerKey, ProductDTO dto) {
-        this.validator.validateConstraints(dto);
         this.validator.validateCollectionElementsNotNull(
             dto::getBranding, dto::getDependentProductIds, dto::getProductContent);
 
@@ -1884,7 +1880,6 @@ public class OwnerResource implements OwnersApi {
             );
         }
 
-        this.validator.validateConstraints(update);
         this.validator.validateCollectionElementsNotNull(
             update::getBranding, update::getDependentProductIds, update::getProductContent);
 
@@ -2093,7 +2088,7 @@ public class OwnerResource implements OwnersApi {
 
         if (content == null) {
             throw new NotFoundException(
-                    i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
+                i18n.tr("Content with ID \"{0}\" could not be found.", contentId)
             );
         }
 

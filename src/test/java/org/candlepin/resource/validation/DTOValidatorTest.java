@@ -17,6 +17,8 @@ package org.candlepin.resource.validation;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import org.candlepin.exceptions.BadRequestException;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -32,8 +34,6 @@ import java.util.Stack;
 import java.util.WeakHashMap;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.validation.ConstraintViolationException;
-import javax.validation.Validation;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -100,41 +100,9 @@ public class DTOValidatorTest {
 
     @BeforeAll
     public static void setUp() {
-        validator = new DTOValidator(Validation.buildDefaultValidatorFactory());
+        validator = new DTOValidator();
     }
 
-    @Test
-    public void testNonNullAndNonEmptyFieldsMarkedAsNotNullAndSizeAtLeastOneAreValid() {
-        TestDTO dto = new TestDTO();
-        dto.field1 = "1";
-        dto.field2 = "2";
-
-        assertDoesNotThrow(() ->
-            validator.validateConstraints(dto)
-        );
-    }
-
-    @Test
-    public void testEmptyFieldMarkedAsSizeAtLeastOneIsInvalid() {
-        TestDTO dto = new TestDTO();
-        dto.field1 = "1";
-        dto.field2 = "";
-
-        assertThrows(ConstraintViolationException.class, () ->
-            validator.validateConstraints(dto)
-        );
-    }
-
-    @Test
-    public void testNullFieldMarkedAsNotNullIsInvalid() {
-        TestDTO dto = new TestDTO();
-        dto.field1 = null;
-        dto.field2 = "2";
-
-        assertThrows(ConstraintViolationException.class, () ->
-            validator.validateConstraints(dto)
-        );
-    }
 
     @Test
     public void testNullCollectionsAreValid() {
@@ -190,7 +158,7 @@ public class DTOValidatorTest {
         dto.stack = new Stack<>();
         dto.stack.add(null);
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             validator.validateCollectionElementsNotNull(dto::getList, dto::getSet, dto::getQueue,
             dto::getStack)
         );
@@ -202,7 +170,7 @@ public class DTOValidatorTest {
         dto.set = new HashSet<>();
         dto.set.add(null);
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             validator.validateCollectionElementsNotNull(dto::getSet)
         );
     }
@@ -215,7 +183,7 @@ public class DTOValidatorTest {
         dto.list = new ArrayList<>();
         dto.list.add(null);
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             validator.validateCollectionElementsNotNull(dto::getSet, dto::getList)
         );
     }
@@ -230,7 +198,7 @@ public class DTOValidatorTest {
         dto.queue = new PriorityQueue<>();
         dto.queue.add(getComparableObject());
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             validator.validateCollectionElementsNotNull(dto::getSet, dto::getList, dto::getQueue)
         );
     }
@@ -240,8 +208,7 @@ public class DTOValidatorTest {
         TestDTO dto = new TestDTO();
 
         assertDoesNotThrow(() ->
-            validator.validateMapElementsNotNull(dto::getMap1, dto::getMap2, dto::getMap3,
-            dto::getMap4)
+            validator.validateMapElementsNotNull(dto::getMap1, dto::getMap2, dto::getMap3, dto::getMap4)
         );
     }
 
@@ -254,8 +221,7 @@ public class DTOValidatorTest {
         dto.map4 = new WeakHashMap<>();
 
         assertDoesNotThrow(() ->
-            validator.validateMapElementsNotNull(dto::getMap1, dto::getMap2, dto::getMap3,
-            dto::getMap4)
+            validator.validateMapElementsNotNull(dto::getMap1, dto::getMap2, dto::getMap3, dto::getMap4)
         );
     }
 
@@ -289,7 +255,7 @@ public class DTOValidatorTest {
         dto.map4 = new WeakHashMap<>();
         dto.map4.put(new Object(), null);
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             validator.validateMapElementsNotNull(dto::getMap1, dto::getMap2, dto::getMap3,
             dto::getMap4)
         );
@@ -307,7 +273,7 @@ public class DTOValidatorTest {
         dto.map4 = new WeakHashMap<>();
         dto.map4.put(null, new Object());
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             validator.validateMapElementsNotNull(dto::getMap1, dto::getMap2, dto::getMap3,
             dto::getMap4)
         );
@@ -319,7 +285,7 @@ public class DTOValidatorTest {
         dto.map1 = new HashMap<>();
         dto.map1.put(new Object(), null);
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             validator.validateMapElementsNotNull(dto::getMap1)
         );
     }
@@ -332,7 +298,7 @@ public class DTOValidatorTest {
         dto.map2 = new ConcurrentHashMap<>();
         dto.map2.put(new Object(), new Object());
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             validator.validateMapElementsNotNull(dto::getMap1, dto::getMap2)
         );
     }
@@ -347,7 +313,7 @@ public class DTOValidatorTest {
         dto.map3 = new ConcurrentHashMap<>();
         dto.map3.put(new Object(), new Object());
 
-        assertThrows(IllegalArgumentException.class, () ->
+        assertThrows(BadRequestException.class, () ->
             validator.validateMapElementsNotNull(dto::getMap1, dto::getMap2, dto::getMap3)
         );
     }

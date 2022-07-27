@@ -116,7 +116,6 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.Validation;
 
 
 
@@ -226,7 +225,7 @@ public class DatabaseTestFixture {
         securityInterceptor = this.injector.getInstance(TestingInterceptor.class);
 
         cpRequestScope = injector.getInstance(CandlepinRequestScope.class);
-        this.validator = new DTOValidator(Validation.buildDefaultValidatorFactory());
+        this.validator = new DTOValidator();
 
         // Because all candlepin operations are running in the CandlepinRequestScope
         // we'll force the instance creations to be done inside the scope.

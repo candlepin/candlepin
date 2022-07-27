@@ -14,20 +14,12 @@
  */
 package org.candlepin.resource.validation;
 
-import com.google.inject.Inject;
+import org.candlepin.exceptions.BadRequestException;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Supplier;
-
-import javax.validation.ConstraintViolation;
-import javax.validation.ConstraintViolationException;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 
 /**
@@ -37,27 +29,6 @@ import javax.validation.constraints.Size;
  */
 public class DTOValidator {
 
-    private Validator validator;
-
-    @Inject
-    public DTOValidator(ValidatorFactory validatorFactory) {
-        this.validator = validatorFactory.getValidator();
-    }
-
-    /**
-     * Performs validation of the DTO's fields (and their fields, thus validating the whole DTO tree) based
-     * on the {@link javax.validation.constraints} annotations set on the them (such as {@link NotNull} and
-     *  {@link Size}).
-     *
-     * @param dto the DTO object to validate
-     * @throws ConstraintViolationException when a constraint validation has failed
-     */
-    public void validateConstraints(Object dto) {
-        Set<ConstraintViolation<Object>> violations = this.validator.validate(dto);
-        if (!violations.isEmpty()) {
-            throw new ConstraintViolationException(violations);
-        }
-    }
 
     /**
      * Accepts a variable amount of method references to getters that return Collections of elements, and
@@ -106,7 +77,7 @@ public class DTOValidator {
     public void validateCollectionElementsNotNull(Supplier<? extends Collection<?>> getter) {
         Collection<?> collection = getter.get();
         if (collection != null && collection.stream().anyMatch(Objects::isNull)) {
-            throw new IllegalArgumentException("collection contains null elements");
+            throw new BadRequestException("collection contains null elements");
         }
     }
 
@@ -179,7 +150,7 @@ public class DTOValidator {
         if (map != null &&
             (map.values().stream().anyMatch(Objects::isNull) ||
             map.keySet().stream().anyMatch(Objects::isNull))) {
-            throw new IllegalArgumentException("map contains null elements");
+            throw new BadRequestException("map contains null elements");
         }
     }
 

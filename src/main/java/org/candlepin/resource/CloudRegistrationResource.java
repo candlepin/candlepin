@@ -57,7 +57,6 @@ public class CloudRegistrationResource implements CloudApi {
         if (cloudRegistrationDTO == null) {
             throw new BadRequestException(this.i18n.tr("No cloud registration information provided"));
         }
-        this.validator.validateConstraints(cloudRegistrationDTO);
 
         Principal principal = ResteasyContext.getContextData(Principal.class);
         CloudRegistrationData registrationData = getCloudRegistrationData(cloudRegistrationDTO);
