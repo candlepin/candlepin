@@ -100,7 +100,7 @@ public class TransactionalTest  {
     private EntityTransaction transaction;
 
     @BeforeEach
-    private void init() {
+    protected void init() {
         this.entityManager = mock(EntityManager.class);
         this.transaction = spy(new TestTransaction());
 
