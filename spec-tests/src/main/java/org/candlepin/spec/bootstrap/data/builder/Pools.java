@@ -17,8 +17,11 @@ package org.candlepin.spec.bootstrap.data.builder;
 
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 import java.time.OffsetDateTime;
+
+
 
 /**
  * Class meant to provide fully randomized instances of pool.
@@ -41,6 +44,23 @@ public final class Pools {
     public static PoolDTO random(ProductDTO product) {
         return random()
             .productId(product.getId());
+    }
+
+    /**
+     * Builds a pool with randomly generated attributes matching the format necessary for the pool
+     * to be treated as one originating from an upstream source (manifest import/refresh).
+     *
+     * @param product
+     *  the product the pool will be referencing as its SKU/marketing product
+     *
+     * @return
+     *  a randomly generated upstream pool
+     */
+    public static PoolDTO randomUpstream(ProductDTO product) {
+        return random(product)
+            .subscriptionId(StringUtil.randomSuffix("source_sub"))
+            .subscriptionSubKey("master")
+            .upstreamPoolId(StringUtil.randomSuffix("upstream_pool_id"));
     }
 
 }

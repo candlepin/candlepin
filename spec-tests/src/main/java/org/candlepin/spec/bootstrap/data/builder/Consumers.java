@@ -32,14 +32,7 @@ public final class Consumers {
     }
 
     public static ConsumerDTO random(OwnerDTO owner) {
-        NestedOwnerDTO nestedOwner;
-        if (owner == null) {
-            nestedOwner = null;
-        }
-        else {
-            nestedOwner = Owners.toNested(owner);
-        }
-        return random(nestedOwner);
+        return random(owner != null ? Owners.toNested(owner) : null);
     }
 
     public static ConsumerDTO random(OwnerDTO owner, ConsumerTypes type) {

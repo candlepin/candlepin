@@ -32,9 +32,37 @@ public final class Products {
     }
 
     public static ProductDTO random() {
+        return randomEng();
+    }
+
+    /**
+     * Creates a product DTO with a randomly generated ID and name following the expected ID format
+     * for SKU (base/marketing) products
+     *
+     * @return
+     *  a product DTO with a randomly generated SKU ID and name
+     */
+    public static ProductDTO randomSKU() {
+        String id = String.valueOf((int) Math.random() * 100000);
+
         return new ProductDTO()
-            .id(StringUtil.random("test_id"))
-            .name(StringUtil.random("test_name"));
+            .id(id)
+            .name("test_product-" + id);
+    }
+
+    /**
+     * Creates a product DTO with a randomly generated ID and name following the expected ID format
+     * for engineering (provided) products
+     *
+     * @return
+     *  a product DTO with a randomly generated engineering ID and name
+     */
+    public static ProductDTO randomEng() {
+        String id = StringUtil.randomSuffix("test_product");
+
+        return new ProductDTO()
+            .id(id)
+            .name(id);
     }
 
     public static ProductDTO withAttributes(AttributeDTO... attributes) {
