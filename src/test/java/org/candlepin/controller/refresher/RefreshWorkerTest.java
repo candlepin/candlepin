@@ -76,7 +76,7 @@ public class RefreshWorkerTest {
     private OwnerContentCurator mockOwnerContentCurator;
 
     @BeforeEach
-    private void init() {
+    protected void init() {
         this.mockEntityManager = mock(EntityManager.class);
         this.mockPoolCurator = mock(PoolCurator.class);
         this.mockProductCurator = mock(ProductCurator.class);
