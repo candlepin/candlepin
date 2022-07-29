@@ -20,9 +20,20 @@ ANSIBLE_VARS = {
 
 def configure_ansible_provisioning(vm_config)
   vm_config.vm.provision "ansible" do |ansible|
+    # ansible.verbose = "vvv"
+    ansible.compatibility_mode = "2.0"
     ansible.playbook = "ansible/candlepin.yml"
     ansible.galaxy_role_file = "ansible/requirements.yml"
-    # ansible.verbose = "v"
+
+    # Impl note:
+    # At the time of writing, specifying the role path (as the default command does) prevents
+    # collections from being installed in some environments. Since we're now reliant on a number of
+    # non-core collections, it's critical that we pull both roles and collections at runtime.
+    # As a side effect, this will install roles and collections in the user's ~/.ansible directory,
+    # rather than in the candlepin/ansible/roles directory as it has in the past. Additionally, the
+    # absence of the --force flag will prevent overwriting any existing roles/collections.
+    ansible.galaxy_command = "ansible-galaxy install -r %{role_file}"
+
     ansible.extra_vars = ANSIBLE_VARS.clone
 
     # Pass through ansible variables and tags from the environment variables
