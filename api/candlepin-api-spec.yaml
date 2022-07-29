@@ -5187,7 +5187,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ImportRecordDTO'
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImportRecordDTO'
         400:
           description: Owner key is null or empty
           content:
@@ -8236,7 +8238,7 @@ components:
               type: string
               example: "/jobs/ff808081554a3e4101554a3e9033005d"
             resultData:
-              type: string
+              type: object
               example: "Refresh completed successfully!"
 
     AbstractCertificateDTO:
@@ -8908,6 +8910,16 @@ components:
               uniqueItems: true
               items:
                 $ref: "#/components/schemas/EnvironmentContentDTO"
+
+    ExportResultDTO:
+      description: Represents the result of an export job
+      properties:
+        exportedConsumer:
+          type: string
+        exportId:
+          type: string
+        href:
+          type: string
 
     GuestIdDTO:
       description: Represents a guest ID running on a virt host consumer

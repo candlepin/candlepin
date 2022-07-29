@@ -1550,7 +1550,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public CandlepinQuery<ImportRecordDTO> getImports(
+    public Iterable<ImportRecordDTO> getImports(
         @Verify(Owner.class) String ownerKey) {
         Owner owner = findOwnerByKey(ownerKey);
 
