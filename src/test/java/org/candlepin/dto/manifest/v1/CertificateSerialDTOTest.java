@@ -39,6 +39,7 @@ public class CertificateSerialDTOTest extends AbstractDTOTest<CertificateSerialD
         this.values.put("Collected", true);
         this.values.put("Revoked", true);
         this.values.put("Expiration", new Date());
+        this.values.put("Collected", Boolean.FALSE);
         this.values.put("Created", new Date());
         this.values.put("Updated", new Date());
     }
