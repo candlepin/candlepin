@@ -22,6 +22,7 @@ import org.candlepin.resource.ConsumerTypeApi;
 import org.candlepin.resource.DeletedConsumerApi;
 import org.candlepin.resource.EntitlementsApi;
 import org.candlepin.resource.EnvironmentApi;
+import org.candlepin.resource.OwnerContentApi;
 import org.candlepin.resource.OwnerProductApi;
 import org.candlepin.resource.PoolsApi;
 import org.candlepin.resource.ProductsApi;
@@ -120,6 +121,10 @@ public class ApiClient {
 
     public UsersApi users() {
         return new UsersApi(this.client);
+    }
+
+    public OwnerContentApi ownerContent() {
+        return new OwnerContentApi(this.client);
     }
 
 }

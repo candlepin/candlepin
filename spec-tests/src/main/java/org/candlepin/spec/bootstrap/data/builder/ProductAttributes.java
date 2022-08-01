@@ -18,6 +18,7 @@ package org.candlepin.spec.bootstrap.data.builder;
 import org.candlepin.dto.api.v1.AttributeDTO;
 
 public enum ProductAttributes {
+    Arch("arch"),
     Usage("usage"),
     Roles("roles"),
     Addons("addons"),

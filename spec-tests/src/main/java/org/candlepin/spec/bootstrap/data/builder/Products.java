@@ -43,7 +43,7 @@ public final class Products {
      *  a product DTO with a randomly generated SKU ID and name
      */
     public static ProductDTO randomSKU() {
-        String id = String.valueOf((int) Math.random() * 100000);
+        String id = String.valueOf((int) (Math.random() * 100000));
 
         return new ProductDTO()
             .id(id)

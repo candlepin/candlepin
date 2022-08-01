@@ -2141,8 +2141,8 @@ paths:
 
   /consumers/{consumer_uuid}/certificates/serials:
     get:
-      description: Retrieves a list of Certiticate Serials Return the client certificate metadata a for
-        the given consumer. This is a small subset of data clients can use to determine which certificates
+      description: Retrieves a list of Certiticate Serials for the given consumer.
+        This is a small subset of data clients can use to determine which certificates
         they need to update/fetch.
       tags:
         - Consumer
