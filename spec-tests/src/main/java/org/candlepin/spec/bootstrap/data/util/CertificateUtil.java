@@ -15,13 +15,17 @@
 package org.candlepin.spec.bootstrap.data.util;
 
 import org.candlepin.dto.api.v1.CertificateDTO;
+import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.codec.binary.Base64;
+import org.mozilla.jss.netscape.security.util.DerValue;
 
+import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -73,7 +77,7 @@ public final class CertificateUtil {
             // Decompress the data
             Inflater decompressor = new Inflater();
             decompressor.setInput(compressedBody);
-            byte[] decompressedBody = new byte[1024];
+            byte[] decompressedBody = new byte[48000];
             decompressor.inflate(decompressedBody);
 
             jsonNodes.add(objectMapper.readTree(new String(decompressedBody)));
@@ -85,5 +89,14 @@ public final class CertificateUtil {
     private static byte[] fromBase64(byte[] data) {
         Base64 base64 = new Base64();
         return base64.decode(data);
+    }
+
+    public static byte[] extensionFromCert(String certString, String extensionId) throws Exception {
+        certString = certString.replace("\"", "")
+            .replace("\\n", Character.toString((char) 10));
+        X509Certificate cert = X509Cert.parseCertificate(certString);
+        DerValue value = new DerValue(cert.getExtensionValue(extensionId));
+        byte[] octetString = value.getOctetString();
+        return Arrays.copyOfRange(octetString, 4, octetString.length);
     }
 }

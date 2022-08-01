@@ -29,6 +29,8 @@ dependencies {
 
     checkstyle libraries["checkstyle"]
     checkstyle libraries["checkstyleSevntu"]
+
+    implementation fileTree(dir: '/usr/lib64/jss', include: '*.jar')
 }
 
 // Disable empty test task
