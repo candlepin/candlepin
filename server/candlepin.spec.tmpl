@@ -15,7 +15,7 @@
 
 Name: candlepin
 Version: 4.0.18
-Release: 2%{?dist}
+Release: 3%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -233,6 +233,11 @@ fi
 
 #raw
 %changelog
+* Mon Aug 01 2022 Nikos Moumoulidis <nmoumoul@redhat.com> 4.0.18-3
+- Use jdbc jars from java dependencies instead of rpm (nmoumoul@redhat.com)
+- 2112391: Add back the collected field to certs in manifest
+  (nmoumoul@redhat.com)
+
 * Wed Jun 22 2022 Nikos Moumoulidis <nmoumoul@redhat.com> 4.0.18-2
 - Fix issue with owner-product mapping during refresh/import (crog@redhat.com)
 - Fixed JDBC packet size overrun in updateOwnerProductReferences
