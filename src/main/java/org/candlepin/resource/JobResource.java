@@ -145,6 +145,24 @@ public class JobResource implements JobsApi {
         Set<String> origins,
         Set<String> executors,
         OffsetDateTime after,
+        OffsetDateTime before,
+        Integer page,
+        Integer perPage,
+        String order,
+        String sortBy) {
+        return listJobStatuses(ids, keys, states, ownerKeys, principals, origins, executors, after, before);
+    }
+
+    @Transactional
+    public Stream<AsyncJobStatusDTO> listJobStatuses(
+        Set<String> ids,
+        Set<String> keys,
+        Set<String> states,
+        Set<String> ownerKeys,
+        Set<String> principals,
+        Set<String> origins,
+        Set<String> executors,
+        OffsetDateTime after,
         OffsetDateTime before) {
 
         // Convert and validate state names to actual states

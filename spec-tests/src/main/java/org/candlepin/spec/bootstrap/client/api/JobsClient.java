@@ -20,6 +20,7 @@ import org.candlepin.ApiException;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.resource.JobsApi;
 
+import java.util.List;
 import java.util.Set;
 
 public class JobsClient extends JobsApi {
@@ -91,5 +92,23 @@ public class JobsClient extends JobsApi {
         }
 
         return null;
+    }
+
+    /**
+     * Fetches a set of job statuses matching the given filter options
+     * @param ownerKey Filter jobs based on a single owner
+     * @param ids List of ID's to search over
+     * @param status Filter for jobs based on status
+     * @return List&lt;AsyncJobStatusDTO&gt;
+     * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
+     */
+    public List<AsyncJobStatusDTO> listMatchingJobStatusForOrg(String ownerKey,
+        Set<String> ids, String status) throws ApiException {
+        if (ownerKey == null) {
+            throw new RuntimeException("The owner cannot be null");
+        }
+        return super.listJobStatuses(ids, null, (status == null ? null : Set.of(status)),
+            Set.of(ownerKey), null, null, null, null, null,
+            null, null, null, null);
     }
 }

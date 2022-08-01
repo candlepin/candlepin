@@ -3810,6 +3810,30 @@ paths:
             type: string
             format: date-time
           description: Filter jobs to those on or before this date
+        - in: query
+          name: page
+          description: Number of a page to return
+          schema:
+            type: integer
+            example: 2
+        - in: query
+          name: per_page
+          description: Number of items to return per page
+          schema:
+            type: integer
+            example: 10
+        - in: query
+          name: order
+          description: Direction of ordering
+          schema:
+            type: string
+            example: name
+        - in: query
+          name: sort_by
+          description: Property to use for ordering
+          schema:
+            type: string
+            example: asc
       x-java-response:
         type: java.util.stream.Stream
         isContainer: true
