@@ -57,6 +57,18 @@ describe 'Export', :serial => true do
       exported_consumer['uuid'].should == @exporter.candlepin_client.uuid
     end
 
+    it 'exports upstream consumer identity certificate' do
+      count = 0
+      Dir["#{@cp_export.export_dir}/upstream_consumer/*.json"].find_all do |idcert|
+        json = parse_file(idcert)
+        count = count + 1
+        expect(json['serial']['collected']).to_not be_nil
+        expect(json['serial']['collected']).to eq(false)
+      end
+      # there should only be 1 identity cert
+      expect(count).to eq(1)
+    end
+
     it 'exports CDN URL' do
      exported_meta = parse_file(File.join(@cp_export.export_dir, 'meta.json'))
      exported_meta['cdnLabel'].should == @exporter.cdn_label
