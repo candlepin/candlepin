@@ -255,7 +255,8 @@ openApiGenerate {
     configOptions = [
             interfaceOnly: 'true',
             generatePom: 'false',
-            dateLibrary: "java8"
+            dateLibrary: "java8",
+            useTags: "true"
     ]
     templateDir = "$rootDir/buildSrc/src/main/resources/templates"
 }

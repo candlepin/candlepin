@@ -26,21 +26,15 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.async.JobManager;
 import org.candlepin.audit.Event;
 import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
-import org.candlepin.auth.Principal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.EntitlementCertificateGenerator;
-import org.candlepin.controller.Entitler;
-import org.candlepin.controller.ManifestManager;
-import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
 import org.candlepin.exceptions.BadRequestException;
@@ -48,39 +42,18 @@ import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerContentOverrideCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.DeletedConsumerCurator;
-import org.candlepin.model.DistributorVersionCurator;
-import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.policy.SystemPurposeComplianceRules;
-import org.candlepin.policy.js.compliance.ComplianceRules;
-import org.candlepin.policy.js.consumer.ConsumerRules;
-import org.candlepin.resource.util.CalculatedAttributesUtil;
-import org.candlepin.resource.util.ConsumerBindUtil;
-import org.candlepin.resource.util.ConsumerEnricher;
-import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
-import org.candlepin.resource.validation.DTOValidator;
-import org.candlepin.service.EntitlementCertServiceAdapter;
-import org.candlepin.service.IdentityCertServiceAdapter;
-import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ElementTransformer;
-import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
 
 import com.google.inject.util.Providers;
@@ -101,7 +74,6 @@ import java.util.List;
 import java.util.Locale;
 
 
-
 /**
  * GuestIdResourceTest
  */
@@ -118,36 +90,11 @@ public class GuestIdResourceTest {
     @Mock private EventFactory eventFactory;
     @Mock private EventBuilder eventBuilder;
     @Mock private EventSink sink;
-    @Mock private ConsumerEnricher consumerEnricher;
     @Mock private EnvironmentCurator environmentCurator;
-    @Mock private JobManager jobManager;
-    @Mock private DTOValidator dtoValidator;
-    @Mock private IdentityCertServiceAdapter idCertService;
-    @Mock private ActivationKeyCurator activationKeyCurator;
-    @Mock private PoolManager poolManager;
-    @Mock private ComplianceRules complianceRules;
-    @Mock private SystemPurposeComplianceRules systemPurposeComplianceRules;
-    @Mock private Entitler entitler;
-    @Mock private DeletedConsumerCurator deletedConsumerCurator;
-    @Mock private ConsumerBindUtil consumerBindUtil;
-    @Mock private Principal principal;
-    @Mock private EntitlementCertServiceAdapter entitlementCertServiceAdapter;
-    @Mock private SubscriptionServiceAdapter subscriptionServiceAdapter;
-    @Mock private ProductServiceAdapter productService;
-    @Mock private EntitlementCurator entitlementCurator;
-    @Mock private ContentAccessManager contentAccessManager;
-    @Mock private ManifestManager manifestManager;
-    @Mock private UserServiceAdapter userServiceAdapter;
-    @Mock private ConsumerRules consumerRules;
-    @Mock private CalculatedAttributesUtil calculatedAttributesUtil;
-    @Mock private DistributorVersionCurator distributorVersionCurator;
     @Mock private PrincipalProvider principalProvider;
-    @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
-    @Mock private ContentOverrideValidator contentOverrideValidator;
-    @Mock private EnvironmentContentCurator environmentContentCurator;
-    @Mock private EntitlementCertificateGenerator entCertGenerator;
+    @Mock private ConsumerResource consumerResource;
 
-    private ConsumerResource resource;
+    private GuestIdResource resource;
 
     private Configuration config;
     private Consumer consumer;
@@ -171,46 +118,17 @@ public class GuestIdResourceTest {
         this.ct.setId("test-system-ctype");
 
         this.consumer = new Consumer("consumer", "test", owner, ct).setUuid(Util.generateUUID());
-        this.resource = new ConsumerResource(
+        this.resource = new GuestIdResource(
             this.consumerCurator,
             this.consumerTypeCurator,
-            this.subscriptionServiceAdapter,
-            this.productService,
-            this.entitlementCurator,
-            this.idCertService,
-            this.entitlementCertServiceAdapter,
+            this.guestIdCurator,
             this.i18n,
             this.sink,
             this.eventFactory,
-            this.userServiceAdapter,
-            this.poolManager,
-            this.consumerRules,
-            this.ownerCurator,
-            this.activationKeyCurator,
-            this.entitler,
-            this.complianceRules,
-            this.systemPurposeComplianceRules,
-            this.deletedConsumerCurator,
-            this.environmentCurator,
-            this.distributorVersionCurator,
-            this.config,
-            this.calculatedAttributesUtil,
-            this.consumerBindUtil,
-            this.manifestManager,
-            this.contentAccessManager,
-            new FactValidator(this.config, () -> this.i18n),
-            new ConsumerTypeValidator(consumerTypeCurator, i18n),
-            this.consumerEnricher,
             Providers.of(this.testMigration),
             this.modelTranslator,
-            this.jobManager,
-            this.dtoValidator,
-            this.guestIdCurator,
             this.principalProvider,
-            this.contentOverrideValidator,
-            this.consumerContentOverrideCurator,
-            this.entCertGenerator,
-            this.environmentContentCurator
+            this.consumerResource
         );
 
         when(consumerCurator.findByUuid(consumer.getUuid())).thenReturn(consumer);
@@ -255,6 +173,8 @@ public class GuestIdResourceTest {
         List<GuestIdDTO> guestIds = new LinkedList<>();
         guestIds.add(TestUtil.createGuestIdDTO("1"));
 
+        when(consumerResource.performConsumerUpdates(any(ConsumerDTO.class), any(Consumer.class),
+            eq(testMigration))).thenReturn(true);
         resource.updateGuests(consumer.getUuid(), guestIds);
 
         verify(testMigration, times(1)).migrate();
@@ -264,6 +184,7 @@ public class GuestIdResourceTest {
     public void updateGuestsNoUpdate() {
         List<GuestIdDTO> guestIds = new LinkedList<>();
         guestIds.add(TestUtil.createGuestIdDTO("1"));
+
 
         // resource tells us nothing changed
         resource.updateGuests(consumer.getUuid(), guestIds);
@@ -358,15 +279,13 @@ public class GuestIdResourceTest {
             eq(guest.getGuestId()))).thenReturn(guest);
         when(consumerCurator.findByVirtUuid(guest.getGuestId(),
             consumer.getOwnerId())).thenReturn(guestConsumer);
-        when(consumerCurator.findByUuid(eq(guestConsumer.getUuid())))
-            .thenReturn(guestConsumer);
 
         resource.deleteGuest(consumer.getUuid(),
             guest.getGuestId(), true);
 
         verify(guestIdCurator, times(1)).delete(eq(guest));
-        verify(consumerCurator, times(1))
-            .delete(eq(guestConsumer));
+        verify(consumerResource, times(1))
+            .deleteConsumer(eq(guestConsumer.getUuid()));
     }
 
     /*

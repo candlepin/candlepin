@@ -33,7 +33,7 @@ import org.xnap.commons.i18n.I18n;
 /**
  * API implementation for ConsumerType operations
  */
-public class ConsumerTypeResource implements ConsumertypesApi {
+public class ConsumerTypeResource implements ConsumerTypeApi {
     private static Logger log = LoggerFactory.getLogger(ConsumerTypeResource.class);
 
     private ConsumerTypeCurator consumerTypeCurator;

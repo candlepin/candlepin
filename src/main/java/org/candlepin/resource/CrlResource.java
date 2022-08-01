@@ -21,7 +21,7 @@ import com.google.inject.Inject;
 import java.util.List;
 import java.util.Objects;
 
-public class CrlResource implements CrlApi {
+public class CrlResource implements CertificateRevocationListApi {
 
     private final CertificateSerialCurator certificateSerialCurator;
 

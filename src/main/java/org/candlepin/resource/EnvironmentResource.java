@@ -77,7 +77,7 @@ import javax.persistence.RollbackException;
 /**
  * REST API for managing Environments.
  */
-public class EnvironmentResource implements EnvironmentsApi {
+public class EnvironmentResource implements EnvironmentApi {
     private static final Logger log = LoggerFactory.getLogger(AdminResource.class);
 
     private final EnvironmentCurator envCurator;
