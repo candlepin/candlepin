@@ -19,11 +19,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertGone;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertUnauthorized;
 
-import org.candlepin.ApiException;
-import org.candlepin.dto.api.v1.ConsumerDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.resource.ConsumerApi;
-import org.candlepin.resource.OwnerApi;
+import org.candlepin.dto.api.client.v1.ConsumerDTO;
+import org.candlepin.dto.api.client.v1.OwnerDTO;
+import org.candlepin.invoker.client.ApiException;
+import org.candlepin.resource.client.v1.ConsumerApi;
+import org.candlepin.resource.client.v1.OwnerApi;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;

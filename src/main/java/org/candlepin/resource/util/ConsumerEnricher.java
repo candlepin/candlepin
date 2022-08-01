@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource.util;
 
-import org.candlepin.dto.api.v1.DateRange;
+import org.candlepin.dto.api.server.v1.DateRange;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.OwnerProductCurator;

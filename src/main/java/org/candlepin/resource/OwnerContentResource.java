@@ -19,7 +19,7 @@ import org.candlepin.auth.Verify;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.CandlepinQuery;
@@ -27,6 +27,7 @@ import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.resource.server.v1.OwnerContentApi;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.UniqueIdGenerator;
@@ -40,7 +41,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class OwnerContentResource implements OwnerContentApi{
+public class OwnerContentResource implements OwnerContentApi {
     private DTOValidator validator;
     private ModelTranslator translator;
     private ContentAccessManager contentAccessManager;

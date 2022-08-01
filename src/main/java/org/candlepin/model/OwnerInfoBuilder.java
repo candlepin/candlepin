@@ -15,8 +15,8 @@
 
 package org.candlepin.model;
 
-import org.candlepin.dto.api.v1.ConsumptionTypeCountsDTO;
-import org.candlepin.dto.api.v1.OwnerInfo;
+import org.candlepin.dto.api.server.v1.ConsumptionTypeCountsDTO;
+import org.candlepin.dto.api.server.v1.OwnerInfo;
 
 import java.util.List;
 

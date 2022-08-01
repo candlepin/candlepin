@@ -20,8 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.UserDTO;
 import org.candlepin.model.User;
-
 
 
 /**

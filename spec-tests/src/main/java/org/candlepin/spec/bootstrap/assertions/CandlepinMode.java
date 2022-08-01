@@ -15,8 +15,8 @@
 
 package org.candlepin.spec.bootstrap.assertions;
 
-import org.candlepin.ApiException;
-import org.candlepin.dto.api.v1.StatusDTO;
+import org.candlepin.dto.api.client.v1.StatusDTO;
+import org.candlepin.invoker.client.ApiException;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 
 /**

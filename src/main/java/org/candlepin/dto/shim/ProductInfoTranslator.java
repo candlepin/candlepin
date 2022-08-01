@@ -16,11 +16,11 @@ package org.candlepin.dto.shim;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
-import org.candlepin.dto.api.v1.AttributeDTO;
-import org.candlepin.dto.api.v1.BrandingDTO;
-import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.dto.api.v1.ProductContentDTO;
-import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.dto.api.server.v1.AttributeDTO;
+import org.candlepin.dto.api.server.v1.BrandingDTO;
+import org.candlepin.dto.api.server.v1.ContentDTO;
+import org.candlepin.dto.api.server.v1.ProductContentDTO;
+import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;

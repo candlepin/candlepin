@@ -15,10 +15,10 @@
 package org.candlepin.hostedtest;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.dto.api.v1.SubscriptionDTO;
+import org.candlepin.dto.api.server.v1.ContentDTO;
+import org.candlepin.dto.api.server.v1.OwnerDTO;
+import org.candlepin.dto.api.server.v1.ProductDTO;
+import org.candlepin.dto.api.server.v1.SubscriptionDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.NotFoundException;

@@ -21,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.DistributorVersionCapabilityDTO;
+import org.candlepin.dto.api.server.v1.DistributorVersionDTO;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
 

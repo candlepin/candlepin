@@ -14,8 +14,8 @@
  */
 package org.candlepin.spec.bootstrap.client.request;
 
-import org.candlepin.ApiException;
-import org.candlepin.Pair;
+import org.candlepin.invoker.client.ApiException;
+import org.candlepin.invoker.client.Pair;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 
 import java.io.IOException;
@@ -43,7 +43,7 @@ public class Request {
     private static final String CONTENT_TYPE_HEADER = "Content-Type";
     private static final String CONTENT_TYPE_JSON = "application/json";
 
-    private final org.candlepin.ApiClient client;
+    private final org.candlepin.invoker.client.ApiClient client;
 
     private String basePath;
     private String endpoint;
@@ -65,7 +65,7 @@ public class Request {
      * @throws IllegalArgumentException
      *  if the provided client is null
      */
-    public Request(org.candlepin.ApiClient client) {
+    public Request(org.candlepin.invoker.client.ApiClient client) {
         if (client == null) {
             throw new IllegalArgumentException("client is null");
         }

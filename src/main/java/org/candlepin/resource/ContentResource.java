@@ -15,10 +15,11 @@
 package org.candlepin.resource;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
+import org.candlepin.resource.server.v1.ContentApi;
 
 import com.google.inject.Inject;
 

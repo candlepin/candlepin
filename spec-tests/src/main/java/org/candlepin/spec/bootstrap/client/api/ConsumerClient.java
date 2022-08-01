@@ -15,12 +15,12 @@
 
 package org.candlepin.spec.bootstrap.client.api;
 
-import org.candlepin.ApiClient;
-import org.candlepin.ApiException;
-import org.candlepin.dto.api.v1.CertificateDTO;
-import org.candlepin.dto.api.v1.ConsumerDTO;
-import org.candlepin.dto.api.v1.EntitlementDTO;
-import org.candlepin.resource.ConsumerApi;
+import org.candlepin.dto.api.client.v1.CertificateDTO;
+import org.candlepin.dto.api.client.v1.ConsumerDTO;
+import org.candlepin.dto.api.client.v1.EntitlementDTO;
+import org.candlepin.invoker.client.ApiClient;
+import org.candlepin.invoker.client.ApiException;
+import org.candlepin.resource.client.v1.ConsumerApi;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;

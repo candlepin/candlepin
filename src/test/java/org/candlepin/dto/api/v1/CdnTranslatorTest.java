@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.CdnDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CertificateSerial;

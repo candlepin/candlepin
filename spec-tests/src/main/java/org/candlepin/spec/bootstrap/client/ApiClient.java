@@ -14,23 +14,23 @@
  */
 package org.candlepin.spec.bootstrap.client;
 
-import org.candlepin.resource.ActivationKeyApi;
-import org.candlepin.resource.AdminApi;
-import org.candlepin.resource.CdnApi;
-import org.candlepin.resource.ConsumerTypeApi;
-import org.candlepin.resource.ContentApi;
-import org.candlepin.resource.DeletedConsumerApi;
-import org.candlepin.resource.DistributorVersionsApi;
-import org.candlepin.resource.EntitlementsApi;
-import org.candlepin.resource.EnvironmentApi;
 import org.candlepin.resource.HostedTestApi;
-import org.candlepin.resource.OwnerContentApi;
-import org.candlepin.resource.OwnerProductApi;
-import org.candlepin.resource.ProductsApi;
-import org.candlepin.resource.RolesApi;
-import org.candlepin.resource.RootApi;
-import org.candlepin.resource.StatusApi;
-import org.candlepin.resource.UsersApi;
+import org.candlepin.resource.client.v1.ActivationKeyApi;
+import org.candlepin.resource.client.v1.AdminApi;
+import org.candlepin.resource.client.v1.CdnApi;
+import org.candlepin.resource.client.v1.ConsumerTypeApi;
+import org.candlepin.resource.client.v1.ContentApi;
+import org.candlepin.resource.client.v1.DeletedConsumerApi;
+import org.candlepin.resource.client.v1.DistributorVersionsApi;
+import org.candlepin.resource.client.v1.EntitlementsApi;
+import org.candlepin.resource.client.v1.EnvironmentApi;
+import org.candlepin.resource.client.v1.OwnerContentApi;
+import org.candlepin.resource.client.v1.OwnerProductApi;
+import org.candlepin.resource.client.v1.ProductsApi;
+import org.candlepin.resource.client.v1.RolesApi;
+import org.candlepin.resource.client.v1.RootApi;
+import org.candlepin.resource.client.v1.StatusApi;
+import org.candlepin.resource.client.v1.UsersApi;
 import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
 import org.candlepin.spec.bootstrap.client.api.JobsClient;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
@@ -51,13 +51,13 @@ public class ApiClient {
         .registerModule(new Jdk8Module())
         .registerModule(new JavaTimeModule());
 
-    private final org.candlepin.ApiClient client;
+    private final org.candlepin.invoker.client.ApiClient client;
 
-    public ApiClient(org.candlepin.ApiClient client) {
+    public ApiClient(org.candlepin.invoker.client.ApiClient client) {
         this.client = Objects.requireNonNull(client);
     }
 
-    public org.candlepin.ApiClient getApiClient() {
+    public org.candlepin.invoker.client.ApiClient getApiClient() {
         return this.client;
     }
 

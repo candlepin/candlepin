@@ -18,6 +18,8 @@ import org.candlepin.auth.Access;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
+import org.candlepin.dto.api.server.v1.PermissionBlueprintDTO;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.util.Util;
 

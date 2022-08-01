@@ -31,7 +31,7 @@ import org.candlepin.async.JobManager;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.EntitlementDTO;
+import org.candlepin.dto.api.server.v1.EntitlementDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;

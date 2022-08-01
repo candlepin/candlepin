@@ -17,8 +17,8 @@ package org.candlepin.spec.bootstrap.data.builder;
 
 import static java.util.Objects.requireNonNull;
 
-import org.candlepin.dto.api.v1.NestedOwnerDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.client.v1.NestedOwnerDTO;
+import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 /**

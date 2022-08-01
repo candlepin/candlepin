@@ -21,6 +21,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.server.v1.ActivationKeyPoolDTO;
+import org.candlepin.dto.api.server.v1.ActivationKeyProductDTO;
+import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;

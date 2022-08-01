@@ -21,11 +21,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.BrandingDTO;
+import org.candlepin.dto.api.server.v1.BrandingDTO;
+import org.candlepin.dto.api.server.v1.ContentDTO;
+import org.candlepin.dto.api.server.v1.ProductContentDTO;
+import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.dto.api.v1.BrandingTranslator;
-import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.dto.api.v1.ProductContentDTO;
-import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;

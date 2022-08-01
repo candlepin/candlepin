@@ -24,6 +24,15 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.BrandingDTO;
+import org.candlepin.dto.api.server.v1.CdnDTO;
+import org.candlepin.dto.api.server.v1.CertificateDTO;
+import org.candlepin.dto.api.server.v1.CertificateSerialDTO;
+import org.candlepin.dto.api.server.v1.ContentDTO;
+import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
+import org.candlepin.dto.api.server.v1.ProductContentDTO;
+import org.candlepin.dto.api.server.v1.ProductDTO;
+import org.candlepin.dto.api.server.v1.SubscriptionDTO;
 import org.candlepin.dto.shim.ContentInfoTranslator;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;

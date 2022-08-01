@@ -14,7 +14,7 @@
  */
 package org.candlepin.spec.bootstrap.data.util;
 
-import org.candlepin.dto.api.v1.CertificateDTO;
+import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 
 import com.fasterxml.jackson.databind.JsonNode;

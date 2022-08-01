@@ -18,7 +18,7 @@ import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
-import org.candlepin.dto.api.v1.QueueStatus;
+import org.candlepin.dto.api.server.v1.QueueStatus;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.guice.CandlepinRequestScoped;
 import org.candlepin.model.Consumer;

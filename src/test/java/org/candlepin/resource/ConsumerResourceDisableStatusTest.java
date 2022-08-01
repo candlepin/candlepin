@@ -17,8 +17,8 @@ package org.candlepin.resource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import org.candlepin.dto.api.v1.ComplianceStatusDTO;
-import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
+import org.candlepin.dto.api.server.v1.ComplianceStatusDTO;
+import org.candlepin.dto.api.server.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;

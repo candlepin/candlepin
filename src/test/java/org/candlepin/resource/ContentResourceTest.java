@@ -25,7 +25,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.SimpleModelTranslator;
-import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.dto.api.v1.ContentTranslator;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Content;

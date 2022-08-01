@@ -48,10 +48,10 @@ import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
-import org.candlepin.dto.api.v1.ConsumerDTO;
-import org.candlepin.dto.api.v1.ConsumerTypeDTO;
-import org.candlepin.dto.api.v1.EnvironmentDTO;
-import org.candlepin.dto.api.v1.ReleaseVerDTO;
+import org.candlepin.dto.api.server.v1.ConsumerDTO;
+import org.candlepin.dto.api.server.v1.ConsumerTypeDTO;
+import org.candlepin.dto.api.server.v1.EnvironmentDTO;
+import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.CertificateSerial;
@@ -134,41 +134,76 @@ public class ConsumerResourceCreationTest {
 
     private static final String USER = "testuser";
 
-    @Mock protected UserServiceAdapter userService;
-    @Mock protected IdentityCertServiceAdapter idCertService;
-    @Mock protected ProductServiceAdapter productService;
-    @Mock protected SubscriptionServiceAdapter subscriptionService;
-    @Mock protected ConsumerCurator consumerCurator;
-    @Mock protected ConsumerTypeCurator consumerTypeCurator;
-    @Mock protected OwnerCurator ownerCurator;
-    @Mock private EntitlementCurator entitlementCurator;
-    @Mock private EntitlementCertServiceAdapter entitlementCertServiceAdapter;
-    @Mock protected EventSink sink;
-    @Mock protected EventFactory factory;
-    @Mock protected ActivationKeyCurator activationKeyCurator;
-    @Mock protected ComplianceRules complianceRules;
-    @Mock protected SystemPurposeComplianceRules systemPurposeComplianceRules;
-    @Mock protected DeletedConsumerCurator deletedConsumerCurator;
-    @Mock protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
-    @Mock protected ServiceLevelValidator serviceLevelValidator;
-    @Mock protected ConsumerBindUtil consumerBindUtil;
-    @Mock protected ConsumerEnricher consumerEnricher;
-    @Mock protected EnvironmentCurator environmentCurator;
-    @Mock protected JobManager jobManager;
-    @Mock protected DTOValidator dtoValidator;
-    @Mock private PoolManager poolManager;
-    @Mock private EventFactory eventFactory;
-    @Mock private ContentAccessManager contentAccessManager;
-    @Mock private Entitler entitler;
-    @Mock private ManifestManager manifestManager;
-    @Mock private ConsumerRules consumerRules;
-    @Mock private CalculatedAttributesUtil calculatedAttributesUtil;
-    @Mock private DistributorVersionCurator distributorVersionCurator;
-    @Mock private GuestIdCurator guestIdCurator;
-    @Mock private PrincipalProvider principalProvider;
-    @Mock private ContentOverrideValidator contentOverrideValidator;
-    @Mock private EnvironmentContentCurator environmentContentCurator;
-    @Mock private EntitlementCertificateGenerator entCertGenerator;
+    @Mock
+    protected UserServiceAdapter userService;
+    @Mock
+    protected IdentityCertServiceAdapter idCertService;
+    @Mock
+    protected ProductServiceAdapter productService;
+    @Mock
+    protected SubscriptionServiceAdapter subscriptionService;
+    @Mock
+    protected ConsumerCurator consumerCurator;
+    @Mock
+    protected ConsumerTypeCurator consumerTypeCurator;
+    @Mock
+    protected OwnerCurator ownerCurator;
+    @Mock
+    private EntitlementCurator entitlementCurator;
+    @Mock
+    private EntitlementCertServiceAdapter entitlementCertServiceAdapter;
+    @Mock
+    protected EventSink sink;
+    @Mock
+    protected EventFactory factory;
+    @Mock
+    protected ActivationKeyCurator activationKeyCurator;
+    @Mock
+    protected ComplianceRules complianceRules;
+    @Mock
+    protected SystemPurposeComplianceRules systemPurposeComplianceRules;
+    @Mock
+    protected DeletedConsumerCurator deletedConsumerCurator;
+    @Mock
+    protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
+    @Mock
+    protected ServiceLevelValidator serviceLevelValidator;
+    @Mock
+    protected ConsumerBindUtil consumerBindUtil;
+    @Mock
+    protected ConsumerEnricher consumerEnricher;
+    @Mock
+    protected EnvironmentCurator environmentCurator;
+    @Mock
+    protected JobManager jobManager;
+    @Mock
+    protected DTOValidator dtoValidator;
+    @Mock
+    private PoolManager poolManager;
+    @Mock
+    private EventFactory eventFactory;
+    @Mock
+    private ContentAccessManager contentAccessManager;
+    @Mock
+    private Entitler entitler;
+    @Mock
+    private ManifestManager manifestManager;
+    @Mock
+    private ConsumerRules consumerRules;
+    @Mock
+    private CalculatedAttributesUtil calculatedAttributesUtil;
+    @Mock
+    private DistributorVersionCurator distributorVersionCurator;
+    @Mock
+    private GuestIdCurator guestIdCurator;
+    @Mock
+    private PrincipalProvider principalProvider;
+    @Mock
+    private ContentOverrideValidator contentOverrideValidator;
+    @Mock
+    private EnvironmentContentCurator environmentContentCurator;
+    @Mock
+    private EntitlementCertificateGenerator entCertGenerator;
 
     protected ModelTranslator modelTranslator;
 
@@ -259,7 +294,7 @@ public class ConsumerResourceCreationTest {
         when(ownerCurator.getByKey(owner.getKey())).thenReturn(owner);
         when(complianceRules.getStatus(
             any(Consumer.class), any(Date.class), any(Boolean.class), any(Boolean.class)))
-                .thenReturn(new ComplianceStatus(new Date()));
+            .thenReturn(new ComplianceStatus(new Date()));
     }
 
     public ConsumerType initConsumerType() {

@@ -15,20 +15,20 @@
 
 package org.candlepin.resource.util;
 
-import org.candlepin.dto.api.v1.AttributeDTO;
-import org.candlepin.dto.api.v1.BrandingDTO;
-import org.candlepin.dto.api.v1.CdnDTO;
-import org.candlepin.dto.api.v1.CertificateDTO;
-import org.candlepin.dto.api.v1.CertificateSerialDTO;
-import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.dto.api.v1.NestedOwnerDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
-import org.candlepin.dto.api.v1.ProductContentDTO;
-import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.dto.api.v1.RoleDTO;
-import org.candlepin.dto.api.v1.SubscriptionDTO;
-import org.candlepin.dto.api.v1.UserDTO;
+import org.candlepin.dto.api.server.v1.AttributeDTO;
+import org.candlepin.dto.api.server.v1.BrandingDTO;
+import org.candlepin.dto.api.server.v1.CdnDTO;
+import org.candlepin.dto.api.server.v1.CertificateDTO;
+import org.candlepin.dto.api.server.v1.CertificateSerialDTO;
+import org.candlepin.dto.api.server.v1.ContentDTO;
+import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
+import org.candlepin.dto.api.server.v1.OwnerDTO;
+import org.candlepin.dto.api.server.v1.PermissionBlueprintDTO;
+import org.candlepin.dto.api.server.v1.ProductContentDTO;
+import org.candlepin.dto.api.server.v1.ProductDTO;
+import org.candlepin.dto.api.server.v1.RoleDTO;
+import org.candlepin.dto.api.server.v1.SubscriptionDTO;
+import org.candlepin.dto.api.server.v1.UserDTO;
 import org.candlepin.service.model.BrandingInfo;
 import org.candlepin.service.model.CdnInfo;
 import org.candlepin.service.model.CertificateInfo;

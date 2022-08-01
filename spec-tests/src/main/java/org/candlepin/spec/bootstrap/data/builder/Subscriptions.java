@@ -15,9 +15,9 @@
 
 package org.candlepin.spec.bootstrap.data.builder;
 
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.dto.api.v1.SubscriptionDTO;
+import org.candlepin.dto.api.client.v1.OwnerDTO;
+import org.candlepin.dto.api.client.v1.ProductDTO;
+import org.candlepin.dto.api.client.v1.SubscriptionDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 import java.time.OffsetDateTime;

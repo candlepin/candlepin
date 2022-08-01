@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
-import org.candlepin.dto.api.v1.OwnerDTO;
+import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.resource.OwnerResource;

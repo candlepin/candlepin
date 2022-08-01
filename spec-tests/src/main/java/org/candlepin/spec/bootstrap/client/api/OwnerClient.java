@@ -15,11 +15,11 @@
 
 package org.candlepin.spec.bootstrap.client.api;
 
-import org.candlepin.ApiClient;
-import org.candlepin.ApiException;
-import org.candlepin.dto.api.v1.ConsumerDTOArrayElement;
-import org.candlepin.dto.api.v1.PoolDTO;
-import org.candlepin.resource.OwnerApi;
+import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
+import org.candlepin.dto.api.client.v1.PoolDTO;
+import org.candlepin.invoker.client.ApiClient;
+import org.candlepin.invoker.client.ApiException;
+import org.candlepin.resource.client.v1.OwnerApi;
 
 import java.util.List;
 import java.util.Set;

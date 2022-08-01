@@ -16,6 +16,12 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.server.v1.ActivationKeyPoolDTO;
+import org.candlepin.dto.api.server.v1.ActivationKeyProductDTO;
+import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
+import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;

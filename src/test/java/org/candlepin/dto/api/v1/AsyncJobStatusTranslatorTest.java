@@ -23,6 +23,7 @@ import static org.mockito.Mockito.spy;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.resource.util.JobStateMapper.ExternalJobState;

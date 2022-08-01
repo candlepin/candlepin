@@ -24,6 +24,9 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.CapabilityDTO;
+import org.candlepin.dto.api.server.v1.ConsumerDTOArrayElement;
+import org.candlepin.dto.api.server.v1.ConsumerInstalledProductDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCapability;
 import org.candlepin.model.ConsumerInstalledProduct;

@@ -312,18 +312,18 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             }
         }
 
-        org.candlepin.dto.api.v1.SubscriptionDTO fabricated = modelTranslator.translate(masterPool,
-            org.candlepin.dto.api.v1.SubscriptionDTO.class);
+        org.candlepin.dto.api.server.v1.SubscriptionDTO fabricated = modelTranslator.translate(masterPool,
+            org.candlepin.dto.api.server.v1.SubscriptionDTO.class);
         assertNotNull(fabricated);
         assertNotNull(masterPool.getProduct());
         assertNotNull(fabricated.getProduct());
 
-        Set<org.candlepin.dto.api.v1.BrandingDTO> brandingSet = fabricated.getProduct().getBranding();
+        Set<org.candlepin.dto.api.server.v1.BrandingDTO> brandingSet = fabricated.getProduct().getBranding();
 
         assertNotNull(brandingSet);
         assertEquals(2, brandingSet.size());
-        ArrayList<org.candlepin.dto.api.v1.BrandingDTO> list = new ArrayList<>(brandingSet);
-        list.sort(Comparator.comparing(org.candlepin.dto.api.v1.BrandingDTO::getName));
+        ArrayList<org.candlepin.dto.api.server.v1.BrandingDTO> list = new ArrayList<>(brandingSet);
+        list.sort(Comparator.comparing(org.candlepin.dto.api.server.v1.BrandingDTO::getName));
 
         assertEquals("branding1", list.get(0).getName());
         assertEquals("product1", list.get(0).getProductId());

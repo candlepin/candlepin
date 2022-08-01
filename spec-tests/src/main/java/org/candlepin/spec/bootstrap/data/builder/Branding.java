@@ -14,8 +14,8 @@
  */
 package org.candlepin.spec.bootstrap.data.builder;
 
-import org.candlepin.dto.api.v1.BrandingDTO;
-import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.dto.api.client.v1.BrandingDTO;
+import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 

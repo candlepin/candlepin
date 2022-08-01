@@ -16,6 +16,8 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.api.server.v1.CdnDTO;
+import org.candlepin.dto.api.server.v1.CertificateDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.util.Util;

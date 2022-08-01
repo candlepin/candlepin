@@ -23,11 +23,12 @@ import org.candlepin.config.Configuration;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.controller.mode.ModeChangeReason;
-import org.candlepin.dto.api.v1.StatusDTO;
+import org.candlepin.dto.api.server.v1.StatusDTO;
 import org.candlepin.guice.CandlepinCapabilities;
 import org.candlepin.model.Rules.RulesSourceEnum;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.resource.server.v1.StatusApi;
 import org.candlepin.util.Util;
 import org.candlepin.version.VersionUtil;
 

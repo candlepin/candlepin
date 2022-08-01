@@ -24,9 +24,9 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.v1.ProductCertificateDTO;
-import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.server.v1.ProductCertificateDTO;
+import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.IseException;
@@ -43,6 +43,7 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.resource.server.v1.OwnerProductApi;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.resource.validation.DTOValidator;
 
@@ -60,7 +61,7 @@ import java.util.Map;
 
 import javax.persistence.LockModeType;
 
-public class OwnerProductResource implements OwnerProductApi{
+public class OwnerProductResource implements OwnerProductApi {
 
     private static Logger log = LoggerFactory.getLogger(OwnerProductResource.class);
     private OwnerCurator ownerCurator;

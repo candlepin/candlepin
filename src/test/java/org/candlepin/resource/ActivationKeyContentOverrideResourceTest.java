@@ -22,8 +22,8 @@ import static org.mockito.Mockito.when;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SubResource;
-import org.candlepin.dto.api.v1.ActivationKeyDTO;
-import org.candlepin.dto.api.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -59,12 +59,14 @@ import javax.inject.Inject;
 @SuppressWarnings("checkstyle:indentation")
 public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixture {
 
-    @Mock private Principal principal;
+    @Mock
+    private Principal principal;
 
     private ActivationKey key;
 
     private ActivationKeyResource resource;
-    @Inject private Injector injector;
+    @Inject
+    private Injector injector;
 
     @BeforeEach
     public void setUp() {

@@ -15,9 +15,10 @@
 package org.candlepin.resource;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.CertificateSerialDTO;
+import org.candlepin.dto.api.server.v1.CertificateSerialDTO;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.resource.server.v1.CertificateSerialApi;
 
 import com.google.inject.Inject;
 

@@ -16,6 +16,16 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.api.server.v1.CapabilityDTO;
+import org.candlepin.dto.api.server.v1.CertificateDTO;
+import org.candlepin.dto.api.server.v1.ConsumerActivationKeyDTO;
+import org.candlepin.dto.api.server.v1.ConsumerDTO;
+import org.candlepin.dto.api.server.v1.ConsumerInstalledProductDTO;
+import org.candlepin.dto.api.server.v1.ConsumerTypeDTO;
+import org.candlepin.dto.api.server.v1.EnvironmentDTO;
+import org.candlepin.dto.api.server.v1.HypervisorIdDTO;
+import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
+import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerActivationKey;
 import org.candlepin.model.ConsumerCapability;

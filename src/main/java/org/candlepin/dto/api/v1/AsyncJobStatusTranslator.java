@@ -16,6 +16,7 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.resource.util.JobStateMapper;

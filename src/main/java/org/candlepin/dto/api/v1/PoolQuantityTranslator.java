@@ -16,6 +16,8 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.api.server.v1.PoolDTO;
+import org.candlepin.dto.api.server.v1.PoolQuantityDTO;
 import org.candlepin.model.PoolQuantity;
 
 /**

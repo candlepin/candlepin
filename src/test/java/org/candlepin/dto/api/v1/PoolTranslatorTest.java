@@ -21,6 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.BrandingDTO;
+import org.candlepin.dto.api.server.v1.PoolDTO;
+import org.candlepin.dto.api.server.v1.ProvidedProductDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;

@@ -16,6 +16,7 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.api.server.v1.UserDTO;
 import org.candlepin.service.model.UserInfo;
 import org.candlepin.util.Util;
 

@@ -16,6 +16,9 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.api.server.v1.ComplianceReasonDTO;
+import org.candlepin.dto.api.server.v1.ComplianceStatusDTO;
+import org.candlepin.dto.api.server.v1.EntitlementDTO;
 import org.candlepin.model.Entitlement;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;

@@ -24,7 +24,7 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.auth.Principal;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.HypervisorUpdateResultDTO;
+import org.candlepin.dto.api.server.v1.HypervisorUpdateResultDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Owner;

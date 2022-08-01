@@ -15,6 +15,7 @@
 package org.candlepin.resource;
 
 import org.candlepin.model.CertificateSerialCurator;
+import org.candlepin.resource.server.v1.CertificateRevocationListApi;
 
 import com.google.inject.Inject;
 

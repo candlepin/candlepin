@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.auth.ConsumerPrincipal;
-import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.exceptions.DuplicateEntryException;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.resource.ConsumerResource;

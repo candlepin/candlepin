@@ -16,6 +16,12 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.api.server.v1.AttributeDTO;
+import org.candlepin.dto.api.server.v1.BrandingDTO;
+import org.candlepin.dto.api.server.v1.NestedEntitlementDTO;
+import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
+import org.candlepin.dto.api.server.v1.PoolDTO;
+import org.candlepin.dto.api.server.v1.ProvidedProductDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;

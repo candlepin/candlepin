@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.HypervisorConsumerDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
