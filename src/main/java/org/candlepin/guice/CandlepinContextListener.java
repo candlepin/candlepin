@@ -38,6 +38,7 @@ import com.google.inject.persist.PersistService;
 import com.google.inject.util.Modules;
 
 import liquibase.Liquibase;
+import liquibase.changelog.ChangeSet;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
@@ -372,10 +373,16 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     protected void checkDbChangelog() {
         try {
             Liquibase liquibase = getLiquibase();
-            List unrunChangesets = liquibase.listUnrunChangeSets(null, null);
+            List<ChangeSet> unrunChangesets = liquibase.listUnrunChangeSets(null, null);
             if (!unrunChangesets.isEmpty()) {
-                log.error("The database is missing {} Liquibase changeset(s). Please update the database.",
-                    unrunChangesets.size());
+                StringBuffer setBuffer = new StringBuffer();
+                setBuffer.append(String.format("The database is missing %s Liquibase changeset(s):\n",
+                    unrunChangesets.size()));
+                unrunChangesets.stream().forEach(
+                    x -> setBuffer.append(String.format("  %s, filename: %s\n", x.getId(), x.getFilePath())));
+
+                log.error(setBuffer.toString());
+                log.error("Please update the database.");
                 log.error("Aborting Candlepin initialization ...");
                 throw new RuntimeException("The database is missing Liquibase changeset(s).");
             }
