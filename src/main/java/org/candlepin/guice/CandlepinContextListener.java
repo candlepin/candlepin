@@ -367,6 +367,9 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
      * @throws RuntimeException if there are missing changesets or a LiqubaseException
      */
     protected void checkDbChangelog() {
+        if (!config.getBoolean(HALT_ON_LIQUIBASE_DESYNC)) {
+            return;
+        }
         try {
             Liquibase liquibase = getLiquibase();
             List<ChangeSet> unrunChangesets = liquibase.listUnrunChangeSets(null, null);
