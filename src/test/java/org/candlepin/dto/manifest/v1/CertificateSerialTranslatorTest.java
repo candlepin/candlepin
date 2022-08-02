@@ -73,6 +73,7 @@ public class CertificateSerialTranslatorTest extends
             assertEquals(source.getSerial(), dest.getSerial());
             assertEquals(source.getExpiration(), dest.getExpiration());
             assertEquals(source.isRevoked(), dest.isRevoked());
+            assertEquals(false, dest.isCollected()); // we export this to false by default now
         }
         else {
             assertNull(dest);

@@ -36,6 +36,9 @@ public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSer
     protected BigInteger serial;
     protected Date expiration;
     protected Boolean revoked;
+    // we export this to false by default now that the CRL functionality is removed to avoid breaking old
+    // candlepin imports.
+    protected Boolean collected = Boolean.FALSE;
 
     /**
      * Initializes a new CertificateSerialDTO instance with null values.
@@ -90,6 +93,9 @@ public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSer
         this.revoked = revoked;
         return this;
     }
+    public Boolean isCollected() {
+        return this.collected;
+    }
 
     /**
      * {@inheritDoc}
@@ -100,8 +106,8 @@ public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSer
         String date = expiration != null ? String.format("%1$tF %1$tT%1$tz", expiration) : null;
 
         return String.format(
-            "CertificateSerialDTO [id: %s, serial: %s, expiration: %s, revoked: %s]",
-            this.getId(), this.getSerial(), date, this.isRevoked());
+            "CertificateSerialDTO [id: %s, serial: %s, expiration: %s, collected: %s, revoked: %s]",
+            this.getId(), this.getSerial(), date, this.isCollected(), this.isRevoked());
     }
 
     /**
@@ -120,6 +126,7 @@ public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSer
                 .append(this.getId(), that.getId())
                 .append(this.getSerial(), that.getSerial())
                 .append(this.getExpiration(), that.getExpiration())
+                .append(this.isCollected(), that.isCollected())
                 .append(this.isRevoked(), that.isRevoked());
 
             return builder.isEquals();
@@ -138,6 +145,7 @@ public class CertificateSerialDTO extends TimestampedCandlepinDTO<CertificateSer
             .append(this.getId())
             .append(this.getSerial())
             .append(this.getExpiration())
+            .append(this.isCollected())
             .append(this.isRevoked());
 
         return builder.toHashCode();
