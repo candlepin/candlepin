@@ -283,16 +283,18 @@ class JobStatusSpecTest {
     @DisplayName("should not allow user to cancel job from another user")
     public void shouldNotAllowUserToCancelJobFromAnotherUser() throws Exception {
         jobsClient.setSchedulerStatus(false);
+        String jobId = null;
         try {
             AsyncJobStatusDTO job = userClient.owners().healEntire(owner.getKey());
             UserDTO otherUser = UserUtil.createUser(client, owner);
             ApiClient otherUserClient = ApiClients.trustedUser(otherUser.getUsername());
             assertForbidden(() -> otherUserClient.jobs().cancelJob(job.getId()));
-            // wait for job to complete, or test clean up will conflict with the asynchronous job.
-            jobsClient.waitForJobToComplete(job.getId(), 15000);
+            jobId = job.getId();
         }
         finally {
             jobsClient.setSchedulerStatus(true);
+            AsyncJobStatusDTO statusDTO = jobsClient.waitForJobToComplete(jobId, 5000);
+            assertEquals("FINISHED", statusDTO.getState());
         }
     }
 
