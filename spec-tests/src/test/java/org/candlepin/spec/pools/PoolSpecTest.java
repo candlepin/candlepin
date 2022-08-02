@@ -83,7 +83,7 @@ class PoolSpecTest {
     }
 
     private ProductDTO createProduct(ApiClient client, OwnerDTO owner) throws ApiException {
-        ProductDTO product = Products.randomSKU();
+        ProductDTO product = Products.randomEng();
 
         return client.ownerProducts()
             .createProductByOwner(owner.getKey(), product);
@@ -301,7 +301,7 @@ class PoolSpecTest {
         OwnerDTO owner = this.createOwner(adminClient);
         ApiClient ownerClient = this.createUserClient(adminClient, owner);
 
-        ProductDTO product = Products.randomSKU()
+        ProductDTO product = Products.randomEng()
             .addAttributesItem(this.buildAttribute("arch", "x86"));
 
         product = adminClient.ownerProducts()
@@ -402,7 +402,7 @@ class PoolSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
-        ProductDTO product = Products.randomSKU()
+        ProductDTO product = Products.randomEng()
             .addAttributesItem(this.buildAttribute("virt_limit", "10"));
 
         product = adminClient.ownerProducts()
@@ -546,7 +546,7 @@ class PoolSpecTest {
         BrandingDTO brand2 = Branding.build("branding-2", "brand_type-2")
             .productId("test_product-2");
 
-        ProductDTO product = Products.randomSKU()
+        ProductDTO product = Products.randomEng()
             .addBrandingItem(brand1)
             .addBrandingItem(brand2);
 

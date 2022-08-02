@@ -228,7 +228,7 @@ public class ContentResourceSpecTest {
 
     private ProductDTO createProduct(String ownerKey, Long multiplier, AttributeDTO attribute)
         throws ApiException {
-        ProductDTO newProduct = Products.randomSKU();
+        ProductDTO newProduct = Products.randomEng();
         if (attribute != null) {
             newProduct.setAttributes(List.of(attribute));
         }
