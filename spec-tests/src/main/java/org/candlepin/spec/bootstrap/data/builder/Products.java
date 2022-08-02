@@ -32,7 +32,7 @@ public final class Products {
     }
 
     public static ProductDTO random() {
-        return randomEng();
+        return randomSKU();
     }
 
     /**
@@ -42,7 +42,7 @@ public final class Products {
      * @return
      *  a product DTO with a randomly generated SKU ID and name
      */
-    public static ProductDTO randomSKU() {
+    public static ProductDTO randomEng() {
         String id = String.valueOf((int) (Math.random() * 100000));
 
         return new ProductDTO()
@@ -57,7 +57,7 @@ public final class Products {
      * @return
      *  a product DTO with a randomly generated engineering ID and name
      */
-    public static ProductDTO randomEng() {
+    public static ProductDTO randomSKU() {
         String id = StringUtil.randomSuffix("test_product");
 
         return new ProductDTO()
