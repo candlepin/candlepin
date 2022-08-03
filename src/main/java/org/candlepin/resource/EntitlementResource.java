@@ -24,7 +24,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.EntitlementDTO;
-import org.candlepin.dto.api.v1.KeyValueParamDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.AsyncJobStatus;
@@ -139,7 +138,7 @@ public class EntitlementResource implements EntitlementsApi {
     public List<EntitlementDTO> listAllForConsumer(
         String consumerUuid,
         String matches,
-        List<KeyValueParamDTO> attrFilters) {
+        List<String> attrFilters) {
 
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);

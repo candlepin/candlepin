@@ -111,7 +111,7 @@ public class ContentResourceSpecTest {
         consumer.setFacts(facts);
 
         consumer = consumerApi.createConsumer(consumer, null, owner.getKey(), null, false);
-        consumerApi.bind(consumer.getUuid(), pool.getId(), null);
+        consumerApi.bindPool(consumer.getUuid(), pool.getId(), null);
 
         List<JsonNode> jsonNodes = consumerApi.exportCertificates(consumer.getUuid(), null);
 
@@ -183,8 +183,8 @@ public class ContentResourceSpecTest {
         consumer.setFacts(facts);
 
         consumer = consumerApi.createConsumer(consumer, null, owner.getKey(), null, false);
-        consumerApi.bind(consumer.getUuid(), pool1.getId(), null);
-        consumerApi.bind(consumer.getUuid(), pool2.getId(), null);
+        consumerApi.bindPool(consumer.getUuid(), pool1.getId(), null);
+        consumerApi.bindPool(consumer.getUuid(), pool2.getId(), null);
 
         List<JsonNode> jsonNodes = consumerApi.exportCertificates(consumer.getUuid(), null);
         assertEquals(2, jsonNodes.size());

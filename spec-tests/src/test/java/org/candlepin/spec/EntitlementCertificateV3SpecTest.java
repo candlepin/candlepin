@@ -115,7 +115,7 @@ public class EntitlementCertificateV3SpecTest {
         ConsumerDTO consumer = client.consumers().register(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
         consumerApi = consumerClient.consumers();
-        JsonNode bindResult = consumerApi.bind(consumer.getUuid(), pool.getId(), 1);
+        JsonNode bindResult = consumerApi.bindPool(consumer.getUuid(), pool.getId(), 1);
 
         // confirm content count to cross-check
         List<JsonNode> jsonNodes = consumerApi.exportCertificates(consumer.getUuid(), null);
