@@ -19,8 +19,6 @@ import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
-
-
 /**
  * Class meant to provide fully randomized instances of product.
  *

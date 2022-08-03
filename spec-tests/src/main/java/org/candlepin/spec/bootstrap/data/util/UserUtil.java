@@ -16,8 +16,10 @@
 package org.candlepin.spec.bootstrap.data.util;
 
 import org.candlepin.dto.api.client.v1.OwnerDTO;
+import org.candlepin.dto.api.client.v1.PermissionBlueprintDTO;
 import org.candlepin.dto.api.client.v1.RoleDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
+import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.RolesApi;
 import org.candlepin.resource.client.v1.UsersApi;
 import org.candlepin.spec.bootstrap.client.ApiClient;
@@ -31,21 +33,29 @@ public final class UserUtil {
         throw new UnsupportedOperationException();
     }
 
-    public static UserDTO createAdminUser(ApiClient client, OwnerDTO owner) {
-        return createUsers(client, true, Roles.all(owner));
+    public static UserDTO createAdminUser(ApiClient client, OwnerDTO owner)
+        throws ApiException {
+        return createUsers(client, true, Roles.ownerAll(owner));
     }
 
-    public static UserDTO createUser(ApiClient client, OwnerDTO owner) {
-        return createUsers(client, false, Roles.all(owner));
+    public static UserDTO createUser(ApiClient client, OwnerDTO owner)
+        throws ApiException {
+        return createUsers(client, false, Roles.ownerAll(owner));
     }
 
-    public static UserDTO createReadOnlyUser(ApiClient client, OwnerDTO owner) {
-        return createUsers(client, false, Roles.readOnly(owner));
+    public static UserDTO createReadOnlyUser(ApiClient client, OwnerDTO owner)
+        throws ApiException {
+        return createUsers(client, false, Roles.ownerReadOnly(owner));
+    }
+
+    public static UserDTO createWith(
+        ApiClient client, PermissionBlueprintDTO... type) throws ApiException {
+        return createUsers(client, false, Roles.with(type));
     }
 
     @NotNull
     private static UserDTO createUsers(
-        ApiClient client, boolean superAdmin, RoleDTO role) {
+        ApiClient client, boolean superAdmin, RoleDTO role) throws ApiException {
         RolesApi roles = client.roles();
         UsersApi usersClient = client.users();
         UserDTO user = new UserDTO()

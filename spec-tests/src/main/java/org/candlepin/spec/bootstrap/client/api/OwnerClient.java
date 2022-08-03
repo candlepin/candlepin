@@ -18,8 +18,10 @@ package org.candlepin.spec.bootstrap.client.api;
 import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.invoker.client.ApiClient;
+import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.OwnerApi;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -122,6 +124,95 @@ public class OwnerClient extends OwnerApi {
             paging.perPage(),
             paging.order(),
             paging.orderBy());
+    }
+
+    public List<PoolDTO> listOwnerPoolsWithAttributes(
+        String ownerKey, List<String> attribute) throws ApiException {
+        return super.listOwnerPools(
+            ownerKey,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            attribute,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
+    }
+
+    public List<PoolDTO> listOwnerPoolsWithPoolIds(String ownerKey, List<String> poolId)
+        throws ApiException {
+        return super.listOwnerPools(
+            ownerKey,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            poolId,
+            null,
+            null,
+            null,
+            null);
+    }
+
+    public List<PoolDTO> listOwnerPools(
+        String ownerKey, Boolean addFuture, Boolean onlyFuture, OffsetDateTime after)
+        throws ApiException {
+        return super.listOwnerPools(
+            ownerKey,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            addFuture,
+            onlyFuture,
+            after,
+            null,
+            null,
+            null,
+            null,
+            null);
+    }
+
+    public List<PoolDTO> listOwnerPoolsWithSubscription(
+        String ownerKey, String subscription, Boolean addFuture) throws ApiException {
+        return super.listOwnerPools(
+            ownerKey,
+            null,
+            null,
+            null,
+            subscription,
+            null,
+            null,
+            null,
+            null,
+            addFuture,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
     }
 
 }

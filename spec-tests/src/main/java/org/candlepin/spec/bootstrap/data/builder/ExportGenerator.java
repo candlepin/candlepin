@@ -95,7 +95,7 @@ public class ExportGenerator {
     private void initializeMinimalExport() {
         owner = ownerApi.createOwner(Owners.random());
 
-        RoleDTO role = rolesApi.createRole(Roles.all(owner));
+        RoleDTO role = rolesApi.createRole(Roles.ownerAll(owner));
         UserDTO user = usersApi.createUser(Users.random());
         rolesApi.addUserToRole(role.getName(), user.getUsername());
         consumer = consumerApi.createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin),
