@@ -1,6 +1,13 @@
 ---
-- src: https://github.com/candlepin/ansible-role-candlepin.git
-  name: candlepin
-  version: master
+roles:
+  - src: https://github.com/candlepin/ansible-role-candlepin.git
+    name: candlepin
+    version: master
 
-- src: rvm.ruby
+  - src: rvm.ruby
+
+collections:
+  - name: ansible.posix
+  - name: community.general
+  - name: community.mysql
+  - name: community.postgresql
