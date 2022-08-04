@@ -30,9 +30,8 @@ def configure_ansible_provisioning(vm_config)
     # collections from being installed in some environments. Since we're now reliant on a number of
     # non-core collections, it's critical that we pull both roles and collections at runtime.
     # As a side effect, this will install roles and collections in the user's ~/.ansible directory,
-    # rather than in the candlepin/ansible/roles directory as it has in the past. Additionally, the
-    # absence of the --force flag will prevent overwriting any existing roles/collections.
-    ansible.galaxy_command = "ansible-galaxy install -r %{role_file}"
+    # rather than in the candlepin/ansible/roles directory as it has in the past.
+    ansible.galaxy_command = "ansible-galaxy install -r %{role_file} --force"
 
     ansible.extra_vars = ANSIBLE_VARS.clone
 
