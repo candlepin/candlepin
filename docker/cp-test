@@ -10,7 +10,7 @@
 # See usage below.
 
 # Exit on any error:
-set -e
+set -eE
 
 # have to '|| true' here, for some reason /etc/profile.d/rvm.sh
 # will break set -e even though it actually works
@@ -275,7 +275,7 @@ while getopts ":dtRqrHulskib:c:a:vj:n" opt; do
 
             ARG="${ARGV[$OPTIND - 1]}"
             if [ "${ARG:0:1}" != "-" ] && [ "${ARG:0:1}" != "" ]; then
-                RSPEC_FILTER="$ARG"
+                SPEC_FILTER="$ARG"
                 OPTIND=$((OPTIND + 1))
             fi
             ;;
