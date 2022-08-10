@@ -17,14 +17,13 @@ plugins {
     id "org.owasp.dependencycheck"
     id "jacoco"
     id "org.sonarqube"
-    id "com.adarshr.test-logger"
-
 
     // The following are plugins are plugins we wrote in the buildSrc folder
     id "org.candlepin.gradle.gettext"
     id "org.candlepin.gradle.msgfmt"
     id "org.candlepin.gradle.SpecVersion"
     id "org.candlepin.gradle.PomToolkit"
+    id "test-logging-convention"
 }
 
 apply from: "dependencies.gradle"
@@ -318,26 +317,6 @@ test {
             '-XX:+HeapDumpOnOutOfMemoryError'
     ]
 
-}
-
-testlogger {
-    theme 'standard'
-    showExceptions true
-    showStackTraces true
-    showFullStackTraces project.hasProperty("full")
-    showCauses true
-    slowThreshold 2000
-    showSummary true
-    showSimpleNames false
-    showPassed true
-    showSkipped true
-    showFailed true
-    showOnlySlow false
-    showStandardStreams project.hasProperty("full")
-    showPassedStandardStreams false
-    showSkippedStandardStreams false
-    showFailedStandardStreams project.hasProperty("full")
-    logLevel 'lifecycle'
 }
 
 jacocoTestReport {

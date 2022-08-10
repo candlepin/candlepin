@@ -17,12 +17,15 @@ package org.candlepin.spec;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.ApiException;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.AttributeDTO;
 import org.candlepin.dto.api.v1.BrandingDTO;
+import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
@@ -38,6 +41,8 @@ import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.OwnerContentApi;
 import org.candlepin.resource.OwnerProductApi;
 import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
+import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
+import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -63,29 +68,32 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 
 @SpecTest
 public class EntitlementCertificateV3SpecTest {
 
-    private static ApiClient client;
-    private static OwnerDTO owner;
-    private static ConsumerDTO system;
-    private static ProductDTO product;
-    private static ProductDTO product30;
-    private static ContentDTO content;
-    private static ContentDTO archContent;
-    private static PoolDTO pool;
-    private static PoolDTO pool30;
-
-    private static SubscriptionDTO subscription;
-    private static SubscriptionDTO subscription30;
+    private ApiClient client;
     private OwnerClient ownerApi;
     private OwnerContentApi ownerContentApi;
     private OwnerProductApi ownerProductApi;
     private ConsumerClient consumerApi;
     private HostedTestApi hostedTestApi;
+    private OwnerDTO owner;
+    private ConsumerDTO system;
+    private ProductDTO product;
+    private ProductDTO product30;
+    private ContentDTO content;
+    private ContentDTO archContent;
+    private PoolDTO pool;
+    private PoolDTO pool30;
+
+    private SubscriptionDTO subscription;
+    private SubscriptionDTO subscription30;
+
 
     @BeforeEach
     public void beforeEach() throws ApiException {
@@ -195,17 +203,88 @@ public class EntitlementCertificateV3SpecTest {
      */
     @Test
     @DisplayName("should generate a version 3.4 certificate when requesting a 3.0 certificate")
+    @OnlyInHosted
     public void shouldGenerateThreeFourCertRequestThreeZero() throws Exception {
-        ConsumerDTO v3System = Consumers.random(owner)
-            .name(StringUtil.random("system"))
-            .type(new ConsumerTypeDTO().label("system"))
-            .facts(Map.of("system.certificate_version", "3.0", "uname.machine", "i386"));
-        v3System = consumerApi.register(v3System);
-        consumerApi.bindProduct(v3System.getUuid(), product30.getId());
-        String value = CertificateUtil.standardExtensionValueFromCert(
-            consumerApi.listEntitlements(v3System.getUuid())
-            .get(0).getCertificates().iterator().next().getCert(), "1.3.6.1.4.1.2312.9.6");
-        assertEquals("3.4", value);
+        ProductDTO product30 = Products.randomEng().name(StringUtil.random("Test Product"))
+            .addAttributesItem(new AttributeDTO().name("version").value("6.4"))
+            .addAttributesItem(new AttributeDTO().name("arch").value("i386, x86_64"))
+            .addAttributesItem(new AttributeDTO().name("sockets").value("4"))
+            .addAttributesItem(new AttributeDTO().name("warning_period").value("15"))
+            .addAttributesItem(new AttributeDTO().name("management_enabled").value("true"))
+            .addAttributesItem(new AttributeDTO().name("virt_only").value("false"))
+            .addAttributesItem(new AttributeDTO().name("support_level").value("standard"))
+            .addAttributesItem(new AttributeDTO().name("support_type").value("excellent"));
+        product30 = hostedTestApi.createProduct(product30);
+        SubscriptionDTO subscription30 = Subscriptions.random(owner, product30)
+            .contractNumber("123456")
+            .accountNumber("67890")
+            .orderNumber("order2");
+        subscription30 = hostedTestApi.createSubscription(subscription30);
+        AsyncJobStatusDTO refresh = ownerApi.refreshPools(owner.getKey(), false);
+        if (refresh != null) {
+            client.jobs().waitForJob(refresh.getId());
+        }
+
+        ConsumerDTO v3System = consumerApi.register(Consumers.random(owner, ConsumerTypes.System)
+            .facts(Map.of("system.certificate_version", "3.0", "uname.machine", "i386")));
+        ApiClient v3SystemClient = ApiClients.trustedConsumer(v3System.getUuid());
+        v3SystemClient.consumers().bindProduct(v3System.getUuid(), product30.getId());
+
+        List<EntitlementDTO> v3SystemEntitlements = v3SystemClient.consumers()
+            .listEntitlements(v3System.getUuid());
+        Optional<CertificateDTO> certificate = v3SystemEntitlements.stream()
+            .map(EntitlementDTO::getCertificates)
+            .filter(Objects::nonNull)
+            .flatMap(Set::stream)
+            .findFirst();
+
+        assertThat(certificate)
+            .as("Cert is missing!")
+            .isPresent()
+            .map(CertificateDTO::getCert)
+            .map(cert -> CertificateUtil.standardExtensionValueFromCert(cert, "1.3.6.1.4.1.2312.9.6"))
+            .hasValue("3.4");
+    }
+
+    @Test
+    @DisplayName("should generate a version 3.4 certificate when requesting a 3.0 certificate")
+    @OnlyInStandalone
+    public void shouldGenerateThreeFourCertRequestThreeZeroInStandalone() throws Exception {
+        ProductDTO product30 = Products.randomEng().name(StringUtil.random("Test Product"))
+            .addAttributesItem(new AttributeDTO().name("version").value("6.4"))
+            .addAttributesItem(new AttributeDTO().name("arch").value("i386, x86_64"))
+            .addAttributesItem(new AttributeDTO().name("sockets").value("4"))
+            .addAttributesItem(new AttributeDTO().name("warning_period").value("15"))
+            .addAttributesItem(new AttributeDTO().name("management_enabled").value("true"))
+            .addAttributesItem(new AttributeDTO().name("virt_only").value("false"))
+            .addAttributesItem(new AttributeDTO().name("support_level").value("standard"))
+            .addAttributesItem(new AttributeDTO().name("support_type").value("excellent"));
+        product30 = ownerProductApi.createProductByOwner(owner.getKey(), product30);
+        PoolDTO pool30 = Pools.random(product30)
+            .contractNumber("123456")
+            .accountNumber("67890")
+            .orderNumber("order2");
+        pool30 = ownerApi.createPool(owner.getKey(), pool30);
+
+        ConsumerDTO v3System = consumerApi.register(Consumers.random(owner, ConsumerTypes.System)
+            .facts(Map.of("system.certificate_version", "3.0", "uname.machine", "i386")));
+        ApiClient v3SystemClient = ApiClients.trustedConsumer(v3System.getUuid());
+        v3SystemClient.consumers().bindProduct(v3System.getUuid(), product30.getId());
+
+        List<EntitlementDTO> v3SystemEntitlements = v3SystemClient.consumers()
+            .listEntitlements(v3System.getUuid());
+        Optional<CertificateDTO> certificate = v3SystemEntitlements.stream()
+            .map(EntitlementDTO::getCertificates)
+            .filter(Objects::nonNull)
+            .flatMap(Set::stream)
+            .findFirst();
+
+        assertThat(certificate)
+            .as("Cert is missing!")
+            .isPresent()
+            .map(CertificateDTO::getCert)
+            .map(cert -> CertificateUtil.standardExtensionValueFromCert(cert, "1.3.6.1.4.1.2312.9.6"))
+            .hasValue("3.4");
     }
 
     @Test

@@ -19,7 +19,6 @@ import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 
-
 /**
  * Class providing factory functions for BrandingDTO instances.
  */

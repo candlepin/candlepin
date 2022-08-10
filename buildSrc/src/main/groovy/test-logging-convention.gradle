@@ -1,0 +1,23 @@
+plugins {
+    id "com.adarshr.test-logger"
+}
+
+testlogger {
+    theme 'standard'
+    showExceptions true
+    showStackTraces true
+    showFullStackTraces project.hasProperty("full")
+    showCauses true
+    slowThreshold 2000
+    showSummary true
+    showSimpleNames false
+    showPassed true
+    showSkipped true
+    showFailed true
+    showOnlySlow false
+    showStandardStreams project.hasProperty("full")
+    showPassedStandardStreams false
+    showSkippedStandardStreams false
+    showFailedStandardStreams project.hasProperty("full")
+    logLevel 'lifecycle'
+}
