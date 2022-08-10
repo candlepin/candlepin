@@ -26,7 +26,6 @@ import org.candlepin.resource.EnvironmentApi;
 import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.OwnerContentApi;
 import org.candlepin.resource.OwnerProductApi;
-import org.candlepin.resource.PoolsApi;
 import org.candlepin.resource.ProductsApi;
 import org.candlepin.resource.RolesApi;
 import org.candlepin.resource.RootApi;
@@ -35,6 +34,7 @@ import org.candlepin.resource.UsersApi;
 import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
 import org.candlepin.spec.bootstrap.client.api.JobsClient;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
+import org.candlepin.spec.bootstrap.client.api.PoolsClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -77,6 +77,10 @@ public class ApiClient {
         return new ConsumerTypeApi(this.client);
     }
 
+    public ContentApi content() {
+        return new ContentApi(this.client);
+    }
+
     public DeletedConsumerApi deletedConsumers() {
         return new DeletedConsumerApi(this.client);
     }
@@ -109,12 +113,8 @@ public class ApiClient {
         return new OwnerProductApi(this.client);
     }
 
-    public ContentApi content() {
-        return new ContentApi(this.client);
-    }
-
-    public PoolsApi pools() {
-        return new PoolsApi(this.client);
+    public PoolsClient pools() {
+        return new PoolsClient(this.client);
     }
 
     public ProductsApi products() {

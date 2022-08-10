@@ -123,7 +123,7 @@ class EntitlementResourceSpecTest {
         consumerClient.bindProduct(consumer.getUuid(), virtual.getId());
 
         List<EntitlementDTO> ents = entitlementsApi.listAllForConsumer(
-            consumer.getUuid(), "virtualization", null);
+            consumer.getUuid(), "virtualization", null, null, null, null, null);
         assertThat(ents).hasSize(1);
     }
 
@@ -133,7 +133,7 @@ class EntitlementResourceSpecTest {
         consumerClient.bindProduct(consumer.getUuid(), virtual.getId());
 
         List<EntitlementDTO> ents = entitlementsApi.listAllForConsumer(
-            consumer.getUuid(), "virtualization", null);
+            consumer.getUuid(), "virtualization", null, null, null, null, null);
         assertThat(ents).hasSize(1);
         assertNull(ents.get(0).getPool().getCalculatedAttributes());
     }
@@ -145,7 +145,7 @@ class EntitlementResourceSpecTest {
         consumerClient.bindProduct(consumer.getUuid(), virtual.getId());
 
         List<EntitlementDTO> ents = entitlementsApi.listAllForConsumer(
-            consumer.getUuid(), null, List.of("variant:Satellite Starter Pack"));
+            consumer.getUuid(), null, List.of("variant:Satellite Starter Pack"), null, null, null, null);
         assertThat(ents).hasSize(1);
         assertEquals("Satellite Starter Pack",
             ents.get(0).getPool().getProductAttributes().get(0).getValue());
@@ -158,11 +158,11 @@ class EntitlementResourceSpecTest {
         consumerClient.bindProduct(consumer.getUuid(), virtual.getId());
 
         List<EntitlementDTO> ents = consumerClient.listEntitlements(
-            consumer.getUuid(), null, null, null);
+            consumer.getUuid(), null, null, null, null, null, null, null);
         assertThat(ents).hasSize(2);
 
-        ents = consumerClient.listEntitlements(
-            consumer.getUuid(), null, null, List.of("variant:Satellite Starter Pack"));
+        ents = consumerClient.listEntitlements(consumer.getUuid(),
+            null, null, List.of("variant:Satellite Starter Pack"), null, null, null, null);
         assertThat(ents).hasSize(1);
 
         assertEquals("Satellite Starter Pack",
@@ -189,7 +189,7 @@ class EntitlementResourceSpecTest {
         consumerClient.bindProduct(consumer.getUuid(), virtual.getId());
 
         List<EntitlementDTO> ents = consumerClient.listEntitlements(
-            consumer.getUuid(), monitoring.getId(), null, null);
+            consumer.getUuid(), monitoring.getId(), null, null, null, null, null, null);
         assertThat(ents).hasSize(1);
 
         List<CertificateSerialDTO> certSerials = ents.stream()

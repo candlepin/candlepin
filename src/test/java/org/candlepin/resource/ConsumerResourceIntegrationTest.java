@@ -460,7 +460,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
         consumerResource.unbindBySerial(consumer.getUuid(), Long.valueOf(serials.get(0).getSerial().getId()));
         assertEquals(0, consumerResource.listEntitlements(
-            consumer.getUuid(), null, true, new ArrayList<>()).size());
+            consumer.getUuid(), null, true, new ArrayList<>(), null, null, null, null).size());
     }
 
     @Test
@@ -551,8 +551,8 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(new ConsumerPrincipal(consumer, owner));
         securityInterceptor.enable();
 
-        assertThrows(ForbiddenException.class, () ->
-            consumerResource.searchConsumers(null, null, null, new ArrayList<>(), null, null));
+        assertThrows(ForbiddenException.class, () -> consumerResource
+            .searchConsumers(null, null, null, new ArrayList<>(), null, null, null, null, null, null));
     }
 
     @Test
@@ -568,7 +568,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertEquals(3, consumerResource.listEntitlements(
-            consumer.getUuid(), null, true, new ArrayList<>()).size());
+            consumer.getUuid(), null, true, new ArrayList<>(), null, null, null, null).size());
     }
 
     @Test
@@ -587,7 +587,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertThrows(NotFoundException.class, () -> consumerResource.listEntitlements(consumer.getUuid(),
-            null, true, new ArrayList<>())
+            null, true, new ArrayList<>(), null, null, null, null)
         );
     }
 
@@ -607,7 +607,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         setupPrincipal(evilOwner, Access.ALL);
 
         assertThrows(NotFoundException.class, () -> consumerResource.listEntitlements(consumer.getUuid(),
-            null, true, new ArrayList<>())
+            null, true, new ArrayList<>(), null, null, null, null)
         );
     }
 
@@ -622,7 +622,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         securityInterceptor.enable();
 
         assertEquals(3, consumerResource.listEntitlements(
-            consumer.getUuid(), null, true, new ArrayList<>()).size());
+            consumer.getUuid(), null, true, new ArrayList<>(), null, null, null, null).size());
     }
 
     @Test

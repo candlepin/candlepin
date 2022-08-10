@@ -19,6 +19,7 @@ import org.candlepin.ApiClient;
 import org.candlepin.ApiException;
 import org.candlepin.dto.api.v1.CertificateDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.v1.EntitlementDTO;
 import org.candlepin.resource.ConsumerApi;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 
@@ -77,6 +78,10 @@ public class ConsumerClient extends ConsumerApi {
         catch (Exception e) {
             throw new ApiException(e);
         }
+    }
+
+    public List<EntitlementDTO> listEntitlements(String consumerUuid) throws ApiException {
+        return super.listEntitlements(consumerUuid, null, false, null, null, null, null, null);
     }
 
 }

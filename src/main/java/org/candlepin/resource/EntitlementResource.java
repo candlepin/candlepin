@@ -138,8 +138,8 @@ public class EntitlementResource implements EntitlementsApi {
     public List<EntitlementDTO> listAllForConsumer(
         String consumerUuid,
         String matches,
-        List<String> attrFilters) {
-
+        List<String> attrFilters,
+        Integer page, Integer perPage, String order, String sortBy) {
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
         EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
         Page<List<Entitlement>> p;

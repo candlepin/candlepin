@@ -36,7 +36,8 @@ public class OwnerClient extends OwnerApi {
 
     public List<ConsumerDTOArrayElement> listOwnerConsumers(
         String ownerKey, Set<String> consumerTypes) throws ApiException {
-        return super.listConsumers(ownerKey, null, consumerTypes, List.of(), List.of(), List.of());
+        return super.listConsumers(ownerKey, null, consumerTypes, List.of(), List.of(), List.of(),
+            null, null, null, null);
     }
 
     public List<PoolDTO> listOwnerPools(String ownerKey) throws ApiException {
@@ -77,8 +78,8 @@ public class OwnerClient extends OwnerApi {
             null,
             paging.page(),
             paging.perPage(),
-            paging.orderBy(),
-            paging.order());
+            paging.order(),
+            paging.orderBy());
     }
 
     public List<PoolDTO> listOwnerPools(String ownerKey, String consumerUuid) throws ApiException {
@@ -119,8 +120,8 @@ public class OwnerClient extends OwnerApi {
             null,
             paging.page(),
             paging.perPage(),
-            paging.orderBy(),
-            paging.order());
+            paging.order(),
+            paging.orderBy());
     }
 
 }

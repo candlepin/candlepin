@@ -556,8 +556,14 @@ public class ConsumerResource implements ConsumerApi {
     @Override
     @Wrapped(element = "consumers")
     @SuppressWarnings("checkstyle:indentation")
-    public Stream<ConsumerDTOArrayElement> searchConsumers(String username, Set<String> typeLabels,
-        String ownerKey, List<String> uuids, List<String> hypervisorIds, List<KeyValueParamDTO> facts) {
+    public Stream<ConsumerDTOArrayElement> searchConsumers(
+        String username,
+        Set<String> typeLabels,
+        String ownerKey,
+        List<String> uuids,
+        List<String> hypervisorIds,
+        List<KeyValueParamDTO> facts,
+        Integer page, Integer perPage, String order, String sortBy) {
 
         if ((username == null || username.isEmpty()) &&
             (typeLabels == null || typeLabels.isEmpty()) &&
@@ -591,8 +597,8 @@ public class ConsumerResource implements ConsumerApi {
         // Do paging bits, if necessary
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
         if (pageRequest != null) {
-            Page<Stream<ConsumerDTOArrayElement>> page = new Page<>();
-            page.setPageRequest(pageRequest);
+            Page<Stream<ConsumerDTOArrayElement>> pageResponse = new Page<>();
+            pageResponse.setPageRequest(pageRequest);
 
             if (pageRequest.isPaging()) {
                 queryArgs.setOffset((pageRequest.getPage() - 1) * pageRequest.getPerPage())
@@ -604,10 +610,10 @@ public class ConsumerResource implements ConsumerApi {
                 queryArgs.addOrder(pageRequest.getSortBy(), reverse);
             }
 
-            page.setMaxRecords((int) count);
+            pageResponse.setMaxRecords((int) count);
 
             // Store the page for the LinkHeaderResponseFilter
-            ResteasyContext.pushContext(Page.class, page);
+            ResteasyContext.pushContext(Page.class, pageResponse);
         }
         // If no paging was specified, force a limit on amount of results
         else {
@@ -2483,8 +2489,12 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
-    public List<EntitlementDTO> listEntitlements(@Verify(Consumer.class) String consumerUuid,
-        String productId, Boolean regen, List<String> attrFilters) {
+    public List<EntitlementDTO> listEntitlements(
+        @Verify(Consumer.class) String consumerUuid,
+        String productId,
+        Boolean regen,
+        List<String> attrFilters,
+        Integer page, Integer perPage, String order, String sortBy) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);

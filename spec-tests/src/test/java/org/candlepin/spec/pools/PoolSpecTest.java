@@ -135,8 +135,7 @@ class PoolSpecTest {
 
         ApiClient userClient = this.createUserClient(adminClient, owner);
 
-        List<PoolDTO> pools = userClient.pools()
-            .listPools(owner.getId(), null, null, true, null);
+        List<PoolDTO> pools = userClient.pools().listPoolsByOwner(owner.getId());
 
         assertNotNull(pools);
         assertEquals(1, pools.size());
@@ -242,8 +241,7 @@ class PoolSpecTest {
         pool = adminClient.owners()
             .createPool(owner.getKey(), pool);
 
-        List<PoolDTO> pools = ownerClient.pools()
-            .listPools(owner.getId(), null, null, true, null);
+        List<PoolDTO> pools = ownerClient.pools().listPoolsByOwner(owner.getId());
 
         assertNotNull(pools);
         assertEquals(0, pools.size());
@@ -279,15 +277,13 @@ class PoolSpecTest {
         assertNotNull(output);
 
         // Neither consumer should see a fully-consumed pool
-        List<PoolDTO> pools1 = consumerClient1.pools()
-            .listPools(null, consumer1.getUuid(), null, true, null);
+        List<PoolDTO> pools1 = consumerClient1.pools().listPoolsByConsumer(consumer1.getUuid());
 
         assertNotNull(pools1);
         assertEquals(0, pools1.size());
 
         // Consumer 2 shouldn't see a fully-consumed pool
-        List<PoolDTO> pools2 = consumerClient2.pools()
-            .listPools(null, consumer2.getUuid(), null, true, null);
+        List<PoolDTO> pools2 = consumerClient2.pools().listPoolsByConsumer(consumer2.getUuid());
 
         assertNotNull(pools2);
         assertEquals(0, pools2.size());
@@ -316,8 +312,7 @@ class PoolSpecTest {
         ApiClient consumerClient = this.createConsumerClient(ownerClient, consumer);
 
         // Consumer should see the pools regardless of warnings due to use of the "listall" flag
-        List<PoolDTO> pools = consumerClient.pools()
-            .listPools(owner.getId(), null, null, true, null);
+        List<PoolDTO> pools = consumerClient.pools().listPoolsByOwner(owner.getId());
 
         assertNotNull(pools);
         assertEquals(1, pools.size());
@@ -345,7 +340,7 @@ class PoolSpecTest {
 
         // Could translate the output here, but it's less work to just query for it again
         List<EntitlementDTO> entitlements1 = consumerClient.consumers()
-            .listEntitlements(consumer.getUuid(), null, false, null);
+            .listEntitlements(consumer.getUuid());
 
         assertNotNull(entitlements1);
         assertEquals(1, entitlements1.size());
@@ -364,8 +359,7 @@ class PoolSpecTest {
         // The consumer's entitlement should be gone
         assertNotFound(() -> adminClient.entitlements().getEntitlement(entitlements1.get(0).getId()));
 
-        List<EntitlementDTO> entitlements2 = consumerClient.consumers()
-            .listEntitlements(consumer.getUuid(), null, false, null);
+        List<EntitlementDTO> entitlements2 = consumerClient.consumers().listEntitlements(consumer.getUuid());
 
         assertNotNull(entitlements2);
         assertEquals(0, entitlements2.size());
@@ -411,8 +405,7 @@ class PoolSpecTest {
         PoolDTO pool = this.createPool(adminClient, owner, product);
 
         // Fetch the org's pools, verify the target pool and its unmapped guest pool exist
-        List<PoolDTO> pools = adminClient.pools()
-            .listPools(owner.getId(), null, null, true, null);
+        List<PoolDTO> pools = adminClient.pools().listPoolsByOwner(owner.getId());
 
         assertNotNull(pools);
         assertEquals(2, pools.size());
@@ -435,8 +428,7 @@ class PoolSpecTest {
         adminClient.pools().deletePool(pool.getId());
 
         // Verify the both pools were deleted
-        pools = adminClient.pools()
-            .listPools(owner.getId(), null, null, true, null);
+        pools = adminClient.pools().listPoolsByOwner(owner.getId());
 
         assertNotNull(pools);
         assertEquals(0, pools.size());
