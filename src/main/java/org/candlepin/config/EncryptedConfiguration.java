@@ -21,56 +21,27 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Properties;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+
+
 /**
  * EncryptedValueConfigurationParser
  */
 public class EncryptedConfiguration extends PropertiesFileConfiguration {
-    private static Logger log = LoggerFactory.getLogger(EncryptedConfiguration.class);
+    private static final Logger log = LoggerFactory.getLogger(EncryptedConfiguration.class);
 
     private String passphrase = null;
 
     public EncryptedConfiguration() {
-        super();
-    }
-
-    public EncryptedConfiguration(String fileName) throws ConfigurationException {
-        super(fileName);
-    }
-
-    public EncryptedConfiguration(String fileName, Charset encoding) throws ConfigurationException {
-        super(fileName, encoding);
-    }
-
-    public EncryptedConfiguration(File file) throws ConfigurationException {
-        super(file);
-    }
-
-    public EncryptedConfiguration(File file, Charset encoding) throws ConfigurationException {
-        super(file, encoding);
-    }
-
-    public EncryptedConfiguration(InputStream inStream) throws ConfigurationException {
-        super(inStream);
-    }
-
-    public EncryptedConfiguration(InputStream inStream, Charset encoding)
-        throws ConfigurationException {
-        super(inStream, encoding);
-    }
-
-    public EncryptedConfiguration(Properties properties) {
-        super(properties);
+        // Intentionally left empty
     }
 
     public EncryptedConfiguration use(String passphraseProperty) throws ConfigurationException {
@@ -78,28 +49,30 @@ public class EncryptedConfiguration extends PropertiesFileConfiguration {
         return this;
     }
 
-    public void toDecrypt(String... encryptedProperties) throws ConfigurationException {
+    public EncryptedConfiguration toDecrypt(String... encryptedProperties) throws ConfigurationException {
         for (String p : encryptedProperties) {
             toDecrypt(p);
         }
+
+        return this;
     }
 
-    public void toDecrypt(String property) throws ConfigurationException {
+    public EncryptedConfiguration toDecrypt(String property) throws ConfigurationException {
         if (passphrase == null) {
-            log.debug("Passphrase is null.  Skipping decrypt.");
-            return;
+            log.debug("Passphrase is null. Skipping decrypt.");
+            return this;
         }
 
         if (!containsKey(property)) {
             log.debug("Can't decrypt missing property: {}", property);
-            return;
+            return this;
         }
 
         String toDecrypt = getString(property);
         if (!toDecrypt.startsWith("$1$")) {
             // this is not an encrypted password, just return it
             log.debug("Value for {} is not an encrypted string", property);
-            return;
+            return this;
         }
 
         // remove the magic string
@@ -131,6 +104,7 @@ public class EncryptedConfiguration extends PropertiesFileConfiguration {
             throw new ConfigurationException(e);
         }
 
+        return this;
     }
 
     protected String readPassphrase(String passphraseProperty) throws ConfigurationException {
