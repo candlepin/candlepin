@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
 
 import java.io.File;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -253,20 +253,16 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         CandlepinCapabilities.setCapabilities(capabilities);
     }
 
-    protected Configuration readConfiguration(ServletContext context)
-        throws ConfigurationException {
-
-        // Use StandardCharsets.UTF_8 when we move to Java 7
-        Charset utf8 = Charset.forName("UTF-8");
-        EncryptedConfiguration systemConfig = new EncryptedConfiguration();
-
-        systemConfig.setEncoding(utf8);
+    protected Configuration readConfiguration(ServletContext context) throws ConfigurationException {
         File configFile = new File(ConfigProperties.DEFAULT_CONFIG_FILE);
+
+        EncryptedConfiguration systemConfig = new EncryptedConfiguration();
 
         if (configFile.canRead()) {
             log.debug("Loading system configuration");
+
             // First, read the system configuration
-            systemConfig.load(configFile);
+            systemConfig.load(configFile, StandardCharsets.UTF_8);
             log.debug("System configuration: {}", systemConfig);
         }
 
@@ -276,8 +272,8 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         MapConfiguration defaults = new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES);
 
         // Default to Postgresql if jpa.config.hibernate.dialect is unset
-        DatabaseConfigFactory.SupportedDatabase db = determinDatabaseConfiguration(systemConfig.getString
-            ("jpa.config.hibernate.dialect", PostgreSQL92Dialect.class.getName()));
+        DatabaseConfigFactory.SupportedDatabase db = determinDatabaseConfiguration(
+            systemConfig.getString("jpa.config.hibernate.dialect", PostgreSQL92Dialect.class.getName()));
         log.info("Running under {}", db.getLabel());
         Configuration databaseConfig = DatabaseConfigFactory.fetchConfig(db);
 
