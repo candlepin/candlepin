@@ -15,6 +15,7 @@
 package org.candlepin.spec.bootstrap.data.builder;
 
 import org.candlepin.dto.api.v1.BrandingDTO;
+import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 
@@ -57,6 +58,19 @@ public final class Branding {
      */
     public static BrandingDTO random(String name) {
         return build(name, StringUtil.random("brand_type-", 8, StringUtil.CHARSET_NUMERIC_HEX));
+    }
+
+    /**
+     * Builds a random BrandingDTO instance using the provided product's id.
+     *
+     * @param product
+     *  the product to use for populating BrandingDTO's product Id.
+     *
+     * @return a BrandingDTO instance with a randomly generated name and type using the product's id.
+     */
+    public static BrandingDTO random(ProductDTO product) {
+        return random()
+            .productId(product.getId());
     }
 
     /**
