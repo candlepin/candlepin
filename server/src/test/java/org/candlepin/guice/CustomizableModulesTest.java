@@ -14,43 +14,49 @@
  */
 package org.candlepin.guice;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.common.config.Configuration;
+import org.candlepin.common.config.ConfigurationException;
 import org.candlepin.common.config.PropertiesFileConfiguration;
 
 import com.google.inject.Module;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.net.URISyntaxException;
 import java.util.Set;
 
+
+
 public class CustomizableModulesTest {
+
+    private Configuration loadConfig(String filename) throws URISyntaxException, ConfigurationException {
+        PropertiesFileConfiguration config = new PropertiesFileConfiguration();
+
+        String path = this.getClass().getResource(filename).toURI().getPath();
+        config.load(path);
+
+        return config;
+    }
 
     @Test
     public void shouldLoadAndParseConfigurationFile() throws Exception {
-        Configuration config = new PropertiesFileConfiguration(
-            getAbsolutePath("customizable_modules_test.conf"));
+        Configuration config = this.loadConfig("customizable_modules_test.conf");
         Set<Module> loaded = new CustomizableModules().load(config);
 
         assertEquals(1, loaded.size());
         assertTrue(loaded.iterator().next() instanceof DummyModuleForTesting);
     }
 
-    // TODO: We should probably be more specific...
-    @Test(expected = RuntimeException.class)
-    public void shouldFailWhenConfigurationContainsMissingClass()
-        throws Exception {
+    @Test
+    public void shouldFailWhenConfigurationContainsMissingClass() throws Exception {
+        Configuration config = this.loadConfig("customizable_modules_with_missing_class.conf");
 
-        Configuration config = new PropertiesFileConfiguration(
-            getAbsolutePath("customizable_modules_with_missing_class.conf"));
-
-        new CustomizableModules().load(config);
+        // TODO: We should probably be more specific...
+        assertThrows(RuntimeException.class, () -> new CustomizableModules().load(config));
     }
 
-    private String getAbsolutePath(String fileName) throws URISyntaxException {
-        return getClass().getResource(fileName).toURI().getPath();
-    }
 }
