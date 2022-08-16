@@ -15,17 +15,17 @@
 package org.candlepin.config;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
+
+
 
 /**
  * Configuration implementation that reads from a Java Properties object.  If
@@ -35,46 +35,15 @@ import java.util.Properties;
 public class PropertiesFileConfiguration extends AbstractConfiguration
     implements FileConfiguration {
 
-    protected Charset encoding;
+    /** Default character set to use when none is provided */
+    private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
 
+    // TODO: Flatten this. We don't utilize the value we get out of having a separate configuration
+    // instance backing this facade.
     private MapConfiguration backingMap = new MapConfiguration();
 
     public PropertiesFileConfiguration() {
-    }
-
-    public PropertiesFileConfiguration(String fileName) throws ConfigurationException {
-        this(fileName, Charset.defaultCharset());
-    }
-
-    public PropertiesFileConfiguration(String fileName, Charset encoding)
-        throws ConfigurationException {
-        setEncoding(encoding);
-        load(fileName);
-    }
-
-    public PropertiesFileConfiguration(File file) throws ConfigurationException {
-        this(file, Charset.defaultCharset());
-    }
-
-    public PropertiesFileConfiguration(File file, Charset encoding)
-        throws ConfigurationException {
-        setEncoding(encoding);
-        load(file);
-    }
-
-    public PropertiesFileConfiguration(InputStream inStream) throws ConfigurationException {
-        this(inStream, Charset.defaultCharset());
-    }
-
-    public PropertiesFileConfiguration(InputStream inStream, Charset encoding)
-        throws ConfigurationException {
-        setEncoding(encoding);
-        load(inStream);
-    }
-
-    public PropertiesFileConfiguration(Properties properties) {
-        setEncoding(Charset.defaultCharset());
-        load(properties);
+        // Intentionally left empty
     }
 
     @Override
@@ -127,16 +96,6 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
         return backingMap.getProperty(key, defaultValue);
     }
 
-    @Override
-    public Charset getEncoding() {
-        return encoding;
-    }
-
-    @Override
-    public void setEncoding(Charset encoding) {
-        this.encoding = encoding;
-    }
-
     /**
      * Merge configuration objects.  Any collisions on keys will use the value
      * from the leftmost argument.
@@ -158,32 +117,53 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
         return mergedConfig;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void load(String fileName) throws ConfigurationException {
-        load(new File(fileName));
+    public Charset getDefaultCharset() {
+        return DEFAULT_CHARSET;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void load(String filename) throws ConfigurationException {
+        this.load(filename, null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void load(String filename, Charset encoding) throws ConfigurationException {
+        if (filename == null) {
+            throw new IllegalArgumentException("filename is null");
+        }
+
+        this.load(new File(filename), encoding);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void load(File file) throws ConfigurationException {
-        try {
-            load(new BufferedInputStream(new FileInputStream(file)));
-        }
-        catch (FileNotFoundException e) {
-            throw new ConfigurationException(e);
-        }
+        this.load(file, null);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void load(InputStream inStream) throws ConfigurationException {
-        load(new BufferedReader(new InputStreamReader(inStream, getEncoding())));
-    }
+    public void load(File file, Charset encoding) throws ConfigurationException {
+        if (file == null) {
+            throw new IllegalArgumentException("file is null");
+        }
 
-    @Override
-    public void load(Reader reader) throws ConfigurationException {
         try {
-            Properties p = new Properties();
-            p.load(reader);
-            load(p);
+            this.load(new BufferedInputStream(new FileInputStream(file)), encoding);
         }
         catch (IOException e) {
             throw new ConfigurationException(e);
@@ -191,15 +171,49 @@ public class PropertiesFileConfiguration extends AbstractConfiguration
     }
 
     /**
-     * Calling this method directly is primarily meant for testing purposes.
-     * @param properties
+     * {@inheritDoc}
      */
-    public void load(Properties properties) {
-        for (Map.Entry<Object, Object> entry : properties.entrySet()) {
-            backingMap.setProperty((String) entry.getKey(), (String) entry.getValue());
+    @Override
+    public void load(InputStream istream) throws ConfigurationException {
+        this.load(istream, null);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void load(InputStream istream, Charset encoding) throws ConfigurationException {
+        if (istream == null) {
+            throw new IllegalArgumentException("input stream is null");
+        }
+
+        this.load(new InputStreamReader(istream, encoding != null ? encoding : DEFAULT_CHARSET));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void load(Reader reader) throws ConfigurationException {
+        if (reader == null) {
+            throw new IllegalArgumentException("reader is null");
+        }
+
+        try {
+            Properties properties = new Properties();
+            properties.load(reader);
+
+            this.backingMap.clear();
+            properties.forEach((key, value) -> this.backingMap.setProperty((String) key, (String) value));
+        }
+        catch (IOException e) {
+            throw new ConfigurationException(e);
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String toString() {
         return backingMap.toString();

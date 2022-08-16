@@ -51,6 +51,13 @@ public class EncryptedConfigurationTest {
         props.setProperty(key2, "y");
     }
 
+    private EncryptedConfiguration loadConfig(Properties properties) throws ConfigurationException {
+        EncryptedConfiguration config = new EncryptedConfiguration();
+        properties.forEach((key, value) -> config.setProperty((String) key, (String) value));
+
+        return config;
+    }
+
     @Test
     public void testDecrypt(@TempDir Path temp) throws Exception {
         File passphraseFile = temp.resolve("passphrase.txt").toFile();
@@ -60,8 +67,10 @@ public class EncryptedConfigurationTest {
 
         props.setProperty("passphrase_file", passphraseFile.getAbsolutePath());
 
-        EncryptedConfiguration c = new EncryptedConfiguration(props);
-        c.use("passphrase_file").toDecrypt(key1, key2);
+        EncryptedConfiguration c = this.loadConfig(props)
+            .use("passphrase_file")
+            .toDecrypt(key1, key2);
+
         assertEquals(plainPassword, c.getString(key1));
         assertEquals("y", c.getString(key2));
     }
@@ -70,16 +79,20 @@ public class EncryptedConfigurationTest {
     public void testDecryptWithEmptyPassphraseFile() throws Exception {
         props.setProperty("passphrase_file", "");
 
-        EncryptedConfiguration c = new EncryptedConfiguration(props);
-        c.use("passphrase_file").toDecrypt(key1, key2);
+        EncryptedConfiguration c = this.loadConfig(props)
+            .use("passphrase_file")
+            .toDecrypt(key1, key2);
+
         assertEquals(encPasswordAsStored, c.getString(key1));
         assertEquals("y", c.getString(key2));
     }
 
     @Test
     public void testDecryptWithNoPassphraseFile() throws Exception {
-        EncryptedConfiguration c = new EncryptedConfiguration(props);
-        c.use("passphrase_file").toDecrypt(key1, key2);
+        EncryptedConfiguration c = this.loadConfig(props)
+            .use("passphrase_file")
+            .toDecrypt(key1, key2);
+
         assertEquals(encPasswordAsStored, c.getString(key1));
         assertEquals("y", c.getString(key2));
     }
@@ -88,11 +101,9 @@ public class EncryptedConfigurationTest {
     public void testDecryptWithBadPassphraseFile() throws Exception {
         props.setProperty("passphrase_file", "/does/not/exist");
 
-        EncryptedConfiguration c = new EncryptedConfiguration(props);
+        EncryptedConfiguration c = this.loadConfig(props);
 
-        Throwable t = assertThrows(ConfigurationException.class,
-            () -> c.use("passphrase_file").toDecrypt(key1, key2));
-
+        Throwable t = assertThrows(ConfigurationException.class, () -> c.use("passphrase_file"));
         assertThat(t.getCause(), IsInstanceOf.instanceOf(FileNotFoundException.class));
     }
 
@@ -105,8 +116,10 @@ public class EncryptedConfigurationTest {
 
         props.setProperty("passphrase_file", passphraseFile.getAbsolutePath());
 
-        EncryptedConfiguration c = new EncryptedConfiguration(props);
-        assertThrows(ConfigurationException.class, () -> c.use("passphrase_file").toDecrypt(key1, key2));
+        EncryptedConfiguration c = this.loadConfig(props)
+            .use("passphrase_file");
+
+        assertThrows(ConfigurationException.class, () -> c.toDecrypt(key1, key2));
 
         // Note: if we care about being backend-agnostic here, we can't guarantee a specific exception
         // will be thrown, as which exception is used varies between crypto providers.
@@ -121,7 +134,7 @@ public class EncryptedConfigurationTest {
         w.close();
 
         props.setProperty("passphrase_file", passphraseFile.getAbsolutePath());
-        EncryptedConfiguration c = new EncryptedConfiguration(props);
+        EncryptedConfiguration c = this.loadConfig(props);
         assertEquals(expected, c.readPassphrase("passphrase_file"));
     }
 }
