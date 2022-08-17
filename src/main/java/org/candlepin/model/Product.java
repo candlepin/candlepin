@@ -403,7 +403,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
     }
 
     @Override
-    public Object clone() {
+    public Product clone() {
         Product copy;
 
         try {
