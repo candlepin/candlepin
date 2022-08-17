@@ -58,7 +58,7 @@ public final class Products {
      *  a product DTO with a randomly generated engineering ID and name
      */
     public static ProductDTO randomSKU() {
-        String id = StringUtil.randomSuffix("test_product");
+        String id = StringUtil.random("test_product");
 
         return new ProductDTO()
             .id(id)
