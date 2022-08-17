@@ -75,9 +75,9 @@ public class GuestIdTranslatorTest extends AbstractTranslatorTest<GuestId, Guest
             assertEquals(source.getGuestId(), dto.getGuestId());
             assertEquals(source.getAttributes(), dto.getAttributes());
             assertEquals(source.getCreated(), dto.getCreated() != null ?
-                new Date(dto.getCreated().toInstant().toEpochMilli()) : null);
+                Date.from(dto.getCreated().toInstant()) : null);
             assertEquals(source.getUpdated(), dto.getUpdated() != null ?
-                new Date(dto.getUpdated().toInstant().toEpochMilli()) : null);
+                Date.from(dto.getUpdated().toInstant()) : null);
         }
         else {
             assertNull(dto);

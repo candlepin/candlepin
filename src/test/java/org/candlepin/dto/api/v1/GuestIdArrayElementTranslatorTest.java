@@ -75,9 +75,9 @@ public class GuestIdArrayElementTranslatorTest extends AbstractTranslatorTest<Gu
             assertEquals(source.getId(), dto.getId());
             assertEquals(source.getGuestId(), dto.getGuestId());
             assertEquals(source.getCreated(), dto.getCreated() != null ?
-                new Date(dto.getCreated().toInstant().toEpochMilli()) : null);
+                Date.from(dto.getCreated().toInstant()) : null);
             assertEquals(source.getUpdated(), dto.getUpdated() != null ?
-                new Date(dto.getUpdated().toInstant().toEpochMilli()) : null);
+                Date.from(dto.getUpdated().toInstant()) : null);
 
             // No need to assert for translation of attributes field, as that is not present on this
             // version of the DTO.

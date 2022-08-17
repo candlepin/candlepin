@@ -38,6 +38,7 @@ public class IdentityCertificateCurator extends AbstractHibernateCurator<Identit
     /**
      * Lists all expired identity certificates that are not revoked.
      *  Upstream consumer certificates are not retrieved.
+     *  Manifest consumers are also excluded.
      *
      * @return a list of expired certificates
      */
@@ -47,7 +48,9 @@ public class IdentityCertificateCurator extends AbstractHibernateCurator<Identit
             " FROM IdentityCertificate c" +
             " INNER JOIN c.serial s" +
             " INNER JOIN Consumer con on con.idCert = c.id" +
-            " WHERE s.expiration < :nowDate";
+            " INNER JOIN ConsumerType type on con.typeId = type.id" +
+            " WHERE s.expiration < :nowDate" +
+            " AND type.manifest <> true";
 
         Query query = this.getEntityManager().createQuery(hql, ExpiredCertificate.class);
 

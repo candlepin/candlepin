@@ -446,6 +446,9 @@ public class Exporter {
         idcertdir.mkdir();
 
         IdentityCertificate cert = consumer.getIdCert();
+        if (cert == null) {
+            throw new RuntimeException("The consumer for export does not have a valid identity certificate");
+        }
 
         // paradigm dictates this should go in an exporter.export method
         File file = new File(idcertdir.getCanonicalPath(), cert.getSerial().getId() + ".json");
