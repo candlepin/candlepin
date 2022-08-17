@@ -37,16 +37,14 @@ import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.JobsClient;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
-import org.candlepin.spec.bootstrap.data.util.StringUtil;
+import org.candlepin.spec.bootstrap.data.builder.Pools;
+import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -81,19 +79,10 @@ class JobStatusSpecTest {
         user = UserUtil.createUser(client, owner);
         userClient = ApiClients.trustedUser(user.getUsername());
 
-        product = new ProductDTO();
-        product.setId(StringUtil.random("ID"));
-        product.setName(StringUtil.random("Test Product"));
+        product = Products.random();
         product = ownerProductApi.createProductByOwner(owner.getKey(), product);
 
-        pool = new PoolDTO();
-        pool.setProductId(product.getId());
-        pool.setSubscriptionId(StringUtil.random("source_sub"));
-        pool.setSubscriptionSubKey(StringUtil.random("sub_key"));
-        pool.setUpstreamPoolId(StringUtil.random("upstream"));
-        pool.setQuantity(4L);
-        pool.setStartDate(Instant.now().atOffset(ZoneOffset.UTC));
-        pool.setEndDate(Instant.now().plus(365, ChronoUnit.DAYS).atOffset(ZoneOffset.UTC));
+        pool = Pools.random().quantity(4L).productId(product.getId());
         pool = ownerApi.createPool(owner.getKey(), pool);
     }
 
