@@ -115,7 +115,7 @@ class PoolSpecTest {
     }
 
     private ApiClient createConsumerClient(ApiClient client, OwnerDTO owner) throws ApiException {
-        String consumerName = StringUtil.randomSuffix("test_consumer");
+        String consumerName = StringUtil.random("test_consumer");
         ConsumerDTO consumer = this.createConsumer(client, owner, consumerName, null);
 
         return this.createConsumerClient(client, consumer);
@@ -266,9 +266,9 @@ class PoolSpecTest {
             .createPool(owner.getKey(), pool);
 
         ConsumerDTO consumer1 = this.createConsumer(ownerClient, owner,
-            StringUtil.randomSuffix("test_consumer_1"), null);
+            StringUtil.random("test_consumer_1"), null);
         ConsumerDTO consumer2 = this.createConsumer(ownerClient, owner,
-            StringUtil.randomSuffix("test_consumer_2"), null);
+            StringUtil.random("test_consumer_2"), null);
         ApiClient consumerClient1 = this.createConsumerClient(ownerClient, consumer1);
         ApiClient consumerClient2 = this.createConsumerClient(ownerClient, consumer2);
 
@@ -311,7 +311,7 @@ class PoolSpecTest {
 
         // Create a consumer with a different arch than the product
         ConsumerDTO consumer = this.createConsumer(ownerClient, owner,
-            StringUtil.randomSuffix("test_consumer"), Map.of("uname.machine", "x86_64"));
+            StringUtil.random("test_consumer"), Map.of("uname.machine", "x86_64"));
 
         ApiClient consumerClient = this.createConsumerClient(ownerClient, consumer);
 
@@ -334,7 +334,7 @@ class PoolSpecTest {
         ApiClient ownerClient = this.createUserClient(adminClient, owner);
 
         ConsumerDTO consumer = this.createConsumer(ownerClient, owner,
-            StringUtil.randomSuffix("test_consumer"), null);
+            StringUtil.random("test_consumer"), null);
 
         ApiClient consumerClient = this.createConsumerClient(ownerClient, consumer);
 
@@ -454,7 +454,7 @@ class PoolSpecTest {
 
         ApiClient ownerClient = this.createUserClient(adminClient, owner);
 
-        String consumerName = StringUtil.randomSuffix("test_consumer");
+        String consumerName = StringUtil.random("test_consumer");
         ConsumerDTO consumer = this.createConsumer(ownerClient, owner, consumerName, null);
         ApiClient consumerClient = this.createConsumerClient(ownerClient, consumer);
 

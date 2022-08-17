@@ -24,11 +24,7 @@ public final class StringUtil {
     private StringUtil() {
         throw new UnsupportedOperationException();
     }
-
-    public static String random(String prefix) {
-        return prefix + "-" + System.nanoTime() + "-" + RANDOM.nextInt(100000);
-    }
-
+    
     /**
      * Generates a random suffix of 7 characters or fewer.
      *
@@ -38,7 +34,7 @@ public final class StringUtil {
      * @return
      *  the provided base string concatenated with a randomly generated suffix
      */
-    public static String randomSuffix(String base) {
+    public static String random(String base) {
         return base + "-" + RANDOM.nextInt(100000);
     }
 

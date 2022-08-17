@@ -41,7 +41,7 @@ public final class Branding {
      *  a BrandingDTO instance with a randomly generated name and type
      */
     public static BrandingDTO random() {
-        String name = StringUtil.randomSuffix("branding");
+        String name = StringUtil.random("branding");
         return random(name);
     }
 
@@ -55,7 +55,7 @@ public final class Branding {
      *  a BrandingDTO instance with the given name and a randomly generated type
      */
     public static BrandingDTO random(String name) {
-        String type = StringUtil.randomSuffix("brand_type");
+        String type = StringUtil.random("brand_type");
         return build(name, type);
     }
 

@@ -58,9 +58,9 @@ public final class Pools {
      */
     public static PoolDTO randomUpstream(ProductDTO product) {
         return random(product)
-            .subscriptionId(StringUtil.randomSuffix("source_sub"))
+            .subscriptionId(StringUtil.random("source_sub"))
             .subscriptionSubKey("master")
-            .upstreamPoolId(StringUtil.randomSuffix("upstream_pool_id"));
+            .upstreamPoolId(StringUtil.random("upstream_pool_id"));
     }
 
 }
