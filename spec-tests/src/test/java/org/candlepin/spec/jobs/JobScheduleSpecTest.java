@@ -32,7 +32,8 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.JobsClient;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
-import org.candlepin.spec.bootstrap.data.util.StringUtil;
+import org.candlepin.spec.bootstrap.data.builder.Pools;
+import org.candlepin.spec.bootstrap.data.builder.Products;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -80,19 +81,14 @@ public class JobScheduleSpecTest {
         OwnerApi ownerApi = client.owners();
         PoolsApi poolsApi = client.pools();
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ProductDTO product = new ProductDTO();
-        product.setId(StringUtil.random("ID"));
-        product.setName(StringUtil.random("Test Product"));
+        ProductDTO product = Products.random();
         product = client.ownerProducts().createProductByOwner(owner.getKey(), product);
 
-        PoolDTO pool = new PoolDTO();
-        pool.setProductId(product.getId());
-        pool.setSubscriptionId(StringUtil.random("source_sub"));
-        pool.setSubscriptionSubKey(StringUtil.random("sub_key"));
-        pool.setUpstreamPoolId(StringUtil.random("upstream"));
-        pool.setQuantity(6L);
-        pool.setStartDate(Instant.now().atOffset(ZoneOffset.UTC).minus(20, ChronoUnit.DAYS));
-        pool.setEndDate(Instant.now().atOffset(ZoneOffset.UTC).minus(10, ChronoUnit.DAYS));
+        PoolDTO pool = Pools.random()
+            .quantity(6L)
+            .startDate(Instant.now().atOffset(ZoneOffset.UTC).minus(20, ChronoUnit.DAYS))
+            .endDate(Instant.now().atOffset(ZoneOffset.UTC).minus(10, ChronoUnit.DAYS))
+            .productId(product.getId());
         pool = ownerApi.createPool(owner.getKey(), pool);
 
         // verify pool exists before
@@ -101,8 +97,8 @@ public class JobScheduleSpecTest {
         AsyncJobStatusDTO jobStatus = client.jobs().scheduleJob("ExpiredPoolsCleanupJob");
         jobsClient.waitForJobToComplete(jobStatus.getId(), 15000);
 
-        PoolDTO finalPool = pool;
-        assertNotFound(() -> poolsApi.getPool(finalPool.getId(), null, null));
+        final String poolId = pool.getId();
+        assertNotFound(() -> poolsApi.getPool(poolId, null, null));
     }
 
     @Test
