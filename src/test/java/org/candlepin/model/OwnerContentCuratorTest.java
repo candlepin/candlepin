@@ -753,4 +753,159 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         // Make sure c1 is true in actual result, as enabled content will have precedence.
         assertEquals(actualResult.get(c1), true);
     }
+
+    private Long getContentEntityVersion(String uuid) {
+        // We need to query this directly, since the objects will automatically regenerate the
+        // entity version if it's null
+        return this.getEntityManager()
+            .createQuery("SELECT entityVersion FROM Content WHERE uuid = :uuid", Long.class)
+            .setParameter("uuid", uuid)
+            .getSingleResult();
+    }
+
+    @Test
+    public void testClearContentEntityVersionByEntity() {
+        Owner owner = createOwner("test-owner", "owner-test");
+        Content content1 = this.createContent(owner);
+        Content content2 = this.createContent(owner);
+
+        long version1 = content1.getEntityVersion();
+        assertNotEquals(0, version1);
+
+        long version2 = content2.getEntityVersion();
+        assertNotEquals(0, version2);
+
+        this.ownerContentCurator.clearContentEntityVersion(content1);
+
+        Long fetched1 = this.getContentEntityVersion(content1.getUuid());
+        Long fetched2 = this.getContentEntityVersion(content2.getUuid());
+
+        assertNull(fetched1);
+
+        assertNotNull(fetched2);
+        assertEquals(version2, fetched2);
+    }
+
+    @Test
+    public void testClearContentEntityVersionByEntityWithNullEntity() {
+        Owner owner = createOwner("test-owner", "owner-test");
+        Content content1 = this.createContent(owner);
+        Content content2 = this.createContent(owner);
+
+        long version1 = content1.getEntityVersion();
+        assertNotEquals(0, version1);
+
+        long version2 = content2.getEntityVersion();
+        assertNotEquals(0, version2);
+
+        // This should be a silent no-op
+        this.ownerContentCurator.clearContentEntityVersion((Content) null);
+
+        Long fetched1 = this.getContentEntityVersion(content1.getUuid());
+        Long fetched2 = this.getContentEntityVersion(content2.getUuid());
+
+        assertNotNull(fetched1);
+        assertEquals(version1, fetched1);
+
+        assertNotNull(fetched2);
+        assertEquals(version2, fetched2);
+    }
+
+    @Test
+    public void testClearContentEntityVersionByEntityWithNullEntityUuid() {
+        Owner owner = createOwner("test-owner", "owner-test");
+        Content content1 = this.createContent(owner);
+        Content content2 = this.createContent(owner);
+
+        long version1 = content1.getEntityVersion();
+        assertNotEquals(0, version1);
+
+        long version2 = content2.getEntityVersion();
+        assertNotEquals(0, version2);
+
+        // This should be a silent no-op
+        this.ownerContentCurator.clearContentEntityVersion(new Content());
+
+        Long fetched1 = this.getContentEntityVersion(content1.getUuid());
+        Long fetched2 = this.getContentEntityVersion(content2.getUuid());
+
+        assertNotNull(fetched1);
+        assertEquals(version1, fetched1);
+
+        assertNotNull(fetched2);
+        assertEquals(version2, fetched2);
+    }
+
+    @Test
+    public void testClearContentEntityVersionByUUID() {
+        Owner owner = createOwner("test-owner", "owner-test");
+        Content content1 = this.createContent(owner);
+        Content content2 = this.createContent(owner);
+
+        long version1 = content1.getEntityVersion();
+        assertNotEquals(0, version1);
+
+        long version2 = content2.getEntityVersion();
+        assertNotEquals(0, version2);
+
+        this.ownerContentCurator.clearContentEntityVersion(content1.getUuid());
+
+        Long fetched1 = this.getContentEntityVersion(content1.getUuid());
+        Long fetched2 = this.getContentEntityVersion(content2.getUuid());
+
+        assertNull(fetched1);
+
+        assertNotNull(fetched2);
+        assertEquals(version2, fetched2);
+    }
+
+    @Test
+    public void testClearContentEntityVersionByUUIDWithNullUUID() {
+        Owner owner = createOwner("test-owner", "owner-test");
+        Content content1 = this.createContent(owner);
+        Content content2 = this.createContent(owner);
+
+        long version1 = content1.getEntityVersion();
+        assertNotEquals(0, version1);
+
+        long version2 = content2.getEntityVersion();
+        assertNotEquals(0, version2);
+
+        // This should be a silent no-op
+        this.ownerContentCurator.clearContentEntityVersion((String) null);
+
+        Long fetched1 = this.getContentEntityVersion(content1.getUuid());
+        Long fetched2 = this.getContentEntityVersion(content2.getUuid());
+
+        assertNotNull(fetched1);
+        assertEquals(version1, fetched1);
+
+        assertNotNull(fetched2);
+        assertEquals(version2, fetched2);
+    }
+
+    @Test
+    public void testClearContentEntityVersionByUUIDWithEmptyUUID() {
+        Owner owner = createOwner("test-owner", "owner-test");
+        Content content1 = this.createContent(owner);
+        Content content2 = this.createContent(owner);
+
+        long version1 = content1.getEntityVersion();
+        assertNotEquals(0, version1);
+
+        long version2 = content2.getEntityVersion();
+        assertNotEquals(0, version2);
+
+        // This should be a silent no-op
+        this.ownerContentCurator.clearContentEntityVersion("");
+
+        Long fetched1 = this.getContentEntityVersion(content1.getUuid());
+        Long fetched2 = this.getContentEntityVersion(content2.getUuid());
+
+        assertNotNull(fetched1);
+        assertEquals(version1, fetched1);
+
+        assertNotNull(fetched2);
+        assertEquals(version2, fetched2);
+    }
 }

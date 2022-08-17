@@ -547,4 +547,58 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
         Content deleted = this.ownerContentCurator.getContentById(owner, existing.getId());
         assertNull(deleted);
     }
+
+    /**
+     * This test verifies that a content version collision on a given content ID can be resolved
+     * by clearing the entity version of the existing content, operating under the assumption that
+     * the current content is broken and the new one is the "correct" entity for the version.
+     */
+    @Test
+    public void testEntityVersionCollisionResolution() {
+        Owner owner2 = this.createOwner();
+        Content collider = this.createContent("test_content", "test content", owner2);
+
+        this.ownerContentCurator.flush();
+        this.ownerContentCurator.clear();
+
+        Owner owner1 = this.createOwner();
+
+        Content imported = collider.clone()
+            .setUuid(null)
+            .setLabel("imported label");
+
+        long entityVersion = imported.getEntityVersion();
+
+        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner1, collider.getId())
+            .setImportedEntity(imported);
+
+        // Forcefully set the entity version
+        int count = this.getEntityManager()
+            .createQuery("UPDATE Content SET entityVersion = :version WHERE uuid = :uuid")
+            .setParameter("version", entityVersion)
+            .setParameter("uuid", collider.getUuid())
+            .executeUpdate();
+
+        assertEquals(1, count);
+
+        ContentNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+        visitor.pruneNode(pnode);
+        visitor.applyChanges(pnode);
+        visitor.complete();
+
+        assertEquals(NodeState.CREATED, pnode.getNodeState());
+        assertNotNull(pnode.getMergedEntity());
+        assertNotNull(pnode.getMergedEntity().getUuid());
+        assertEquals(entityVersion, pnode.getMergedEntity().getEntityVersion());
+
+        // Query the entity version directly so we avoid the automatic regeneration when it's null
+        Long existingEntityVersion = this.getEntityManager()
+            .createQuery("SELECT entityVersion FROM Content WHERE uuid = :uuid", Long.class)
+            .setParameter("uuid", collider.getUuid())
+            .getSingleResult();
+
+        assertNull(existingEntityVersion);
+    }
+
 }

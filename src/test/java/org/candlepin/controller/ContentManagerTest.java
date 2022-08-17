@@ -317,4 +317,89 @@ public class ContentManagerTest extends DatabaseTestFixture {
     }
 
 
+    /**
+     * This test verifies that a content version collision on a given content ID can be resolved
+     * by clearing the entity version of the existing content, operating under the assumption that
+     * the current content is broken and the new one is the "correct" entity for the version.
+     */
+    @Test
+    public void testContentCreationEntityVersionCollisionResolution() {
+        Owner owner2 = this.createOwner();
+        Content collider = this.createContent("test_content", "test content", owner2);
+
+        this.ownerContentCurator.flush();
+        this.ownerContentCurator.clear();
+
+        Owner owner1 = this.createOwner();
+
+        Content create = collider.clone()
+            .setUuid(null)
+            .setLabel("new label");
+
+        long entityVersion = create.getEntityVersion();
+
+        // Forcefully set the entity version
+        int count = this.getEntityManager()
+            .createQuery("UPDATE Content SET entityVersion = :version WHERE uuid = :uuid")
+            .setParameter("version", entityVersion)
+            .setParameter("uuid", collider.getUuid())
+            .executeUpdate();
+
+        assertEquals(1, count);
+
+        Content output = this.contentManager.createContent(owner1, create);
+
+        assertNotNull(output);
+        assertEquals(create, output);
+        assertEquals(entityVersion, output.getEntityVersion());
+
+        // Query the entity version directly so we avoid the automatic regeneration when it's null
+        Long existingEntityVersion = this.getEntityManager()
+            .createQuery("SELECT entityVersion FROM Content WHERE uuid = :uuid", Long.class)
+            .setParameter("uuid", collider.getUuid())
+            .getSingleResult();
+
+        assertNull(existingEntityVersion);
+    }
+
+    @Test
+    public void testContentUpdateEntityVersionCollisionResolution() {
+        Owner owner2 = this.createOwner();
+        Content collider = this.createContent("test_content", "test content", owner2);
+
+        this.ownerContentCurator.flush();
+        this.ownerContentCurator.clear();
+
+        Owner owner1 = this.createOwner();
+        Content toUpdate = this.createContent("test_content", "not test content", owner1);
+
+        Content update = collider.clone()
+            .setUuid(null)
+            .setLabel("new label");
+
+        long entityVersion = update.getEntityVersion();
+
+        // Forcefully set the entity version
+        int count = this.getEntityManager()
+            .createQuery("UPDATE Content SET entityVersion = :version WHERE uuid = :uuid")
+            .setParameter("version", entityVersion)
+            .setParameter("uuid", collider.getUuid())
+            .executeUpdate();
+
+        assertEquals(1, count);
+
+        Content output = this.contentManager.updateContent(owner1, update, false);
+
+        assertNotNull(output);
+        assertEquals(update, output);
+        assertEquals(entityVersion, output.getEntityVersion());
+
+        // Query the entity version directly so we avoid the automatic regeneration when it's null
+        Long existingEntityVersion = this.getEntityManager()
+            .createQuery("SELECT entityVersion FROM Content WHERE uuid = :uuid", Long.class)
+            .setParameter("uuid", collider.getUuid())
+            .getSingleResult();
+
+        assertNull(existingEntityVersion);
+    }
 }

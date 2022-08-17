@@ -340,15 +340,24 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
 
         for (Product candidate : entityMap.getOrDefault(entity.getId(), Collections.emptyList())) {
             if (entityVersion == candidate.getEntityVersion()) {
-                if (!entity.equals(candidate)) {
-                    String errmsg = String.format("Entity version collision detected: %s != %s",
-                        entity, candidate);
-
-                    log.error(errmsg);
-                    throw new IllegalStateException(errmsg);
+                if (entity.equals(candidate)) {
+                    // We found a match! Map to the candidate entity
+                    return candidate;
                 }
 
-                return candidate;
+                // If we have a version collision, and the entity IDs are the same, there's likely
+                // some shenanigans going on. Rather than halting all behavior, let's just clear
+                // the old entity's version so we start mapping to the new one.
+                // If we have a collision where the products are actually different, we won't
+                // fail at this point (but we *will* fail), and we won't be able to detect it.
+
+                // Impl note:
+                // We've already implicitly checked the ID above by how we're pulling candidate
+                // entities from the map
+                log.error("Entity version collision detected; attempting resolution... {} != {}",
+                    entity, candidate);
+
+                this.ownerProductCurator.clearProductEntityVersion(candidate);
             }
         }
 

@@ -759,4 +759,144 @@ public class ProductManagerTest extends DatabaseTestFixture {
             }
         }
     }
+
+    /**
+     * This test verifies that a product version collision on a given product ID can be resolved
+     * by clearing the entity version of the existing product, operating under the assumption that
+     * the current product is broken and the new one is the "correct" entity for the version.
+     */
+    @Test
+    public void testProductCreationEntityVersionCollisionResolution() {
+        Owner owner2 = this.createOwner();
+        Product collider = this.createProduct("test_product", "test product", owner2);
+
+        this.ownerProductCurator.flush();
+        this.ownerProductCurator.clear();
+
+        Owner owner1 = this.createOwner();
+
+        Product created = collider.clone()
+            .setUuid(null)
+            .setMultiplier(9001L);
+
+        long entityVersion = created.getEntityVersion();
+
+        // Forcefully set the entity version
+        int count = this.getEntityManager()
+            .createQuery("UPDATE Product SET entityVersion = :version WHERE uuid = :uuid")
+            .setParameter("version", entityVersion)
+            .setParameter("uuid", collider.getUuid())
+            .executeUpdate();
+
+        assertEquals(1, count);
+
+        Product output = this.productManager.createProduct(owner1, created);
+
+        assertNotNull(output);
+        assertEquals(created, output);
+        assertEquals(entityVersion, output.getEntityVersion());
+
+        // Query the entity version directly so we avoid the automatic regeneration when it's null
+        Long colliderEntityVersion = this.getEntityManager()
+            .createQuery("SELECT entityVersion FROM Product WHERE uuid = :uuid", Long.class)
+            .setParameter("uuid", collider.getUuid())
+            .getSingleResult();
+
+        assertNull(colliderEntityVersion);
+    }
+
+    @Test
+    public void testProductUpdateEntityVersionCollisionResolution() {
+        Owner owner2 = this.createOwner();
+        Product collider = this.createProduct("test_product", "test product", owner2);
+
+        this.ownerProductCurator.flush();
+        this.ownerProductCurator.clear();
+
+        Owner owner1 = this.createOwner();
+        Product toUpdate = this.createProduct("test_product", "not test product", owner1);
+
+        Product update = collider.clone()
+            .setUuid(null)
+            .setMultiplier(9001L);
+
+        long entityVersion = update.getEntityVersion();
+
+        // Forcefully set the entity version
+        int count = this.getEntityManager()
+            .createQuery("UPDATE Product SET entityVersion = :version WHERE uuid = :uuid")
+            .setParameter("version", entityVersion)
+            .setParameter("uuid", collider.getUuid())
+            .executeUpdate();
+
+        assertEquals(1, count);
+
+        Product output = this.productManager.updateProduct(owner1, update, false);
+
+        assertNotNull(output);
+        assertEquals(update, output);
+        assertEquals(entityVersion, output.getEntityVersion());
+
+        // Query the entity version directly so we avoid the automatic regeneration when it's null
+        Long colliderEntityVersion = this.getEntityManager()
+            .createQuery("SELECT entityVersion FROM Product WHERE uuid = :uuid", Long.class)
+            .setParameter("uuid", collider.getUuid())
+            .getSingleResult();
+
+        assertNull(colliderEntityVersion);
+    }
+
+    @Test
+    public void testChildResolutionEntityVersionCollisionResolution() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product child = this.createProduct("child_product", "child product", owner1, owner2);
+        Product collider = new Product()
+            .setId("test_product")
+            .setName("test product")
+            .setMultiplier(1L)
+            .setDerivedProduct(child);
+
+        this.createProduct(collider, owner2);
+        this.ownerProductCurator.flush();
+        this.ownerProductCurator.clear();
+
+        Product unlinkedChild = child.clone()
+            .setUuid(null)
+            .setName("unlinked child");
+
+        // Persist the child, but don't associate it with the org. This will allow it to be linked
+        // as a derived or provided product, but will be overwritten by the correct product with
+        // the call to updateChildrenReferences.
+        unlinkedChild = this.productCurator.create(unlinkedChild);
+
+        Product update = collider.clone()
+            .setUuid(null)
+            .setDerivedProduct(unlinkedChild);
+
+        update = this.createProduct(update, owner1);
+
+        // Forcefully make some critical change to our collider product so the version check gets
+        // upset by it -- this shouldn't change the entity version.
+        int count = this.getEntityManager()
+            .createQuery("UPDATE Product SET name = 'collider product' WHERE uuid = :uuid")
+            .setParameter("uuid", collider.getUuid())
+            .executeUpdate();
+
+        Product output = this.productManager.updateChildrenReferences(owner1, update, false);
+
+        assertNotNull(output);
+        assertNotNull(output.getDerivedProduct());
+        assertEquals(child.getUuid(), output.getDerivedProduct().getUuid());
+
+        // Query the entity version directly so we avoid the automatic regeneration when it's null
+        Long colliderEntityVersion = this.getEntityManager()
+            .createQuery("SELECT entityVersion FROM Product WHERE uuid = :uuid", Long.class)
+            .setParameter("uuid", collider.getUuid())
+            .getSingleResult();
+
+        assertNull(colliderEntityVersion);
+    }
+
 }

@@ -255,20 +255,36 @@ public class ProductManager {
             .get(entity.getId());
 
         if (alternateVersions != null) {
-            log.debug("Checking {} alternate product versions", alternateVersions.size());
+            // Impl note: this should only ever have 1 entry in it due to our implicit limitation
+            // on ID and entity version
+            if (alternateVersions.size() != 1) {
+                log.warn("Unexpected number of alternate versions received for product ID {}: {}",
+                    entity.getId(), alternateVersions.size());
+            }
+            else {
+                log.debug("Checking {} alternate product versions", alternateVersions.size());
+            }
 
-            for (Product alt : alternateVersions) {
-                if (!alt.equals(entity)) {
-                    String errmsg = String.format("Entity version collision detected: %s != %s", alt, entity);
-                    throw new IllegalStateException(errmsg);
+            for (Product candidate : alternateVersions) {
+                if (entity.equals(candidate)) {
+                    // We found a match! Map to the candidate entity
+                    log.debug("Converging with existing product version: {} => {}", entity, candidate);
+
+                    // If we're "creating" a product, we shouldn't have any other object references to
+                    // update for this product. Instead, we'll just add the new owner to the product.
+                    this.ownerProductCurator.mapProductToOwner(candidate, owner);
+                    return candidate;
                 }
 
-                log.debug("Converging with existing product version: {} => {}", entity, alt);
+                // If we have a version collision, and the entity IDs are the same, there's likely
+                // some shenanigans going on. Rather than halting all behavior, let's just clear
+                // the old entity's version so we start mapping to the new one.
+                // If we have a collision where the products are actually different, we won't
+                // fail at this point (but we *will* fail), and we won't be able to detect it.
+                log.error("Entity version collision detected; attempting resolution... {} != {}",
+                    entity, candidate);
 
-                // If we're "creating" a product, we shouldn't have any other object references to
-                // update for this product. Instead, we'll just add the new owner to the product.
-                this.ownerProductCurator.mapProductToOwner(alt, owner);
-                return alt;
+                this.ownerProductCurator.clearProductEntityVersion(candidate);
             }
         }
 
@@ -358,22 +374,37 @@ public class ProductManager {
             .get(updated.getId());
 
         if (alternateVersions != null) {
-            log.debug("Checking {} alternate product versions", alternateVersions.size());
+            // Impl note: this should only ever have 1 entry in it due to our implicit limitation
+            // on ID and version
+            if (alternateVersions.size() != 1) {
+                log.warn("Unexpected number of alternate versions received for product ID {}: {}",
+                    entity.getId(), alternateVersions.size());
+            }
+            else {
+                log.debug("Checking {} alternate product versions", alternateVersions.size());
+            }
 
-            for (Product alt : alternateVersions) {
-                if (!alt.equals(updated)) {
-                    String errmsg = String.format("Entity version collision detected: %s != %s",
-                        alt, updated);
+            for (Product candidate : alternateVersions) {
+                if (updated.equals(candidate)) {
+                    // We found a match! Map to the candidate entity
+                    log.debug("Converging with existing product version: {} => {}", updated, candidate);
 
-                    throw new IllegalStateException(errmsg);
+                    this.ownerProductCurator.updateOwnerProductReferences(owner,
+                        Map.of(entity.getUuid(), candidate.getUuid()));
+
+                    updated = candidate;
+                    break;
                 }
 
-                log.debug("Converging with existing product version: {} => {}", updated, alt);
+                // If we have a version collision, and the entity IDs are the same, there's likely
+                // some shenanigans going on. Rather than halting all behavior, let's just clear
+                // the old entity's version so we start mapping to the new one.
+                // If we have a collision where the products are actually different, we won't
+                // fail at this point (but we *will* fail), and we won't be able to detect it.
+                log.error("Entity version collision detected; attempting resolution... {} != {}",
+                    updated, candidate);
 
-                this.ownerProductCurator.updateOwnerProductReferences(owner,
-                    Collections.singletonMap(entity.getUuid(), alt.getUuid()));
-
-                updated = alt;
+                this.ownerProductCurator.clearProductEntityVersion(candidate);
             }
         }
 
@@ -484,22 +515,37 @@ public class ProductManager {
             .get(updated.getId());
 
         if (alternateVersions != null) {
-            log.debug("Checking {} alternate product versions", alternateVersions.size());
+            // Impl note: this should only ever have 1 entry in it due to our implicit limitation
+            // on ID and version
+            if (alternateVersions.size() != 1) {
+                log.warn("Unexpected number of alternate versions received for product ID {}: {}",
+                    entity.getId(), alternateVersions.size());
+            }
+            else {
+                log.debug("Checking {} alternate product versions", alternateVersions.size());
+            }
 
-            for (Product alt : alternateVersions) {
-                if (!alt.equals(updated)) {
-                    String errmsg = String.format("Entity version collision detected: %s != %s",
-                        alt, updated);
+            for (Product candidate : alternateVersions) {
+                if (updated.equals(candidate)) {
+                    // We found a match! Map to the candidate entity
+                    log.debug("Converging with existing product version: {} => {}", updated, candidate);
 
-                    throw new IllegalStateException(errmsg);
+                    this.ownerProductCurator.updateOwnerProductReferences(owner,
+                        Map.of(entity.getUuid(), candidate.getUuid()));
+
+                    updated = candidate;
+                    break;
                 }
 
-                log.debug("Converging with existing product: {} => {}", updated, alt);
+                // If we have a version collision, and the entity IDs are the same, there's likely
+                // some shenanigans going on. Rather than halting all behavior, let's just clear
+                // the old entity's version so we start mapping to the new one.
+                // If we have a collision where the products are actually different, we won't
+                // fail at this point (but we *will* fail), and we won't be able to detect it.
+                log.error("Entity version collision detected; attempting resolution... {} != {}",
+                    updated, candidate);
 
-                this.ownerProductCurator.updateOwnerProductReferences(owner,
-                    Collections.singletonMap(entity.getUuid(), alt.getUuid()));
-
-                updated = alt;
+                this.ownerProductCurator.clearProductEntityVersion(candidate);
             }
         }
 

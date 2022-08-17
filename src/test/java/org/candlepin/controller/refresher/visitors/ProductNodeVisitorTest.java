@@ -988,4 +988,58 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
         assertNotNull(updated);
         assertNull(updated.getOrphanedDate());
     }
+
+    /**
+     * This test verifies that a product version collision on a given product ID can be resolved
+     * by clearing the entity version of the existing product, operating under the assumption that
+     * the current product is broken and the new one is the "correct" entity for the version.
+     */
+    @Test
+    public void testEntityVersionCollisionResolution() {
+        Owner owner2 = this.createOwner();
+        Product collider = this.createProduct("test_product", "test product", owner2);
+
+        this.ownerProductCurator.flush();
+        this.ownerProductCurator.clear();
+
+        Owner owner1 = this.createOwner();
+
+        Product imported = collider.clone()
+            .setUuid(null)
+            .setMultiplier(9001L);
+
+        long entityVersion = imported.getEntityVersion();
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner1, collider.getId())
+            .setImportedEntity(imported);
+
+        // Forcefully set the entity version
+        int count = this.getEntityManager()
+            .createQuery("UPDATE Product SET entityVersion = :version WHERE uuid = :uuid")
+            .setParameter("version", entityVersion)
+            .setParameter("uuid", collider.getUuid())
+            .executeUpdate();
+
+        assertEquals(1, count);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor(-1);
+        visitor.processNode(pnode);
+        visitor.pruneNode(pnode);
+        visitor.applyChanges(pnode);
+        visitor.complete();
+
+        assertEquals(NodeState.CREATED, pnode.getNodeState());
+        assertNotNull(pnode.getMergedEntity());
+        assertNotNull(pnode.getMergedEntity().getUuid());
+        assertEquals(entityVersion, pnode.getMergedEntity().getEntityVersion());
+
+        // Query the entity version directly so we avoid the automatic regeneration when it's null
+        Long existingEntityVersion = this.getEntityManager()
+            .createQuery("SELECT entityVersion FROM Product WHERE uuid = :uuid", Long.class)
+            .setParameter("uuid", collider.getUuid())
+            .getSingleResult();
+
+        assertNull(existingEntityVersion);
+    }
+
 }
