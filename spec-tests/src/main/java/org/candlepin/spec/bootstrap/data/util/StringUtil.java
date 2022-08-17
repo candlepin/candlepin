@@ -24,7 +24,7 @@ public final class StringUtil {
     private StringUtil() {
         throw new UnsupportedOperationException();
     }
-    
+
     /**
      * Generates a random suffix of 7 characters or fewer.
      *
