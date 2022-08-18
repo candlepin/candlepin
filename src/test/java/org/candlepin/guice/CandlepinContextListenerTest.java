@@ -348,8 +348,10 @@ public class CandlepinContextListenerTest {
         Liquibase l = le.getLiquibase();
         CandlepinContextListener spy = Mockito.spy(listener);
         doReturn(l).when(spy).getLiquibase();
-        //  no RuntimeException because the db was updated
-        spy.checkDbChangelog();
+
+        //  no RuntimeException because the db is updated
+        prepareForInitialization();
+        spy.contextInitialized(evt);
     }
 
     @Test
@@ -387,9 +389,53 @@ public class CandlepinContextListenerTest {
         l.getDatabaseChangeLog().addChangeSet(cs);
         CandlepinContextListener spy = Mockito.spy(listener);
         doReturn(l).when(spy).getLiquibase();
+
         // Runtime exception for changeset that is not in db
-        RuntimeException re = assertThrows(RuntimeException.class, () -> spy.checkDbChangelog());
+        prepareForInitialization();
+        RuntimeException re = assertThrows(RuntimeException.class, () -> spy.contextInitialized(evt));
         assertEquals("The database is missing Liquibase changeset(s).", re.getMessage());
+    }
+
+    @Test
+    public void hasMissingChangesetsConfigFalse() throws Exception {
+        // needs a listener that allows checkDbChangelog()
+        listener = new CandlepinContextListener() {
+            @Override
+            protected List<Module> getModules(ServletContext context) {
+                List<Module> modules = new LinkedList<>();
+                modules.add(new TestingModules.JpaModule());
+                modules.add(new TestingModules.StandardTest(config));
+                modules.add(new ContextListenerTestModule());
+                return modules;
+            }
+
+            @Override
+            protected Configuration readConfiguration(ServletContext context) {
+                configRead.verify(context);
+                return config;
+            }
+        };
+
+        LiquibaseExtension le = new LiquibaseExtension();
+        le.createLiquibaseSchema();
+        le.runUpdate();
+        Liquibase l = le.getLiquibase();
+        ChangeSet cs = new ChangeSet("21220101",
+            "tester",
+            true,
+            true,
+            "db/changelog/21220101-test.xml",
+            null,
+            null,
+            l.getDatabaseChangeLog());
+        l.getDatabaseChangeLog().addChangeSet(cs);
+        CandlepinContextListener spy = Mockito.spy(listener);
+        doReturn(l).when(spy).getLiquibase();
+
+        // no Runtime exception because of config override
+        this.config.setProperty(ConfigProperties.HALT_ON_LIQUIBASE_DESYNC, "false");
+        prepareForInitialization();
+        spy.contextInitialized(evt);
     }
 
     private void registerDrivers(Enumeration<Driver> drivers) {

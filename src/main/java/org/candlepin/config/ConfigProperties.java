@@ -129,6 +129,8 @@ public class ConfigProperties {
     // Space separated list of resources to hide in GET /status
     public static final String HIDDEN_CAPABILITIES = "candlepin.hidden_capabilities";
 
+    public static final String HALT_ON_LIQUIBASE_DESYNC = "candlepin.db.halt_on_liquibase_desync";
+
     // Authentication
     public static final String TRUSTED_AUTHENTICATION = "candlepin.auth.trusted.enable";
     public static final String SSL_AUTHENTICATION = "candlepin.auth.ssl.enable";
@@ -409,6 +411,7 @@ public class ConfigProperties {
             // submit one when registering.
             this.put(HIDDEN_RESOURCES, "environments");
             this.put(HIDDEN_CAPABILITIES, "");
+            this.put(HALT_ON_LIQUIBASE_DESYNC, "true");
             this.put(SSL_VERIFY, "false");
 
             this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
