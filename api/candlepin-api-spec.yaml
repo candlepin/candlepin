@@ -7712,28 +7712,6 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
-  /serials:
-    get:
-      description: Retrieves a list of Certificate Serials
-      tags:
-        - certificate_serial
-      operationId: getCertificateSerials
-      x-java-response:
-        type: Iterable
-        isContainer: true
-      security: []
-      responses:
-        200:
-          description: A list of certificate serials
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/CertificateSerialDTO'
-        default:
-          $ref: '#/components/responses/default'
-
   /serials/{id}:
     get:
       description: Retrieves a single Certificate Serial
