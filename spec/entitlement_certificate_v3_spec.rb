@@ -263,38 +263,6 @@ end
     @system.unbind_entitlement entitlement.id
   end
 
-  it 'encoded many content urls' do
-    number = 100
-    number.times do |i|
-      content = create_content_ex({:content_url => "/content/dist/rhel/$releasever#{i}/$basearch#{i}/debug#{i}",})
-      map_content_to_product(@owner['key'], @product.id, content.id, true)
-    end
-
-    #refresh the subscription - product resolution will take care of adding the content automatically
-    refresh_upstream_subscription(@pool)
-    entitlement = @system.consume_product(@product.id)[0]
-
-    json_body = extract_payload(entitlement.certificates[0]['cert'])
-
-    json_body['products'][0]['content'].size.should == 102
-
-    value = extension_from_cert(entitlement.certificates[0]['cert'], "1.3.6.1.4.1.2312.9.7")
-
-    # Can dump binary to file
-    #File.open('tmp.bin', 'w') do |f1|
-    #  f1.puts value
-    #end
-
-    urls = []
-    urls[0] = '/content/dist/rhel/$releasever0/$basearch0/debug0'
-    urls[1] = '/content/dist/rhel/$releasever29/$basearch29/debug29'
-    urls[2] = '/content/dist/rhel/$releasever41/$basearch41/debug41'
-    urls[3] = '/content/dist/rhel/$releasever75/$basearch75/debug75'
-    urls[4] = '/content/dist/rhel/$releasever99/$basearch99/debug99'
-    are_content_urls_present(value, urls).should == true
-    @system.unbind_entitlement entitlement.id
-  end
-
   it 'generates a version 3.4 certificate on distributors with a cert_v3 capability' do
     dist_name = random_string("SAMvBillion")
     dist_version = create_distributor_version(dist_name,

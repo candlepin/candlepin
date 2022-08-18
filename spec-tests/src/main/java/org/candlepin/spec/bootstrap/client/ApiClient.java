@@ -19,6 +19,7 @@ import org.candlepin.resource.ActivationKeyApi;
 import org.candlepin.resource.AdminApi;
 import org.candlepin.resource.CdnApi;
 import org.candlepin.resource.ConsumerTypeApi;
+import org.candlepin.resource.ContentApi;
 import org.candlepin.resource.DeletedConsumerApi;
 import org.candlepin.resource.EntitlementsApi;
 import org.candlepin.resource.EnvironmentApi;
@@ -97,6 +98,10 @@ public class ApiClient {
 
     public OwnerProductApi ownerProducts() {
         return new OwnerProductApi(this.client);
+    }
+
+    public ContentApi content() {
+        return new ContentApi(this.client);
     }
 
     public PoolsApi pools() {

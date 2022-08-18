@@ -22,6 +22,7 @@ import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.resource.ConsumerApi;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -56,9 +57,10 @@ public class ConsumerClient extends ConsumerApi {
         return super.createConsumer(consumer, null, consumer.getOwner().getKey(), null, true);
     }
 
-    public String bind(String consumerUuid, String poolId, Integer quantity) throws ApiException {
-        return super.bind(consumerUuid, poolId, new ArrayList<>(), quantity, "", "",
-                false, "", new ArrayList<>());
+    public JsonNode bind(String consumerUuid, String poolId, Integer quantity)
+        throws ApiException, JsonProcessingException {
+        return new ObjectMapper().readTree(super.bind(consumerUuid, poolId, new ArrayList<>(), quantity, "",
+            "", false, "", new ArrayList<>()));
     }
 
     public List<JsonNode> exportCertificates(String consumerUuid, String serials) throws ApiException {
