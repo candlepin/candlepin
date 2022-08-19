@@ -23,9 +23,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.codec.binary.Base64;
 import org.mozilla.jss.netscape.security.util.DerValue;
 
+import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -91,12 +91,23 @@ public final class CertificateUtil {
         return base64.decode(data);
     }
 
-    public static byte[] extensionFromCert(String certString, String extensionId) throws Exception {
+    public static byte[] compressedContentExtensionValueFromCert(String certString, String extensionId)
+        throws IOException {
+        return getDerValueFromExtension(certString, extensionId).getOctetString();
+    }
+
+    public static String standardExtensionValueFromCert(String certString, String extensionId)
+        throws IOException {
+        return getDerValueFromExtension(certString, extensionId).toString();
+    }
+
+    public static DerValue getDerValueFromExtension(String certString, String extensionId)
+        throws IOException {
         certString = certString.replace("\"", "")
             .replace("\\n", Character.toString((char) 10));
         X509Certificate cert = X509Cert.parseCertificate(certString);
         DerValue value = new DerValue(cert.getExtensionValue(extensionId));
         byte[] octetString = value.getOctetString();
-        return Arrays.copyOfRange(octetString, 4, octetString.length);
+        return new DerValue(octetString);
     }
 }
