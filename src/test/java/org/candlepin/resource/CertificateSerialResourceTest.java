@@ -17,17 +17,13 @@ package org.candlepin.resource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.TestingModules;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.model.EmptyCandlepinQuery;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -50,21 +46,6 @@ public class CertificateSerialResourceTest {
         );
 
         injector.injectMembers(this);
-    }
-
-    @Test
-    public void listall() {
-        CandlepinQuery cqmock = new EmptyCandlepinQuery();
-
-        CertificateSerialCurator csc = mock(CertificateSerialCurator.class);
-        when(csc.listAll()).thenReturn(cqmock);
-
-        CertificateSerialResource csr = new CertificateSerialResource(csc, this.modelTranslator);
-
-        CandlepinQuery<CertificateSerialDTO> result = csr.getCertificateSerials();
-        assertNotNull(result);
-
-        verify(csc, times(1)).listAll();
     }
 
     @Test

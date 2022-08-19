@@ -16,7 +16,6 @@ package org.candlepin.resource;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.CertificateSerialDTO;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 
@@ -43,11 +42,5 @@ public class CertificateSerialResource implements CertificateSerialApi {
     public CertificateSerialDTO getCertificateSerial(Long serialId) {
         CertificateSerial serial = this.certificateSerialCurator.get(serialId);
         return this.translator.translate(serial, CertificateSerialDTO.class);
-    }
-
-    @Override
-    public CandlepinQuery<CertificateSerialDTO> getCertificateSerials() {
-        CandlepinQuery<CertificateSerial> query = this.certificateSerialCurator.listAll();
-        return this.translator.translateQuery(query, CertificateSerialDTO.class);
     }
 }
