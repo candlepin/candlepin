@@ -38,6 +38,7 @@ class IdentityCertificateCuratorTest extends DatabaseTestFixture {
         String include2 = createExpiredIdCertWithConsumer().getId();
         String exclude1 = createExpiredIdCertWithUpstreamConsumer().getId();
         String exclude2 = createExpiredIdCertWithUpstreamConsumer().getId();
+        String exclude3 = createExpiredManifestIdCert().getId();
 
         List<ExpiredCertificate> expiredCertificates = this.identityCertificateCurator.listAllExpired();
 
@@ -48,6 +49,7 @@ class IdentityCertificateCuratorTest extends DatabaseTestFixture {
         assertFalse(expiredCertIds.contains(idCert));
         assertFalse(expiredCertIds.contains(exclude1));
         assertFalse(expiredCertIds.contains(exclude2));
+        assertFalse(expiredCertIds.contains(exclude3));
         assertTrue(expiredCertIds.contains(include1));
         assertTrue(expiredCertIds.contains(include2));
     }
@@ -102,6 +104,16 @@ class IdentityCertificateCuratorTest extends DatabaseTestFixture {
         owner.setUpstreamConsumer(upstream);
         idCert = saveCert(idCert);
         upstream.setIdCert(idCert);
+        ownerCurator.saveOrUpdate(owner);
+        return idCert;
+    }
+
+    private IdentityCertificate createExpiredManifestIdCert() {
+        IdentityCertificate idCert = TestUtil.createIdCert(Util.yesterday());
+        Owner owner = createOwner();
+        Consumer consumer = createConsumer(owner, createConsumerType(true));
+        idCert = saveCert(idCert);
+        consumer.setIdCert(idCert);
         ownerCurator.saveOrUpdate(owner);
         return idCert;
     }
