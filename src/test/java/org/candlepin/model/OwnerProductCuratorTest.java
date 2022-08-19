@@ -1269,4 +1269,160 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
             this.ownerProductCurator.updateOwnerProductOrphanedDates((String) null, List.of("a", "b", "c"),
                 Instant.now()));
     }
+
+    private Long getProductEntityVersion(String uuid) {
+        // We need to query this directly, since the objects will automatically regenerate the
+        // entity version if it's null
+        return this.getEntityManager()
+            .createQuery("SELECT entityVersion FROM Product WHERE uuid = :uuid", Long.class)
+            .setParameter("uuid", uuid)
+            .getSingleResult();
+    }
+
+    @Test
+    public void testClearProductEntityVersionByEntity() {
+        Owner owner = createOwner("test-owner", "owner-test");
+        Product product1 = this.createProduct(owner);
+        Product product2 = this.createProduct(owner);
+
+        long version1 = product1.getEntityVersion();
+        assertNotEquals(0, version1);
+
+        long version2 = product2.getEntityVersion();
+        assertNotEquals(0, version2);
+
+        this.ownerProductCurator.clearProductEntityVersion(product1);
+
+        Long fetched1 = this.getProductEntityVersion(product1.getUuid());
+        Long fetched2 = this.getProductEntityVersion(product2.getUuid());
+
+        assertNull(fetched1);
+
+        assertNotNull(fetched2);
+        assertEquals(version2, fetched2);
+    }
+
+    @Test
+    public void testClearProductEntityVersionByEntityWithNullEntity() {
+        Owner owner = createOwner("test-owner", "owner-test");
+        Product product1 = this.createProduct(owner);
+        Product product2 = this.createProduct(owner);
+
+        long version1 = product1.getEntityVersion();
+        assertNotEquals(0, version1);
+
+        long version2 = product2.getEntityVersion();
+        assertNotEquals(0, version2);
+
+        // This should be a silent no-op
+        this.ownerProductCurator.clearProductEntityVersion((Product) null);
+
+        Long fetched1 = this.getProductEntityVersion(product1.getUuid());
+        Long fetched2 = this.getProductEntityVersion(product2.getUuid());
+
+        assertNotNull(fetched1);
+        assertEquals(version1, fetched1);
+
+        assertNotNull(fetched2);
+        assertEquals(version2, fetched2);
+    }
+
+    @Test
+    public void testClearProductEntityVersionByEntityWithNullEntityUuid() {
+        Owner owner = createOwner("test-owner", "owner-test");
+        Product product1 = this.createProduct(owner);
+        Product product2 = this.createProduct(owner);
+
+        long version1 = product1.getEntityVersion();
+        assertNotEquals(0, version1);
+
+        long version2 = product2.getEntityVersion();
+        assertNotEquals(0, version2);
+
+        // This should be a silent no-op
+        this.ownerProductCurator.clearProductEntityVersion(new Product());
+
+        Long fetched1 = this.getProductEntityVersion(product1.getUuid());
+        Long fetched2 = this.getProductEntityVersion(product2.getUuid());
+
+        assertNotNull(fetched1);
+        assertEquals(version1, fetched1);
+
+        assertNotNull(fetched2);
+        assertEquals(version2, fetched2);
+    }
+
+    @Test
+    public void testClearProductEntityVersionByUUID() {
+        Owner owner = createOwner("test-owner", "owner-test");
+        Product product1 = this.createProduct(owner);
+        Product product2 = this.createProduct(owner);
+
+        long version1 = product1.getEntityVersion();
+        assertNotEquals(0, version1);
+
+        long version2 = product2.getEntityVersion();
+        assertNotEquals(0, version2);
+
+        this.ownerProductCurator.clearProductEntityVersion(product1.getUuid());
+
+        Long fetched1 = this.getProductEntityVersion(product1.getUuid());
+        Long fetched2 = this.getProductEntityVersion(product2.getUuid());
+
+        assertNull(fetched1);
+
+        assertNotNull(fetched2);
+        assertEquals(version2, fetched2);
+    }
+
+    @Test
+    public void testClearProductEntityVersionByUUIDWithNullUUID() {
+        Owner owner = createOwner("test-owner", "owner-test");
+        Product product1 = this.createProduct(owner);
+        Product product2 = this.createProduct(owner);
+
+        long version1 = product1.getEntityVersion();
+        assertNotEquals(0, version1);
+
+        long version2 = product2.getEntityVersion();
+        assertNotEquals(0, version2);
+
+        // This should be a silent no-op
+        this.ownerProductCurator.clearProductEntityVersion((String) null);
+
+        Long fetched1 = this.getProductEntityVersion(product1.getUuid());
+        Long fetched2 = this.getProductEntityVersion(product2.getUuid());
+
+        assertNotNull(fetched1);
+        assertEquals(version1, fetched1);
+
+        assertNotNull(fetched2);
+        assertEquals(version2, fetched2);
+    }
+
+    @Test
+    public void testClearProductEntityVersionByUUIDWithEmptyUUID() {
+        Owner owner = createOwner("test-owner", "owner-test");
+        Product product1 = this.createProduct(owner);
+        Product product2 = this.createProduct(owner);
+
+        long version1 = product1.getEntityVersion();
+        assertNotEquals(0, version1);
+
+        long version2 = product2.getEntityVersion();
+        assertNotEquals(0, version2);
+
+        // This should be a silent no-op
+        this.ownerProductCurator.clearProductEntityVersion("");
+
+        Long fetched1 = this.getProductEntityVersion(product1.getUuid());
+        Long fetched2 = this.getProductEntityVersion(product2.getUuid());
+
+        assertNotNull(fetched1);
+        assertEquals(version1, fetched1);
+
+        assertNotNull(fetched2);
+        assertEquals(version2, fetched2);
+    }
+
 }
