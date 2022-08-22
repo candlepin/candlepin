@@ -14,14 +14,15 @@
  */
 package org.candlepin.hostedtest;
 
+import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.v1.ContentDTO;
 import org.candlepin.dto.api.v1.OwnerDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.dto.api.v1.SubscriptionDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ProductContent;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.ContentInfo;
@@ -39,6 +40,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -63,11 +66,17 @@ import javax.ws.rs.core.MediaType;
 public class HostedTestResource {
     private static final Logger log = LoggerFactory.getLogger(HostedTestResource.class);
 
-    @Inject
-    private HostedTestDataStore datastore;
+    private final HostedTestDataStore datastore;
+    private final UniqueIdGenerator idGenerator;
+    private final ModelTranslator translator;
 
     @Inject
-    private UniqueIdGenerator idGenerator;
+    public HostedTestResource(HostedTestDataStore datastore, UniqueIdGenerator idGenerator,
+        ModelTranslator translator) {
+        this.datastore = Objects.requireNonNull(datastore);
+        this.idGenerator = Objects.requireNonNull(idGenerator);
+        this.translator = Objects.requireNonNull(translator);
+    }
 
     /**
      * API to check if resource is alive
@@ -104,8 +113,8 @@ public class HostedTestResource {
         log.debug("Creating {} children entities for subscription {}", (pmap.size() + cmap.size()),
             subscription.getId());
 
-        this.persistMappedProducts(pmap);
         this.persistMappedContent(cmap);
+        this.persistMappedProducts(pmap);
     }
 
     /**
@@ -232,7 +241,7 @@ public class HostedTestResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/owners")
-    public OwnerInfo createOwner(OwnerDTO owner) {
+    public OwnerDTO createOwner(OwnerDTO owner) {
         if (this.datastore.getOwner(owner.getKey()) != null) {
             throw new ConflictException("owner already exists: " + owner.getKey());
         }
@@ -240,7 +249,7 @@ public class HostedTestResource {
         // Create owner object...
         OwnerInfo ownerInfo = this.datastore.createOwner(InfoAdapter.ownerInfoAdapter(owner));
 
-        return ownerInfo;
+        return this.translator.translate(ownerInfo, OwnerDTO.class);
     }
 
     // TODO: Add remaining owner CRUD operations as needed
@@ -263,9 +272,9 @@ public class HostedTestResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/subscriptions")
-    public SubscriptionInfo createSubscription(
+    public SubscriptionDTO createSubscription(
         @QueryParam("create_children") @DefaultValue("false") boolean createChildren,
-        Subscription subscription) {
+        SubscriptionDTO subscription) {
 
         if (subscription == null) {
             throw new BadRequestException("no subscription data provided");
@@ -284,16 +293,17 @@ public class HostedTestResource {
             throw new ConflictException("subscription already exists: " + subscription.getId());
         }
 
+        SubscriptionInfo subscriptionToCreate = InfoAdapter.subscriptionInfoAdapter(subscription);
         // Create the subobjects first
         if (createChildren) {
-            log.debug("Persisting children received on subscription {}", subscription.getId());
-            this.createSubscriptionChildren(subscription);
+            log.debug("Persisting children received on subscription {}", subscriptionToCreate.getId());
+            this.createSubscriptionChildren(subscriptionToCreate);
         }
 
         // Create subscription object...
-        SubscriptionInfo sinfo = this.datastore.createSubscription(subscription);
+        SubscriptionInfo createdSubscription = this.datastore.createSubscription(subscriptionToCreate);
 
-        return sinfo;
+        return this.translator.translate(createdSubscription, SubscriptionDTO.class);
     }
 
     /**
@@ -305,8 +315,9 @@ public class HostedTestResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/subscriptions")
-    public Collection<? extends SubscriptionInfo> listSubscriptions() {
-        return this.datastore.listSubscriptions();
+    public Stream<SubscriptionDTO> listSubscriptions() {
+        return this.datastore.listSubscriptions().stream()
+            .map(this.translator.getStreamMapper(SubscriptionInfo.class, SubscriptionDTO.class));
     }
 
     /**
@@ -322,8 +333,14 @@ public class HostedTestResource {
     @GET
     @Path("/subscriptions/{subscription_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public SubscriptionInfo getSubscription(@PathParam("subscription_id") String subscriptionId) {
-        return this.datastore.getSubscription(subscriptionId);
+    public SubscriptionDTO getSubscription(@PathParam("subscription_id") String subscriptionId) {
+        SubscriptionInfo foundSubscription = this.datastore.getSubscription(subscriptionId);
+
+        if (foundSubscription == null) {
+            throw new NotFoundException("subscription does not exist: " + subscriptionId);
+        }
+
+        return this.translator.translate(foundSubscription, SubscriptionDTO.class);
     }
 
     /**
@@ -346,10 +363,10 @@ public class HostedTestResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/subscriptions/{subscription_id}")
-    public SubscriptionInfo updateSubscription(
+    public SubscriptionDTO updateSubscription(
         @PathParam("subscription_id") String subscriptionId,
         @QueryParam("create_children") @DefaultValue("false") boolean createChildren,
-        Subscription subscription) {
+        SubscriptionDTO subscription) {
 
         if (subscription == null) {
             throw new BadRequestException("no subscription data provided");
@@ -359,14 +376,17 @@ public class HostedTestResource {
             throw new NotFoundException("subscription does not yet exist: " + subscriptionId);
         }
 
+        SubscriptionInfo subscriptionToCreate = InfoAdapter.subscriptionInfoAdapter(subscription);
         // Create/Update sub objects, if necessary
         if (createChildren) {
             log.debug("Persisting children received on subscription {}", subscription.getId());
-            this.createSubscriptionChildren(subscription);
+            this.createSubscriptionChildren(subscriptionToCreate);
         }
 
         // Update subscription
-        return this.datastore.updateSubscription(subscriptionId, subscription);
+        SubscriptionInfo updatedSubscription = this.datastore
+            .updateSubscription(subscriptionId, subscriptionToCreate);
+        return this.translator.translate(updatedSubscription, SubscriptionDTO.class);
     }
 
     @DELETE
@@ -379,28 +399,29 @@ public class HostedTestResource {
     @GET
     @Path("/products")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<? extends ProductInfo> listProducts() {
-        return this.datastore.listProducts();
+    public Stream<ProductDTO> listProducts() {
+        return this.datastore.listProducts().stream()
+            .map(this.translator.getStreamMapper(ProductInfo.class, ProductDTO.class));
     }
 
     @GET
     @Path("/products/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ProductInfo getProduct(@PathParam("product_id") String productId) {
-        ProductInfo pinfo = this.datastore.getProduct(productId);
+    public ProductDTO getProduct(@PathParam("product_id") String productId) {
+        ProductInfo foundProduct = this.datastore.getProduct(productId);
 
-        if (pinfo == null) {
+        if (foundProduct == null) {
             throw new NotFoundException("product does not exist: " + productId);
         }
 
-        return pinfo;
+        return this.translator.translate(foundProduct, ProductDTO.class);
     }
 
     @POST
     @Path("/products")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public ProductInfo createProduct(
+    public ProductDTO createProduct(
         @QueryParam("create_children") @DefaultValue("false") boolean createChildren,
         ProductDTO product) {
 
@@ -421,14 +442,15 @@ public class HostedTestResource {
             this.createProductChildren(InfoAdapter.productInfoAdapter(product));
         }
 
-        return this.datastore.createProduct(InfoAdapter.productInfoAdapter(product));
+        ProductInfo createdProduct = this.datastore.createProduct(InfoAdapter.productInfoAdapter(product));
+        return this.translator.translate(createdProduct, ProductDTO.class);
     }
 
     @PUT
     @Path("/products/{product_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public ProductInfo updateProduct(
+    public ProductDTO updateProduct(
         @PathParam("product_id") String productId,
         @QueryParam("create_children") @DefaultValue("false") boolean createChildren,
         ProductDTO product) {
@@ -446,7 +468,9 @@ public class HostedTestResource {
             this.createProductChildren(InfoAdapter.productInfoAdapter(product));
         }
 
-        return this.datastore.updateProduct(productId, InfoAdapter.productInfoAdapter(product));
+        ProductInfo updatedProduct = this.datastore
+            .updateProduct(productId, InfoAdapter.productInfoAdapter(product));
+        return this.translator.translate(updatedProduct, ProductDTO.class);
     }
 
     @DELETE
@@ -460,28 +484,29 @@ public class HostedTestResource {
     @GET
     @Path("/content")
     @Produces(MediaType.APPLICATION_JSON)
-    public Collection<? extends ContentInfo> listContent() {
-        return this.datastore.listContent();
+    public Stream<ContentDTO> listContent() {
+        return this.datastore.listContent().stream()
+            .map(this.translator.getStreamMapper(ContentInfo.class, ContentDTO.class));
     }
 
     @GET
     @Path("/content/{content_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ContentInfo getContent(@PathParam("content_id") String contentId) {
-        ContentInfo cinfo = this.datastore.getContent(contentId);
+    public ContentDTO getContent(@PathParam("content_id") String contentId) {
+        ContentInfo foundContent = this.datastore.getContent(contentId);
 
-        if (cinfo == null) {
+        if (foundContent == null) {
             throw new NotFoundException("content does not exist: " + contentId);
         }
 
-        return cinfo;
+        return this.translator.translate(foundContent, ContentDTO.class);
     }
 
     @POST
     @Path("/content")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public ContentInfo createContent(ContentDTO content) {
+    public ContentDTO createContent(ContentDTO content) {
         if (content == null) {
             throw new BadRequestException("content is null");
         }
@@ -494,14 +519,15 @@ public class HostedTestResource {
             throw new ConflictException("content already exists: " + content.getId());
         }
 
-        return this.datastore.createContent(InfoAdapter.contentInfoAdapter(content));
+        ContentInfo createdContent = this.datastore.createContent(InfoAdapter.contentInfoAdapter(content));
+        return this.translator.translate(createdContent, ContentDTO.class);
     }
 
     @PUT
     @Path("/content/{content_id}")
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    public ContentInfo updateContent(
+    public ContentDTO updateContent(
         @PathParam("content_id") String contentId,
         ContentDTO content) {
 
@@ -513,7 +539,9 @@ public class HostedTestResource {
             throw new NotFoundException("content does not yet exist: " + contentId);
         }
 
-        return this.datastore.updateContent(contentId, InfoAdapter.contentInfoAdapter(content));
+        ContentInfo updatedContent = this.datastore
+            .updateContent(contentId, InfoAdapter.contentInfoAdapter(content));
+        return this.translator.translate(updatedContent, ContentDTO.class);
     }
 
     @DELETE
@@ -527,7 +555,7 @@ public class HostedTestResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/products/{product_id}/content")
-    public ProductInfo addContentToProduct(
+    public ProductDTO addContentToProduct(
         @PathParam("product_id") String productId,
         Map<String, Boolean> contentMap) {
 
@@ -553,14 +581,15 @@ public class HostedTestResource {
             this.datastore.addContentToProduct(productId, contentId, enabled);
         }
 
-        return pinfo;
+        ProductInfo updatedProduct = this.datastore.getProduct(productId);
+        return this.translator.translate(updatedProduct, ProductDTO.class);
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.WILDCARD)
     @Path("/products/{product_id}/content/{content_id}")
-    public ProductInfo addContentToProduct(
+    public ProductDTO addContentToProduct(
         @PathParam("product_id") String productId,
         @PathParam("content_id") String contentId,
         @QueryParam("enabled") Boolean enabled) {
@@ -574,7 +603,7 @@ public class HostedTestResource {
     @Path("/products/{product_id}/content")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public ProductInfo removeContentFromProduct(@PathParam("product_id") String productId,
+    public ProductDTO removeContentFromProduct(@PathParam("product_id") String productId,
         Collection<String> contentIds) {
 
         if (this.datastore.getProduct(productId) == null) {
@@ -587,15 +616,16 @@ public class HostedTestResource {
             }
         }
 
-        return this.datastore.getProduct(productId);
+        ProductInfo updatedProduct = this.datastore.getProduct(productId);
+        return this.translator.translate(updatedProduct, ProductDTO.class);
     }
 
     @DELETE
     @Path("/products/{product_id}/content/{content_id}")
     @Produces(MediaType.APPLICATION_JSON)
-    public ProductInfo removeContentFromProduct(@PathParam("product_id") String productId,
+    public ProductDTO removeContentFromProduct(@PathParam("product_id") String productId,
         @PathParam("content_id") String contentId) {
 
-        return this.removeContentFromProduct(productId, Collections.<String>singletonList(contentId));
+        return this.removeContentFromProduct(productId, Collections.singletonList(contentId));
     }
 }

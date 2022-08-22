@@ -52,7 +52,6 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -304,8 +303,6 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should let only superadmin users refresh pools")
-    // fixme once we have means of calling the hosted test resource
-    @Disabled
     void onlySuperAdminCanRefresh() throws ApiException {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO readOnlyUser = UserUtil.createReadOnlyUser(admin, owner);
@@ -314,9 +311,6 @@ class OwnerResourceSpecTest {
         ApiClient readOnlyClient = ApiClients.trustedUser(readOnlyUser.getUsername());
         ApiClient readWriteClient = ApiClients.trustedUser(readWriteUser.getUsername());
         ApiClient adminClient = ApiClients.trustedUser(adminUser.getUsername());
-
-        ProductDTO product = createProduct(owner);
-        owners.createPool(owner.getKey(), Pools.random(product));
 
         assertForbidden(() -> readOnlyClient.owners().refreshPools(owner.getKey(), false));
         assertForbidden(() -> readWriteClient.owners().refreshPools(owner.getKey(), false));

@@ -1,6 +1,7 @@
 plugins {
     id "org.openapi.generator"
     id "java-library"
+    id "java"
 }
 apply from: "../dependencies.gradle"
 
@@ -21,7 +22,10 @@ dependencies {
     implementation libraries["javaxRs"]
 }
 
-sourceSets.main.java.srcDirs = ["${buildDir}/generated/src/main/java"]
+sourceSets.main.java.srcDirs = [
+        "src/main/java",
+        "${buildDir}/generated/src/main/java"
+]
 compileJava.dependsOn tasks.openApiGenerate
 
 openApiGenerate {

@@ -23,6 +23,7 @@ import org.candlepin.resource.ContentApi;
 import org.candlepin.resource.DeletedConsumerApi;
 import org.candlepin.resource.EntitlementsApi;
 import org.candlepin.resource.EnvironmentApi;
+import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.OwnerContentApi;
 import org.candlepin.resource.OwnerProductApi;
 import org.candlepin.resource.PoolsApi;
@@ -88,12 +89,20 @@ public class ApiClient {
         return new EnvironmentApi(this.client);
     }
 
+    public HostedTestApi hosted() {
+        return new HostedTestApi(this.client);
+    }
+
     public JobsClient jobs() {
         return new JobsClient(this.client);
     }
 
     public OwnerClient owners() {
         return new OwnerClient(this.client);
+    }
+
+    public OwnerContentApi ownerContent() {
+        return new OwnerContentApi(this.client);
     }
 
     public OwnerProductApi ownerProducts() {
@@ -126,10 +135,6 @@ public class ApiClient {
 
     public UsersApi users() {
         return new UsersApi(this.client);
-    }
-
-    public OwnerContentApi ownerContent() {
-        return new OwnerContentApi(this.client);
     }
 
 }
