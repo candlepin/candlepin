@@ -1477,10 +1477,12 @@ paths:
         - name: attribute
           in: query
           description: Attribute filters
+          required: false
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/KeyValueParamDTO'
+              type: string
+              format: key:value
       responses:
         200:
           description: A list of entitlements
@@ -3282,11 +3284,13 @@ paths:
             type: string
         - name: attribute
           in: query
+          description: Attribute filters
           required: false
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/KeyValueParamDTO'
+              type: string
+              format: key:value
       security: []
       responses:
         200:
@@ -4969,11 +4973,13 @@ paths:
             type: string
         - name: attribute
           in: query
-          description: The pair of attribute values
+          description: Attribute filters
+          required: false
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/KeyValueParamDTO'
+              type: string
+              format: key:value
       security: []
       responses:
         200:

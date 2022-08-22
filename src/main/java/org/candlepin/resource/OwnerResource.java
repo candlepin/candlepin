@@ -939,7 +939,7 @@ public class OwnerResource implements OwnerApi {
 
     @Override
     public List<EntitlementDTO> ownerEntitlements(
-        @Verify(Owner.class) String ownerKey, String productId, List<KeyValueParamDTO> attrFilters) {
+        @Verify(Owner.class) String ownerKey, String productId, List<String> attrFilters) {
 
         Owner owner = findOwnerByKey(ownerKey);
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);

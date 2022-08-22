@@ -57,10 +57,16 @@ public class ConsumerClient extends ConsumerApi {
         return super.createConsumer(consumer, null, consumer.getOwner().getKey(), null, true);
     }
 
-    public JsonNode bind(String consumerUuid, String poolId, Integer quantity)
+    public JsonNode bindPool(String consumerUuid, String poolId, Integer quantity)
         throws ApiException, JsonProcessingException {
-        return new ObjectMapper().readTree(super.bind(consumerUuid, poolId, new ArrayList<>(), quantity, "",
+        return mapper.readTree(super.bind(consumerUuid, poolId, null, quantity, "",
             "", false, "", new ArrayList<>()));
+    }
+
+    public JsonNode bindProduct(String consumerUuid, String productId)
+        throws ApiException, JsonProcessingException {
+        return mapper.readTree(super.bind(consumerUuid, null, List.of(productId), null,
+            "", "", false, "", new ArrayList<>()));
     }
 
     public List<JsonNode> exportCertificates(String consumerUuid, String serials) throws ApiException {

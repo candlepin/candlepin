@@ -2484,7 +2484,7 @@ public class ConsumerResource implements ConsumerApi {
 
     @Override
     public List<EntitlementDTO> listEntitlements(@Verify(Consumer.class) String consumerUuid,
-        String productId, Boolean regen, List<KeyValueParamDTO> attrFilters) {
+        String productId, Boolean regen, List<String> attrFilters) {
 
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
