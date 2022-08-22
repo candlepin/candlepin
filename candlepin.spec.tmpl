@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.4
+Version: 4.2.5
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,77 @@ fi
 
 #raw
 %changelog
+* Mon Aug 22 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.5-1
+- Bump dependency-check-gradle from 7.1.1 to 7.1.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Remove /serials endpoint (wpoteat@redhat.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- 2118759: Leave manifest consumer identity certificate (wpoteat@redhat.com)
+- Added same-ID entity version collision resolution (crog@redhat.com)
+- checkstyle issue (wpoteat@redhat.com)
+- Use random without nano to follow field length constraints
+  (wpoteat@redhat.com)
+- Update pool creation for Jenkins (wpoteat@redhat.com)
+- 2110031: add config for enabling/disabling the DB check on startup
+  (wpoteat@redhat.com)
+- Bump mockito-junit-jupiter from 4.6.1 to 4.7.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Convert huffman decoding to java (wpoteat@redhat.com)
+- Use formatter instead of toString for date field (wpoteat@redhat.com)
+- Removed setting encoding on FileConfiguration implementation
+  (crog@redhat.com)
+- Bump postgresql from 42.4.0 to 42.4.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Archiving artifacts for unit and spec tests (jmolet@redhat.com)
+- Restored the --force flag to the Vagrantfile's ansible-galaxy command
+  (crog@redhat.com)
+- Fixed cp-test artifact collection and spec test filtering (crog@redhat.com)
+- Bump mariadb-java-client from 3.0.6 to 3.0.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Bump postgresql from 42.4.0 to 42.4.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis-stomp-protocol from 2.23.1 to 2.24.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Update builder methods (wpoteat@redhat.com)
+- Bump artemis-server from 2.23.1 to 2.24.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Fix long-running job spec test (nmoumoul@redhat.com)
+- 2110036: log missing changesets if startup DB check fails
+  (wpoteat@redhat.com)
+- Break up resources classes into smaller one (sbakaj@redhat.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- Bump gson from 2.9.0 to 2.9.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Convert job_schedule_spec and job_status_spec to java spec
+  (wpoteat@redhat.com)
+- 2112883: Add back the collected field to certs in manifest
+  (nmoumoul@redhat.com)
+- Updated Vagrant configuration to support upcoming Ansible changes
+  (crog@redhat.com)
+- Added spec-test naming standards documentation (joshmalbrecht@gmail.com)
+- Bump keycloak-servlet-filter-adapter from 19.0.0 to 19.0.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Migrated content_resource_spec to java (joshmalbrecht@gmail.com)
+- 2110028: Addressed failure with liquibase changeset - Updated
+  add_delete_cascade_to_consumer_fks.xml to check if   fks exist before trying
+  to remove with individual change sets. (joshmalbrecht@gmail.com)
+- Bump hsqldb from 2.6.1 to 2.7.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Upgrade junit libs to 5.9.0 (nmoumoul@redhat.com)
+- Bump keycloak-servlet-filter-adapter from 18.0.2 to 19.0.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump junit-jupiter from 5.8.2 to 5.9.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Ported some pool resource spec tests to Java (crog@redhat.com)
+- ENT-4809: Enable bean validation. (sbakaj@redhat.com)
+- Improve spec test logging (ojanus@redhat.com)
+- ENT-4612: Migrate owner_resource_spec to Java (Part 1) (ojanus@redhat.com)
+- Bump tzinfo from 1.2.3 to 1.2.10
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Removed length requirement on cloud registration signature (crog@redhat.com)
+
 * Mon Jul 18 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.4-1
 - Migrate product_resource_spec to java - Moved the product_resource_spec.rb to
   ProductResourceSpecTest.java - Removed product_resource_spec.rb - Updated GET
