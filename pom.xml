@@ -431,6 +431,7 @@
                 <interfaceOnly>true</interfaceOnly>
                 <generatePom>false</generatePom>
                 <dateLibrary>java8</dateLibrary>
+                <useTags>true</useTags>
                 <sourceFolder>src/gen/java/main</sourceFolder>
               </configOptions>
               <templateDirectory>${project.basedir}/buildSrc/src/main/resources/templates</templateDirectory>
