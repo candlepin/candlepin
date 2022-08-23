@@ -12,7 +12,6 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.spec.bootstrap.client;
 
 import org.candlepin.resource.ActivationKeyApi;
@@ -47,7 +46,7 @@ import java.util.Objects;
  */
 public class ApiClient {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper()
+    public static final ObjectMapper MAPPER = new ObjectMapper()
         .registerModule(new Jdk8Module())
         .registerModule(new JavaTimeModule());
 
@@ -55,6 +54,10 @@ public class ApiClient {
 
     public ApiClient(org.candlepin.ApiClient client) {
         this.client = Objects.requireNonNull(client);
+    }
+
+    public org.candlepin.ApiClient getApiClient() {
+        return this.client;
     }
 
     public ActivationKeyApi activationKeys() {
