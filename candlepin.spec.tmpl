@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.5
+Version: 4.2.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,11 @@ fi
 
 #raw
 %changelog
+* Tue Aug 23 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.6-1
+- Set the OpenApi 'useTags' property in pom.xml (nmoumoul@redhat.com)
+- ENT-5256: Create client for HostedTestResource (ojanus@redhat.com)
+- Convert entitlement_resource_spec test to Java (wpoteat@redhat.com)
+
 * Mon Aug 22 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.5-1
 - Bump dependency-check-gradle from 7.1.1 to 7.1.2
   (49699333+dependabot[bot]@users.noreply.github.com)
