@@ -168,6 +168,7 @@ class PomToolkit implements Plugin<Project> {
         configOptions.appendNode('interfaceOnly', 'true')
         configOptions.appendNode('generatePom', 'false')
         configOptions.appendNode('dateLibrary', 'java8')
+        configOptions.appendNode('useTags', 'true')
         configOptions.appendNode('sourceFolder', 'src/gen/java/main')
         configurationsNode.appendNode('templateDirectory', '${project.basedir}/buildSrc/src/main/resources/templates')
     }
