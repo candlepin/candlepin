@@ -939,8 +939,10 @@ public class OwnerResource implements OwnerApi {
 
     @Override
     public List<EntitlementDTO> ownerEntitlements(
-        @Verify(Owner.class) String ownerKey, String productId, List<String> attrFilters) {
-
+        @Verify(Owner.class) String ownerKey,
+        String productId,
+        List<String> attrFilters,
+        Integer page, Integer perPage, String order, String sortBy) {
         Owner owner = findOwnerByKey(ownerKey);
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
 
@@ -1096,8 +1098,8 @@ public class OwnerResource implements OwnerApi {
         Set<String> typeLabels,
         @Verify(value = Consumer.class, nullable = true) List<String> uuids,
         List<String> hypervisorIds,
-        List<KeyValueParamDTO> facts) {
-
+        List<KeyValueParamDTO> facts,
+        Integer page, Integer perPage, String order, String sortBy) {
         Owner owner = findOwnerByKey(ownerKey);
         List<ConsumerType> types = this.consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
 
@@ -1120,8 +1122,8 @@ public class OwnerResource implements OwnerApi {
         // Do paging bits, if necessary
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
         if (pageRequest != null) {
-            Page<Stream<ConsumerDTOArrayElement>> page = new Page<>();
-            page.setPageRequest(pageRequest);
+            Page<Stream<ConsumerDTOArrayElement>> pageResponse = new Page<>();
+            pageResponse.setPageRequest(pageRequest);
 
             if (pageRequest.isPaging()) {
                 queryArgs.setOffset((pageRequest.getPage() - 1) * pageRequest.getPerPage())
@@ -1133,10 +1135,10 @@ public class OwnerResource implements OwnerApi {
                 queryArgs.addOrder(pageRequest.getSortBy(), reverse);
             }
 
-            page.setMaxRecords((int) count);
+            pageResponse.setMaxRecords((int) count);
 
             // Store the page for the LinkHeaderResponseFilter
-            ResteasyContext.pushContext(Page.class, page);
+            ResteasyContext.pushContext(Page.class, pageResponse);
         }
         // If no paging was specified, force a limit on amount of results
         else {

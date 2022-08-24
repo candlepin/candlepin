@@ -43,11 +43,9 @@ class SslAuthSpecTest {
         ApiClient client = ApiClients.admin();
         OwnerDTO owner = client.owners().createOwner(Owners.random());
         ConsumerDTO consumer = client.consumers().register(Consumers.random(owner));
-        CertificateDTO idCert = consumer.getIdCert();
-        ApiClient sslClient = ApiClients.ssl(idCert);
+        ApiClient sslClient = ApiClients.ssl(consumer);
 
-        List<EntitlementDTO> entitlements = sslClient.consumers()
-            .listEntitlements(consumer.getUuid(), null, false, null);
+        List<EntitlementDTO> entitlements = sslClient.consumers().listEntitlements(consumer.getUuid());
 
         assertThat(entitlements).isNotNull();
     }
@@ -64,8 +62,7 @@ class SslAuthSpecTest {
         assertThat(certs).hasSize(1);
 
         ApiClient scaClient = ApiClients.ssl(cleanCert(certs.get(0)));
-        assertUnauthorized(() -> scaClient.consumers()
-            .listEntitlements(consumer.getUuid(), null, false, null));
+        assertUnauthorized(() -> scaClient.consumers().listEntitlements(consumer.getUuid()));
     }
 
     // Removes entitlement section of certificate so that it is usable for ssl auth

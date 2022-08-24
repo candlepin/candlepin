@@ -321,7 +321,8 @@ public class EntitlementResourceTest {
         when(modelTranslator.translate(isA(Entitlement.class),
                 eq(EntitlementDTO.class))).thenReturn(entitlementDTO);
 
-        List<EntitlementDTO> result = entResource.listAllForConsumer(null, null, null);
+        List<EntitlementDTO> result = entResource
+            .listAllForConsumer(null, null, null, null, null, null, null);
 
         assertEquals(1, result.size());
         assertEquals("getEntitlementList", result.get(0).getId());
@@ -350,7 +351,7 @@ public class EntitlementResourceTest {
             eq(EntitlementDTO.class))).thenReturn(entitlementDTO);
 
         List<EntitlementDTO> result = entResource
-            .listAllForConsumer(consumer.getUuid(), null, null);
+            .listAllForConsumer(consumer.getUuid(), null, null, null, null, null, null);
 
         assertEquals(1, result.size());
         assertEquals("getAllEntitlementsForConsumer", result.get(0).getId());

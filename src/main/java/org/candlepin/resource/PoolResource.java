@@ -90,9 +90,13 @@ public class PoolResource implements PoolsApi {
     @Override
     @Deprecated
     @SecurityHole
-    public List<PoolDTO> listPools(String ownerId, String consumerUuid, String productId,
-        Boolean listAll, String activeOn) {
-
+    public List<PoolDTO> listPools(
+        String ownerId,
+        String consumerUuid,
+        String productId,
+        Boolean listAll,
+        String activeOn,
+        Integer page, Integer perPage, String order, String sortBy) {
         Principal principal = this.principalProvider.get();
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
 
@@ -148,16 +152,16 @@ public class PoolResource implements PoolsApi {
                 principal.getPrincipalName()));
         }
 
-        Page<List<Pool>> page = poolManager.listAvailableEntitlementPools(c, null, oId,
+        Page<List<Pool>> pageResponse = poolManager.listAvailableEntitlementPools(c, null, oId,
             productId, null, activeOnDate, listAll.booleanValue(), new PoolFilterBuilder(), pageRequest,
             false, false, null);
-        List<Pool> poolList = page.getPageData();
+        List<Pool> poolList = pageResponse.getPageData();
 
         calculatedAttributesUtil.setCalculatedAttributes(poolList, activeOnDate);
         calculatedAttributesUtil.setQuantityAttributes(poolList, c, activeOnDate);
 
         // Store the page for the LinkHeaderResponseFilter
-        ResteasyContext.pushContext(Page.class, page);
+        ResteasyContext.pushContext(Page.class, pageResponse);
 
         List<PoolDTO> poolDTOs = new ArrayList<>();
         for (Pool pool : poolList) {

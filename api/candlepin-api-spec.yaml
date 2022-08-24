@@ -655,6 +655,10 @@ paths:
             type: array
             items:
               $ref: '#/components/schemas/KeyValueParamDTO'
+        - $ref: "#/components/parameters/paging_page"
+        - $ref: "#/components/parameters/paging_per_page"
+        - $ref: "#/components/parameters/paging_order"
+        - $ref: "#/components/parameters/paging_sort_by"
       responses:
         200:
           description: List of consumers
@@ -1483,6 +1487,10 @@ paths:
             items:
               type: string
               format: key:value
+        - $ref: "#/components/parameters/paging_page"
+        - $ref: "#/components/parameters/paging_per_page"
+        - $ref: "#/components/parameters/paging_order"
+        - $ref: "#/components/parameters/paging_sort_by"
       responses:
         200:
           description: A list of entitlements
@@ -3291,6 +3299,10 @@ paths:
             items:
               type: string
               format: key:value
+        - $ref: "#/components/parameters/paging_page"
+        - $ref: "#/components/parameters/paging_per_page"
+        - $ref: "#/components/parameters/paging_order"
+        - $ref: "#/components/parameters/paging_sort_by"
       security: []
       responses:
         200:
@@ -3814,30 +3826,11 @@ paths:
             type: string
             format: date-time
           description: Filter jobs to those on or before this date
-        - in: query
-          name: page
-          description: Number of a page to return
-          schema:
-            type: integer
-            example: 2
-        - in: query
-          name: per_page
-          description: Number of items to return per page
-          schema:
-            type: integer
-            example: 10
-        - in: query
-          name: order
-          description: Direction of ordering
-          schema:
-            type: string
-            example: name
-        - in: query
-          name: sort_by
-          description: Property to use for ordering
-          schema:
-            type: string
-            example: asc
+        - $ref: "#/components/parameters/paging_page"
+        - $ref: "#/components/parameters/paging_per_page"
+        - $ref: "#/components/parameters/paging_order"
+        - $ref: "#/components/parameters/paging_sort_by"
+
       x-java-response:
         type: java.util.stream.Stream
         isContainer: true
@@ -4775,6 +4768,10 @@ paths:
             type: array
             items:
               $ref: '#/components/schemas/KeyValueParamDTO'
+        - $ref: "#/components/parameters/paging_page"
+        - $ref: "#/components/parameters/paging_per_page"
+        - $ref: "#/components/parameters/paging_order"
+        - $ref: "#/components/parameters/paging_sort_by"
       security: []
       responses:
         200:
@@ -4980,6 +4977,10 @@ paths:
             items:
               type: string
               format: key:value
+        - $ref: "#/components/parameters/paging_page"
+        - $ref: "#/components/parameters/paging_per_page"
+        - $ref: "#/components/parameters/paging_order"
+        - $ref: "#/components/parameters/paging_sort_by"
       security: []
       responses:
         200:
@@ -5642,30 +5643,11 @@ paths:
             type: array
             items:
               type: string
-        - name: page
-          in: query
-          description: Number of a page to return
-          schema:
-            type: integer
-            example: 2
-        - name: per_page
-          in: query
-          description: Number of items to return per page
-          schema:
-            type: integer
-            example: 10
-        - name: sort_by
-          in: query
-          description: Property to use for ordering
-          schema:
-            type: string
-            example: name
-        - name: order
-          in: query
-          description: Direction of ordering
-          schema:
-            type: string
-            example: asc
+        - $ref: "#/components/parameters/paging_page"
+        - $ref: "#/components/parameters/paging_per_page"
+        - $ref: "#/components/parameters/paging_order"
+        - $ref: "#/components/parameters/paging_sort_by"
+
       security: []
       responses:
         200:
@@ -6875,6 +6857,10 @@ paths:
           required: false
           schema:
             type: string
+        - $ref: "#/components/parameters/paging_page"
+        - $ref: "#/components/parameters/paging_per_page"
+        - $ref: "#/components/parameters/paging_order"
+        - $ref: "#/components/parameters/paging_sort_by"
       security: []
       responses:
         200:
@@ -9680,3 +9666,33 @@ components:
     basicAuth:
       type: http
       scheme: basic
+
+  parameters:
+    paging_page:
+      name: page
+      description: Page index to return
+      in: query
+      schema:
+        type: integer
+        example: 2
+    paging_per_page:
+      name: per_page
+      description: Number of items to return per page
+      in: query
+      schema:
+        type: integer
+        example: 10
+    paging_order:
+      name: order
+      description: Direction of ordering
+      in: query
+      schema:
+        type: string
+        example: asc
+    paging_sort_by:
+      name: sort_by
+      description: Property to use for ordering
+      in: query
+      schema:
+        type: string
+        example: name
