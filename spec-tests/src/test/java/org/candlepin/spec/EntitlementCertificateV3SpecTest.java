@@ -192,7 +192,7 @@ public class EntitlementCertificateV3SpecTest {
             .name(StringUtil.random("system"))
             .type(new ConsumerTypeDTO().label("system"))
             .facts(Map.of("system.certificate_version", "3.4", "uname.machine", "i386"));
-        system = consumerApi.register(system);
+        system = consumerApi.createConsumer(system);
     }
 
     /**
@@ -225,7 +225,7 @@ public class EntitlementCertificateV3SpecTest {
             client.jobs().waitForJob(refresh.getId());
         }
 
-        ConsumerDTO v3System = consumerApi.register(Consumers.random(owner, ConsumerTypes.System)
+        ConsumerDTO v3System = consumerApi.createConsumer(Consumers.random(owner, ConsumerTypes.System)
             .facts(Map.of("system.certificate_version", "3.0", "uname.machine", "i386")));
         ApiClient v3SystemClient = ApiClients.trustedConsumer(v3System.getUuid());
         v3SystemClient.consumers().bindProduct(v3System.getUuid(), product30.getId());
@@ -266,7 +266,7 @@ public class EntitlementCertificateV3SpecTest {
             .orderNumber("order2");
         pool30 = ownerApi.createPool(owner.getKey(), pool30);
 
-        ConsumerDTO v3System = consumerApi.register(Consumers.random(owner, ConsumerTypes.System)
+        ConsumerDTO v3System = consumerApi.createConsumer(Consumers.random(owner, ConsumerTypes.System)
             .facts(Map.of("system.certificate_version", "3.0", "uname.machine", "i386")));
         ApiClient v3SystemClient = ApiClients.trustedConsumer(v3System.getUuid());
         v3SystemClient.consumers().bindProduct(v3System.getUuid(), product30.getId());
@@ -310,7 +310,7 @@ public class EntitlementCertificateV3SpecTest {
             .name(StringUtil.random("v3_system"))
             .type(ConsumerTypes.Candlepin.value())
             .facts(Map.of("distributor_version", distName));
-        distributor = consumerApi.register(distributor);
+        distributor = consumerApi.createConsumer(distributor);
         ApiClient consumerClient = ApiClients.trustedConsumer(distributor.getUuid());
         consumerApi = consumerClient.consumers();
         consumerApi.bindProduct(distributor.getUuid(), product30.getId());

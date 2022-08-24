@@ -26,6 +26,7 @@ dependencies {
     implementation libraries["assertj"]
     implementation libraries["commonsCodec"]
     implementation libraries["guava"]
+    implementation libraries["gson"]
 
     testImplementation libraries["jimfs"]
 

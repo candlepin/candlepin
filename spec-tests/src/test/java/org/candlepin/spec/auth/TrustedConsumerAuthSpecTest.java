@@ -57,7 +57,7 @@ class TrustedConsumerAuthSpecTest {
     @Test
     @DisplayName("deleted consumers should be rejected")
     void deletedConsumerShouldFail() throws ApiException {
-        ConsumerDTO consumer = client.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
         client.consumers().deleteConsumer(consumer.getUuid());
         OwnerApi consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).owners();
 
@@ -67,7 +67,7 @@ class TrustedConsumerAuthSpecTest {
     @Test
     @DisplayName("should pass for existing consumers")
     void existingConsumerShouldPass() throws ApiException {
-        ConsumerDTO consumer = client.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
         ConsumerApi consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).consumers();
 
         ConsumerDTO foundConsumer = consumerClient.getConsumer(consumer.getUuid());

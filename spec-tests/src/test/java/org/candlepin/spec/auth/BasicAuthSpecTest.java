@@ -61,7 +61,7 @@ class BasicAuthSpecTest {
         UserDTO user = UserUtil.createUser(admin, owner);
         ApiClient client = ApiClients.basic(user.getUsername(), user.getPassword());
 
-        ConsumerDTO consumer = client.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
 
         assertThat(consumer).isNotNull();
     }

@@ -82,7 +82,7 @@ class OwnerContentSpecTest {
     }
 
     private ApiClient createConsumerClient(ApiClient adminClient, OwnerDTO owner) throws ApiException {
-        ConsumerDTO consumer = adminClient.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         return ApiClients.ssl(consumer.getIdCert());
     }
 
@@ -717,7 +717,7 @@ class OwnerContentSpecTest {
         assertNotNull(pool);
 
         // Create a consumer and consume it
-        ConsumerDTO consumer = adminClient.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer.getIdCert());
 
         String output = consumerClient.consumers()

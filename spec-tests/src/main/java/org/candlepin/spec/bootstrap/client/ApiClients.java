@@ -56,6 +56,10 @@ public final class ApiClients {
         return new ApiClient(CLIENT_FACTORY.createTrustedUserClient(username, lookupPermissions));
     }
 
+    public static ApiClient cloudAuthUser(String token) {
+        return new ApiClient(CLIENT_FACTORY.createCloudAuthClient(token));
+    }
+
     public static ApiClient ssl(CertificateDTO cert) {
         String certificate = cert.getCert() + cert.getKey();
         return new ApiClient(CLIENT_FACTORY.createSslClient(certificate));

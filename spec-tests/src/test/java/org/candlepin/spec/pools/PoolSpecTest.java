@@ -79,7 +79,7 @@ class PoolSpecTest {
         consumer.putFactsItem("system.certificate_version", "3.3");
 
         return client.consumers()
-            .register(consumer);
+            .createConsumer(consumer);
     }
 
     private ProductDTO createProduct(ApiClient client, OwnerDTO owner) throws ApiException {

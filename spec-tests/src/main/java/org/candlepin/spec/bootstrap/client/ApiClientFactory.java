@@ -80,6 +80,13 @@ public class ApiClientFactory {
         return apiClient;
     }
 
+    public ApiClient createCloudAuthClient(String token) {
+        ApiClient apiClient = createDefaultClient();
+        apiClient.setHttpClient(createOkHttpClient(new CloudAuthInterceptor(token)));
+
+        return apiClient;
+    }
+
     public ApiClient createActivationKeyClient(String owner, String activationKeys) {
         ApiClient apiClient = createDefaultClient();
         apiClient.setHttpClient(createOkHttpClient(new ActivationKeyInterceptor(owner, activationKeys)));
@@ -108,6 +115,7 @@ public class ApiClientFactory {
 
         return createClient(username, password);
     }
+
 
     public ApiClient createClient(String username, String password) {
         ApiClient apiClient = createDefaultClient();
@@ -295,6 +303,25 @@ public class ApiClientFactory {
         public Response intercept(Chain chain) throws IOException {
             Request request = chain.request().newBuilder()
                 .header("Authorization", credentials)
+                .build();
+            return chain.proceed(request);
+        }
+
+    }
+
+    public static class CloudAuthInterceptor implements Interceptor {
+
+        private final String token;
+
+        public CloudAuthInterceptor(String token) {
+            this.token = token;
+        }
+
+        @NotNull
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            Request request = chain.request().newBuilder()
+                .header("Authorization", "Bearer ".concat(token))
                 .build();
             return chain.proceed(request);
         }
