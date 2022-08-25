@@ -43,7 +43,7 @@ public final class Consumers {
     private static ConsumerDTO random(NestedOwnerDTO owner) {
         // TODO: fill in rest of the data
         return new ConsumerDTO()
-            .name(StringUtil.random("test_consumer"))
+            .name(StringUtil.random("test_consumer-", 8, StringUtil.CHARSET_NUMERIC_HEX))
             .owner(owner)
             .type(ConsumerTypes.System.value())
             .putFactsItem("system.certificate_version", "3.3");

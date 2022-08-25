@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.within;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.ApiException;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
@@ -60,6 +61,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+// TODO: FIXME: Several tests are named in ways that don't match convention, don't match the display
+// name to the method name, or don't match with the test logic itself.
 
 @SpecTest
 class OwnerResourceSpecTest {
@@ -294,7 +298,8 @@ class OwnerResourceSpecTest {
         String ownerKey = StringUtil.random("owner");
 
         AsyncJobStatusDTO refreshJob = owners.refreshPools(ownerKey, true);
-        admin.jobs().waitForJobToComplete(refreshJob.getId(), 10);
+        refreshJob = admin.jobs().waitForJob(refreshJob);
+        assertEquals("FINISHED", refreshJob.getState());
 
         OwnerDTO createdOwner = owners.getOwner(ownerKey);
         assertThat(createdOwner.getLastRefreshed())
@@ -571,13 +576,16 @@ class OwnerResourceSpecTest {
         consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
 
         AsyncJobStatusDTO healJob1 = userClient.owners().healEntire(owner.getKey());
-        userClient.jobs().waitForJobToComplete(healJob1.getId(), 30);
+        healJob1 = userClient.jobs().waitForJob(healJob1);
+        assertEquals("FINISHED", healJob1.getState());
+
         ConsumerDTO updatedConsumer = admin.consumers().getConsumer(consumer.getUuid());
         assertThat(updatedConsumer.getEntitlementCount()).isEqualTo(1);
 
         owners.createPool(owner.getKey(), Pools.random(product));
         AsyncJobStatusDTO healJob2 = userClient.owners().healEntire(owner.getKey());
-        userClient.jobs().waitForJobToComplete(healJob2.getId(), 30);
+        healJob2 = userClient.jobs().waitForJob(healJob2);
+        assertEquals("FINISHED", healJob2.getState());
 
         ConsumerDTO updatedConsumer2 = admin.consumers().getConsumer(consumer.getUuid());
         assertThat(updatedConsumer2.getEntitlementCount()).isEqualTo(1);

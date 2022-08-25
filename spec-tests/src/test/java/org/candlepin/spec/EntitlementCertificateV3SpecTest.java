@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.ApiException;
-import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.AttributeDTO;
 import org.candlepin.dto.api.v1.ConsumerDTO;
 import org.candlepin.dto.api.v1.ContentDTO;
@@ -108,10 +107,6 @@ public class EntitlementCertificateV3SpecTest {
         pool.setProductName(product.getName());
         pool = ownerApi.createPool(owner.getKey(), pool);
 
-        AsyncJobStatusDTO refresh = ownerApi.refreshPools(owner.getKey(), false);
-        if (refresh != null) {
-            client.jobs().waitForJobToComplete(refresh.getId(), 15000);
-        }
         ConsumerDTO consumer = client.consumers().register(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
         consumerApi = consumerClient.consumers();

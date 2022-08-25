@@ -37,13 +37,13 @@ public final class Roles {
     }
 
     private static RoleDTO createRole(OwnerDTO owner, String access) {
-        List<PermissionBlueprintDTO> permissions = List.of(new PermissionBlueprintDTO()
+        PermissionBlueprintDTO ownerPermission = new PermissionBlueprintDTO()
             .owner(Owners.toNested(owner))
             .type("OWNER")
-            .access(access)
-        );
+            .access(access);
+
         return new RoleDTO()
-            .name(StringUtil.random("test-role"))
-            .permissions(permissions);
+            .name(StringUtil.random("test-role-", 8, StringUtil.CHARSET_NUMERIC_HEX))
+            .permissions(List.of(ownerPermission));
     }
 }

@@ -72,7 +72,9 @@ public class JobScheduleSpecTest {
     public void shouldScheduleCronTasksCaseIndependant() throws Exception {
         AsyncJobStatusDTO jobStatus = client.jobs().scheduleJob("ExpiredPoolsCleanupJob");
         assertEquals("CREATED", jobStatus.getState());
-        jobsClient.waitForJobToComplete(jobStatus.getId(), 15000);
+
+        jobStatus = jobsClient.waitForJob(jobStatus);
+        assertEquals("FINISHED", jobStatus.getState());
     }
 
     @Test
@@ -95,7 +97,8 @@ public class JobScheduleSpecTest {
         assertNotNull(poolsApi.getPool(pool.getId(), null, null));
 
         AsyncJobStatusDTO jobStatus = client.jobs().scheduleJob("ExpiredPoolsCleanupJob");
-        jobsClient.waitForJobToComplete(jobStatus.getId(), 15000);
+        jobStatus = jobsClient.waitForJob(jobStatus.getId());
+        assertEquals("FINISHED", jobStatus.getState());
 
         final String poolId = pool.getId();
         assertNotFound(() -> poolsApi.getPool(poolId, null, null));

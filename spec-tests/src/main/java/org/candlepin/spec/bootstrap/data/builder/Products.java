@@ -43,7 +43,7 @@ public final class Products {
      *  a product DTO with a randomly generated SKU ID and name
      */
     public static ProductDTO randomEng() {
-        String id = String.valueOf((int) (Math.random() * 100000));
+        String id = StringUtil.random(8, StringUtil.CHARSET_NUMERIC);
 
         return new ProductDTO()
             .id(id)
@@ -58,7 +58,7 @@ public final class Products {
      *  a product DTO with a randomly generated engineering ID and name
      */
     public static ProductDTO randomSKU() {
-        String id = StringUtil.random("test_product");
+        String id = StringUtil.random("test_product-", 8, StringUtil.CHARSET_NUMERIC_HEX);
 
         return new ProductDTO()
             .id(id)
