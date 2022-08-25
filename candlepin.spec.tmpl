@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.6
+Version: 4.2.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,11 @@ fi
 
 #raw
 %changelog
+* Thu Aug 25 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.7-1
+- Added an API for performing generic requests (crog@redhat.com)
+- ENT-5308: Add and apply global paging params to OpenApi spec
+  (ojanus@redhat.com)
+
 * Tue Aug 23 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.6-1
 - Set the OpenApi 'useTags' property in pom.xml (nmoumoul@redhat.com)
 - ENT-5256: Create client for HostedTestResource (ojanus@redhat.com)
