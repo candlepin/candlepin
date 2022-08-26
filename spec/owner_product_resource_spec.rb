@@ -121,6 +121,12 @@ describe 'Owner Product Resource' do
     prod.name.should == 'iron maiden'
   end
 
+  it 'should throw exception while inserting product without name' do
+    expect {
+      @cp.create_product('test-product', nil, {:multiplier => 4})
+    }.to raise_exception(RestClient::BadRequest)
+  end
+
   it 'removes content from products' do
     prod = create_product
     content = create_content

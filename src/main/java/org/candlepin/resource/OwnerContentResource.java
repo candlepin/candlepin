@@ -84,7 +84,6 @@ public class OwnerContentResource implements OwnerContentApi{
         return this.translator.translate(entity, ContentDTO.class);
     }
 
-
     @Override
     public ContentDTO getOwnerContent(
         @Verify(Owner.class) String ownerKey, String contentId) {
@@ -135,7 +134,7 @@ public class OwnerContentResource implements OwnerContentApi{
         }
 
         Content updated = this.contentManager
-            .updateContent(owner, InfoAdapter.contentInfoAdapter(content), true);
+            .updateContent(owner, InfoAdapter.contentInfoAdapter(content.id(contentId)), true);
         this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
         return this.translator.translate(updated, ContentDTO.class);

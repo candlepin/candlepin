@@ -34,7 +34,7 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.Content;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
@@ -95,7 +95,7 @@ public class EntitlementCertificateV3SpecTest {
         product = ownerProductApi.createProductByOwner(owner.getKey(), product);
 
         for (int i = 0; i < 100; i++) {
-            ContentDTO content = Contents.random();
+            ContentDTO content = Content.random();
             content.setContentUrl(
                 String.format("/content/dist/rhel/$releasever-%s/$basearch-%s/debug-%s", i, i, i));
             content = ownerContentApi.createContent(owner.getKey(), content);
