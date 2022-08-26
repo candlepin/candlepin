@@ -33,7 +33,7 @@ public final class ActivationKeys {
     public static ActivationKeyDTO random(NestedOwnerDTO owner) {
         return new ActivationKeyDTO()
             .owner(owner)
-            .name(StringUtil.random("test_activation_key"));
+            .name(StringUtil.random("test_activation_key-"));
     }
 
 }

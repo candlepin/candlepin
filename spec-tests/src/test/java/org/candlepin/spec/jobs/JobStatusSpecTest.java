@@ -133,14 +133,17 @@ class JobStatusSpecTest {
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
             null, List.of(product.getId()), null, null, null, true, null, null));
         assertEquals(consumer.getUuid(), bindStatus.getPrincipal());
-        jobsClient.waitForJobToComplete(bindStatus.getId(), 15000);
+
+        bindStatus = jobsClient.waitForJob(bindStatus.getId());
+        assertEquals("FINISHED", bindStatus.getState());
     }
 
     @Test
     @DisplayName("should allow admin to view any job status")
     public void shouldAllowAdminToViewJobStatus() throws Exception {
         AsyncJobStatusDTO jobStatus = ownerApi.healEntire(owner.getKey());
-        jobsClient.waitForJobToComplete(jobStatus.getId(), 15000);
+        jobsClient.waitForJob(jobStatus.getId());
+
         AsyncJobStatusDTO newStatus = jobsClient.getJobStatus(jobStatus.getId());
         assertEquals(jobStatus.getId(), newStatus.getId());
     }
@@ -158,6 +161,7 @@ class JobStatusSpecTest {
         for (int i = 0; i < totalThreads; i++) {
             owners.add(ownerApi.createOwner(Owners.random()));
         }
+
         // For each owner create a Thread which refreshes that owner, and saves the job status
         for (OwnerDTO owner : owners) {
             Thread t = new Thread(() -> {
@@ -172,18 +176,17 @@ class JobStatusSpecTest {
             threadCount++;
         }
         assertEquals(totalThreads, threadCount);
-        // Run all the threads
-        for (Thread t : threads) {
-            t.start();
+
+        // Run all the threads, then wait for them to complete
+        threads.forEach(Thread::start);
+        for (Thread thread : threads) {
+            thread.join();
         }
-        for (Thread t : threads) {
-            t.join();
-        }
+
         // Check that all jobs finished successfully
         for (AsyncJobStatusDTO job : jobs) {
-            jobsClient.waitForJobToComplete(job.getId(), 30000);
-            AsyncJobStatusDTO newStatus = jobsClient.getJobStatus(job.getId());
-            assertEquals("FINISHED", newStatus.getState());
+            AsyncJobStatusDTO jobStatus = jobsClient.waitForJob(job);
+            assertEquals("FINISHED", jobStatus.getState());
         }
     }
 
@@ -192,8 +195,10 @@ class JobStatusSpecTest {
     public void shouldAllUserToViewStatusOfOwnJob() throws Exception {
         JobsApi jobsApi = userClient.jobs();
         OwnerApi ownerApi1 = userClient.owners();
+
         AsyncJobStatusDTO jobStatus = ownerApi1.healEntire(owner.getKey());
-        jobsClient.waitForJobToComplete(jobStatus.getId(), 15000);
+        jobsClient.waitForJob(jobStatus);
+
         AsyncJobStatusDTO newStatus = jobsApi.getJobStatus(jobStatus.getId());
         assertEquals(jobStatus.getId(), newStatus.getId());
         assertEquals(user.getUsername(), newStatus.getPrincipal());
@@ -264,8 +269,9 @@ class JobStatusSpecTest {
         JobsApi jobsApi = userClient.jobs();
         AsyncJobStatusDTO userStatus = jobsApi.getJobStatus(bindStatus.getId());
         assertEquals(bindStatus.getId(), userStatus.getId());
+
         // wait for job to complete, or test clean up will conflict with the asynchronous job.
-        jobsClient.waitForJobToComplete(bindStatus.getId(), 15000);
+        jobsClient.waitForJob(bindStatus.getId());
     }
 
     @Test
@@ -273,16 +279,18 @@ class JobStatusSpecTest {
     public void shouldNotAllowUserToCancelJobFromAnotherUser() throws Exception {
         jobsClient.setSchedulerStatus(false);
         String jobId = null;
+
         try {
             AsyncJobStatusDTO job = userClient.owners().healEntire(owner.getKey());
             UserDTO otherUser = UserUtil.createUser(client, owner);
             ApiClient otherUserClient = ApiClients.trustedUser(otherUser.getUsername());
+
             assertForbidden(() -> otherUserClient.jobs().cancelJob(job.getId()));
             jobId = job.getId();
         }
         finally {
             jobsClient.setSchedulerStatus(true);
-            AsyncJobStatusDTO statusDTO = jobsClient.waitForJobToComplete(jobId, 5000);
+            AsyncJobStatusDTO statusDTO = jobsClient.waitForJob(jobId);
             assertEquals("FINISHED", statusDTO.getState());
         }
     }
@@ -348,7 +356,7 @@ class JobStatusSpecTest {
         consumerApi = consumerClient.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
             null, List.of(product.getId()), null, null, null, true, null, null));
-        jobsClient.waitForJobToComplete(bindStatus.getId(), 15000);
+        jobsClient.waitForJob(bindStatus);
 
         assertForbidden(() -> userClient.jobs().getJobStatus(bindStatus.getId()));
     }
@@ -365,7 +373,7 @@ class JobStatusSpecTest {
         assertEquals(bindStatus.getId(), resultStatus.getId());
 
         // wait for job to complete, or test clean up will conflict with the asynchronous job.
-        jobsClient.waitForJobToComplete(bindStatus.getId(), 15000);
+        jobsClient.waitForJob(bindStatus);
     }
 
     @Test
@@ -376,8 +384,9 @@ class JobStatusSpecTest {
         ConsumerApi consumerApi1 = consumerClient1.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi1.bind(consumer1.getUuid(),
             null, List.of(product.getId()), null, null, null, true, null, null));
+
         // wait for job to complete, or test clean up will conflict with the asynchronous job.
-        jobsClient.waitForJobToComplete(bindStatus.getId(), 15000);
+        jobsClient.waitForJob(bindStatus);
 
         ConsumerDTO consumer2 = client.consumers().register(Consumers.random(owner));
         ApiClient consumerClient2 = ApiClients.trustedConsumer(consumer2.getUuid());
@@ -411,7 +420,7 @@ class JobStatusSpecTest {
         consumerApi = consumerClient.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
             null, List.of(product.getId()), null, null, null, true, null, null));
-        jobsClient.waitForJobToComplete(bindStatus.getId(), 15000);
+        jobsClient.waitForJob(bindStatus);
 
         assertBadRequest(() -> consumerClient.jobs().cancelJob(bindStatus.getId()));
     }
@@ -424,8 +433,9 @@ class JobStatusSpecTest {
         ConsumerApi consumerApi1 = consumerClient1.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi1.bind(consumer1.getUuid(),
             null, List.of(product.getId()), null, null, null, true, null, null));
+
         // wait for job to complete, or test clean up will conflict with the asynchronous job.
-        jobsClient.waitForJobToComplete(bindStatus.getId(), 15000);
+        jobsClient.waitForJob(bindStatus);
 
         ConsumerDTO consumer2 = client.consumers().register(Consumers.random(owner));
         ApiClient consumerClient2 = ApiClients.trustedConsumer(consumer2.getUuid());

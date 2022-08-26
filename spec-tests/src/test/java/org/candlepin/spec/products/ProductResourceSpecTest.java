@@ -224,13 +224,16 @@ public class ProductResourceSpecTest {
         pool.setQuantity(10L);
         pool.setStartDate(Instant.now().atOffset(ZoneOffset.UTC));
         pool.setEndDate(Instant.now().plus(10, ChronoUnit.DAYS).atOffset(ZoneOffset.UTC));
+
         return ownerApi.createPool(ownerKey, pool);
     }
 
     private void verifyRefreshPoolsForProducts(AsyncJobStatusDTO job)
         throws ApiException, InterruptedException {
+
         assertEquals("Refresh Pools", job.getName());
-        AsyncJobStatusDTO finishedJobStatus = jobsClient.waitForJobToComplete(job.getId());
+
+        AsyncJobStatusDTO finishedJobStatus = jobsClient.waitForJob(job);
         assertEquals("FINISHED", finishedJobStatus.getState());
     }
 

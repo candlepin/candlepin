@@ -57,10 +57,12 @@ public final class Pools {
      *  a randomly generated upstream pool
      */
     public static PoolDTO randomUpstream(ProductDTO product) {
+        String suffix = StringUtil.random(8, StringUtil.CHARSET_NUMERIC_HEX);
+
         return random(product)
-            .subscriptionId(StringUtil.random("source_sub"))
+            .subscriptionId("source_sub" + suffix)
             .subscriptionSubKey("master")
-            .upstreamPoolId(StringUtil.random("upstream_pool_id"));
+            .upstreamPoolId("upstream_pool_id" + suffix);
     }
 
 }

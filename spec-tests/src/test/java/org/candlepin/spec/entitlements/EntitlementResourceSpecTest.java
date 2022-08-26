@@ -176,7 +176,8 @@ class EntitlementResourceSpecTest {
         CertificateDTO oldCert = consumerClient.fetchCertificates(consumer.getUuid()).get(0);
         AsyncJobStatusDTO job = entitlementsApi.regenerateEntitlementCertificatesForProduct(
             monitoring.getId(), false);
-        jobsClient.waitForJobToComplete(job.getId(), 15000);
+        job = jobsClient.waitForJob(job);
+        assertEquals("FINISHED", job.getState());
 
         CertificateDTO newCert = consumerClient.fetchCertificates(consumer.getUuid()).get(0);
         assertNotEquals(oldCert.getSerial(), newCert.getSerial());

@@ -41,8 +41,9 @@ public final class Branding {
      *  a BrandingDTO instance with a randomly generated name and type
      */
     public static BrandingDTO random() {
-        String name = StringUtil.random("branding");
-        return random(name);
+        String suffix = StringUtil.random(8, StringUtil.CHARSET_NUMERIC_HEX);
+
+        return build("branding-" + suffix, "brand_type-" + suffix);
     }
 
     /**
@@ -55,8 +56,7 @@ public final class Branding {
      *  a BrandingDTO instance with the given name and a randomly generated type
      */
     public static BrandingDTO random(String name) {
-        String type = StringUtil.random("brand_type");
-        return build(name, type);
+        return build(name, StringUtil.random("brand_type-", 8, StringUtil.CHARSET_NUMERIC_HEX));
     }
 
     /**

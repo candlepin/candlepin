@@ -108,7 +108,7 @@ public class InactiveConsumerCleanerJobSpecTest {
         createProductAndPoolForConsumer(consumerWithEntitlement);
 
         String jobId = jobsClient.scheduleJob(JOB_KEY).getId();
-        AsyncJobStatusDTO status = jobsClient.waitForJobToComplete(jobId);
+        AsyncJobStatusDTO status = jobsClient.waitForJob(jobId);
         assertEquals("FINISHED", status.getState());
 
         // Verify that the inactive consumer has been deleted.

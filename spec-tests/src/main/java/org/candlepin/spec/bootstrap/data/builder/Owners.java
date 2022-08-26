@@ -37,10 +37,11 @@ public final class Owners {
     }
 
     public static OwnerDTO random() {
-        // todo fill in rest of the data
+        String suffix = StringUtil.random(8, StringUtil.CHARSET_NUMERIC_HEX);
+
         return new OwnerDTO()
-            .key(StringUtil.random("test_owner"))
-            .displayName(StringUtil.random("Test Owner"))
+            .key("test_owner-" + suffix)
+            .displayName("Test Owner " + suffix)
             .contentAccessMode(ENT_ACCESS_MODE)
             .contentAccessModeList(ACCESS_MODE_LIST);
     }

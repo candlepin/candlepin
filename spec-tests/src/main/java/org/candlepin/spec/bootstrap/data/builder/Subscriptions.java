@@ -35,7 +35,7 @@ public final class Subscriptions {
 
     public static SubscriptionDTO random(OwnerDTO owner, ProductDTO product) {
         return new SubscriptionDTO()
-            .id(StringUtil.random("test_sub"))
+            .id(StringUtil.random("test_sub-", 8, StringUtil.CHARSET_NUMERIC_HEX))
             .owner(Owners.toNested(owner))
             .product(product)
             .quantity(10L)

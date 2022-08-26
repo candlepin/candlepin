@@ -12,7 +12,6 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.spec.bootstrap.client.api;
 
 import org.candlepin.ApiClient;
@@ -25,73 +24,134 @@ import java.util.Set;
 
 public class JobsClient extends JobsApi {
 
-    /** The default amount of time we should wait for a job to finish processing **/
-    private static final long DEFAULT_TIMEOUT_MILLISECONDS = 60000;
+    /** The default amount of time we should wait for a job to terminate, in milliseconds **/
+    public static final long DEFAULT_JOB_WAIT_DURATION = 60000;
 
     public JobsClient(ApiClient client) {
         super(client);
     }
 
-    @Override
-    public AsyncJobStatusDTO scheduleJob(String jobKey) throws ApiException {
-        return super.scheduleJob(jobKey);
-    }
-
     /**
-     * Waits for a given job to finish processing based on the provided job Id.
+     * Waits for a job to reach a terminal state, or for the given timeout to elapse. If the job
+     * does not terminate in the specified duration, this method throws an exception.
      *
-     * @param jobId - Id of the job to wait for.
-     * @return the status of the job or null if the job has timed out.
-     * @throws ApiException
-     */
-    public AsyncJobStatusDTO waitForJobToComplete(String jobId)
-        throws ApiException {
-        return waitForJobToComplete(jobId, DEFAULT_TIMEOUT_MILLISECONDS);
-    }
-
-    /**
-     * Waits for a given job to finish processing based on the provided job Id.
+     * @param jobId
+     *  the ID of the job to wait for
      *
-     * @param jobId   - Id of the job to wait for.
-     * @param timeout - max duration in milliseconds to wait for the job to finish.
-     * @return the status of the job or null if the job has timed out.
-     * @throws ApiException
+     * @param timeout
+     *  the max duration in milliseconds to wait for the job to terminate
+     *
+     * @throws IllegalArgumentException
+     *  if jobId is null or empty, or the given timeout is not a positive integer
+     *
+     * @throws IllegalStateException
+     *  if the job does not terminate in the allotted time
+     *
+     * @return
+     *  an AsyncJobStatusDTO representing the final state of the job
      */
-    public AsyncJobStatusDTO waitForJobToComplete(String jobId, long timeout)
-        throws ApiException {
-        if (jobId == null || jobId.length() == 0) {
-            throw new IllegalArgumentException("Job Id must not be null or empty.");
+    public AsyncJobStatusDTO waitForJob(String jobId, long timeout) throws ApiException {
+        if (jobId == null || jobId.isEmpty()) {
+            throw new IllegalArgumentException("jobId is null or empty");
         }
 
         if (timeout <= 0L) {
-            throw new IllegalArgumentException("Timeout must be greater than 0 milliseconds.");
+            throw new IllegalArgumentException("timeout is not a positive integer");
         }
 
         Set<String> terminalStates = Set.of("FINISHED", "FAILED", "CANCELED", "ABORTED");
         long startTime = System.currentTimeMillis();
-        long elapsedMilliseconds = 0L;
-        AsyncJobStatusDTO status = null;
-        while (elapsedMilliseconds <= timeout) {
-            status = this.getJobStatus(jobId);
+
+        do {
+            AsyncJobStatusDTO status = this.getJobStatus(jobId);
             if (status == null) {
-                return status;
+                // This shouldn't ever happen; getJobStatus should 404 if the job isn't found
+                throw new IllegalStateException("Job status lookup returned null");
             }
 
             if (terminalStates.contains(status.getState())) {
                 return status;
             }
 
-            // Wait before trying again
             try {
                 Thread.sleep(1000);
             }
             catch (InterruptedException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Unexpected interrupt", e);
             }
-            elapsedMilliseconds = System.currentTimeMillis() - startTime;
+        }
+        while (System.currentTimeMillis() - startTime < timeout);
+
+        // If we don't know the job state, this should not return *anything*, as our tests are
+        // written with the assumption that the job has completed successfully.
+        throw new IllegalStateException("job did not terminate in the specified duration");
+    }
+
+    /**
+     * Waits for a job to reach a terminal state. If the job does not terminate in the default
+     * time specified, this method throws an exception.
+     *
+     * @param jobId
+     *  the ID of the job to wait for
+     *
+     * @throws IllegalArgumentException
+     *  if jobId is null or empty, or the given timeout is not a positive integer
+     *
+     * @throws IllegalStateException
+     *  if the job does not terminate in the allotted time
+     *
+     * @return
+     *  an AsyncJobStatusDTO representing the final state of the job
+     */
+    public AsyncJobStatusDTO waitForJob(String jobId) throws ApiException {
+        return waitForJob(jobId, DEFAULT_JOB_WAIT_DURATION);
+    }
+
+    /**
+     * Waits for a job to reach a terminal state, or for the given timeout to elapse. If the job
+     * does not terminate in the specified duration, this method throws an exception.
+     *
+     * @param job
+     *  the job to wait for
+     *
+     * @param timeout
+     *  the max duration in milliseconds to wait for the job to terminate
+     *
+     * @throws IllegalArgumentException
+     *  if job is null lacks a job ID, or the given timeout is not a positive integer
+     *
+     * @throws IllegalStateException
+     *  if the job does not terminate in the allotted time
+     *
+     * @return
+     *  an AsyncJobStatusDTO representing the final state of the job
+     */
+    public AsyncJobStatusDTO waitForJob(AsyncJobStatusDTO job, long timeout) throws ApiException {
+        if (job == null || job.getId() == null || job.getId().isEmpty()) {
+            throw new IllegalArgumentException("job is null, or lacks a job ID");
         }
 
-        return null;
+        return waitForJob(job.getId(), timeout);
+    }
+
+    /**
+     * Waits for a job to reach a terminal state. If the job does not terminate in the default
+     * time specified, this method throws an exception.
+     *
+     * @param job
+     *  the job to wait for
+     *
+     * @throws IllegalArgumentException
+     *  if job is null or lacks a job ID
+     *
+     * @throws IllegalStateException
+     *  if the job does not terminate in the allotted time
+     *
+     * @return
+     *  an AsyncJobStatusDTO representing the final state of the job
+     */
+    public AsyncJobStatusDTO waitForJob(AsyncJobStatusDTO job) throws ApiException {
+        return waitForJob(job, DEFAULT_JOB_WAIT_DURATION);
     }
 
     /**
@@ -102,8 +162,9 @@ public class JobsClient extends JobsApi {
      * @return List&lt;AsyncJobStatusDTO&gt;
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
-    public List<AsyncJobStatusDTO> listMatchingJobStatusForOrg(String ownerKey,
-        Set<String> ids, String status) throws ApiException {
+    public List<AsyncJobStatusDTO> listMatchingJobStatusForOrg(String ownerKey, Set<String> ids,
+        String status) throws ApiException {
+
         if (ownerKey == null) {
             throw new RuntimeException("The owner cannot be null");
         }
