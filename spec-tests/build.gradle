@@ -18,7 +18,6 @@ dependencies {
     implementation libraries["okhttpTls"]
     implementation libraries["slf4j"]
     implementation libraries["junitApi"]
-    implementation libraries["slf4j"]
     implementation libraries["jacksonDatabind"]
     implementation libraries["jacksonJdk8"]
     implementation libraries["jacksonJsr310"]
