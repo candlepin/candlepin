@@ -102,6 +102,7 @@ public class OwnerClient extends OwnerApi {
             null,
             null);
     }
+
     public List<PoolDTO> listOwnerPools(
         String ownerKey, String consumerUuid, Paging paging) throws ApiException {
         return super.listOwnerPools(

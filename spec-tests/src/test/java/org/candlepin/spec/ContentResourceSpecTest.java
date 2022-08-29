@@ -33,7 +33,7 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.Content;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
@@ -220,7 +220,7 @@ public class ContentResourceSpecTest {
     }
 
     private ContentDTO createContent(String ownerKey, String contentUrl, String arches) throws ApiException {
-        ContentDTO newContent = Contents.random();
+        ContentDTO newContent = Content.random();
         newContent.setContentUrl(contentUrl);
         newContent.setArches(arches);
         return ownerContentApi.createContent(ownerKey, newContent);

@@ -34,13 +34,15 @@ public final class Subscriptions {
     }
 
     public static SubscriptionDTO random(OwnerDTO owner, ProductDTO product) {
+        OffsetDateTime startDate = OffsetDateTime.now();
+
         return new SubscriptionDTO()
             .id(StringUtil.random("test_sub-", 8, StringUtil.CHARSET_NUMERIC_HEX))
             .owner(Owners.toNested(owner))
             .product(product)
             .quantity(10L)
-            .startDate(OffsetDateTime.now())
-            .endDate(OffsetDateTime.now().plusYears(1));
+            .startDate(startDate)
+            .endDate(startDate.plusYears(1));
     }
 
 }

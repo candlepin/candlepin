@@ -12,13 +12,14 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.spec.bootstrap.data.builder;
 
 import org.candlepin.dto.api.v1.AttributeDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
+
+
 
 /**
  * Class meant to provide fully randomized instances of product.

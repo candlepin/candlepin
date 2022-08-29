@@ -26,7 +26,7 @@ import org.candlepin.resource.HostedTestApi;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
-import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.Content;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
@@ -58,8 +58,8 @@ class HostedTestSpecTest {
 
     @Test
     void shouldCleanServerData() throws ApiException {
-        hosted.createContent(Contents.random());
-        hosted.createContent(Contents.random());
+        hosted.createContent(Content.random());
+        hosted.createContent(Content.random());
         hosted.createProduct(Products.random());
 
         assertThat(hosted.listProducts()).hasSizeGreaterThanOrEqualTo(1);
@@ -181,7 +181,7 @@ class HostedTestSpecTest {
 
     @Test
     void shouldListContent() throws ApiException {
-        hosted.createContent(Contents.random());
+        hosted.createContent(Content.random());
 
         List<ContentDTO> found = hosted.listContent();
 
@@ -190,7 +190,7 @@ class HostedTestSpecTest {
 
     @Test
     void shouldFindContent() throws ApiException {
-        ContentDTO content = hosted.createContent(Contents.random());
+        ContentDTO content = hosted.createContent(Content.random());
 
         ContentDTO found = hosted.getContent(content.getId());
 
@@ -199,14 +199,14 @@ class HostedTestSpecTest {
 
     @Test
     void shouldCreateContent() throws Exception {
-        ContentDTO content = hosted.createContent(Contents.random());
+        ContentDTO content = hosted.createContent(Content.random());
 
         assertThat(content).isNotNull();
     }
 
     @Test
     void shouldUpdateContent() throws ApiException {
-        ContentDTO content = hosted.createContent(Contents.random());
+        ContentDTO content = hosted.createContent(Content.random());
 
         content.name(StringUtil.random("new_name"));
         ContentDTO updatedContent = hosted.updateContent(content.getId(), content);
@@ -216,7 +216,7 @@ class HostedTestSpecTest {
 
     @Test
     void shouldDeleteContent() throws ApiException {
-        ContentDTO content = hosted.createContent(Contents.random());
+        ContentDTO content = hosted.createContent(Content.random());
 
         hosted.deleteContent(content.getId());
 
@@ -225,7 +225,7 @@ class HostedTestSpecTest {
 
     @Test
     void shouldAddProductContent() throws ApiException {
-        ContentDTO content = hosted.createContent(Contents.random());
+        ContentDTO content = hosted.createContent(Content.random());
         ProductDTO product = hosted.createProduct(Products.random());
 
         product.name(StringUtil.random("new_name"));
@@ -236,9 +236,9 @@ class HostedTestSpecTest {
 
     @Test
     void shouldAddProductContents() throws ApiException {
-        ContentDTO content1 = hosted.createContent(Contents.random());
-        ContentDTO content2 = hosted.createContent(Contents.random());
-        ContentDTO content3 = hosted.createContent(Contents.random());
+        ContentDTO content1 = hosted.createContent(Content.random());
+        ContentDTO content2 = hosted.createContent(Content.random());
+        ContentDTO content3 = hosted.createContent(Content.random());
         ProductDTO product = hosted.createProduct(Products.random());
 
         product.name(StringUtil.random("new_name"));
@@ -253,8 +253,8 @@ class HostedTestSpecTest {
 
     @Test
     void shouldRemoveProductContent() throws ApiException {
-        ContentDTO content1 = hosted.createContent(Contents.random());
-        ContentDTO content2 = hosted.createContent(Contents.random());
+        ContentDTO content1 = hosted.createContent(Content.random());
+        ContentDTO content2 = hosted.createContent(Content.random());
         ProductDTO product = hosted.createProduct(Products.random());
 
         product.name(StringUtil.random("new_name"));
@@ -269,9 +269,9 @@ class HostedTestSpecTest {
 
     @Test
     void shouldRemoveProductContents() throws ApiException {
-        ContentDTO content1 = hosted.createContent(Contents.random());
-        ContentDTO content2 = hosted.createContent(Contents.random());
-        ContentDTO content3 = hosted.createContent(Contents.random());
+        ContentDTO content1 = hosted.createContent(Content.random());
+        ContentDTO content2 = hosted.createContent(Content.random());
+        ContentDTO content3 = hosted.createContent(Content.random());
         ProductDTO createdProduct = hosted.createProduct(Products.random());
 
         ProductDTO updatedProduct = hosted.addContentToProduct(createdProduct.getId(), Map.ofEntries(
