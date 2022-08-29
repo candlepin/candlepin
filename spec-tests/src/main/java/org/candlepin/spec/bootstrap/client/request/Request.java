@@ -18,8 +18,6 @@ import org.candlepin.ApiException;
 import org.candlepin.Pair;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,12 +40,15 @@ public class Request {
 
     private static final Pattern PATH_PARAM_REGEX = Pattern.compile("\\{([^}]+)\\}");
 
+    private static final String CONTENT_TYPE_HEADER = "Content-Type";
+    private static final String CONTENT_TYPE_JSON = "application/json";
+
     private final org.candlepin.ApiClient client;
 
     private String basePath;
     private String endpoint;
     private String method;
-    private String body;
+    private Object body;
 
     private Map<String, String> pathParams;
     private Map<String, String> headers;
@@ -271,20 +272,8 @@ public class Request {
      *  a reference to this Request
      */
     public Request setBody(Object body) {
-
-        if (!(body instanceof String || body == null)) {
-            try {
-                this.body = ApiClient.MAPPER.writeValueAsString(body);
-                this.addHeader("Content-Type", "application/json");
-            }
-            catch (JsonProcessingException e) {
-                throw new JsonSerializationException(e);
-            }
-        }
-        else {
-            this.body = (String) body;
-        }
-
+        // Impl note: this will be serialized by the backing ApiClient
+        this.body = body;
         return this;
     }
 
@@ -315,6 +304,9 @@ public class Request {
             .stream()
             .flatMap((entry) -> entry.getValue().stream().map((value) -> new Pair(entry.getKey(), value)))
             .collect(Collectors.toList());
+
+        // Ensure a content type has been set so we don't explode
+        this.headers.computeIfAbsent(CONTENT_TYPE_HEADER, (key) -> CONTENT_TYPE_JSON);
 
         // TODO: Add more things here as necessary (forms? cookies?)
 
