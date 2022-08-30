@@ -20,6 +20,7 @@ import org.candlepin.resource.CdnApi;
 import org.candlepin.resource.ConsumerTypeApi;
 import org.candlepin.resource.ContentApi;
 import org.candlepin.resource.DeletedConsumerApi;
+import org.candlepin.resource.DistributorVersionsApi;
 import org.candlepin.resource.EntitlementsApi;
 import org.candlepin.resource.EnvironmentApi;
 import org.candlepin.resource.HostedTestApi;
@@ -86,6 +87,10 @@ public class ApiClient {
 
     public DeletedConsumerApi deletedConsumers() {
         return new DeletedConsumerApi(this.client);
+    }
+
+    public DistributorVersionsApi distributorVersions() {
+        return new DistributorVersionsApi(this.client);
     }
 
     public EntitlementsApi entitlements() {
