@@ -158,7 +158,7 @@ public class Request {
      * endpoint, minus the common components of the path that would be captured by the base path.
      * <p></p>
      * The endpoint path may optionally include parameters which will be replaced by the values set
-     * in any path parameters later. For example, in the path "owners/{owner_key}/products", the
+     * in any path parameters later. For example, in the path "/owners/{owner_key}/products", the
      * "{owner_key}" segment is a path parameter, and will be replaced by the value set for
      * "owner_key".
      *
