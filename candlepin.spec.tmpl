@@ -234,6 +234,9 @@ fi
 ## else logroate fails
 %attr(750, tomcat, tomcat) %{_localstatedir}/log/%{name}
 
+## logback.xml should not be overridden during rpm upgrade/install
+%config(noreplace) %{_sharedstatedir}/tomcat/webapps/%{name}/WEB-INF/classes/logback.xml
+
 %files selinux
 %defattr(-,root,root,0755)
 %doc selinux/*
