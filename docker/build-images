@@ -82,13 +82,11 @@ if [ "$1" != "" ]; then
   IMAGE=$1
 fi
 
-get_image_names() {
-  python -c 'import yaml,sys;y=yaml.safe_load(sys.stdin); print(" ".join(y["services"].keys()))' <$SCRIPT_HOME/docker-compose-build.yml
-}
+DEFAULT_IMAGES='candlepin-base candlepin-base-cs8'
+IMAGES=${IMAGE:-$DEFAULT_IMAGES}
 
 echo "Building images..."
 cd $SCRIPT_HOME
-IMAGES=${IMAGE:-$(get_image_names)}
 CP_VERSION="$(git describe | cut -d- -f 2)"
 for IMG in ${IMAGES}; do
   "${CONTAINER_ENGINE}" build -f $IMG/Dockerfile . -t $REGISTRY/$IMG:latest
