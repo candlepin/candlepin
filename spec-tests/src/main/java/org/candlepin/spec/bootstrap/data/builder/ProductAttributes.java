@@ -18,11 +18,13 @@ package org.candlepin.spec.bootstrap.data.builder;
 import org.candlepin.dto.api.client.v1.AttributeDTO;
 
 public enum ProductAttributes {
-
     Addons("addons"),
     Arch("arch"),
     Cores("cores"),
+    HostLimited("host_limited"),
+    InstanceMultiplier("instance_multiplier"),
     ManagementEnabled("management_enabled"),
+    MultiEntitlement("multi-entitlement"),
     Ram("ram"),
     Roles("roles"),
     Sockets("sockets"),
@@ -30,8 +32,11 @@ public enum ProductAttributes {
     SupportLevel("support_level"),
     SupportLevelExempt("support_level_exempt"),
     SupportType("support_type"),
+    Type("type"),
+    Unlimited("unlimited_product"),
     Usage("usage"),
     Version("version"),
+    VirtLimit("virt_limit"),
     VirtOnly("virt_only"),
     VirtualLimit("virt_limit"),
     WarningPeriod("warning_period");
