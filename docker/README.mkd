@@ -5,8 +5,7 @@ the following is useful for running tests directly (for example, you want to tes
 ideally this would be triggered automatically via jenkins [[1]](https://github.com/candlepin/candlepin-jobs).
 
 ## Building Images
-To build the images run the `build-images` script.  Its build configuration is located in `docker-compose-build.yml`.
-`docker-compose-build.yml`  Is only used for building the images and will not work to bring up containers using docker-compose.
+To build the images run the `build-images` script.
 If you choose to push the images to a different docker registry, change the REGISTRY value found in `./.env`.
 Basic invocations of `build-images` are as follows:
 

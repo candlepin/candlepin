@@ -1,8 +1,8 @@
 #!/bin/bash
 
 unset CDPATH
-SCRIPT_NAME=$( basename "$0" )
-SCRIPT_HOME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+SCRIPT_NAME=$(basename "$0")
+SCRIPT_HOME=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 CURRENT_DIR=$PWD
 
 # defaults
@@ -11,15 +11,15 @@ BUILD_ARGS="--no-cache"
 PUSH='false'
 
 evalrc() {
-    if [ "$1" -ne "0" ]; then
-        echo "$2"
-        cd $CURRENT_DIR
-        exit $1
-    fi
+  if [ "$1" -ne "0" ]; then
+    echo "$2"
+    cd $CURRENT_DIR
+    exit $1
+  fi
 }
 
 usage() {
-    cat <<HELP
+  cat <<HELP
 Usage: $SCRIPT_NAME [options] [IMAGE]
   * if IMAGE is omitted, all images will be built
 
@@ -29,61 +29,76 @@ OPTIONS:
   -d <repo>   Specify the destination repo to receive the images; implies -p;
               defaults to: "$REGISTRY"
   -c          Use cached layers when building containers; defaults to false
+  -e          docker or podman. Used to build and run the container. Defaults to what is available, preferring podman.
   -v          Enable verbose/debug output
 HELP
 }
 
-while getopts ":pd:cv" opt; do
-    case $opt in
-        h  ) usage; exit 0;;
-        p  ) PUSH='true';;
-        d  ) PUSH='true'
-             REGISTRY="${OPTARG}";;
-        c  ) BUILD_ARGS="$(echo $BUILD_ARGS | sed -e s/--no-cache//g)";;
-        v  ) set -x;;
-        \?)
-          echo "Invalid option: -$OPTARG" >&2
-          usage
-          exit 1
-          ;;
-        :)
-          echo "Option -$OPTARG requires an argument." >&2
-          usage
-          exit 1
-          ;;
-    esac
+while getopts ":pd:ce:v" opt; do
+  case $opt in
+  h)
+    usage
+    exit 0
+    ;;
+  p) PUSH='true' ;;
+  d)
+    PUSH='true'
+    REGISTRY="${OPTARG}"
+    ;;
+  c) BUILD_ARGS="$(echo $BUILD_ARGS | sed -e s/--no-cache//g)" ;;
+  e)
+    if [ "${OPTARG}" != "podman" ] && [ "${OPTARG}" != "docker" ]; then
+      echo >&2 "Not a valid e: ${OPTARG}. podman or docker supported."
+      exit 1
+    fi
+    CONTAINER_ENGINE="${OPTARG}"
+    ;;
+  v) set -x ;;
+  \?)
+    echo "Invalid option: -$OPTARG" >&2
+    usage
+    exit 1
+    ;;
+  :)
+    echo "Option -$OPTARG requires an argument." >&2
+    usage
+    exit 1
+    ;;
+  esac
 done
+
+if [ "$CONTAINER_ENGINE" == "" ]; then
+  if type podman >/dev/null 2>&1; then
+    CONTAINER_ENGINE="podman"
+  else
+    CONTAINER_ENGINE="docker"
+  fi
+fi
 
 shift $(($OPTIND - 1))
 
 # Determine image name
 if [ "$1" != "" ]; then
-    IMAGE=$1
+  IMAGE=$1
 fi
 
-get_image_names() {
-  python -c 'import yaml,sys;y=yaml.safe_load(sys.stdin); print(" ".join(y["services"].keys()))' < $SCRIPT_HOME/docker-compose-build.yml
-}
-
-# tags a docker image with a version
-tag_images() {
-  TAG_IMAGES=${IMAGE:-$(get_image_names)}
-  CP_VERSION="$( git describe | cut -d- -f 2 )"
-  for IMG in ${TAG_IMAGES}; do
-    docker tag $REGISTRY/$IMG:latest $REGISTRY/$IMG:$CP_VERSION
-  done
-}
+DEFAULT_IMAGES='candlepin-base candlepin-base-cs8'
+IMAGES=${IMAGE:-$DEFAULT_IMAGES}
 
 echo "Building images..."
 cd $SCRIPT_HOME
-docker-compose -f docker-compose-build.yml build $BUILD_ARGS $IMAGE && tag_images
-evalrc $? "Build not successful."
+CP_VERSION="$(git describe | cut -d- -f 2)"
+for IMG in ${IMAGES}; do
+  "${CONTAINER_ENGINE}" build -f $IMG/Dockerfile . -t $REGISTRY/$IMG:latest
+  evalrc $? "Build not successful."
+  "${CONTAINER_ENGINE}" tag $REGISTRY/$IMG:latest $REGISTRY/$IMG:$CP_VERSION
+done
 
 if [ $PUSH = true ]; then
   echo "Pushing images..."
   # pushes the version tag
-  for IMG in ${TAG_IMAGES}; do
-    docker push $REGISTRY/$IMG
+  for IMG in ${IMAGES}; do
+    "${CONTAINER_ENGINE}" push $REGISTRY/$IMG
     evalrc $? "Push not successful."
   done
 fi
