@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20220901113942-delete_unused_table_and_columns-1" author="ojanus">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="cp2_pool_provided_products"/>
+        </preConditions>
+
+        <dropTable tableName="cp2_pool_provided_products"/>
+    </changeSet>
+
+    <changeSet id="20220901113942-delete_unused_table_and_columns-2" author="ojanus">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="cp2_pool_derprov_products"/>
+        </preConditions>
+
+        <dropTable tableName="cp2_pool_derprov_products"/>
+    </changeSet>
+
+    <changeSet id="20220901113942-delete_unused_table_and_columns-3" author="ojanus">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="cp_pool" columnName="derived_product_uuid" />
+        </preConditions>
+
+        <dropColumn tableName="cp_pool"
+                    columnName="derived_product_uuid"/>
+    </changeSet>
+</databaseChangeLog>
