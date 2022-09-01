@@ -11,6 +11,7 @@
     <changeSet id="20170220102027-1" author="crog">
         <validCheckSum>7:da9ac9b551583e7a0771e6e808b383c0</validCheckSum>
         <validCheckSum>8:badd9607b42d12265c76b93f3db8f16c</validCheckSum>
+        <validCheckSum>8:c58887dc066f1b22944195943af3f0b7</validCheckSum>
 
         <!-- On MySQL/MariaDB, we need to drop *all* foreign keys before we can drop our primary key -->
         <dropAllForeignKeyConstraints baseTableName="cp2_product_content"/>
@@ -18,7 +19,7 @@
         <dropPrimaryKey tableName="cp2_product_content" constraintName="cp2_product_content_pk"/>
 
         <addColumn tableName="cp2_product_content">
-            <column name="id" type="varchar(32)" position="1"/>
+            <column name="id" type="varchar(32)" />
         </addColumn>
 
         <!-- We need to populate the ID column before we designate it as a primary key -->

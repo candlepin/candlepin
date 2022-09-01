@@ -7,12 +7,13 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
     <changeSet id="20200902123935-1" author="crog">
+        <validCheckSum>8:85948979429199b8006134f80140c0b9</validCheckSum>
         <comment>
             Adds the derived_product_uuid column for moving dervied products from pool to product
         </comment>
 
         <addColumn tableName="cp2_products">
-            <column name="derived_product_uuid" type="varchar(32)" beforeColumn="locked"/>
+            <column name="derived_product_uuid" type="varchar(32)" />
         </addColumn>
     </changeSet>
 
