@@ -89,6 +89,25 @@ import javax.servlet.ServletContextEvent;
 public class CandlepinContextListener extends GuiceResteasyBootstrapServletContextListener {
     public static final String CONFIGURATION_NAME = Configuration.class.getName();
 
+    /**
+     * The (rough) state of this listener's lifecycle, not including transitional states.
+     */
+    public static enum ListenerState {
+        /** Listener state after instantiation but before a successful call to contextInitialized */
+        UNINITIALIZED,
+
+        /**
+         * Listener state after a successful call to contextInitialized, but before a successful call to
+         * contextDestroyed
+         */
+        INITIALIZED,
+
+        /** Listener state after a successful call to contextDestroyed */
+        DESTROYED
+    }
+
+    private ListenerState state = ListenerState.UNINITIALIZED;
+
     private CPMContextListener cpmContextListener;
 
     private ActiveMQContextListener activeMQContextListener;
@@ -116,7 +135,11 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     private Injector injector;
 
     @Override
-    public void contextInitialized(ServletContextEvent sce) {
+    public synchronized void contextInitialized(ServletContextEvent sce) {
+        if (this.state != ListenerState.UNINITIALIZED) {
+            throw new IllegalStateException("context listener already initialized");
+        }
+
         log.info("Candlepin initializing context.");
 
         I18nManager.getInstance().setDefaultLocale(Locale.US);
@@ -142,6 +165,8 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
         // set things up BEFORE calling the super class' initialize method.
         super.contextInitialized(sce);
+
+        this.state = ListenerState.INITIALIZED;
         log.info("Candlepin context initialized.");
     }
 
@@ -196,8 +221,14 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     }
 
     @Override
-    public void contextDestroyed(ServletContextEvent event) {
-        super.contextDestroyed(event);
+    public synchronized void contextDestroyed(ServletContextEvent event) {
+        if (this.state != ListenerState.INITIALIZED) {
+            // Silently ignore the event if we never completed initialization
+            return;
+        }
+
+        // TODO: Add transitional states and checks if we still have issues with completing
+        // an initialization or shutdown op.
 
         try {
             this.destroySubsystems();
@@ -205,6 +236,9 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         catch (Exception e) {
             throw new RuntimeException(e);
         }
+
+        super.contextDestroyed(event);
+        this.state = ListenerState.DESTROYED;
     }
 
     private void destroySubsystems() throws Exception {
@@ -373,17 +407,27 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         try {
             Liquibase liquibase = getLiquibase();
             List<ChangeSet> unrunChangesets = liquibase.listUnrunChangeSets(null, null);
-            if (!unrunChangesets.isEmpty()) {
-                StringBuffer setBuffer = new StringBuffer();
-                setBuffer.append(String.format("The database is missing %s Liquibase changeset(s):\n",
-                    unrunChangesets.size()));
-                unrunChangesets.stream().forEach(
-                    x -> setBuffer.append(String.format("  %s, filename: %s\n", x.getId(), x.getFilePath())));
 
-                log.error(setBuffer.toString());
-                log.error("Please update the database.");
-                log.error("Aborting Candlepin initialization ...");
-                throw new RuntimeException("The database is missing Liquibase changeset(s).");
+            if (!unrunChangesets.isEmpty()) {
+                StringBuilder builder = new StringBuilder()
+                    .append("The database is missing ")
+                    .append(unrunChangesets.size())
+                    .append(" Liquibase changeset(s):")
+                    .append('\n');
+
+                unrunChangesets.forEach(changeset -> {
+                    builder.append("  ")
+                        .append(changeset.getId())
+                        .append(", filename: ")
+                        .append(changeset.getFilePath())
+                        .append('\n');
+                });
+
+                log.error(builder.toString());
+                log.error("Please update the database");
+                log.error("Aborting Candlepin initialization...");
+
+                throw new RuntimeException("The database is missing Liquibase changeset(s)");
             }
         }
         catch (LiquibaseException e) {
