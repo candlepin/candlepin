@@ -660,4 +660,38 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         return activeContent;
     }
+
+    /**
+     * Clears the entity version for the given content. Calling this method will not unlink the
+     * content from any entities referencing it, but it will prevent further updates from converging
+     * on the content.
+     *
+     * @param entity
+     *  the content of which to clear the entity version
+     */
+    public void clearContentEntityVersion(Content entity) {
+        if (entity != null) {
+            this.clearContentEntityVersion(entity.getUuid());
+        }
+    }
+
+    /**
+     * Clears the entity version for the content with the given UUID. Calling this method will not
+     * unlink the content from any entities referencing it, but it will prevent further updates from
+     * converging on the content.
+     *
+     * @param contentUuid
+     *  the UUID of the content of which to clear the entity version
+     */
+    public void clearContentEntityVersion(String contentUuid) {
+        if (contentUuid == null || contentUuid.isEmpty()) {
+            return;
+        }
+
+        this.getEntityManager()
+            .createQuery("UPDATE Content SET entityVersion = NULL WHERE uuid = :content_uuid")
+            .setParameter("content_uuid", contentUuid)
+            .executeUpdate();
+    }
+
 }

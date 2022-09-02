@@ -660,7 +660,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @Override
     public String toString() {
         return String.format("Content [uuid: %s, id: %s, name: %s, label: %s]",
-            this.uuid, this.id, this.name, this.label);
+            this.getUuid(), this.getId(), this.getName(), this.getLabel());
     }
 
     @PrePersist

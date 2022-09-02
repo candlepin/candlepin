@@ -32,8 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -156,20 +156,36 @@ public class ContentManager {
             .get(entity.getId());
 
         if (alternateVersions != null) {
-            log.debug("Checking {} alternate content versions", alternateVersions.size());
+            // Impl note: this should only ever have 1 entry in it due to our implicit limitation
+            // on ID and entity version
+            if (alternateVersions.size() != 1) {
+                log.warn("Unexpected number of alternate versions received for content ID {}: {}",
+                    entity.getId(), alternateVersions.size());
+            }
+            else {
+                log.debug("Checking {} alternate content versions", alternateVersions.size());
+            }
 
-            for (Content alt : alternateVersions) {
-                if (!alt.equals(entity)) {
-                    String errmsg = String.format("Entity version collision detected: %s != %s", alt, entity);
-                    throw new IllegalStateException(errmsg);
+            for (Content candidate : alternateVersions) {
+                if (entity.equals(candidate)) {
+                    // We found a match! Map to the candidate entity
+                    log.debug("Converging with existing content version: {} => {}", entity, candidate);
+
+                    // If we're "creating" a content, we shouldn't have any other object references to
+                    // update for this content. Instead, we'll just add the new owner to the content.
+                    this.ownerContentCurator.mapContentToOwner(candidate, owner);
+                    return candidate;
                 }
 
-                log.debug("Converging content with existing version: {} => {}", entity, alt);
+                // If we have a version collision, and the entity IDs are the same, there's likely
+                // some shenanigans going on. Rather than halting all behavior, let's just clear
+                // the old entity's version so we start mapping to the new one.
+                // If we have a collision where the contents are actually different, we won't
+                // fail at this point (but we *will* fail), and we won't be able to detect it.
+                log.error("Entity version collision detected; attempting resolution... {} != {}",
+                    entity, candidate);
 
-                // If we're "creating" a content, we shouldn't have any other object references to
-                // update for this content. Instead, we'll just add the new owner to the content.
-                this.ownerContentCurator.mapContentToOwner(alt, owner);
-                return alt;
+                this.ownerContentCurator.clearContentEntityVersion(candidate);
             }
         }
 
@@ -257,22 +273,37 @@ public class ContentManager {
             .get(updated.getId());
 
         if (alternateVersions != null) {
-            log.debug("Checking {} alternate content versions", alternateVersions.size());
+            // Impl note: this should only ever have 1 entry in it due to our implicit limitation
+            // on ID and version
+            if (alternateVersions.size() != 1) {
+                log.warn("Unexpected number of alternate versions received for content ID {}: {}",
+                    entity.getId(), alternateVersions.size());
+            }
+            else {
+                log.debug("Checking {} alternate content versions", alternateVersions.size());
+            }
 
-            for (Content alt : alternateVersions) {
-                if (!alt.equals(updated)) {
-                    String errmsg = String.format("Entity version collision detected: %s != %s",
-                        alt, updated);
+            for (Content candidate : alternateVersions) {
+                if (updated.equals(candidate)) {
+                    // We found a match! Map to the candidate entity
+                    log.debug("Converging with existing content version: {} => {}", updated, candidate);
 
-                    throw new IllegalStateException(errmsg);
+                    this.ownerContentCurator.updateOwnerContentReferences(owner,
+                        Map.of(entity.getUuid(), candidate.getUuid()));
+
+                    updated = candidate;
+                    break;
                 }
 
-                log.debug("Converging content with existing version: {} => {}", updated, alt);
+                // If we have a version collision, and the entity IDs are the same, there's likely
+                // some shenanigans going on. Rather than halting all behavior, let's just clear
+                // the old entity's version so we start mapping to the new one.
+                // If we have a collision where the contents are actually different, we won't
+                // fail at this point (but we *will* fail), and we won't be able to detect it.
+                log.error("Entity version collision detected; attempting resolution... {} != {}",
+                    updated, candidate);
 
-                this.ownerContentCurator.updateOwnerContentReferences(owner,
-                    Collections.singletonMap(entity.getUuid(), alt.getUuid()));
-
-                updated = alt;
+                this.ownerContentCurator.clearContentEntityVersion(candidate);
             }
         }
 
@@ -281,7 +312,7 @@ public class ContentManager {
             updated = this.contentCurator.create(updated);
 
             this.ownerContentCurator.updateOwnerContentReferences(owner,
-                Collections.singletonMap(entity.getUuid(), updated.getUuid()));
+                Map.of(entity.getUuid(), updated.getUuid()));
         }
 
         if (affectedProducts.size() > 0) {
@@ -366,7 +397,7 @@ public class ContentManager {
 
         // Validation checks passed, remove the reference to it
         log.debug("Removing content for org: {}, {}", entity, owner);
-        this.ownerContentCurator.removeOwnerContentReferences(owner, Collections.singleton(entity.getUuid()));
+        this.ownerContentCurator.removeOwnerContentReferences(owner, Set.of(entity.getUuid()));
 
         // Update affected products
         if (affectedProducts.size() > 0) {

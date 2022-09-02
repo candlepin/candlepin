@@ -325,7 +325,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         return this.cpQueryFactory.<Product>buildQuery();
     }
 
-
     @Transactional
     public long getOwnerCount(Product product) {
         String jpql = "SELECT count(op) FROM OwnerProduct op WHERE op.product.uuid = :product_uuid";
@@ -1018,6 +1017,39 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
                 log.info("{} activation key product(s) removed", count);
             }
         }
+    }
+
+    /**
+     * Clears the entity version for the given product. Calling this method will not unlink the
+     * product from any entities referencing it, but it will prevent further updates from converging
+     * on the product.
+     *
+     * @param entity
+     *  the product of which to clear the entity version
+     */
+    public void clearProductEntityVersion(Product entity) {
+        if (entity != null) {
+            this.clearProductEntityVersion(entity.getUuid());
+        }
+    }
+
+    /**
+     * Clears the entity version for the product with the given UUID. Calling this method will not
+     * unlink the product from any entities referencing it, but it will prevent further updates from
+     * converging on the product.
+     *
+     * @param productUuid
+     *  the UUID of the product of which to clear the entity version
+     */
+    public void clearProductEntityVersion(String productUuid) {
+        if (productUuid == null || productUuid.isEmpty()) {
+            return;
+        }
+
+        this.getEntityManager()
+            .createQuery("UPDATE Product SET entityVersion = NULL WHERE uuid = :product_uuid")
+            .setParameter("product_uuid", productUuid)
+            .executeUpdate();
     }
 
 }
