@@ -20,6 +20,9 @@ import java.io.InputStream;
 import java.util.Properties;
 import java.util.function.Supplier;
 
+/**
+ * Class for loading spec test configuration from internal config file.
+ */
 public class DefaultProperties implements Supplier<Properties> {
 
     @Override

@@ -18,6 +18,9 @@ package org.candlepin.spec.bootstrap.client;
 import java.util.Properties;
 import java.util.function.Supplier;
 
+/**
+ * Class for loading spec test configuration from system properties.
+ */
 public class SystemProperties implements Supplier<Properties> {
     @Override
     public Properties get() {

@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.TimeUnit;
 
@@ -54,7 +55,10 @@ public class ApiClientFactory {
             if (properties == null) {
                 properties = new PropertiesConfiguration(
                     new DefaultProperties(),
-                    // TODO add support for external properties
+                    new ExternalProperties(
+                        Paths.get(System.getProperty("user.home"), ".candlepin_spec.conf"),
+                        Paths.get(System.getProperty("user.dir"), ".candlepin_spec.conf")
+                    ),
                     new SystemProperties());
             }
         }

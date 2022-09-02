@@ -27,6 +27,8 @@ dependencies {
     implementation libraries["commonsCodec"]
     implementation libraries["guava"]
 
+    testImplementation libraries["jimfs"]
+
     testRuntimeOnly libraries["junitEngine"]
 
     checkstyle libraries["checkstyle"]
@@ -50,7 +52,13 @@ task spec(type: Test) {
     // We have to propagate the -D params if we want them available in tests
     System.properties.keys().each { key ->
         def properyKey = key.toString()
+        // Propagate spec config
         if (properyKey.startsWith("spec.test.client")) {
+            systemProperty properyKey, System.getProperty(properyKey)
+        }
+
+        // Propagate current working directory
+        if (properyKey == "user.dir") {
             systemProperty properyKey, System.getProperty(properyKey)
         }
     }
