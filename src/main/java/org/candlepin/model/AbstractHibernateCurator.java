@@ -63,7 +63,6 @@ import java.util.TreeSet;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;
-import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
@@ -124,23 +123,6 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     public String getDatabaseDialect() {
         return ((String) this.currentSession().getSessionFactory().getProperties()
             .get("hibernate.dialect")).toLowerCase();
-    }
-
-    /**
-     * Get one or zero items.  Thanks http://stackoverflow.com/a/6378045/6124862
-     * @param query
-     * @param <E>
-     * @return one and only one object of type E
-     */
-    public <E> E getSingleResult(TypedQuery<E> query) {
-        List<E> list = query.getResultList();
-        if (list.isEmpty()) {
-            return null;
-        }
-        else if (list.size() == 1) {
-            return list.get(0);
-        }
-        throw new NonUniqueResultException();
     }
 
     public void enableFilter(String filterName, String parameterName, Object value) {
@@ -1294,6 +1276,38 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     /**
+     * Creates a new system lock row, attempting to minimize cases where parallel operations attempt
+     * to create the same system lock.
+     *
+     * @param lockName
+     *  the name of the system lock to create
+     */
+    private void createSystemLock(String lockName) {
+        String dialect = this.getDatabaseDialect();
+        String query = "%s INTO %s VALUES (:lock_name) %s";
+        String[] pieces;
+
+        if (dialect.contains("mysql") || dialect.contains("maria")) {
+            pieces = new String[] { "INSERT IGNORE", SystemLock.DB_TABLE, "" };
+        }
+        else if (dialect.contains("postgresql")) {
+            pieces = new String[] { "INSERT", SystemLock.DB_TABLE, "ON CONFLICT DO NOTHING" };
+        }
+        else {
+            // Unrecognized dialect, just stick to a basic SQL INSERT and hope for the best.
+            // Depending on how the underlying DB handles locks, transaction isolation, and parallel
+            // insertions, this may or may not fail; but it'll *probably* fail in this extremely
+            // rare case.
+            pieces = new String[] { "INSERT", SystemLock.DB_TABLE, "" };
+        }
+
+        this.getEntityManager()
+            .createNativeQuery(String.format(query, (Object[]) pieces))
+            .setParameter("lock_name", lockName)
+            .executeUpdate();
+    }
+
+    /**
      * Obtains a system-level lock for serializing certain critical operations
      *
      * @param lockName
@@ -1325,12 +1339,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
                 .getSingleResult();
         }
         catch (javax.persistence.NoResultException e) {
-            SystemLock lock = new SystemLock()
-                .setId(lockName);
-
-            this.getEntityManager()
-                .persist(lock);
-
+            this.createSystemLock(lockName);
             this.getSystemLock(lockName, lockMode);
         }
     }
