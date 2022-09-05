@@ -42,6 +42,7 @@ import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -58,25 +59,30 @@ import java.util.stream.Collectors;
 class JobStatusSpecTest {
 
     private static ApiClient client;
-    ApiClient userClient;
-    private static OwnerDTO owner;
-    private static UserDTO user;
-    private OwnerApi ownerApi;
-    private OwnerProductApi ownerProductApi;
-    private ConsumerApi consumerApi;
-    private JobsClient jobsClient;
+    private static OwnerApi ownerApi;
+    private static OwnerProductApi ownerProductApi;
+    private static ConsumerApi consumerApi;
+    private static JobsClient jobsClient;
+    private ApiClient userClient;
+    private OwnerDTO owner;
+    private UserDTO user;
     private ProductDTO product;
     private PoolDTO pool;
 
     @BeforeAll
-    public void beforeAll() {
+    public static void beforeAll() {
         client = ApiClients.admin();
         ownerApi = client.owners();
         ownerProductApi = client.ownerProducts();
         jobsClient = client.jobs();
         consumerApi = client.consumers();
+    }
+
+    @BeforeEach
+    void beforeEach() {
         owner = ownerApi.createOwner(Owners.random());
         user = UserUtil.createUser(client, owner);
+
         userClient = ApiClients.trustedUser(user.getUsername());
 
         product = Products.random();

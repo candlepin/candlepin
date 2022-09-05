@@ -68,6 +68,7 @@ import com.google.gson.Gson;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -85,18 +86,18 @@ import java.util.stream.Stream;
 public class OwnerProductResourceSpecTest {
     private static final String OWNER_PRODUCTS_PATH = "/owners/{owner_key}/products";
 
-    private ApiClient client;
-    private ActivationKeyApi activationKeyApi;
-    private ConsumerClient consumerApi;
-    private OwnerClient ownerApi;
-    private OwnerContentApi ownerContentApi;
-    private OwnerProductApi ownerProductApi;
-    private ProductsApi productsApi;
-    private HostedTestApi hostedTestApi;
-    private JobsClient jobsApi;
+    private static ApiClient client;
+    private static ActivationKeyApi activationKeyApi;
+    private static ConsumerClient consumerApi;
+    private static OwnerClient ownerApi;
+    private static OwnerContentApi ownerContentApi;
+    private static OwnerProductApi ownerProductApi;
+    private static ProductsApi productsApi;
+    private static HostedTestApi hostedTestApi;
+    private static JobsClient jobsApi;
 
     @BeforeAll
-    public void beforeAll() throws Exception {
+    public static void beforeAll() throws Exception {
         client = ApiClients.admin();
         activationKeyApi = client.activationKeys();
         consumerApi = client.consumers();
@@ -761,35 +762,33 @@ public class OwnerProductResourceSpecTest {
 
     @Nested
     @OnlyInHosted
-    @TestInstance(Lifecycle.PER_CLASS)
     public class LockedEntityTests {
-        private ApiClient client;
         private OwnerProductApi ownerProductApi;
 
         private OwnerDTO owner;
         private ProductDTO derivedProvProduct;
-        private ProductDTO derivedProduct;
         private ProductDTO providedProduct;
         private ProductDTO product;
 
-        @BeforeAll
+        @BeforeEach
         public void setup() {
-            this.client = ApiClients.admin();
+            ApiClient client = ApiClients.admin();
             this.owner = client.owners().createOwner(Owners.random());
             this.ownerProductApi = client.ownerProducts();
+            HostedTestApi hosted = client.hosted();
 
-            derivedProvProduct = client.hosted().createProduct(Products.random());
-            derivedProduct = Products.random();
+            derivedProvProduct = hosted.createProduct(Products.random());
+            ProductDTO derivedProduct = Products.random();
             derivedProduct.setProvidedProducts(Set.of(derivedProvProduct));
-            derivedProduct = client.hosted().createProduct(derivedProduct);
+            derivedProduct = hosted.createProduct(derivedProduct);
 
             providedProduct = hostedTestApi.createProduct(Products.random());
             product = Products.random();
             product.setProvidedProducts(Set.of(providedProduct));
             product.setDerivedProduct(derivedProduct);
-            product = client.hosted().createProduct(product);
+            product = hosted.createProduct(product);
 
-            this.client.hosted().createSubscription(Subscriptions.random(owner, product));
+            hosted.createSubscription(Subscriptions.random(owner, product));
             AsyncJobStatusDTO job = ownerApi.refreshPools(this.owner.getKey(), false);
             AsyncJobStatusDTO status = jobsApi.waitForJob(job.getId());
             assertEquals("FINISHED", status.getState());

@@ -13,16 +13,17 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.spec;
+package org.candlepin.spec.entitlements;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.client.v1.AttributeDTO;
 import org.candlepin.dto.api.client.v1.BrandingDTO;
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
@@ -40,8 +41,6 @@ import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.client.v1.OwnerContentApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
-import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
-import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -53,6 +52,7 @@ import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Content;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
+import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
@@ -61,8 +61,8 @@ import org.candlepin.spec.bootstrap.data.util.X509HuffmanDecodeUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -75,11 +75,12 @@ import java.util.Set;
 @SpecTest
 public class EntitlementCertificateV3SpecTest {
 
-    private ApiClient client;
-    private OwnerClient ownerApi;
-    private OwnerContentApi ownerContentApi;
-    private OwnerProductApi ownerProductApi;
-    private ConsumerClient consumerApi;
+    public static final String EXTENSION_ID = "1.3.6.1.4.1.2312.9.6";
+    private static ApiClient client;
+    private static OwnerClient ownerApi;
+    private static OwnerContentApi ownerContentApi;
+    private static OwnerProductApi ownerProductApi;
+    private static ConsumerClient consumerApi;
     private HostedTestApi hostedTestApi;
     private OwnerDTO owner;
     private ConsumerDTO system;
@@ -88,48 +89,51 @@ public class EntitlementCertificateV3SpecTest {
     private ContentDTO content;
     private ContentDTO archContent;
     private PoolDTO pool;
-    private PoolDTO pool30;
 
     private SubscriptionDTO subscription;
-    private SubscriptionDTO subscription30;
 
-
-    @BeforeEach
-    public void beforeEach() {
+    @BeforeAll
+    public static void beforeAll() {
         client = ApiClients.admin();
         ownerApi = client.owners();
         ownerContentApi = client.ownerContent();
         ownerProductApi = client.ownerProducts();
         consumerApi = client.consumers();
-        if (CandlepinMode.isHosted()) {
-            hostedTestApi = client.hosted();
-        }
-        product = Products.randomEng().name(StringUtil.random("Test Product"))
-            .addAttributesItem(new AttributeDTO().name("version").value("6.4"))
-            .addAttributesItem(new AttributeDTO().name("arch").value("i386, x86_64"))
-            .addAttributesItem(new AttributeDTO().name("sockets").value("4"))
-            .addAttributesItem(new AttributeDTO().name("cores").value("8"))
-            .addAttributesItem(new AttributeDTO().name("ram").value("16"))
-            .addAttributesItem(new AttributeDTO().name("usage").value("Disaster Recovery"))
-            .addAttributesItem(new AttributeDTO().name("roles")
-                .value("Red Hat Enterprise Linux Server, Red Hat Enterprise Linux Workstation"))
-            .addAttributesItem(new AttributeDTO().name("addons")
-                .value("my_server_addon, my_workstation_addon"))
-            .addAttributesItem(new AttributeDTO().name("warning_period").value("15"))
-            .addAttributesItem(new AttributeDTO().name("management_enabled").value("true"))
-            .addAttributesItem(new AttributeDTO().name("stacking_id").value("8888"))
-            .addAttributesItem(new AttributeDTO().name("virt_only").value("false"))
-            .addAttributesItem(new AttributeDTO().name("support_level").value("standard"))
-            .addAttributesItem(new AttributeDTO().name("support_type").value("excellent"));
-        product30 = Products.randomEng().name(StringUtil.random("Test Product"))
-            .addAttributesItem(new AttributeDTO().name("version").value("6.4"))
-            .addAttributesItem(new AttributeDTO().name("arch").value("i386, x86_64"))
-            .addAttributesItem(new AttributeDTO().name("sockets").value("4"))
-            .addAttributesItem(new AttributeDTO().name("warning_period").value("15"))
-            .addAttributesItem(new AttributeDTO().name("management_enabled").value("true"))
-            .addAttributesItem(new AttributeDTO().name("virt_only").value("false"))
-            .addAttributesItem(new AttributeDTO().name("support_level").value("standard"))
-            .addAttributesItem(new AttributeDTO().name("support_type").value("excellent"));
+    }
+
+    @BeforeEach
+    public void beforeEach() {
+        hostedTestApi = client.hosted();
+        product = Products.randomEng()
+            .attributes(List.of(
+                ProductAttributes.Version.withValue("6.4"),
+                ProductAttributes.Arch.withValue("i386, x86_64"),
+                ProductAttributes.Sockets.withValue("4"),
+                ProductAttributes.Cores.withValue("8"),
+                ProductAttributes.Ram.withValue("16"),
+                ProductAttributes.Usage.withValue("Disaster Recovery"),
+                ProductAttributes.Roles
+                    .withValue("Red Hat Enterprise Linux Server, Red Hat Enterprise Linux Workstation"),
+                ProductAttributes.Addons
+                    .withValue("my_server_addon, my_workstation_addon"),
+                ProductAttributes.WarningPeriod.withValue("15"),
+                ProductAttributes.ManagementEnabled.withValue("true"),
+                ProductAttributes.StackingId.withValue("8888"),
+                ProductAttributes.VirtOnly.withValue("false"),
+                ProductAttributes.SupportLevel.withValue("standard"),
+                ProductAttributes.SupportType.withValue("excellent")
+            ));
+        product30 = Products.randomEng()
+            .attributes(List.of(
+                ProductAttributes.Version.withValue("6.4"),
+                ProductAttributes.Arch.withValue("i386, x86_64"),
+                ProductAttributes.Sockets.withValue("4"),
+                ProductAttributes.WarningPeriod.withValue("15"),
+                ProductAttributes.ManagementEnabled.withValue("true"),
+                ProductAttributes.VirtOnly.withValue("false"),
+                ProductAttributes.SupportLevel.withValue("standard"),
+                ProductAttributes.SupportType.withValue("excellent")
+            ));
 
         content = Content.random()
             .type("yum")
@@ -154,16 +158,14 @@ public class EntitlementCertificateV3SpecTest {
             archContent = hostedTestApi.createContent(archContent);
             hostedTestApi.addContentToProduct(product.getId(), Map.of(content.getId(), false));
             hostedTestApi.addContentToProduct(product.getId(), Map.of(archContent.getId(), false));
-            subscription = Subscriptions.random(owner, product)
+            subscription = hostedTestApi.createSubscription(Subscriptions.random(owner, product)
                 .contractNumber("12345")
                 .accountNumber("6789")
-                .orderNumber("order1");
-            subscription = hostedTestApi.createSubscription(subscription);
-            subscription30 = Subscriptions.random(owner, product30)
+                .orderNumber("order1"));
+            hostedTestApi.createSubscription(Subscriptions.random(owner, product30)
                 .contractNumber("123456")
                 .accountNumber("67890")
-                .orderNumber("order2");
-            subscription30 = hostedTestApi.createSubscription(subscription30);
+                .orderNumber("order2"));
             AsyncJobStatusDTO refresh = ownerApi.refreshPools(owner.getKey(), false);
             if (refresh != null) {
                 client.jobs().waitForJob(refresh.getId());
@@ -176,54 +178,29 @@ public class EntitlementCertificateV3SpecTest {
             archContent = ownerContentApi.createContent(owner.getKey(), archContent);
             product = ownerProductApi.addContent(owner.getKey(), product.getId(), content.getId(), false);
             product = ownerProductApi.addContent(owner.getKey(), product.getId(), archContent.getId(), false);
-            pool = Pools.random(product)
+            pool = ownerApi.createPool(owner.getKey(), Pools.random(product)
                 .contractNumber("12345")
                 .accountNumber("6789")
-                .orderNumber("order1");
-            pool = ownerApi.createPool(owner.getKey(), pool);
-            pool30 = Pools.random(product30)
+                .orderNumber("order1"));
+            ownerApi.createPool(owner.getKey(), Pools.random(product30)
                 .contractNumber("123456")
                 .accountNumber("67890")
-                .orderNumber("order2");
-            pool30 = ownerApi.createPool(owner.getKey(), pool30);
+                .orderNumber("order2"));
         }
-        system = Consumers.random(owner)
+
+        system = consumerApi.createConsumer(Consumers.random(owner)
             .name(StringUtil.random("system"))
             .type(new ConsumerTypeDTO().label("system"))
-            .facts(Map.of("system.certificate_version", "3.4", "uname.machine", "i386"));
-        system = consumerApi.createConsumer(system);
+            .facts(Map.of("system.certificate_version", "3.4", "uname.machine", "i386")));
     }
 
     /**
      * This test covers the case where the system supports 3.0 certs, but
      * the server is creating 3.4 certs, and the product contains attributes
      * supported by 3.0.
-     * @throws Exception
      */
     @Test
-    @DisplayName("should generate a version 3.4 certificate when requesting a 3.0 certificate")
-    @OnlyInHosted
-    public void shouldGenerateThreeFourCertRequestThreeZero() throws Exception {
-        ProductDTO product30 = Products.randomEng().name(StringUtil.random("Test Product"))
-            .addAttributesItem(new AttributeDTO().name("version").value("6.4"))
-            .addAttributesItem(new AttributeDTO().name("arch").value("i386, x86_64"))
-            .addAttributesItem(new AttributeDTO().name("sockets").value("4"))
-            .addAttributesItem(new AttributeDTO().name("warning_period").value("15"))
-            .addAttributesItem(new AttributeDTO().name("management_enabled").value("true"))
-            .addAttributesItem(new AttributeDTO().name("virt_only").value("false"))
-            .addAttributesItem(new AttributeDTO().name("support_level").value("standard"))
-            .addAttributesItem(new AttributeDTO().name("support_type").value("excellent"));
-        product30 = hostedTestApi.createProduct(product30);
-        SubscriptionDTO subscription30 = Subscriptions.random(owner, product30)
-            .contractNumber("123456")
-            .accountNumber("67890")
-            .orderNumber("order2");
-        subscription30 = hostedTestApi.createSubscription(subscription30);
-        AsyncJobStatusDTO refresh = ownerApi.refreshPools(owner.getKey(), false);
-        if (refresh != null) {
-            client.jobs().waitForJob(refresh.getId());
-        }
-
+    public void shouldGenerateThreeFourCertRequestThreeZero() {
         ConsumerDTO v3System = consumerApi.createConsumer(Consumers.random(owner, ConsumerTypes.System)
             .facts(Map.of("system.certificate_version", "3.0", "uname.machine", "i386")));
         ApiClient v3SystemClient = ApiClients.trustedConsumer(v3System.getUuid());
@@ -232,73 +209,33 @@ public class EntitlementCertificateV3SpecTest {
         List<EntitlementDTO> v3SystemEntitlements = v3SystemClient.consumers()
             .listEntitlements(v3System.getUuid());
         Optional<CertificateDTO> certificate = v3SystemEntitlements.stream()
-            .map(EntitlementDTO::getCertificates)
-            .filter(Objects::nonNull)
-            .flatMap(Set::stream)
+            .map(this::firstCertOf)
+            .flatMap(Optional::stream)
             .findFirst();
 
-        assertThat(certificate)
-            .as("Cert is missing!")
-            .isPresent()
-            .map(CertificateDTO::getCert)
-            .map(cert -> CertificateUtil.standardExtensionValueFromCert(cert, "1.3.6.1.4.1.2312.9.6"))
-            .hasValue("3.4");
+        assertExtensionValue(certificate, "3.4");
     }
 
     @Test
-    @DisplayName("should generate a version 3.4 certificate when requesting a 3.0 certificate")
-    @OnlyInStandalone
-    public void shouldGenerateThreeFourCertRequestThreeZeroInStandalone() throws Exception {
-        ProductDTO product30 = Products.randomEng().name(StringUtil.random("Test Product"))
-            .addAttributesItem(new AttributeDTO().name("version").value("6.4"))
-            .addAttributesItem(new AttributeDTO().name("arch").value("i386, x86_64"))
-            .addAttributesItem(new AttributeDTO().name("sockets").value("4"))
-            .addAttributesItem(new AttributeDTO().name("warning_period").value("15"))
-            .addAttributesItem(new AttributeDTO().name("management_enabled").value("true"))
-            .addAttributesItem(new AttributeDTO().name("virt_only").value("false"))
-            .addAttributesItem(new AttributeDTO().name("support_level").value("standard"))
-            .addAttributesItem(new AttributeDTO().name("support_type").value("excellent"));
-        product30 = ownerProductApi.createProductByOwner(owner.getKey(), product30);
-        PoolDTO pool30 = Pools.random(product30)
-            .contractNumber("123456")
-            .accountNumber("67890")
-            .orderNumber("order2");
-        pool30 = ownerApi.createPool(owner.getKey(), pool30);
-
-        ConsumerDTO v3System = consumerApi.createConsumer(Consumers.random(owner, ConsumerTypes.System)
-            .facts(Map.of("system.certificate_version", "3.0", "uname.machine", "i386")));
-        ApiClient v3SystemClient = ApiClients.trustedConsumer(v3System.getUuid());
-        v3SystemClient.consumers().bindProduct(v3System.getUuid(), product30.getId());
-
-        List<EntitlementDTO> v3SystemEntitlements = v3SystemClient.consumers()
-            .listEntitlements(v3System.getUuid());
-        Optional<CertificateDTO> certificate = v3SystemEntitlements.stream()
-            .map(EntitlementDTO::getCertificates)
-            .filter(Objects::nonNull)
-            .flatMap(Set::stream)
-            .findFirst();
-
-        assertThat(certificate)
-            .as("Cert is missing!")
-            .isPresent()
-            .map(CertificateDTO::getCert)
-            .map(cert -> CertificateUtil.standardExtensionValueFromCert(cert, "1.3.6.1.4.1.2312.9.6"))
-            .hasValue("3.4");
-    }
-
-    @Test
-    @DisplayName("should generated a version 3.4 certificate")
-    public void shouldGenerateThreeFourCert() throws Exception {
+    public void shouldGenerateThreeFourCert() {
         consumerApi.bindProduct(system.getUuid(), product.getId());
         EntitlementDTO ent = consumerApi.listEntitlements(system.getUuid()).get(0);
-        String value = CertificateUtil.standardExtensionValueFromCert(
-            ent.getCertificates().iterator().next().getCert(), "1.3.6.1.4.1.2312.9.6");
-        assertEquals("3.4", value);
+        Optional<CertificateDTO> certificate = firstCertOf(ent);
+
+        assertExtensionValue(certificate, "3.4");
+    }
+
+    private Optional<CertificateDTO> firstCertOf(EntitlementDTO ent) {
+        if (ent == null || ent.getCertificates() == null) {
+            return Optional.empty();
+        }
+        return ent.getCertificates().stream()
+            .filter(Objects::nonNull)
+            .findFirst();
     }
 
     @Test
-    @DisplayName("should generate a version 3.4 certificate on distributors with a cert_v3 capability")
-    public void shouldGenerateThreeFourCertForCapableDistributor() throws Exception {
+    public void shouldGenerateThreeFourCertForCapableDistributor() {
         String distName = StringUtil.random("SAMvBillion");
         DistributorVersionDTO version = new DistributorVersionDTO()
             .name(distName)
@@ -311,18 +248,15 @@ public class EntitlementCertificateV3SpecTest {
             .facts(Map.of("distributor_version", distName));
         distributor = consumerApi.createConsumer(distributor);
         ApiClient consumerClient = ApiClients.trustedConsumer(distributor.getUuid());
-        consumerApi = consumerClient.consumers();
-        consumerApi.bindProduct(distributor.getUuid(), product30.getId());
+        consumerClient.consumers().bindProduct(distributor.getUuid(), product30.getId());
         EntitlementDTO ent = consumerApi.listEntitlements(distributor.getUuid()).get(0);
-        String value = CertificateUtil.standardExtensionValueFromCert(
-            ent.getCertificates().iterator().next().getCert(), "1.3.6.1.4.1.2312.9.6");
-        assertEquals("3.4", value);
+        Optional<CertificateDTO> certificate = firstCertOf(ent);
+        assertExtensionValue(certificate, "3.4");
         client.distributorVersions().delete(version.getId());
     }
 
     @Test
-    @DisplayName("should generate the correct body in the blob")
-    public void shouldGenerateCorrectBodyInTheBlob() throws Exception {
+    public void shouldGenerateCorrectBodyInTheBlob() {
         consumerApi.bindProduct(system.getUuid(), product.getId());
         List<JsonNode> jsonNodes = consumerApi.exportCertificates(system.getUuid(), null);
         assertEquals(1, jsonNodes.size());
@@ -344,7 +278,7 @@ public class EntitlementCertificateV3SpecTest {
         String addons = subscription.get("addons").toString();
         assert addons.contains("my_server_addon");
         assert addons.contains("my_workstation_addon");
-        assertEquals(true, subscription.get("management").asBoolean());
+        assertTrue(subscription.get("management").asBoolean());
         assertEquals("8888", subscription.get("stacking_id").asText());
         assertNull(subscription.get("virt_only"));
         assertEquals("standard", subscription.get("service").get("level").asText());
@@ -385,7 +319,7 @@ public class EntitlementCertificateV3SpecTest {
         assertEquals(content.getGpgUrl(), regRetContent.get("gpg_url").asText());
         assertEquals("/content/dist/rhel/$releasever/$basearch/os",
             regRetContent.get("path").asText());
-        assertEquals(false, regRetContent.get("enabled").asBoolean());
+        assertFalse(regRetContent.get("enabled").asBoolean());
         assertEquals(6400, regRetContent.get("metadata_expire").asInt());
         assertThat(regRetContent.get("required_tags")).hasSize(2);
 
@@ -396,7 +330,7 @@ public class EntitlementCertificateV3SpecTest {
         assertEquals(archContent.getGpgUrl(), archRetContent.get("gpg_url").asText());
         assertEquals("/content/dist/rhel/arch/specific/$releasever/$basearch/os",
             archRetContent.get("path").asText());
-        assertEquals(false, archRetContent.get("enabled").asBoolean());
+        assertFalse(archRetContent.get("enabled").asBoolean());
         assertEquals(6400, archRetContent.get("metadata_expire").asInt());
         assertThat(archRetContent.get("required_tags")).hasSize(2);
         assertThat(archRetContent.get("arches")).hasSize(2);
@@ -406,62 +340,27 @@ public class EntitlementCertificateV3SpecTest {
     }
 
     @Test
-    @DisplayName("should have correct branding info in json blob")
-    public void shouldHaveCorrectBrandingInTheBlob() throws Exception {
-        BrandingDTO branding = null;
-        ProductDTO mktProduct = null;
-        ProductDTO engProduct = null;
-        if (CandlepinMode.isHosted()) {
-            engProduct = Products.randomEng()
-                .name("engineering_product_name");
-            engProduct = hostedTestApi.createProduct(engProduct);
-            branding = Branding.random("Super Branded Name")
-                .type("Some Type")
-                .productId(engProduct.getId());
-            mktProduct = Products.randomSKU()
-                .name("marketing_product_name")
-                .branding(Set.of(branding))
-                .providedProducts(Set.of(engProduct));
-            mktProduct = hostedTestApi.createProduct(mktProduct);
-            subscription = Subscriptions.random(owner, mktProduct)
-                .contractNumber("12345")
-                .accountNumber("6789")
-                .orderNumber("order1")
-                .providedProducts(Set.of(engProduct));
-            subscription = hostedTestApi.createSubscription(subscription);
-            AsyncJobStatusDTO refresh = ownerApi.refreshPools(owner.getKey(), false);
-            if (refresh != null) {
-                client.jobs().waitForJob(refresh.getId());
-            }
-            List<PoolDTO> pools = ownerApi.listOwnerPools(owner.getKey());
-            for (PoolDTO subPool : pools) {
-                if (subPool.getProductId().equals(mktProduct.getId())) {
-                    pool = subPool;
-                }
-            }
-        }
-        else {
-            engProduct = Products.randomEng()
-                .name("engineering_product_name");
-            engProduct = ownerProductApi.createProductByOwner(owner.getKey(), engProduct);
-            branding = Branding.random("Super Branded Name")
-                .type("Some Type")
-                .productId(engProduct.getId());
-            mktProduct = Products.randomSKU()
-                .name("marketing_product_name")
-                .branding(Set.of(branding))
-                .providedProducts(Set.of(engProduct));
-            mktProduct = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct);
-            ProvidedProductDTO engProvidedProduct = (new ProvidedProductDTO())
-                .productName(engProduct.getName())
-                .productId(engProduct.getId());
-            pool = Pools.random(mktProduct)
-                .contractNumber("12345")
-                .accountNumber("6789")
-                .orderNumber("order1")
-                .providedProducts(Set.of(engProvidedProduct));
-            pool = ownerApi.createPool(owner.getKey(), pool);
-        }
+    public void shouldHaveCorrectBrandingInTheBlob() {
+        ProductDTO engProduct = Products.randomEng()
+            .name("engineering_product_name");
+        engProduct = ownerProductApi.createProductByOwner(owner.getKey(), engProduct);
+        BrandingDTO branding = Branding.random("Super Branded Name")
+            .type("Some Type")
+            .productId(engProduct.getId());
+        ProductDTO mktProduct = Products.randomSKU()
+            .name("marketing_product_name")
+            .branding(Set.of(branding))
+            .providedProducts(Set.of(engProduct));
+        mktProduct = ownerProductApi.createProductByOwner(owner.getKey(), mktProduct);
+        ProvidedProductDTO engProvidedProduct = (new ProvidedProductDTO())
+            .productName(engProduct.getName())
+            .productId(engProduct.getId());
+        pool = Pools.random(mktProduct)
+            .contractNumber("12345")
+            .accountNumber("6789")
+            .orderNumber("order1")
+            .providedProducts(Set.of(engProvidedProduct));
+        pool = ownerApi.createPool(owner.getKey(), pool);
 
         assertThat(pool.getBranding()).hasSize(1);
         consumerApi.bindProduct(system.getUuid(), engProduct.getId());
@@ -476,7 +375,6 @@ public class EntitlementCertificateV3SpecTest {
     }
 
     @Test
-    @DisplayName("should encode the content urls")
     public void shouldEncodeTheContentUrls() throws Exception {
         ContentDTO content1 = Content.random();
         content1.setContentUrl("/content/dist/rhel/$releasever/$basearch/debug");
@@ -506,10 +404,10 @@ public class EntitlementCertificateV3SpecTest {
             pool = ownerApi.createPool(owner.getKey(), pool);
         }
         ApiClient consumerClient = ApiClients.trustedConsumer(system.getUuid());
-        consumerApi = consumerClient.consumers();
-        JsonNode bindResult = consumerApi.bindProduct(system.getUuid(), product.getId());
+        ConsumerClient consumers = consumerClient.consumers();
+        JsonNode bindResult = consumers.bindProduct(system.getUuid(), product.getId());
 
-        List<JsonNode> jsonNodes = consumerApi.exportCertificates(system.getUuid(), null);
+        List<JsonNode> jsonNodes = consumers.exportCertificates(system.getUuid(), null);
         assertEquals(1, jsonNodes.size());
         JsonNode jsonBody = jsonNodes.get(0);
         assertThat(jsonBody.get("products").get(0).get("content")).hasSize(4);
@@ -525,7 +423,6 @@ public class EntitlementCertificateV3SpecTest {
     }
 
     @Test
-    @DisplayName("should encode many content urls")
     public void shouldEncodeManyContentUrls() throws Exception {
         for (int i = 0; i < 100; i++) {
             ContentDTO content = Content.random();
@@ -556,11 +453,11 @@ public class EntitlementCertificateV3SpecTest {
             pool = ownerApi.createPool(owner.getKey(), pool);
         }
         ApiClient consumerClient = ApiClients.trustedConsumer(system.getUuid());
-        consumerApi = consumerClient.consumers();
-        JsonNode bindResult = consumerApi.bindProduct(system.getUuid(), product.getId());
+        ConsumerClient consumers = consumerClient.consumers();
+        JsonNode bindResult = consumers.bindProduct(system.getUuid(), product.getId());
 
         // confirm content count to cross-check
-        List<JsonNode> jsonNodes = consumerApi.exportCertificates(system.getUuid(), null);
+        List<JsonNode> jsonNodes = consumers.exportCertificates(system.getUuid(), null);
         assertEquals(1, jsonNodes.size());
         JsonNode jsonBody = jsonNodes.get(0);
         assertThat(jsonBody.get("products")).hasSize(1);
@@ -580,4 +477,14 @@ public class EntitlementCertificateV3SpecTest {
             "/content/dist/rhel/$releasever-75/$basearch-75/debug-75",
             "/content/dist/rhel/$releasever-99/$basearch-99/debug-99"));
     }
+
+    private void assertExtensionValue(Optional<CertificateDTO> certificate, String expectedValue) {
+        assertThat(certificate)
+            .as("Cert is missing!")
+            .isPresent()
+            .map(CertificateDTO::getCert)
+            .map(cert -> CertificateUtil.standardExtensionValueFromCert(cert, EXTENSION_ID))
+            .hasValue(expectedValue);
+    }
+
 }

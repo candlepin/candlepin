@@ -109,30 +109,6 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, path, "GET", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public void clearData() {
-        okhttp3.Call localVarCall = clearDataCall();
-        localVarApiClient.execute(localVarCall);
-    }
-
-    public okhttp3.Call clearDataCall() {
-        // Operation Servers
-        String basePath = getBasePath();
-
-        Object body = null;
-
-        // create path and map variables
-        String localVarPath = "/hostedtest";
-
-        List<Pair> queryParams = new ArrayList<>();
-        List<Pair> collectionQueryParams = new ArrayList<>();
-        Map<String, String> headers = new HashMap<>();
-        Map<String, String> cookies = new HashMap<>();
-        Map<String, Object> form = new HashMap<>();
-
-        String[] auth = new String[]{};
-        return localVarApiClient.buildCall(basePath, localVarPath, "DELETE", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
-    }
-
     public OwnerDTO createOwner(OwnerDTO owner) {
         okhttp3.Call localVarCall = createOwnerCall(owner);
         Type localVarReturnType = new TypeToken<OwnerDTO>() {}.getType();

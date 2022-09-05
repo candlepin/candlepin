@@ -49,10 +49,10 @@ import java.util.List;
 
 @SpecTest
 public class ProductResourceSpecTest {
-    private ProductsApi productsApi;
-    private OwnerApi ownerApi;
-    private OwnerProductApi ownerProductApi;
-    private JobsClient jobsClient;
+    private static ProductsApi productsApi;
+    private static OwnerApi ownerApi;
+    private static OwnerProductApi ownerProductApi;
+    private static JobsClient jobsClient;
 
     private String p1ProductId;
     private String p2ProductId;
@@ -65,7 +65,7 @@ public class ProductResourceSpecTest {
     private String p6ProductId;
 
     @BeforeAll
-    public void beforeAll() {
+    public static void beforeAll() {
         ApiClient client = ApiClients.admin();
         productsApi = client.products();
         ownerApi = client.owners();

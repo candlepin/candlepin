@@ -56,21 +56,6 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldCleanServerData() {
-        hosted.createContent(Content.random());
-        hosted.createContent(Content.random());
-        hosted.createProduct(Products.random());
-
-        assertThat(hosted.listProducts()).hasSizeGreaterThanOrEqualTo(1);
-        assertThat(hosted.listContent()).hasSizeGreaterThanOrEqualTo(2);
-
-        hosted.clearData();
-
-        assertThat(hosted.listProducts()).isEmpty();
-        assertThat(hosted.listContent()).isEmpty();
-    }
-
-    @Test
     void shouldCreateOwner() {
         OwnerDTO owner = hosted.createOwner(Owners.random());
 
