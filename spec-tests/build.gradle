@@ -1,7 +1,7 @@
 plugins {
     id "java"
     id "checkstyle"
-    id "com.adarshr.test-logger"
+    id "test-logging-convention"
 }
 apply from: "../dependencies.gradle"
 
@@ -37,6 +37,10 @@ dependencies {
     implementation fileTree(dir: '/usr/lib64/jss', include: '*.jar')
 }
 
+testlogger {
+    theme = "standard-parallel"
+}
+
 // Disable empty test task
 test {
     enabled = false
@@ -62,26 +66,6 @@ task spec(type: Test) {
             systemProperty properyKey, System.getProperty(properyKey)
         }
     }
-}
-
-testlogger {
-    theme 'standard'
-    showExceptions true
-    showStackTraces true
-    showFullStackTraces project.hasProperty("full")
-    showCauses true
-    slowThreshold 2000
-    showSummary true
-    showSimpleNames false
-    showPassed true
-    showSkipped true
-    showFailed true
-    showOnlySlow false
-    showStandardStreams project.hasProperty("full")
-    showPassedStandardStreams false
-    showSkippedStandardStreams false
-    showFailedStandardStreams project.hasProperty("full")
-    logLevel 'lifecycle'
 }
 
 // Create a single checkstyle task to make it easier to run both the checkstyleMain & checkstyleTest targets

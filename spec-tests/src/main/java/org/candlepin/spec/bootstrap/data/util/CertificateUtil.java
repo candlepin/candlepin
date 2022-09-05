@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
 public final class CertificateUtil {
@@ -44,10 +45,11 @@ public final class CertificateUtil {
      * @param jsonPayload - the json that contains the encoded and compressed entitlement certificates
      * @param mapper - used to parse the json payload.
      * @return the entitlement certificate bodies
-     * @throws Exception if unable to decompress the body of the certificate or parse the json
+     * @throws IOException if unable to decompress the body of the certificate or parse the json
+     * @throws DataFormatException if unable to decompress the body of the certificate or parse the json
      */
     public static List<JsonNode> extractEntitlementCertificatesFromPayload(Object jsonPayload,
-        ObjectMapper mapper) throws Exception {
+        ObjectMapper mapper) throws IOException, DataFormatException {
         if (jsonPayload == null) {
             return new ArrayList<>();
         }
@@ -61,7 +63,7 @@ public final class CertificateUtil {
         List<String> certificateBodies = ((List<Map<String, String>>) jsonPayload).stream()
             .map(stringStringMap -> mapper.convertValue(stringStringMap, CertificateDTO.class))
             .filter(Objects::nonNull)
-            .map(cert -> cert.getCert())
+            .map(CertificateDTO::getCert)
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
 
@@ -96,18 +98,21 @@ public final class CertificateUtil {
         return getDerValueFromExtension(certString, extensionId).getOctetString();
     }
 
-    public static String standardExtensionValueFromCert(String certString, String extensionId)
-        throws IOException {
+    public static String standardExtensionValueFromCert(String certString, String extensionId) {
         return getDerValueFromExtension(certString, extensionId).toString();
     }
 
-    public static DerValue getDerValueFromExtension(String certString, String extensionId)
-        throws IOException {
+    public static DerValue getDerValueFromExtension(String certString, String extensionId) {
         certString = certString.replace("\"", "")
             .replace("\\n", Character.toString((char) 10));
         X509Certificate cert = X509Cert.parseCertificate(certString);
-        DerValue value = new DerValue(cert.getExtensionValue(extensionId));
-        byte[] octetString = value.getOctetString();
-        return new DerValue(octetString);
+        try {
+            DerValue value = new DerValue(cert.getExtensionValue(extensionId));
+            byte[] octetString = value.getOctetString();
+            return new DerValue(octetString);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

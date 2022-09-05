@@ -541,22 +541,18 @@ public class OwnerProductResourceSpecTest {
         ProductDTO product = Products.random();
         product.setBranding(Set.of(Branding.random(product), Branding.random(product)));
         product = ownerProductApi.createProductByOwner(ownerKey, product);
-        assertEquals(2, product.getBranding().size());
-        BrandingDTO branding1 = Iterables.get(product.getBranding(), 0);
-        BrandingDTO branding2 = Iterables.get(product.getBranding(), 1);
+        Set<String> expectedBranding = getBrandingNames(product);
+        assertEquals(2, expectedBranding.size());
+        assertThat(getBrandingNames(product)).hasSameElementsAs(expectedBranding);
 
         product = ownerProductApi.getProductByOwner(ownerKey, product.getId());
-        assertEquals(2, product.getBranding().size());
-        assertTrue(product.getBranding().contains(branding1));
-        assertTrue(product.getBranding().contains(branding2));
+        assertThat(getBrandingNames(product)).hasSameElementsAs(expectedBranding);
 
         String newName = StringUtil.random("name");
         product.setName(newName);
         product = ownerProductApi.updateProductByOwner(ownerKey, product.getId(), product);
         assertEquals(newName, product.getName());
-        assertEquals(2, product.getBranding().size());
-        assertTrue(product.getBranding().contains(branding1));
-        assertTrue(product.getBranding().contains(branding2));
+        assertThat(getBrandingNames(product)).hasSameElementsAs(expectedBranding);
 
         ownerProductApi.deleteProductByOwner(ownerKey, product.getId());
         final String productId = product.getId();
@@ -564,9 +560,13 @@ public class OwnerProductResourceSpecTest {
 
         // The shared product data should not get removed until the OrphanCleanupJob runs.
         product = productsApi.getProduct(product.getUuid());
-        assertEquals(2, product.getBranding().size());
-        assertTrue(product.getBranding().contains(branding1));
-        assertTrue(product.getBranding().contains(branding2));
+        assertThat(getBrandingNames(product)).hasSameElementsAs(expectedBranding);
+    }
+
+    private Set<String> getBrandingNames(ProductDTO product) {
+        return product.getBranding().stream()
+            .map(BrandingDTO::getName)
+            .collect(Collectors.toSet());
     }
 
     @Test
