@@ -41,8 +41,6 @@ import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.OwnerContentApi;
 import org.candlepin.resource.OwnerProductApi;
 import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
-import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
-import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -203,76 +201,15 @@ public class EntitlementCertificateV3SpecTest {
      */
     @Test
     @DisplayName("should generate a version 3.4 certificate when requesting a 3.0 certificate")
-    @OnlyInHosted
     public void shouldGenerateThreeFourCertRequestThreeZero() throws Exception {
-        ProductDTO product30 = Products.randomEng().name(StringUtil.random("Test Product"))
-            .addAttributesItem(new AttributeDTO().name("version").value("6.4"))
-            .addAttributesItem(new AttributeDTO().name("arch").value("i386, x86_64"))
-            .addAttributesItem(new AttributeDTO().name("sockets").value("4"))
-            .addAttributesItem(new AttributeDTO().name("warning_period").value("15"))
-            .addAttributesItem(new AttributeDTO().name("management_enabled").value("true"))
-            .addAttributesItem(new AttributeDTO().name("virt_only").value("false"))
-            .addAttributesItem(new AttributeDTO().name("support_level").value("standard"))
-            .addAttributesItem(new AttributeDTO().name("support_type").value("excellent"));
-        product30 = hostedTestApi.createProduct(product30);
-        SubscriptionDTO subscription30 = Subscriptions.random(owner, product30)
-            .contractNumber("123456")
-            .accountNumber("67890")
-            .orderNumber("order2");
-        subscription30 = hostedTestApi.createSubscription(subscription30);
-        AsyncJobStatusDTO refresh = ownerApi.refreshPools(owner.getKey(), false);
-        if (refresh != null) {
-            client.jobs().waitForJob(refresh.getId());
-        }
+        ConsumerDTO v3System = Consumers.random(owner)
+            .name(StringUtil.random("system"))
+            .type(new ConsumerTypeDTO().label("system"))
+            .facts(Map.of("system.certificate_version", "3.0", "uname.machine", "i386"));
+        v3System = consumerApi.register(v3System);
+        consumerApi.bindProduct(v3System.getUuid(), product30.getId());
 
-        ConsumerDTO v3System = consumerApi.register(Consumers.random(owner, ConsumerTypes.System)
-            .facts(Map.of("system.certificate_version", "3.0", "uname.machine", "i386")));
-        ApiClient v3SystemClient = ApiClients.trustedConsumer(v3System.getUuid());
-        v3SystemClient.consumers().bindProduct(v3System.getUuid(), product30.getId());
-
-        List<EntitlementDTO> v3SystemEntitlements = v3SystemClient.consumers()
-            .listEntitlements(v3System.getUuid());
-        Optional<CertificateDTO> certificate = v3SystemEntitlements.stream()
-            .map(EntitlementDTO::getCertificates)
-            .filter(Objects::nonNull)
-            .flatMap(Set::stream)
-            .findFirst();
-
-        assertThat(certificate)
-            .as("Cert is missing!")
-            .isPresent()
-            .map(CertificateDTO::getCert)
-            .map(cert -> CertificateUtil.standardExtensionValueFromCert(cert, "1.3.6.1.4.1.2312.9.6"))
-            .hasValue("3.4");
-    }
-
-    @Test
-    @DisplayName("should generate a version 3.4 certificate when requesting a 3.0 certificate")
-    @OnlyInStandalone
-    public void shouldGenerateThreeFourCertRequestThreeZeroInStandalone() throws Exception {
-        ProductDTO product30 = Products.randomEng().name(StringUtil.random("Test Product"))
-            .addAttributesItem(new AttributeDTO().name("version").value("6.4"))
-            .addAttributesItem(new AttributeDTO().name("arch").value("i386, x86_64"))
-            .addAttributesItem(new AttributeDTO().name("sockets").value("4"))
-            .addAttributesItem(new AttributeDTO().name("warning_period").value("15"))
-            .addAttributesItem(new AttributeDTO().name("management_enabled").value("true"))
-            .addAttributesItem(new AttributeDTO().name("virt_only").value("false"))
-            .addAttributesItem(new AttributeDTO().name("support_level").value("standard"))
-            .addAttributesItem(new AttributeDTO().name("support_type").value("excellent"));
-        product30 = ownerProductApi.createProductByOwner(owner.getKey(), product30);
-        PoolDTO pool30 = Pools.random(product30)
-            .contractNumber("123456")
-            .accountNumber("67890")
-            .orderNumber("order2");
-        pool30 = ownerApi.createPool(owner.getKey(), pool30);
-
-        ConsumerDTO v3System = consumerApi.register(Consumers.random(owner, ConsumerTypes.System)
-            .facts(Map.of("system.certificate_version", "3.0", "uname.machine", "i386")));
-        ApiClient v3SystemClient = ApiClients.trustedConsumer(v3System.getUuid());
-        v3SystemClient.consumers().bindProduct(v3System.getUuid(), product30.getId());
-
-        List<EntitlementDTO> v3SystemEntitlements = v3SystemClient.consumers()
-            .listEntitlements(v3System.getUuid());
+        List<EntitlementDTO> v3SystemEntitlements = consumerApi.listEntitlements(v3System.getUuid());
         Optional<CertificateDTO> certificate = v3SystemEntitlements.stream()
             .map(EntitlementDTO::getCertificates)
             .filter(Objects::nonNull)
