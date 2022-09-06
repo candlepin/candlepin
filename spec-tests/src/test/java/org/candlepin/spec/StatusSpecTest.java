@@ -42,7 +42,7 @@ class StatusSpecTest {
         assertThat(status.getVersion()).isNotBlank();
         assertThat(status.getRulesVersion()).isNotBlank();
         assertThat(status.getStandalone()).isNotNull();
-        assertThat(status.getRulesSource()).isEqualTo("default");
+        assertThat(status.getRulesSource()).containsAnyOf("default", "database");
         assertThat(status.getManagerCapabilities()).isNotEmpty();
         assertThat(status.getTimeUTC()).isNotNull();
     }
