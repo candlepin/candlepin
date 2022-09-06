@@ -5151,7 +5151,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ConsumerDTOArrayElement'
+                type: array
+                items:
+                  $ref: '#/components/schemas/ConsumerDTOArrayElement'
         404:
           description: An owner could not be found using the provided key
           content:
@@ -8239,6 +8241,7 @@ components:
               example: "/jobs/ff808081554a3e4101554a3e9033005d"
             resultData:
               type: object
+              description: "May contain a single message or job data as JSON"
               example: "Refresh completed successfully!"
 
     AbstractCertificateDTO:

@@ -35,4 +35,8 @@ public class PoolsClient extends PoolsApi {
         return super.listPools(null, consumer, null, true, null, null, null, null, null);
     }
 
+    public List<PoolDTO> listPoolsByOwnerAndProduct(String owner, String product) {
+        return super.listPools(owner, null, product, true, null, null, null, null, null);
+    }
+
 }
