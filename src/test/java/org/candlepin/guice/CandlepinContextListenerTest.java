@@ -393,7 +393,7 @@ public class CandlepinContextListenerTest {
         // Runtime exception for changeset that is not in db
         prepareForInitialization();
         RuntimeException re = assertThrows(RuntimeException.class, () -> spy.contextInitialized(evt));
-        assertEquals("The database is missing Liquibase changeset(s).", re.getMessage());
+        assertEquals("The database is missing Liquibase changeset(s)", re.getMessage());
     }
 
     @Test
