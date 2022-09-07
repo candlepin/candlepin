@@ -15,12 +15,13 @@
 package org.candlepin.resource;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.ConsumerTypeDTO;
+import org.candlepin.dto.api.server.v1.ConsumerTypeDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.resource.server.v1.ConsumerTypeApi;
 
 import com.google.inject.Inject;
 

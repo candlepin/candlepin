@@ -17,11 +17,11 @@ package org.candlepin.spec;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 
-import org.candlepin.ApiException;
-import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.dto.api.v1.SubscriptionDTO;
+import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.OwnerDTO;
+import org.candlepin.dto.api.client.v1.ProductDTO;
+import org.candlepin.dto.api.client.v1.SubscriptionDTO;
+import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.HostedTestApi;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.client.ApiClients;

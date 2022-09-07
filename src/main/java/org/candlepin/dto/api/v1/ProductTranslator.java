@@ -16,6 +16,10 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.api.server.v1.AttributeDTO;
+import org.candlepin.dto.api.server.v1.BrandingDTO;
+import org.candlepin.dto.api.server.v1.ProductContentDTO;
+import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;

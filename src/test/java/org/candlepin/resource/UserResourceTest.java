@@ -23,8 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.dto.api.v1.UserDTO;
+import org.candlepin.dto.api.server.v1.OwnerDTO;
+import org.candlepin.dto.api.server.v1.UserDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Owner;

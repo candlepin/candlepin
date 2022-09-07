@@ -16,7 +16,7 @@ package org.candlepin.dto.shim;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
-import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.util.Util;
 

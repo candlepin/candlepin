@@ -25,7 +25,7 @@ import static org.mockito.Mockito.mock;
 import org.candlepin.auth.CloudRegistrationAuth;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
-import org.candlepin.dto.api.v1.CloudRegistrationDTO;
+import org.candlepin.dto.api.server.v1.CloudRegistrationDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.exceptions.NotImplementedException;

@@ -14,7 +14,7 @@
  */
 package org.candlepin.jackson;
 
-import org.candlepin.dto.api.v1.ConsumerTypeDTO;
+import org.candlepin.dto.api.server.v1.ConsumerTypeDTO;
 import org.candlepin.exceptions.CandlepinJsonProcessingException;
 
 import com.fasterxml.jackson.core.JsonParser;

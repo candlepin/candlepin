@@ -15,9 +15,8 @@
 package org.candlepin.dto.rules.v1;
 
 import org.candlepin.dto.AbstractDTOTest;
-import org.candlepin.dto.api.v1.DateRange;
+import org.candlepin.dto.api.server.v1.DateRange;
 import org.candlepin.util.Util;
-
 
 import java.util.Arrays;
 import java.util.Calendar;

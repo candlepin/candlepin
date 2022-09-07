@@ -21,7 +21,8 @@ package org.candlepin.resource;
 import org.candlepin.auth.SecurityHole;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.dto.api.v1.Link;
+import org.candlepin.dto.api.server.v1.Link;
+import org.candlepin.resource.server.v1.RootApi;
 
 import com.google.inject.Inject;
 

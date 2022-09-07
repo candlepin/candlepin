@@ -15,12 +15,13 @@
 package org.candlepin.resource;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.DistributorVersionDTO;
+import org.candlepin.dto.api.server.v1.DistributorVersionDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
+import org.candlepin.resource.server.v1.DistributorVersionsApi;
 import org.candlepin.resource.validation.DTOValidator;
 
 import com.google.inject.Inject;

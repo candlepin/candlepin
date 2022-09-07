@@ -22,8 +22,8 @@ import org.candlepin.auth.Verify;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.v1.EntitlementDTO;
+import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.server.v1.EntitlementDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.AsyncJobStatus;
@@ -43,6 +43,7 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
+import org.candlepin.resource.server.v1.EntitlementsApi;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 
 import com.google.inject.Inject;

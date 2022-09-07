@@ -14,8 +14,8 @@
  */
 package org.candlepin.spec.bootstrap.client;
 
-import org.candlepin.dto.api.v1.CertificateDTO;
-import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.client.v1.CertificateDTO;
+import org.candlepin.dto.api.client.v1.ConsumerDTO;
 
 /**
  * Static factory created for easy selection of appropriate authentication method.

@@ -22,13 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.CdnDTO;
+import org.candlepin.dto.api.server.v1.CdnDTO;
+import org.candlepin.dto.api.server.v1.ContentDTO;
+import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
+import org.candlepin.dto.api.server.v1.ProductDTO;
+import org.candlepin.dto.api.server.v1.SubscriptionDTO;
 import org.candlepin.dto.api.v1.CdnTranslator;
-import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.NestedOwnerTranslator;
-import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.dto.api.v1.SubscriptionDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Owner;

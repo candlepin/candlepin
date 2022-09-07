@@ -14,7 +14,7 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.dto.api.v1.OwnerInfo;
+import org.candlepin.dto.api.server.v1.OwnerInfo;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;

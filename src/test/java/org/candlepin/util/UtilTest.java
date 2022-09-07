@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 
-import org.candlepin.dto.api.v1.AttributeDTO;
+import org.candlepin.dto.api.server.v1.AttributeDTO;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;

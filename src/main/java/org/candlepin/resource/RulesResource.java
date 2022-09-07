@@ -21,6 +21,7 @@ import org.candlepin.model.CuratorException;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.resource.server.v1.RulesApi;
 
 import com.google.inject.Inject;
 

@@ -14,7 +14,7 @@
  */
 package org.candlepin.resource.util;
 
-import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.GuestId;

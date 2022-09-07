@@ -21,10 +21,10 @@ import org.candlepin.auth.SecurityHole;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.dto.api.v1.ProductCertificateDTO;
-import org.candlepin.dto.api.v1.ProductDTO;
+import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.server.v1.OwnerDTO;
+import org.candlepin.dto.api.server.v1.ProductCertificateDTO;
+import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.AsyncJobStatus;
@@ -34,6 +34,7 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.resource.server.v1.ProductsApi;
 
 import com.google.inject.Inject;
 

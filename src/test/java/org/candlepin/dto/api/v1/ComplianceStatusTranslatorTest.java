@@ -21,6 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.ComplianceReasonDTO;
+import org.candlepin.dto.api.server.v1.ComplianceStatusDTO;
+import org.candlepin.dto.api.server.v1.DateRange;
+import org.candlepin.dto.api.server.v1.EntitlementDTO;
 import org.candlepin.model.Entitlement;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;

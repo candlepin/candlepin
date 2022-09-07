@@ -17,8 +17,8 @@ package org.candlepin.spec;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.candlepin.dto.api.v1.StatusDTO;
-import org.candlepin.resource.StatusApi;
+import org.candlepin.dto.api.client.v1.StatusDTO;
+import org.candlepin.resource.client.v1.StatusApi;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 

@@ -14,10 +14,10 @@
  */
 package org.candlepin.spec.bootstrap.client.api;
 
-import org.candlepin.ApiClient;
-import org.candlepin.ApiException;
-import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
-import org.candlepin.resource.JobsApi;
+import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
+import org.candlepin.invoker.client.ApiClient;
+import org.candlepin.invoker.client.ApiException;
+import org.candlepin.resource.client.v1.JobsApi;
 
 import java.util.List;
 import java.util.Set;

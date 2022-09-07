@@ -14,7 +14,7 @@
  */
 package org.candlepin.spec.bootstrap.client;
 
-import org.candlepin.ApiClient;
+import org.candlepin.invoker.client.ApiClient;
 
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;

@@ -15,9 +15,10 @@
 package org.candlepin.resource;
 
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.DeletedConsumerDTO;
+import org.candlepin.dto.api.server.v1.DeletedConsumerDTO;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.DeletedConsumerCurator;
+import org.candlepin.resource.server.v1.DeletedConsumerApi;
 import org.candlepin.resource.util.ResourceDateParser;
 
 import com.google.inject.Inject;

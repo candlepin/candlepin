@@ -16,8 +16,8 @@ package org.candlepin.dto.shim;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
-import org.candlepin.dto.api.v1.CertificateDTO;
-import org.candlepin.dto.api.v1.CertificateSerialDTO;
+import org.candlepin.dto.api.server.v1.CertificateDTO;
+import org.candlepin.dto.api.server.v1.CertificateSerialDTO;
 import org.candlepin.service.model.CertificateInfo;
 
 /**

@@ -14,7 +14,7 @@
  */
 package org.candlepin.resteasy.converter;
 
-import org.candlepin.dto.api.v1.KeyValueParamDTO;
+import org.candlepin.dto.api.server.v1.KeyValueParamDTO;
 import org.candlepin.exceptions.CandlepinParameterParseException;
 
 import org.slf4j.Logger;

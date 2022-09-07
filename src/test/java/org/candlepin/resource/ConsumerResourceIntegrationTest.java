@@ -38,15 +38,15 @@ import org.candlepin.config.Configuration;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.CertificateDTO;
-import org.candlepin.dto.api.v1.CertificateSerialDTO;
-import org.candlepin.dto.api.v1.ConsumerDTO;
-import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
-import org.candlepin.dto.api.v1.ConsumerTypeDTO;
-import org.candlepin.dto.api.v1.EntitlementDTO;
-import org.candlepin.dto.api.v1.HypervisorIdDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.dto.api.v1.ReleaseVerDTO;
+import org.candlepin.dto.api.server.v1.CertificateDTO;
+import org.candlepin.dto.api.server.v1.CertificateSerialDTO;
+import org.candlepin.dto.api.server.v1.ConsumerDTO;
+import org.candlepin.dto.api.server.v1.ConsumerInstalledProductDTO;
+import org.candlepin.dto.api.server.v1.ConsumerTypeDTO;
+import org.candlepin.dto.api.server.v1.EntitlementDTO;
+import org.candlepin.dto.api.server.v1.HypervisorIdDTO;
+import org.candlepin.dto.api.server.v1.OwnerDTO;
+import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
@@ -106,13 +106,20 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     private static final String CONSUMER_NAME = "consumer_name";
     private static final String USER_NAME = "testing user";
 
-    @Inject private CandlepinPoolManager poolManager;
-    @Inject private PermissionFactory permFactory;
-    @Inject private ConsumerResource consumerResource;
-    @Inject private IdentityCertServiceAdapter icsa;
-    @Inject private CertificateSerialCurator serialCurator;
-    @Inject protected ModelTranslator modelTranslator;
-    @Inject protected JobManager jobManager;
+    @Inject
+    private CandlepinPoolManager poolManager;
+    @Inject
+    private PermissionFactory permFactory;
+    @Inject
+    private ConsumerResource consumerResource;
+    @Inject
+    private IdentityCertServiceAdapter icsa;
+    @Inject
+    private CertificateSerialCurator serialCurator;
+    @Inject
+    protected ModelTranslator modelTranslator;
+    @Inject
+    protected JobManager jobManager;
 
     private ConsumerType standardSystemType;
     private ConsumerTypeDTO standardSystemTypeDTO;
@@ -725,7 +732,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(1, serials.size());
 
         CertificateDTO original = serials.get(0);
-        CertificateSerialDTO serialDTO  = original.getSerial();
+        CertificateSerialDTO serialDTO = original.getSerial();
         CertificateSerial serial = new CertificateSerial(serialDTO.getId(),
             Util.toDate(serialDTO.getExpiration()));
         serial.setSerial(serialDTO.getSerial());

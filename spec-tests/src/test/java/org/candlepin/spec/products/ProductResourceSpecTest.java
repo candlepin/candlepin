@@ -19,14 +19,14 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.candlepin.ApiException;
-import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.dto.api.v1.PoolDTO;
-import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.resource.OwnerApi;
-import org.candlepin.resource.OwnerProductApi;
-import org.candlepin.resource.ProductsApi;
+import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.client.v1.OwnerDTO;
+import org.candlepin.dto.api.client.v1.PoolDTO;
+import org.candlepin.dto.api.client.v1.ProductDTO;
+import org.candlepin.invoker.client.ApiException;
+import org.candlepin.resource.client.v1.OwnerApi;
+import org.candlepin.resource.client.v1.OwnerProductApi;
+import org.candlepin.resource.client.v1.ProductsApi;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;

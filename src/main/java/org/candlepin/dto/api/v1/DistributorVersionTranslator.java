@@ -16,6 +16,8 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.api.server.v1.DistributorVersionCapabilityDTO;
+import org.candlepin.dto.api.server.v1.DistributorVersionDTO;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.util.Util;

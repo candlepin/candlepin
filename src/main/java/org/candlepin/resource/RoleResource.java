@@ -16,12 +16,13 @@ package org.candlepin.resource;
 
 import org.candlepin.auth.Access;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
-import org.candlepin.dto.api.v1.RoleDTO;
+import org.candlepin.dto.api.server.v1.PermissionBlueprintDTO;
+import org.candlepin.dto.api.server.v1.RoleDTO;
 import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PermissionBlueprintCurator;
+import org.candlepin.resource.server.v1.RolesApi;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.UserServiceAdapter;

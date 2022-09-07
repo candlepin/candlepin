@@ -15,7 +15,7 @@
 
 package org.candlepin.spec.bootstrap.client.cert;
 
-import org.candlepin.dto.api.v1.CertificateDTO;
+import org.candlepin.dto.api.client.v1.CertificateDTO;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;

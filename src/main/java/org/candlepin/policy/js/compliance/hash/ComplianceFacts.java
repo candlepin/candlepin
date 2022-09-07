@@ -15,7 +15,7 @@
 
 package org.candlepin.policy.js.compliance.hash;
 
-import org.candlepin.dto.api.v1.ConsumerDTO;
+import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.model.Consumer;
 
 import java.util.Arrays;

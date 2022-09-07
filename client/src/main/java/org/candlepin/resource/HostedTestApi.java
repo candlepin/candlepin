@@ -15,15 +15,15 @@
 
 package org.candlepin.resource;
 
-import org.candlepin.ApiClient;
-import org.candlepin.ApiException;
-import org.candlepin.ApiResponse;
-import org.candlepin.Configuration;
-import org.candlepin.Pair;
-import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.dto.api.v1.ProductDTO;
-import org.candlepin.dto.api.v1.SubscriptionDTO;
+import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.OwnerDTO;
+import org.candlepin.dto.api.client.v1.ProductDTO;
+import org.candlepin.dto.api.client.v1.SubscriptionDTO;
+import org.candlepin.invoker.client.ApiClient;
+import org.candlepin.invoker.client.ApiException;
+import org.candlepin.invoker.client.ApiResponse;
+import org.candlepin.invoker.client.Configuration;
+import org.candlepin.invoker.client.Pair;
 
 import com.google.gson.reflect.TypeToken;
 

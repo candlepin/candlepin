@@ -16,6 +16,8 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
+import org.candlepin.dto.api.server.v1.ConsumerTypeDTO;
+import org.candlepin.dto.api.server.v1.ImportUpstreamConsumerDTO;
 import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.util.Util;
 

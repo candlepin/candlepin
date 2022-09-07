@@ -18,13 +18,14 @@ import org.candlepin.auth.Verify;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.SubscriptionDTO;
+import org.candlepin.dto.api.server.v1.SubscriptionDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
+import org.candlepin.resource.server.v1.SubscriptionApi;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.Inject;

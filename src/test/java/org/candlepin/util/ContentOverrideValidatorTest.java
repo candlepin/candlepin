@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.dto.api.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.test.DatabaseTestFixture;

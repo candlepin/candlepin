@@ -15,12 +15,12 @@
 
 package org.candlepin.spec.bootstrap.data.util;
 
-import org.candlepin.ApiException;
-import org.candlepin.dto.api.v1.OwnerDTO;
-import org.candlepin.dto.api.v1.RoleDTO;
-import org.candlepin.dto.api.v1.UserDTO;
-import org.candlepin.resource.RolesApi;
-import org.candlepin.resource.UsersApi;
+import org.candlepin.dto.api.client.v1.OwnerDTO;
+import org.candlepin.dto.api.client.v1.RoleDTO;
+import org.candlepin.dto.api.client.v1.UserDTO;
+import org.candlepin.invoker.client.ApiException;
+import org.candlepin.resource.client.v1.RolesApi;
+import org.candlepin.resource.client.v1.UsersApi;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.data.builder.Roles;
 

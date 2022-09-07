@@ -18,7 +18,7 @@ package org.candlepin.cache;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import org.candlepin.dto.api.v1.StatusDTO;
+import org.candlepin.dto.api.server.v1.StatusDTO;
 
 import org.junit.jupiter.api.Test;
 

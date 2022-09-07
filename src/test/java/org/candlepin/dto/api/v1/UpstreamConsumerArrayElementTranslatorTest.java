@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.UpstreamConsumerDTOArrayElement;
 import org.candlepin.model.UpstreamConsumer;
 
 /**

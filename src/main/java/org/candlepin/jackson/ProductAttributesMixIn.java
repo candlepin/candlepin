@@ -15,7 +15,7 @@
 
 package org.candlepin.jackson;
 
-import org.candlepin.dto.api.v1.AttributeDTO;
+import org.candlepin.dto.api.server.v1.AttributeDTO;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

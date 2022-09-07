@@ -19,10 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.UpstreamConsumerDTO;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.UpstreamConsumer;
-
 
 
 /**

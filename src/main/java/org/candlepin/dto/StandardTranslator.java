@@ -14,72 +14,72 @@
  */
 package org.candlepin.dto;
 
-import org.candlepin.dto.api.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.server.v1.BrandingDTO;
+import org.candlepin.dto.api.server.v1.CapabilityDTO;
+import org.candlepin.dto.api.server.v1.CdnDTO;
+import org.candlepin.dto.api.server.v1.CertificateDTO;
+import org.candlepin.dto.api.server.v1.CertificateSerialDTO;
+import org.candlepin.dto.api.server.v1.ComplianceReasonDTO;
+import org.candlepin.dto.api.server.v1.ComplianceStatusDTO;
+import org.candlepin.dto.api.server.v1.ConsumerInstalledProductDTO;
+import org.candlepin.dto.api.server.v1.ContentDTO;
+import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.server.v1.DeletedConsumerDTO;
+import org.candlepin.dto.api.server.v1.EnvironmentDTO;
+import org.candlepin.dto.api.server.v1.GuestIdDTO;
+import org.candlepin.dto.api.server.v1.GuestIdDTOArrayElement;
+import org.candlepin.dto.api.server.v1.HypervisorConsumerDTO;
+import org.candlepin.dto.api.server.v1.HypervisorIdDTO;
+import org.candlepin.dto.api.server.v1.ImportRecordDTO;
+import org.candlepin.dto.api.server.v1.ImportUpstreamConsumerDTO;
+import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
+import org.candlepin.dto.api.server.v1.PermissionBlueprintDTO;
+import org.candlepin.dto.api.server.v1.ProductCertificateDTO;
+import org.candlepin.dto.api.server.v1.ProductContentDTO;
+import org.candlepin.dto.api.server.v1.ProductDTO;
+import org.candlepin.dto.api.server.v1.RoleDTO;
+import org.candlepin.dto.api.server.v1.SubscriptionDTO;
+import org.candlepin.dto.api.server.v1.SystemPurposeComplianceStatusDTO;
+import org.candlepin.dto.api.server.v1.UeberCertificateDTO;
+import org.candlepin.dto.api.server.v1.UpstreamConsumerDTO;
+import org.candlepin.dto.api.server.v1.UpstreamConsumerDTOArrayElement;
+import org.candlepin.dto.api.server.v1.UserDTO;
 import org.candlepin.dto.api.v1.ActivationKeyTranslator;
-import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.AsyncJobStatusTranslator;
-import org.candlepin.dto.api.v1.BrandingDTO;
 import org.candlepin.dto.api.v1.BrandingTranslator;
-import org.candlepin.dto.api.v1.CapabilityDTO;
 import org.candlepin.dto.api.v1.CapabilityTranslator;
-import org.candlepin.dto.api.v1.CdnDTO;
 import org.candlepin.dto.api.v1.CdnTranslator;
-import org.candlepin.dto.api.v1.CertificateDTO;
-import org.candlepin.dto.api.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.v1.CertificateSerialTranslator;
 import org.candlepin.dto.api.v1.CertificateTranslator;
-import org.candlepin.dto.api.v1.ComplianceReasonDTO;
 import org.candlepin.dto.api.v1.ComplianceReasonTranslator;
-import org.candlepin.dto.api.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.v1.ComplianceStatusTranslator;
-import org.candlepin.dto.api.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.v1.ConsumerInstalledProductTranslator;
-import org.candlepin.dto.api.v1.ContentDTO;
-import org.candlepin.dto.api.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.v1.ContentOverrideTranslator;
 import org.candlepin.dto.api.v1.ContentTranslator;
-import org.candlepin.dto.api.v1.DeletedConsumerDTO;
 import org.candlepin.dto.api.v1.DeletedConsumerTranslator;
-import org.candlepin.dto.api.v1.EnvironmentDTO;
 import org.candlepin.dto.api.v1.EnvironmentTranslator;
 import org.candlepin.dto.api.v1.GuestIdArrayElementTranslator;
-import org.candlepin.dto.api.v1.GuestIdDTO;
-import org.candlepin.dto.api.v1.GuestIdDTOArrayElement;
 import org.candlepin.dto.api.v1.GuestIdTranslator;
-import org.candlepin.dto.api.v1.HypervisorConsumerDTO;
 import org.candlepin.dto.api.v1.HypervisorConsumerTranslator;
-import org.candlepin.dto.api.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.v1.HypervisorIdTranslator;
-import org.candlepin.dto.api.v1.ImportRecordDTO;
 import org.candlepin.dto.api.v1.ImportRecordTranslator;
-import org.candlepin.dto.api.v1.ImportUpstreamConsumerDTO;
 import org.candlepin.dto.api.v1.ImportUpstreamConsumerTranslator;
-import org.candlepin.dto.api.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.v1.NestedOwnerDTOTranslator;
 import org.candlepin.dto.api.v1.OwnerInfoTranslator;
-import org.candlepin.dto.api.v1.PermissionBlueprintDTO;
 import org.candlepin.dto.api.v1.PermissionBlueprintInfoTranslator;
 import org.candlepin.dto.api.v1.PermissionBlueprintTranslator;
 import org.candlepin.dto.api.v1.PoolToSubscriptionTranslator;
-import org.candlepin.dto.api.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.v1.ProductCertificateTranslator;
-import org.candlepin.dto.api.v1.ProductContentDTO;
 import org.candlepin.dto.api.v1.ProductContentTranslator;
-import org.candlepin.dto.api.v1.ProductDTO;
 import org.candlepin.dto.api.v1.ProductTranslator;
-import org.candlepin.dto.api.v1.RoleDTO;
 import org.candlepin.dto.api.v1.RoleInfoTranslator;
 import org.candlepin.dto.api.v1.RoleTranslator;
-import org.candlepin.dto.api.v1.SubscriptionDTO;
-import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.dto.api.v1.SystemPurposeComplianceStatusTranslator;
-import org.candlepin.dto.api.v1.UeberCertificateDTO;
 import org.candlepin.dto.api.v1.UeberCertificateTranslator;
 import org.candlepin.dto.api.v1.UpstreamConsumerArrayElementTranslator;
-import org.candlepin.dto.api.v1.UpstreamConsumerDTO;
-import org.candlepin.dto.api.v1.UpstreamConsumerDTOArrayElement;
 import org.candlepin.dto.api.v1.UpstreamConsumerTranslator;
-import org.candlepin.dto.api.v1.UserDTO;
 import org.candlepin.dto.api.v1.UserInfoTranslator;
 import org.candlepin.dto.api.v1.UserTranslator;
 import org.candlepin.dto.shim.BrandingInfoTranslator;
@@ -171,17 +171,17 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new org.candlepin.dto.api.v1.ConsumerTranslator(
             consumerTypeCurator, environmentCurator, ownerCurator),
-            Consumer.class, org.candlepin.dto.api.v1.ConsumerDTO.class);
+            Consumer.class, org.candlepin.dto.api.server.v1.ConsumerDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.api.v1.ConsumerArrayElementTranslator(
             consumerTypeCurator, ownerCurator),
-            Consumer.class, org.candlepin.dto.api.v1.ConsumerDTOArrayElement.class);
+            Consumer.class, org.candlepin.dto.api.server.v1.ConsumerDTOArrayElement.class);
         this.registerTranslator(
             new ConsumerInstalledProductTranslator(), ConsumerInstalledProduct.class,
             ConsumerInstalledProductDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.api.v1.ConsumerTypeTranslator(),
-            ConsumerType.class, org.candlepin.dto.api.v1.ConsumerTypeDTO.class);
+            ConsumerType.class, org.candlepin.dto.api.server.v1.ConsumerTypeDTO.class);
         this.registerTranslator(
             new ContentTranslator(), Content.class, ContentDTO.class);
         this.registerTranslator(
@@ -190,10 +190,10 @@ public class StandardTranslator extends SimpleModelTranslator {
             new DeletedConsumerTranslator(), DeletedConsumer.class, DeletedConsumerDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.api.v1.DistributorVersionTranslator(),
-            DistributorVersion.class, org.candlepin.dto.api.v1.DistributorVersionDTO.class);
+            DistributorVersion.class, org.candlepin.dto.api.server.v1.DistributorVersionDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.api.v1.EntitlementTranslator(),
-            Entitlement.class, org.candlepin.dto.api.v1.EntitlementDTO.class);
+            Entitlement.class, org.candlepin.dto.api.server.v1.EntitlementDTO.class);
         this.registerTranslator(
             new EnvironmentTranslator(), Environment.class, EnvironmentDTO.class);
         this.registerTranslator(
@@ -210,14 +210,14 @@ public class StandardTranslator extends SimpleModelTranslator {
             ImportUpstreamConsumer.class, ImportUpstreamConsumerDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.api.v1.NestedOwnerTranslator(),
-            Owner.class, org.candlepin.dto.api.v1.NestedOwnerDTO.class);
+            Owner.class, org.candlepin.dto.api.server.v1.NestedOwnerDTO.class);
         this.registerTranslator(
             new NestedOwnerDTOTranslator(), NestedOwnerDTO.class, Owner.class);
         this.registerTranslator(
             new org.candlepin.dto.api.v1.OwnerTranslator(),
-            Owner.class, org.candlepin.dto.api.v1.OwnerDTO.class);
+            Owner.class, org.candlepin.dto.api.server.v1.OwnerDTO.class);
         this.registerTranslator(
-            new OwnerInfoTranslator(), OwnerInfo.class, org.candlepin.dto.api.v1.OwnerDTO.class);
+            new OwnerInfoTranslator(), OwnerInfo.class, org.candlepin.dto.api.server.v1.OwnerDTO.class);
         this.registerTranslator(
             new PermissionBlueprintTranslator(), PermissionBlueprint.class, PermissionBlueprintDTO.class);
         this.registerTranslator(
@@ -225,10 +225,10 @@ public class StandardTranslator extends SimpleModelTranslator {
             PermissionBlueprintInfo.class, PermissionBlueprintDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.api.v1.PoolTranslator(),
-            Pool.class, org.candlepin.dto.api.v1.PoolDTO.class);
+            Pool.class, org.candlepin.dto.api.server.v1.PoolDTO.class);
         this.registerTranslator(
             new org.candlepin.dto.api.v1.PoolQuantityTranslator(),
-            PoolQuantity.class, org.candlepin.dto.api.v1.PoolQuantityDTO.class);
+            PoolQuantity.class, org.candlepin.dto.api.server.v1.PoolQuantityDTO.class);
         this.registerTranslator(
             new ProductTranslator(), Product.class, ProductDTO.class);
         this.registerTranslator(
@@ -311,7 +311,7 @@ public class StandardTranslator extends SimpleModelTranslator {
         this.registerTranslator(
             new BrandingInfoTranslator(), BrandingInfo.class, BrandingDTO.class);
         this.registerTranslator(new SubscriptionInfoTranslator(),
-            SubscriptionInfo.class, org.candlepin.dto.api.v1.SubscriptionDTO.class);
+            SubscriptionInfo.class, org.candlepin.dto.api.server.v1.SubscriptionDTO.class);
         this.registerTranslator(new CertificateSerialInfoTranslator(),
             CertificateSerialInfo.class, CertificateSerialDTO.class);
         this.registerTranslator(new CertificateInfoTranslator(),

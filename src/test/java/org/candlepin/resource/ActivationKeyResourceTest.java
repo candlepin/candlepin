@@ -22,12 +22,12 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.controller.PoolManager;
-import org.candlepin.dto.api.v1.ActivationKeyDTO;
-import org.candlepin.dto.api.v1.ActivationKeyPoolDTO;
-import org.candlepin.dto.api.v1.ActivationKeyProductDTO;
-import org.candlepin.dto.api.v1.ContentOverrideDTO;
-import org.candlepin.dto.api.v1.NestedOwnerDTO;
-import org.candlepin.dto.api.v1.ReleaseVerDTO;
+import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
+import org.candlepin.dto.api.server.v1.ActivationKeyPoolDTO;
+import org.candlepin.dto.api.server.v1.ActivationKeyProductDTO;
+import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
+import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
+import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;

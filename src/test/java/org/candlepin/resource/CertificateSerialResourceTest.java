@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.TestingModules;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.CertificateSerialDTO;
+import org.candlepin.dto.api.server.v1.CertificateSerialDTO;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 

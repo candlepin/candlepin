@@ -15,7 +15,7 @@
 
 package org.candlepin.spec.bootstrap.data.builder;
 
-import org.candlepin.dto.api.v1.AttributeDTO;
+import org.candlepin.dto.api.client.v1.AttributeDTO;
 
 public enum ProductAttributes {
     Arch("arch"),

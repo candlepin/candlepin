@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.js.compliance;
 
-import org.candlepin.dto.api.v1.DateRange;
+import org.candlepin.dto.api.server.v1.DateRange;
 import org.candlepin.model.Entitlement;
 
 import com.fasterxml.jackson.annotation.JsonFilter;

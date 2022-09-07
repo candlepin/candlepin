@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
-import org.candlepin.dto.api.v1.ContentDTO;
+import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.model.ContentInfo;
 

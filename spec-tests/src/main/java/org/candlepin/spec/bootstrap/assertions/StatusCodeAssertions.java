@@ -17,7 +17,7 @@ package org.candlepin.spec.bootstrap.assertions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.candlepin.ApiException;
+import org.candlepin.invoker.client.ApiException;
 
 import org.assertj.core.api.AbstractThrowableAssert;
 import org.assertj.core.api.AssertionsForClassTypes;

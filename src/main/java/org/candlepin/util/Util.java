@@ -14,7 +14,7 @@
  */
 package org.candlepin.util;
 
-import org.candlepin.dto.api.v1.AttributeDTO;
+import org.candlepin.dto.api.server.v1.AttributeDTO;
 import org.candlepin.model.CuratorException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -65,7 +65,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Predicate;
-
 
 
 /**
@@ -616,7 +615,7 @@ public class Util {
             .filter(Objects::nonNull)
             .filter(attr -> attr.getName() != null && !attr.getName().isEmpty())
             .filter(attr -> attr.getValue() != null)
-            .collect(HashMap::new, (map, attr)->map.put(attr.getName(), attr.getValue()), HashMap::putAll);
+            .collect(HashMap::new, (map, attr) -> map.put(attr.getName(), attr.getValue()), HashMap::putAll);
     }
 
     public static OffsetDateTime parseOffsetDateTime(DateTimeFormatter formatter, String value) {

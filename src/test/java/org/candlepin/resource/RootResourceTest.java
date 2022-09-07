@@ -17,7 +17,7 @@ package org.candlepin.resource;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.config.CandlepinCommonTestConfig;
-import org.candlepin.dto.api.v1.Link;
+import org.candlepin.dto.api.server.v1.Link;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
