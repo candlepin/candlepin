@@ -54,7 +54,7 @@ public class ConsumerClient extends ConsumerApi {
             .collect(Collectors.toList());
     }
 
-    public ConsumerDTO register(ConsumerDTO consumer) throws ApiException {
+    public ConsumerDTO createConsumer(ConsumerDTO consumer) throws ApiException {
         return super.createConsumer(consumer, null, consumer.getOwner().getKey(), null, true);
     }
 

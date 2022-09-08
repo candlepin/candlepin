@@ -112,7 +112,7 @@ class EntitlementResourceSpecTest {
         PoolDTO virtPool = Pools.random(virtual).quantity(6L);
         virtPool = ownerClient.createPool(owner.getKey(), virtPool);
 
-        consumer = client.consumers().register(Consumers.random(owner));
+        consumer = client.consumers().createConsumer(Consumers.random(owner));
         consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).consumers();
     }
 
@@ -213,7 +213,7 @@ class EntitlementResourceSpecTest {
     @Test
     @DisplayName("should allow consumer to change entitlement quantity")
     public void shouldAllowConsumerToChangeQuantity() throws Exception {
-        consumer = client.consumers().register(Consumers.random(qowner));
+        consumer = client.consumers().createConsumer(Consumers.random(qowner));
         consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).consumers();
         ProductDTO product = Products.random();
         product.setAttributes(List.of(new AttributeDTO().name("multi-entitlement").value("yes")));
@@ -250,7 +250,7 @@ class EntitlementResourceSpecTest {
     @Test
     @DisplayName("should not allow consumer to change entitlement quantity out of bounds")
     public void shouldNotAllowConsumerToChangeToExcessQuantity() throws Exception {
-        consumer = client.consumers().register(Consumers.random(qowner));
+        consumer = client.consumers().createConsumer(Consumers.random(qowner));
         consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).consumers();
         ProductDTO product = Products.random();
         product.setAttributes(List.of(new AttributeDTO().name("multi-entitlement").value("yes")));
@@ -276,7 +276,7 @@ class EntitlementResourceSpecTest {
     @Test
     @DisplayName("should not allow consumer to change entitlement quantity non-multi")
     public void shouldNotAllowConsumerToChangeQuantityNonMulti() throws Exception {
-        consumer = client.consumers().register(Consumers.random(qowner));
+        consumer = client.consumers().createConsumer(Consumers.random(qowner));
         consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).consumers();
         ProductDTO product = Products.random();
         product = ownerProductApi.createProductByOwner(qowner.getKey(), product);
@@ -374,7 +374,7 @@ class EntitlementResourceSpecTest {
 
     public void registerAndConsume(String poolId, String consumerType, int quantity)
         throws JsonProcessingException, ApiException {
-        ConsumerDTO consumer = client.consumers().register(
+        ConsumerDTO consumer = client.consumers().createConsumer(
             Consumers.random(owner).type(new ConsumerTypeDTO().label(consumerType)));
         ConsumerClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).consumers();
         try {
@@ -429,7 +429,7 @@ class EntitlementResourceSpecTest {
 
     public void registerConsumeUnregister(String poolId, String consumerType, int quantity)
         throws JsonProcessingException, ApiException {
-        ConsumerDTO consumer = client.consumers().register(
+        ConsumerDTO consumer = client.consumers().createConsumer(
             Consumers.random(owner).type(new ConsumerTypeDTO().label(consumerType)));
         ConsumerClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).consumers();
         try {

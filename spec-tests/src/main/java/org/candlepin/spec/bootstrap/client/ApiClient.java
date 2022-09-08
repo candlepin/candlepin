@@ -18,6 +18,7 @@ import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.client.v1.ActivationKeyApi;
 import org.candlepin.resource.client.v1.AdminApi;
 import org.candlepin.resource.client.v1.CdnApi;
+import org.candlepin.resource.client.v1.CloudRegistrationApi;
 import org.candlepin.resource.client.v1.ConsumerTypeApi;
 import org.candlepin.resource.client.v1.ContentApi;
 import org.candlepin.resource.client.v1.DeletedConsumerApi;
@@ -71,6 +72,10 @@ public class ApiClient {
 
     public CdnApi cdns() {
         return new CdnApi(this.client);
+    }
+
+    public CloudRegistrationApi cloudAuthorization() {
+        return new CloudRegistrationApi(this.client);
     }
 
     public ConsumerClient consumers() {

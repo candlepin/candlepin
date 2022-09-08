@@ -18,10 +18,13 @@ package org.candlepin.spec.bootstrap.assertions;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.candlepin.invoker.client.ApiException;
+import org.candlepin.spec.bootstrap.client.request.Response;
 
 import org.assertj.core.api.AbstractThrowableAssert;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.assertj.core.api.ThrowableAssert;
+
+import java.util.function.Supplier;
 
 public final class StatusCodeAssertions {
 
@@ -57,6 +60,18 @@ public final class StatusCodeAssertions {
         ThrowableAssert.ThrowingCallable callable) {
         ApiException exception = catchApiException(callable);
         return assertReturnCode(410, exception);
+    }
+
+    public static CandlepinStatusAssert assertThatStatus(
+        ThrowableAssert.ThrowingCallable callable) {
+        ApiException exception = catchApiException(callable);
+        return new CandlepinStatusAssert(exception);
+    }
+
+    public static CandlepinStatusAssert assertThatStatus(
+        Supplier<Response> callable) {
+        ApiException exception = new ApiExceptionAdapter(callable.get());
+        return new CandlepinStatusAssert(exception);
     }
 
     public static ApiException catchApiException(ThrowableAssert.ThrowingCallable code) {

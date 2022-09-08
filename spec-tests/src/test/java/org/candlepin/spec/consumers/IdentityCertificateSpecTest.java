@@ -46,7 +46,7 @@ class IdentityCertificateSpecTest {
         ApiClient client = ApiClients.admin();
         owner = client.owners().createOwner(Owners.random());
         consumer = client.consumers()
-            .register(Consumers.random(owner));
+            .createConsumer(Consumers.random(owner));
         idCert = X509Cert.from(consumer.getIdCert());
     }
 

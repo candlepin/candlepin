@@ -235,7 +235,7 @@ public class OwnerProductResourceSpecTest {
         product = ownerProductApi.createProductByOwner(ownerKey, product);
         PoolDTO pool = ownerApi.createPool(ownerKey, Pools.random(product));
 
-        ConsumerDTO consumer = consumerApi.register(Consumers.random(owner));
+        ConsumerDTO consumer = consumerApi.createConsumer(Consumers.random(owner));
         consumerApi.bindPool(consumer.getUuid(), pool.getId(), 1);
         List<OwnerDTO> productOwners = productsApi.getProductOwners(List.of(product.getId()));
         assertEquals(1, productOwners.size());

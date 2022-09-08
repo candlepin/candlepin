@@ -113,7 +113,7 @@ class OwnerResourceSpecTest {
         OwnerDTO newOwner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, newOwner);
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
-        userClient.consumers().register(Consumers.random(newOwner));
+        userClient.consumers().createConsumer(Consumers.random(newOwner));
 
         List<ConsumerDTOArrayElement> consumers = userClient.owners()
             .listOwnerConsumers(newOwner.getKey(), Set.of("system"));
@@ -136,7 +136,7 @@ class OwnerResourceSpecTest {
         OwnerDTO testOwner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, testOwner);
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
-        userClient.consumers().register(Consumers.random(testOwner));
+        userClient.consumers().createConsumer(Consumers.random(testOwner));
 
         List<ConsumerDTOArrayElement> consumers = userClient.owners()
             .listOwnerConsumers(testOwner.getKey());
@@ -151,7 +151,7 @@ class OwnerResourceSpecTest {
         UserDTO user = UserUtil.createUser(admin, owner);
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
 
-        ConsumerDTO consumer = userClient.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         ProductDTO product = createProduct(owner,
@@ -175,7 +175,7 @@ class OwnerResourceSpecTest {
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
         OwnerDTO testOwner2 = owners.createOwner(Owners.random());
 
-        ConsumerDTO consumer = userClient.consumers().register(Consumers.random(testOwner));
+        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(testOwner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         assertNotFound(() -> consumerClient.owners().ownerServiceLevels(testOwner2.getKey(), ""));
@@ -256,7 +256,7 @@ class OwnerResourceSpecTest {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
-        ConsumerDTO consumer = userClient.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ProductDTO product = createProduct(owner);
 
         for (int i = 0; i < 4; i++) {
@@ -331,8 +331,8 @@ class OwnerResourceSpecTest {
         ApiClient readOnlyClient = ApiClients.trustedUser(readOnlyUser.getUsername());
         ApiClient readWriteClient = ApiClients.trustedUser(readWriteUser.getUsername());
 
-        assertForbidden(() -> readOnlyClient.consumers().register(Consumers.random(owner)));
-        ConsumerDTO consumer = readWriteClient.consumers().register(Consumers.random(owner));
+        assertForbidden(() -> readOnlyClient.consumers().createConsumer(Consumers.random(owner)));
+        ConsumerDTO consumer = readWriteClient.consumers().createConsumer(Consumers.random(owner));
         assertThat(consumer).isNotNull();
     }
 
@@ -344,7 +344,7 @@ class OwnerResourceSpecTest {
         UserDTO user = UserUtil.createReadOnlyUser(admin, owner1);
         ApiClient ownerClient = ApiClients.trustedUser(user.getUsername());
 
-        assertNotFound(() -> ownerClient.consumers().register(Consumers.random(owner2)));
+        assertNotFound(() -> ownerClient.consumers().createConsumer(Consumers.random(owner2)));
     }
 
     @Test
@@ -475,7 +475,7 @@ class OwnerResourceSpecTest {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
-        ConsumerDTO consumer = userClient.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         ProductDTO product1 = createProduct(owner,
@@ -509,7 +509,7 @@ class OwnerResourceSpecTest {
         OwnerDTO owner = owners.createOwner(Owners.random());
         ProductDTO product = createProduct(owner, ProductAttributes.SupportLevel.withValue("VIP"));
         owners.createPool(owner.getKey(), Pools.random(product));
-        ConsumerDTO consumer = admin.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(owner));
 
         List<PoolDTO> ownerPools = owners.listOwnerPools(owner.getKey(), consumer.getUuid());
         assertThat(ownerPools)
@@ -567,7 +567,7 @@ class OwnerResourceSpecTest {
 
         UserDTO user = UserUtil.createUser(admin, owner);
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
-        ConsumerDTO consumer = admin.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         consumer
@@ -619,10 +619,10 @@ class OwnerResourceSpecTest {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
-        userClient.consumers().register(Consumers.random(owner));
-        userClient.consumers().register(Consumers.random(owner));
-        userClient.consumers().register(Consumers.random(owner, ConsumerTypes.Hypervisor));
-        userClient.consumers().register(Consumers.random(owner, ConsumerTypes.Candlepin));
+        userClient.consumers().createConsumer(Consumers.random(owner));
+        userClient.consumers().createConsumer(Consumers.random(owner));
+        userClient.consumers().createConsumer(Consumers.random(owner, ConsumerTypes.Hypervisor));
+        userClient.consumers().createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin));
 
         List<ConsumerDTOArrayElement> systems = userClient.owners()
             .listOwnerConsumers(owner.getKey(), Set.of("system"));

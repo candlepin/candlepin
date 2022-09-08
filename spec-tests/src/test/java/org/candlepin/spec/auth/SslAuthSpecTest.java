@@ -42,7 +42,7 @@ class SslAuthSpecTest {
     void shouldPassWithConsumerIdentityCert() throws ApiException {
         ApiClient client = ApiClients.admin();
         OwnerDTO owner = client.owners().createOwner(Owners.random());
-        ConsumerDTO consumer = client.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient sslClient = ApiClients.ssl(consumer);
 
         List<EntitlementDTO> entitlements = sslClient.consumers().listEntitlements(consumer.getUuid());
@@ -55,7 +55,7 @@ class SslAuthSpecTest {
     void shouldRejectScaCert() throws ApiException {
         ApiClient client = ApiClients.admin();
         OwnerDTO owner = client.owners().createOwner(Owners.randomSca());
-        ConsumerDTO consumer = client.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
 
         ApiClient sslClient = ApiClients.ssl(consumer.getIdCert());
         List<CertificateDTO> certs = sslClient.consumers().fetchCertificates(consumer.getUuid());

@@ -128,7 +128,7 @@ class JobStatusSpecTest {
     @DisplayName("should contain the system id for async binds")
     public void shouldContainSystemIdForAsync() throws Exception {
         ownerApi.healEntire(owner.getKey());
-        ConsumerDTO consumer = client.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
         consumerApi = consumerClient.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
@@ -330,7 +330,7 @@ class JobStatusSpecTest {
     public void shouldNotAllowUserToCancelJobItDidNotInitiate() throws Exception {
         jobsClient.setSchedulerStatus(false);
         try {
-            ConsumerDTO consumer = client.consumers().register(Consumers.random(owner));
+            ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
             ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
             consumerApi = consumerClient.consumers();
             AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
@@ -365,7 +365,7 @@ class JobStatusSpecTest {
     @Test
     @DisplayName("should allow consumer to view status of own job")
     public void shouldAllowConsumerToViewStatusOfOwnJob() throws Exception {
-        ConsumerDTO consumer = client.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
         consumerApi = consumerClient.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
@@ -380,7 +380,7 @@ class JobStatusSpecTest {
     @Test
     @DisplayName("should not allow consumer to access another consumers job status")
     public void shouldNotAllowConsumerToAccessStatusOfOthersJob() throws Exception {
-        ConsumerDTO consumer1 = client.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer1 = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient1 = ApiClients.trustedConsumer(consumer1.getUuid());
         ConsumerApi consumerApi1 = consumerClient1.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi1.bind(consumer1.getUuid(),
@@ -389,7 +389,7 @@ class JobStatusSpecTest {
         // wait for job to complete, or test clean up will conflict with the asynchronous job.
         jobsClient.waitForJob(bindStatus);
 
-        ConsumerDTO consumer2 = client.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer2 = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient2 = ApiClients.trustedConsumer(consumer2.getUuid());
 
         assertForbidden(() -> consumerClient2.jobs().getJobStatus(bindStatus.getId()));
@@ -400,7 +400,7 @@ class JobStatusSpecTest {
     public void shouldAllowConsumerToCancelOwnJob() throws Exception {
         jobsClient.setSchedulerStatus(false);
         try {
-            ConsumerDTO consumer = client.consumers().register(Consumers.random(owner));
+            ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
             ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
             consumerApi = consumerClient.consumers();
             AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
@@ -416,7 +416,7 @@ class JobStatusSpecTest {
     @Test
     @DisplayName("should fail to cancel terminal job")
     public void shouldFailToCancelTerminalJob() throws Exception {
-        ConsumerDTO consumer = client.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
         consumerApi = consumerClient.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
@@ -429,7 +429,7 @@ class JobStatusSpecTest {
     @Test
     @DisplayName("should not allow consumer to cancel another consumers job")
     public void shouldNotAllowConsumerToCancelOthersJob() throws Exception {
-        ConsumerDTO consumer1 = client.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer1 = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient1 = ApiClients.trustedConsumer(consumer1.getUuid());
         ConsumerApi consumerApi1 = consumerClient1.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi1.bind(consumer1.getUuid(),
@@ -438,7 +438,7 @@ class JobStatusSpecTest {
         // wait for job to complete, or test clean up will conflict with the asynchronous job.
         jobsClient.waitForJob(bindStatus);
 
-        ConsumerDTO consumer2 = client.consumers().register(Consumers.random(owner));
+        ConsumerDTO consumer2 = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient2 = ApiClients.trustedConsumer(consumer2.getUuid());
 
         assertForbidden(() -> consumerClient2.jobs().cancelJob(bindStatus.getId()));
