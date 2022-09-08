@@ -56,6 +56,12 @@ public final class StatusCodeAssertions {
         return assertReturnCode(404, exception);
     }
 
+    public static AbstractThrowableAssert<?, ? extends Throwable> assertConflict(
+        ThrowableAssert.ThrowingCallable callable) {
+        ApiException exception = catchApiException(callable);
+        return assertReturnCode(409, exception);
+    }
+
     public static AbstractThrowableAssert<?, ? extends Throwable> assertGone(
         ThrowableAssert.ThrowingCallable callable) {
         ApiException exception = catchApiException(callable);

@@ -56,4 +56,8 @@ public enum ProductAttributes {
             .value(value);
     }
 
+    public boolean isKeyOf(AttributeDTO attribute) {
+        return this.key.equals(attribute.getName());
+    }
+
 }
