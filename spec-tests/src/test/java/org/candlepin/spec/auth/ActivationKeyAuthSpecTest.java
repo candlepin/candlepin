@@ -24,7 +24,6 @@ import org.candlepin.dto.api.client.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.StatusDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.ConsumerApi;
 import org.candlepin.resource.client.v1.OwnerApi;
 import org.candlepin.resource.client.v1.ProductsApi;
@@ -48,7 +47,7 @@ class ActivationKeyAuthSpecTest {
     private static ActivationKeyDTO activationKey;
 
     @BeforeAll
-    static void beforeAll() throws ApiException {
+    static void beforeAll() {
         ApiClient userClient = ApiClients.admin();
         owner = userClient.owners().createOwner(Owners.random());
         ActivationKeyDTO testActivationKey = ActivationKeys.random(owner);
@@ -81,7 +80,7 @@ class ActivationKeyAuthSpecTest {
 
     @Test
     @DisplayName("no auth security hole should accept unauthenticated requests")
-    void noAuthSecurityHoleEndpointsShouldAcceptNoAuthRequests() throws ApiException {
+    void noAuthSecurityHoleEndpointsShouldAcceptNoAuthRequests() {
         StatusApi client = ApiClients.activationKey(owner.getKey(), activationKey.getName()).status();
 
         StatusDTO status = client.status();
@@ -137,7 +136,7 @@ class ActivationKeyAuthSpecTest {
 
     @Test
     @DisplayName("activation key with two keys one valid should pass")
-    void shouldPassWithAtLeastOneValidKey() throws ApiException {
+    void shouldPassWithAtLeastOneValidKey() {
         ConsumerApi client = ApiClients.noAuth().consumers();
         String activationKeys = toKeyString(activationKey.getName(), "some_key");
 

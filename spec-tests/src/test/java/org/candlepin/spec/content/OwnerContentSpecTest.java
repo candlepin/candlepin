@@ -32,7 +32,6 @@ import org.candlepin.dto.api.client.v1.ProductContentDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.SubscriptionDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
@@ -67,21 +66,21 @@ import java.util.Set;
 @SpecTest
 class OwnerContentSpecTest {
 
-    private OwnerDTO createOwner(ApiClient client) throws ApiException {
+    private OwnerDTO createOwner(ApiClient client) {
         return client.owners().createOwner(Owners.random());
     }
 
-    private ContentDTO createContent(ApiClient client, OwnerDTO owner, String idPrefix) throws ApiException {
+    private ContentDTO createContent(ApiClient client, OwnerDTO owner, String idPrefix) {
         return client.ownerContent()
             .createContent(owner.getKey(), Content.random(idPrefix));
     }
 
-    private ApiClient createOrgAdminClient(ApiClient adminClient, OwnerDTO owner) throws ApiException {
+    private ApiClient createOrgAdminClient(ApiClient adminClient, OwnerDTO owner) {
         UserDTO user = UserUtil.createUser(adminClient, owner);
         return ApiClients.trustedUser(user.getUsername(), true);
     }
 
-    private ApiClient createConsumerClient(ApiClient adminClient, OwnerDTO owner) throws ApiException {
+    private ApiClient createConsumerClient(ApiClient adminClient, OwnerDTO owner) {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
         return ApiClients.ssl(consumer.getIdCert());
     }

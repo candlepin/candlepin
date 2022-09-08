@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 class StatusSpecTest {
 
     @Test
-    void retrievesServerStatus() throws Exception {
+    void retrievesServerStatus() {
         StatusApi api = ApiClients.noAuth().status();
         StatusDTO status = api.status();
 

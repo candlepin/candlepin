@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -42,7 +41,7 @@ class IdentityCertificateSpecTest {
     private static X509Cert idCert;
 
     @BeforeAll
-    static void beforeAll() throws ApiException {
+    static void beforeAll() {
         ApiClient client = ApiClients.admin();
         owner = client.owners().createOwner(Owners.random());
         consumer = client.consumers()

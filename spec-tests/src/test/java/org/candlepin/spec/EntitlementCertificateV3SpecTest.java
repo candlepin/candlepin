@@ -36,7 +36,6 @@ import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ProvidedProductDTO;
 import org.candlepin.dto.api.client.v1.SubscriptionDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.client.v1.OwnerContentApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
@@ -96,7 +95,7 @@ public class EntitlementCertificateV3SpecTest {
 
 
     @BeforeEach
-    public void beforeEach() throws ApiException {
+    public void beforeEach() {
         client = ApiClients.admin();
         ownerApi = client.owners();
         ownerContentApi = client.ownerContent();

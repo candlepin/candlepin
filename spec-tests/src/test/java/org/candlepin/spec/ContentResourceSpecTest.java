@@ -23,7 +23,6 @@ import org.candlepin.dto.api.client.v1.ContentDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.OwnerApi;
 import org.candlepin.resource.client.v1.OwnerContentApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
@@ -219,15 +218,14 @@ public class ContentResourceSpecTest {
         assertEquals("ppc64", actualArch);
     }
 
-    private ContentDTO createContent(String ownerKey, String contentUrl, String arches) throws ApiException {
+    private ContentDTO createContent(String ownerKey, String contentUrl, String arches) {
         ContentDTO newContent = Content.random();
         newContent.setContentUrl(contentUrl);
         newContent.setArches(arches);
         return ownerContentApi.createContent(ownerKey, newContent);
     }
 
-    private ProductDTO createProduct(String ownerKey, Long multiplier, AttributeDTO attribute)
-        throws ApiException {
+    private ProductDTO createProduct(String ownerKey, Long multiplier, AttributeDTO attribute) {
         ProductDTO newProduct = Products.randomEng();
         if (attribute != null) {
             newProduct.setAttributes(List.of(attribute));
@@ -237,7 +235,7 @@ public class ContentResourceSpecTest {
         return ownerProductApi.createProductByOwner(ownerKey, newProduct);
     }
 
-    private PoolDTO createPool(String ownerKey, ProductDTO product) throws ApiException {
+    private PoolDTO createPool(String ownerKey, ProductDTO product) {
         PoolDTO pool = Pools.random();
         pool.setProductId(product.getId());
         pool.setProductName(product.getName());

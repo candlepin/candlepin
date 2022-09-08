@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertUnauthorized;
 
 import org.candlepin.dto.api.client.v1.StatusDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.OwnerApi;
 import org.candlepin.resource.client.v1.ProductsApi;
 import org.candlepin.resource.client.v1.StatusApi;
@@ -59,7 +58,7 @@ class NoAuthSpecTest {
 
     @Test
     @DisplayName("no auth security hole should accept unauthenticated requests")
-    void noAuthSecurityHoleEndpointsShouldAcceptNoAuthRequests() throws ApiException {
+    void noAuthSecurityHoleEndpointsShouldAcceptNoAuthRequests() {
         StatusApi client = ApiClients.noAuth().status();
 
         StatusDTO status = client.status();

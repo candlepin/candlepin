@@ -42,4 +42,7 @@ openApiGenerate {
     modelPackage = "org.candlepin.dto.api.client.v1"
     apiPackage = "org.candlepin.resource.client.v1"
     invokerPackage = "org.candlepin.invoker.client"
+    additionalProperties = [
+        useRuntimeException: true
+    ]
 }

@@ -25,7 +25,6 @@ import org.candlepin.dto.api.client.v1.DeletedConsumerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.ConsumerApi;
 import org.candlepin.resource.client.v1.DeletedConsumerApi;
 import org.candlepin.resource.client.v1.OwnerApi;
@@ -65,7 +64,7 @@ public class InactiveConsumerCleanerJobSpecTest {
     private OwnerDTO owner;
 
     @BeforeAll
-    public void beforeAll() throws ApiException {
+    public void beforeAll() {
         ApiClient client = ApiClients.admin();
         consumerApi = client.consumers();
         deletedConsumerApi = client.deletedConsumers();
@@ -133,7 +132,7 @@ public class InactiveConsumerCleanerJobSpecTest {
         compareConsumers(activeConsumer2, consumerApi.getConsumer(activeConsumer2.getUuid()));
     }
 
-    private void createProductAndPoolForConsumer(ConsumerDTO consumer) throws ApiException {
+    private void createProductAndPoolForConsumer(ConsumerDTO consumer) {
         ProductDTO product = new ProductDTO();
         product.setId(StringUtil.random("ID"));
         product.setName(StringUtil.random("Test Product"));

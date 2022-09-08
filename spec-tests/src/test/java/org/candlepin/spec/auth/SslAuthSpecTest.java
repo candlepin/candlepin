@@ -22,7 +22,6 @@ import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.EntitlementDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -39,7 +38,7 @@ class SslAuthSpecTest {
 
     @Test
     @DisplayName("should allow authentication with consumer's identity certificate")
-    void shouldPassWithConsumerIdentityCert() throws ApiException {
+    void shouldPassWithConsumerIdentityCert() {
         ApiClient client = ApiClients.admin();
         OwnerDTO owner = client.owners().createOwner(Owners.random());
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
@@ -52,7 +51,7 @@ class SslAuthSpecTest {
 
     @Test
     @DisplayName("should not allow authentication with consumer's sca certificate")
-    void shouldRejectScaCert() throws ApiException {
+    void shouldRejectScaCert() {
         ApiClient client = ApiClients.admin();
         OwnerDTO owner = client.owners().createOwner(Owners.randomSca());
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));

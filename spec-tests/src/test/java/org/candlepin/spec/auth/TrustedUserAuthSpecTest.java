@@ -21,7 +21,6 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.OwnerApi;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
@@ -40,7 +39,7 @@ class TrustedUserAuthSpecTest {
     private static OwnerDTO owner;
 
     @BeforeAll
-    static void beforeAll() throws ApiException {
+    static void beforeAll() {
         client = ApiClients.admin();
         owner = client.owners().createOwner(Owners.random());
     }
@@ -55,7 +54,7 @@ class TrustedUserAuthSpecTest {
 
     @Test
     @DisplayName("trusted user does not need to exist")
-    void trustedUserDoesNotNeedToExist() throws ApiException {
+    void trustedUserDoesNotNeedToExist() {
         OwnerApi client = ApiClients.trustedUser("unknown_user", false).owners();
 
         OwnerDTO createdOwner = client.createOwner(Owners.random());
@@ -64,7 +63,7 @@ class TrustedUserAuthSpecTest {
 
     @Test
     @DisplayName("trusted user can access admin endpoint")
-    void trustedUserHasFullAccess() throws ApiException {
+    void trustedUserHasFullAccess() {
         UserDTO user = UserUtil.createUser(client, owner);
         OwnerApi client = ApiClients.trustedUser(user.getUsername(), false).owners();
 
@@ -74,7 +73,7 @@ class TrustedUserAuthSpecTest {
 
     @Test
     @DisplayName("trusted user cannot access admin endpoint")
-    void trustedUserHasLimitedAccess() throws ApiException {
+    void trustedUserHasLimitedAccess() {
         UserDTO user = UserUtil.createUser(client, owner);
         OwnerApi userClient = ApiClients.trustedUser(user.getUsername()).owners();
 

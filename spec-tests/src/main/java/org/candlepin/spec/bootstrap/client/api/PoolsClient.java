@@ -17,7 +17,6 @@ package org.candlepin.spec.bootstrap.client.api;
 
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.invoker.client.ApiClient;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.PoolsApi;
 
 import java.util.List;
@@ -28,11 +27,11 @@ public class PoolsClient extends PoolsApi {
         super(client);
     }
 
-    public List<PoolDTO> listPoolsByOwner(String owner) throws ApiException {
+    public List<PoolDTO> listPoolsByOwner(String owner) {
         return super.listPools(owner, null, null, true, null, null, null, null, null);
     }
 
-    public List<PoolDTO> listPoolsByConsumer(String consumer) throws ApiException {
+    public List<PoolDTO> listPoolsByConsumer(String consumer) {
         return super.listPools(null, consumer, null, true, null, null, null, null, null);
     }
 

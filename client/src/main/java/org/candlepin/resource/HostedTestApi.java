@@ -20,7 +20,6 @@ import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.SubscriptionDTO;
 import org.candlepin.invoker.client.ApiClient;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.invoker.client.ApiResponse;
 import org.candlepin.invoker.client.Configuration;
 import org.candlepin.invoker.client.Pair;
@@ -82,14 +81,14 @@ public class HostedTestApi {
         this.localCustomBaseUrl = customBaseUrl;
     }
 
-    public Boolean isAlive() throws ApiException {
+    public Boolean isAlive() {
         okhttp3.Call localVarCall = isAliveCall();
         Type localVarReturnType = new TypeToken<String>() {}.getType();
         ApiResponse<String> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return Boolean.valueOf(localVarResp.getData());
     }
 
-    public okhttp3.Call isAliveCall() throws ApiException {
+    public okhttp3.Call isAliveCall() {
         // Operation Servers
         String basePath = getBasePath();
 
@@ -110,12 +109,12 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, path, "GET", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public void clearData() throws ApiException {
+    public void clearData() {
         okhttp3.Call localVarCall = clearDataCall();
         localVarApiClient.execute(localVarCall);
     }
 
-    public okhttp3.Call clearDataCall() throws ApiException {
+    public okhttp3.Call clearDataCall() {
         // Operation Servers
         String basePath = getBasePath();
 
@@ -134,14 +133,14 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "DELETE", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public OwnerDTO createOwner(OwnerDTO owner) throws ApiException {
+    public OwnerDTO createOwner(OwnerDTO owner) {
         okhttp3.Call localVarCall = createOwnerCall(owner);
         Type localVarReturnType = new TypeToken<OwnerDTO>() {}.getType();
         ApiResponse<OwnerDTO> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call createOwnerCall(OwnerDTO owner) throws ApiException {
+    public okhttp3.Call createOwnerCall(OwnerDTO owner) {
         String basePath = getBasePath();
 
         Object body = owner;
@@ -163,18 +162,18 @@ public class HostedTestApi {
     }
 
 
-    public SubscriptionDTO createSubscription(SubscriptionDTO subscription) throws ApiException {
+    public SubscriptionDTO createSubscription(SubscriptionDTO subscription) {
         return createSubscription(subscription, false);
     }
 
-    public SubscriptionDTO createSubscription(SubscriptionDTO subscription, boolean createChildren) throws ApiException {
+    public SubscriptionDTO createSubscription(SubscriptionDTO subscription, boolean createChildren) {
         okhttp3.Call localVarCall = createSubscriptionCall(subscription, createChildren);
         Type localVarReturnType = new TypeToken<SubscriptionDTO>() {}.getType();
         ApiResponse<SubscriptionDTO> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call createSubscriptionCall(SubscriptionDTO subscription, boolean createChildren) throws ApiException {
+    public okhttp3.Call createSubscriptionCall(SubscriptionDTO subscription, boolean createChildren) {
         String basePath = getBasePath();
 
         Object body = subscription;
@@ -200,14 +199,14 @@ public class HostedTestApi {
     }
 
 
-    public List<SubscriptionDTO> listSubscriptions() throws ApiException {
+    public List<SubscriptionDTO> listSubscriptions() {
         okhttp3.Call localVarCall = listSubscriptionsCall();
         Type localVarReturnType = new TypeToken<List<SubscriptionDTO>>() {}.getType();
         ApiResponse<List<SubscriptionDTO>> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call listSubscriptionsCall() throws ApiException {
+    public okhttp3.Call listSubscriptionsCall() {
         String basePath = getBasePath();
 
         Object body = null;
@@ -228,14 +227,14 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "GET", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public SubscriptionDTO getSubscription(String subscriptionId) throws ApiException {
+    public SubscriptionDTO getSubscription(String subscriptionId) {
         okhttp3.Call localVarCall = getSubscriptionCall(subscriptionId);
         Type localVarReturnType = new TypeToken<SubscriptionDTO>() {}.getType();
         ApiResponse<SubscriptionDTO> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call getSubscriptionCall(String subscriptionId) throws ApiException {
+    public okhttp3.Call getSubscriptionCall(String subscriptionId) {
         String basePath = getBasePath();
 
         Object body = null;
@@ -257,18 +256,18 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "GET", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public SubscriptionDTO updateSubscription(String subscriptionId, SubscriptionDTO subscription) throws ApiException {
+    public SubscriptionDTO updateSubscription(String subscriptionId, SubscriptionDTO subscription) {
         return updateSubscription(subscriptionId, subscription, false);
     }
 
-    public SubscriptionDTO updateSubscription(String subscriptionId, SubscriptionDTO subscription, Boolean createChildren) throws ApiException {
+    public SubscriptionDTO updateSubscription(String subscriptionId, SubscriptionDTO subscription, Boolean createChildren) {
         okhttp3.Call localVarCall = updateSubscriptionCall(subscriptionId, subscription, createChildren);
         Type localVarReturnType = new TypeToken<SubscriptionDTO>() {}.getType();
         ApiResponse<SubscriptionDTO> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call updateSubscriptionCall(String subscriptionId, SubscriptionDTO subscription, boolean createChildren) throws ApiException {
+    public okhttp3.Call updateSubscriptionCall(String subscriptionId, SubscriptionDTO subscription, boolean createChildren) {
         String basePath = getBasePath();
 
         Object body = subscription;
@@ -294,12 +293,12 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "PUT", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public void deleteSubscription(String subscriptionId) throws ApiException {
+    public void deleteSubscription(String subscriptionId) {
         okhttp3.Call localVarCall = deleteSubscriptionCall(subscriptionId);
         localVarApiClient.execute(localVarCall);
     }
 
-    public okhttp3.Call deleteSubscriptionCall(String subscriptionId) throws ApiException {
+    public okhttp3.Call deleteSubscriptionCall(String subscriptionId) {
         String basePath = getBasePath();
 
         Object body = null;
@@ -321,14 +320,14 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "DELETE", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public List<ProductDTO> listProducts() throws ApiException {
+    public List<ProductDTO> listProducts() {
         okhttp3.Call localVarCall = listProductsCall();
         Type localVarReturnType = new TypeToken<List<ProductDTO>>() {}.getType();
         ApiResponse<List<ProductDTO>> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call listProductsCall() throws ApiException {
+    public okhttp3.Call listProductsCall() {
         String basePath = getBasePath();
 
         Object body = null;
@@ -349,14 +348,14 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "GET", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public ProductDTO getProduct(String productId) throws ApiException {
+    public ProductDTO getProduct(String productId) {
         okhttp3.Call localVarCall = getProductCall(productId);
         Type localVarReturnType = new TypeToken<ProductDTO>() {}.getType();
         ApiResponse<ProductDTO> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call getProductCall(String productId) throws ApiException {
+    public okhttp3.Call getProductCall(String productId) {
         String basePath = getBasePath();
 
         Object body = null;
@@ -377,18 +376,18 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "GET", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public ProductDTO createProduct(ProductDTO product) throws ApiException {
+    public ProductDTO createProduct(ProductDTO product) {
         return createProduct(product, false);
     }
 
-    public ProductDTO createProduct(ProductDTO product, boolean createChildren) throws ApiException {
+    public ProductDTO createProduct(ProductDTO product, boolean createChildren) {
         okhttp3.Call localVarCall = createProductCall(product, createChildren);
         Type localVarReturnType = new TypeToken<ProductDTO>() {}.getType();
         ApiResponse<ProductDTO> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call createProductCall(ProductDTO product, boolean createChildren) throws ApiException {
+    public okhttp3.Call createProductCall(ProductDTO product, boolean createChildren) {
         String basePath = getBasePath();
 
         Object body = product;
@@ -412,18 +411,18 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "POST", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public ProductDTO updateProduct(String productId, ProductDTO product) throws ApiException {
+    public ProductDTO updateProduct(String productId, ProductDTO product) {
         return updateProduct(productId, product, false);
     }
 
-    public ProductDTO updateProduct(String productId, ProductDTO product, boolean createChildren) throws ApiException {
+    public ProductDTO updateProduct(String productId, ProductDTO product, boolean createChildren) {
         okhttp3.Call localVarCall = updateProductCall(productId, product, createChildren);
         Type localVarReturnType = new TypeToken<ProductDTO>() {}.getType();
         ApiResponse<ProductDTO> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call updateProductCall(String productId, ProductDTO product, boolean createChildren) throws ApiException {
+    public okhttp3.Call updateProductCall(String productId, ProductDTO product, boolean createChildren) {
         String basePath = getBasePath();
 
         Object body = product;
@@ -447,12 +446,12 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "PUT", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public void deleteProduct(String productId) throws ApiException {
+    public void deleteProduct(String productId) {
         okhttp3.Call localVarCall = deleteProductCall(productId);
         localVarApiClient.execute(localVarCall);
     }
 
-    public okhttp3.Call deleteProductCall(String productId) throws ApiException {
+    public okhttp3.Call deleteProductCall(String productId) {
         String basePath = getBasePath();
 
         Object body = null;
@@ -473,14 +472,14 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "DELETE", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public List<ContentDTO> listContent() throws ApiException {
+    public List<ContentDTO> listContent() {
         okhttp3.Call localVarCall = listContentCall();
         Type localVarReturnType = new TypeToken<List<ContentDTO>>() {}.getType();
         ApiResponse<List<ContentDTO>> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call listContentCall() throws ApiException {
+    public okhttp3.Call listContentCall() {
         String basePath = getBasePath();
 
         Object body = null;
@@ -501,14 +500,14 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "GET", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public ContentDTO getContent(String contentId) throws ApiException {
+    public ContentDTO getContent(String contentId) {
         okhttp3.Call localVarCall = getContentCall(contentId);
         Type localVarReturnType = new TypeToken<ContentDTO>() {}.getType();
         ApiResponse<ContentDTO> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call getContentCall(String contentId) throws ApiException {
+    public okhttp3.Call getContentCall(String contentId) {
         String basePath = getBasePath();
 
         Object body = null;
@@ -529,14 +528,14 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "GET", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public ContentDTO createContent(ContentDTO content) throws ApiException {
+    public ContentDTO createContent(ContentDTO content) {
         okhttp3.Call localVarCall = createContentCall(content);
         Type localVarReturnType = new TypeToken<ContentDTO>() {}.getType();
         ApiResponse<ContentDTO> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call createContentCall(ContentDTO content) throws ApiException {
+    public okhttp3.Call createContentCall(ContentDTO content) {
         String basePath = getBasePath();
 
         Object body = content;
@@ -557,14 +556,14 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "POST", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public ContentDTO updateContent(String contentId, ContentDTO content) throws ApiException {
+    public ContentDTO updateContent(String contentId, ContentDTO content) {
         okhttp3.Call localVarCall = updateContentCall(contentId, content);
         Type localVarReturnType = new TypeToken<ContentDTO>() {}.getType();
         ApiResponse<ContentDTO> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call updateContentCall(String contentId, ContentDTO content) throws ApiException {
+    public okhttp3.Call updateContentCall(String contentId, ContentDTO content) {
         String basePath = getBasePath();
 
         Object body = content;
@@ -585,12 +584,12 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "PUT", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public void deleteContent(String contentId) throws ApiException {
+    public void deleteContent(String contentId) {
         okhttp3.Call localVarCall = deleteContentCall(contentId);
         localVarApiClient.execute(localVarCall);
     }
 
-    public okhttp3.Call deleteContentCall(String contentId) throws ApiException {
+    public okhttp3.Call deleteContentCall(String contentId) {
         String basePath = getBasePath();
 
         Object body = null;
@@ -612,14 +611,14 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "DELETE", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public ProductDTO addContentToProduct(String productId, Map<String, Boolean> content) throws ApiException {
+    public ProductDTO addContentToProduct(String productId, Map<String, Boolean> content) {
         okhttp3.Call localVarCall = addContentToProductCall(productId, content);
         Type localVarReturnType = new TypeToken<ProductDTO>() {}.getType();
         ApiResponse<ProductDTO> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call addContentToProductCall(String productId, Map<String, Boolean> content) throws ApiException {
+    public okhttp3.Call addContentToProductCall(String productId, Map<String, Boolean> content) {
         String basePath = getBasePath();
 
         Object body = content;
@@ -641,14 +640,14 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "POST", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public ProductDTO addContentToProduct(String productId, String contentId, Boolean enabled) throws ApiException {
+    public ProductDTO addContentToProduct(String productId, String contentId, Boolean enabled) {
         okhttp3.Call localVarCall = addContentToProductCall(productId, contentId, enabled);
         Type localVarReturnType = new TypeToken<ProductDTO>() {}.getType();
         ApiResponse<ProductDTO> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call addContentToProductCall(String productId, String contentId, Boolean enabled) throws ApiException {
+    public okhttp3.Call addContentToProductCall(String productId, String contentId, Boolean enabled) {
         String basePath = getBasePath();
 
         Object body = null;
@@ -671,14 +670,14 @@ public class HostedTestApi {
         return localVarApiClient.buildCall(basePath, localVarPath, "POST", queryParams, collectionQueryParams, body, headers, cookies, form, auth, null);
     }
 
-    public ProductDTO removeContentFromProduct(String productId, List<String> contentIds) throws ApiException {
+    public ProductDTO removeContentFromProduct(String productId, List<String> contentIds) {
         okhttp3.Call localVarCall = removeContentFromProductCall(productId, contentIds);
         Type localVarReturnType = new TypeToken<ProductDTO>() {}.getType();
         ApiResponse<ProductDTO> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call removeContentFromProductCall(String productId, List<String> contentIds) throws ApiException {
+    public okhttp3.Call removeContentFromProductCall(String productId, List<String> contentIds) {
         String basePath = getBasePath();
 
         Object body = contentIds;
@@ -701,14 +700,14 @@ public class HostedTestApi {
     }
 
 
-    public ProductDTO removeContentFromProduct(String productId, String contentId) throws ApiException {
+    public ProductDTO removeContentFromProduct(String productId, String contentId) {
         okhttp3.Call localVarCall = removeContentFromProductCall(productId, contentId);
         Type localVarReturnType = new TypeToken<ProductDTO>() {}.getType();
         ApiResponse<ProductDTO> localVarResp = localVarApiClient.execute(localVarCall, localVarReturnType);
         return localVarResp.getData();
     }
 
-    public okhttp3.Call removeContentFromProductCall(String productId, String contentId) throws ApiException {
+    public okhttp3.Call removeContentFromProductCall(String productId, String contentId) {
         String basePath = getBasePath();
 
         Object body = null;

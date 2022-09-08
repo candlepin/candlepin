@@ -27,7 +27,6 @@ import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.ConsumerApi;
 import org.candlepin.resource.client.v1.JobsApi;
 import org.candlepin.resource.client.v1.OwnerApi;
@@ -70,7 +69,7 @@ class JobStatusSpecTest {
     private PoolDTO pool;
 
     @BeforeAll
-    public void beforeAll() throws ApiException {
+    public void beforeAll() {
         client = ApiClients.admin();
         ownerApi = client.owners();
         ownerProductApi = client.ownerProducts();
@@ -89,7 +88,7 @@ class JobStatusSpecTest {
 
     @Test
     @DisplayName("should find an empty list if the owner key is wrong")
-    public void shouldFindEmptyListOwnerNotExist() throws Exception {
+    public void shouldFindEmptyListOwnerNotExist() {
         List<AsyncJobStatusDTO> jobs = jobsClient.listMatchingJobStatusForOrg("totally-made-up",
             null, null);
         assertThat(jobs).isEmpty();
@@ -141,7 +140,7 @@ class JobStatusSpecTest {
 
     @Test
     @DisplayName("should allow admin to view any job status")
-    public void shouldAllowAdminToViewJobStatus() throws Exception {
+    public void shouldAllowAdminToViewJobStatus() {
         AsyncJobStatusDTO jobStatus = ownerApi.healEntire(owner.getKey());
         jobsClient.waitForJob(jobStatus.getId());
 
@@ -151,9 +150,8 @@ class JobStatusSpecTest {
 
     @Test
     @DisplayName("should successfully run jobs concurrently")
-    public void shouldRunJobsConcurrently() throws Exception {
+    public void shouldRunJobsConcurrently() throws InterruptedException {
         int totalThreads = 6;
-        int threadCount = 0;
         List<Thread> threads = new ArrayList<>();
         List<AsyncJobStatusDTO> jobs = new ArrayList<>();
 
@@ -165,18 +163,10 @@ class JobStatusSpecTest {
 
         // For each owner create a Thread which refreshes that owner, and saves the job status
         for (OwnerDTO owner : owners) {
-            Thread t = new Thread(() -> {
-                try {
-                    jobs.add(ownerApi.healEntire(owner.getKey()));
-                }
-                catch (ApiException ae) {
-                    throw new RuntimeException(ae);
-                }
-            });
+            Thread t = new Thread(() -> jobs.add(ownerApi.healEntire(owner.getKey())));
             threads.add(t);
-            threadCount++;
         }
-        assertEquals(totalThreads, threadCount);
+        assertEquals(totalThreads, threads.size());
 
         // Run all the threads, then wait for them to complete
         threads.forEach(Thread::start);
@@ -193,7 +183,7 @@ class JobStatusSpecTest {
 
     @Test
     @DisplayName("should allow user to view status of own job")
-    public void shouldAllUserToViewStatusOfOwnJob() throws Exception {
+    public void shouldAllUserToViewStatusOfOwnJob() {
         JobsApi jobsApi = userClient.jobs();
         OwnerApi ownerApi1 = userClient.owners();
 
@@ -207,7 +197,7 @@ class JobStatusSpecTest {
 
     @Test
     @DisplayName("should allow paging of jobs")
-    public void shouldAllowPagingOfJobs() throws Exception {
+    public void shouldAllowPagingOfJobs() {
         AsyncJobStatusDTO job1 = ownerApi.healEntire(owner.getKey());
         AsyncJobStatusDTO job2 = ownerApi.healEntire(owner.getKey());
         AsyncJobStatusDTO job3 = ownerApi.healEntire(owner.getKey());
@@ -226,7 +216,7 @@ class JobStatusSpecTest {
 
     @Test
     @DisplayName("should allow sorting of jobs")
-    public void shouldAllowSortingOfJobs() throws Exception {
+    public void shouldAllowSortingOfJobs() {
         AsyncJobStatusDTO job1 = ownerApi.healEntire(owner.getKey());
         AsyncJobStatusDTO job2 = ownerApi.healEntire(owner.getKey());
         AsyncJobStatusDTO job3 = ownerApi.healEntire(owner.getKey());
@@ -246,7 +236,7 @@ class JobStatusSpecTest {
 
     @Test
     @DisplayName("should allow paging and sorting of jobs")
-    public void shouldAllowPagingAndSortingOfJobs() throws Exception {
+    public void shouldAllowPagingAndSortingOfJobs() {
         AsyncJobStatusDTO job1 = ownerApi.healEntire(owner.getKey());
         AsyncJobStatusDTO job2 = ownerApi.healEntire(owner.getKey());
         AsyncJobStatusDTO job3 = ownerApi.healEntire(owner.getKey());
@@ -277,7 +267,7 @@ class JobStatusSpecTest {
 
     @Test
     @DisplayName("should not allow user to cancel job from another user")
-    public void shouldNotAllowUserToCancelJobFromAnotherUser() throws Exception {
+    public void shouldNotAllowUserToCancelJobFromAnotherUser() {
         jobsClient.setSchedulerStatus(false);
         String jobId = null;
 

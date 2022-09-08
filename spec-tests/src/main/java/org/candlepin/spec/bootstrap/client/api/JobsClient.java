@@ -50,7 +50,7 @@ public class JobsClient extends JobsApi {
      * @return
      *  an AsyncJobStatusDTO representing the final state of the job
      */
-    public AsyncJobStatusDTO waitForJob(String jobId, long timeout) throws ApiException {
+    public AsyncJobStatusDTO waitForJob(String jobId, long timeout) {
         if (jobId == null || jobId.isEmpty()) {
             throw new IllegalArgumentException("jobId is null or empty");
         }
@@ -103,7 +103,7 @@ public class JobsClient extends JobsApi {
      * @return
      *  an AsyncJobStatusDTO representing the final state of the job
      */
-    public AsyncJobStatusDTO waitForJob(String jobId) throws ApiException {
+    public AsyncJobStatusDTO waitForJob(String jobId) {
         return waitForJob(jobId, DEFAULT_JOB_WAIT_DURATION);
     }
 
@@ -126,7 +126,7 @@ public class JobsClient extends JobsApi {
      * @return
      *  an AsyncJobStatusDTO representing the final state of the job
      */
-    public AsyncJobStatusDTO waitForJob(AsyncJobStatusDTO job, long timeout) throws ApiException {
+    public AsyncJobStatusDTO waitForJob(AsyncJobStatusDTO job, long timeout) {
         if (job == null || job.getId() == null || job.getId().isEmpty()) {
             throw new IllegalArgumentException("job is null, or lacks a job ID");
         }
@@ -150,7 +150,7 @@ public class JobsClient extends JobsApi {
      * @return
      *  an AsyncJobStatusDTO representing the final state of the job
      */
-    public AsyncJobStatusDTO waitForJob(AsyncJobStatusDTO job) throws ApiException {
+    public AsyncJobStatusDTO waitForJob(AsyncJobStatusDTO job) {
         return waitForJob(job, DEFAULT_JOB_WAIT_DURATION);
     }
 
@@ -163,7 +163,7 @@ public class JobsClient extends JobsApi {
      * @throws ApiException If fail to call the API, e.g. server error or cannot deserialize the response body
      */
     public List<AsyncJobStatusDTO> listMatchingJobStatusForOrg(String ownerKey, Set<String> ids,
-        String status) throws ApiException {
+        String status) {
 
         if (ownerKey == null) {
             throw new RuntimeException("The owner cannot be null");

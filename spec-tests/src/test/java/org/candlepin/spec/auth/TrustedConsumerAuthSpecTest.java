@@ -21,7 +21,6 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.ConsumerApi;
 import org.candlepin.resource.client.v1.OwnerApi;
 import org.candlepin.spec.bootstrap.client.ApiClient;
@@ -41,7 +40,7 @@ class TrustedConsumerAuthSpecTest {
     private static OwnerDTO owner;
 
     @BeforeAll
-    static void beforeAll() throws ApiException {
+    static void beforeAll() {
         client = ApiClients.admin();
         owner = client.owners().createOwner(Owners.random());
     }
@@ -56,7 +55,7 @@ class TrustedConsumerAuthSpecTest {
 
     @Test
     @DisplayName("deleted consumers should be rejected")
-    void deletedConsumerShouldFail() throws ApiException {
+    void deletedConsumerShouldFail() {
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
         client.consumers().deleteConsumer(consumer.getUuid());
         OwnerApi consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).owners();
@@ -66,7 +65,7 @@ class TrustedConsumerAuthSpecTest {
 
     @Test
     @DisplayName("should pass for existing consumers")
-    void existingConsumerShouldPass() throws ApiException {
+    void existingConsumerShouldPass() {
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
         ConsumerApi consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).consumers();
 

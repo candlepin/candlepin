@@ -30,7 +30,6 @@ import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -56,12 +55,12 @@ import java.util.Set;
 @SpecTest
 class PoolSpecTest {
 
-    private OwnerDTO createOwner(ApiClient client) throws ApiException {
+    private OwnerDTO createOwner(ApiClient client) {
         return client.owners().createOwner(Owners.random());
     }
 
     private ConsumerDTO createConsumer(ApiClient client, OwnerDTO owner, String name,
-        Map<String, String> facts) throws ApiException {
+        Map<String, String> facts) {
 
         ConsumerTypeDTO ctype = new ConsumerTypeDTO()
             .label("system");
@@ -82,7 +81,7 @@ class PoolSpecTest {
             .createConsumer(consumer);
     }
 
-    private ProductDTO createProduct(ApiClient client, OwnerDTO owner) throws ApiException {
+    private ProductDTO createProduct(ApiClient client, OwnerDTO owner) {
         ProductDTO product = Products.randomEng();
 
         return client.ownerProducts()
@@ -96,12 +95,12 @@ class PoolSpecTest {
             .value(value);
     }
 
-    private PoolDTO createPool(ApiClient client, OwnerDTO owner) throws ApiException {
+    private PoolDTO createPool(ApiClient client, OwnerDTO owner) {
         ProductDTO product = this.createProduct(client, owner);
         return this.createPool(client, owner, product);
     }
 
-    private PoolDTO createPool(ApiClient client, OwnerDTO owner, ProductDTO product) throws ApiException {
+    private PoolDTO createPool(ApiClient client, OwnerDTO owner, ProductDTO product) {
         PoolDTO pool = Pools.randomUpstream(product);
 
         return client.owners()
@@ -109,26 +108,26 @@ class PoolSpecTest {
     }
 
 
-    private ApiClient createUserClient(ApiClient client, OwnerDTO owner) throws ApiException {
+    private ApiClient createUserClient(ApiClient client, OwnerDTO owner) {
         UserDTO user = UserUtil.createUser(client, owner);
         return ApiClients.trustedUser(user.getUsername(), true);
     }
 
-    private ApiClient createConsumerClient(ApiClient client, OwnerDTO owner) throws ApiException {
+    private ApiClient createConsumerClient(ApiClient client, OwnerDTO owner) {
         String consumerName = StringUtil.random("test_consumer-");
         ConsumerDTO consumer = this.createConsumer(client, owner, consumerName, null);
 
         return this.createConsumerClient(client, consumer);
     }
 
-    private ApiClient createConsumerClient(ApiClient client, ConsumerDTO consumer) throws ApiException {
+    private ApiClient createConsumerClient(ApiClient client, ConsumerDTO consumer) {
         return ApiClients.ssl(consumer.getIdCert());
     }
 
 
     @Test
     @DisplayName("should let consumers view their own pools")
-    public void shouldLetConsumersViewTheirOwnPools() throws ApiException {
+    public void shouldLetConsumersViewTheirOwnPools() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
         PoolDTO pool = this.createPool(adminClient, owner);
@@ -151,7 +150,7 @@ class PoolSpecTest {
 
     @Test
     @DisplayName("should not let consumers view pool entitlements")
-    public void shouldNotLetConsumersViewPoolEntitlements() throws ApiException {
+    public void shouldNotLetConsumersViewPoolEntitlements() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
         PoolDTO pool = this.createPool(adminClient, owner);
@@ -169,7 +168,7 @@ class PoolSpecTest {
 
     @Test
     @DisplayName("should not let org admins view pools in other orgs")
-    public void shouldNotLetOrgAdminsViewPoolsInOtherOrgs() throws ApiException {
+    public void shouldNotLetOrgAdminsViewPoolsInOtherOrgs() {
         ApiClient adminClient = ApiClients.admin();
 
         OwnerDTO owner1 = this.createOwner(adminClient);
@@ -195,7 +194,7 @@ class PoolSpecTest {
 
     @Test
     @DisplayName("should not let consumers view pools in other orgs")
-    public void shouldNotLetConsumersViewPoolsFromOtherOrgs() throws ApiException {
+    public void shouldNotLetConsumersViewPoolsFromOtherOrgs() {
         ApiClient adminClient = ApiClients.admin();
 
         OwnerDTO owner1 = this.createOwner(adminClient);
@@ -223,7 +222,7 @@ class PoolSpecTest {
 
     @Test
     @DisplayName("should not return expired pools")
-    public void shouldNotReturnExpiredPools() throws ApiException {
+    public void shouldNotReturnExpiredPools() {
         ApiClient adminClient = ApiClients.admin();
 
         OwnerDTO owner = this.createOwner(adminClient);
@@ -249,7 +248,7 @@ class PoolSpecTest {
 
     @Test
     @DisplayName("should not list pools with errors for consumer clients when listAll is used")
-    public void shouldNotListPoolsWithErrorsForConsumersWhenListAllIsUsed() throws ApiException {
+    public void shouldNotListPoolsWithErrorsForConsumersWhenListAllIsUsed() {
         ApiClient adminClient = ApiClients.admin();
 
         OwnerDTO owner = this.createOwner(adminClient);
@@ -291,7 +290,7 @@ class PoolSpecTest {
 
     @Test
     @DisplayName("should list pools with warnings for consumer clients when listAll is used")
-    public void shouldListPoolsWithWarningsForConsumersWhenListAllIsUsed() throws ApiException {
+    public void shouldListPoolsWithWarningsForConsumersWhenListAllIsUsed() {
         ApiClient adminClient = ApiClients.admin();
 
         OwnerDTO owner = this.createOwner(adminClient);
@@ -321,7 +320,7 @@ class PoolSpecTest {
 
     @Test
     @DisplayName("should allow super admins to delete pools")
-    public void shouldAllowSuperAdminsToDeletePools() throws ApiException {
+    public void shouldAllowSuperAdminsToDeletePools() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
         PoolDTO pool = this.createPool(adminClient, owner);
@@ -367,7 +366,7 @@ class PoolSpecTest {
 
     @Test
     @DisplayName("should not allow org admins to delete pools")
-    public void shouldNotAllowOrgAdminsToDeletePools() throws ApiException {
+    public void shouldNotAllowOrgAdminsToDeletePools() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
         PoolDTO pool = this.createPool(adminClient, owner);
@@ -379,7 +378,7 @@ class PoolSpecTest {
 
     @Test
     @DisplayName("should not allow consumers to delete pools")
-    public void shouldNotAllowConsumersToDeletePools() throws ApiException {
+    public void shouldNotAllowConsumersToDeletePools() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
         PoolDTO pool = this.createPool(adminClient, owner);
@@ -392,7 +391,7 @@ class PoolSpecTest {
 
     @Test
     @DisplayName("should delete children pools when parent pool is deleted")
-    public void shouldDeleteChildrenPoolsWhenParentPoolIsDeleted() throws ApiException {
+    public void shouldDeleteChildrenPoolsWhenParentPoolIsDeleted() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
@@ -439,7 +438,7 @@ class PoolSpecTest {
 
     @Test
     @DisplayName("should include calculated attributes when fetching pools")
-    public void shouldIncludeCalculatedAttributesWhenFetchingPools() throws ApiException {
+    public void shouldIncludeCalculatedAttributesWhenFetchingPools() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
         PoolDTO pool = this.createPool(adminClient, owner);
@@ -464,7 +463,7 @@ class PoolSpecTest {
     }
 
     // @Test
-    // public void shouldAllowFetchingCDNByPoolId() throws ApiException {
+    // public void shouldAllowFetchingCDNByPoolId() {
     //     // Impl note:
     //     // This test is currently blocked on a limitation with CDNs in that we can perform CRUD
     //     // operations on them (as they are first-class objects for some reason), but the only way
@@ -526,7 +525,7 @@ class PoolSpecTest {
 
     @Test
     @DisplayName("should include product branding when fetching pools")
-    public void shouldIncludeProductBrandingWhenFetchingPool() throws ApiException {
+    public void shouldIncludeProductBrandingWhenFetchingPool() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
