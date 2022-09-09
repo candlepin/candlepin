@@ -22,7 +22,6 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -55,7 +54,7 @@ class BasicAuthSpecTest {
 
     @Test
     @DisplayName("allows valid users to auth")
-    void validUserShouldPassBasicAuth() throws ApiException {
+    void validUserShouldPassBasicAuth() {
         ApiClient admin = ApiClients.admin();
         OwnerDTO owner = admin.owners().createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);

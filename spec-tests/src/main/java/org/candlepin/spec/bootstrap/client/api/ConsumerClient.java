@@ -44,33 +44,40 @@ public class ConsumerClient extends ConsumerApi {
         this.mapper = mapper;
     }
 
-    public List<CertificateDTO> fetchCertificates(String consumerUuid) throws ApiException {
+    public List<CertificateDTO> fetchCertificates(String consumerUuid) {
         return this.fetchCertificates(consumerUuid, "");
     }
 
-    public List<CertificateDTO> fetchCertificates(String consumerUuid, String serials) throws ApiException {
+    public List<CertificateDTO> fetchCertificates(String consumerUuid, String serials) {
         return ((List<Map<String, String>>) super.exportCertificates(consumerUuid, serials)).stream()
             .map(stringStringMap -> mapper.convertValue(stringStringMap, CertificateDTO.class))
             .collect(Collectors.toList());
     }
 
-    public ConsumerDTO createConsumer(ConsumerDTO consumer) throws ApiException {
+    public ConsumerDTO createConsumer(ConsumerDTO consumer) {
         return super.createConsumer(consumer, null, consumer.getOwner().getKey(), null, true);
     }
 
-    public JsonNode bindPool(String consumerUuid, String poolId, Integer quantity)
-        throws ApiException, JsonProcessingException {
-        return mapper.readTree(super.bind(consumerUuid, poolId, null, quantity, "",
+    public JsonNode bindPool(String consumerUuid, String poolId, Integer quantity) {
+        return getJsonNode(super.bind(consumerUuid, poolId, null, quantity, "",
             "", false, "", new ArrayList<>()));
     }
 
-    public JsonNode bindProduct(String consumerUuid, String productId)
-        throws ApiException, JsonProcessingException {
-        return mapper.readTree(super.bind(consumerUuid, null, List.of(productId), null,
+    private JsonNode getJsonNode(String consumerUuid) {
+        try {
+            return mapper.readTree(consumerUuid);
+        }
+        catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public JsonNode bindProduct(String consumerUuid, String productId) {
+        return getJsonNode(super.bind(consumerUuid, null, List.of(productId), null,
             "", "", false, "", new ArrayList<>()));
     }
 
-    public List<JsonNode> exportCertificates(String consumerUuid, String serials) throws ApiException {
+    public List<JsonNode> exportCertificates(String consumerUuid, String serials) {
         Object jsonPayload = super.exportCertificates(consumerUuid, serials);
         try {
             return CertificateUtil.extractEntitlementCertificatesFromPayload(jsonPayload, mapper);
@@ -80,7 +87,7 @@ public class ConsumerClient extends ConsumerApi {
         }
     }
 
-    public List<EntitlementDTO> listEntitlements(String consumerUuid) throws ApiException {
+    public List<EntitlementDTO> listEntitlements(String consumerUuid) {
         return super.listEntitlements(consumerUuid, null, false, null, null, null, null, null);
     }
 

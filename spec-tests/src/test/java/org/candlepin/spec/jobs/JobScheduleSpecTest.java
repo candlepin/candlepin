@@ -24,7 +24,6 @@ import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.OwnerApi;
 import org.candlepin.resource.client.v1.PoolsApi;
 import org.candlepin.spec.bootstrap.client.ApiClient;
@@ -50,7 +49,7 @@ public class JobScheduleSpecTest {
     private static JobsClient jobsClient;
 
     @BeforeAll
-    public void beforeAll() throws ApiException {
+    public void beforeAll() {
         client = ApiClients.admin();
         jobsClient = client.jobs();
     }

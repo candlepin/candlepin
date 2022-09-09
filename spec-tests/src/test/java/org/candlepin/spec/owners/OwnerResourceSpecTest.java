@@ -34,7 +34,6 @@ import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.client.v1.SystemPurposeAttributesDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.client.ApiClient;
@@ -80,7 +79,7 @@ class OwnerResourceSpecTest {
     }
 
     @Test
-    void shouldCreateOwner() throws ApiException {
+    void shouldCreateOwner() {
         OwnerDTO ownerDTO = Owners.random();
         OwnerDTO status = owners.createOwner(ownerDTO);
 
@@ -109,7 +108,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("Lets an owner see only their system consumer types")
-    void ownerSeesOnlyTheirConsumerTypes() throws ApiException {
+    void ownerSeesOnlyTheirConsumerTypes() {
         OwnerDTO newOwner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, newOwner);
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
@@ -122,7 +121,7 @@ class OwnerResourceSpecTest {
     }
 
     @Test
-    void ownerGetContentAccess() throws ApiException {
+    void ownerGetContentAccess() {
         OwnerDTO newOwner = owners.createOwner(Owners.random());
         ContentAccessDTO ownerContentAccess = owners.getOwnerContentAccess(newOwner.getKey());
 
@@ -132,7 +131,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("Lets an owner see only their consumers")
-    void ownerSeesOnlyTheirConsumers() throws ApiException {
+    void ownerSeesOnlyTheirConsumers() {
         OwnerDTO testOwner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, testOwner);
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
@@ -146,7 +145,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("allows consumers to view their service levels")
-    void consumersCanSeeTheirServiceLevels() throws ApiException {
+    void consumersCanSeeTheirServiceLevels() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
@@ -169,7 +168,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("forbids consumers to view service levels of other consumers")
-    void consumerCannotSeeServiceLevelsOfOthers() throws ApiException {
+    void consumerCannotSeeServiceLevelsOfOthers() {
         OwnerDTO testOwner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, testOwner);
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
@@ -183,7 +182,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should allow to create an owner with parent")
-    void allowOwnerWithParent() throws ApiException {
+    void allowOwnerWithParent() {
         OwnerDTO parentOwner = owners.createOwner(Owners.random());
         OwnerDTO ownerWithParent = Owners.random()
             .parentOwner(Owners.toNested(parentOwner));
@@ -204,7 +203,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should let owners list pools")
-    void letOwnersListPools() throws ApiException {
+    void letOwnersListPools() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         ProductDTO product = createProduct(owner);
         owners.createPool(owner.getKey(), Pools.random(product));
@@ -217,7 +216,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should let owners list pools in pages")
-    void letOwnersListPoolsPaged() throws ApiException {
+    void letOwnersListPoolsPaged() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         ProductDTO product = createProduct(owner);
 
@@ -236,7 +235,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should let owners update subscription")
-    void ownerCanUpdateSubscription() throws ApiException {
+    void ownerCanUpdateSubscription() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         ProductDTO product = createProduct(owner);
         PoolDTO pool = owners.createPool(owner.getKey(), Pools.random(product));
@@ -252,7 +251,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should let owners list pools in pages for a consumer")
-    void letOwnersListPoolsPagedForConsumer() throws ApiException {
+    void letOwnersListPoolsPagedForConsumer() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
@@ -279,7 +278,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("lets owners be created and refreshed at the same time")
-    void createOwnerDuringRefresh() throws ApiException {
+    void createOwnerDuringRefresh() {
         String ownerKey = StringUtil.random("owner");
         owners.refreshPools(ownerKey, true);
 
@@ -293,7 +292,7 @@ class OwnerResourceSpecTest {
     @Test
     @DisplayName("updates owners on a refresh")
     @OnlyInHosted
-    void refreshUpdatesOwners() throws ApiException {
+    void refreshUpdatesOwners() {
         OffsetDateTime now = OffsetDateTime.now().truncatedTo(ChronoUnit.SECONDS);
         String ownerKey = StringUtil.random("owner");
 
@@ -308,7 +307,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should let only superadmin users refresh pools")
-    void onlySuperAdminCanRefresh() throws ApiException {
+    void onlySuperAdminCanRefresh() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO readOnlyUser = UserUtil.createReadOnlyUser(admin, owner);
         UserDTO readWriteUser = UserUtil.createUser(admin, owner);
@@ -324,7 +323,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should not let read only users register systems")
-    void readOnlyCannotRegister() throws ApiException {
+    void readOnlyCannotRegister() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO readOnlyUser = UserUtil.createReadOnlyUser(admin, owner);
         UserDTO readWriteUser = UserUtil.createUser(admin, owner);
@@ -338,7 +337,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should not let users register system when owner belong to principal")
-    void cannotRegisterForPrincipalOwner() throws ApiException {
+    void cannotRegisterForPrincipalOwner() {
         OwnerDTO owner1 = owners.createOwner(Owners.random());
         OwnerDTO owner2 = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createReadOnlyUser(admin, owner1);
@@ -349,7 +348,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should not let the owner key get updated")
-    void cannotUpdateOwnerKey() throws ApiException {
+    void cannotUpdateOwnerKey() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         String originalKey = owner.getKey();
         String newKey = StringUtil.random("owner");
@@ -364,7 +363,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should allow the parent owner only to get updated")
-    void canUpdateParentOwner() throws ApiException {
+    void canUpdateParentOwner() {
         OwnerDTO parent1 = owners.createOwner(Owners.random());
         OwnerDTO parent2 = owners.createOwner(Owners.random());
         OwnerDTO owner = owners.createOwner(Owners.random().parentOwner(Owners.toNested(parent1)));
@@ -379,7 +378,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should allow the default service level only to get updated")
-    void onlyDefaultServiceLevelCanUpdate() throws ApiException {
+    void onlyDefaultServiceLevelCanUpdate() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         ProductDTO product = createProduct(owner,
             ProductAttributes.SupportLevel.withValue("VIP"));
@@ -397,7 +396,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should let owners update their default service level")
-    void ownerUpdateDefaultServiceLevel() throws ApiException {
+    void ownerUpdateDefaultServiceLevel() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         assertThat(owner.getDefaultServiceLevel()).isNull();
         ProductDTO product1 = createProduct(owner,
@@ -440,7 +439,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should allow unicode owner creation")
-    void allowUnicodeOwners() throws ApiException {
+    void allowUnicodeOwners() {
         OwnerDTO createdOwner = owners
             .createOwner(Owners.random().key(StringUtil.random("Ακμή корпорация")));
         assertThat(createdOwner).isNotNull();
@@ -448,7 +447,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should let owners show service levels")
-    void showServiceLevels() throws ApiException {
+    void showServiceLevels() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         assertThat(owner.getDefaultServiceLevel()).isNull();
         ProductDTO product1 = createProduct(owner,
@@ -471,7 +470,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("allows service level exempt service levels to be filtered out")
-    void exemptServiceLevelFiltering() throws ApiException {
+    void exemptServiceLevelFiltering() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
@@ -505,7 +504,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should return calculated attributes")
-    void returnCalculatedAttributes() throws ApiException {
+    void returnCalculatedAttributes() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         ProductDTO product = createProduct(owner, ProductAttributes.SupportLevel.withValue("VIP"));
         owners.createPool(owner.getKey(), Pools.random(product));
@@ -521,7 +520,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should create custom floating pools")
-    void customFloatingPools() throws ApiException {
+    void customFloatingPools() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         ProductDTO provided1 = createProduct(owner);
         ProductDTO provided2 = createProduct(owner);
@@ -554,7 +553,7 @@ class OwnerResourceSpecTest {
     @Test
     // BZ 988549
     @DisplayName("should not double bind when healing an org")
-    void shouldNotDoubleBindWhenHealingOrg() throws ApiException {
+    void shouldNotDoubleBindWhenHealingOrg() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         ProductDTO product = createProduct(owner,
             ProductAttributes.Usage.withValue("Development"),
@@ -593,7 +592,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should allow admin users to set org debug mode")
-    void canSetOrgDebug() throws ApiException {
+    void canSetOrgDebug() {
         OwnerDTO owner = owners.createOwner(Owners.random());
 
         owners.setLogLevel(owner.getKey(), null);
@@ -607,7 +606,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should not allow setting bad log levels")
-    void cannotSetBadLogLevel() throws ApiException {
+    void cannotSetBadLogLevel() {
         OwnerDTO owner = owners.createOwner(Owners.random());
 
         assertBadRequest(() -> owners.setLogLevel(owner.getKey(), "THISLEVELISBAD"));
@@ -615,7 +614,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should allow consumer lookup by consumer types")
-    void consumerLookupByType() throws ApiException {
+    void consumerLookupByType() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);
         ApiClient userClient = ApiClients.trustedUser(user.getUsername());
@@ -659,7 +658,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should allow updating autobindDisabled on an owner")
-    void canUpdateAutoBindDisabled() throws ApiException {
+    void canUpdateAutoBindDisabled() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         assertThat(owner.getAutobindDisabled()).isFalse();
 
@@ -676,7 +675,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should ignore autobindDisabled when not set on incoming owner")
-    void ignoreAutoBindDisabled() throws ApiException {
+    void ignoreAutoBindDisabled() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         assertThat(owner.getAutobindDisabled()).isFalse();
 
@@ -689,7 +688,7 @@ class OwnerResourceSpecTest {
 
     @Test
     @DisplayName("should list system purpose attributes of its products")
-    void listSystemPurposeAttributes() throws ApiException {
+    void listSystemPurposeAttributes() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         ProductDTO product1 = createProduct(owner,
             ProductAttributes.Usage.withValue("Development"),
@@ -731,7 +730,7 @@ class OwnerResourceSpecTest {
             .containsEntry("support_type", Set.of("test_support1", "test_support2"));
     }
 
-    private ProductDTO createProduct(OwnerDTO owner, AttributeDTO... attributes) throws ApiException {
+    private ProductDTO createProduct(OwnerDTO owner, AttributeDTO... attributes) {
         return ownerProducts.createProductByOwner(owner.getKey(), Products.withAttributes(attributes));
     }
 }

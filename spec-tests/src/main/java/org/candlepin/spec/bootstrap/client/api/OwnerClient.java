@@ -18,7 +18,6 @@ package org.candlepin.spec.bootstrap.client.api;
 import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.invoker.client.ApiClient;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.OwnerApi;
 
 import java.util.List;
@@ -30,17 +29,17 @@ public class OwnerClient extends OwnerApi {
         super(client);
     }
 
-    public List<ConsumerDTOArrayElement> listOwnerConsumers(String ownerKey) throws ApiException {
+    public List<ConsumerDTOArrayElement> listOwnerConsumers(String ownerKey) {
         return listOwnerConsumers(ownerKey, Set.of());
     }
 
     public List<ConsumerDTOArrayElement> listOwnerConsumers(
-        String ownerKey, Set<String> consumerTypes) throws ApiException {
+        String ownerKey, Set<String> consumerTypes) {
         return super.listConsumers(ownerKey, null, consumerTypes, List.of(), List.of(), List.of(),
             null, null, null, null);
     }
 
-    public List<PoolDTO> listOwnerPools(String ownerKey) throws ApiException {
+    public List<PoolDTO> listOwnerPools(String ownerKey) {
         return super.listOwnerPools(
             ownerKey,
             null,
@@ -61,7 +60,7 @@ public class OwnerClient extends OwnerApi {
             null);
     }
 
-    public List<PoolDTO> listOwnerPools(String ownerKey, Paging paging) throws ApiException {
+    public List<PoolDTO> listOwnerPools(String ownerKey, Paging paging) {
         return super.listOwnerPools(
             ownerKey,
             null,
@@ -82,7 +81,7 @@ public class OwnerClient extends OwnerApi {
             paging.orderBy());
     }
 
-    public List<PoolDTO> listOwnerPools(String ownerKey, String consumerUuid) throws ApiException {
+    public List<PoolDTO> listOwnerPools(String ownerKey, String consumerUuid) {
         return super.listOwnerPools(
             ownerKey,
             consumerUuid,
@@ -104,7 +103,7 @@ public class OwnerClient extends OwnerApi {
     }
 
     public List<PoolDTO> listOwnerPools(
-        String ownerKey, String consumerUuid, Paging paging) throws ApiException {
+        String ownerKey, String consumerUuid, Paging paging) {
         return super.listOwnerPools(
             ownerKey,
             consumerUuid,

@@ -21,7 +21,6 @@ import org.candlepin.dto.api.client.v1.ContentDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.SubscriptionDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.HostedTestApi;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.client.ApiClients;
@@ -50,14 +49,14 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void hostedShouldBeAlive() throws ApiException {
+    void hostedShouldBeAlive() {
         Boolean isAlive = hosted.isAlive();
 
         assertThat(isAlive).isTrue();
     }
 
     @Test
-    void shouldCleanServerData() throws ApiException {
+    void shouldCleanServerData() {
         hosted.createContent(Content.random());
         hosted.createContent(Content.random());
         hosted.createProduct(Products.random());
@@ -72,14 +71,14 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldCreateOwner() throws ApiException {
+    void shouldCreateOwner() {
         OwnerDTO owner = hosted.createOwner(Owners.random());
 
         assertThat(owner).isNotNull();
     }
 
     @Test
-    void shouldCreateSubscription() throws ApiException {
+    void shouldCreateSubscription() {
         OwnerDTO owner = hosted.createOwner(Owners.random());
         ProductDTO product = hosted.createProduct(Products.random());
 
@@ -89,7 +88,7 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldListSubscriptions() throws ApiException {
+    void shouldListSubscriptions() {
         OwnerDTO owner = hosted.createOwner(Owners.random());
         ProductDTO product = hosted.createProduct(Products.random());
         hosted.createSubscription(Subscriptions.random(owner, product));
@@ -100,7 +99,7 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldFindSubscription() throws ApiException {
+    void shouldFindSubscription() {
         OwnerDTO owner = hosted.createOwner(Owners.random());
         ProductDTO product = hosted.createProduct(Products.random());
         SubscriptionDTO subscription = hosted.createSubscription(Subscriptions.random(owner, product));
@@ -111,7 +110,7 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldUpdateSubscriptions() throws ApiException {
+    void shouldUpdateSubscriptions() {
         OwnerDTO owner = hosted.createOwner(Owners.random());
         ProductDTO product = hosted.createProduct(Products.random());
         SubscriptionDTO subscription = hosted.createSubscription(Subscriptions.random(owner, product));
@@ -123,7 +122,7 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldDeleteSubscriptions() throws ApiException {
+    void shouldDeleteSubscriptions() {
         OwnerDTO owner = hosted.createOwner(Owners.random());
         ProductDTO product = hosted.createProduct(Products.random());
         SubscriptionDTO subscription = hosted.createSubscription(Subscriptions.random(owner, product));
@@ -135,7 +134,7 @@ class HostedTestSpecTest {
 
 
     @Test
-    void shouldListProducts() throws ApiException {
+    void shouldListProducts() {
         hosted.createProduct(Products.random());
 
         List<ProductDTO> foundProducts = hosted.listProducts();
@@ -144,7 +143,7 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldFindProduct() throws ApiException {
+    void shouldFindProduct() {
         ProductDTO product = hosted.createProduct(Products.random());
 
         ProductDTO foundProduct = hosted.getProduct(product.getId());
@@ -161,7 +160,7 @@ class HostedTestSpecTest {
 
 
     @Test
-    void shouldUpdateProduct() throws ApiException {
+    void shouldUpdateProduct() {
         ProductDTO createdProduct = hosted.createProduct(Products.random());
 
         createdProduct.name(StringUtil.random("new_name"));
@@ -171,7 +170,7 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldDeleteProduct() throws ApiException {
+    void shouldDeleteProduct() {
         ProductDTO createdProduct = hosted.createProduct(Products.random());
 
         hosted.deleteProduct(createdProduct.getId());
@@ -180,7 +179,7 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldListContent() throws ApiException {
+    void shouldListContent() {
         hosted.createContent(Content.random());
 
         List<ContentDTO> found = hosted.listContent();
@@ -189,7 +188,7 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldFindContent() throws ApiException {
+    void shouldFindContent() {
         ContentDTO content = hosted.createContent(Content.random());
 
         ContentDTO found = hosted.getContent(content.getId());
@@ -205,7 +204,7 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldUpdateContent() throws ApiException {
+    void shouldUpdateContent() {
         ContentDTO content = hosted.createContent(Content.random());
 
         content.name(StringUtil.random("new_name"));
@@ -215,7 +214,7 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldDeleteContent() throws ApiException {
+    void shouldDeleteContent() {
         ContentDTO content = hosted.createContent(Content.random());
 
         hosted.deleteContent(content.getId());
@@ -224,7 +223,7 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldAddProductContent() throws ApiException {
+    void shouldAddProductContent() {
         ContentDTO content = hosted.createContent(Content.random());
         ProductDTO product = hosted.createProduct(Products.random());
 
@@ -235,7 +234,7 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldAddProductContents() throws ApiException {
+    void shouldAddProductContents() {
         ContentDTO content1 = hosted.createContent(Content.random());
         ContentDTO content2 = hosted.createContent(Content.random());
         ContentDTO content3 = hosted.createContent(Content.random());
@@ -252,7 +251,7 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldRemoveProductContent() throws ApiException {
+    void shouldRemoveProductContent() {
         ContentDTO content1 = hosted.createContent(Content.random());
         ContentDTO content2 = hosted.createContent(Content.random());
         ProductDTO product = hosted.createProduct(Products.random());
@@ -268,7 +267,7 @@ class HostedTestSpecTest {
     }
 
     @Test
-    void shouldRemoveProductContents() throws ApiException {
+    void shouldRemoveProductContents() {
         ContentDTO content1 = hosted.createContent(Content.random());
         ContentDTO content2 = hosted.createContent(Content.random());
         ContentDTO content3 = hosted.createContent(Content.random());

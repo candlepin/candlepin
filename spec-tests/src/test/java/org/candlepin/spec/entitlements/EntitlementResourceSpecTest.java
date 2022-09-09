@@ -49,7 +49,6 @@ import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -84,7 +83,7 @@ class EntitlementResourceSpecTest {
 
 
     @BeforeEach
-    public void beforeEach() throws ApiException {
+    public void beforeEach() {
         client = ApiClients.admin();
         ownerClient = client.owners();
         jobsClient = client.jobs();
@@ -372,13 +371,12 @@ class EntitlementResourceSpecTest {
         assertEquals(3, thePool.getConsumed());
     }
 
-    public void registerAndConsume(String poolId, String consumerType, int quantity)
-        throws JsonProcessingException, ApiException {
+    public void registerAndConsume(String poolId, String consumerType, int quantity) {
         ConsumerDTO consumer = client.consumers().createConsumer(
             Consumers.random(owner).type(new ConsumerTypeDTO().label(consumerType)));
         ConsumerClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).consumers();
         try {
-            consumerClient.bindPool(consumer.getUuid(), poolId, quantity);
+            assertForbidden(() -> consumerClient.bindPool(consumer.getUuid(), poolId, quantity));
         }
         catch (ApiException e) {
             // tests will run that try to over consume, this is expected
@@ -389,7 +387,7 @@ class EntitlementResourceSpecTest {
 
     @Test
     @DisplayName("should end at zero quantity consumed when all consumers are unregistered")
-    public void shouldEndAtZeroConsumption() throws Exception {
+    public void shouldEndAtZeroConsumption() throws InterruptedException {
         ProductDTO product = Products.random();
         product.setAttributes(List.of(new AttributeDTO().name("multi-entitlement").value("yes")));
         product = ownerProductApi.createProductByOwner(owner.getKey(), product);
@@ -427,8 +425,7 @@ class EntitlementResourceSpecTest {
         assertEquals(0, thePool.getExported());
     }
 
-    public void registerConsumeUnregister(String poolId, String consumerType, int quantity)
-        throws JsonProcessingException, ApiException {
+    public void registerConsumeUnregister(String poolId, String consumerType, int quantity) {
         ConsumerDTO consumer = client.consumers().createConsumer(
             Consumers.random(owner).type(new ConsumerTypeDTO().label(consumerType)));
         ConsumerClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).consumers();

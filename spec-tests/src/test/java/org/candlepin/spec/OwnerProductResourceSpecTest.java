@@ -36,7 +36,6 @@ import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ProvidedProductDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.client.v1.ActivationKeyApi;
 import org.candlepin.resource.client.v1.OwnerContentApi;
@@ -111,7 +110,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should fail when fetching non-existing products")
-    public void shouldFailWhenFetchingNonExistingProducts() throws Exception {
+    public void shouldFailWhenFetchingNonExistingProducts() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         assertNotFound(() -> ownerProductApi.getProductByOwner(owner.getKey(), "bad product id"));
     }
@@ -167,7 +166,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should not update product name with null value")
-    public void shouldNotUpdateProductNameWithNullValue() throws Exception {
+    public void shouldNotUpdateProductNameWithNullValue() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO prod = Products.randomEng();
         String prodName = prod.getName();
@@ -182,7 +181,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should remove content from products")
-    public void shouldRemoveContentFromProducts() throws Exception {
+    public void shouldRemoveContentFromProducts() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO prod = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
         ContentDTO content = ownerContentApi.createContent(owner.getKey(), Content.random());
@@ -198,7 +197,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should allow regular users to view products")
-    public void shouldAllowRegularUsersToViewProducts() throws Exception {
+    public void shouldAllowRegularUsersToViewProducts() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         UserDTO readOnlyUser = UserUtil.createReadOnlyUser(client, owner);
         ProductDTO expectedProduct = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
@@ -212,7 +211,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should create two products with the same name")
-    public void shouldCreateTwoProductsWithTheSameName() throws Exception {
+    public void shouldCreateTwoProductsWithTheSameName() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO prod = Products.random();
         ProductDTO prod1 = ownerProductApi.createProductByOwner(owner.getKey(), prod);
@@ -246,7 +245,7 @@ public class OwnerProductResourceSpecTest {
     @Test
     @OnlyInHosted
     @DisplayName("should refresh pools for orgs owning products")
-    public void shouldRefreshPoolsForOrgsOwningProducts() throws Exception {
+    public void shouldRefreshPoolsForOrgsOwningProducts() {
         OwnerDTO owner1 = ownerApi.createOwner(Owners.random());
         OwnerDTO owner2 = ownerApi.createOwner(Owners.random());
         OwnerDTO owner3 = ownerApi.createOwner(Owners.random());
@@ -290,17 +289,17 @@ public class OwnerProductResourceSpecTest {
         pool3.setDerivedProvidedProducts(Set.of(new ProvidedProductDTO().productId(product3.getId())));
         ownerApi.createPool(owner3.getKey(), pool3);
 
-        verifyRefreshPoolJob(ownerProductApi, owner1.getKey(), prod4.getId(), true);
-        verifyRefreshPoolJob(ownerProductApi, owner2.getKey(), prod5d.getId(), true);
-        verifyRefreshPoolJob(ownerProductApi, owner3.getKey(), product1.getId(), true);
-        verifyRefreshPoolJob(ownerProductApi, owner3.getKey(), product3.getId(), true);
+        verifyRefreshPoolJob(owner1.getKey(), prod4.getId(), true);
+        verifyRefreshPoolJob(owner2.getKey(), prod5d.getId(), true);
+        verifyRefreshPoolJob(owner3.getKey(), product1.getId(), true);
+        verifyRefreshPoolJob(owner3.getKey(), product3.getId(), true);
 
         assertNotFound(() -> ownerProductApi.refreshPoolsForProduct(owner1.getKey(), "bad_id", true));
     }
 
     @Test
     @DisplayName("should lists all products in bulk fetch")
-    public void shouldListsAllProductsInBulkFetch() throws Exception {
+    public void shouldListsAllProductsInBulkFetch() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         String ownerKey = owner.getKey();
         ProductDTO prod1 = ownerProductApi.createProductByOwner(ownerKey, Products.random());
@@ -317,7 +316,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should lists all specified products in bulk fetch")
-    public void shouldListsAllSpecifiedProductsInBulkFetch() throws Exception {
+    public void shouldListsAllSpecifiedProductsInBulkFetch() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         String ownerKey = owner.getKey();
         ProductDTO prod1 = ownerProductApi.createProductByOwner(ownerKey, Products.random());
@@ -477,7 +476,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should return correct exception for constraint violations")
-    public void shouldReturnCorrectExceptionForConstraintViolations() throws Exception {
+    public void shouldReturnCorrectExceptionForConstraintViolations() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         AttributeDTO attribute = ProductAttributes.SupportLevel.withValue(StringUtil.random(400));
         ProductDTO product = Products.withAttributes(attribute);
@@ -486,7 +485,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should return bad request on attempt to delete product attached to sub")
-    public void shouldReturnBadRequestOnAttemptToDeleteProductAttachedToSub() throws Exception {
+    public void shouldReturnBadRequestOnAttemptToDeleteProductAttachedToSub() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product = createProductWithProvidedAndDerivedProduct(owner.getKey());
         assertBadRequest(() -> ownerProductApi.deleteProductByOwner(owner.getKey(), product.getId()));
@@ -494,7 +493,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should return bad request on attempt to delete provided product attached to sub")
-    public void shouldReturnBadRequestOnAttemptToDeleteProvidedProductAttachedToSub() throws Exception {
+    public void shouldReturnBadRequestOnAttemptToDeleteProvidedProductAttachedToSub() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product = createProductWithProvidedAndDerivedProduct(owner.getKey());
         ProductDTO providedProduct = Iterables.getOnlyElement(product.getProvidedProducts());
@@ -503,7 +502,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should return bad request on attempt to delete derived product attached to sub")
-    public void shouldReturnBadRequestOnAttemptToDeleteDerivedProduct() throws Exception {
+    public void shouldReturnBadRequestOnAttemptToDeleteDerivedProduct() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product = createProductWithProvidedAndDerivedProduct(owner.getKey());
         ProductDTO derivedProduct = product.getDerivedProduct();
@@ -512,8 +511,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should return bad request on attempt to delete derived product attached to sub")
-    public void shouldReturnBadRequestOnAttemptToDeleteDerivedProductAttachedToSub()
-        throws Exception {
+    public void shouldReturnBadRequestOnAttemptToDeleteDerivedProductAttachedToSub() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product = createProductWithProvidedAndDerivedProduct(owner.getKey());
         ProductDTO derivedProduct = product.getDerivedProduct();
@@ -523,8 +521,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should return bad request on attempt to delete derived provided product attached to sub")
-    public void shouldReturnbadRequestOnAttemptToDeleteDerivedProvidedProductAttachedToSub()
-        throws Exception {
+    public void shouldReturnbadRequestOnAttemptToDeleteDerivedProvidedProductAttachedToSub() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product = createProductWithProvidedAndDerivedProduct(owner.getKey());
         ProductDTO derivedProvidedProduct =
@@ -535,7 +532,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should create and delete products with branding correctly")
-    public void shouldCreateAndDeleteProductsWithBrandingCorrectly() throws Exception {
+    public void shouldCreateAndDeleteProductsWithBrandingCorrectly() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         String ownerKey = owner.getKey();
         ProductDTO product = Products.random();
@@ -571,7 +568,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should create new product version when updating branding")
-    public void shouldCreateNewProductVersionWhenUpdatingBranding() throws Exception {
+    public void shouldCreateNewProductVersionWhenUpdatingBranding() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         String ownerKey = owner.getKey();
         ProductDTO product = Products.random();
@@ -598,7 +595,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should be able to create product with provided product")
-    public void shouldBeAbleToCreateProductWithProvidedProduct() throws Exception {
+    public void shouldBeAbleToCreateProductWithProvidedProduct() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         String ownerKey = owner.getKey();
         ProductDTO product1 = ownerProductApi.createProductByOwner(ownerKey, Products.random());
@@ -616,7 +613,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should be able to update product with provided products")
-    public void shouldBeAbleToUpdateProductWithProvidedProducts() throws Exception {
+    public void shouldBeAbleToUpdateProductWithProvidedProducts() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         String ownerKey = owner.getKey();
         ProductDTO product1 = ownerProductApi.createProductByOwner(ownerKey, Products.random());
@@ -633,7 +630,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should create new product version when updating provided product")
-    public void shouldCreateNewProductVersionWhenUpdatingProvidedProduct() throws Exception {
+    public void shouldCreateNewProductVersionWhenUpdatingProvidedProduct() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         String ownerKey = owner.getKey();
         ProductDTO product = createProductWithProvidedAndDerivedProduct(ownerKey);
@@ -656,7 +653,7 @@ public class OwnerProductResourceSpecTest {
 
     @Test
     @DisplayName("should allow deleting a product associated with an activation key")
-    public void shouldAllowDeletingAProductAssociatedWithAnActivationKey() throws Exception {
+    public void shouldAllowDeletingAProductAssociatedWithAnActivationKey() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         String ownerKey = owner.getKey();
         ProductDTO product = ownerProductApi.createProductByOwner(ownerKey, Products.random());
@@ -687,7 +684,7 @@ public class OwnerProductResourceSpecTest {
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("invalidStrings")
     @DisplayName("should return bad request when inserting product with invalid name")
-    public void shouldReturnBadRequestWhenInsertingProductWithInvalidName(String name) throws Exception {
+    public void shouldReturnBadRequestWhenInsertingProductWithInvalidName(String name) {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product = Products.random()
             .name(name);
@@ -698,7 +695,7 @@ public class OwnerProductResourceSpecTest {
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @MethodSource("invalidStrings")
     @DisplayName("should return bad request when inserting product with invalid id")
-    public void shouldReturnBadRequestWhenInsertingProductWithInvalidId(String id) throws Exception {
+    public void shouldReturnBadRequestWhenInsertingProductWithInvalidId(String id) {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO product = Products.random()
             .id(id);
@@ -742,7 +739,7 @@ public class OwnerProductResourceSpecTest {
         @ParameterizedTest(name = "{displayName} {index}: {0}")
         @MethodSource("invalidStrings")
         @DisplayName("should return bad request when inserting product with invalid name")
-        public void shouldReturnBadRequestWhenInsertingProductWithInvalidName(String name) throws Exception {
+        public void shouldReturnBadRequestWhenInsertingProductWithInvalidName(String name) {
             OwnerDTO owner = ownerApi.createOwner(Owners.random());
             ProductDTO product = Products.random()
                 .name(name);
@@ -753,7 +750,7 @@ public class OwnerProductResourceSpecTest {
         @ParameterizedTest(name = "{displayName} {index}: {0}")
         @MethodSource("invalidStrings")
         @DisplayName("should return bad request when inserting product with invalid id")
-        public void shouldReturnBadRequestWhenInsertingProductWithInvalidId(String id) throws Exception {
+        public void shouldReturnBadRequestWhenInsertingProductWithInvalidId(String id) {
             OwnerDTO owner = ownerApi.createOwner(Owners.random());
             ProductDTO product = Products.random()
                 .id(id);
@@ -776,7 +773,7 @@ public class OwnerProductResourceSpecTest {
         private ProductDTO product;
 
         @BeforeAll
-        public void setup() throws Exception {
+        public void setup() {
             this.client = ApiClients.admin();
             this.owner = client.owners().createOwner(Owners.random());
             this.ownerProductApi = client.ownerProducts();
@@ -800,28 +797,26 @@ public class OwnerProductResourceSpecTest {
 
         @Test
         @DisplayName("should return forbidden request when deleting derived provided product attached to sub")
-        public void shouldReturnForbiddenRequestWhenDeletingDerivedProvidedProductAttachedToSub()
-            throws Exception {
+        public void shouldReturnForbiddenRequestWhenDeletingDerivedProvidedProductAttachedToSub() {
             assertForbidden(() -> this.ownerProductApi
                 .deleteProductByOwner(owner.getKey(), derivedProvProduct.getId()));
         }
 
         @Test
         @DisplayName("should return forbidden request on attempt to delete provided product attached to sub")
-        public void shouldReturnForbiddenRequestOnAttemptToDeleteProvidedProductAttachedToSub()
-            throws Exception {
+        public void shouldReturnForbiddenRequestOnAttemptToDeleteProvidedProductAttachedToSub() {
             assertForbidden(() -> this.ownerProductApi
                 .deleteProductByOwner(owner.getKey(), providedProduct.getId()));
         }
 
         @Test
         @DisplayName("should return forbidden request on attempt to delete product attached to sub")
-        public void shouldReturnForbiddenRequestOnAttemptToDeleteProductAttachedToSub() throws Exception {
+        public void shouldReturnForbiddenRequestOnAttemptToDeleteProductAttachedToSub() {
             assertForbidden(() -> this.ownerProductApi.deleteProductByOwner(owner.getKey(), product.getId()));
         }
     }
 
-    private ProductDTO createProductWithProvidedProduct(String ownerKey) throws ApiException {
+    private ProductDTO createProductWithProvidedProduct(String ownerKey) {
         ProductDTO derivedProvProduct = ownerProductApi.createProductByOwner(ownerKey, Products.random());
         ProductDTO derivedProduct = Products.random();
         derivedProduct.setProvidedProducts(Set.of(derivedProvProduct));
@@ -830,7 +825,7 @@ public class OwnerProductResourceSpecTest {
         return derivedProduct;
     }
 
-    private ProductDTO createProductWithProvidedAndDerivedProduct(String ownerKey) throws ApiException {
+    private ProductDTO createProductWithProvidedAndDerivedProduct(String ownerKey) {
         ProductDTO derivedProduct = createProductWithProvidedProduct(ownerKey);
         ProductDTO provProduct = ownerProductApi.createProductByOwner(ownerKey, Products.random());
         ProductDTO product = Products.random();
@@ -849,8 +844,7 @@ public class OwnerProductResourceSpecTest {
         assertEquals(expected.getType(), actual.getType());
     }
 
-    private void verifyRefreshPoolJob(OwnerProductApi api, String ownerKey, String productId,
-        boolean lazyRegen)throws ApiException {
+    private void verifyRefreshPoolJob(String ownerKey, String productId, boolean lazyRegen) {
         AsyncJobStatusDTO job = ownerProductApi.refreshPoolsForProduct(ownerKey, productId, lazyRegen);
         assertNotNull(job);
         AsyncJobStatusDTO status = jobsApi.waitForJob(job.getId());

@@ -23,7 +23,6 @@ import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
-import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.OwnerApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.resource.client.v1.ProductsApi;
@@ -76,7 +75,7 @@ public class ProductResourceSpecTest {
 
     @Test
     @DisplayName("retrieves owners by product")
-    public void retrieveOwnersByProduct() throws Exception {
+    public void retrieveOwnersByProduct() {
         List<OwnerDTO> expectedOwners = setupOrgProductsAndPools();
         OwnerDTO owner1 = expectedOwners.get(0);
         OwnerDTO owner2 = expectedOwners.get(1);
@@ -143,13 +142,13 @@ public class ProductResourceSpecTest {
 
     @Test
     @DisplayName("throws exception on get_owners with no products")
-    public void getOwnersWithNoProductsException() throws Exception {
+    public void getOwnersWithNoProductsException() {
         assertBadRequest(() -> productsApi.getProductOwners(new ArrayList<>()));
     }
 
     @Test
     @DisplayName("throws exception on refresh with no products")
-    public void refreshWithNoProductsException() throws Exception {
+    public void refreshWithNoProductsException() {
         assertBadRequest(() -> productsApi.refreshPoolsForProducts(new ArrayList<>(), false));
     }
 
@@ -159,7 +158,7 @@ public class ProductResourceSpecTest {
         assertNotFound(() -> productsApi.getProduct("unknown-product-id"));
     }
 
-    private List<OwnerDTO> setupOrgProductsAndPools() throws ApiException {
+    private List<OwnerDTO> setupOrgProductsAndPools() {
         OwnerDTO owner1 = ownerApi.createOwner(Owners.random());
         OwnerDTO owner2 = ownerApi.createOwner(Owners.random());
         OwnerDTO owner3 = ownerApi.createOwner(Owners.random());
@@ -202,7 +201,7 @@ public class ProductResourceSpecTest {
     }
 
     private ProductDTO createProduct(String productId, String ownerKey, ProductDTO derivedProduct,
-        Collection<ProductDTO> providedProducts) throws ApiException {
+        Collection<ProductDTO> providedProducts) {
         ProductDTO newProduct = new ProductDTO();
         newProduct.setId(productId);
         newProduct.setName(productId);
@@ -217,7 +216,7 @@ public class ProductResourceSpecTest {
         return ownerProductApi.createProductByOwner(ownerKey, newProduct);
     }
 
-    private PoolDTO createPool(String ownerKey, ProductDTO product) throws ApiException {
+    private PoolDTO createPool(String ownerKey, ProductDTO product) {
         PoolDTO pool = new PoolDTO();
         pool.setProductId(product.getId());
         pool.setProductName(product.getName());
@@ -228,9 +227,7 @@ public class ProductResourceSpecTest {
         return ownerApi.createPool(ownerKey, pool);
     }
 
-    private void verifyRefreshPoolsForProducts(AsyncJobStatusDTO job)
-        throws ApiException, InterruptedException {
-
+    private void verifyRefreshPoolsForProducts(AsyncJobStatusDTO job) {
         assertEquals("Refresh Pools", job.getName());
 
         AsyncJobStatusDTO finishedJobStatus = jobsClient.waitForJob(job);
