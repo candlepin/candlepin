@@ -4,13 +4,14 @@
 # Sundeep Anand <suanand@redhat.com>, 2021.
 # Pino Toscano <ptoscano@redhat.com>, 2022.
 # 김인수 <simmon@nplob.com>, 2022.
+# John Sefler <jsefler@redhat.com>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-06-09 03:02-0400\n"
-"PO-Revision-Date: 2022-06-10 02:18+0000\n"
-"Last-Translator: 김인수 <simmon@nplob.com>\n"
+"PO-Revision-Date: 2022-08-25 05:35+0000\n"
+"Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-1-hotfix/ko/>\n"
 "Language: ko\n"
@@ -18,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.12.2\n"
+"X-Generator: Weblate 4.13\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -530,9 +531,9 @@ msgid ""
 "guest subscription. For more information, please see https://access.redhat."
 "com/solutions/1592573"
 msgstr ""
-"게스트가 호스트에서 보고되어 있지 않으며 일치되지 않은 임시 게스트 서브스크립"
-"션을 사용하고 있습니다. 보다 자세한 내용은 https://access.redhat.com/"
-"solutions/1592573에서 참조하십시오"
+"게스트가 호스트에서 보고되어 있지 않으며 일치되지 않은 임시 게스트 "
+"서브스크립션을 사용하고 있습니다. 보다 자세한 내용은 https://access.redhat."
+"com/solutions/1592573 에서 참조하십시오"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format
