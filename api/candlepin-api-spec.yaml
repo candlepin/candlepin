@@ -85,7 +85,7 @@ paths:
         - activation_key
       operationId: findActivationKey
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       responses:
@@ -215,7 +215,7 @@ paths:
           schema:
             type: string
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       responses:
         200:
@@ -270,7 +270,7 @@ paths:
               items:
                 $ref: '#/components/schemas/ContentOverrideDTO'
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       responses:
         200:
@@ -325,7 +325,7 @@ paths:
               items:
                 $ref: '#/components/schemas/ContentOverrideDTO'
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       responses:
         200:
@@ -372,7 +372,7 @@ paths:
           schema:
             type: string
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       responses:
         200:
@@ -1266,7 +1266,7 @@ paths:
           schema:
             type: string
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       responses:
         200:
@@ -1321,7 +1321,7 @@ paths:
               items:
                 $ref: '#/components/schemas/ContentOverrideDTO'
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       responses:
         200:
@@ -1390,7 +1390,7 @@ paths:
               items:
                 $ref: '#/components/schemas/ContentOverrideDTO'
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       responses:
         200:
@@ -1814,7 +1814,7 @@ paths:
         - guest_ids
       operationId: getGuestIds
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       parameters:
@@ -2519,7 +2519,7 @@ paths:
           - consumer_type
       operationId: getConsumerTypes
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       responses:
@@ -2662,7 +2662,7 @@ paths:
         - cdn
       operationId: getContentDeliveryNetworks
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       responses:
@@ -2782,7 +2782,7 @@ paths:
       description: Retrieves list of Content
       operationId: listContent
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       responses:
@@ -2862,7 +2862,7 @@ paths:
             type: string
           description: Filter deleted consumers to those on or after this date
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       security: []
       responses:
@@ -3034,7 +3034,7 @@ paths:
         - environment
       security: []
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       responses:
         200:
@@ -4166,7 +4166,7 @@ paths:
         - owner
       operationId: listOwners
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       parameters:
         - name: key
@@ -4373,7 +4373,7 @@ paths:
         - owner
       operationId: ownerActivationKeys
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       parameters:
         - name: owner_key
@@ -4485,7 +4485,7 @@ paths:
         - owner_content
       operationId: listOwnerContent
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       parameters:
         - name: owner_key
@@ -5045,7 +5045,7 @@ paths:
         - owner
       operationId: listEnvironments
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       parameters:
         - name: owner_key
@@ -5128,7 +5128,7 @@ paths:
       operationId: getHypervisors
       security: []
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       parameters:
         - name: owner_key
@@ -5172,7 +5172,7 @@ paths:
       operationId: getImports
       security: []
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       parameters:
         - name: owner_key
@@ -5840,7 +5840,7 @@ paths:
       operationId: getProductsByOwner
       security: []
       x-java-response:
-        type: Iterable
+        type: java.util.stream.Stream
         isContainer: true
       parameters:
         - name: owner_key

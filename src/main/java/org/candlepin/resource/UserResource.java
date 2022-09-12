@@ -98,7 +98,7 @@ public class UserResource implements UsersApi {
         Collection<? extends UserInfo> users = userService.listUsers();
 
         return users != null ?
-            users.stream().map(this.modelTranslator.getStreamMapper(UserInfo.class, UserDTO.class)) :
+            users.stream().map(this.modelTranslator.getMapper(UserInfo.class, UserDTO.class)) :
             null;
     }
 
@@ -123,7 +123,7 @@ public class UserResource implements UsersApi {
             // Make sure we clear/overwrite the collection of users with our singleton users set
             // to avoid leaking role details about other users.
             return roles.stream()
-                .map(this.modelTranslator.getStreamMapper(RoleInfo.class, RoleDTO.class))
+                .map(this.modelTranslator.getMapper(RoleInfo.class, RoleDTO.class))
                 .map(e -> e.users(new HashSet<>(users)));
         }
 
@@ -191,7 +191,7 @@ public class UserResource implements UsersApi {
 
             return owners.stream()
                 .map(this::resolveOwner)
-                .map(this.modelTranslator.getStreamMapper(Owner.class, OwnerDTO.class));
+                .map(this.modelTranslator.getMapper(Owner.class, OwnerDTO.class));
         }
 
         return null;

@@ -128,7 +128,7 @@ public class ProductResource implements ProductsApi {
         Set<Owner> owners = this.ownerCurator.getOwnersWithProducts(productIds);
 
         return owners.stream().map(
-            this.translator.getStreamMapper(Owner.class, OwnerDTO.class));
+            this.translator.getMapper(Owner.class, OwnerDTO.class));
     }
 
     @Override
@@ -165,6 +165,6 @@ public class ProductResource implements ProductsApi {
             .stream()
             .map(jobConfigMapper)
             .map(jobQueueMapper)
-            .map(this.translator.getStreamMapper(AsyncJobStatus.class, AsyncJobStatusDTO.class));
+            .map(this.translator.getMapper(AsyncJobStatus.class, AsyncJobStatusDTO.class));
     }
 }

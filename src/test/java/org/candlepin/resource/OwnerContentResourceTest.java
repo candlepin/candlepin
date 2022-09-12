@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
@@ -37,10 +36,13 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
+
+
 
 public class OwnerContentResourceTest extends DatabaseTestFixture {
 
@@ -65,12 +67,10 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
         Content content = this.createContent("test_content", "test_content", owner);
         ContentDTO cdto = this.modelTranslator.translate(content, ContentDTO.class);
 
-        CandlepinQuery<ContentDTO> response = this.ownerContentResource.listOwnerContent(owner.getKey());
-
+        Stream<ContentDTO> response = this.ownerContentResource.listOwnerContent(owner.getKey());
         assertNotNull(response);
 
-        Collection<ContentDTO> received = response.list();
-
+        List<ContentDTO> received = response.collect(Collectors.toList());
         assertEquals(1, received.size());
         assertTrue(received.contains(cdto));
     }
@@ -78,13 +78,10 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
     @Test
     public void listOwnerContentNoContent() throws Exception {
         Owner owner = this.createOwner("test_owner");
-        CandlepinQuery<ContentDTO> response = this.ownerContentResource.listOwnerContent(owner.getKey());
 
+        Stream<ContentDTO> response = this.ownerContentResource.listOwnerContent(owner.getKey());
         assertNotNull(response);
-
-        Collection<ContentDTO> received = response.list();
-
-        assertEquals(0, received.size());
+        assertEquals(0, response.count());
     }
 
     @Test

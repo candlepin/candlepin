@@ -21,7 +21,6 @@ import org.candlepin.dto.api.server.v1.CertificateDTO;
 import org.candlepin.dto.api.server.v1.CertificateSerialDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
@@ -34,6 +33,9 @@ import org.xnap.commons.i18n.I18n;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.stream.Stream;
+
+
 
 /**
  * CdnResource
@@ -54,8 +56,10 @@ public class CdnResource implements CdnApi {
     }
 
     @Override
-    public CandlepinQuery<CdnDTO> getContentDeliveryNetworks() {
-        return this.translator.translateQuery(curator.listAll(), CdnDTO.class);
+    public Stream<CdnDTO> getContentDeliveryNetworks() {
+        return this.curator.listAll().list()
+            .stream()
+            .map(this.translator.getMapper(Cdn.class, CdnDTO.class));
     }
 
     @Override

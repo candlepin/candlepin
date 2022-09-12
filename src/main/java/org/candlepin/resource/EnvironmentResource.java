@@ -70,9 +70,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
+
 
 
 /**
@@ -255,8 +257,11 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
-    public Iterable<EnvironmentDTO> getEnvironments() {
-        return translator.translateQuery(this.envCurator.listAll(), EnvironmentDTO.class);
+    public Stream<EnvironmentDTO> getEnvironments() {
+        return this.envCurator.listAll()
+            .list()
+            .stream()
+            .map(this.translator.getMapper(Environment.class, EnvironmentDTO.class));
     }
 
     @Override
@@ -358,7 +363,7 @@ public class EnvironmentResource implements EnvironmentApi {
 
         List<EnvironmentDTO> environmentDTOs = Arrays.stream(envId.trim().split("\\s*,\\s*"))
             .map(this::lookupEnvironment)
-            .map(this.translator.getStreamMapper(Environment.class, EnvironmentDTO.class))
+            .map(this.translator.getMapper(Environment.class, EnvironmentDTO.class))
             .collect(Collectors.toList());
 
         // Check if all envs belongs to same org

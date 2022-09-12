@@ -74,7 +74,6 @@ import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Certificate;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerActivationKey;
@@ -347,18 +346,20 @@ public class ConsumerResource implements ConsumerApi {
     @Override
     @SecurityHole
     @RootResource.LinkedResource
-    public Iterable<ContentOverrideDTO> listConsumerContentOverrides(String consumerUuid) {
+    public Stream<ContentOverrideDTO> listConsumerContentOverrides(String consumerUuid) {
         Principal principal = ResteasyContext.getContextData(Principal.class);
         Consumer parent = this.verifyAndGetParent(consumerUuid, principal, Access.READ_ONLY);
 
-        CandlepinQuery<ConsumerContentOverride> query = this.ccoCurator.getList(parent);
-        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+        return this.ccoCurator.getList(parent)
+            .list()
+            .stream()
+            .map(this.translator.getMapper(ConsumerContentOverride.class, ContentOverrideDTO.class));
     }
 
     @Override
     @Transactional
     @SecurityHole
-    public Iterable<ContentOverrideDTO> addConsumerContentOverrides(
+    public Stream<ContentOverrideDTO> addConsumerContentOverrides(
         String consumerUuid, List<ContentOverrideDTO> entries) {
 
         // Validate our input
@@ -401,14 +402,16 @@ public class ConsumerResource implements ConsumerApi {
         // Hibernate typically persists automatically before executing a query against a table with
         // pending changes, but if it doesn't, we can add a flush here to make sure this outputs the
         // correct values
-        CandlepinQuery<ConsumerContentOverride> query = this.ccoCurator.getList(parent);
-        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+        return this.ccoCurator.getList(parent)
+            .list()
+            .stream()
+            .map(this.translator.getMapper(ConsumerContentOverride.class, ContentOverrideDTO.class));
     }
 
     @Override
     @Transactional
     @SecurityHole
-    public Iterable<ContentOverrideDTO> deleteConsumerContentOverrides(
+    public Stream<ContentOverrideDTO> deleteConsumerContentOverrides(
         String consumerUuid, List<ContentOverrideDTO> entries) {
 
         Principal principal = ResteasyContext.getContextData(Principal.class);
@@ -435,8 +438,10 @@ public class ConsumerResource implements ConsumerApi {
             }
         }
 
-        CandlepinQuery<ConsumerContentOverride> query = this.ccoCurator.getList(parent);
-        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+        return this.ccoCurator.getList(parent)
+            .list()
+            .stream()
+            .map(this.translator.getMapper(ConsumerContentOverride.class, ContentOverrideDTO.class));
     }
 
     private Consumer verifyAndGetParent(String parentId, Principal principal, Access access) {
@@ -627,7 +632,7 @@ public class ConsumerResource implements ConsumerApi {
 
         try {
             return this.consumerCurator.findConsumers(queryArgs).stream()
-                .map(this.translator.getStreamMapper(Consumer.class, ConsumerDTOArrayElement.class));
+                .map(this.translator.getMapper(Consumer.class, ConsumerDTOArrayElement.class));
         }
         catch (InvalidOrderKeyException e) {
             throw new BadRequestException(e.getMessage(), e);
@@ -2085,7 +2090,7 @@ public class ConsumerResource implements ConsumerApi {
                 .filter(cert -> cert.getSerial() != null && serialSet.contains(cert.getSerial().getId()));
         }
 
-        return certStream.map(this.translator.getStreamMapper(Certificate.class, CertificateDTO.class))
+        return certStream.map(this.translator.getMapper(Certificate.class, CertificateDTO.class))
             .collect(Collectors.toList());
     }
 

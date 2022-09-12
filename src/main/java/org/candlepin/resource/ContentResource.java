@@ -26,23 +26,29 @@ import com.google.inject.Inject;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Objects;
+import java.util.stream.Stream;
+
+
 
 public class ContentResource implements ContentApi {
 
     private final ContentCurator contentCurator;
     private final I18n i18n;
-    private final ModelTranslator modelTranslator;
+    private final ModelTranslator translator;
 
     @Inject
-    public ContentResource(ContentCurator contentCurator, I18n i18n, ModelTranslator modelTranslator) {
+    public ContentResource(ContentCurator contentCurator, I18n i18n, ModelTranslator translator) {
         this.i18n = Objects.requireNonNull(i18n);
         this.contentCurator = Objects.requireNonNull(contentCurator);
-        this.modelTranslator = Objects.requireNonNull(modelTranslator);
+        this.translator = Objects.requireNonNull(translator);
     }
 
     @Override
-    public Iterable<ContentDTO> listContent() {
-        return this.modelTranslator.translateQuery(this.contentCurator.listAll(), ContentDTO.class);
+    public Stream<ContentDTO> listContent() {
+        return this.contentCurator.listAll()
+            .list()
+            .stream()
+            .map(this.translator.getMapper(Content.class, ContentDTO.class));
     }
 
     @Override
@@ -54,7 +60,7 @@ public class ContentResource implements ContentApi {
                 i18n.tr("Content with UUID \"{0}\" could not be found.", contentUuid));
         }
 
-        return this.modelTranslator.translate(content, ContentDTO.class);
+        return this.translator.translate(content, ContentDTO.class);
     }
 
 }

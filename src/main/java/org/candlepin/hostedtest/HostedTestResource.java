@@ -317,7 +317,7 @@ public class HostedTestResource {
     @Path("/subscriptions")
     public Stream<SubscriptionDTO> listSubscriptions() {
         return this.datastore.listSubscriptions().stream()
-            .map(this.translator.getStreamMapper(SubscriptionInfo.class, SubscriptionDTO.class));
+            .map(this.translator.getMapper(SubscriptionInfo.class, SubscriptionDTO.class));
     }
 
     /**
@@ -401,7 +401,7 @@ public class HostedTestResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Stream<ProductDTO> listProducts() {
         return this.datastore.listProducts().stream()
-            .map(this.translator.getStreamMapper(ProductInfo.class, ProductDTO.class));
+            .map(this.translator.getMapper(ProductInfo.class, ProductDTO.class));
     }
 
     @GET
@@ -486,7 +486,7 @@ public class HostedTestResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Stream<ContentDTO> listContent() {
         return this.datastore.listContent().stream()
-            .map(this.translator.getStreamMapper(ContentInfo.class, ContentDTO.class));
+            .map(this.translator.getMapper(ContentInfo.class, ContentDTO.class));
     }
 
     @GET

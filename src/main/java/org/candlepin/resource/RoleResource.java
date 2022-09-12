@@ -248,6 +248,6 @@ public class RoleResource implements RolesApi {
         // TODO: Add in filter options
 
         Collection<? extends RoleInfo> roles = this.userService.listRoles();
-        return roles.stream().map(this.modelTranslator.getStreamMapper(RoleInfo.class, RoleDTO.class));
+        return roles.stream().map(this.modelTranslator.getMapper(RoleInfo.class, RoleDTO.class));
     }
 }

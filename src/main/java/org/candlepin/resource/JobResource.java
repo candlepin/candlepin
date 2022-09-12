@@ -220,7 +220,7 @@ public class JobResource implements JobsApi {
 
         try {
             return this.jobManager.findJobs(queryArgs).stream()
-                .map(this.translator.getStreamMapper(AsyncJobStatus.class, AsyncJobStatusDTO.class));
+                .map(this.translator.getMapper(AsyncJobStatus.class, AsyncJobStatusDTO.class));
         }
         catch (InvalidOrderKeyException e) {
             throw new BadRequestException(e.getMessage(), e);

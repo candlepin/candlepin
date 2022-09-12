@@ -764,12 +764,14 @@ public class OwnerResource implements OwnerApi {
 
     @Override
     @Wrapped(element = "owners")
-    public CandlepinQuery<OwnerDTO> listOwners(String keyFilter) {
+    public Stream<OwnerDTO> listOwners(String keyFilter) {
         CandlepinQuery<Owner> query = keyFilter != null ?
             this.ownerCurator.getByKeys(Arrays.asList(keyFilter)) :
             this.ownerCurator.listAll();
 
-        return this.translator.translateQuery(query, OwnerDTO.class);
+        return query.list()
+            .stream()
+            .map(this.translator.getMapper(Owner.class, OwnerDTO.class));
     }
 
     @Override
@@ -999,12 +1001,15 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public CandlepinQuery<ActivationKeyDTO> ownerActivationKeys(
-        @Verify(Owner.class) String ownerKey, String keyName) {
-        Owner owner = findOwnerByKey(ownerKey);
+    public Stream<ActivationKeyDTO> ownerActivationKeys(@Verify(Owner.class) String ownerKey,
+        String keyName) {
 
-        CandlepinQuery<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner, keyName);
-        return translator.translateQuery(keys, ActivationKeyDTO.class);
+        Owner owner = this.findOwnerByKey(ownerKey);
+
+        return this.activationKeyCurator.listByOwner(owner, keyName)
+            .list()
+            .stream()
+            .map(this.translator.getMapper(ActivationKey.class, ActivationKeyDTO.class));
     }
 
     @Override
@@ -1061,13 +1066,18 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public CandlepinQuery<EnvironmentDTO> listEnvironments(
-        @Verify(Owner.class) String ownerKey, String envName) {
+    public Stream<EnvironmentDTO> listEnvironments(@Verify(Owner.class) String ownerKey,
+        String envName) {
+
         Owner owner = findOwnerByKey(ownerKey);
+
         CandlepinQuery<Environment> query = envName == null ?
             envCurator.listForOwner(owner) :
             envCurator.listForOwnerByName(owner, envName);
-        return translator.translateQuery(query, EnvironmentDTO.class);
+
+        return query.list()
+            .stream()
+            .map(this.translator.getMapper(Environment.class, EnvironmentDTO.class));
     }
 
     @Override
@@ -1152,7 +1162,7 @@ public class OwnerResource implements OwnerApi {
 
         try {
             return this.consumerCurator.findConsumers(queryArgs).stream()
-                .map(this.translator.getStreamMapper(Consumer.class, ConsumerDTOArrayElement.class));
+                .map(this.translator.getMapper(Consumer.class, ConsumerDTOArrayElement.class));
         }
         catch (InvalidOrderKeyException e) {
             throw new BadRequestException(e.getMessage(), e);
@@ -1265,7 +1275,7 @@ public class OwnerResource implements OwnerApi {
         ResteasyContext.pushContext(Page.class, poolPage);
 
         return poolList.stream()
-            .map(this.translator.getStreamMapper(Pool.class, PoolDTO.class));
+            .map(this.translator.getMapper(Pool.class, PoolDTO.class));
     }
 
     @Override
@@ -1550,12 +1560,13 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public CandlepinQuery<ImportRecordDTO> getImports(
-        @Verify(Owner.class) String ownerKey) {
-        Owner owner = findOwnerByKey(ownerKey);
+    public Stream<ImportRecordDTO> getImports(@Verify(Owner.class) String ownerKey) {
+        Owner owner = this.findOwnerByKey(ownerKey);
 
-        return this.translator.translateQuery(this.importRecordCurator.findRecords(owner),
-            ImportRecordDTO.class);
+        return this.importRecordCurator.findRecords(owner)
+            .list()
+            .stream()
+            .map(this.translator.getMapper(ImportRecord.class, ImportRecordDTO.class));
     }
 
     @Override
@@ -1638,14 +1649,18 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public CandlepinQuery<ConsumerDTOArrayElement> getHypervisors(
-        @Verify(Owner.class) String ownerKey, List<String> hypervisorIds) {
+    public Stream<ConsumerDTOArrayElement> getHypervisors(@Verify(Owner.class) String ownerKey,
+        List<String> hypervisorIds) {
 
-        Owner owner = ownerCurator.getByKey(ownerKey);
+        Owner owner = this.findOwnerByKey(ownerKey);
+
         CandlepinQuery<Consumer> query = (hypervisorIds == null || hypervisorIds.isEmpty()) ?
             this.consumerCurator.getHypervisorsForOwner(owner.getId()) :
             this.consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId());
-        return translator.translateQuery(query, ConsumerDTOArrayElement.class);
+
+        return query.list()
+            .stream()
+            .map(this.translator.getMapper(Consumer.class, ConsumerDTOArrayElement.class));
     }
 
     private ConflictOverrides processConflictOverrideParams(String[] overrideConflicts) {

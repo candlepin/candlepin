@@ -112,7 +112,7 @@ public class DistributorVersionResource implements DistributorVersionsApi {
         }
 
         return versions.stream().map(
-            this.translator.getStreamMapper(DistributorVersion.class, DistributorVersionDTO.class));
+            this.translator.getMapper(DistributorVersion.class, DistributorVersionDTO.class));
     }
 
     @Override

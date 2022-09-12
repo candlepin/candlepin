@@ -14,9 +14,8 @@
  */
 package org.candlepin.dto;
 
-import org.candlepin.model.CandlepinQuery;
-
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 
 
@@ -148,6 +147,27 @@ public interface ModelTranslator {
     <I, O> ObjectTranslator<I, O> findTranslatorByInstance(I instance, Class<O> outputClass);
 
     /**
+     * Builds a function to be used as a mapper to convert instances of the given input class to
+     * instances of the given output class without needing to perform repeated mapping resolution.
+     *
+     * @param inputClass
+     *  The expected class of the input objects
+     *
+     * @param outputClass
+     *  The desired class of the output translated objects
+     *
+     * @throws IllegalArgumentException
+     *  if the inputClass or outputClass are null
+     *
+     * #throws TranslationException
+     *  if a translator cannot be found for the input object or any of its nested objects
+     *
+     * @return
+     *  a mapping function to convert instances of the input class to instances of the output class
+     */
+    <I, O> Function<I, O> getMapper(Class<I> inputClass, Class<O> outputClass);
+
+    /**
      * Builds a new instance from the given input object using the translators registered to
      * translator to process the object and any nested objects it contains. If this factory does
      * not have a registered translator which can process the input object and its nested objects,
@@ -169,48 +189,29 @@ public interface ModelTranslator {
     <I, O> O translate(I input, Class<O> outputClass);
 
     /**
-     * Builds a function to be used as a mapper within a stream to convert instances of the given
-     * input class to instances of the given output class.
+     * Applies a translation to the specified stream that uses this ModelTranslator to translate its
+     * elements. If this factory does not have a registered translator which can process the stream's
+     * elements, this method throws an exception.
+     *
+     * @param stream
+     *  The stream to translate
      *
      * @param inputClass
-     *  The expected class of the input objects
+     *  The expected class of the elements of the stream
      *
      * @param outputClass
-     *  The desired class of the output translated objects
+     *  The desired output class to which elements of the stream should be translated
      *
      * @throws IllegalArgumentException
-     *  if the inputClass or outputClass are null
-     *
-     * #throws TranslationException
-     *  if a translator cannot be found for the input object or any of its nested objects
-     *
-     * @return
-     *  a mapping function to convert instances of the input class to instances of the output class
-     */
-    <I, O> Function<I, O> getStreamMapper(Class<I> inputClass, Class<O> outputClass);
-
-    /**
-     * Applies a translate to the specified query that uses this ModelTranslator to translate the
-     * entities fetched by the query to DTOs. If this factory does not have a registered translator
-     * which can process the query's entities and their nested objects, this method will complete
-     * as normal, but the CandlepinQuery will throw a DTOException when it fetches any results.
-     *
-     * @param query
-     *  The CandlepinQuery to translate
-     *
-     * @param outputClass
-     *  The desired class of the output translated object
-     *
-     * @throws IllegalArgumentException
-     *  if query is null
+     *  if stream is null
      *
      * #throws TranslationException
      *  if a translator cannot be found for the source object or any of its nested objects
      *
      * @return
-     *  A translated CandlepinQuery using this ModelTranslator for its element transformation
+     *  A stream instance using this ModelTranslator for its element transformation
      */
-    <I, O> CandlepinQuery<O> translateQuery(CandlepinQuery<I> query, Class<O> outputClass);
+    <I, O> Stream<O> translate(Stream<I> stream, Class<I> inputClass, Class<O> outputClass);
 
     // /**
     //  * Populates the given destination object with data from the source object, using the specified

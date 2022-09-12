@@ -29,7 +29,6 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
@@ -48,8 +47,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.inject.Provider;
+
+
 
 public class GuestIdResource implements GuestIdsApi {
 
@@ -143,10 +145,13 @@ public class GuestIdResource implements GuestIdsApi {
 
     @Override
     @RootResource.LinkedResource
-    public CandlepinQuery<GuestIdDTOArrayElement> getGuestIds(@Verify(Consumer.class) String consumerUuid) {
-        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
-        return translator.translateQuery(guestIdCurator.listByConsumer(consumer),
-            GuestIdDTOArrayElement.class);
+    public Stream<GuestIdDTOArrayElement> getGuestIds(@Verify(Consumer.class) String consumerUuid) {
+        Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
+
+        return this.guestIdCurator.listByConsumer(consumer)
+            .list()
+            .stream()
+            .map(this.translator.getMapper(GuestId.class, GuestIdDTOArrayElement.class));
     }
 
     @Override

@@ -69,11 +69,11 @@ public class QuantityRules {
         Stream<EntitlementDTO> entStream = c.getEntitlements() == null ? Stream.empty() :
             c.getEntitlements().stream()
                 .filter(ent -> ent.isValidOnDate(date))
-                .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
+                .map(this.translator.getMapper(Entitlement.class, EntitlementDTO.class));
 
         Stream<GuestIdDTO> guestIdStream = c.getGuestIds() == null ? Stream.empty() :
             c.getGuestIds().stream()
-                .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
+                .map(this.translator.getMapper(GuestId.class, GuestIdDTO.class));
 
         args.put("consumer", this.translator.translate(c, ConsumerDTO.class));
         args.put("pool", this.translator.translate(p, PoolDTO.class));
@@ -104,16 +104,16 @@ public class QuantityRules {
         JsonJsContext args = new JsonJsContext(mapper);
 
         Stream<PoolDTO> poolStream = pools == null ? Stream.empty() :
-            pools.stream().map(this.translator.getStreamMapper(Pool.class, PoolDTO.class));
+            pools.stream().map(this.translator.getMapper(Pool.class, PoolDTO.class));
 
         Stream<EntitlementDTO> entStream = c.getEntitlements() == null ? Stream.empty() :
             c.getEntitlements().stream()
                 .filter(ent -> ent.isValidOnDate(date))
-                .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
+                .map(this.translator.getMapper(Entitlement.class, EntitlementDTO.class));
 
         Stream<GuestIdDTO> guestIdStream = c.getGuestIds() == null ? Stream.empty() :
             c.getGuestIds().stream()
-                .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
+                .map(this.translator.getMapper(GuestId.class, GuestIdDTO.class));
 
         args.put("pools", poolStream);
         args.put("consumer", this.translator.translate(c, ConsumerDTO.class));

@@ -125,7 +125,7 @@ public class AutobindRules {
 
         Stream<GuestIdDTO> guestIdStream = consumer.getGuestIds() == null ? Stream.empty() :
             consumer.getGuestIds().stream()
-            .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
+            .map(this.translator.getMapper(GuestId.class, GuestIdDTO.class));
 
         // Provide objects for the script:
         JsonJsContext args = new JsonJsContext(mapper);

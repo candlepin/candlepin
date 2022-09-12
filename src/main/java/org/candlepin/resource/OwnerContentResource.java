@@ -22,7 +22,6 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
@@ -40,6 +39,9 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+
 
 public class OwnerContentResource implements OwnerContentApi {
     private DTOValidator validator;
@@ -96,10 +98,13 @@ public class OwnerContentResource implements OwnerContentApi {
     }
 
     @Override
-    public CandlepinQuery<ContentDTO> listOwnerContent(@Verify(Owner.class) String ownerKey) {
-        final Owner owner = this.getOwnerByKey(ownerKey);
-        CandlepinQuery<Content> query = this.ownerContentCurator.getContentByOwner(owner);
-        return this.translator.translateQuery(query, ContentDTO.class);
+    public Stream<ContentDTO> listOwnerContent(@Verify(Owner.class) String ownerKey) {
+        Owner owner = this.getOwnerByKey(ownerKey);
+
+        return this.ownerContentCurator.getContentByOwner(owner)
+            .list()
+            .stream()
+            .map(this.translator.getMapper(Content.class, ContentDTO.class));
     }
 
 
@@ -114,7 +119,7 @@ public class OwnerContentResource implements OwnerContentApi {
 
         List<ContentDTO> output = contents.stream()
             .map(content -> this.createContentImpl(owner, content))
-            .map(this.translator.getStreamMapper(Content.class, ContentDTO.class))
+            .map(this.translator.getMapper(Content.class, ContentDTO.class))
             .collect(Collectors.toList());
 
         this.contentAccessManager.syncOwnerLastContentUpdate(owner);

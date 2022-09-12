@@ -41,12 +41,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -98,33 +97,38 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
         return overrides;
     }
 
+    private void stripTimestamps(ContentOverrideDTO override) {
+        if (override != null) {
+            override.setCreated(null);
+            override.setUpdated(null);
+        }
+    }
+
     /**
      * Removes the created and updated timestamps from the DTOs to make comparison easier
      */
     private List<ContentOverrideDTO> stripTimestamps(List<ContentOverrideDTO> list) {
         if (list != null) {
-            for (ContentOverrideDTO dto : list) {
-                dto.setCreated(null);
-                dto.setUpdated(null);
-            }
+            list.forEach(this::stripTimestamps);
         }
 
         return list;
     }
 
-    private List<ContentOverrideDTO> stripTimestamps(Iterable<ContentOverrideDTO> list) {
-        return stripTimestamps(StreamSupport.stream(list.spliterator(), false).collect(Collectors.toList()));
-    }
+    private List<ContentOverrideDTO> stripTimestamps(Stream<ContentOverrideDTO> stream) {
+        if (stream != null) {
+            return stream.peek(this::stripTimestamps)
+                .collect(Collectors.toList());
+        }
 
-    private long sizeOf(Iterable<ContentOverrideDTO> list) {
-        return StreamSupport.stream(list.spliterator(), false).count();
+        return null;
     }
 
     /**
      * Compares the collections of override DTOs by converting them to generic override lists and
      * stripping their timestamps.
      */
-    private void compareOverrideDTOs(List<ContentOverrideDTO> expected, Iterable<ContentOverrideDTO> actual) {
+    private void compareOverrideDTOs(List<ContentOverrideDTO> expected, Stream<ContentOverrideDTO> actual) {
         assertEquals(this.stripTimestamps(expected), this.stripTimestamps(actual));
     }
 
@@ -142,11 +146,10 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
     public void testGetOverrides() {
         List<ActivationKeyContentOverride> overrides = this.createOverrides(this.key, 1, 3);
         List<ContentOverrideDTO> expected = overrides.stream()
-            .map(this.modelTranslator.getStreamMapper(ActivationKeyContentOverride.class,
-                ContentOverrideDTO.class))
+            .map(this.modelTranslator.getMapper(ActivationKeyContentOverride.class, ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .listActivationKeyContentOverrides(key.getId());
 
         this.compareOverrideDTOs(expected, actual);
@@ -154,10 +157,10 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
     @Test
     public void testGetOverridesEmptyList() {
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .listActivationKeyContentOverrides(key.getId());
 
-        assertEquals(0, sizeOf(actual));
+        assertEquals(0, actual.count());
     }
 
     @Test
@@ -170,12 +173,11 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
             .name(toDelete.getName());
 
         List<ContentOverrideDTO> expected = overrides.stream()
-            .map(this.modelTranslator.getStreamMapper(ActivationKeyContentOverride.class,
-                ContentOverrideDTO.class))
+            .map(this.modelTranslator.getMapper(ActivationKeyContentOverride.class, ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        Iterable<ContentOverrideDTO> actual = this.resource
-            .deleteActivationKeyContentOverrides(key.getId(), Arrays.asList(toDeleteDTO));
+        Stream<ContentOverrideDTO> actual = this.resource
+            .deleteActivationKeyContentOverrides(key.getId(), List.of(toDeleteDTO));
 
         this.compareOverrideDTOs(expected, actual);
     }
@@ -189,12 +191,11 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
             .contentLabel(toDelete.getContentLabel());
 
         List<ContentOverrideDTO> expected = overrides.stream()
-            .map(this.modelTranslator.getStreamMapper(ActivationKeyContentOverride.class,
-                ContentOverrideDTO.class))
+            .map(this.modelTranslator.getMapper(ActivationKeyContentOverride.class, ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        Iterable<ContentOverrideDTO> actual = this.resource
-            .deleteActivationKeyContentOverrides(key.getId(), Arrays.asList(toDeleteDTO));
+        Stream<ContentOverrideDTO> actual = this.resource
+            .deleteActivationKeyContentOverrides(key.getId(), List.of(toDeleteDTO));
 
         this.compareOverrideDTOs(expected, actual);
     }
@@ -203,20 +204,20 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
     public void testDeleteAllOverridesUsingEmptyList() {
         this.createOverrides(this.key, 1, 3);
 
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .deleteActivationKeyContentOverrides(key.getId(), Collections.emptyList());
 
-        assertEquals(0, sizeOf(actual));
+        assertEquals(0, actual.count());
     }
 
     @Test
     public void testDeleteAllOverridesUsingEmptyContentLabel() {
         this.createOverrides(this.key, 1, 3);
 
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .deleteActivationKeyContentOverrides(key.getId(), Collections.emptyList());
 
-        assertEquals(0, sizeOf(actual));
+        assertEquals(0, actual.count());
     }
 
     @Test
@@ -231,7 +232,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .addActivationKeyContentOverrides(key.getId(), overrides);
 
         this.compareOverrideDTOs(overrides, actual);
@@ -244,7 +245,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        actual = this.resource.addActivationKeyContentOverrides(key.getId(), Arrays.asList(dto));
+        actual = this.resource.addActivationKeyContentOverrides(key.getId(), List.of(dto));
 
         this.compareOverrideDTOs(overrides, actual);
     }
@@ -261,7 +262,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .addActivationKeyContentOverrides(key.getId(), overrides);
 
         this.compareOverrideDTOs(overrides, actual);
@@ -293,7 +294,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .addActivationKeyContentOverrides(key.getId(), overrides);
 
         this.compareOverrideDTOs(overrides, actual);

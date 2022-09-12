@@ -85,7 +85,7 @@ public class RoleTranslator implements ObjectTranslator<Role, RoleDTO> {
 
             if (users != null) {
                 dest.setUsers(users.stream()
-                    .map(translator.getStreamMapper(User.class, UserDTO.class))
+                    .map(translator.getMapper(User.class, UserDTO.class))
                     .collect(Collectors.toSet()));
             }
             else {
@@ -97,7 +97,7 @@ public class RoleTranslator implements ObjectTranslator<Role, RoleDTO> {
 
             if (permissions != null) {
                 dest.setPermissions(permissions.stream()
-                    .map(translator.getStreamMapper(PermissionBlueprint.class, PermissionBlueprintDTO.class))
+                    .map(translator.getMapper(PermissionBlueprint.class, PermissionBlueprintDTO.class))
                     .collect(Collectors.toList()));
             }
             else {

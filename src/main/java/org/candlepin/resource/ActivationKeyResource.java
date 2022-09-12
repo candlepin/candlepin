@@ -26,7 +26,6 @@ import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.PoolDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
@@ -36,12 +35,12 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.activationkey.ActivationKeyRules;
 import org.candlepin.resource.server.v1.ActivationKeyApi;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
-import org.candlepin.util.TransformedIterator;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -58,6 +57,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
+
 
 
 /**
@@ -132,11 +133,16 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
-    public Iterable<PoolDTO> getActivationKeyPools(@Verify(ActivationKey.class) String activationKeyId) {
+    public Stream<PoolDTO> getActivationKeyPools(@Verify(ActivationKey.class) String activationKeyId) {
         ActivationKey key = this.fetchActivationKey(activationKeyId);
-        return () -> new TransformedIterator<>(key.getPools().iterator(),
-            akp -> translator.translate(akp.getPool(), PoolDTO.class)
-        );
+
+        Set<ActivationKeyPool> pools = key.getPools();
+        if (pools == null) {
+            pools = Set.of();
+        }
+
+        return pools.stream()
+            .map(this.translator.getMapper(ActivationKeyPool.class, PoolDTO.class));
     }
 
     @Override
@@ -260,9 +266,10 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
-    public CandlepinQuery<ActivationKeyDTO> findActivationKey() {
-        CandlepinQuery<ActivationKey> query = this.activationKeyCurator.listAll();
-        return this.translator.translateQuery(query, ActivationKeyDTO.class);
+    public Stream<ActivationKeyDTO> findActivationKey() {
+        return this.activationKeyCurator.listAll().list()
+            .stream()
+            .map(this.translator.getMapper(ActivationKey.class, ActivationKeyDTO.class));
     }
 
     @Override
@@ -274,18 +281,19 @@ public class ActivationKeyResource implements ActivationKeyApi {
 
     @Override
     @SecurityHole
-    public Iterable<ContentOverrideDTO> listActivationKeyContentOverrides(String activationKeyId) {
+    public Stream<ContentOverrideDTO> listActivationKeyContentOverrides(String activationKeyId) {
         Principal principal = ResteasyContext.getContextData(Principal.class);
         ActivationKey parent = this.verifyAndGetParent(activationKeyId, principal, Access.READ_ONLY);
 
-        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(parent);
-        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+        return this.contentOverrideCurator.getList(parent).list()
+            .stream()
+            .map(translator.getMapper(ActivationKeyContentOverride.class, ContentOverrideDTO.class));
     }
 
     @Override
     @Transactional
     @SecurityHole
-    public Iterable<ContentOverrideDTO> addActivationKeyContentOverrides(
+    public Stream<ContentOverrideDTO> addActivationKeyContentOverrides(
         String activationKeyId, List<ContentOverrideDTO> entries) {
         Principal principal = ResteasyContext.getContextData(Principal.class);
 
@@ -325,14 +333,15 @@ public class ActivationKeyResource implements ActivationKeyApi {
         // Hibernate typically persists automatically before executing a query against a table with
         // pending changes, but if it doesn't, we can add a flush here to make sure this outputs the
         // correct values
-        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(parent);
-        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+        return this.contentOverrideCurator.getList(parent).list()
+            .stream()
+            .map(translator.getMapper(ActivationKeyContentOverride.class, ContentOverrideDTO.class));
     }
 
     @Override
     @Transactional
     @SecurityHole
-    public Iterable<ContentOverrideDTO> deleteActivationKeyContentOverrides(
+    public Stream<ContentOverrideDTO> deleteActivationKeyContentOverrides(
         String activationKeyId, List<ContentOverrideDTO> entries) {
         Principal principal = ResteasyContext.getContextData(Principal.class);
 
@@ -359,8 +368,9 @@ public class ActivationKeyResource implements ActivationKeyApi {
             }
         }
 
-        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(parent);
-        return this.translator.translateQuery(query, ContentOverrideDTO.class);
+        return this.contentOverrideCurator.getList(parent).list()
+            .stream()
+            .map(translator.getMapper(ActivationKeyContentOverride.class, ContentOverrideDTO.class));
     }
 
     private Pool findPool(String poolId) {

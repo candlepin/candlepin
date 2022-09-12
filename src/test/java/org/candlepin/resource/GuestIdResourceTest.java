@@ -15,6 +15,7 @@
 package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
@@ -53,7 +54,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.ElementTransformer;
 import org.candlepin.util.Util;
 
 import com.google.inject.util.Providers;
@@ -72,6 +72,8 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
+
 
 
 /**
@@ -142,14 +144,12 @@ public class GuestIdResourceTest {
     @Test
     public void getGuestIdsEmpty() {
         CandlepinQuery<GuestId> query = mock(CandlepinQuery.class);
-        CandlepinQuery<GuestIdDTO> dtoQuery = mock(CandlepinQuery.class);
         when(guestIdCurator.listByConsumer(eq(consumer))).thenReturn(query);
-        when(query.transform((any(ElementTransformer.class)))).thenReturn(dtoQuery);
 
-        CandlepinQuery<GuestIdDTOArrayElement> result = resource.getGuestIds(consumer.getUuid());
+        Stream<GuestIdDTOArrayElement> result = resource.getGuestIds(consumer.getUuid());
 
-        verify(query, times(1)).transform(any(ElementTransformer.class));
-        assertEquals(result, dtoQuery);
+        assertNotNull(result);
+        assertEquals(0, result.count());
     }
 
     @Test

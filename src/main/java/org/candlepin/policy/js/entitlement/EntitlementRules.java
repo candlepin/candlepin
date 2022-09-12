@@ -154,11 +154,11 @@ public class EntitlementRules implements Enforcer {
          */
         Stream<EntitlementDTO> entStream = consumer.getEntitlements() == null ? Stream.empty() :
             consumer.getEntitlements().stream()
-                .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
+                .map(this.translator.getMapper(Entitlement.class, EntitlementDTO.class));
 
         Stream<PoolQuantityDTO> quantityStream = entitlementPoolQuantities == null ? Stream.empty() :
             entitlementPoolQuantities.stream()
-                .map(this.translator.getStreamMapper(PoolQuantity.class, PoolQuantityDTO.class));
+                .map(this.translator.getMapper(PoolQuantity.class, PoolQuantityDTO.class));
 
         JsonJsContext args = new JsonJsContext(objectMapper);
         args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
@@ -204,11 +204,11 @@ public class EntitlementRules implements Enforcer {
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
         Stream<PoolDTO> poolStream = pools == null ? Stream.empty() :
-            pools.stream().map(this.translator.getStreamMapper(Pool.class, PoolDTO.class));
+            pools.stream().map(this.translator.getMapper(Pool.class, PoolDTO.class));
 
         Stream<EntitlementDTO> entStream = consumer.getEntitlements() == null ? Stream.empty() :
             consumer.getEntitlements().stream()
-                .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
+                .map(this.translator.getMapper(Entitlement.class, EntitlementDTO.class));
 
         args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));
         args.put("hostConsumer", this.translator.translate(getHost(consumer), ConsumerDTO.class));

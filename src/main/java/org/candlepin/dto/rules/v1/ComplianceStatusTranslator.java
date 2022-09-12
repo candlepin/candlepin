@@ -123,7 +123,7 @@ public class ComplianceStatusTranslator implements ObjectTranslator<ComplianceSt
             Set<ComplianceReason> reasons = source.getReasons();
             if (reasons != null) {
                 destination.setReasons(reasons.stream()
-                    .map(translator.getStreamMapper(ComplianceReason.class, ComplianceReasonDTO.class))
+                    .map(translator.getMapper(ComplianceReason.class, ComplianceReasonDTO.class))
                     .collect(Collectors.toSet()));
             }
         }

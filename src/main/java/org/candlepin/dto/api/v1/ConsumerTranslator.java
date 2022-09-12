@@ -153,7 +153,7 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
             if (source.getEnvironmentIds() != null && !source.getEnvironmentIds().isEmpty()) {
                 List<EnvironmentDTO> environments = this.environmentCurator.getConsumerEnvironments(source)
                     .stream()
-                    .map(translator.getStreamMapper(Environment.class, EnvironmentDTO.class))
+                    .map(translator.getMapper(Environment.class, EnvironmentDTO.class))
                     .collect(Collectors.toList());
                 String orderedEnvNames = environments.stream().map(EnvironmentDTO::getName)
                     .collect(Collectors.joining(","));

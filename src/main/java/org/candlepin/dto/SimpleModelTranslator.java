@@ -14,9 +14,6 @@
  */
 package org.candlepin.dto;
 
-import org.candlepin.model.CandlepinQuery;
-import org.candlepin.util.ElementTransformer;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +22,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 
 
@@ -300,6 +298,23 @@ public class SimpleModelTranslator implements ModelTranslator {
      * {@inheritDoc}
      */
     @Override
+    public <I, O> Function<I, O> getMapper(Class<I> inputClass, Class<O> outputClass) {
+        if (inputClass == null) {
+            throw new IllegalArgumentException("inputClass is null");
+        }
+
+        if (outputClass == null) {
+            throw new IllegalArgumentException("outputClass is null");
+        }
+
+        ObjectTranslator<I, O> translator = this.findTranslatorByClass(inputClass, outputClass);
+        return (input) -> translator.translate(this, input);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public <I, O> O translate(I input, Class<O> outputClass) {
         if (outputClass == null) {
             throw new IllegalArgumentException("outputClass is null");
@@ -321,67 +336,11 @@ public class SimpleModelTranslator implements ModelTranslator {
      * {@inheritDoc}
      */
     @Override
-    public <I, O> Function<I, O> getStreamMapper(Class<I> inputClass, Class<O> outputClass) {
-        if (inputClass == null) {
-            throw new IllegalArgumentException("inputClass is null");
+    public <I, O> Stream<O> translate(Stream<I> stream, Class<I> inputClass, Class<O> outputClass) {
+        if (stream == null) {
+            throw new IllegalArgumentException("stream is null");
         }
 
-        if (outputClass == null) {
-            throw new IllegalArgumentException("outputClass is null");
-        }
-
-        ObjectTranslator<I, O> translator = this.findTranslatorByClass(inputClass, outputClass);
-        return (input) -> translator.translate(this, input);
+        return stream.map(this.getMapper(inputClass, outputClass));
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <I, O> CandlepinQuery<O> translateQuery(CandlepinQuery<I> query, Class<O> outputClass) {
-        // TODO: It would be great if we could make this method, and the CandlepinQuery more
-        // generic, but type erasure makes this pretty cumbersome to do properly.
-
-        if (query == null) {
-            throw new IllegalArgumentException("query is null");
-        }
-
-        if (outputClass == null) {
-            throw new IllegalArgumentException("outputClass is null");
-        }
-
-        return query.transform(new ElementTransformer<I, O>() {
-            private ModelTranslator modelTranslator;
-            private Class<O> outputClass;
-
-            // This should be fine for now, but if we ever have queries that return multiple
-            // entity types, this will need to be changed.
-            private ObjectTranslator<I, O> translator;
-
-            public ElementTransformer<I, O> init(ModelTranslator modelTranslator, Class<O> outputClass) {
-                this.modelTranslator = modelTranslator;
-                this.outputClass = outputClass;
-
-                return this;
-            }
-
-            public O transform(I source) {
-                O output = null;
-
-                if (source != null) {
-                    // Look up our translator if we haven't already
-                    if (this.translator == null) {
-                        this.translator = this.modelTranslator
-                            .findTranslatorByClass((Class<I>) source.getClass(), this.outputClass);
-                    }
-
-                    // Translate our output
-                    output = this.translator.translate(this.modelTranslator, source);
-                }
-
-                return output;
-            }
-        }.init(this, outputClass));
-    }
-
 }

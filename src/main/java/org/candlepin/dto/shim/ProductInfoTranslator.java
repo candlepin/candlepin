@@ -142,7 +142,7 @@ public class ProductInfoTranslator implements ObjectTranslator<ProductInfo, Prod
 
         return productBrandings.stream()
             .filter(Objects::nonNull)
-            .map(modelTranslator.getStreamMapper(BrandingInfo.class, BrandingDTO.class))
+            .map(modelTranslator.getMapper(BrandingInfo.class, BrandingDTO.class))
             .collect(Collectors.toSet());
     }
 
@@ -154,7 +154,7 @@ public class ProductInfoTranslator implements ObjectTranslator<ProductInfo, Prod
 
         return providedProducts.stream()
             .filter(Objects::nonNull)
-            .map(modelTranslator.getStreamMapper(ProductInfo.class, ProductDTO.class))
+            .map(modelTranslator.getMapper(ProductInfo.class, ProductDTO.class))
             .collect(Collectors.toSet());
     }
 

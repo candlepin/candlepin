@@ -143,7 +143,7 @@ public class SubscriptionInfoTranslator implements ObjectTranslator<Subscription
         }
 
         return products.stream()
-            .map(translator.getStreamMapper(ProductInfo.class, ProductDTO.class))
+            .map(translator.getMapper(ProductInfo.class, ProductDTO.class))
             .collect(Collectors.toSet());
     }
 

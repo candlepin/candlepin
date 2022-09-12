@@ -81,9 +81,10 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import java.util.stream.Stream;
 
 import javax.inject.Provider;
+
 
 
 @ExtendWith(MockitoExtension.class)
@@ -200,33 +201,38 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         return overrides;
     }
 
+    private void stripTimestamps(ContentOverrideDTO override) {
+        if (override != null) {
+            override.setCreated(null);
+            override.setUpdated(null);
+        }
+    }
+
     /**
      * Removes the created and updated timestamps from the DTOs to make comparison easier
      */
     private List<ContentOverrideDTO> stripTimestamps(List<ContentOverrideDTO> list) {
         if (list != null) {
-            for (ContentOverrideDTO dto : list) {
-                dto.setCreated(null);
-                dto.setUpdated(null);
-            }
+            list.forEach(this::stripTimestamps);
         }
 
         return list;
     }
 
-    private List<ContentOverrideDTO> stripTimestamps(Iterable<ContentOverrideDTO> list) {
-        return stripTimestamps(StreamSupport.stream(list.spliterator(), false).collect(Collectors.toList()));
-    }
+    private List<ContentOverrideDTO> stripTimestamps(Stream<ContentOverrideDTO> stream) {
+        if (stream != null) {
+            return stream.peek(this::stripTimestamps)
+                .collect(Collectors.toList());
+        }
 
-    private long sizeOf(Iterable<ContentOverrideDTO> list) {
-        return StreamSupport.stream(list.spliterator(), false).count();
+        return null;
     }
 
     /**
      * Compares the collections of override DTOs by converting them to generic override lists and
      * stripping their timestamps.
      */
-    private void compareOverrideDTOs(List<ContentOverrideDTO> expected, Iterable<ContentOverrideDTO> actual) {
+    private void compareOverrideDTOs(List<ContentOverrideDTO> expected, Stream<ContentOverrideDTO> actual) {
         assertEquals(this.stripTimestamps(expected), this.stripTimestamps(actual));
     }
 
@@ -245,11 +251,11 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
         List<ConsumerContentOverride> overrides = this.createOverrides(this.consumer, 1, 3);
 
         List<ContentOverrideDTO> expected = overrides.stream()
-            .map(this.modelTranslator.getStreamMapper(
+            .map(this.modelTranslator.getMapper(
             ConsumerContentOverride.class, ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .listConsumerContentOverrides(this.consumer.getUuid());
 
         this.compareOverrideDTOs(expected, actual);
@@ -257,10 +263,10 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testGetOverridesEmptyList() {
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .listConsumerContentOverrides(this.consumer.getUuid());
 
-        assertEquals(0, sizeOf(actual));
+        assertEquals(0, actual.count());
     }
 
     @Test
@@ -273,11 +279,11 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             .name(toDelete.getName());
 
         List<ContentOverrideDTO> expected = overrides.stream()
-            .map(this.modelTranslator.getStreamMapper(
+            .map(this.modelTranslator.getMapper(
             ConsumerContentOverride.class, ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .deleteConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(toDeleteDTO));
 
         this.compareOverrideDTOs(expected, actual);
@@ -292,11 +298,11 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             .contentLabel(toDelete.getContentLabel());
 
         List<ContentOverrideDTO> expected = overrides.stream()
-            .map(this.modelTranslator.getStreamMapper(
+            .map(this.modelTranslator.getMapper(
             ConsumerContentOverride.class, ContentOverrideDTO.class))
             .collect(Collectors.toList());
 
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .deleteConsumerContentOverrides(this.consumer.getUuid(), Arrays.asList(toDeleteDTO));
 
         this.compareOverrideDTOs(expected, actual);
@@ -306,20 +312,20 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     public void testDeleteAllOverridesUsingEmptyList() {
         List<ConsumerContentOverride> overrides = this.createOverrides(this.consumer, 1, 3);
 
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .deleteConsumerContentOverrides(this.consumer.getUuid(), Collections.emptyList());
 
-        assertEquals(0, sizeOf(actual));
+        assertEquals(0, actual.count());
     }
 
     @Test
     public void testDeleteAllOverridesUsingEmptyContentLabel() {
         List<ConsumerContentOverride> overrides = this.createOverrides(this.consumer, 1, 3);
 
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .deleteConsumerContentOverrides(this.consumer.getUuid(), Collections.emptyList());
 
-        assertEquals(0, sizeOf(actual));
+        assertEquals(0, actual.count());
     }
 
     @Test
@@ -334,7 +340,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .addConsumerContentOverrides(this.consumer.getUuid(), overrides);
 
         this.compareOverrideDTOs(overrides, actual);
@@ -364,7 +370,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .addConsumerContentOverrides(this.consumer.getUuid(), overrides);
 
         this.compareOverrideDTOs(overrides, actual);
@@ -396,7 +402,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
 
         overrides.add(dto);
 
-        Iterable<ContentOverrideDTO> actual = this.resource
+        Stream<ContentOverrideDTO> actual = this.resource
             .addConsumerContentOverrides(this.consumer.getUuid(), overrides);
 
         this.compareOverrideDTOs(overrides, actual);

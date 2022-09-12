@@ -170,11 +170,11 @@ public class ComplianceRules {
         Stream<EntitlementDTO> entStream = Stream.concat(
             newEntitlements != null ? newEntitlements.stream() : Stream.empty(),
             consumer.getEntitlements() != null ? consumer.getEntitlements().stream() : Stream.empty())
-                .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
+                .map(this.translator.getMapper(Entitlement.class, EntitlementDTO.class));
 
         Stream<GuestIdDTO> guestIdStream = consumer.getGuestIds() == null ? Stream.empty() :
             consumer.getGuestIds().stream()
-                .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
+                .map(this.translator.getMapper(GuestId.class, GuestIdDTO.class));
 
 
         // Status can only be 'disabled' when in golden ticket mode
@@ -260,11 +260,11 @@ public class ComplianceRules {
     public boolean isStackCompliant(Consumer consumer, String stackId, List<Entitlement> entsToConsider) {
         Stream<EntitlementDTO> entStream = entsToConsider == null ? Stream.empty() :
             entsToConsider.stream()
-                .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
+                .map(this.translator.getMapper(Entitlement.class, EntitlementDTO.class));
 
         Stream<GuestIdDTO> guestIdStream = consumer.getGuestIds() == null ? Stream.empty() :
             consumer.getGuestIds().stream()
-                .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
+                .map(this.translator.getMapper(GuestId.class, GuestIdDTO.class));
 
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("stack_id", stackId);
@@ -281,11 +281,11 @@ public class ComplianceRules {
         List<Entitlement> ents = entCurator.listByConsumerAndDate(consumer, onDate).list();
 
         Stream<EntitlementDTO> entStream = ents == null ? Stream.empty() :
-            ents.stream().map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
+            ents.stream().map(this.translator.getMapper(Entitlement.class, EntitlementDTO.class));
 
         Stream<GuestIdDTO> guestIdStream = consumer.getGuestIds() == null ? Stream.empty() :
             consumer.getGuestIds().stream()
-                .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
+                .map(this.translator.getMapper(GuestId.class, GuestIdDTO.class));
 
         JsonJsContext args = new JsonJsContext(mapper);
         args.put("consumer", this.translator.translate(consumer, ConsumerDTO.class));

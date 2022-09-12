@@ -58,8 +58,11 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.persistence.LockModeType;
+
+
 
 public class OwnerProductResource implements OwnerProductApi {
 
@@ -214,14 +217,18 @@ public class OwnerProductResource implements OwnerProductApi {
     }
 
     @Override
-    public CandlepinQuery<ProductDTO> getProductsByOwner(@Verify(Owner.class) String ownerKey,
+    public Stream<ProductDTO> getProductsByOwner(@Verify(Owner.class) String ownerKey,
         List<String> productIds) {
+
         Owner owner = getOwnerByKey(ownerKey);
+
         CandlepinQuery<Product> query = productIds != null && !productIds.isEmpty() ?
             this.ownerProductCurator.getProductsByIds(owner, productIds) :
             this.ownerProductCurator.getProductsByOwner(owner);
 
-        return this.translator.translateQuery(query, ProductDTO.class);
+        return query.list()
+            .stream()
+            .map(this.translator.getMapper(Product.class, ProductDTO.class));
     }
 
     @Override

@@ -85,7 +85,6 @@ import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
-import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerCurator.ConsumerQueryArguments;
@@ -1124,12 +1123,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertNotNull(key.getId());
         assertEquals(key.getOwner().getId(), owner.getId());
         assertEquals(key.getReleaseVer().getReleaseVer(), "release1");
-        CandlepinQuery<ActivationKeyDTO> result = ownerResource.ownerActivationKeys(owner.getKey(), null);
 
+        Stream<ActivationKeyDTO> result = ownerResource.ownerActivationKeys(owner.getKey(), null);
         assertNotNull(result);
-        List<ActivationKeyDTO> keys = result.list();
-
-        assertEquals(1, keys.size());
+        assertEquals(1, result.count());
     }
 
     @Test
@@ -1150,15 +1147,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(key.getOwner().getId(), owner.getId());
         assertEquals(key.getReleaseVer().getReleaseVer(), "release2");
 
-        CandlepinQuery<ActivationKeyDTO> result = ownerResource.ownerActivationKeys(owner.getKey(), "dd");
+        Stream<ActivationKeyDTO> result = ownerResource.ownerActivationKeys(owner.getKey(), "dd");
         assertNotNull(result);
-        List<ActivationKeyDTO> keys = result.list();
-        assertEquals(1, keys.size());
+        assertEquals(1, result.count());
 
         result = ownerResource.ownerActivationKeys(owner.getKey(), null);
         assertNotNull(result);
-        keys = result.list();
-        assertEquals(2, keys.size());
+        assertEquals(2, result.count());
     }
 
     @Test

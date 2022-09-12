@@ -151,7 +151,7 @@ public class PoolTranslator implements ObjectTranslator<Pool, PoolDTO> {
             if (product != null && product.getBranding() != null) {
                 dest.setBranding(product.getBranding().stream()
                     .filter(productBranding -> productBranding != null)
-                    .map(modelTranslator.getStreamMapper(Branding.class, BrandingDTO.class))
+                    .map(modelTranslator.getMapper(Branding.class, BrandingDTO.class))
                     .collect(Collectors.toSet()));
             }
             else {
