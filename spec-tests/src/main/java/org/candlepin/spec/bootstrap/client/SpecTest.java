@@ -16,7 +16,6 @@
 package org.candlepin.spec.bootstrap.client;
 
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.TestInstance;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -26,6 +25,5 @@ import java.lang.annotation.Target;
 @Tag("spec")
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public @interface SpecTest {
 }

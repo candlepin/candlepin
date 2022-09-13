@@ -25,13 +25,13 @@ import org.candlepin.dto.api.client.v1.DeletedConsumerDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
-import org.candlepin.resource.client.v1.ConsumerApi;
 import org.candlepin.resource.client.v1.DeletedConsumerApi;
 import org.candlepin.resource.client.v1.OwnerApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
 import org.candlepin.spec.bootstrap.client.api.JobsClient;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
@@ -39,6 +39,7 @@ import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -48,6 +49,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @SpecTest
 public class InactiveConsumerCleanerJobSpecTest {
@@ -55,38 +57,37 @@ public class InactiveConsumerCleanerJobSpecTest {
     private static final String JOB_KEY = "InactiveConsumerCleanerJob";
     private static final int DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS = 397;
 
-    private ConsumerApi consumerApi;
-    private DeletedConsumerApi deletedConsumerApi;
-    private OwnerApi ownerApi;
-    private OwnerProductApi ownerProductApi;
-    private JobsClient jobsClient;
+    private static ConsumerClient consumerApi;
+    private static DeletedConsumerApi deletedConsumerApi;
+    private static OwnerApi ownerApi;
+    private static OwnerProductApi ownerProductApi;
+    private static JobsClient jobsClient;
 
     private OwnerDTO owner;
 
     @BeforeAll
-    public void beforeAll() {
+    public static void beforeAll() {
         ApiClient client = ApiClients.admin();
         consumerApi = client.consumers();
         deletedConsumerApi = client.deletedConsumers();
         ownerApi = client.owners();
         ownerProductApi = client.ownerProducts();
         jobsClient = client.jobs();
+    }
 
-        if (owner == null) {
-            owner = ownerApi.createOwner(Owners.random());
-        }
+    @BeforeEach
+    void setUp() {
+        owner = ownerApi.createOwner(Owners.random());
     }
 
     @Test
     @DisplayName("should delete inactive consumers")
-    public void shouldDeleteInactiveConsumers() throws Exception {
+    public void shouldDeleteInactiveConsumers() {
         Instant inactiveTime = Instant.now()
             .minus(DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS + 10, ChronoUnit.DAYS);
         Instant activeTime = Instant.now()
             .minus(DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS - 10, ChronoUnit.DAYS);
 
-        ConsumerDTO inactiveConsumer = Consumers.random(owner)
-            .lastCheckin(inactiveTime.atOffset(ZoneOffset.UTC));
         ConsumerDTO consumerWithManifest = Consumers.random(owner, ConsumerTypes.Candlepin)
             .lastCheckin(inactiveTime.atOffset(ZoneOffset.UTC));
         ConsumerDTO consumerWithEntitlement = Consumers.random(owner)
@@ -96,7 +97,8 @@ public class InactiveConsumerCleanerJobSpecTest {
         ConsumerDTO activeConsumer2 = Consumers.random(owner)
             .lastCheckin(activeTime.atOffset(ZoneOffset.UTC));
 
-        inactiveConsumer = consumerApi.createConsumer(inactiveConsumer, null, owner.getKey(), null, false);
+        ConsumerDTO inactiveConsumer = consumerApi.createConsumer(Consumers.random(owner)
+            .lastCheckin(inactiveTime.atOffset(ZoneOffset.UTC)));
         consumerWithManifest = consumerApi
             .createConsumer(consumerWithManifest, null, owner.getKey(), null, false);
         consumerWithEntitlement = consumerApi
@@ -118,12 +120,18 @@ public class InactiveConsumerCleanerJobSpecTest {
             .listByDate(DateTimeFormatter.ISO_DATE_TIME.format(inactiveConsumer.getCreated()));
         // Assert that other tests might have created an inactive consumer
         assertThat(deletedConsumers).hasSizeGreaterThanOrEqualTo(1);
-        assertEquals(inactiveConsumer.getUuid(), deletedConsumers.get(0).getConsumerUuid());
-        assertEquals(inactiveConsumer.getName(), deletedConsumers.get(0).getConsumerName());
-        assertEquals(inactiveConsumer.getOwner().getId(), deletedConsumers.get(0).getOwnerId());
-        assertEquals(inactiveConsumer.getOwner().getDisplayName(), deletedConsumers.get(0)
-            .getOwnerDisplayName());
-        assertEquals(inactiveConsumer.getOwner().getKey(), deletedConsumers.get(0).getOwnerKey());
+        Optional<DeletedConsumerDTO> deletedConsumer = deletedConsumers.stream()
+            .filter(consumer -> inactiveConsumer.getUuid().equals(consumer.getConsumerUuid()))
+            .findFirst();
+        assertThat(deletedConsumer)
+            .isPresent()
+            .hasValueSatisfying(consumer -> {
+                assertThat(consumer.getConsumerName()).isEqualTo(inactiveConsumer.getName());
+                assertThat(consumer.getOwnerId()).isEqualTo(inactiveConsumer.getOwner().getId());
+                assertThat(consumer.getOwnerKey()).isEqualTo(inactiveConsumer.getOwner().getKey());
+                assertThat(consumer.getOwnerDisplayName())
+                    .isEqualTo(inactiveConsumer.getOwner().getDisplayName());
+            });
 
         // Verify that the active consumers have not been deleted.
         compareConsumers(consumerWithManifest, consumerApi.getConsumer(consumerWithManifest.getUuid()));

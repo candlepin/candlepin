@@ -49,7 +49,7 @@ public class JobScheduleSpecTest {
     private static JobsClient jobsClient;
 
     @BeforeAll
-    public void beforeAll() {
+    public static void beforeAll() {
         client = ApiClients.admin();
         jobsClient = client.jobs();
     }

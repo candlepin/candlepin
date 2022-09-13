@@ -51,14 +51,14 @@ import java.util.Map;
 
 @SpecTest
 public class ContentResourceSpecTest {
-    private ConsumerClient consumerApi;
-    private OwnerApi ownerApi;
-    private OwnerContentApi ownerContentApi;
-    private OwnerProductApi ownerProductApi;
-    private ProductsApi productsApi;
+    private static ConsumerClient consumerApi;
+    private static OwnerApi ownerApi;
+    private static OwnerContentApi ownerContentApi;
+    private static OwnerProductApi ownerProductApi;
+    private static ProductsApi productsApi;
 
     @BeforeAll
-    public void beforeAll() throws Exception {
+    public static void beforeAll() throws Exception {
         ApiClient client = ApiClients.admin();
         consumerApi = client.consumers();
         productsApi = client.products();
