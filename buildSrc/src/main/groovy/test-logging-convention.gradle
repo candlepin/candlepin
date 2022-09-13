@@ -1,3 +1,6 @@
+import org.gradle.internal.logging.text.StyledTextOutput
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+
 plugins {
     id "com.adarshr.test-logger"
 }
@@ -20,4 +23,32 @@ testlogger {
     showSkippedStandardStreams false
     showFailedStandardStreams project.hasProperty("full")
     logLevel 'lifecycle'
+}
+
+tasks.withType(Test) {
+    ext.failedTests = []
+
+    afterTest { descriptor, result ->
+        if (result.resultType == TestResult.ResultType.FAILURE) {
+            String failedTest = "${descriptor.className}::${descriptor.name}"
+            logger.debug("Adding " + failedTest + " to failedTests...")
+            failedTests << failedTest
+        }
+    }
+
+    afterSuite { suite, result ->
+        // will match the outermost suite
+        if (!suite.parent) {
+            if (!failedTests.empty) {
+                def out = services.get(StyledTextOutputFactory)
+                        .create("test-ouput")
+                        .style(StyledTextOutput.Style.Failure)
+
+                out.text("Failed tests:").println()
+                failedTests.each { failedTest ->
+                    out.text("${failedTest}").println()
+                }
+            }
+        }
+    }
 }
