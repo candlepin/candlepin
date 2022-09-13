@@ -15,27 +15,23 @@
 
 package org.candlepin.spec.bootstrap.data.builder;
 
-import org.candlepin.dto.api.client.v1.ActivationKeyDTO;
-import org.candlepin.dto.api.client.v1.NestedOwnerDTO;
-import org.candlepin.dto.api.client.v1.OwnerDTO;
-import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
+import org.candlepin.dto.api.client.v1.ContentOverrideDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
-public final class ActivationKeys {
 
-    private ActivationKeys() {
+/**
+ * Class providing factory functions for ContentOverrideDTO instances.
+ */
+public class ContentOverrides {
+
+    private ContentOverrides() {
         throw new UnsupportedOperationException();
     }
 
-    public static ActivationKeyDTO random(OwnerDTO owner) {
-        return random(Owners.toNested(owner));
+    public static ContentOverrideDTO random() {
+        return new ContentOverrideDTO()
+            .name(StringUtil.random("name").toLowerCase())
+            .value(StringUtil.random("value"))
+            .contentLabel(StringUtil.random("contentlabel"));
     }
-
-    public static ActivationKeyDTO random(NestedOwnerDTO owner) {
-        return new ActivationKeyDTO()
-            .owner(owner)
-            .name(StringUtil.random("test_activation_key-"))
-            .releaseVer(new ReleaseVerDTO().releaseVer(StringUtil.random("ver-")));
-    }
-
 }
