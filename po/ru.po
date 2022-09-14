@@ -6,8 +6,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-06-09 03:02-0400\n"
-"PO-Revision-Date: 2022-06-01 10:15+0000\n"
-"Last-Translator: Pino Toscano <ptoscano@redhat.com>\n"
+"PO-Revision-Date: 2022-09-09 20:19+0000\n"
+"Last-Translator: Igor Gorbounov <igor.gorbounov@gmail.com>\n"
 "Language-Team: Russian <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-1-hotfix/ru/>\n"
 "Language: ru\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2;\n"
-"X-Generator: Weblate 4.12.2\n"
+"X-Generator: Weblate 4.14\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -226,7 +226,7 @@ msgstr "{0} удалил правила из базы данных"
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:153
 #, java-format
 msgid "Compliance recalculated for consumer {1}"
-msgstr "Оценка совместимости для {1} выполнена."
+msgstr "Оценка совместимости для {1} выполнена"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -253,7 +253,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resteasy/filter/StoreFactory.java:142
 #, java-format
 msgid "Unit {0} has been deleted"
-msgstr "{0} удален."
+msgstr "{0} удален"
 
 #: src/main/java/org/candlepin/auth/OAuth.java:117
 #: src/main/java/org/candlepin/auth/OAuth.java:153
@@ -304,13 +304,13 @@ msgstr "Владелец не задан или не содержит идент
 #: src/main/java/org/candlepin/resource/util/ResolverUtil.java:63
 #, java-format
 msgid "Unable to find an owner with the key \"{0}\""
-msgstr "Владелец с ключом «{0}» не обнаружен."
+msgstr "Владелец с ключом «{0}» не обнаружен"
 
 #: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:391
 #: src/main/java/org/candlepin/resource/util/ResolverUtil.java:71
 #, java-format
 msgid "Unable to find an owner with the ID \"{0}\""
-msgstr "Владелец с ID «{0}» не обнаружен."
+msgstr "Владелец с ID «{0}» не обнаружен"
 
 #: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:2046
 msgid ""
@@ -633,20 +633,20 @@ msgstr ""
 "Модуль не поддерживает расчет на основе экземпляра, требуемый буфером «{1}»"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:171
-#, fuzzy, java-format
+#, java-format
 msgid "Unit does not support band calculation required by pool \"{1}\""
-msgstr "Модуль не поддерживает расчет диапазона, требуемый буфером «{1]»"
+msgstr "Модуль не поддерживает расчет диапазона, требуемый буфером «{1}»"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:173
-#, fuzzy, java-format
+#, java-format
 msgid "Unit does not support core calculation required by pool \"{1}\""
-msgstr "Модуль не поддерживает расчет ядер, требуемый буфером «{1]»"
+msgstr "Модуль не поддерживает расчет ядер, требуемый буфером «{1}»"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:175
-#, fuzzy, java-format
+#, java-format
 msgid "Unit does not support RAM calculation required by pool \"{1}\""
 msgstr ""
-"Модуль не поддерживает расчет оперативной памяти, требуемый буфером «{1]»"
+"Модуль не поддерживает расчет оперативной памяти, требуемый буфером «{1}»"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:177
 #, java-format
@@ -890,7 +890,7 @@ msgstr "Указанные ключи активации не существую
 # keys, author ypoyarko
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1254
 msgid "System name cannot begin with # character"
-msgstr "Имя системы не может начинаться с #."
+msgstr "Имя системы не может начинаться с #"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1287
 #, java-format
@@ -1110,12 +1110,12 @@ msgstr "Не удалось создать тип {0}"
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:131
 #, java-format
 msgid "Unit type with label {0} could not be found."
-msgstr "Не найден тип с меткой {0}"
+msgstr "Не найден тип с меткой {0}."
 
 #: src/main/java/org/candlepin/resource/ConsumerTypeResource.java:147
 #, java-format
 msgid "Unit type with id {0} could not be found."
-msgstr "Не найден тип с ID {0}"
+msgstr "Не найден тип с ID {0}."
 
 #: src/main/java/org/candlepin/resource/ContentResource.java:53
 #, java-format
@@ -1125,7 +1125,7 @@ msgstr "Не удалось найти данные с UUID «{0}»."
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:132
 #, java-format
 msgid "A distributor version with name {0} already exists"
-msgstr "Версия дистрибьютора {0} уже существует."
+msgstr "Версия дистрибьютора {0} уже существует"
 
 #: src/main/java/org/candlepin/resource/DistributorVersionResource.java:160
 #, java-format
@@ -1203,11 +1203,11 @@ msgstr "Часть данных больше не существует в окр
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:329
 msgid "No environment specified, or environment lacks owner information"
-msgstr "Окружение не задано, или в окружении отсутствуют сведения о владельце."
+msgstr "Окружение не задано, или в окружении отсутствуют сведения о владельце"
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:333
 msgid "No content ID specified"
-msgstr "Идентификатор содержимого не задан."
+msgstr "Идентификатор содержимого не задан"
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:338
 #, java-format
@@ -1416,7 +1416,7 @@ msgstr "У {0} нет доступа к клиенту {1}"
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1360
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
-msgstr "Не найден ключ активации с ID {0}"
+msgstr "Не найден ключ активации с ID {0}."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1366
 msgid "The flags add_future and only_future cannot be used at the same time."
@@ -1594,7 +1594,7 @@ msgstr "Не удалось найти продукт с UUID «{0}»."
 #: src/main/java/org/candlepin/resource/ProductResource.java:124
 #: src/main/java/org/candlepin/resource/ProductResource.java:138
 msgid "No product IDs specified"
-msgstr "Идентификаторы продуктов не указаны."
+msgstr "Идентификаторы продуктов не указаны"
 
 #: src/main/java/org/candlepin/resource/RoleResource.java:78
 msgid "role name is null or empty"
@@ -1647,13 +1647,13 @@ msgstr "ошибка чтения файла правил"
 # keys, author ypoyarko
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:89
 msgid "email is required for notification"
-msgstr "Необходимо указать адрес для получения уведомлений."
+msgstr "Необходимо указать адрес для получения уведомлений"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:93
 msgid "email locale is required for notification"
-msgstr "Необходимо выбрать язык уведомлений."
+msgstr "Необходимо выбрать язык уведомлений"
 
 #: src/main/java/org/candlepin/resource/SubscriptionResource.java:129
 #, java-format
@@ -1716,7 +1716,7 @@ msgstr "Не удалось обработать параметр даты"
 
 #: src/main/java/org/candlepin/resteasy/filter/AuthenticationFilter.java:171
 msgid "Please use SSL when accessing protected resources"
-msgstr ""
+msgstr "Используйте SSL при доступе к защищенным ресурсам"
 
 #: src/main/java/org/candlepin/resteasy/filter/CandlepinSuspendModeFilter.java:67
 msgid ""
@@ -1730,7 +1730,7 @@ msgstr ""
 msgid "offset and limit parameters must be positive integers"
 msgstr ""
 "Значения ограничения и смещения должны быть представлены целыми "
-"положительными числами."
+"положительными числами"
 
 #: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:108
 msgid "the order parameter must be either \"ascending\" or \"descending\""
@@ -1750,7 +1750,7 @@ msgstr "Организация"
 #: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:273
 #, java-format
 msgid "{0} with id {1} could not be found."
-msgstr "Не удалось найти {0} с ID {1}"
+msgstr "Не удалось найти {0} с ID {1}."
 
 #: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:375
 #, java-format
@@ -1761,7 +1761,7 @@ msgid ""
 msgstr ""
 "Превышено допустимое число наборов содержимого для сертификата {0}. "
 "Возможно, обновление клиента поможет это исправить. За подробной информацией "
-"обратитесь к статье https://access.redhat.com/knowledge/node/129003"
+"обратитесь к статье https://access.redhat.com/knowledge/node/129003."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author ypoyarko
@@ -1793,7 +1793,7 @@ msgstr ""
 #: src/main/java/org/candlepin/sync/EntitlementImporter.java:197
 #, java-format
 msgid "Unable to find product with ID: {0}"
-msgstr "Продукт с ID «{0}» не обнаружен."
+msgstr "Продукт с ID «{0}» не обнаружен"
 
 #: src/main/java/org/candlepin/sync/Importer.java:193
 msgid "Uploaded manifest file does not exist."
@@ -1879,7 +1879,7 @@ msgstr "Архив не содержит обязательный файл meta.
 
 #: src/main/java/org/candlepin/sync/Importer.java:489
 msgid "The archive does not contain the required consumer_types directory"
-msgstr "Архив не содержит обязательный каталог consumer_types."
+msgstr "Архив не содержит обязательный каталог consumer_types"
 
 #: src/main/java/org/candlepin/sync/Importer.java:494
 msgid "The archive does not contain the required consumer.json file"
@@ -1892,7 +1892,7 @@ msgstr "Архив не содержит каталог полномочий"
 #: src/main/java/org/candlepin/sync/Importer.java:751
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
-msgstr "Недопустимый формат архива {0} или пустой архив."
+msgstr "Недопустимый формат архива {0} или пустой архив"
 
 #: src/main/java/org/candlepin/util/ContentOverrideValidator.java:111
 #, java-format
