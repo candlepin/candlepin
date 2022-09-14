@@ -68,6 +68,10 @@ public class X509Cert {
         return toLocalDate(certificate.getNotBefore());
     }
 
+    public LocalDateTime notAfter() {
+        return toLocalDate(certificate.getNotAfter());
+    }
+
     public String subjectAltNames() {
         return subjectAlternativeNames().stream()
             .map(objects -> (String) objects.get(1))
