@@ -35,7 +35,6 @@ import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -74,8 +73,7 @@ public class ProductResourceSpecTest {
     }
 
     @Test
-    @DisplayName("retrieves owners by product")
-    public void retrieveOwnersByProduct() {
+    public void shouldRetrieveOwnersByProduct() {
         List<OwnerDTO> expectedOwners = setupOrgProductsAndPools();
         OwnerDTO owner1 = expectedOwners.get(0);
         OwnerDTO owner2 = expectedOwners.get(1);
@@ -108,8 +106,7 @@ public class ProductResourceSpecTest {
 
     @Test
     @OnlyInHosted
-    @DisplayName("refreshes pools for orgs owning products")
-    public void refreshPoolsForOrgsOwningProducts() throws Exception {
+    public void shouldRefreshPoolsForOrgsOwningProducts() throws Exception {
         setupOrgProductsAndPools();
 
         List<AsyncJobStatusDTO> jobs = productsApi.refreshPoolsForProducts(Arrays.asList(p4ProductId), true);
@@ -141,20 +138,17 @@ public class ProductResourceSpecTest {
     }
 
     @Test
-    @DisplayName("throws exception on get_owners with no products")
-    public void getOwnersWithNoProductsException() {
+    public void shouldRaiseBadRequestOnGetOwnersWithNoProducts() {
         assertBadRequest(() -> productsApi.getProductOwners(new ArrayList<>()));
     }
 
     @Test
-    @DisplayName("throws exception on refresh with no products")
-    public void refreshWithNoProductsException() {
+    public void shouldRaiseBadRequestOnRefreshWithNoProducts() {
         assertBadRequest(() -> productsApi.refreshPoolsForProducts(new ArrayList<>(), false));
     }
 
     @Test
-    @DisplayName("should fail when fetching non-existing products")
-    public void getNonExistingProducts() {
+    public void shouldRaiseNotFoundForNonExistingProducts() {
         assertNotFound(() -> productsApi.getProduct("unknown-product-id"));
     }
 

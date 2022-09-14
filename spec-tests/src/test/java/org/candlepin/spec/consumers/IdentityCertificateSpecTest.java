@@ -27,7 +27,6 @@ import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
@@ -50,13 +49,11 @@ class IdentityCertificateSpecTest {
     }
 
     @Test
-    @DisplayName("should create identity certificate during registration")
     void shouldExistAfterRegistration() {
         assertThat(idCert).isNotNull();
     }
 
     @Test
-    @DisplayName("should have the same CN and O as the consumer UUID & Owner Key")
     void shouldHaveCorrectCnAndO() {
         assertThat(idCert.subject())
             .contains("CN=" + consumer.getUuid())
@@ -64,7 +61,6 @@ class IdentityCertificateSpecTest {
     }
 
     @Test
-    @DisplayName("should contain consumer name and uuid in subject alternative names")
     void altNamesShouldContainConsumerNameAndUuid() {
         assertThat(idCert.subjectAltNames())
             .contains("CN=" + consumer.getName())
@@ -72,8 +68,7 @@ class IdentityCertificateSpecTest {
     }
 
     @Test
-    @DisplayName("should be pre-dated")
-    void shouldBePreDated() {
+    void shouldPreDateIdentityCertificate() {
         LocalDateTime hourAgo = LocalDateTime.now().minus(Duration.ofMinutes(59));
         assertThat(idCert.notBefore()).isBefore(hourAgo);
     }

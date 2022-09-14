@@ -30,7 +30,6 @@ import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @SpecTest
@@ -46,16 +45,14 @@ class TrustedConsumerAuthSpecTest {
     }
 
     @Test
-    @DisplayName("trusted consumer must exist")
-    void consumerMustExist() {
+    void shouldNotAllowOwnerCreationWithUnknownConsumer() {
         OwnerApi client = ApiClients.trustedConsumer("unknown_consumer").owners();
 
         assertUnauthorized(() -> client.createOwner(Owners.random()));
     }
 
     @Test
-    @DisplayName("deleted consumers should be rejected")
-    void deletedConsumerShouldFail() {
+    void shouldNotAllowOwnerCreationWithDeletedConsumer() {
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
         client.consumers().deleteConsumer(consumer.getUuid());
         OwnerApi consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).owners();
@@ -64,8 +61,7 @@ class TrustedConsumerAuthSpecTest {
     }
 
     @Test
-    @DisplayName("should pass for existing consumers")
-    void existingConsumerShouldPass() {
+    void shouldAllowConsumerRetrievalWithExistingConsumer() {
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
         ConsumerApi consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).consumers();
 

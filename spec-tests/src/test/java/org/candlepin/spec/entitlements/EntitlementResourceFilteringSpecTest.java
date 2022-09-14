@@ -82,14 +82,14 @@ public class EntitlementResourceFilteringSpecTest {
     }
 
     @Test
-    public void canFilterEntitlementsWithMatches() {
+    public void shouldFilterEntitlementsWithMatches() {
         List<EntitlementDTO> ents = entitlementsApi.listAllForConsumer(
             consumer.getUuid(), "virtualization", null, null, null, null, null);
         assertThat(ents).hasSize(1);
     }
 
     @Test
-    public void canFilterEntitlementsByProductAttribute() {
+    public void shouldFilterEntitlementsByProductAttribute() {
         List<EntitlementDTO> ents = entitlementsApi.listAllForConsumer(
             consumer.getUuid(), null, List.of("variant:Satellite Starter Pack"), null, null, null, null);
         assertThat(ents).hasSize(1);
@@ -98,7 +98,7 @@ public class EntitlementResourceFilteringSpecTest {
     }
 
     @Test
-    public void canFilterConsumerEntitlementsByProductAttribute() {
+    public void shouldFilterConsumerEntitlementsByProductAttribute() {
         List<EntitlementDTO> ents = consumerClient.listEntitlements(
             consumer.getUuid(), null, null, null, null, null, null, null);
         assertThat(ents).hasSize(2);
@@ -112,7 +112,7 @@ public class EntitlementResourceFilteringSpecTest {
     }
 
     @Test
-    public void allowFilterCertsBySerial() {
+    public void shouldAllowFilteringCertsBySerial() {
         List<EntitlementDTO> ents = consumerClient.listEntitlements(
             consumer.getUuid(), monitoring.getId(), null, null, null, null, null, null);
         assertThat(ents).hasSize(1);

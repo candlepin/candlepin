@@ -29,14 +29,12 @@ import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @SpecTest
 class BasicAuthSpecTest {
 
     @Test
-    @DisplayName("should return a 401 if user credentials are invalid")
     void shouldRejectInvalidCredentials() {
         ApiClient client = ApiClients.basic("random", "not valid");
 
@@ -44,8 +42,7 @@ class BasicAuthSpecTest {
     }
 
     @Test
-    @DisplayName("does not return a 401 for the root level, since it is not protected")
-    void badCredentialsShouldPassToUnprotectedEndpoint() {
+    void shouldPassToUnprotectedEndpointForBadCredentials() {
         ApiClient client = ApiClients.basic("random", "not valid");
 
         assertThatCode(client.root()::getRootResources)
@@ -53,8 +50,7 @@ class BasicAuthSpecTest {
     }
 
     @Test
-    @DisplayName("allows valid users to auth")
-    void validUserShouldPassBasicAuth() {
+    void shouldPassBasicAuthForValidUser() {
         ApiClient admin = ApiClients.admin();
         OwnerDTO owner = admin.owners().createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);

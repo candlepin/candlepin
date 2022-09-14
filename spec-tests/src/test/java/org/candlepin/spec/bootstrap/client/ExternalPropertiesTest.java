@@ -49,7 +49,7 @@ class ExternalPropertiesTest {
     }
 
     @Test
-    void canReadProperties() {
+    void shouldReadProperties() {
         Path configFile = fs.getPath("/config", ".candlepin_spec.conf");
         createFile(configFile, KEY + "=" + VALUE);
 
@@ -60,7 +60,7 @@ class ExternalPropertiesTest {
     }
 
     @Test
-    void laterFilesShouldHavePriority() {
+    void shouldGivePriorityToLaterFiles() {
         String priorityValue = VALUE;
         Path configFile1 = fs.getPath("/config", ".candlepin_spec1.conf");
         createFile(configFile1, KEY + "=" + VALUE);
@@ -74,7 +74,7 @@ class ExternalPropertiesTest {
     }
 
     @Test
-    void configPathsMustBeProvided() {
+    void shouldRequireProvidedConfigPaths() {
         assertThatThrownBy(ExternalProperties::new)
             .isInstanceOf(IllegalArgumentException.class);
     }

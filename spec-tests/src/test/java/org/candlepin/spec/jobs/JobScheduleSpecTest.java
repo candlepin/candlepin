@@ -35,7 +35,6 @@ import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -55,19 +54,16 @@ public class JobScheduleSpecTest {
     }
 
     @Test
-    @DisplayName("should not schedule arbitrary tasks")
     public void shouldNotScheduleArbitraryTasks() throws Exception {
         assertForbidden(() -> jobsClient.scheduleJob("totally-made-up"));
     }
 
     @Test
-    @DisplayName("should not schedule non cron tasks")
     public void shouldNotScheduleNonCronTasks() throws Exception {
         assertForbidden(() -> jobsClient.scheduleJob("UndoImportsJob"));
     }
 
     @Test
-    @DisplayName("should schedule cron tasks irrespective of the case")
     public void shouldScheduleCronTasksCaseIndependant() throws Exception {
         AsyncJobStatusDTO jobStatus = client.jobs().scheduleJob("ExpiredPoolsCleanupJob");
         assertEquals("CREATED", jobStatus.getState());
@@ -77,7 +73,6 @@ public class JobScheduleSpecTest {
     }
 
     @Test
-    @DisplayName("should purge expired pools")
     public void shouldPurgeExpiredPools() throws Exception {
         OwnerApi ownerApi = client.owners();
         PoolsApi poolsApi = client.pools();
@@ -104,7 +99,6 @@ public class JobScheduleSpecTest {
     }
 
     @Test
-    @DisplayName("should purge import records")
     public void shouldPurgeImportRecords() throws Exception {
         // TODO change to annotation once test that introduces it is merged
         if (!client.status().status().getStandalone()) {

@@ -31,7 +31,7 @@ import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.SubscriptionDTO;
-import org.candlepin.invoker.client.ApiException;;
+import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.client.v1.EntitlementsApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
@@ -57,7 +57,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 
 import java.time.ZoneId;
 import java.util.List;
@@ -250,7 +249,6 @@ public class EntitlementCertificateSpecTest {
      * Needs a consumer that has not bound to the normal pool
       */
     @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     public class EntitlementCertificateUnboundConsumerSpecTest {
         @BeforeEach
         public void beforeEach() throws ApiException {
@@ -324,7 +322,6 @@ public class EntitlementCertificateSpecTest {
 
     @Nested
     @OnlyInHosted
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     public class EntitlementCertificateHostedSpecTest {
         @BeforeEach
         public void beforeEach() throws ApiException, JsonProcessingException {

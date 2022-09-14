@@ -43,7 +43,6 @@ import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -93,7 +92,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should find an empty list if the owner key is wrong")
     public void shouldFindEmptyListOwnerNotExist() {
         List<AsyncJobStatusDTO> jobs = jobsClient.listMatchingJobStatusForOrg("totally-made-up",
             null, null);
@@ -101,7 +99,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should cancel a job")
     public void shouldCancelAJob() throws Exception {
         jobsClient.setSchedulerStatus(false);
         try {
@@ -130,7 +127,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should contain the system id for async binds")
     public void shouldContainSystemIdForAsync() throws Exception {
         ownerApi.healEntire(owner.getKey());
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
@@ -145,7 +141,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should allow admin to view any job status")
     public void shouldAllowAdminToViewJobStatus() {
         AsyncJobStatusDTO jobStatus = ownerApi.healEntire(owner.getKey());
         jobsClient.waitForJob(jobStatus.getId());
@@ -155,7 +150,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should successfully run jobs concurrently")
     public void shouldRunJobsConcurrently() throws InterruptedException {
         int totalThreads = 6;
         List<Thread> threads = new ArrayList<>();
@@ -188,7 +182,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should allow user to view status of own job")
     public void shouldAllUserToViewStatusOfOwnJob() {
         JobsApi jobsApi = userClient.jobs();
         OwnerApi ownerApi1 = userClient.owners();
@@ -202,7 +195,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should allow paging of jobs")
     public void shouldAllowPagingOfJobs() {
         AsyncJobStatusDTO job1 = ownerApi.healEntire(owner.getKey());
         AsyncJobStatusDTO job2 = ownerApi.healEntire(owner.getKey());
@@ -221,7 +213,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should allow sorting of jobs")
     public void shouldAllowSortingOfJobs() {
         AsyncJobStatusDTO job1 = ownerApi.healEntire(owner.getKey());
         AsyncJobStatusDTO job2 = ownerApi.healEntire(owner.getKey());
@@ -241,7 +232,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should allow paging and sorting of jobs")
     public void shouldAllowPagingAndSortingOfJobs() {
         AsyncJobStatusDTO job1 = ownerApi.healEntire(owner.getKey());
         AsyncJobStatusDTO job2 = ownerApi.healEntire(owner.getKey());
@@ -254,7 +244,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should allow user to view job status of consumer in managed org")
     public void shouldAllowUserToViewConsumerJobStatus() throws Exception {
         ConsumerDTO consumer = Consumers.random(owner);
         consumer = consumerApi.createConsumer(consumer, user.getUsername(), owner.getKey(), null, false);
@@ -272,7 +261,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow user to cancel job from another user")
     public void shouldNotAllowUserToCancelJobFromAnotherUser() {
         jobsClient.setSchedulerStatus(false);
         String jobId = null;
@@ -293,7 +281,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should allow user to cancel a job it initiated")
     public void shouldAllowUserToCancelJobItInitiated() throws Exception {
         jobsClient.setSchedulerStatus(false);
         try {
@@ -322,7 +309,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow user to cancel a job it did not initiate")
     public void shouldNotAllowUserToCancelJobItDidNotInitiate() throws Exception {
         jobsClient.setSchedulerStatus(false);
         try {
@@ -340,7 +326,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow user to view job status outside of managed org")
     public void shouldNotAllowUserToViewJobStatusOutsideManagedOrg() throws Exception {
         OwnerDTO otherOwner = ownerApi.createOwner(Owners.random());
         UserDTO otherUser = UserUtil.createUser(client, otherOwner);
@@ -359,7 +344,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should allow consumer to view status of own job")
     public void shouldAllowConsumerToViewStatusOfOwnJob() throws Exception {
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
@@ -374,7 +358,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow consumer to access another consumers job status")
     public void shouldNotAllowConsumerToAccessStatusOfOthersJob() throws Exception {
         ConsumerDTO consumer1 = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient1 = ApiClients.trustedConsumer(consumer1.getUuid());
@@ -392,7 +375,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should allow consumer to cancel own job")
     public void shouldAllowConsumerToCancelOwnJob() throws Exception {
         jobsClient.setSchedulerStatus(false);
         try {
@@ -410,7 +392,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should fail to cancel terminal job")
     public void shouldFailToCancelTerminalJob() throws Exception {
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
@@ -423,7 +404,6 @@ class JobStatusSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow consumer to cancel another consumers job")
     public void shouldNotAllowConsumerToCancelOthersJob() throws Exception {
         ConsumerDTO consumer1 = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient1 = ApiClients.trustedConsumer(consumer1.getUuid());

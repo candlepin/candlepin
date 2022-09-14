@@ -52,7 +52,6 @@ import com.google.gson.Gson;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -86,7 +85,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should allow super admins to create content")
     public void shouldAllowSuperAdminsToCreateContent() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -165,7 +163,6 @@ class OwnerContentSpecTest {
         }
 
         @Test
-        @DisplayName("should require critical fields when creating content")
         public void shouldRequireCriticalFieldsWhenCreatingContent() throws Exception {
             // At the time of writing, this is only the ID field
             OwnerDTO owner = OwnerContentSpecTest.this.createOwner(this.client);
@@ -178,7 +175,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should require critical fields when creating content")
     public void shouldRequireCriticalFieldsWhenCreatingContent() throws Exception {
         // At the time of writing, this is only the ID field
         ApiClient adminClient = ApiClients.admin();
@@ -191,7 +187,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow org admins to create content")
     public void shouldNotAllowOrgAdminsToCreateContent() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -201,7 +196,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow consumers to create content")
     public void shouldNotAllowConsumersToCreateContent() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -211,7 +205,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should allow super admins to fetch content")
     public void shouldAllowSuperAdminsToFetchContent() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -225,7 +218,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should allow org admins to fetch content")
     public void shouldAllowOrgAdminsToFetchContent() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -240,7 +232,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow consumers to fetch content")
     public void shouldNotAllowConsumersToFetchContent() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -253,7 +244,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should list content in pages")
     public void shouldListContentInPages() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -338,7 +328,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should list content in sorted pages")
     public void shouldListContentInSortedPages() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -421,7 +410,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should allow super admins to update content")
     public void shouldAllowSuperAdminsToUpdateContent() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -498,7 +486,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow updating critical fields")
     public void shouldNotAllowUpdatingCriticalFields() throws Exception {
         // At the time of writing, this is only the UUID and ID fields
 
@@ -531,7 +518,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should update products when attached content changes")
     public void shouldUpdateProductsWhenAttachedContentChanges() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -579,7 +565,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow org admins to update content")
     public void shouldNotAllowOrgAdminsToUpdateContent() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -595,7 +580,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow consumers to update content")
     public void shouldNotAllowConsumersToUpdateContent() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -611,7 +595,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should allow super admins to remove content")
     public void shouldAllowSuperAdminsToRemoveContent() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -629,7 +612,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow org admins to remove content")
     public void shouldNotAllowOrgAdminsToRemoveContent() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -642,7 +624,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow consumers to remove content")
     public void shouldNotAllowConsumersToRemoveContent() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -655,7 +636,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should update products when attached content is removed")
     public void shouldUpdateProductsWhenAttachedContentIsRemoved() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -695,7 +675,6 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    @DisplayName("should force regeneration of entitlements providing changed content")
     public void shouldForceRegenerationOfEntitlementsProvidingChangedContent() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -799,7 +778,6 @@ class OwnerContentSpecTest {
         }
 
         @Test
-        @DisplayName("should not allow updating locked content")
         public void shouldNotAllowUpdatingLockedContent() throws Exception {
             ApiClient adminClient = ApiClients.admin();
 
@@ -812,7 +790,6 @@ class OwnerContentSpecTest {
         }
 
         @Test
-        @DisplayName("should not allow deleting locked content")
         public void shouldNotAllowDeletingLockedContent() throws Exception {
             ApiClient adminClient = ApiClients.admin();
 

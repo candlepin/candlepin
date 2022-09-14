@@ -29,7 +29,6 @@ import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @SpecTest
@@ -45,16 +44,14 @@ class TrustedUserAuthSpecTest {
     }
 
     @Test
-    @DisplayName("trusted user must exist when lookup permissions header set")
-    void trustedUserMustExist() {
+    void shouldNotAllowUnknownTrustedUserWithLookupPermissions() {
         OwnerApi client = ApiClients.trustedUser("unknown_user").owners();
 
         assertBadRequest(() -> client.createOwner(Owners.random()));
     }
 
     @Test
-    @DisplayName("trusted user does not need to exist")
-    void trustedUserDoesNotNeedToExist() {
+    void shouldAllowUnknownTrustedUserWithoutLookupPermissions() {
         OwnerApi client = ApiClients.trustedUser("unknown_user", false).owners();
 
         OwnerDTO createdOwner = client.createOwner(Owners.random());
@@ -62,8 +59,7 @@ class TrustedUserAuthSpecTest {
     }
 
     @Test
-    @DisplayName("trusted user can access admin endpoint")
-    void trustedUserHasFullAccess() {
+    void shouldAllowTrustedUserWithFullAccess() {
         UserDTO user = UserUtil.createUser(client, owner);
         OwnerApi client = ApiClients.trustedUser(user.getUsername(), false).owners();
 
@@ -72,8 +68,7 @@ class TrustedUserAuthSpecTest {
     }
 
     @Test
-    @DisplayName("trusted user cannot access admin endpoint")
-    void trustedUserHasLimitedAccess() {
+    void shouldForbidTrustedUserWithLimitedAccess() {
         UserDTO user = UserUtil.createUser(client, owner);
         OwnerApi userClient = ApiClients.trustedUser(user.getUsername()).owners();
 
