@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.14
+Version: 4.1.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,14 @@ fi
 
 #raw
 %changelog
+* Wed Sep 14 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.15-1
+- Add new translations using Weblate (noreply@weblate.org)
+- 2123382: Added same-ID entity version collision resolution (crog@redhat.com)
+- Removed setting encoding on FileConfiguration implementation
+  (crog@redhat.com)
+- Updated Vagrant configuration to support upcoming Ansible changes
+  (crog@redhat.com)
+
 * Mon Jul 25 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.14-1
 - Removed length requirement on cloud registration signature (crog@redhat.com)
 - Use jdbc jars from java dependencies instead of rpm (nmoumoul@redhat.com)
