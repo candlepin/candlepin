@@ -28,9 +28,9 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
  */
 public final class Owners {
 
-    private static final String ACCESS_MODE_LIST = "org_environment,entitlement";
-    private static final String ENT_ACCESS_MODE = "entitlement";
-    private static final String SCA_ACCESS_MODE = "org_environment";
+    public static final String ACCESS_MODE_LIST = "org_environment,entitlement";
+    public static final String ENTITLEMENT_ACCESS_MODE = "entitlement";
+    public static final String SCA_ACCESS_MODE = "org_environment";
 
     private Owners() {
         throw new UnsupportedOperationException();
@@ -42,7 +42,7 @@ public final class Owners {
         return new OwnerDTO()
             .key("test_owner-" + suffix)
             .displayName("Test Owner " + suffix)
-            .contentAccessMode(ENT_ACCESS_MODE)
+            .contentAccessMode(ENTITLEMENT_ACCESS_MODE)
             .contentAccessModeList(ACCESS_MODE_LIST);
     }
 

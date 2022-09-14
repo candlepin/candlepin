@@ -42,11 +42,20 @@ public final class CertificateUtil {
     /**
      * Extracts the decoded and uncompressed bodies of the entitlement certificates.
      *
-     * @param jsonPayload - the json that contains the encoded and compressed entitlement certificates
-     * @param mapper - used to parse the json payload.
-     * @return the entitlement certificate bodies
-     * @throws IOException if unable to decompress the body of the certificate or parse the json
-     * @throws DataFormatException if unable to decompress the body of the certificate or parse the json
+     * @param jsonPayload
+     *  the json that contains the encoded and compressed list of entitlement certificates
+     *
+     * @param mapper
+     *  used to parse the json payload
+     *
+     * @return
+     *  the entitlement certificate bodies
+     *
+     * @throws IOException
+     *  if unable to decompress the body of the certificate or parse the json
+     *
+     * @throws DataFormatException
+     *  if unable to decompress the body of the certificate or parse the json
      */
     public static List<JsonNode> extractEntitlementCertificatesFromPayload(Object jsonPayload,
         ObjectMapper mapper) throws IOException, DataFormatException {
@@ -66,26 +75,51 @@ public final class CertificateUtil {
             .map(CertificateDTO::getCert)
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
-
         // Create json nodes for each decoded certificate
-        ObjectMapper objectMapper = new ObjectMapper();
         List<JsonNode> jsonNodes = new ArrayList<>();
         for (String certificate : certificateBodies) {
-            // Retrieve the compressed data body
-            certificate = certificate.split("-----BEGIN ENTITLEMENT DATA-----\n")[1];
-            certificate = certificate.split("-----END ENTITLEMENT DATA-----")[0];
-            byte[] compressedBody = fromBase64(certificate.getBytes());
-
-            // Decompress the data
-            Inflater decompressor = new Inflater();
-            decompressor.setInput(compressedBody);
-            byte[] decompressedBody = new byte[48000];
-            decompressor.inflate(decompressedBody);
-
-            jsonNodes.add(objectMapper.readTree(new String(decompressedBody)));
+            jsonNodes.add(decodeAndUncompressCertificate(certificate, mapper));
         }
 
         return jsonNodes;
+    }
+
+    /**
+     * Decodes and uncompresses a certificate body into a {@link JsonNode}.
+     *
+     * @param certificate
+     *  the encoded and compressed body of the certificate
+     *
+     * @param mapper
+     *  used to parse the json
+     *
+     * @return
+     *  the certificate json
+     *
+     * @throws IOException
+     *  if unable to decompress the body of the certificate or parse the json
+     *
+     * @throws DataFormatException
+     *  if unable to decompress the body of the certificate or parse the json
+     */
+    public static JsonNode decodeAndUncompressCertificate(String certificate, ObjectMapper mapper)
+        throws IOException, DataFormatException {
+        if (certificate == null || certificate.length() == 0) {
+            return null;
+        }
+
+        // Retrieve the compressed data body
+        certificate = certificate.split("-----BEGIN ENTITLEMENT DATA-----\n")[1];
+        certificate = certificate.split("-----END ENTITLEMENT DATA-----")[0];
+        byte[] compressedBody = fromBase64(certificate.getBytes());
+
+        // Decompress the data
+        Inflater decompressor = new Inflater();
+        decompressor.setInput(compressedBody);
+        byte[] decompressedBody = new byte[48000];
+        decompressor.inflate(decompressedBody);
+
+        return mapper.readTree(new String(decompressedBody));
     }
 
     private static byte[] fromBase64(byte[] data) {
