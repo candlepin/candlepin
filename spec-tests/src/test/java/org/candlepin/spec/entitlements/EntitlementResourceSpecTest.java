@@ -120,7 +120,7 @@ class EntitlementResourceSpecTest {
     }
 
     @Test
-    public void allowsListCertsBySerialNumbers() {
+    public void shouldAllowsListCertsBySerialNumbers() {
         ownerClient.createPool(owner.getKey(), Pools.random(monitoring));
         ownerClient.createPool(owner.getKey(), Pools.random(virtual));
         consumerClient.bindProduct(consumer.getUuid(), monitoring.getId());

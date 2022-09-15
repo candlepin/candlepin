@@ -40,7 +40,6 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -81,7 +80,6 @@ public class InactiveConsumerCleanerJobSpecTest {
     }
 
     @Test
-    @DisplayName("should delete inactive consumers")
     public void shouldDeleteInactiveConsumers() {
         Instant inactiveTime = Instant.now()
             .minus(DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS + 10, ChronoUnit.DAYS);

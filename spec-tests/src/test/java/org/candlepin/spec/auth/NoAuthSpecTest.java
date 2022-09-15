@@ -26,39 +26,34 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @SpecTest
 class NoAuthSpecTest {
 
     @Test
-    @DisplayName("super admin endpoints should reject unauthenticated requests")
-    void superAdminEndpointsShouldRejectNoAuthRequests() {
+    void shouldRejectNoAuthRequestsForSuperAdminEndpoints() {
         OwnerApi client = ApiClients.noAuth().owners();
 
         assertUnauthorized(() -> client.createOwner(Owners.random()));
     }
 
     @Test
-    @DisplayName("verified endpoints should reject unauthenticated requests")
-    void verifiedEndpointsShouldRejectNoAuthRequests() {
+    void shouldRejectNoAuthRequestsForVerifiedEndpoints() {
         OwnerApi client = ApiClients.noAuth().owners();
 
         assertUnauthorized(() -> client.getOwner("some_key"));
     }
 
     @Test
-    @DisplayName("security hole should reject unauthenticated requests")
-    void securityHoleEndpointsShouldRejectNoAuthRequests() {
+    void shouldRejectNoAuthRequestsForSecurityHoleEndpoints() {
         ProductsApi client = ApiClients.noAuth().products();
 
         assertUnauthorized(() -> client.getProduct("some_uuid"));
     }
 
     @Test
-    @DisplayName("no auth security hole should accept unauthenticated requests")
-    void noAuthSecurityHoleEndpointsShouldAcceptNoAuthRequests() {
+    void shouldAcceptNoAuthRequestsForNoAuthSecurityHoleEndpoints() {
         StatusApi client = ApiClients.noAuth().status();
 
         StatusDTO status = client.status();

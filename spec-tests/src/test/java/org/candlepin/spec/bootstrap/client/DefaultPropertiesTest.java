@@ -24,7 +24,7 @@ class DefaultPropertiesTest {
     private final DefaultProperties properties = new DefaultProperties();
 
     @Test
-    void canReadDefault() {
+    void shouldReadDefault() {
         assertThat(this.properties.get())
             .containsKey("spec.test.client.host")
             .containsKey("spec.test.client.port")

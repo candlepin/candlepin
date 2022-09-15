@@ -42,7 +42,6 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -68,7 +67,6 @@ public class ContentResourceSpecTest {
     }
 
     @Test
-    @DisplayName("should show content on products")
     public void shouldShowContentOnProducts() throws Exception {
         OwnerDTO owner1 = ownerApi.createOwner(Owners.random());
         ContentDTO expectedContent = createContent(owner1.getKey(), null, null);
@@ -82,7 +80,6 @@ public class ContentResourceSpecTest {
     }
 
     @Test
-    @DisplayName("should filter content with mismatched architecture")
     public void shouldFilterContentWithMismatchedArchitecture() throws Exception {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         // We expect this content to NOT be filtered out due to a match with the system's architecture
@@ -149,7 +146,6 @@ public class ContentResourceSpecTest {
     }
 
     @Test
-    @DisplayName("should filter content with mismatched architecture from the product")
     public void shouldFilterContentWithMismatchedArchitectureFromTheProduct() throws Exception {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         // Even though this product has no arches specified, and should normally not be filtered out,

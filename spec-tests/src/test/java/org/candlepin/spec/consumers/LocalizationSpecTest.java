@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 public class LocalizationSpecTest {
 
     @Test
-    public void returnedTranslatedErrorMessage() {
+    public void shouldReturnranslatedErrorMessage() {
         String expectedMessage = "Ungültige Berechtigungsnachweise";
         Request request = Request.from(ApiClients.basic("admin", "badpass"))
             .setMethod("POST")
@@ -46,7 +46,7 @@ public class LocalizationSpecTest {
     }
 
     @Test
-    public void returnedTranslatedMessageForDeletedConsumer() throws ApiException {
+    public void shouldReturnTranslatedMessageForDeletedConsumer() throws ApiException {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = createOwner(adminClient);
         ConsumerDTO consumer = createConsumer(adminClient, owner);

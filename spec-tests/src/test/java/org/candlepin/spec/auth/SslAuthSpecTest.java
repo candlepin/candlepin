@@ -28,7 +28,6 @@ import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -37,7 +36,6 @@ import java.util.List;
 class SslAuthSpecTest {
 
     @Test
-    @DisplayName("should allow authentication with consumer's identity certificate")
     void shouldPassWithConsumerIdentityCert() {
         ApiClient client = ApiClients.admin();
         OwnerDTO owner = client.owners().createOwner(Owners.random());
@@ -50,7 +48,6 @@ class SslAuthSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow authentication with consumer's sca certificate")
     void shouldRejectScaCert() {
         ApiClient client = ApiClients.admin();
         OwnerDTO owner = client.owners().createOwner(Owners.randomSca());

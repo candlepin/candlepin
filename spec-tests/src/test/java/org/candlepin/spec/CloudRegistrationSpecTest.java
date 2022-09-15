@@ -46,7 +46,7 @@ import java.util.stream.Stream;
 class CloudRegistrationSpecTest {
 
     @Test
-    public void generateValidTokenWithValidMetadata() throws ApiException {
+    public void shouldGenerateValidTokenWithValidMetadata() throws ApiException {
         ApiClient adminClient = ApiClients.admin();
         HostedTestApi upstreamClient = adminClient.hosted();
         CloudRegistrationApi cloudRegistration = adminClient.cloudAuthorization();
@@ -57,7 +57,7 @@ class CloudRegistrationSpecTest {
     }
 
     @Test
-    public void allowRegistrationWithValidToken() throws ApiException {
+    public void shouldAllowRegistrationWithValidToken() throws ApiException {
         ApiClient adminClient = ApiClients.admin();
         HostedTestApi upstreamClient = adminClient.hosted();
         CloudRegistrationApi cloudRegistration = adminClient.cloudAuthorization();
@@ -71,14 +71,14 @@ class CloudRegistrationSpecTest {
 
     @ParameterizedTest
     @MethodSource("tokenVariation")
-    public void failCloudRegistration(String owner, String type, String signature) {
+    public void shouldFailCloudRegistration(String owner, String type, String signature) {
         ApiClient adminClient = ApiClients.admin();
         CloudRegistrationApi cloudRegistration = adminClient.cloudAuthorization();
         assertBadRequest(() -> cloudRegistration.cloudAuthorize(generateToken(owner, type, signature)));
     }
 
     @Test
-    public void allowRegistrationWithEmptySignature() throws ApiException {
+    public void shouldAllowRegistrationWithEmptySignature() throws ApiException {
         ApiClient adminClient = ApiClients.admin();
         HostedTestApi upstreamClient = adminClient.hosted();
         CloudRegistrationApi cloudRegistration = adminClient.cloudAuthorization();

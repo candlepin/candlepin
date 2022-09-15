@@ -37,7 +37,6 @@ import org.candlepin.spec.bootstrap.data.builder.Owners;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @SpecTest
@@ -55,32 +54,28 @@ class ActivationKeyAuthSpecTest {
     }
 
     @Test
-    @DisplayName("super admin endpoints should reject unauthenticated requests")
-    void superAdminEndpointsShouldRejectActivationKeyAuth() {
+    void shouldRejectActivationKeyAuthForSuperAdminEndpoints() {
         OwnerApi client = ApiClients.activationKey(owner.getKey(), activationKey.getName()).owners();
 
         assertForbidden(() -> client.createOwner(Owners.random()));
     }
 
     @Test
-    @DisplayName("verified endpoints should reject unauthenticated requests")
-    void verifiedEndpointsShouldRejectActivationKeyAuth() {
+    void shouldRejectActivationKeyAuthForVerifiedEndpoints() {
         OwnerApi client = ApiClients.activationKey(owner.getKey(), activationKey.getName()).owners();
 
         assertForbidden(() -> client.getOwner(owner.getKey()));
     }
 
     @Test
-    @DisplayName("security hole should reject unauthenticated requests")
-    void securityHoleEndpointsShouldRejectActivationKeyAuth() {
+    void shouldRejectActivationKeyAuthForSecurityHoleEndpoints() {
         ProductsApi client = ApiClients.activationKey(owner.getKey(), activationKey.getName()).products();
 
         assertForbidden(() -> client.getProduct("some_uuid"));
     }
 
     @Test
-    @DisplayName("no auth security hole should accept unauthenticated requests")
-    void noAuthSecurityHoleEndpointsShouldAcceptNoAuthRequests() {
+    void shouldAcceptNoAuthRequestsForNoAuthSecurityHoleEndpoints() {
         StatusApi client = ApiClients.activationKey(owner.getKey(), activationKey.getName()).status();
 
         StatusDTO status = client.status();
@@ -89,7 +84,6 @@ class ActivationKeyAuthSpecTest {
     }
 
     @Test
-    @DisplayName("activation key auth requires owner")
     void shouldRequireOwner() {
         ConsumerApi client = ApiClients.noAuth().consumers();
 
@@ -98,7 +92,6 @@ class ActivationKeyAuthSpecTest {
     }
 
     @Test
-    @DisplayName("activation key auth requires existing owner")
     void shouldRequireExistingOwner() {
         ConsumerApi client = ApiClients.noAuth().consumers();
 
@@ -107,7 +100,6 @@ class ActivationKeyAuthSpecTest {
     }
 
     @Test
-    @DisplayName("activation key auth requires activation keys")
     void shouldRequireActivationKeys() {
         ConsumerApi client = ApiClients.noAuth().consumers();
 
@@ -116,7 +108,6 @@ class ActivationKeyAuthSpecTest {
     }
 
     @Test
-    @DisplayName("activation key auth should fail with activation keys and username present together")
     void shouldFailWithActivationKeysAndUsernamePresentAtOnce() {
         ConsumerApi client = ApiClients.noAuth().consumers();
 
@@ -125,7 +116,6 @@ class ActivationKeyAuthSpecTest {
     }
 
     @Test
-    @DisplayName("activation key with two keys none valid should fail")
     void shouldFailWithNoValidKeys() {
         ConsumerApi client = ApiClients.noAuth().consumers();
         String activationKeys = toKeyString("some_key", "some_other_key");
@@ -135,7 +125,6 @@ class ActivationKeyAuthSpecTest {
     }
 
     @Test
-    @DisplayName("activation key with two keys one valid should pass")
     void shouldPassWithAtLeastOneValidKey() {
         ConsumerApi client = ApiClients.noAuth().consumers();
         String activationKeys = toKeyString(activationKey.getName(), "some_key");

@@ -40,7 +40,6 @@ import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
@@ -126,7 +125,6 @@ class PoolSpecTest {
 
 
     @Test
-    @DisplayName("should let consumers view their own pools")
     public void shouldLetConsumersViewTheirOwnPools() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -149,7 +147,6 @@ class PoolSpecTest {
     }
 
     @Test
-    @DisplayName("should not let consumers view pool entitlements")
     public void shouldNotLetConsumersViewPoolEntitlements() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -167,7 +164,6 @@ class PoolSpecTest {
     }
 
     @Test
-    @DisplayName("should not let org admins view pools in other orgs")
     public void shouldNotLetOrgAdminsViewPoolsInOtherOrgs() {
         ApiClient adminClient = ApiClients.admin();
 
@@ -193,7 +189,6 @@ class PoolSpecTest {
     }
 
     @Test
-    @DisplayName("should not let consumers view pools in other orgs")
     public void shouldNotLetConsumersViewPoolsFromOtherOrgs() {
         ApiClient adminClient = ApiClients.admin();
 
@@ -221,7 +216,6 @@ class PoolSpecTest {
     }
 
     @Test
-    @DisplayName("should not return expired pools")
     public void shouldNotReturnExpiredPools() {
         ApiClient adminClient = ApiClients.admin();
 
@@ -247,7 +241,6 @@ class PoolSpecTest {
     }
 
     @Test
-    @DisplayName("should not list pools with errors for consumer clients when listAll is used")
     public void shouldNotListPoolsWithErrorsForConsumersWhenListAllIsUsed() {
         ApiClient adminClient = ApiClients.admin();
 
@@ -289,7 +282,6 @@ class PoolSpecTest {
     }
 
     @Test
-    @DisplayName("should list pools with warnings for consumer clients when listAll is used")
     public void shouldListPoolsWithWarningsForConsumersWhenListAllIsUsed() {
         ApiClient adminClient = ApiClients.admin();
 
@@ -319,7 +311,6 @@ class PoolSpecTest {
     }
 
     @Test
-    @DisplayName("should allow super admins to delete pools")
     public void shouldAllowSuperAdminsToDeletePools() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -365,7 +356,6 @@ class PoolSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow org admins to delete pools")
     public void shouldNotAllowOrgAdminsToDeletePools() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -377,7 +367,6 @@ class PoolSpecTest {
     }
 
     @Test
-    @DisplayName("should not allow consumers to delete pools")
     public void shouldNotAllowConsumersToDeletePools() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -390,7 +379,6 @@ class PoolSpecTest {
     }
 
     @Test
-    @DisplayName("should delete children pools when parent pool is deleted")
     public void shouldDeleteChildrenPoolsWhenParentPoolIsDeleted() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -437,7 +425,6 @@ class PoolSpecTest {
     }
 
     @Test
-    @DisplayName("should include calculated attributes when fetching pools")
     public void shouldIncludeCalculatedAttributesWhenFetchingPools() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
@@ -524,7 +511,6 @@ class PoolSpecTest {
     // }
 
     @Test
-    @DisplayName("should include product branding when fetching pools")
     public void shouldIncludeProductBrandingWhenFetchingPool() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
