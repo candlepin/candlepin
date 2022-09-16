@@ -30,6 +30,7 @@ import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.resource.client.v1.ProductsApi;
 import org.candlepin.resource.client.v1.RolesApi;
 import org.candlepin.resource.client.v1.RootApi;
+import org.candlepin.resource.client.v1.RulesApi;
 import org.candlepin.resource.client.v1.StatusApi;
 import org.candlepin.resource.client.v1.UsersApi;
 import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
@@ -37,6 +38,7 @@ import org.candlepin.spec.bootstrap.client.api.JobsClient;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.client.api.PoolsClient;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -50,7 +52,8 @@ public class ApiClient {
 
     public static final ObjectMapper MAPPER = new ObjectMapper()
         .registerModule(new Jdk8Module())
-        .registerModule(new JavaTimeModule());
+        .registerModule(new JavaTimeModule())
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private final org.candlepin.invoker.client.ApiClient client;
 
@@ -150,4 +153,7 @@ public class ApiClient {
         return new UsersApi(this.client);
     }
 
+    public RulesApi rules() {
+        return new RulesApi(this.client);
+    }
 }

@@ -98,30 +98,4 @@ public class JobScheduleSpecTest {
         assertNotFound(() -> poolsApi.getPool(poolId, null, null));
     }
 
-    @Test
-    public void shouldPurgeImportRecords() throws Exception {
-        // TODO change to annotation once test that introduces it is merged
-        if (!client.status().status().getStandalone()) {
-            return;
-        }
-        // TODO convert this test after import/export is written
-//        @cp_export = StandardExporter.new
-//        @cp_export.create_candlepin_export()
-//        @cp_export_file = @cp_export.export_filename
-//
-//        @import_owner =@cp.create_owner(random_string("test_owner"))
-//        (1. .11).each do
-//          import_record = @cp.import( @import_owner['key'],
-//            @cp_export_file,
-//            {:force => ["SIGNATURE_CONFLICT", 'MANIFEST_SAME']})
-//          import_record.status.should == 'SUCCESS'
-//        end
-//        records = @cp.list_imports(@import_owner['key'])
-//        records.size.should == 11
-//        job = @cp.trigger_job('ImportRecordCleanerJob')
-//        wait_for_job(job['id'], 15)
-//        records = @cp.list_imports(@import_owner['key'])
-//        records.size.should == 10
-//        end
-    }
 }

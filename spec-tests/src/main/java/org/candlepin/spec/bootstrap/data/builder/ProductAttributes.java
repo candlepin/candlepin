@@ -33,6 +33,7 @@ public enum ProductAttributes {
     Usage("usage"),
     Version("version"),
     VirtOnly("virt_only"),
+    VirtualLimit("virt_limit"),
     WarningPeriod("warning_period");
 
     private final String key;
