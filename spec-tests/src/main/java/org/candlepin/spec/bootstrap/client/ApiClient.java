@@ -18,6 +18,7 @@ import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.client.v1.ActivationKeyApi;
 import org.candlepin.resource.client.v1.AdminApi;
 import org.candlepin.resource.client.v1.CdnApi;
+import org.candlepin.resource.client.v1.CertificateRevocationListApi;
 import org.candlepin.resource.client.v1.CloudRegistrationApi;
 import org.candlepin.resource.client.v1.ConsumerTypeApi;
 import org.candlepin.resource.client.v1.ContentApi;
@@ -91,6 +92,10 @@ public class ApiClient {
 
     public ContentApi content() {
         return new ContentApi(this.client);
+    }
+
+    public CertificateRevocationListApi crl() {
+        return new CertificateRevocationListApi(this.client);
     }
 
     public DeletedConsumerApi deletedConsumers() {
