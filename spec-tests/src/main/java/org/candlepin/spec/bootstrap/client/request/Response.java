@@ -17,6 +17,7 @@ package org.candlepin.spec.bootstrap.client.request;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -169,6 +170,27 @@ public class Response {
     public <T> T deserialize(TypeReference<T> typeref) {
         try {
             return ApiClient.MAPPER.readValue(this.getBody(), typeref);
+        }
+        catch (IOException e) { // Impl note: JsonProcessingException *is* an IOException
+            throw new JsonDeserializationException(e);
+        }
+    }
+
+    /**
+     * Attempts to process the body as a JSON-formatted UTF-8 string representing the given object
+     * class. If the body cannot be successfully deserialized into an object of the JsonNode,
+     * this method throws an exception.
+     *
+     * @throws JsonDeserializationException
+     *  if the body cannot be deserialized into an object of the given class
+     *
+     * @return
+     *  an instance of the JsonNode, populated with the data contained in the body of
+     *  this response
+     */
+    public JsonNode deserialize() {
+        try {
+            return ApiClient.MAPPER.readTree(this.getBody());
         }
         catch (IOException e) { // Impl note: JsonProcessingException *is* an IOException
             throw new JsonDeserializationException(e);

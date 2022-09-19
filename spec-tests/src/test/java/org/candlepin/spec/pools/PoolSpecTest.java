@@ -15,14 +15,18 @@
 package org.candlepin.spec.pools;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatObject;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.AttributeDTO;
 import org.candlepin.dto.api.client.v1.BrandingDTO;
+import org.candlepin.dto.api.client.v1.CdnDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerTypeDTO;
 import org.candlepin.dto.api.client.v1.EntitlementDTO;
@@ -30,15 +34,22 @@ import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
+import org.candlepin.resource.HostedTestApi;
+import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.data.builder.Branding;
+import org.candlepin.spec.bootstrap.data.builder.Cdns;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
+import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
+
+import com.fasterxml.jackson.databind.JsonNode;
 
 import org.junit.jupiter.api.Test;
 
@@ -449,66 +460,58 @@ class PoolSpecTest {
             .containsEntry("compliance_type", "Standard");
     }
 
-    // @Test
-    // public void shouldAllowFetchingCDNByPoolId() {
-    //     // Impl note:
-    //     // This test is currently blocked on a limitation with CDNs in that we can perform CRUD
-    //     // operations on them (as they are first-class objects for some reason), but the only way
-    //     // to assign a CDN to a pool is via manifest import or pool refresh -- neither of which are
-    //     // implementated at the time of writing.
+    @Test
+    @OnlyInHosted
+    public void shouldAllowFetchingCDNByPoolId() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = this.createOwner(adminClient);
+        HostedTestApi upstreamClient = adminClient.hosted();
 
-    //     ApiClient adminClient = ApiClients.admin();
-    //     OwnerDTO owner = this.createOwner(adminClient);
+        CdnDTO cdn = Cdns.random();
+        cdn = adminClient.cdns().createCdn(cdn);
 
-    //     CdnDTO cdn = new CdnDTO()
-    //         .name(StringUtil.randomSuffix("test_cdn"))
-    //         .label("Test CDN")
-    //         .url("https://cdn.test.com");
+        ProductDTO product = Products.randomSKU()
+            .addAttributesItem(this.buildAttribute("virt_limit", "10"));
 
-    //     cdn = adminClient.cdns().createCdn(cdn);
+        product = adminClient.ownerProducts()
+            .createProductByOwner(owner.getKey(), product);
 
-    //     ProductDTO product = Products.randomSKU()
-    //         .addAttributesItem(this.buildAttribute("virt_limit", "10"));
+        upstreamClient.createProduct(product);
+        upstreamClient.createSubscription(Subscriptions.random(owner, product).cdn(cdn));
 
-    //     product = adminClient.ownerProducts()
-    //         .createProductByOwner(owner.getKey(), product);
+        AsyncJobStatusDTO job =  adminClient.owners().refreshPools(owner.getKey(), false);
+        job = adminClient.jobs().waitForJob(job.getId());
+        assertThat(job)
+            .hasFieldOrPropertyWithValue("state", "FINISHED");
 
-    //     PoolDTO pool = Pools.randomUpstream(product)
-    //         .setCdn(cdn);
+        // We should have two pools created, but only the base/primary pool should have the CDN
+        // associated with it
+        List<PoolDTO> pools = adminClient.pools().listPoolsByOwner(owner.getId());
 
-    //     pool = adminClient.owners()
-    //         .createPool(owner.getKey(), pool);
+        assertNotNull(pools);
+        assertEquals(2, pools.size());
 
+        Optional<PoolDTO> bpfilter = pools.stream()
+            .filter(p -> "NORMAL".equals(p.getType()))
+            .findFirst();
 
-    //     // We should have two pools created, but only the base/primary pool should have the CDN
-    //     // associated with it
-    //     List<PoolDTO> pools = adminClient.pools()
-    //         .listPools(owner.getId(), null, null, true, null);
+        Optional<PoolDTO> dpfilter = pools.stream()
+            .filter(p -> !"NORMAL".equals(p.getType()))
+            .findFirst();
 
-    //     assertNotNull(pools);
-    //     assertEquals(2, pools.size());
+        assertTrue(bpfilter.isPresent());
+        assertTrue(dpfilter.isPresent());
 
-    //     Optional<PoolDTO> bpfilter = pools.stream()
-    //         .filter(p -> "NORMAL".equals(p.getType()))
-    //         .findFirst();
+        PoolDTO basePool = bpfilter.get();
+        PoolDTO derivedPool = dpfilter.get();
 
-    //     Optional<PoolDTO> dpfilter = pools.stream()
-    //         .filter(p -> !"NORMAL".equals(p.getType()))
-    //         .findFirst();
+        CdnDTO fetched1 = adminClient.pools().getPoolCdn(basePool.getId());
+        assertNotNull(fetched1);
+        assertEquals(cdn.getName(), fetched1.getName());
 
-    //     assertTrue(bpfilter.isPresent());
-    //     assertTrue(dpfilter.isPresent());
-
-    //     PoolDTO basePool = bpfilter.get();
-    //     PoolDTO derivedPool = dpfilter.get();
-
-    //     CdnDTO fetched1 = adminClient.pools().getPoolCdn(basePool.getId());
-    //     assertNotNull(fetched1);
-    //     assertEquals(cdn.getName(), fetched1.getName());
-
-    //     CdnDTO fetched2 = adminClient.pools().getPoolCdn(derivedPool.getId());
-    //     assertNull(fetched2);
-    // }
+        CdnDTO fetched2 = adminClient.pools().getPoolCdn(derivedPool.getId());
+        assertNull(fetched2);
+    }
 
     @Test
     public void shouldIncludeProductBrandingWhenFetchingPool() {
@@ -551,4 +554,38 @@ class PoolSpecTest {
         assertTrue(b2filter.isPresent());
     }
 
+    @Test
+    public void shouldIncludesNullValuesInJson() {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = this.createOwner(adminClient);
+
+        ProductDTO product = createProduct(adminClient, owner);
+        adminClient.owners().createPool(owner.getKey(), Pools.random(product));
+
+        JsonNode nodes = Request.from(adminClient)
+            .setPath("/pools")
+            .addQueryParam("owner", owner.getId())
+            .execute()
+            .deserialize();
+
+        assertThatObject(nodes)
+            .isNotNull()
+            .returns(true, JsonNode::isArray)
+            .returns(false, JsonNode::isEmpty);
+
+        List<String> fields = List.of("upstreamPoolId", "upstreamEntitlementId", "upstreamConsumerId");
+
+        for (JsonNode jsonNode : nodes) {
+            assertThatObject(jsonNode)
+                .isNotNull()
+                .returns(true, JsonNode::isObject);
+
+            for (String field : fields) {
+                assertTrue(jsonNode.has(field));
+                assertThatObject(jsonNode.get(field))
+                    .isNotNull()
+                    .returns(true, JsonNode::isNull);
+            }
+        }
+    }
 }
