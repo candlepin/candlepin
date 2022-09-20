@@ -582,6 +582,53 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
     }
 
     /**
+     * Clears and rebuilds the content mapping for the given owner, using the provided map of
+     * content IDs to UUIDs.
+     *
+     * @param owner
+     *  the owner for which to rebuild content mappings
+     *
+     * @param contentIdMap
+     *  a mapping of content IDs to content UUIDs to use as the new content mappings for this
+     *  organization. If null or empty, the organization will be left without any content mappings.
+     *
+     * @throws IllegalArgumentException
+     *  if owner is null, or lacks an ID
+     */
+    public void rebuildOwnerContentMapping(Owner owner, Map<String, String> contentIdMap) {
+        if (owner == null || owner.getId() == null) {
+            throw new IllegalArgumentException("owner is null, or lacks an ID");
+        }
+
+        EntityManager entityManager = this.getEntityManager();
+
+        int rcount = entityManager.createQuery("DELETE FROM OwnerContent oc WHERE oc.owner.id = :owner_id")
+            .setParameter("owner_id", owner.getId())
+            .executeUpdate();
+
+        log.debug("Removed {} owner-content mappings for owner: {}", rcount, owner);
+
+        if (contentIdMap != null) {
+            // TODO: content ID isn't part of the owner_content table, but it probably should be. Update
+            // this query to also include the content ID in the inserts
+            String sql = "INSERT INTO " + OwnerContent.DB_TABLE + " (owner_id, content_uuid) " +
+                "VALUES(:owner_id, :content_uuid)";
+
+            Query query = this.getEntityManager()
+                .createNativeQuery(sql)
+                .setParameter("owner_id", owner.getId());
+
+            int icount = 0;
+            for (Map.Entry<String, String> entry : contentIdMap.entrySet()) {
+                icount += query.setParameter("content_uuid", entry.getValue())
+                    .executeUpdate();
+            }
+
+            log.debug("Inserted {} owner-content mappings for owner: {}", icount, owner);
+        }
+    }
+
+    /**
      * Returns a mapping of content and content enabled flag.
      *
      * Note - If same content (say C1) is being enabled/disabled by two or more products, with at least

@@ -126,6 +126,11 @@ public class RefreshResult {
             return stream;
         }
 
+        public Stream<T> streamEntities(Collection<EntityState> states) {
+            return this.getEntityStream(states)
+                .map(EntityData::getEntity);
+        }
+
         public Map<String, T> getEntities(Collection<EntityState> states) {
             return this.getEntityStream(states)
                 .collect(Collectors.toMap(EntityData::getEntityId, EntityData::getEntity));
@@ -323,6 +328,48 @@ public class RefreshResult {
 
         EntityStore<T> entityStore = this.getEntityStore(cls, false);
         return entityStore != null ? entityStore.getEntities(states) : new HashMap<>();
+    }
+
+    /**
+     * Fetches a stream of entities matching the given class and optional collection of entity
+     * states.
+     *
+     * @param cls
+     *  the class of entities to fetch
+     *
+     * @param states
+     *  an optional collection of entity states to use to filter the output. If provided, only
+     *  entities in the states provided will be fetched.
+     *
+     * @return
+     *  a stream of entities matching the given class and entity states, or an empty stream if no
+     *  matching entities were part of this refresh
+     */
+    public <T extends AbstractHibernateObject> Stream<T> streamEntities(Class<T> cls,
+        Collection<EntityState> states) {
+
+        EntityStore<T> entityStore = this.getEntityStore(cls, false);
+        return entityStore != null ? entityStore.streamEntities(states) : Stream.empty();
+    }
+
+    /**
+     * Fetches a stream of entities matching the given class and optional array of entity states.
+     *
+     * @param cls
+     *  the class of entities to fetch
+     *
+     * @param states
+     *  an optional array of entity states to use to filter the output. If provided, only entities
+     *  in the states provided will be fetched
+     *
+     * @return
+     *  a stream of entities matching the given class and entity states, or an empty stream if no
+     *  matching entities were part of this refresh
+     */
+    public <T extends AbstractHibernateObject> Stream<T> streamEntities(Class<T> cls,
+        EntityState... states) {
+
+        return this.streamEntities(cls, states != null && states.length > 0 ? Arrays.asList(states) : null);
     }
 
     /**

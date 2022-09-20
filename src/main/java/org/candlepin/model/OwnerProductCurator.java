@@ -963,61 +963,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     }
 
     /**
-     * Part of the updateOwnerProductReferences operation; updates the activation key to product
-     * join table. See updateOwnerProductReferences for additional details.
-     *
-     * @param owner
-     * @param productUuidMap
-     */
-    private void updateOwnerProductActivationKeys(Owner owner, Map<String, String> productUuidMap) {
-        EntityManager entityManager = this.getEntityManager();
-
-        String sql = "SELECT key.id, prod.uuid FROM ActivationKey key JOIN key.products prod " +
-            "WHERE key.owner.id = :owner_id " +
-            "  AND prod.uuid IN (:product_uuids)";
-
-        Query query = entityManager.createQuery(sql)
-            .setParameter("owner_id", owner.getId());
-
-        Map<String, Set<String>> keyMap = new HashMap<>();
-        for (List<String> block : this.partition(productUuidMap.keySet())) {
-            List<Object> rows = query.setParameter("product_uuids", block)
-                .getResultList();
-
-            for (Object row : rows) {
-                String keyid = (String) ((Object[]) row)[0];
-                String uuid = (String) ((Object[]) row)[1];
-
-                keyMap.computeIfAbsent(uuid, key -> new HashSet<>())
-                    .add(keyid);
-            }
-        }
-
-        int count = 0;
-        if (!keyMap.isEmpty()) {
-            sql = "UPDATE cp2_activation_key_products SET product_uuid = :updated " +
-                "WHERE key_id = :key_id AND product_uuid = :current";
-
-            query = entityManager.createNativeQuery(sql);
-
-            for (Map.Entry<String, Set<String>> entry : keyMap.entrySet()) {
-                String cUuid = entry.getKey();
-                String uUuid = productUuidMap.get(cUuid);
-
-                query.setParameter("current", cUuid)
-                    .setParameter("updated", uUuid);
-
-                for (String keyid : entry.getValue()) {
-                    count += query.setParameter("key_id", keyid)
-                        .executeUpdate();
-                }
-            }
-        }
-
-        log.debug("{} activation keys updated", count);
-    }
-
-    /**
      * Removes the product references currently pointing to the specified product for the given
      * owners.
      * <p/></p>
@@ -1092,6 +1037,107 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
                 log.info("{} activation key product(s) removed", count);
             }
+        }
+    }
+
+    /**
+     * Part of the updateOwnerProductReferences operation; updates the activation key to product
+     * join table. See updateOwnerProductReferences for additional details.
+     *
+     * @param owner
+     * @param productUuidMap
+     */
+    private void updateOwnerProductActivationKeys(Owner owner, Map<String, String> productUuidMap) {
+        EntityManager entityManager = this.getEntityManager();
+
+        String sql = "SELECT key.id, prod.uuid FROM ActivationKey key JOIN key.products prod " +
+            "WHERE key.owner.id = :owner_id " +
+            "  AND prod.uuid IN (:product_uuids)";
+
+        Query query = entityManager.createQuery(sql)
+            .setParameter("owner_id", owner.getId());
+
+        Map<String, Set<String>> keyMap = new HashMap<>();
+        for (List<String> block : this.partition(productUuidMap.keySet())) {
+            List<Object> rows = query.setParameter("product_uuids", block)
+                .getResultList();
+
+            for (Object row : rows) {
+                String keyid = (String) ((Object[]) row)[0];
+                String uuid = (String) ((Object[]) row)[1];
+
+                keyMap.computeIfAbsent(uuid, key -> new HashSet<>())
+                    .add(keyid);
+            }
+        }
+
+        int count = 0;
+        if (!keyMap.isEmpty()) {
+            sql = "UPDATE cp2_activation_key_products SET product_uuid = :updated " +
+                "WHERE key_id = :key_id AND product_uuid = :current";
+
+            query = entityManager.createNativeQuery(sql);
+
+            for (Map.Entry<String, Set<String>> entry : keyMap.entrySet()) {
+                String cUuid = entry.getKey();
+                String uUuid = productUuidMap.get(cUuid);
+
+                query.setParameter("current", cUuid)
+                    .setParameter("updated", uUuid);
+
+                for (String keyid : entry.getValue()) {
+                    count += query.setParameter("key_id", keyid)
+                        .executeUpdate();
+                }
+            }
+        }
+
+        log.debug("{} activation keys updated", count);
+    }
+
+    /**
+     * Clears and rebuilds the product mapping for the given owner, using the provided map of
+     * product IDs to UUIDs.
+     *
+     * @param owner
+     *  the owner for which to rebuild product mappings
+     *
+     * @param productIdMap
+     *  a mapping of product IDs to product UUIDs to use as the new product mappings for this
+     *  organization. If null or empty, the organization will be left without any product mappings.
+     *
+     * @throws IllegalArgumentException
+     *  if owner is null, or lacks an ID
+     */
+    public void rebuildOwnerProductMapping(Owner owner, Map<String, String> productIdMap) {
+        if (owner == null || owner.getId() == null) {
+            throw new IllegalArgumentException("owner is null, or lacks an ID");
+        }
+
+        EntityManager entityManager = this.getEntityManager();
+
+        int rcount = entityManager.createQuery("DELETE FROM OwnerProduct op WHERE op.owner.id = :owner_id")
+            .setParameter("owner_id", owner.getId())
+            .executeUpdate();
+
+        log.debug("Removed {} owner-product mappings for owner: {}", rcount, owner);
+
+        if (productIdMap != null) {
+            String sql = "INSERT INTO " + OwnerProduct.DB_TABLE + " (owner_id, product_id, product_uuid) " +
+                "VALUES(:owner_id, :product_id, :product_uuid)";
+
+            Query query = this.getEntityManager()
+                .createNativeQuery(sql)
+                .setParameter("owner_id", owner.getId());
+
+            int icount = 0;
+            for (Map.Entry<String, String> entry : productIdMap.entrySet()) {
+                icount += query.setParameter("product_id", entry.getKey())
+                    .setParameter("product_uuid", entry.getValue())
+                    .executeUpdate();
+            }
+
+            log.debug("Inserted {} owner-product mappings for owner: {}", icount, owner);
         }
     }
 

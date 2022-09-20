@@ -17,6 +17,9 @@ package org.candlepin.controller.refresher.mappers;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.service.model.ServiceAdapterModel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,8 +41,11 @@ import java.util.Set;
 public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I extends ServiceAdapterModel>
     implements EntityMapper<E, I> {
 
+    private static final Logger log = LoggerFactory.getLogger(AbstractEntityMapper.class);
+
     private Map<String, E> existingEntities;
     private Map<String, I> importedEntities;
+    private Set<String> dirtyEntityRefs;
 
     /**
      * Creates a new AbstractEntityMapper instance
@@ -47,6 +53,7 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
     public AbstractEntityMapper() {
         this.existingEntities = new HashMap<>();
         this.importedEntities = new HashMap<>();
+        this.dirtyEntityRefs = new HashSet<>();
     }
 
     /**
@@ -115,6 +122,13 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
             throw new IllegalArgumentException("entity is null");
         }
 
+        E existing = this.existingEntities.get(id);
+        if (existing != null && !existing.equals(entity)) {
+            this.dirtyEntityRefs.add(id);
+            log.warn("Remapping existing entity with a different entity version; discarding previous..." +
+                "{} -> {} != {}", id, existing, entity);
+        }
+
         return this.existingEntities.put(id, entity) != entity;
     }
 
@@ -149,6 +163,12 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
             throw new IllegalArgumentException("entity is null");
         }
 
+        I existing = this.importedEntities.get(id);
+        if (existing != null && !existing.equals(entity)) {
+            log.warn("Remapping imported entity with a different entity version; discarding previous..." +
+                "{} -> {} != {}", id, existing, entity);
+        }
+
         return this.importedEntities.put(id, entity) != entity;
     }
 
@@ -174,6 +194,37 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
      * {@inheritDoc}
      */
     @Override
+    public boolean isDirty() {
+        return !this.dirtyEntityRefs.isEmpty();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isDirty(String id) {
+        return this.dirtyEntityRefs.contains(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean validateExistingEntities(Collection<String> ids) {
+        if (ids != null && !ids.isEmpty()) {
+            this.existingEntities.keySet()
+                .stream()
+                .filter(id -> !ids.contains(id))
+                .forEach(this.dirtyEntityRefs::add);
+        }
+
+        return this.isDirty();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public void clear() {
         this.clearExistingEntities();
         this.clearImportedEntities();
@@ -185,6 +236,7 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
     @Override
     public void clearExistingEntities() {
         this.existingEntities.clear();
+        this.dirtyEntityRefs.clear();
     }
 
     /**

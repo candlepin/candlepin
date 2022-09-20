@@ -223,12 +223,55 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
     int addImportedEntities(Collection<I> entities);
 
     /**
+     * Checks if any existing entity mapped by this mapper is "dirty," indicating it has been given
+     * two or more different versions of the same entity, or it contains a reference to an entity
+     * which is not mapped to the owning organization.
+     *
+     * @return
+     *  true if any mapped existing entities have dirty references
+     */
+    boolean isDirty();
+
+    /**
+     * Checks if the existing entity mapped to the given ID is "dirty," indicating it has been
+     * mapped to two or more different versions of the entity, or is mapped to an entity which
+     * is not mapped to the owning organization.
+     *
+     * @param id
+     *  the ID of the entity to check
+     *
+     * @throws IllegalArgumentException
+     *  if the provided ID is null or invalid
+     *
+     * @return
+     *  true if the existing entity mapped to the given ID is dirty; false otherwise
+     */
+    boolean isDirty(String id);
+
+    /**
+     * Validates that this mapper only contains existing entity mappings for the entities with the
+     * given IDs. Any mapped existing entities with IDs not present in the provided collection will
+     * be flagged as "dirty," indicating that the mapping is to an entity that exists outside of the
+     * owning organization.
+     * This method returns true if any mapping is flagged as dirty upon completion of this check,
+     * even if the dirty flag was already set prior to the call to this method.
+     *
+     * @param ids
+     *  a collection containing the superset of entity IDs known to the owning organization
+     *
+     * @return
+     *  true if any existing entity mapping is dirty after a call to this method; false otherwise
+     */
+    boolean validateExistingEntities(Collection<String> ids);
+
+    /**
      * Clears this entity mapper, removing all known existing and imported entities
      */
     void clear();
 
     /**
-     * Clears any existing entities from this mapper
+     * Clears any existing entities from this mapper, and clears any dirty flags set for existing
+     * entities.
      */
     void clearExistingEntities();
 

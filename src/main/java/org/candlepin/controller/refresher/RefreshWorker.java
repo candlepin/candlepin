@@ -16,6 +16,7 @@ package org.candlepin.controller.refresher;
 
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.builders.ContentNodeBuilder;
 import org.candlepin.controller.refresher.builders.NodeFactory;
 import org.candlepin.controller.refresher.builders.PoolNodeBuilder;
@@ -29,12 +30,16 @@ import org.candlepin.controller.refresher.visitors.NodeProcessor;
 import org.candlepin.controller.refresher.visitors.PoolNodeVisitor;
 import org.candlepin.controller.refresher.visitors.ProductNodeVisitor;
 import org.candlepin.controller.util.EntityVersioningRetryWrapper;
+import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.Product;
+import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
@@ -49,8 +54,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;
@@ -62,7 +70,7 @@ import javax.persistence.LockModeType;
  * update their local representations.
  */
 public class RefreshWorker {
-    private static Logger log = LoggerFactory.getLogger(RefreshWorker.class);
+    private static final Logger log = LoggerFactory.getLogger(RefreshWorker.class);
 
     /**
      * The number of times to retry certain CRUD operations which may fail as a result of
@@ -471,6 +479,117 @@ public class RefreshWorker {
     }
 
     /**
+     * Maps the given collection of existing pools, and their refresh-critical children entities.
+     *
+     * @param pools
+     *  the collection of pool entities to map
+     */
+    private void mapExistingPools(Collection<Pool> pools) {
+        if (pools == null || pools.isEmpty()) {
+            return;
+        }
+
+        this.poolMapper.addExistingEntities(pools);
+
+        Set<Product> products = pools.stream()
+            .map(Pool::getProduct)
+            .collect(Collectors.toSet());
+
+        this.mapExistingProducts(products);
+    }
+
+    /**
+     * Maps the given collection of existing products, and their refresh-critical children entities.
+     *
+     * @param products
+     *  the collection of product entities to map
+     */
+    private void mapExistingProducts(Collection<Product> products) {
+        if (products == null || products.isEmpty()) {
+            return;
+        }
+
+        this.productMapper.addExistingEntities(products);
+
+        // Add provided (engineering) products...
+        Set<Product> providedProducts = products.stream()
+            .flatMap(prod -> prod.getProvidedProducts().stream())
+            .collect(Collectors.toSet());
+
+        this.mapExistingProducts(providedProducts);
+
+        // Add derived products...
+        Set<Product> derivedProducts = products.stream()
+            .map(Product::getDerivedProduct)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+
+        this.mapExistingProducts(derivedProducts);
+
+        // Add content...
+        Set<Content> content = products.stream()
+            .flatMap(prod -> prod.getProductContent().stream())
+            .map(ProductContent::getContent)
+            .collect(Collectors.toSet());
+
+        this.mapExistingContent(content);
+    }
+
+    /**
+     * Maps the given collection of existing content.
+     *
+     * @param content
+     *  the collection of content entities to map
+     */
+    private void mapExistingContent(Collection<Content> content) {
+        if (content == null || content.isEmpty()) {
+            return;
+        }
+
+        this.contentMapper.addExistingEntities(content);
+
+        // No children to process
+    }
+
+    /**
+     * Collects and builds a mapping of products that should exist in the org as a result of the
+     * refresh operation, and recreates the org-product mappings for those products.
+     *
+     * @param owner
+     *  the org for which the refresh was performed
+     *
+     * @param result
+     *  a RefreshResult instance containing the products to map to the org
+     */
+    private void rebuildOwnerProductMapping(Owner owner, RefreshResult result) {
+        Set<EntityState> states = Set.of(EntityState.CREATED, EntityState.UPDATED, EntityState.UNCHANGED);
+
+        Map<String, String> entityIdMap = result.streamEntities(Product.class, states)
+            .collect(Collectors.toMap(Product::getId, Product::getUuid));
+
+        this.ownerProductCurator.rebuildOwnerProductMapping(owner, entityIdMap);
+    }
+
+    /**
+     * Collects and builds a mapping of content that should exist in the org as a result of the
+     * refresh operation, and recreates the org-product mappings for those content.
+     *
+     * @param owner
+     *  the org for which the refresh was performed
+     *
+     * @param result
+     *  a RefreshResult instance containing the content to map to the org
+     */
+    private void rebuildOwnerContentMapping(Owner owner, RefreshResult result) {
+        Set<EntityState> states = Set.of(EntityState.CREATED, EntityState.UPDATED, EntityState.UNCHANGED);
+
+        Map<String, String> entityIdMap = result.streamEntities(Content.class, states)
+            .collect(Collectors.toMap(Content::getId, Content::getUuid));
+
+        this.ownerContentCurator.rebuildOwnerContentMapping(owner, entityIdMap);
+    }
+
+    /**
      * Performs the import operation on the currently compiled objects
      *
      * @return
@@ -508,18 +627,43 @@ public class RefreshWorker {
             this.contentMapper.clearExistingEntities();
 
             // Add in our existing entities
-            this.poolMapper.addExistingEntities(
-                this.poolCurator.listByOwnerAndTypes(owner.getId(), PoolType.NORMAL, PoolType.DEVELOPMENT));
+            List<Pool> pools = this.poolCurator
+                .listByOwnerAndTypes(owner.getId(), PoolType.NORMAL, PoolType.DEVELOPMENT);
+            this.mapExistingPools(pools);
 
-            this.productMapper.addExistingEntities(this.ownerProductCurator.getProductsByOwner(owner).list());
-            this.contentMapper.addExistingEntities(this.ownerContentCurator.getContentByOwner(owner).list());
+            // TODO: There's a fair bit of optimization that can be done here if Hibernate can be made
+            // to hydrate a set of objects in bulk. As far as I can tell, we're forced to choose between
+            // the jank that is JOIN-FETCHing, manual hydration, or the N+1 issue we have here. I vote
+            // for manual hydration, but that comes with maintenance pain, and it isn't required for
+            // this prototype.
+
+            // Add in the org-mapped entities to ensure we catch everything for this org, as well
+            // verifying there aren't any dangling references to out-of-org entities
+            List<Product> ownerProducts = this.ownerProductCurator.getProductsByOwner(owner).list();
+            this.mapExistingProducts(ownerProducts);
+
+            List<Content> ownerContent = this.ownerContentCurator.getContentByOwner(owner).list();
+            this.mapExistingContent(ownerContent);
 
             // Have our node factory build the node trees
             nodeFactory.buildNodes(owner);
 
             // Process our nodes, starting at the roots, letting the processors build up any persistence
             // state necessary to finalize everything
-            return nodeProcessor.processNodes();
+            RefreshResult result = nodeProcessor.processNodes();
+
+            // If we had any dirty mappings, rebuild the org's mappings to ensure no leftover shenanigans
+            if (this.productMapper.isDirty()) {
+                log.warn("Found one or more dirty product mappings for org {}; remapping products", owner);
+                this.rebuildOwnerProductMapping(owner, result);
+            }
+
+            if (this.contentMapper.isDirty()) {
+                log.warn("Found one or more dirty content mappings for org {}; remapping content", owner);
+                this.rebuildOwnerContentMapping(owner, result);
+            }
+
+            return result;
         });
 
         // Attempt to retry if we're not already in a transaction

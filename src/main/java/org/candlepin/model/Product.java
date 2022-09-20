@@ -264,6 +264,7 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     @ManyToOne
     @JoinColumn(name = "derived_product_uuid", nullable = true)
+    @Immutable // is this necessary?
     private Product derivedProduct;
 
     public Product() {
