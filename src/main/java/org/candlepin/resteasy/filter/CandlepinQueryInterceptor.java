@@ -28,6 +28,7 @@ import com.google.inject.Provider;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.criterion.Order;
 import org.jboss.resteasy.core.ResteasyContext;
 
@@ -78,6 +79,18 @@ public class CandlepinQueryInterceptor implements ContainerResponseFilter {
         if (entity instanceof CandlepinQuery) {
             PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
             Session session = this.openSession();
+
+            // Open a transaction to avoid Hibernate erroneously closing the session after processing
+            // any entity that has children entities. We'll eventually roll this back to ensure we
+            // don't make any changes here.
+            Transaction transaction = session.getTransaction();
+            if (transaction == null) {
+                throw new IllegalStateException("Unable to fetch the current context transaction");
+            }
+
+            if (!transaction.isActive()) {
+                transaction.begin();
+            }
 
             try {
                 CandlepinQuery query = (CandlepinQuery) entity;
@@ -158,6 +171,11 @@ public class CandlepinQueryInterceptor implements ContainerResponseFilter {
             }
             finally {
                 if (session != null) {
+                    Transaction transaction = session.getTransaction();
+                    if (transaction != null && transaction.isActive()) {
+                        transaction.rollback(); // do *NOT* make changes here
+                    }
+
                     session.close();
                 }
             }
