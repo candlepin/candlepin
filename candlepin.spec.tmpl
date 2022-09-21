@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.7
+Version: 4.2.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -244,6 +244,76 @@ fi
 
 #raw
 %changelog
+* Wed Sep 21 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.8-1
+- Add new translations using Weblate (noreply@weblate.org)
+- 2126954: syspurpose attributes should have entry when category is empty
+  (wpoteat@redhat.com)
+- CandlepinQueryInterceptor now processes CPQ instances in a transaction
+  (crog@redhat.com)
+- Migrate post_bind_bonus_pool_spec to Java (joshmalbrecht@gmail.com)
+- Migrate rest of the pool_resource_spec to Java (sbakaj@redhat.com)
+- Bump keycloak-servlet-filter-adapter from 19.0.1 to 19.0.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump dependency-check-gradle from 7.1.2 to 7.2.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump logback-classic from 1.4.0 to 1.4.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Migrated spec test exporter infrastructure to java (joshmalbrecht@gmail.com)
+- Removed test display names from java spec tests - updated test names to
+  should and should not format - removed per class test instance annotations
+  (joshmalbrecht@gmail.com)
+- Convert request_scanner.rb to Python (ptoscano@redhat.com)
+- Migrate entitlement_certificate_spec to java spec (wpoteat@redhat.com)
+- Fix spec parallization issues (ojanus@redhat.com)
+- Bump artemis-stomp-protocol from 2.24.0 to 2.25.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Setup OpenAPI to generate ApiException as RuntimeException
+  (ojanus@redhat.com)
+- Bump mockito-junit-jupiter from 4.7.0 to 4.8.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis-server from 2.24.0 to 2.25.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Migrate cloud_registration_spec and localization_spec to Java
+  (sbakaj@redhat.com)
+- Add test summary (ojanus@redhat.com)
+- Add packages to distinguish classpath for server and client side
+  (sbakaj@redhat.com)
+- Fix random failures of StatusSpecTest (ojanus@redhat.com)
+- Upgrade to jackson 2.13.4 (nmoumoul@redhat.com)
+- Bump spotbugs-annotations from 4.7.1 to 4.7.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Enable parallel execution of spec tests (ojanus@redhat.com)
+- Added minor state management to the CandlepinContextListener
+  (crog@redhat.com)
+- Updated how system locks are created (crog@redhat.com)
+- Remove obsolete database tables and columns (ojanus@redhat.com)
+- Add option to use external config for spec tests (ojanus@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Bump hibernate-jpamodelgen from 5.6.10.Final to 5.6.11.Final
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Update liquibase to 4.15.0 (ojanus@redhat.com)
+- no longer using docker-compose-build.yml (jmolet@redhat.com)
+- 2112308: Made logback.xml a config file to prevent overwriting
+  (joshmalbrecht@gmail.com)
+- Update jars for SLF4J (wpoteat@redhat.com)
+- Migrated owner_product_resource_spec to java (joshmalbrecht@gmail.com)
+- Convert entitlement_certificate_v3 to java spec (wpoteat@redhat.com)
+- Bump logback-classic from 1.2.11 to 1.4.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Ported the owner-content spec tests to Java (crog@redhat.com)
+- Fixed a couple issues with the custom spec Request object (crog@redhat.com)
+- Improved spec test random string generation and job waiting routines
+  (crog@redhat.com)
+- Bump postgresql from 42.4.2 to 42.5.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ehcache from 3.10.0 to 3.10.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- building without docker-compose and option of container engines
+  (jmolet@redhat.com)
+- Bump postgresql from 42.4.1 to 42.4.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Thu Aug 25 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.7-1
 - Added an API for performing generic requests (crog@redhat.com)
 - ENT-5308: Add and apply global paging params to OpenApi spec
