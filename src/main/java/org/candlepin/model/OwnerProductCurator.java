@@ -341,7 +341,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      */
     public Map<String, Set<String>> getSyspurposeAttributesByOwner(Owner owner) {
         if (owner == null) {
-            return new HashMap<>();
+            return getBaseSyspurposeMap();
         }
         return this.getSyspurposeAttributesByOwner(owner.getId());
     }
@@ -359,7 +359,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      */
     public Map<String, Set<String>> getSyspurposeAttributesByOwner(String ownerId) {
         if (ownerId == null) {
-            return new HashMap<>();
+            return getBaseSyspurposeMap();
         }
 
         String sql =
@@ -391,12 +391,21 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .setParameter("owner_id", ownerId)
             .getResultList());
 
-        Map<String, Set<String>> attributeMap = new HashMap<>();
+        Map<String, Set<String>> attributeMap = getBaseSyspurposeMap();
         for (Object[] attMap : result) {
-            attributeMap.computeIfAbsent((String) attMap[0], key -> new HashSet<>())
-                .addAll(Util.toList((String) attMap[1]));
+            attributeMap.get(attMap[0]).addAll(Util.toList((String) attMap[1]));
         }
         return attributeMap;
+    }
+
+    private Map<String, Set<String>> getBaseSyspurposeMap() {
+        return Map.of(
+            "usage", new HashSet<>(),
+            "roles", new HashSet<>(),
+            "addons", new HashSet<>(),
+            "support_type", new HashSet<>(),
+            "support_level", new HashSet<>()
+        );
     }
 
     @Transactional

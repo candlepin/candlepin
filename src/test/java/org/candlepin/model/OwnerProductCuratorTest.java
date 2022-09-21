@@ -706,6 +706,16 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         this.ownerProductCurator.getProductsByVersions(versions);
     }
 
+    private Map<String, Set<String>> getEmptySyspurposeAttributeMap() {
+        return Map.of(
+            "usage", new HashSet<>(),
+            "roles", new HashSet<>(),
+            "addons", new HashSet<>(),
+            "support_type", new HashSet<>(),
+            "support_level", new HashSet<>()
+        );
+    }
+
     @Test
     public void testGetSyspurposeAttributesByOwner() {
         Owner owner = this.createOwner();
@@ -755,7 +765,7 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         this.createProduct(product4);
         this.createOwnerProductMapping(owner, product4);
 
-        Map<String, Set<String>> expected = new HashMap<>();
+        Map<String, Set<String>> expected = getEmptySyspurposeAttributeMap();
         Set<String> useage = new HashSet<>();
         useage.add("usage1a");
         useage.add("usage1b");
@@ -772,10 +782,10 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Set<String> support = new HashSet<>();
         support.add("Standard");
 
-        expected.put(SystemPurposeAttributeType.USAGE.toString(), useage);
-        expected.put(SystemPurposeAttributeType.ADDONS.toString(), addons);
-        expected.put(SystemPurposeAttributeType.ROLES.toString(), roles);
-        expected.put(SystemPurposeAttributeType.SERVICE_LEVEL.toString(), support);
+        expected.get(SystemPurposeAttributeType.USAGE.toString()).addAll(useage);
+        expected.get(SystemPurposeAttributeType.ADDONS.toString()).addAll(addons);
+        expected.get(SystemPurposeAttributeType.ROLES.toString()).addAll(roles);
+        expected.get(SystemPurposeAttributeType.SERVICE_LEVEL.toString()).addAll(support);
 
         Map<String, Set<String>> result = this.ownerProductCurator.getSyspurposeAttributesByOwner(owner);
         assertEquals(result, expected);
@@ -784,27 +794,24 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetNoSyspurposeAttributesByOwner() {
         Owner owner = this.createOwner();
-        Map<String, Set<String>> expected = new HashMap<>();
         Map<String, Set<String>> result = this.ownerProductCurator.getSyspurposeAttributesByOwner(owner);
-        assertEquals(result, expected);
+        assertEquals(result, getEmptySyspurposeAttributeMap());
     }
 
     @Test
     public void testGetSyspurposeAttributesNullOwner() {
         Owner owner = this.createOwner();
-        Map<String, Set<String>> expected = new HashMap<>();
         Map<String, Set<String>> result =
             this.ownerProductCurator.getSyspurposeAttributesByOwner((Owner) null);
-        assertEquals(result, expected);
+        assertEquals(result, getEmptySyspurposeAttributeMap());
     }
 
     @Test
     public void testGetSyspurposeAttributesNullOwnerId() {
         Owner owner = this.createOwner();
-        Map<String, Set<String>> expected = new HashMap<>();
         Map<String, Set<String>> result =
             this.ownerProductCurator.getSyspurposeAttributesByOwner((String) null);
-        assertEquals(result, expected);
+        assertEquals(result, getEmptySyspurposeAttributeMap());
     }
 
     private Product createProduct() {
