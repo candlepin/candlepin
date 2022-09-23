@@ -27,6 +27,7 @@ import org.candlepin.jackson.ConsumerTypeDeserializer;
 import org.candlepin.jackson.DateSerializer;
 import org.candlepin.jackson.DynamicPropertyFilter;
 import org.candlepin.jackson.DynamicPropertyFilterMixIn;
+import org.candlepin.jackson.GuestIdDeserializer;
 import org.candlepin.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.jackson.MultiFilter;
 import org.candlepin.jackson.OffsetDateTimeDeserializer;
@@ -101,6 +102,7 @@ public class JsonProvider extends JacksonJsonProvider {
         // Ensure we handle releaseVer fields properly
         customModule.addDeserializer(ReleaseVerDTO.class, new ReleaseVersionWrapDeserializer());
         customModule.addDeserializer(ConsumerTypeDTO.class, new ConsumerTypeDeserializer());
+        customModule.addDeserializer(GuestIdDTO.class, new GuestIdDeserializer());
         mapper.registerModule(customModule);
 
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
