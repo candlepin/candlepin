@@ -9447,11 +9447,22 @@ components:
           uniqueItems: true
           items:
             type: string
+        # Temporary keycloak stuff -- eventually remove these as they've been supplanted by the device_auth
+        # fields
         keycloakRealm:
           type: string
         keycloakAuthUrl:
           type: string
         keycloakResource:
+          type: string
+        # Device auth fields
+        deviceAuthRealm:
+          type: string
+        deviceAuthUrl:
+          type: string
+        deviceAuthClientId:
+          type: string
+        deviceAuthScope:
           type: string
 
     SubscriptionDTO:

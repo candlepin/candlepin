@@ -177,11 +177,19 @@ public class StatusResourceTest {
     public void keycloakParamsPresentWhenKeycloakActive() {
         when(config.getBoolean(eq(ConfigProperties.KEYCLOAK_AUTHENTICATION))).thenReturn(true);
 
+        AdapterConfig config = this.mockKeycloakAdapterConfig;
+
         StatusResource sr = this.createResource();
         StatusDTO statusDTO = sr.status();
-        assertEquals("realm", statusDTO.getKeycloakRealm());
-        assertEquals("https://example.com/auth", statusDTO.getKeycloakAuthUrl());
-        assertEquals("resource", statusDTO.getKeycloakResource());
+        assertEquals(config.getRealm(), statusDTO.getKeycloakRealm());
+        assertEquals(config.getAuthServerUrl(), statusDTO.getKeycloakAuthUrl());
+        assertEquals(config.getResource(), statusDTO.getKeycloakResource());
+
+        // Also verify that keycloak's presence populates the generic device auth fields
+        assertEquals(config.getRealm(), statusDTO.getDeviceAuthRealm());
+        assertEquals(config.getAuthServerUrl(), statusDTO.getDeviceAuthUrl());
+        assertEquals(config.getResource(), statusDTO.getDeviceAuthClientId());
+        assertEquals("", statusDTO.getDeviceAuthScope());
     }
 
     @Test
@@ -194,5 +202,10 @@ public class StatusResourceTest {
         assertNull(statusDTO.getKeycloakRealm(), "keycloak realm is not null");
         assertNull(statusDTO.getKeycloakAuthUrl(), "keycloak auth URL is not null");
         assertNull(statusDTO.getKeycloakResource(), "keycloak resource is not null");
+
+        assertNull(statusDTO.getDeviceAuthRealm());
+        assertNull(statusDTO.getDeviceAuthUrl());
+        assertNull(statusDTO.getDeviceAuthClientId());
+        assertNull(statusDTO.getDeviceAuthScope());
     }
 }

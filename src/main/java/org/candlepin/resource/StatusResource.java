@@ -162,10 +162,15 @@ public class StatusResource implements StatusApi {
 
         if (keycloakEnabled) {
             AdapterConfig adapterConfig = keycloakConfig.getAdapterConfig();
-            status
-                .keycloakResource(adapterConfig.getResource())
+
+            status.keycloakResource(adapterConfig.getResource())
                 .keycloakAuthUrl(adapterConfig.getAuthServerUrl())
                 .keycloakRealm(adapterConfig.getRealm());
+
+            status.deviceAuthRealm(adapterConfig.getRealm())
+                .deviceAuthUrl(adapterConfig.getAuthServerUrl())
+                .deviceAuthClientId(adapterConfig.getResource())
+                .deviceAuthScope(""); // Currently not applicable
         }
 
         statusCache.setStatus(status);
