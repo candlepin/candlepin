@@ -25,6 +25,8 @@ import org.candlepin.resource.client.v1.DeletedConsumerApi;
 import org.candlepin.resource.client.v1.DistributorVersionsApi;
 import org.candlepin.resource.client.v1.EntitlementsApi;
 import org.candlepin.resource.client.v1.EnvironmentApi;
+import org.candlepin.resource.client.v1.GuestIdsApi;
+import org.candlepin.resource.client.v1.HypervisorsApi;
 import org.candlepin.resource.client.v1.OwnerContentApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.resource.client.v1.ProductsApi;
@@ -109,8 +111,16 @@ public class ApiClient {
         return new EnvironmentApi(this.client);
     }
 
+    public GuestIdsApi guestIds() {
+        return new GuestIdsApi(this.client);
+    }
+
     public HostedTestApi hosted() {
         return new HostedTestApi(this.client);
+    }
+
+    public HypervisorsApi hypervisors() {
+        return new HypervisorsApi(this.client);
     }
 
     public JobsClient jobs() {

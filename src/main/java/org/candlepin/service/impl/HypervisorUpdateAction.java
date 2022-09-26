@@ -210,11 +210,10 @@ public class HypervisorUpdateAction {
                 .buildMigrationManifest(incomingHost, resultHost);
 
             final boolean factsUpdated = consumerResource.checkForFactsUpdate(resultHost, incomingHost);
+            resultHost.setLastCheckin(new Date());
 
             if (factsUpdated || guestMigration.isMigrationPending() || typeUpdated ||
                 hypervisorIdUpdated || nameUpdated) {
-
-                resultHost.setLastCheckin(new Date());
                 guestMigration.migrate(false);
                 result.setUpdated(addHypervisorConsumerDTO(result.getUpdated(), resultHost));
             }

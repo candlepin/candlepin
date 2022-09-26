@@ -40,14 +40,6 @@ describe 'Hypervisor Resource', :type => :virt do
     @user2 = user_client(@owner2, random_string('virt_user2'))
   end
 
-  it 'should add consumer to created when new host id and no guests reported' do
-    host_hyp_id = random_string('host')
-    mapping = get_host_guest_mapping(host_hyp_id, [])
-    result = @consumer.hypervisor_check_in(@owner['key'], mapping)
-    should_add_consumer_to_created_when_new_host_id_and_no_guests_reported(result, host_hyp_id,
-      host_hyp_id)
-  end
-
   it 'should not deadlock when two synchronous hypervisor checkins are performed' do
     hypervisor_ids = [random_string('host'), random_string('host')]
     # The guest ids that will be reported
@@ -66,13 +58,13 @@ describe 'Hypervisor Resource', :type => :virt do
     result1 = nil
     result2 = nil
     thread1 = Thread.new {
-        result1 = @consumer.hypervisor_check_in(@owner['key'], deadlock_mapping)
-        completed_queue << 1
-      }
+      result1 = @consumer.hypervisor_check_in(@owner['key'], deadlock_mapping)
+      completed_queue << 1
+    }
     thread2 = Thread.new {
-        result2 = @consumer.hypervisor_check_in(@owner['key'], reversed_deadlock_mapping)
-        completed_queue << 2
-      }
+      result2 = @consumer.hypervisor_check_in(@owner['key'], reversed_deadlock_mapping)
+      completed_queue << 2
+    }
     thread1.join
     thread2.join
     first_complete = completed_queue.pop  # We do not need to know which was completed first
@@ -94,29 +86,26 @@ describe 'Hypervisor Resource', :type => :virt do
     hypervisors = @user.get_owner_hypervisors(@owner['key'])
     guest_ids_to_check = guest_id_lists[second_complete]
     hypervisors.each { |hypervisor|
-        # Only check the hypervisors created in this test
-        if hypervisor_ids.include? hypervisor.name
-                   guest_ids_of_hypervisor = @cp.get_guestids(hypervisor.uuid)
-                   guest_ids_of_hypervisor.size.should == guest_ids_to_check.size
-                   guest_ids_of_hypervisor.each { |guestId|
-                       guest_ids_to_check.should include(guestId.guestId)
-                   }
-        end
+      # Only check the hypervisors created in this test
+      if hypervisor_ids.include? hypervisor.name
+        guest_ids_of_hypervisor = @cp.get_guestids(hypervisor.uuid)
+        guest_ids_of_hypervisor.size.should == guest_ids_to_check.size
+        guest_ids_of_hypervisor.each { |guestId|
+          guest_ids_to_check.should include(guestId.guestId)
+        }
+      end
     }
   end
 
- it 'should add consumer to created when new host id and no guests reported - async' do
+  it 'should add consumer to created when new host id and no guests reported' do
     host_hyp_id = random_string('host')
-    host_name = random_string('name')
-    job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, [])
-    result_data = job_detail['resultData']
-    hyp_consumer = @cp.get_consumer(result_data.created[0].uuid)
-    hyp_consumer.facts['test_fact'].should == 'fact_value'
-    should_add_consumer_to_created_when_new_host_id_and_no_guests_reported(result_data, host_name,
+    mapping = get_host_guest_mapping(host_hyp_id, [])
+    result = @consumer.hypervisor_check_in(@owner['key'], mapping)
+    should_add_consumer_to_created_when_new_host_id_and_no_guests_reported(result, host_hyp_id,
       host_hyp_id)
   end
 
-  def should_add_consumer_to_created_when_new_host_id_and_no_guests_reported(result, host_name,
+  def should_add_consumer_to_created_when_new_host_id_and_no_guests_reported(result, host_hyp_name,
     host_hyp_id)
     # Should only  have a result entry for created.
     result.created.size.should == 1
@@ -124,12 +113,12 @@ describe 'Hypervisor Resource', :type => :virt do
     result.unchanged.size.should == 0
     result.failedUpdate.size.should == 0
 
-    result.created[0].name.should == host_name
+    result.created[0].name.should == host_hyp_name
     result.created[0].owner['key'].should == @owner['key']
 
     # verify our created consumer is correct.
     created_consumer = @cp.get_consumer(result.created[0].uuid)
-    created_consumer.name.should == host_name
+    created_consumer.name.should == host_hyp_name
     created_consumer.idCert.should be_nil
     # Test get_owner_hypervisors works, should return all
     hypervisors = @user.get_owner_hypervisors(@owner['key'])
@@ -144,35 +133,22 @@ describe 'Hypervisor Resource', :type => :virt do
     created_consumer.lastCheckin.should_not be_nil
   end
 
-
   it 'should add consumer to created when new host id and guests were reported' do
     host_hyp_id = random_string('host')
     mapping = get_host_guest_mapping(host_hyp_id, ['g1'])
     result = @consumer.hypervisor_check_in(@owner['key'], mapping)
-    should_add_consumer_to_created_when_new_host_id_and_guests_were_reported(result, host_hyp_id)
-  end
-
-  it 'should add consumer to created when new host id and guests were reported - async' do
-    host_hyp_id = random_string('host')
-    host_name = random_string('name')
-    job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, ['g1'])
-    result_data = job_detail['resultData']
-    should_add_consumer_to_created_when_new_host_id_and_guests_were_reported(result_data, host_name)
-  end
-
-  def should_add_consumer_to_created_when_new_host_id_and_guests_were_reported(result, host_name)
     # Should only  have a result entry for created.
     result.created.size.should == 1
     result.updated.size.should == 0
     result.unchanged.size.should == 0
     result.failedUpdate.size.should == 0
 
-    result.created[0].name.should == host_name
+    result.created[0].name.should == host_hyp_id
     result.created[0].owner['key'].should == @owner['key']
 
     created_consumer =  @cp.get_consumer(result.created[0].uuid)
     # verify our created consumer is correct.
-    created_consumer.name.should == host_name
+    created_consumer.name.should == host_hyp_id
     # verify last checkin time is updated
     created_consumer.lastCheckin.should_not be_nil
   end
@@ -181,18 +157,6 @@ describe 'Hypervisor Resource', :type => :virt do
     host_hyp_id = random_string('host')
     mapping = get_host_guest_mapping(host_hyp_id, ['g1'])
     result = @consumer.hypervisor_check_in(@owner['key'], mapping, false)
-    should_not_add_new_consumer_when_create_missing_is_false(result)
-  end
-
-  it 'should not add new consumer when create_missing is false - async' do
-    host_hyp_id = random_string('host')
-    host_name = random_string('name')
-    job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, ['g1'], false)
-    result_data = job_detail['resultData']
-    should_not_add_new_consumer_when_create_missing_is_false(result_data)
-  end
-
-  def should_not_add_new_consumer_when_create_missing_is_false(result)
     # Should only  have a result entry for failed.
     result.created.size.should == 0
     result.updated.size.should == 0
@@ -206,19 +170,6 @@ describe 'Hypervisor Resource', :type => :virt do
     #because mysql
     sleep 2
     result = @consumer.hypervisor_check_in(@owner['key'], mapping)
-    should_add_consumer_to_updated_when_guest_ids_are_updated(result, old_check_in)
-  end
-
-  it 'should add consumer to updated when guest ids are updated - async' do
-    old_check_in = @cp.get_consumer(@host_uuid)
-    #because mysql
-    sleep 2
-    job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id,  ['g1', 'g2'])
-    result_data = job_detail['resultData']
-    should_add_consumer_to_updated_when_guest_ids_are_updated(result_data, old_check_in)
-  end
-
-  def should_add_consumer_to_updated_when_guest_ids_are_updated(result, old_check_in)
     # Should only  have a result entry for updated.
     result.created.size.should == 0
     result.updated.size.should == 1
@@ -241,17 +192,6 @@ describe 'Hypervisor Resource', :type => :virt do
     mapping = get_host_guest_mapping(@expected_host_hyp_id, @expected_guest_ids)
     old_check_in = @cp.get_consumer(@host_uuid)
     result = @consumer.hypervisor_check_in(@owner['key'], mapping)
-    should_add_consumer_to_unchanged_when_same_guest_ids_are_sent(result, old_check_in)
-  end
-
-  it 'should add consumer to unchanged when same guest ids are sent - async' do
-    old_check_in = @cp.get_consumer(@host_uuid)
-    job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id, @expected_guest_ids)
-    result_data = job_detail['resultData']
-    should_add_consumer_to_unchanged_when_same_guest_ids_are_sent(result_data, old_check_in)
-  end
-
-  def should_add_consumer_to_unchanged_when_same_guest_ids_are_sent(result, old_check_in)
     # Should only  have a result entry for unchanged.
     result.created.size.should == 0
     result.updated.size.should == 0
@@ -279,61 +219,25 @@ describe 'Hypervisor Resource', :type => :virt do
 
     # Do the same update with [] and it should be considered unchanged.
     result = @consumer.hypervisor_check_in(@owner['key'], mapping)
-    should_add_consumer_to_unchanged_when_comparing_empty_guest_id_lists(result, host_hyp_id)
-  end
-
-  it 'should add consumer to unchanged when comparing empty guest id lists - async' do
-    host_hyp_id = random_string('host')
-    host_name = random_string('host')
-    job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, [])
-    result_data = job_detail['resultData']
-    result_data.created.size.should == 1
-    created_consumer = @cp.get_consumer(result_data.created[0].uuid)
-    created_consumer.name.should == host_name
-
-    # Do the same update with [] and it should be considered unchanged.
-    job_detail = async_update_hypervisor(@owner, @consumer, host_name, host_hyp_id, [])
-    result_data = job_detail['resultData']
-    should_add_consumer_to_unchanged_when_comparing_empty_guest_id_lists(result_data, host_name)
-  end
-
-  def should_add_consumer_to_unchanged_when_comparing_empty_guest_id_lists(result, host_name)
     result.created.size.should == 0
     result.updated.size.should == 0
     result.unchanged.size.should == 1
     result.failedUpdate.size.should == 0
 
-    result.unchanged[0].name.should == host_name
+    result.unchanged[0].name.should == host_hyp_id
     result.unchanged[0].owner['key'].should == @owner['key']
 
     unchanged_consumer = @cp.get_consumer(result.unchanged[0].uuid)
     # verify our unchanged consumer is correct.
-    unchanged_consumer.name.should == host_name
-  end
-
- it 'should add host and associate guests' do
-    consumer = @cp.get_consumer(@host_uuid)
-    check_hypervisor_consumer(consumer, @expected_host_name, @expected_guest_ids)
+    unchanged_consumer.name.should == host_hyp_id
   end
 
   it 'should update host guest ids as consumer' do
     update_guest_ids_test(@consumer)
   end
 
-  it 'should update host guest ids as consumer - async' do
-    async_update_guest_ids_test(@consumer)
-  end
-
-  it 'should persist reporter id on host guest mappings update - async' do
-    async_update_guest_ids_test(@consumer, 'Lois Lane')
-  end
-
   it 'should update host guest ids as user' do
     update_guest_ids_test(@user)
-  end
-
-  it 'should update host guest ids as user - async' do
-    async_update_guest_ids_test(@user)
   end
 
   it 'should not revoke guest entitlements when guest no longer registered' do
@@ -345,22 +249,6 @@ describe 'Hypervisor Resource', :type => :virt do
     # Host stops reporting guest:
     updated_host_guest_mapping = get_host_guest_mapping(@expected_host_hyp_id, [@uuid2])
     results = @consumer.hypervisor_check_in(@owner['key'],  updated_host_guest_mapping)
-    should_not_revoke_guest_entitlements_when_guest_no_longer_registered(results)
-  end
-
-  it 'should not revoke guest entitlements when guest no longer registered - async' do
-    guest_pool = find_guest_virt_pool(@guest1_client, @guest1.uuid)
-
-    @guest1_client.consume_pool(guest_pool.id, {:quantity => 1})
-    @guest1_client.list_entitlements.length.should == 1
-
-    # Host stops reporting guest:
-    job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id, [@uuid2])
-    result_data = job_detail['resultData']
-    should_not_revoke_guest_entitlements_when_guest_no_longer_registered(result_data)
-  end
-
-  def should_not_revoke_guest_entitlements_when_guest_no_longer_registered(results)
     results.created.size.should == 0
     results.updated.size.should == 1
 
@@ -376,23 +264,11 @@ describe 'Hypervisor Resource', :type => :virt do
     # Host reports no guests.
     host_mapping_no_guests = get_host_guest_mapping(@expected_host_hyp_id, [])
     results = @consumer.hypervisor_check_in(@owner['key'],  host_mapping_no_guests)
-    should_not_revoke_host_entitlements_when_guestId_list_is_empty(results)
-  end
+    results.created.size.should == 0
+    results.updated.size.should == 1
 
-  it 'should not revoke host entitlements when guestId list is empty - async' do
-    @host_client.list_entitlements.length.should == 1
-    # Host reports no guests.
-    job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id, [])
-    result_data = job_detail['resultData']
-    should_not_revoke_host_entitlements_when_guestId_list_is_empty(result_data)
-  end
-
-  def should_not_revoke_host_entitlements_when_guestId_list_is_empty(result)
-    result.created.size.should == 0
-    result.updated.size.should == 1
-
-    result.updated[0].name.should == @expected_host_name
-    result.updated[0].owner['key'].should == @owner['key']
+    results.updated[0].name.should == @expected_host_name
+    results.updated[0].owner['key'].should == @owner['key']
 
     @host_client.list_entitlements.length.should == 1
   end
@@ -405,26 +281,11 @@ describe 'Hypervisor Resource', :type => :virt do
     # Host stops reporting guest:
     updated_host_guest_mapping = get_host_guest_mapping(@expected_host_hyp_id, [])
     results = @consumer.hypervisor_check_in(@owner['key'], updated_host_guest_mapping)
-    should_not_revoke_host_and_guest_entitlements_when_guestId_list_is_empty(results)
-  end
+    results.created.size.should == 0
+    results.updated.size.should == 1
 
-  it 'should not revoke host and guest entitlements when guestId list is empty - async' do
-    guest_pool = find_guest_virt_pool(@guest1_client, @guest1.uuid)
-    @guest1_client.consume_pool(guest_pool.id, {:quantity => 1})
-    @guest1_client.list_entitlements.length.should == 1
-
-    # Host stops reporting guest:
-    job_detail = async_update_hypervisor(@owner, @consumer, @expected_host_name, @expected_host_hyp_id, [])
-    result_data = job_detail['resultData']
-    should_not_revoke_host_and_guest_entitlements_when_guestId_list_is_empty(result_data)
-  end
-
-  def should_not_revoke_host_and_guest_entitlements_when_guestId_list_is_empty(result)
-    result.created.size.should == 0
-    result.updated.size.should == 1
-
-    result.updated[0].name.should == @expected_host_name
-    result.updated[0].owner['key'].should == @owner['key']
+    results.updated[0].name.should == @expected_host_name
+    results.updated[0].owner['key'].should == @owner['key']
 
     # Entitlement should not be gone:
     @guest1_client.list_entitlements.length.should == 1
@@ -437,14 +298,6 @@ describe 'Hypervisor Resource', :type => :virt do
     # Host consumer should have been created.
     results.created.size.should == 1
     @cp.get_guestids(results.created[0].uuid).should_not == nil
-  end
-
-  it 'should initialize guest ids to empty when creating new host - async' do
-    job_detail = async_update_hypervisor(@owner, @consumer, random_string('name'), random_string('host'), [])
-    result_data = job_detail['resultData']
-    # Host consumer should have been created.
-    result_data.created.size.should == 1
-    @cp.get_guestids(result_data.created[0].uuid).should_not == nil
   end
 
   it 'should support multiple orgs reporting the same cluster' do
@@ -469,39 +322,6 @@ describe 'Hypervisor Resource', :type => :virt do
     new_host_guest_mapping = get_host_guest_mapping(hostname, ["guest1", "guest2", "guest3", "guest4"])
     results1 = consumer1.hypervisor_check_in(owner1['key'], new_host_guest_mapping)
     results2 = consumer2.hypervisor_check_in(owner2['key'], host_guest_mapping)
-    # Now owner 1 should have an update, but owner two should remain the same
-    multiple_orgs_check_3(results1, results2)
-  end
-
-  it 'should support multiple orgs reporting the same cluster - async' do
-    owner1 = create_owner(random_string('owner1'))
-    owner2 = create_owner(random_string('owner2'))
-    user1 = user_client(owner1, random_string('username1'))
-    user2 = user_client(owner2, random_string('username2'))
-    consumer1 = consumer_client(user1, random_string('consumer1'))
-    consumer2 = consumer_client(user2, random_string('consumer2'))
-    host_hyp_id = random_string('host')
-    host_name = random_string('name')
-    first_guest_list = ["guest1", "guest2", "guest3"]
-    second_guest_list = ["guest1", "guest2", "guest3", "guest4"]
-    job_detail1 = async_update_hypervisor(owner1, consumer1, host_name, host_hyp_id, first_guest_list)
-    results1 = job_detail1['resultData']
-    job_detail2 = async_update_hypervisor(owner2, consumer2, host_name, host_hyp_id, first_guest_list)
-    results2 = job_detail2['resultData']
-    # Check in each org
-    multiple_orgs_check_1(results1, results2)
-    # Now check in each org again
-    job_detail1 = async_update_hypervisor(owner1, consumer1, host_name, host_hyp_id, first_guest_list)
-    results1 = job_detail1['resultData']
-    job_detail2 = async_update_hypervisor(owner2, consumer2, host_name, host_hyp_id, first_guest_list)
-    results2 = job_detail2['resultData']
-    # Nothing should have changed
-    multiple_orgs_check_2(results1, results2)
-    # Send modified data for owner 1, but it shouldn't impact owner 2 at all
-    job_detail1 = async_update_hypervisor(owner1, consumer1, host_name, host_hyp_id, second_guest_list)
-    results1 = job_detail1['resultData']
-    job_detail2 = async_update_hypervisor(owner2, consumer2, host_name, host_hyp_id, first_guest_list)
-    results2 = job_detail2['resultData']
     # Now owner 1 should have an update, but owner two should remain the same
     multiple_orgs_check_3(results1, results2)
   end
@@ -549,23 +369,6 @@ describe 'Hypervisor Resource', :type => :virt do
     results.unchanged.size.should == 1
   end
 
-  it 'should allow virt-who to update mappings - async' do
-    virtwho1 = create_virtwho_client(@user)
-    host_hyp_id = random_string('host')
-    host_name = random_string('name')
-    job_detail = async_update_hypervisor(@owner, virtwho1, host_name, host_hyp_id, ['g1', 'g2'])
-    job_detail['resultData'].created.size.should == 1
-
-    job_detail['resultData'].created[0].name.should == host_name
-    job_detail['resultData'].created[0].owner['key'].should == @owner['key']
-
-    job_detail = async_update_hypervisor(@owner, virtwho1, host_name, host_hyp_id, ['g1', 'g2'])
-    job_detail['resultData'].unchanged.size.should == 1
-
-    job_detail['resultData'].unchanged[0].name.should == host_name
-    job_detail['resultData'].unchanged[0].owner['key'].should == @owner['key']
-  end
-
   it 'should block virt-who if owner does not match identity cert' do
     virtwho1 = create_virtwho_client(@user)
     host_guest_mapping = get_host_guest_mapping(random_string('my-host'), ['g1', 'g2'])
@@ -574,42 +377,11 @@ describe 'Hypervisor Resource', :type => :virt do
     end.should raise_exception(RestClient::ResourceNotFound)
   end
 
-  it 'should block virt-who if owner does not match identity cert - async' do
-    virtwho1 = create_virtwho_client(@user)
-    host_hyp_id = random_string('host')
-    host_name = random_string('name')
-    guests = ['g1', 'g2']
-
-    host_mapping = get_async_host_guest_mapping(host_name, host_hyp_id, guests)
-    lambda do
-      job_detail = JSON.parse(virtwho1.hypervisor_update(@owner2['key'], host_mapping))
-    end.should raise_exception(RestClient::ResourceNotFound)
-  end
-
   it 'should raise bad request exception if mapping was not provided' do
     virtwho = create_virtwho_client(@user)
     lambda do
       virtwho.hypervisor_check_in(@owner['key'], nil)
     end.should raise_exception(RestClient::BadRequest)
-  end
-
-  it 'should raise bad request exception if mapping was not provided - async' do
-    virtwho = create_virtwho_client(@user)
-    lambda do
-      virtwho.hypervisor_update(@owner['key'], nil)
-    end.should raise_exception(RestClient::BadRequest)
-  end
-
-  it 'should raise bad request exception if invalid mapping input was provided - async' do
-    virtwho = create_virtwho_client(@user)
-    lambda do
-      virtwho.hypervisor_update(@owner['key'], 'test invalid input')
-    end.should raise_exception(RestClient::BadRequest)
-  end
-
-  it 'should see the capability that corresponds to the async method' do
-    json = @cp.get_status()
-    json['managerCapabilities'].should include("hypervisors_async")
   end
 
   it 'should ignore hypervisorIds equal to the empty string' do
@@ -621,18 +393,6 @@ describe 'Hypervisor Resource', :type => :virt do
     result.should_not be_nil
     result.each do |k,v|
       v.should be_empty
-    end
-  end
-
-  it 'should ignore hypervisorIds equal to the empty string - async' do
-    virtwho = create_virtwho_client(@user)
-    name = random_string("host")
-    host_hyp_id = ""
-    guests = ['g1', 'g2']
-    result = async_update_hypervisor(@owner, virtwho, name, host_hyp_id, guests)
-    result.should_not be_nil
-    ['updated', 'created', 'unchanged', 'failedUpdate'].each do |key|
-      result['resultData'][key].should be_empty
     end
   end
 
@@ -650,23 +410,6 @@ describe 'Hypervisor Resource', :type => :virt do
     guest_id = guestIds[0]['guestId']
     expect(guest_id).to eq(expected_guest_id)
   end
-
-  it 'should ignore guestIds equal to the empty string - async' do
-    name = random_string("host")
-    virtwho = create_virtwho_client(@user)
-    expected_guest_id = random_string('guest')
-    guests = [expected_guest_id, '']
-    hostguestmapping = get_host_guest_mapping(@expected_host_hyp_id, guests)
-    result = async_update_hypervisor(@owner, virtwho, name, @expected_host_hyp_id, guests)
-    result.should_not be_nil
-    expect(result['resultData']['updated'].length).to eq(1)
-    updated_consumer_uuid = result['resultData']['updated'][0].uuid
-    guestIds = @cp.get_guestids(updated_consumer_uuid)
-    expect(guestIds.length).to eq(1)
-    guest_id = guestIds[0]['guestId']
-    expect(guest_id).to eq(expected_guest_id)
-  end
-
   def get_host_guest_mapping(host_hyp_id, guest_id_list)
     return { host_hyp_id => guest_id_list }
   end
@@ -827,67 +570,7 @@ describe 'Hypervisor Resource', :type => :virt do
     guest_client.list_entitlements().length.should == 0
   end
 
-  it 'should allow a single guest to be migrated and revoke host-limited ents - async' do
-    owner = create_owner random_string('test_owner1')
-    user = user_client(owner, random_string("user"))
-    hypervisor_id_1 = random_string('hypervisor').downcase
-    hypervisor_id_2 = random_string('hypervisor').downcase
-    virtwho = create_virtwho_client(user)
-    uuid1 = random_string('system.uuid')
-    guests = [{:guestId => uuid1}]
-
-    host_consumer = user.register(random_string('host1'), :hypervisor, nil,
-      {}, nil, owner['key'], [], [], [], [], hypervisor_id_1)
-    new_host_consumer = user.register(random_string('host2'), :system, nil,
-      {}, nil, owner['key'], [], [], [], [], hypervisor_id_2)
-
-    guest_consumer = user.register(random_string('guest'), :system, nil,
-      {'virt.uuid' => uuid1, 'virt.is_guest' => 'true'}, nil, owner['key'], [], [])
-    # Create a product/subscription
-    super_awesome = create_product(nil, random_string('super_awesome'),
-                            :attributes => { "virt_limit" => "10", "host_limited" => "true" }, :owner => owner['key'])
-    create_pool_and_subscription(owner['key'], super_awesome.id, 20)
-    consumer_client = Candlepin.new(nil, nil, host_consumer['idCert']['cert'], host_consumer['idCert']['key'])
-    new_consumer_client = Candlepin.new(nil, nil, new_host_consumer['idCert']['cert'], new_host_consumer['idCert']['key'])
-    guest_client = Candlepin.new(nil, nil, guest_consumer['idCert']['cert'], guest_consumer['idCert']['key'])
-
-    async_update_hypervisor(owner, user, 'tester', hypervisor_id_1, [uuid1])
-
-    # consumer_client.update_guestids(guests)
-    pools = consumer_client.list_pools :consumer => host_consumer['uuid']
-    pools.length.should == 1
-    consumer_client.consume_pool(pools[0]['id'], {:quantity => 1})
-    new_consumer_client.consume_pool(pools[0]['id'], {:quantity => 1})
-
-    pools = guest_client.list_pools :consumer => guest_consumer['uuid']
-
-    # The original pool and the new host limited pool should be available
-    pools.length.should == 2
-    # Get the guest pool
-    guest_pool = pools.find_all { |i| !i['sourceEntitlement'].nil? }[0]
-
-    # Make sure the required host is actually the host
-    requires_host = get_attribute_value(guest_pool['attributes'], "requires_host")
-    expect(requires_host).to eq(host_consumer['uuid'])
-
-    # Consume the host limited pool
-    guest_client.consume_pool(guest_pool['id'], {:quantity => 1})
-
-    # Should have a host with 1 registered guest
-    guestList = @cp.get_consumer_guests(host_consumer['uuid'])
-    guestList.length.should == 1
-    guestList[0]['uuid'].should == guest_consumer['uuid']
-
-    guest_client.list_entitlements().length.should == 1
-    # Updating to a new host should remove host specific entitlements
-
-    #because mysql
-    sleep 2
-    async_update_hypervisor(owner, user, 'tester', hypervisor_id_2, [uuid1])
-
-    # The guests host limited entitlement should be gone
-    guest_client.list_entitlements().length.should == 0
-  end
+  # End of part one
 
   it 'should allow existing guest to be migrated to an existing host - async' do
     owner = create_owner random_string('test_owner1')
