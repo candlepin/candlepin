@@ -17,6 +17,11 @@ package org.candlepin.spec.bootstrap.data.builder;
 import org.candlepin.dto.api.client.v1.ContentDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 
 /**
@@ -95,9 +100,28 @@ public final class Content {
             .name("test content " + cid)
             .label("test label " + cid)
             .type("test")
-            .vendor("test vendor");
+            .vendor("test vendor")
+            .contentUrl("/url " + cid);
 
         // perhaps add optional fields here?
     }
 
+    /**
+     * Builds a map populated with a provided collection of {@link ContentDTO}s.
+     * This map is keyed by the content's id.
+     *
+     * @param content
+     *  a list of content to populate the map with
+     *
+     * @return
+     *  a map of content id to {@link ContentDTO} or an empty map if the content
+     *  is either null or empty.
+     */
+    public static Map<String, ContentDTO> toMap(Collection<ContentDTO> content) {
+        if (content == null || content.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        return content.stream().collect(Collectors.toMap(ContentDTO::getId, Function.identity()));
+    }
 }
