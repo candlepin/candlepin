@@ -278,6 +278,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         // Update our capabilities with configurable features
         if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION, false)) {
             capabilities.add(CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY);
+            capabilities.add(CandlepinCapabilities.DEVICE_AUTH_CAPABILITY);
         }
 
         if (config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION, false)) {
@@ -437,7 +438,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
 
     /**
      * Initializes the connection to the database and a Liquibase object for detection of the state
-     *  of the database compared to the liquibase changeset list.
+     * of the database compared to the liquibase changeset list.
      *
      * @return Liquibase initialized for the changeset comparison
      * @throws RuntimeException if there is an issue with establishing the Liquibase object

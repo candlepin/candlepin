@@ -156,6 +156,7 @@ public class CandlepinContextListenerTest {
 
         CandlepinCapabilities expected = new CandlepinCapabilities();
         expected.add(CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY);
+        expected.add(CandlepinCapabilities.DEVICE_AUTH_CAPABILITY);
 
         CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
 
@@ -173,6 +174,9 @@ public class CandlepinContextListenerTest {
 
         assertFalse(actual.contains(CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY),
             "keycloak_auth present but not expected");
+
+        assertFalse(actual.contains(CandlepinCapabilities.DEVICE_AUTH_CAPABILITY),
+            "device_auth present but not expected");
     }
 
     @Test
