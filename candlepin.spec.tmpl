@@ -3,7 +3,7 @@
 %global _binary_payload w9.gzdio
 %global _source_payload w9.gzdio
 
-%global selinux_variants mls strict targeted
+%global selinux_variants mls minimum targeted
 %global selinux_policyver %(%{__sed} -e 's,.*selinux-policy-\\([^/]*\\)/.*,\\1,' /usr/share/selinux/devel/policyhelp || echo 0.0.0)
 %global modulename candlepin
 
@@ -31,6 +31,7 @@ Obsoletes: candlepin-tomcat
 Obsoletes: candlepin-tomcat6
 Obsoletes: candlepin-devel
 Obsoletes: candlepin-certgen-lib
+Suggests: %{name}-selinux = %{version}-%{release}
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildArch: noarch
@@ -79,9 +80,8 @@ BuildRequires:  util-linux
 %if (0%{?rhel} && 0%{?rhel} < 9)
 BuildRequires:  hardlink
 %endif
+%{?selinux_requires}
 
-Requires:	selinux-policy >= %{_selinux_policy_version}
-Requires:       %{name} = %{version}-%{release}
 Requires(post):   /usr/sbin/semodule
 Requires(post):   /sbin/restorecon
 Requires(post):   /usr/sbin/semanage
@@ -164,9 +164,10 @@ cd selinux
 #raw
 for selinuxvariant in %{selinux_variants}
 do
-  %{__install} -d %{buildroot}/%{_datadir}/selinux/$selinuxvariant
-  %{__install} -p -m 644 %{modulename}.pp.$selinuxvariant %{buildroot}/%{_datadir}/selinux/$selinuxvariant/%{modulename}.pp
+  %{__install} -d %{buildroot}/%{_datadir}/selinux/packages/$selinuxvariant
+  %{__install} -p -m 644 %{modulename}.pp.$selinuxvariant %{buildroot}/%{_datadir}/selinux/packages/$selinuxvariant/%{modulename}.pp
 done
+%{__install} -D -p -m 0644 %{modulename}.if %{buildroot}%{_datadir}/selinux/devel/include/distributed/%{modulename}.if
 #end raw
 cd -
 hardlink -cv %{buildroot}/%{_datadir}/selinux
@@ -178,9 +179,14 @@ rm -rf %{buildroot}
 #raw
 for selinuxvariant in %{selinux_variants}
 do
-  /usr/sbin/semodule -s $selinuxvariant -i %{_datadir}/selinux/$selinuxvariant/%{modulename}.pp &> /dev/null || :
+  /usr/sbin/semodule -X 400 -s $selinuxvariant -r %{modulename} &> /dev/null || :
+  /usr/sbin/semodule -X 200 -s $selinuxvariant -i %{_datadir}/selinux/packages/$selinuxvariant/%{modulename}.pp &> /dev/null || :
 done
 /usr/sbin/semanage port -a -t candlepin_activemq_port_t -p tcp 61613 &> /dev/null || :
+#end raw
+
+%posttrans selinux
+#raw
 /sbin/restorecon %{_localstatedir}/cache/thumbslug &> /dev/null || :
 /sbin/restorecon -R %{_sysconfdir}/%{name}/ &> /dev/null || :
 /sbin/restorecon -R %{_localstatedir}/cache/%{name}/ &> /dev/null || :
@@ -195,7 +201,7 @@ if [ $1 -eq 0 ] ; then
 
   for selinuxvariant in %{selinux_variants}
   do
-     /usr/sbin/semodule -s $selinuxvariant -r %{modulename} &> /dev/null || :
+     /usr/sbin/semodule -X 200 -s $selinuxvariant -r %{modulename} &> /dev/null || :
   done
   /sbin/restorecon %{_localstatedir}/cache/thumbslug &> /dev/null || :
   /sbin/restorecon -R %{_sysconfdir}/%{name}/ &> /dev/null || :
@@ -240,7 +246,9 @@ fi
 %files selinux
 %defattr(-,root,root,0755)
 %doc selinux/*
-%{_datadir}/selinux/*/%{modulename}.pp
+%{_datadir}/selinux/packages/*/%{modulename}.pp
+%{_datadir}/selinux/devel/include/distributed/%{modulename}.if
+%ghost %verify(not md5 size mode mtime) %{_sharedstatedir}/selinux/minimum/active/modules/200/%{modulename}
 
 #raw
 %changelog
