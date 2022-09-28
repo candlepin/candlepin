@@ -27,6 +27,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -72,8 +74,13 @@ public class ConsumerClient extends ConsumerApi {
         }
     }
 
-    public JsonNode bindProduct(String consumerUuid, String productId) {
+    public JsonNode bindProduct(String consumerUuid, @NotNull String productId) {
         return getJsonNode(super.bind(consumerUuid, null, List.of(productId), null,
+            "", "", false, "", new ArrayList<>()));
+    }
+
+    public JsonNode autoBind(String consumerUuid) {
+        return getJsonNode(super.bind(consumerUuid, null, null, null,
             "", "", false, "", new ArrayList<>()));
     }
 

@@ -86,6 +86,7 @@ public final class CertificateUtil {
 
     /**
      * Decodes and uncompresses a certificate body into a {@link JsonNode}.
+     * Note that this will fail if you forgot to make your consumer V3 capable
      *
      * @param certificate
      *  the encoded and compressed body of the certificate
