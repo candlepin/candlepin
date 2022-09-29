@@ -14,6 +14,70 @@ import zipfile
 
 import cp_connectors as cp
 
+# Tables as of CP v4.2 (2022-09-29)
+#   - cp2_activation_key_products
+#   - cp2_content
+#   - cp2_content_modified_products
+#   - cp2_environment_content
+#   - cp2_owner_content
+#   - cp2_owner_products
+#   - cp2_pool_source_sub
+#   - cp2_product_attributes
+#   - cp2_product_branding
+#   - cp2_product_certificates
+#   - cp2_product_content
+#   - cp2_product_dependent_products
+#   - cp2_product_provided_products
+#   - cp2_products
+#   - cp_act_key_sp_add_on
+#   - cp_activation_key
+#   - cp_activationkey_pool
+#   - cp_async_job_arguments            -- intentionally omitted
+#   - cp_async_jobs                     -- intentionally omitted
+#   - cp_cdn
+#   - cp_cdn_certificate
+#   - cp_cert_serial
+#   - cp_certificate
+#   - cp_consumer
+#   - cp_consumer_activation_key
+#   - cp_consumer_capability
+#   - cp_consumer_content_tags
+#   - cp_consumer_environments
+#   - cp_consumer_facts
+#   - cp_consumer_guests
+#   - cp_consumer_guests_attributes
+#   - cp_consumer_hypervisor
+#   - cp_consumer_type
+#   - cp_cont_access_cert
+#   - cp_content_override
+#   - cp_deleted_consumers
+#   - cp_dist_version                   -- intentionally omitted
+#   - cp_dist_version_capability        -- intentionally omitted
+#   - cp_ent_certificate
+#   - cp_entitlement
+#   - cp_environment
+#   - cp_export_metadata                -- intentionally omitted
+#   - cp_id_cert
+#   - cp_import_record                  -- intentionally omitted
+#   - cp_import_upstream_consumer       -- intentionally omitted
+#   - cp_installed_products
+#   - cp_key_pair
+#   - cp_manifest_file_record           -- intentionally omitted
+#   - cp_owner
+#   - cp_permission                     -- intentionally omitted
+#   - cp_pool
+#   - cp_pool_attribute
+#   - cp_pool_source_stack
+#   - cp_product_pool_attribute
+#   - cp_role                           -- intentionally omitted
+#   - cp_role_users                     -- intentionally omitted
+#   - cp_rules                          -- intentionally omitted
+#   - cp_sp_add_on
+#   - cp_system_locks                   -- intentionally omitted
+#   - cp_ueber_cert
+#   - cp_upstream_consumer
+#   - cp_user                           -- intentionally omitted
+
 
 LOGLVL_TRACE = 5
 logging.addLevelName(LOGLVL_TRACE, 'TRACE')
@@ -480,6 +544,7 @@ class ProductManager(ModelManager):
         self._export_partitioned_query('cp2_product_content.json', 'cp2_product_content', 'SELECT pc.* FROM cp2_product_content pc WHERE pc.product_uuid IN (%s)', product_uuids)
         self._export_partitioned_query('cp2_product_branding.json', 'cp2_product_branding', 'SELECT pb.* FROM cp2_product_branding pb WHERE pb.product_uuid IN (%s)', product_uuids)
         self._export_partitioned_query('cp2_product_provided_products.json', 'cp2_product_provided_products', 'SELECT ppp.* FROM cp2_product_provided_products ppp WHERE ppp.product_uuid IN (%s)', product_uuids)
+        self._export_partitioned_query('cp2_product_dependent_products.json', 'cp2_product_dependent_products', 'SELECT pdp.* FROM cp2_product_dependent_products pdp WHERE pdp.product_uuid IN (%s)', product_uuids)
 
         # Grab owner-product mappings
         self._export_query('cp2_owner_products.json', 'cp2_owner_products', 'SELECT * FROM cp2_owner_products WHERE owner_id=%s', (self.org_id,))
@@ -498,6 +563,7 @@ class ProductManager(ModelManager):
         result = result and self._import_json('cp2_owner_products.json')
         result = result and self._import_json('cp2_product_branding.json')
         result = result and self._import_json('cp2_product_provided_products.json')
+        result = result and self._import_json('cp2_product_dependent_products.json')
 
         self._imported = result
         return result
@@ -517,7 +583,6 @@ class EnvironmentManager(ModelManager):
 
         self._export_query('cp_environment.json', 'cp_environment', 'SELECT * FROM cp_environment WHERE owner_id=%s', (self.org_id,))
         self._export_query('cp2_environment_content.json', 'cp2_environment_content', 'SELECT ec.* FROM cp2_environment_content ec JOIN cp_environment e ON ec.environment_id = e.id WHERE e.owner_id=%s', (self.org_id,))
-        self._export_query('cp_owner_env_content_access.json', 'cp_owner_env_content_access', 'SELECT eca.* FROM cp_owner_env_content_access eca JOIN cp_environment e ON eca.environment_id = e.id WHERE e.owner_id=%s', (self.org_id,))
 
         self._exported = True
         return True
@@ -528,7 +593,6 @@ class EnvironmentManager(ModelManager):
 
         result = self._import_json('cp_environment.json')
         result = result and self._import_json('cp2_environment_content.json')
-        result = result and self._import_json('cp_owner_env_content_access.json')
 
         self._imported = result
         return result
@@ -571,6 +635,7 @@ class ConsumerManager(ModelManager):
         self._export_query('cp_installed_products.json', 'cp_installed_products', 'SELECT ip.* FROM cp_installed_products ip JOIN cp_consumer c ON c.id = ip.consumer_id WHERE c.owner_id=%s', (self.org_id,))
         self._export_query('cp_content_override.json', 'cp_content_override', 'SELECT co.* FROM cp_content_override co JOIN cp_consumer c ON c.id = co.consumer_id WHERE c.owner_id=%s', (self.org_id,))
         self._export_query('cp_sp_add_on.json', 'cp_sp_add_on', 'SELECT spa.* FROM cp_sp_add_on spa JOIN cp_consumer c ON c.id = spa.consumer_id WHERE c.owner_id=%s', (self.org_id,))
+        self._export_query('cp_consumer_activation_key.json', 'cp_consumer_activation_key', 'SELECT cak.* FROM cp_consumer_activation_key cak JOIN cp_consumer c ON c.id = cak.consumer_id WHERE c.owner_id=%s', (self.org_id,))
 
         # Misc consumer stuff
         self._export_query('cp_upstream_consumer.json', 'cp_upstream_consumer', 'SELECT * FROM cp_upstream_consumer WHERE owner_id=%s', (self.org_id,))
@@ -604,6 +669,7 @@ class ConsumerManager(ModelManager):
         result = result and self._import_json('cp_installed_products.json')
         result = result and self._import_json('cp_content_override.json')
         result = result and self._import_json('cp_sp_add_on.json')
+        result = result and self._import_json('cp_consumer_activation_key.json')
 
         result = result and self._import_json('cp_upstream_consumer.json')
         result = result and self._import_json('cp_deleted_consumers.json')
@@ -843,6 +909,7 @@ class ActivationKeyManager(ModelManager):
         self._export_query('cp_activation_key.json', 'cp_activation_key', 'SELECT * FROM cp_activation_key WHERE owner_id=%s', (self.org_id,))
         self._export_query('cp_activationkey_pool.json', 'cp_activationkey_pool', 'SELECT akp.* FROM cp_activationkey_pool akp JOIN cp_activation_key ak ON ak.id = akp.key_id WHERE ak.owner_id=%s', (self.org_id,))
         self._export_query('cp2_activation_key_products.json', 'cp2_activation_key_products', 'SELECT akp.* FROM cp2_activation_key_products akp JOIN cp2_owner_products op ON op.product_uuid = akp.product_uuid WHERE op.owner_id=%s', (self.org_id,))
+        self._export_query('cp_act_key_sp_add_on.json', 'cp_act_key_sp_add_on', 'SELECT aksao.* FROM cp_act_key_sp_add_on aksao JOIN cp_activation_key ak ON ak.id = aksao.activation_key_id WHERE ak.owner_id=%s', (self.org_id,))
 
         self._exported = True
         return True
@@ -854,6 +921,7 @@ class ActivationKeyManager(ModelManager):
         result = self._import_json('cp_activation_key.json')
         result = result and self._import_json('cp_activationkey_pool.json')
         result = result and self._import_json('cp2_activation_key_products.json')
+        result = result and self._import_json('cp_act_key_sp_add_on.json')
 
         self._imported = result
         return result
@@ -976,8 +1044,8 @@ def parse_options():
         help="The port to use when connecting to the database server")
     parser.add_option("--db", action="store", default='candlepin',
         help="The database to use; defaults to 'candlepin'")
-    parser.add_option("--file", action="store", default='export.zip',
-        help="The name of the file to export to or import from; defaults to 'export.zip'")
+    parser.add_option("--file", action="store", default=None,
+        help="The name of the file to export to or import from; defaults to 'export.zip' during import, and 'export-{org_key}-{yyyymmdd}.zip' during export")
 
     parser.add_option("--import", dest='act_import', action="store_true", default=False,
         help="Sets the operating mode to IMPORT; cannot be used with --export or --list")
@@ -1022,9 +1090,12 @@ def main():
         log.info('Using database: %s @ %s', db.backend(), options.host)
 
         if options.act_import:
-            # Use the provided argument if the --file is still default
-            if options.file == 'export.zip' and len(args) > 0:
-                options.file = args[0]
+            # If the import file isn't set, check if we have an extra arg to use, or default to 'export.zip'
+            if options.file is None :
+                if len(args) > 0:
+                    options.file = args[0]
+                else:
+                    options.file = 'export.zip'
 
             # Verify the file exists (as a file) and can be read so we can kick out a cleaner
             # error message than a spooky exception
@@ -1046,6 +1117,16 @@ def main():
         elif options.act_export:
             org_key = args[0]
             org_id = resolve_org(db, org_key)
+
+            # Default export file to 'export-{org_key}-{yyyymmdd}.zip'
+            if options.file is None:
+                datestr = datetime.date.today().strftime('%Y%m%d')
+                options.file = f"export-{org_key}-{datestr}.zip"
+                count = 0
+
+                while os.path.exists(options.file):
+                    count = count + 1
+                    options.file = f"export-{org_key}-{datestr}-{count}.zip"
 
             if org_id is not None:
                 log.info('Resolved org "%s" to org ID: %s', org_key, org_id)
