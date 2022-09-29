@@ -16,14 +16,13 @@ package org.candlepin.jackson;
 
 import org.candlepin.dto.api.server.v1.GuestIdDTO;
 import org.candlepin.exceptions.CandlepinJsonProcessingException;
-import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectReader;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,37 +34,44 @@ import java.io.IOException;
  * or { "id":"value", "guestId":"value", "attributes":{"att":"val"} }.
  */
 public class GuestIdDeserializer extends JsonDeserializer<GuestIdDTO> {
-    private static Logger log = LoggerFactory.getLogger(GuestIdDeserializer.class);
-    private static ObjectMapper mapper = ObjectMapperFactory.getObjectMapper();
+    private static final Logger log = LoggerFactory.getLogger(GuestIdDeserializer.class);
+
+    private ObjectReader reader;
+
+    /**
+     * Creates a new GuestIdDeserializer using the specified reader as the
+     * default/base reader for processing guest IDs received in object form.
+     *
+     * @param reader
+     *  base reader for processing guest Ids recieved in object form
+     */
+    public GuestIdDeserializer(ObjectReader reader) {
+        if (reader == null) {
+            throw new IllegalArgumentException("reader is null");
+        }
+
+        this.reader = reader;
+    }
 
     @Override
     public GuestIdDTO deserialize(JsonParser parser, DeserializationContext context)
         throws IOException, JacksonException {
-        TreeNode rootNode = parser.readValueAsTree();
-        if (rootNode.isValueNode()) {
-            return parseValueNode(rootNode, parser);
-        }
-        else if (rootNode.isObject()) {
-            log.debug("Processing GuestIdDTO as a containing object node.");
-            return mapper.convertValue(rootNode, GuestIdDTO.class);
-        }
-        else {
-            throw new CandlepinJsonProcessingException(
-                "Unexpected guest id value type: " + rootNode.asToken(),
-                parser.getCurrentLocation()
-            );
-        }
-    }
+        JsonNode node = context.readTree(parser);
+        if (node.isTextual()) {
+            log.debug("Processing node as a guest ID string: {}", node);
 
-    private GuestIdDTO parseValueNode(TreeNode node, JsonParser parser) throws IOException {
-        log.debug("Processing GuestIdDTO as a value node.");
-        JsonParser subParser = node.traverse();
-        subParser.nextValue();
-        String value = subParser.getValueAsString();
-        subParser.close();
+            return new GuestIdDTO()
+                .guestId(node.textValue());
+        }
+        else if (node.isObject()) {
+            log.debug("Processing node as a GuestIdDTO instance: {}", node);
 
-        GuestIdDTO guest = new GuestIdDTO();
-        guest.setGuestId(value);
-        return guest;
+            return reader.readValue(node, GuestIdDTO.class);
+        }
+
+        throw new CandlepinJsonProcessingException(
+            "Unexpected guest ID value type: " + node.asToken(),
+            parser.getCurrentLocation()
+        );
     }
 }
