@@ -29,6 +29,7 @@ pipeline {
                     }
                     post {
                         always {
+                            junit '**/test-results/**/*.xml'
                             sh 'sh jenkins/cleanup.sh'
                             archiveArtifacts artifacts: 'unit-artifacts/**',
                                              fingerprint: true,
@@ -96,6 +97,7 @@ pipeline {
                     }
                     post {
                         always {
+                            junit '**/build/test-results/**/*.xml'
                             sh 'sh jenkins/cleanup.sh'
                             archiveArtifacts artifacts: 'rspec-postgresql-artifacts/**',
                                              fingerprint: true,
@@ -116,6 +118,7 @@ pipeline {
                     }
                     post {
                         always {
+                            junit '**/build/test-results/**/*.xml'
                             sh 'sh jenkins/cleanup.sh'
                             archiveArtifacts artifacts: 'rspec-mysql-artifacts/**',
                                              fingerprint: true,
@@ -136,6 +139,7 @@ pipeline {
                     }
                     post {
                         always {
+                            junit '**/build/test-results/**/*.xml'
                             sh 'sh jenkins/cleanup.sh'
                             archiveArtifacts artifacts: 'rspec-postgres-hosted-artifacts/**',
                                              fingerprint: true,
@@ -156,6 +160,7 @@ pipeline {
                     }
                     post {
                         always {
+                            junit '**/build/test-results/**/*.xml'
                             sh 'sh jenkins/cleanup.sh'
                             archiveArtifacts artifacts: 'rspec-mysql-hosted-artifacts/**',
                                              fingerprint: true,
