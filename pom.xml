@@ -28,7 +28,7 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-jpamodelgen</artifactId>
-      <version>5.6.10.Final</version>
+      <version>5.6.12.Final</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -220,13 +220,13 @@
     <dependency>
       <groupId>com.sun.xml.bind</groupId>
       <artifactId>jaxb-impl</artifactId>
-      <version>4.0.0</version>
+      <version>4.0.1</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>com.sun.xml.bind</groupId>
       <artifactId>jaxb-core</artifactId>
-      <version>4.0.0</version>
+      <version>4.0.1</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -304,7 +304,7 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-jpamodelgen</artifactId>
-      <version>5.6.11.Final</version>
+      <version>5.6.12.Final</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -322,7 +322,7 @@
     <dependency>
       <groupId>org.mariadb.jdbc</groupId>
       <artifactId>mariadb-java-client</artifactId>
-      <version>3.0.7</version>
+      <version>3.0.8</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
@@ -370,7 +370,7 @@
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
-      <version>5.9.0</version>
+      <version>5.9.1</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
