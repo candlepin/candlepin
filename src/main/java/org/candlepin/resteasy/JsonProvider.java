@@ -16,68 +16,19 @@ package org.candlepin.resteasy;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.dto.api.server.v1.AbstractCertificateDTO;
-import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
-import org.candlepin.dto.api.server.v1.ActivationKeyPoolDTO;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.server.v1.AttributeDTO;
-import org.candlepin.dto.api.server.v1.BrandingDTO;
-import org.candlepin.dto.api.server.v1.CapabilityDTO;
-import org.candlepin.dto.api.server.v1.CdnDTO;
-import org.candlepin.dto.api.server.v1.CertificateDTO;
-import org.candlepin.dto.api.server.v1.CertificateSerialDTO;
-import org.candlepin.dto.api.server.v1.ComplianceReasonDTO;
-import org.candlepin.dto.api.server.v1.ComplianceStatusDTO;
-import org.candlepin.dto.api.server.v1.ConsumerDTO;
-import org.candlepin.dto.api.server.v1.ConsumerDTOArrayElement;
-import org.candlepin.dto.api.server.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.server.v1.ConsumerTypeDTO;
-import org.candlepin.dto.api.server.v1.ConsumptionTypeCountsDTO;
-import org.candlepin.dto.api.server.v1.ContentAccessDTO;
-import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
-import org.candlepin.dto.api.server.v1.DeletedConsumerDTO;
-import org.candlepin.dto.api.server.v1.DistributorVersionCapabilityDTO;
-import org.candlepin.dto.api.server.v1.DistributorVersionDTO;
-import org.candlepin.dto.api.server.v1.EntitlementDTO;
-import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.dto.api.server.v1.GuestIdDTO;
-import org.candlepin.dto.api.server.v1.GuestIdDTOArrayElement;
-import org.candlepin.dto.api.server.v1.HypervisorConsumerDTO;
-import org.candlepin.dto.api.server.v1.HypervisorIdDTO;
-import org.candlepin.dto.api.server.v1.HypervisorUpdateResultDTO;
-import org.candlepin.dto.api.server.v1.ImportRecordDTO;
-import org.candlepin.dto.api.server.v1.ImportUpstreamConsumerDTO;
-import org.candlepin.dto.api.server.v1.NestedConsumerDTO;
-import org.candlepin.dto.api.server.v1.NestedEntitlementDTO;
-import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
-import org.candlepin.dto.api.server.v1.OwnerDTO;
-import org.candlepin.dto.api.server.v1.OwnerInfo;
-import org.candlepin.dto.api.server.v1.PermissionBlueprintDTO;
 import org.candlepin.dto.api.server.v1.PoolDTO;
 import org.candlepin.dto.api.server.v1.PoolQuantityDTO;
-import org.candlepin.dto.api.server.v1.ProductCertificateDTO;
-import org.candlepin.dto.api.server.v1.ProductContentDTO;
 import org.candlepin.dto.api.server.v1.ProductDTO;
-import org.candlepin.dto.api.server.v1.ProvidedProductDTO;
 import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
-import org.candlepin.dto.api.server.v1.RoleDTO;
-import org.candlepin.dto.api.server.v1.StatusDTO;
-import org.candlepin.dto.api.server.v1.SubscriptionDTO;
-import org.candlepin.dto.api.server.v1.SystemPurposeAttributesDTO;
-import org.candlepin.dto.api.server.v1.SystemPurposeComplianceStatusDTO;
-import org.candlepin.dto.api.server.v1.TimestampedEntity;
-import org.candlepin.dto.api.server.v1.UeberCertificateDTO;
-import org.candlepin.dto.api.server.v1.UpstreamConsumerDTO;
-import org.candlepin.dto.api.server.v1.UpstreamConsumerDTOArrayElement;
-import org.candlepin.dto.api.server.v1.UserDTO;
 import org.candlepin.jackson.AsyncJobStatusAnnotationMixin;
 import org.candlepin.jackson.ConsumerTypeDeserializer;
 import org.candlepin.jackson.DateSerializer;
 import org.candlepin.jackson.DynamicPropertyFilter;
 import org.candlepin.jackson.DynamicPropertyFilterMixIn;
 import org.candlepin.jackson.GuestIdDeserializer;
-import org.candlepin.jackson.HateoasBeanPropertyFilter;
-import org.candlepin.jackson.MultiFilter;
 import org.candlepin.jackson.OffsetDateTimeDeserializer;
 import org.candlepin.jackson.OffsetDateTimeSerializer;
 import org.candlepin.jackson.PoolAnnotationMixIn;
@@ -110,7 +61,7 @@ import javax.ws.rs.ext.Provider;
 
 /**
  * JsonProvider
- *
+ * <p/>
  * Our own json provider for jax-rs, allowing us to configure jackson as we see fit
  * and deal with input validation.
  */
@@ -168,18 +119,6 @@ public class JsonProvider extends JacksonJsonProvider {
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider = filterProvider.addFilter("DTOFilter", new DynamicPropertyFilter());
 
-        // TODO: Once all DTOs are ported to the openapi spec, stop adding the following
-        //  filters: LegacyDTOFilter, ConsumerFilter, EntitlementFilter, OwnerFilter, GuestFilter.
-        filterProvider = filterProvider.addFilter("LegacyDTOFilter", new DynamicPropertyFilter());
-        filterProvider = filterProvider.addFilter("ConsumerFilter",
-            new MultiFilter(new HateoasBeanPropertyFilter(), new DynamicPropertyFilter()));
-        filterProvider = filterProvider.addFilter("EntitlementFilter",
-            new MultiFilter(new HateoasBeanPropertyFilter(), new DynamicPropertyFilter()));
-        filterProvider = filterProvider.addFilter("OwnerFilter",
-            new MultiFilter(new HateoasBeanPropertyFilter(), new DynamicPropertyFilter()));
-        filterProvider = filterProvider.addFilter("GuestFilter",
-            new MultiFilter(new HateoasBeanPropertyFilter(), new DynamicPropertyFilter()));
-
         filterProvider.setDefaultFilter(new DynamicPropertyFilter());
         filterProvider.setFailOnUnknownId(false);
         mapper.setFilterProvider(filterProvider);
@@ -196,59 +135,11 @@ public class JsonProvider extends JacksonJsonProvider {
      * openapi spec).
      */
     private void addMixInAnnotationsForDTOs(ObjectMapper mapper) {
-        mapper.addMixIn(AbstractCertificateDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(ActivationKeyDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(ActivationKeyPoolDTO.class, DynamicPropertyFilterMixIn.class);
+        // All DTOs will inherit the Object's annotation
+        mapper.addMixIn(Object.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(AsyncJobStatusDTO.class, AsyncJobStatusAnnotationMixin.class);
-        mapper.addMixIn(AttributeDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(BrandingDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(CdnDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(CertificateDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(CertificateSerialDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(CapabilityDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(ComplianceReasonDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(ComplianceStatusDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(ConsumerDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(ConsumerDTOArrayElement.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(ConsumerInstalledProductDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(ConsumerTypeDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(ConsumptionTypeCountsDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(ContentAccessDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(ContentOverrideDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(DeletedConsumerDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(DistributorVersionCapabilityDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(DistributorVersionDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(EntitlementDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(EnvironmentDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(GuestIdDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(GuestIdDTOArrayElement.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(HypervisorIdDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(HypervisorConsumerDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(HypervisorUpdateResultDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(ImportRecordDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(ImportUpstreamConsumerDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(NestedConsumerDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(NestedEntitlementDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(NestedOwnerDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(OwnerDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(OwnerInfo.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(PermissionBlueprintDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(PoolDTO.class, PoolAnnotationMixIn.class);
         mapper.addMixIn(PoolQuantityDTO.class, PoolAnnotationMixIn.class);
-        mapper.addMixIn(ProductCertificateDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(ProductContentDTO.class, DynamicPropertyFilterMixIn.class);
         mapper.addMixIn(ProductDTO.class, ProductAttributesMixIn.class);
-        mapper.addMixIn(ProvidedProductDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(RoleDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(StatusDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(SubscriptionDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(SystemPurposeAttributesDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(SystemPurposeComplianceStatusDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(TimestampedEntity.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(UeberCertificateDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(UserDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(UpstreamConsumerDTO.class, DynamicPropertyFilterMixIn.class);
-        mapper.addMixIn(UpstreamConsumerDTOArrayElement.class, DynamicPropertyFilterMixIn.class);
-        //TODO: Add more mix-ins here as more DTOs are ported to openapi spec
     }
 }
