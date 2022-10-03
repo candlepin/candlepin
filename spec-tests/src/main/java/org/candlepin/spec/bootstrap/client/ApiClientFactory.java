@@ -16,6 +16,12 @@ package org.candlepin.spec.bootstrap.client;
 
 import org.candlepin.invoker.client.ApiClient;
 
+import net.oauth.OAuth;
+import net.oauth.OAuthAccessor;
+import net.oauth.OAuthConsumer;
+import net.oauth.OAuthMessage;
+import net.oauth.signature.OAuthSignatureMethod;
+
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +29,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.security.cert.X509Certificate;
+import java.util.Date;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -83,6 +91,15 @@ public class ApiClientFactory {
     public ApiClient createBearerTokenAuthClient(String token) {
         ApiClient apiClient = createDefaultClient();
         apiClient.setHttpClient(createOkHttpClient(new BearerTokenAuthInterceptor(token)));
+
+        return apiClient;
+    }
+
+    public ApiClient createOauthClient(
+        String oauthConsumer, String oauthSecret) {
+        ApiClient apiClient = createDefaultClient();
+        apiClient.setHttpClient(createOkHttpClient(
+            new OauthInterceptor(oauthConsumer, oauthSecret)));
 
         return apiClient;
     }
@@ -325,7 +342,51 @@ public class ApiClientFactory {
                 .build();
             return chain.proceed(request);
         }
-
     }
 
+    public static class OauthInterceptor implements Interceptor {
+
+        private final String oauthConsumer;
+        private final String oauthSecret;
+
+        public OauthInterceptor(String oauthConsumer, String oauthSecret) {
+            this.oauthConsumer = oauthConsumer;
+            this.oauthSecret = oauthSecret;
+        }
+
+        @NotNull
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            Request request = chain.request();
+            OAuthMessage oAuthMessage = buildMessage(request);
+            sign(oAuthMessage);
+
+            Request.Builder requestToBeBuild = request.newBuilder()
+                .header("Authorization", oAuthMessage.getAuthorizationHeader(null));
+            Request authorizedRequest = requestToBeBuild.build();
+            return chain.proceed(authorizedRequest);
+        }
+
+        private OAuthMessage buildMessage(Request request) {
+            OAuthMessage om = new OAuthMessage(request.method(), request.url().toString(), null);
+            om.addParameter(OAuth.OAUTH_CONSUMER_KEY, oauthConsumer);
+            om.addParameter(OAuth.OAUTH_NONCE, UUID.randomUUID().toString());
+            om.addParameter(OAuth.OAUTH_SIGNATURE_METHOD, OAuth.HMAC_SHA1);
+            om.addParameter(OAuth.OAUTH_TIMESTAMP, Long.toString((new Date().getTime()) / 1000));
+            om.addParameter(OAuth.OAUTH_VERSION, "1.0");
+            return om;
+        }
+
+        private void sign(OAuthMessage om) {
+            OAuthConsumer consumer = new OAuthConsumer(null, oauthConsumer, oauthSecret, null);
+            OAuthAccessor accessor = new OAuthAccessor(consumer);
+            try {
+                OAuthSignatureMethod osm = OAuthSignatureMethod.newMethod(OAuth.HMAC_SHA1, accessor);
+                osm.sign(om);
+            }
+            catch (Exception e) {
+                log.error(e.getMessage(), e);
+            }
+        }
+    }
 }

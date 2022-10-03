@@ -141,6 +141,47 @@ public final class ApiClients {
     }
 
     /**
+     * Returns a client to make API calls with, that uses an OAuth authentication.
+     *
+     * @param oauthConsumer an OAuth consumer
+     * @param oauthSecret an OAuth consumer secret
+     * @return a client to make API calls with, that uses an OAuth authentication
+     */
+    public static ApiClient oauth(String oauthConsumer, String oauthSecret) {
+        return new ApiClient(CLIENT_FACTORY.createOauthClient(oauthConsumer, oauthSecret));
+    }
+
+    /**
+     * Returns a client to make API calls with, that uses an OAuth authentication. Acting like user client
+     * from Candlepin.
+     *
+     * @param oauthConsumer an OAuth consumer
+     * @param oauthSecret an OAuth consumer secret
+     * @param username a Candlepin user username
+     * @return a client to make API calls with, that uses an OAuth authentication with that uses the special
+     * 'cp-user: username' header
+     */
+    public static ApiClient oauthUser(String oauthConsumer, String oauthSecret, String username) {
+        return new ApiClient(CLIENT_FACTORY.createOauthClient(oauthConsumer, oauthSecret)
+            .addDefaultHeader("cp-user", username));
+    }
+
+    /**
+     * Returns a client to make API calls with, that uses an OAuth authentication. Acting like consumer client
+     * from Candlepin.
+     *
+     * @param oauthConsumer an OAuth consumer
+     * @param oauthSecret an OAuth consumer secret
+     * @param consumerUUID a Candlepin consumer UUID
+     * @return a client to make API calls with, that uses an OAuth authentication with that uses the special
+     * 'cp-consumer: uuid' header
+     */
+    public static ApiClient oauthConsumer(String oauthConsumer, String oauthSecret, String consumerUUID) {
+        return new ApiClient(CLIENT_FACTORY.createOauthClient(oauthConsumer, oauthSecret)
+            .addDefaultHeader("cp-consumer", consumerUUID));
+    }
+
+    /**
      * Returns a client to make API calls with, that uses two-way SSL authentication (uses a
      * client/identity certificate and key).
      *
