@@ -18,6 +18,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.dto.api.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.v1.ConsumerTypeDTO;
+import org.candlepin.dto.api.v1.GuestIdDTO;
 import org.candlepin.dto.api.v1.PoolDTO;
 import org.candlepin.dto.api.v1.PoolQuantityDTO;
 import org.candlepin.dto.api.v1.ProductDTO;
@@ -27,6 +28,7 @@ import org.candlepin.jackson.ConsumerTypeDeserializer;
 import org.candlepin.jackson.DateSerializer;
 import org.candlepin.jackson.DynamicPropertyFilter;
 import org.candlepin.jackson.DynamicPropertyFilterMixIn;
+import org.candlepin.jackson.GuestIdDeserializer;
 import org.candlepin.jackson.HateoasBeanPropertyFilter;
 import org.candlepin.jackson.MultiFilter;
 import org.candlepin.jackson.OffsetDateTimeDeserializer;
@@ -98,13 +100,16 @@ public class JsonProvider extends JacksonJsonProvider {
             null));
         // Ensure our DateSerializer is used for all Date objects
         customModule.addSerializer(Date.class, new DateSerializer());
-        // Ensure we handle releaseVer fields properly
-        customModule.addDeserializer(ReleaseVerDTO.class, new ReleaseVersionWrapDeserializer());
-        customModule.addDeserializer(ConsumerTypeDTO.class, new ConsumerTypeDeserializer());
-        mapper.registerModule(customModule);
 
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         configureHateoasObjectMapper(mapper, indentJson);
+
+        // Ensure we handle releaseVer fields properly
+        customModule.addDeserializer(ReleaseVerDTO.class, new ReleaseVersionWrapDeserializer());
+        customModule.addDeserializer(ConsumerTypeDTO.class, new ConsumerTypeDeserializer());
+        customModule.addDeserializer(GuestIdDTO.class, new GuestIdDeserializer(mapper.reader()));
+        mapper.registerModule(customModule);
+
         setMapper(mapper);
     }
 
