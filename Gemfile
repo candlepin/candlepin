@@ -12,7 +12,7 @@ gem 'activesupport', '~> 4.2'
 gem 'rubyzip', '~> 1.3.0'
 
 # Remove this once we are fully using the new Ruby bindings
-gem 'rest-client', '~> 1.6.0'
+gem 'rest-client', '~> 1.8.0'
 
 group :development do
   gem 'webrick'
