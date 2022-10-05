@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.15
+Version: 4.1.16
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,14 @@ fi
 
 #raw
 %changelog
+* Wed Oct 05 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.16-1
+- 2131997: Updated GuestIdDeserializer to use existing ObjectMapper
+  (joshmalbrecht@gmail.com)
+- 2131997: Added deserializer for GuestIdDTO - deserializer that creates
+  GuestIdDTO from id string - deserializer that creates GuestIdDTO from
+  containing object (joshmalbrecht@gmail.com)
+- 2130916: Candlepin ignores the 'include' parameter (ojanus@redhat.com)
+
 * Wed Sep 14 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.15-1
 - Add new translations using Weblate (noreply@weblate.org)
 - 2123382: Added same-ID entity version collision resolution (crog@redhat.com)
