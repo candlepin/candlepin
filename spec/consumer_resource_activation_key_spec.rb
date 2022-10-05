@@ -238,24 +238,6 @@ describe 'Consumer Resource Activation Key' do
     expect(consumer['addOns']).to include(*ak_addons)
   end
 
-  it 'should allow a consumer to register with multiple activation keys with same content override names' do
-    key1 = @cp.create_activation_key(@owner['key'], 'key1')
-    key2 = @cp.create_activation_key(@owner['key'], 'key2')
-
-    override1 = {"name" => "somename", "value" => "someval", "contentLabel" => "somelabel"}
-    override2 = {"name" => "somename", "value" => "otherval", "contentLabel" => "somelabel"}
-    @cp.add_content_overrides_to_key(key1['id'], [override1, override2])
-
-    consumer = @client.register(random_string('machine1'), :system, nil, {}, nil,
-      @owner['key'], ["key2", "key1"])
-    consumer.uuid.should_not be_nil
-
-    consumer_overrides = @cp.get_content_overrides(consumer['uuid'])
-    consumer_overrides.length.should == 1
-    # The order doesn't appear to be preserved, so we dont know which override will be applied
-    # We really just don't want an exception
-  end
-
   it 'should allow a consumer to register with activation keys with null quantity' do
     prod1 = create_product(random_string('product1'), random_string('product1'),
                            :attributes => { :'multi-entitlement' => 'yes',

@@ -26,7 +26,6 @@ import org.hibernate.criterion.Restrictions;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import javax.inject.Singleton;
@@ -78,24 +77,21 @@ public class ActivationKeyCurator extends AbstractHibernateCurator<ActivationKey
     }
 
     public List<ActivationKey> findByKeyNames(String ownerKey, Collection<String> keyNames) {
-        if (ownerKey == null || CollectionUtils.isEmpty(keyNames)) {
-            return Collections.emptyList();
-        }
-
-        String hql = "SELECT key FROM ActivationKey key JOIN FETCH key.owner" +
-            " WHERE key.owner.key = :owner_key AND key.name IN (:keys)";
-
-        TypedQuery<ActivationKey> query = this.getEntityManager()
-            .createQuery(hql, ActivationKey.class)
-            .setParameter("owner_key", ownerKey);
-
         List<ActivationKey> foundActivationKeys = new ArrayList<>();
-        for (List<String> keyNameBlock : this.partition(keyNames)) {
-            foundActivationKeys.addAll(query
-                .setParameter("keys", keyNameBlock)
-                .getResultList());
-        }
+        if (ownerKey != null && !CollectionUtils.isEmpty(keyNames)) {
+            String hql = "SELECT key FROM ActivationKey key JOIN FETCH key.owner" +
+                " WHERE key.owner.key = :owner_key AND key.name IN (:keys)";
 
+            TypedQuery<ActivationKey> query = this.getEntityManager()
+                .createQuery(hql, ActivationKey.class)
+                .setParameter("owner_key", ownerKey);
+
+            for (List<String> keyNameBlock : this.partition(keyNames)) {
+                foundActivationKeys.addAll(query
+                    .setParameter("keys", keyNameBlock)
+                    .getResultList());
+            }
+        }
         return foundActivationKeys;
     }
 

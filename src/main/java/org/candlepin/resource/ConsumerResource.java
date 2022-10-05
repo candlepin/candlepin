@@ -26,7 +26,6 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
-import org.candlepin.auth.ActivationKeyPrincipal;
 import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SecurityHole;
@@ -168,6 +167,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -947,13 +947,8 @@ public class ConsumerResource implements ConsumerApi {
         String userName, Owner owner, String activationKeys, boolean identityCertCreation)
         throws BadRequestException {
 
-        // API:registerConsumer
-        Set<String> keyStrings = splitKeys(activationKeys);
-
-        validateOnKeyStrings(keyStrings, owner.getKey(), userName);
-
-        // Raise an exception if none of the keys specified exist for this owner.
-        List<ActivationKey> keys = findActivationKeys(principal, owner, keyStrings);
+        validateOnKeyStrings(activationKeys, owner.getKey(), userName);
+        List<ActivationKey> keys = findActivationKeysInOrder(owner, activationKeys);
 
         userName = setUserName(consumer, principal, userName);
         checkConsumerName(consumer);
@@ -1063,27 +1058,39 @@ public class ConsumerResource implements ConsumerApi {
         }
     }
 
-    private List<ActivationKey> findActivationKeys(
-        Principal principal, Owner owner, Set<String> keyStrings) {
-        if (keyStrings.isEmpty()) {
+    /**
+     * We need to make sure the requested keys are available. In addition, the order in
+     *  which they are specified in the call should be maintained for their later application.
+     *
+     * @param owner Owner to filter on
+     * @param keyStrings Comma-delimited list of activation key names
+     * @return List of found activation keys in the same order as the keystring
+     */
+    private List<ActivationKey> findActivationKeysInOrder(Owner owner, String keyStrings) {
+        if (keyStrings == null || keyStrings.isEmpty()) {
             return Collections.emptyList();
         }
-
-        List<ActivationKey> foundKeys = this.activationKeyCurator.findByKeyNames(owner.getKey(), keyStrings);
-
-        Set<String> found = foundKeys.stream()
-            .map(ActivationKey::getName)
-            .collect(Collectors.toSet());
-
-        if (!(principal instanceof ActivationKeyPrincipal)) {
-            for (String key : keyStrings) {
-                if (!found.contains(key)) {
-                    log.warn("Activation key \"{}\" not found for organization \"{}\".", key, owner.getKey());
-                }
-            }
+        LinkedHashMap<String, ActivationKey> keys = new LinkedHashMap<>();
+        for (String keyname : keyStrings.split("\\s*,\\s*")) {
+            keys.put(keyname, null);
         }
 
-        return foundKeys;
+        this.activationKeyCurator.findByKeyNames(owner.getKey(), keys.keySet())
+            .forEach(key -> keys.put(key.getName(), key));
+
+        Predicate<Map.Entry<String, ActivationKey>> keyFilter = entry -> {
+            if (entry.getValue() == null) {
+                log.warn("Activation key \"{}\" not found for organization \"{}\".",
+                    entry.getKey(), owner.getKey());
+                return false;
+            }
+            return true;
+        };
+
+        return keys.entrySet().stream()
+            .filter(keyFilter)
+            .map(Map.Entry::getValue)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -1141,8 +1148,8 @@ public class ConsumerResource implements ConsumerApi {
         }
     }
 
-    private void validateOnKeyStrings(Set<String> keyStrings, String ownerKey, String userName) {
-        if (!keyStrings.isEmpty()) {
+    private void validateOnKeyStrings(String keyString, String ownerKey, String userName) {
+        if (keyString != null && !keyString.isEmpty()) {
             if (ownerKey == null) {
                 throw new BadRequestException(i18n.tr("Org required to register with activation keys."));
             }
