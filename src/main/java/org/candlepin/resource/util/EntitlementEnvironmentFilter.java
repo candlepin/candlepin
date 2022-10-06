@@ -16,19 +16,15 @@ package org.candlepin.resource.util;
 
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentContentCurator;
-import org.candlepin.util.Util;
 
-import org.apache.commons.collections.CollectionUtils;
-
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+
 
 /**
  * The EntitlementEnvironmentFilter class filters the consumer's entitlement
@@ -37,89 +33,69 @@ import java.util.stream.Collectors;
  * This filtering avoids re-generating all the consumer entitlement certificates.
  */
 public class EntitlementEnvironmentFilter {
+
     private final EntitlementCurator entitlementCurator;
     private final EnvironmentContentCurator environmentContentCurator;
 
     public EntitlementEnvironmentFilter(
         EntitlementCurator entitlementCurator,
         EnvironmentContentCurator environmentContentCurator) {
+
         this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
         this.environmentContentCurator = Objects.requireNonNull(environmentContentCurator);
     }
 
     /**
-     * Filters the entitlements whose certificates are needed to be re-generated due to environments
-     * being added, removed or re-prioritized for a consumer.
-     * Idea is to avoid regenerating all the consumer's entitlements certs & filter the
-     * necessary entitlements whose certificates are actually needed to be re-generated.
+     * Fetches a set of entitlement IDs whose certificates should be regenerated as a result of
+     * the given environment updates. If no entitlements need regeneration, this method returns
+     * an empty set.
      *
      * @param updates
-     *  A collection of consumers, their original environments and their updated environments
+     *  an EnvironmentUpdates instance containing the environment changes to process
+     *
+     * @throws IllegalArgumentException
+     *  if updates is null
+     *
      * @return
-     *  List of entitlement IDs selected for certificate regeneration
+     *  a set of entitlement IDs whose certificates need regeneration as a result of the given
+     *  environment updates
      */
     public Set<String> filterEntitlements(EnvironmentUpdates updates) {
+        if (updates == null) {
+            throw new IllegalArgumentException("updates is null");
+        }
+
         Set<String> entitlementsToRegen = new HashSet<>();
-        Set<String> consumerIds = updates.consumers();
-        Set<String> allEnvIds = updates.environments();
 
-        Map<String, List<String>> mapOfEnvironmentContentUUID = this.environmentContentCurator
-            .getEnvironmentContentUUIDs(allEnvIds);
-        Map<String, Set<String>> mapOfEntitlementContentUUID = this.entitlementCurator
-            .getEntitlementContentUUIDs(consumerIds);
+        Map<String, Set<String>> environmentContentIdMap = this.environmentContentCurator
+            .getEnvironmentContentIdMap(updates.environments());
 
-        for (String consumerId : consumerIds) {
-            List<String> updatedEnvs = updates.currentEnvsOf(consumerId);
-            List<String> preExistingEnvs = updates.updatedEnvsOf(consumerId);
-            List<String> envRemoved = new ArrayList<>(differenceOf(updatedEnvs, preExistingEnvs));
-            Set<String> envChangeList = getEnvironmentChangeList(envRemoved, preExistingEnvs, updatedEnvs);
+        Map<String, String> entConsumerIdMap = this.entitlementCurator
+            .getEntitlementConsumerIdMap(updates.consumers());
 
-            for (String entitlementId : mapOfEntitlementContentUUID.keySet()) {
-                boolean entToRegen = false;
-                Set<String> entitlementContentUUIDs = mapOfEntitlementContentUUID.get(entitlementId);
+        Map<String, Set<String>> entitlementContentIdMap = this.entitlementCurator
+            .getEntitlementContentIdMap(entConsumerIdMap.keySet());
 
-                for (String environmentId : envChangeList) {
-                    List<String> environmentContentUUIDs = mapOfEnvironmentContentUUID.get(environmentId);
+        for (Map.Entry<String, Set<String>> entry : entitlementContentIdMap.entrySet()) {
+            String entitlementId = entry.getKey();
+            Set<String> entContentIds = entry.getValue();
 
-                    if (environmentContentUUIDs == null) {
-                        // No content present for this env
-                        continue;
-                    }
+            String consumerId = entConsumerIdMap.get(entitlementId);
+            List<String> currentEnvList = updates.currentEnvsOf(consumerId);
+            List<String> updatedEnvList = updates.updatedEnvsOf(consumerId);
 
-                    List<String> currentHigher = new ArrayList<>(
-                        findCurrentHigher(updatedEnvs, environmentId));
-                    Set<String> currentHigherContentUUIDs = contentOf(
-                        mapOfEnvironmentContentUUID, currentHigher);
+            // Entitlement needs to be regenerated if any of the following occur:
+            // - the first environment that has promoted the content has changed
+            // - all environments that have promoted the content are removed
+            // - the content was not promoted previously
 
-                    if (isCertRegenerationRequired(environmentContentUUIDs,
-                        entitlementContentUUIDs, currentHigherContentUUIDs)) {
-                        entToRegen = true;
-                        break;
-                    }
-                }
+            for (String contentId : entContentIds) {
+                String cEnv = this.getContentEnvironment(contentId, currentEnvList, environmentContentIdMap);
+                String uEnv = this.getContentEnvironment(contentId, updatedEnvList, environmentContentIdMap);
 
-                // Case where env of higher priority is being removed
-                if (!envRemoved.isEmpty() && !entToRegen) {
-                    for (String environmentId : envRemoved) {
-                        List<String> currentLower = findCurrentLower(
-                            envRemoved, preExistingEnvs, environmentId);
-                        List<String> contentProvided = mapOfEnvironmentContentUUID
-                            .getOrDefault(environmentId, Collections.emptyList());
-
-                        Set<String> contentOfLowerEnvs = contentOf(mapOfEnvironmentContentUUID, currentLower);
-
-                        entToRegen = contentProvided.stream()
-                            .filter(entitlementContentUUIDs::contains)
-                            .anyMatch(contentOfLowerEnvs::contains);
-
-                        if (entToRegen) {
-                            break;
-                        }
-                    }
-                }
-
-                if (entToRegen) {
+                if (uEnv != null ? !uEnv.equals(cEnv) : cEnv != null) {
                     entitlementsToRegen.add(entitlementId);
+                    break;
                 }
             }
         }
@@ -127,101 +103,33 @@ public class EntitlementEnvironmentFilter {
         return entitlementsToRegen;
     }
 
-    private Set<String> contentOf(Map<String, List<String>> envContents, List<String> envIds) {
-        return envIds.stream()
-            .map(envContents::get)
-            .flatMap(Collection::stream)
-            .collect(Collectors.toSet());
-    }
-
-    private List<String> findCurrentLower(List<String> envRemoved, List<String> preExistingEnvs,
-        String environmentId) {
-        int fromIndex = envRemoved.indexOf(environmentId) + 1;
-        List<String> currentLower = new ArrayList<>(
-            preExistingEnvs.subList(fromIndex, preExistingEnvs.size()));
-        return (List<String>) differenceOf(envRemoved, currentLower);
-    }
-
-    private List<String> findCurrentHigher(List<String> updatedEnvs, String environmentId) {
-        if (updatedEnvs.contains(environmentId)) {
-            return updatedEnvs.subList(0, updatedEnvs.indexOf(environmentId));
-        }
-        else {
-            return updatedEnvs;
-        }
-    }
-
     /**
-     * Returns the list of environment IDs which got added, removed or re-prioritized
-     * from consumers current existing environments.
+     * Fetches the first environment in the given list in which the specified content is promoted.
+     * If the content has not been promoted in any of the environments, this method returns null.
+     *
+     * @param contentId
+     *  the ID of the content to lookup
+     *
+     * @param environmentIds
+     *  the list of environments to check, in descending order of priority
+     *
+     * @map environmentContentIdMap
+     *  a map consisting of the environment IDs mapped to their promoted content IDs
      *
      * @return
-     *  Returns the unique environmentIds which got added, removed or re-prioritized
+     *  the ID of the first environment in which the specified content is promoted, or null if the
+     *  content has not been promoted in any of the given environments
      */
-    private Set<String> getEnvironmentChangeList(List<String> envRemoved,
-        List<String> preExistingEnvs, List<String> updatedEnvs) {
+    private String getContentEnvironment(String contentId, List<String> environmentIds,
+        Map<String, Set<String>> environmentContentIdMap) {
 
-        Set<String> environmentChangeList = new HashSet<>();
-
-        // Envs Added
-        environmentChangeList.addAll(differenceOf(preExistingEnvs, updatedEnvs));
-
-        // Env removed are kept in separate list for special use cases
-        environmentChangeList.addAll(envRemoved);
-
-        // Env reordered
-        environmentChangeList.addAll(Util.getReorderedItems(preExistingEnvs, updatedEnvs));
-
-        return environmentChangeList;
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> Collection<T> differenceOf(List<T> preExistingEnvs, List<T> updatedEnvs) {
-        return CollectionUtils.subtract(updatedEnvs, preExistingEnvs);
-    }
-
-    /**
-     * Method to check if entitlement cert needs to be regenerated or not,
-     * based on environment content UUIDs, content UUIDs of environment having
-     * higher priority & content UUIDs provided by entitlement itself.
-     *
-     * @param environmentContentUUIDs
-     *  Content UUIDs associated with environment
-     *
-     * @param entitlementContentUUIDs
-     *  Content UUIDs associated with entitlement
-     *
-     * @param currentHigherContentUUIDs
-     *  Content UUIDs belonging to environment having higher priority
-     *
-     * @return
-     *  Returns true or false, whether to regenerate entitlement cert or not.
-     */
-
-    private boolean isCertRegenerationRequired(List<String> environmentContentUUIDs,
-        Set<String> entitlementContentUUIDs, Set<String> currentHigherContentUUIDs) {
-        boolean regenRequired = false;
-        // If current env is of the highest priority,
-        // we only check if any one of environment content UUID is being provided
-        // by the entitlement
-        if (currentHigherContentUUIDs.isEmpty()) {
-            for (String contentUUID : environmentContentUUIDs) {
-                if (entitlementContentUUIDs.contains(contentUUID)) {
-                    regenRequired = true;
-                    break;
-                }
-            }
-        }
-        else {
-            for (String contentUUID : environmentContentUUIDs) {
-                if (entitlementContentUUIDs.contains(contentUUID) &&
-                    !currentHigherContentUUIDs.contains(contentUUID)) {
-                    regenRequired = true;
-                    break;
-                }
+        for (String envId : environmentIds) {
+            if (environmentContentIdMap.getOrDefault(envId, Collections.emptySet()).contains(contentId)) {
+                return envId;
             }
         }
 
-        return regenRequired;
+        return null;
     }
+
 }

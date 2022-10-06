@@ -147,8 +147,7 @@ class EnvironmentResourceTest {
             this.entCertGenerator
         );
 
-        this.owner = new Owner("owner1", "Owner 1");
-        owner.setId("owner1");
+        this.owner = TestUtil.createOwner("owner1");
         this.environment1 = createEnvironment(owner, ENV_ID_1);
     }
 
@@ -239,9 +238,13 @@ class EnvironmentResourceTest {
     void shouldThrowExceptionIfAnyOfEnvIdsDoesNotBelongToSameOwner() {
         ConsumerDTO dto = new ConsumerDTO();
         String envIds = "env1,env2,env3";
-        Environment env1 = createEnvironment(new Owner("Random_Owner_1", "Owner1"), "env1");
-        Environment env2 = createEnvironment(new Owner("Random_Owner_2", "Owner2"), "env2");
-        Environment env3 = createEnvironment(new Owner("Random_Owner_1", "Owner1"), "env3");
+
+        Owner owner1 = TestUtil.createOwner("owner1");
+        Owner owner2 = TestUtil.createOwner("owner2");
+
+        Environment env1 = createEnvironment(owner1, "env1");
+        Environment env2 = createEnvironment(owner2, "env2");
+        Environment env3 = createEnvironment(owner1, "env3");
         when(this.envCurator.get(anyString())).thenReturn(env2, env1, env3);
 
         assertThrows(BadRequestException.class, () -> this.environmentResource

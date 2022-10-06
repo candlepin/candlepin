@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20221003160605-1" author="crog">
+        <createTable tableName="cp_activation_key_products">
+            <column name="key_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20221003160605-2" author="crog">
+        <addPrimaryKey tableName="cp_activation_key_products" columnNames="key_id, product_id"
+            constraintName="cp_akproducts_pkey"/>
+
+        <addForeignKeyConstraint constraintName="cp_akproducts_fk1"
+            baseTableName="cp_activation_key_products"
+            baseColumnNames="key_id"
+            referencedTableName="cp_activation_key"
+            referencedColumnNames="id"
+            deleteCascade="true"/>
+    </changeSet>
+
+    <changeSet id="20221003160605-3" author="crog">
+        <createIndex indexName="cp_akproducts_idx1" tableName="cp_activation_key_products">
+            <column name="key_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20221003160605-4" author="crog">
+        <sql dbms="postgresql, mysql">
+            INSERT INTO cp_activation_key_products
+                SELECT akp2.key_id, prod.product_id
+                    FROM cp2_activation_key_products akp2
+                    JOIN cp2_products prod ON prod.uuid = akp2.product_uuid;
+        </sql>
+    </changeSet>
+
+<!--
+    <changeSet id="20221003160605-5" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="cp2_activation_key_products"/>
+        </preConditions>
+
+        <dropTable tableName="cp2_activation_key_products"/>
+    </changeSet>
+-->
+
+</databaseChangeLog>

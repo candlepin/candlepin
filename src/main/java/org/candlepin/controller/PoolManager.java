@@ -116,7 +116,7 @@ public interface PoolManager {
     List<Entitlement> entitleByProducts(AutobindData data)
         throws EntitlementRefusedException;
 
-    List<PoolQuantity> getBestPools(Consumer consumer, String[] productIds,
+    List<PoolQuantity> getBestPools(Consumer consumer, Collection<String> productIds,
         Date entitleDate, String ownerId, String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException;
 

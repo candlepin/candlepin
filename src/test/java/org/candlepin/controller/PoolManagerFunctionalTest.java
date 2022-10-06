@@ -231,8 +231,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void testQuantityCheck() throws Exception {
         Pool monitoringPool = poolCurator.listByOwnerAndProduct(o, monitoring.getId()).get(0);
         assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
-        AutobindData data = AutobindData.create(parentSystem, o).on(new Date())
-            .forProducts(new String[] { monitoring.getId() });
+        AutobindData data = new AutobindData(parentSystem, o)
+            .on(new Date())
+            .forProducts(Set.of(monitoring.getId()));
+
         for (int i = 0; i < 5; i++) {
             List<Entitlement> entitlements = poolManager.entitleByProducts(data);
             assertEquals(1, entitlements.size());
@@ -264,8 +266,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testRevocation() throws Exception {
-        AutobindData data = AutobindData.create(parentSystem, o).on(new Date())
-            .forProducts(new String[] { monitoring.getId() });
+        AutobindData data = new AutobindData(parentSystem, o)
+            .on(new Date())
+            .forProducts(Set.of(monitoring.getId()));
+
         Entitlement e = poolManager.entitleByProducts(data).get(0);
         poolManager.revokeEntitlement(e);
 
@@ -294,10 +298,11 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testRegenerateEntitlementCertificatesWithSingleEntitlement()
-        throws Exception {
-        AutobindData data = AutobindData.create(childVirtSystem, o).on(new Date())
-            .forProducts(new String[] { provisioning.getId() });
+    public void testRegenerateEntitlementCertificatesWithSingleEntitlement() throws Exception {
+        AutobindData data = new AutobindData(childVirtSystem, o)
+            .on(new Date())
+            .forProducts(Set.of(provisioning.getId()));
+
         this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         regenerateECAndAssertNotSameCertificates();
     }
@@ -336,8 +341,11 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRegenerateEntitlementCertificatesWithMultipleEntitlements()
         throws EntitlementRefusedException {
-        AutobindData data = AutobindData.create(childVirtSystem, o).on(new Date())
-            .forProducts(new String[] { provisioning.getId() });
+
+        AutobindData data = new AutobindData(childVirtSystem, o)
+            .on(new Date())
+            .forProducts(Set.of(provisioning.getId()));
+
         this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         this.entitlementCurator.refresh(poolManager.entitleByProducts(data).get(0));
         regenerateECAndAssertNotSameCertificates();
@@ -390,14 +398,16 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // this ends up causing a hibernate failure (the old cert is asked to be deleted,
         // but it hasn't been saved yet). Since getting the pool ordering right is tricky
         // inside an entitleByProducts call, we do it in two singular calls here.
-        AutobindData data = AutobindData.create(parentSystem, o).on(new Date())
-            .forProducts(new String[] { "modifier" });
+        AutobindData data = new AutobindData(parentSystem, o)
+            .on(new Date())
+            .forProducts(Set.of("modifier"));
 
         poolManager.entitleByProducts(data);
 
         try {
-            data = AutobindData.create(parentSystem, o).on(new Date())
-                .forProducts(new String[] { PRODUCT_VIRT_HOST });
+            data = new AutobindData(parentSystem, o)
+                .on(new Date())
+                .forProducts(Set.of(PRODUCT_VIRT_HOST));
 
             poolManager.entitleByProducts(data);
         }
@@ -942,8 +952,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testRevocationRevokesEntitlementCertSerial() throws Exception {
-        AutobindData data = AutobindData.create(parentSystem, o).on(new Date())
-            .forProducts(new String[] { monitoring.getId() });
+        AutobindData data = new AutobindData(parentSystem, o)
+            .on(new Date())
+            .forProducts(Set.of(monitoring.getId()));
+
         Entitlement e = poolManager.entitleByProducts(data).get(0);
         CertificateSerial serial = e.getCertificates().iterator().next().getSerial();
         poolManager.revokeEntitlement(e);

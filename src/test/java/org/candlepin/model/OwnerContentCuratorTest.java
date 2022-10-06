@@ -30,7 +30,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -523,11 +525,6 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
         assertTrue(original.getUuid() != modified.getUuid());
 
-        Environment environment1 = this.createEnvironment(owner1, "test_env-1", "test_env-1", null, null,
-            List.of(original));
-        Environment environment2 = this.createEnvironment(owner2, "test_env-2", "test_env-2", null, null,
-            List.of(original));
-
         assertTrue(this.isContentMappedToOwner(original, owner1));
         assertTrue(this.isContentMappedToOwner(original, owner2));
         assertFalse(this.isContentMappedToOwner(modified, owner1));
@@ -540,18 +537,6 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         assertTrue(this.isContentMappedToOwner(modified, owner1));
         assertTrue(this.isContentMappedToOwner(original, owner2));
         assertFalse(this.isContentMappedToOwner(modified, owner2));
-
-        this.environmentCurator.evict(environment1);
-        this.environmentCurator.evict(environment2);
-        environment1 = this.environmentCurator.get(environment1.getId());
-        environment2 = this.environmentCurator.get(environment2.getId());
-
-        assertEquals(1, environment1.getEnvironmentContent().size());
-        assertEquals(1, environment2.getEnvironmentContent().size());
-        assertEquals(modified.getUuid(), environment1.getEnvironmentContent().iterator().next().getContent()
-            .getUuid());
-        assertEquals(original.getUuid(), environment2.getEnvironmentContent().iterator().next().getContent()
-            .getUuid());
     }
 
     @Test
@@ -573,15 +558,27 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         assertFalse(this.isContentMappedToOwner(content, owner1));
         assertTrue(this.isContentMappedToOwner(content, owner2));
 
+        // Impl note: we must use evict+fetch here, as a refresh will attempt to refresh all child
+        // entities, even if they've been removed at the database level
         this.environmentCurator.evict(environment1);
         this.environmentCurator.evict(environment2);
         environment1 = this.environmentCurator.get(environment1.getId());
         environment2 = this.environmentCurator.get(environment2.getId());
 
-        assertEquals(0, environment1.getEnvironmentContent().size());
-        assertEquals(1, environment2.getEnvironmentContent().size());
-        assertEquals(content.getUuid(), environment2.getEnvironmentContent().iterator().next().getContent()
-            .getUuid());
+        Set<EnvironmentContent> envContent1 = environment1.getEnvironmentContent();
+        assertNotNull(envContent1);
+        assertTrue(envContent1.isEmpty());
+
+        Set<EnvironmentContent> envContent2 = environment2.getEnvironmentContent();
+        assertNotNull(envContent2);
+        assertEquals(1, envContent2.size());
+
+        Optional<String> contentId = envContent2.stream()
+            .map(EnvironmentContent::getContentId)
+            .findFirst();
+
+        assertTrue(contentId.isPresent());
+        assertEquals(content.getId(), contentId.get());
     }
 
     @Test

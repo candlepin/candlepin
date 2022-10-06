@@ -18,6 +18,7 @@ package org.candlepin.async.tasks;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -31,6 +32,7 @@ import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
+import org.candlepin.test.CollectionMatcher;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,6 +41,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+
+
 
 public class EntitleByProductsJobTest {
 
@@ -62,7 +67,7 @@ public class EntitleByProductsJobTest {
 
     @Test
     void allMandatoryValuesPresent() {
-        final String[] pids = { "pid1", "pid2", "pid3" };
+        final Set<String> pids = Set.of("pid1", "pid2", "pid3");
         final List<String> fromPools = Collections.singletonList("pool_id1");
 
         final JobConfig config = EntitleByProductsJob.createConfig()
@@ -76,7 +81,7 @@ public class EntitleByProductsJobTest {
 
     @Test
     void consumerMustBePresent() {
-        final String[] pids = { "pid1", "pid2", "pid3" };
+        final Set<String> pids = Set.of("pid1", "pid2", "pid3");
         final List<String> fromPools = Collections.singletonList("pool_id1");
 
         final JobConfig config = EntitleByProductsJob.createConfig()
@@ -89,7 +94,7 @@ public class EntitleByProductsJobTest {
 
     @Test
     void consumerCannotBeBlank() {
-        final String[] pids = { "pid1", "pid2", "pid3" };
+        final Set<String> pids = Set.of("pid1", "pid2", "pid3");
         final List<String> fromPools = Collections.singletonList("pool_id1");
         consumer.setUuid("");
 
@@ -116,7 +121,7 @@ public class EntitleByProductsJobTest {
 
     @Test
     void productIdsCanBeEmpty() {
-        final String[] pids = {};
+        final Set<String> pids = Set.of();
         final List<String> fromPools = Collections.singletonList("pool_id1");
 
         final JobConfig config = EntitleByProductsJob.createConfig()
@@ -130,7 +135,7 @@ public class EntitleByProductsJobTest {
 
     @Test
     void entitleDateIsOptional() {
-        final String[] pids = { "pid1", "pid2", "pid3" };
+        final Set<String> pids = Set.of("pid1", "pid2", "pid3");
         final List<String> fromPools = Collections.singletonList("pool_id1");
 
         final JobConfig config = EntitleByProductsJob.createConfig()
@@ -143,7 +148,7 @@ public class EntitleByProductsJobTest {
 
     @Test
     void fromPoolsMustBePresent() {
-        final String[] pids = { "pid1", "pid2", "pid3" };
+        final Set<String> pids = Set.of("pid1", "pid2", "pid3");
 
         final JobConfig config = EntitleByProductsJob.createConfig()
             .setConsumer(consumer)
@@ -155,7 +160,9 @@ public class EntitleByProductsJobTest {
 
     @Test
     void bindByProductsExec() throws Exception  {
-        final String[] pids = { "pid1", "pid2", "pid3" };
+        final Set<String> pids = Set.of("pid1", "pid2", "pid3");
+        CollectionMatcher<String> matcher = new CollectionMatcher<>(pids);
+
         final List<String> fromPools = Collections.singletonList("pool_id1");
         final Date entitleDate = new Date();
         final JobConfig config = EntitleByProductsJob.createConfig()
@@ -166,13 +173,13 @@ public class EntitleByProductsJobTest {
         final JobExecutionContext ctx = mock(JobExecutionContext.class);
         final List<Entitlement> ents = Arrays.asList(mock(Entitlement.class), mock(Entitlement.class));
         when(ctx.getJobArguments()).thenReturn(config.getJobArguments());
-        when(entitler.bindByProducts(eq(pids), eq(consumerUuid), eq(entitleDate), eq(fromPools)))
+        when(entitler.bindByProducts(argThat(matcher), eq(consumerUuid), eq(entitleDate), eq(fromPools)))
             .thenReturn(ents);
         final EntitleByProductsJob job = new EntitleByProductsJob(entitler);
 
         job.execute(ctx);
 
-        verify(entitler).bindByProducts(eq(pids), eq(consumerUuid), eq(entitleDate), eq(fromPools));
+        verify(entitler).bindByProducts(argThat(matcher), eq(consumerUuid), eq(entitleDate), eq(fromPools));
         verify(entitler).sendEvents(eq(ents));
     }
 

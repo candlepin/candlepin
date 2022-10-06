@@ -28,8 +28,11 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.test.TestUtil;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Collection;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+
 
 /**
  * Test suite for the ProductTranslator class
@@ -66,14 +69,13 @@ public class EnvironmentTranslatorTest extends
         source.setDescription("test_description");
         source.setOwner(ownerTranslatorTest.initSourceObject());
 
-        Set<EnvironmentContent> environmentContents = new HashSet<>();
         for (int i = 0; i < 3; ++i) {
             Content content = TestUtil.createContent("content-" + i);
             content.setUuid(content.getId() + "_uuid");
-            EnvironmentContent environmentContent = new EnvironmentContent(source, content, true);
-            environmentContents.add(environmentContent);
+
+            source.addContent(content, true);
         }
-        source.setEnvironmentContent(environmentContents);
+
         return source;
     }
 
@@ -91,25 +93,23 @@ public class EnvironmentTranslatorTest extends
             assertEquals(source.getDescription(), dto.getDescription());
 
             if (childrenGenerated) {
-                this.nestedOwnerTranslatorTest.verifyOutput(source.getOwner(),
-                    dto.getOwner(), childrenGenerated);
+                this.nestedOwnerTranslatorTest.verifyOutput(source.getOwner(), dto.getOwner(), true);
+
                 assertNotNull(dto.getEnvironmentContent());
-                for (EnvironmentContent ec : source.getEnvironmentContent()) {
-                    for (EnvironmentContentDTO ecdto : dto.getEnvironmentContent()) {
-                        Content content = ec.getContent();
-                        ContentDTO cdto = ecdto.getContent();
 
-                        assertNotNull(cdto);
-                        assertNotNull(cdto.getUuid());
+                Collection<EnvironmentContent> envcontent = source.getEnvironmentContent();
+                Collection<EnvironmentContentDTO> envcontentDtos = dto.getEnvironmentContent();
 
-                        if (cdto.getUuid().equals(content.getUuid())) {
-                            assertEquals(ec.getEnabled(), ecdto.getEnabled());
+                assertNotNull(envcontentDtos);
+                assertEquals(envcontent.size(), envcontentDtos.size());
 
-                            // Pass the content off to the ContentTranslatorTest to verify it
-                            this.contentTranslatorTest.verifyOutput(content, cdto, childrenGenerated);
-                        }
-                    }
-                }
+                Map<String, Boolean> ecMap = envcontent.stream().collect(
+                    Collectors.toMap(EnvironmentContent::getContentId, EnvironmentContent::getEnabled));
+
+                Map<String, Boolean> ecDtoMap = envcontentDtos.stream().collect(
+                    Collectors.toMap(EnvironmentContentDTO::getContentId, EnvironmentContentDTO::getEnabled));
+
+                assertEquals(ecMap, ecDtoMap);
             }
             else {
                 assertNull(dto.getEnvironmentContent());

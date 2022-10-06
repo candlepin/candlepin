@@ -122,7 +122,11 @@ public class EventSinkImplTest {
         this.eventFilter = new EventFilter(new CandlepinCommonTestConfig());
 
         this.eventSinkImpl = createEventSink(mockSessionFactory);
-        o = new Owner("test owner");
+
+        this.o = new Owner()
+            .setId("test_owner")
+            .setKey("test_owner")
+            .setDisplayName("Test Owner");
     }
 
     /**
@@ -206,7 +210,7 @@ public class EventSinkImplTest {
 
     @Test
     public void emptyKeyShouldEmitSuccessfully() throws Exception {
-        ActivationKey key = TestUtil.createActivationKey(new Owner("deadbeef"), null);
+        ActivationKey key = TestUtil.createActivationKey(this.o, null);
         eventSinkImpl.emitActivationKeyCreated(key);
         eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
@@ -217,7 +221,7 @@ public class EventSinkImplTest {
         ArrayList<Pool> pools = new ArrayList<>();
         pools.add(TestUtil.createPool(o, TestUtil.createProduct()));
         pools.add(TestUtil.createPool(o, TestUtil.createProduct()));
-        ActivationKey key = TestUtil.createActivationKey(new Owner("deadbeef"), pools);
+        ActivationKey key = TestUtil.createActivationKey(this.o, pools);
         eventSinkImpl.emitActivationKeyCreated(key);
         eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));

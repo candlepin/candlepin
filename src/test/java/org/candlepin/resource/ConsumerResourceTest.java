@@ -569,23 +569,25 @@ public class ConsumerResourceTest {
 
     @Test
     public void futureHealing() throws Exception {
-        Owner o = createOwner();
-        Consumer c = createConsumer(o);
+        Owner owner = createOwner();
+        Consumer consumer = createConsumer(owner);
         ConsumerCurator cc = mock(ConsumerCurator.class);
         ConsumerInstalledProduct cip = mock(ConsumerInstalledProduct.class);
         Set<ConsumerInstalledProduct> products = new HashSet<>();
         products.add(cip);
 
-        when(ownerCurator.findOwnerById(eq(o.getId()))).thenReturn(o);
+        when(ownerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
         when(cip.getProductId()).thenReturn("product-foo");
-        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(eq(o.getKey()))).thenReturn(false);
-        when(cc.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
+        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(eq(owner.getKey()))).thenReturn(false);
+        when(cc.verifyAndLookupConsumerWithEntitlements(eq(consumer.getUuid()))).thenReturn(consumer);
 
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
         Date dt = ResourceDateParser.parseDateString(dtStr);
 
-        consumerResource.bind(c.getUuid(), null, null, null, null, null, false, dtStr, null);
-        AutobindData data = AutobindData.create(c, o).on(dt);
+        consumerResource.bind(consumer.getUuid(), null, null, null, null, null, false, dtStr, null);
+        AutobindData data = new AutobindData(consumer, owner)
+            .on(dt);
+
         verify(entitler).bindByProducts(eq(data));
     }
 

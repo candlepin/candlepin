@@ -1093,6 +1093,9 @@ public class PoolManagerTest {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testEntitleWithADate() throws Exception {
+        // TODO: Fix this test with proper mocks -- the current mocks were hiding a bug in the
+        // test where we were sending the wrong product IDs in, and still got the correct result.
+
         Product product = TestUtil.createProduct();
         List<Pool> pools = new ArrayList<>();
         Pool pool1 = TestUtil.createPool(product);
@@ -1123,16 +1126,16 @@ public class PoolManagerTest {
 
         List<PoolQuantity> bestPools = new ArrayList<>();
         bestPools.add(new PoolQuantity(pool1, 1));
-        when(autobindRules.selectBestPools(any(Consumer.class), any(String[].class),
-            anyList(), nullable(ComplianceStatus.class), nullable(String.class),
-            anySet(), eq(false)))
+        when(autobindRules.selectBestPools(any(Consumer.class), anyCollection(), anyList(),
+            nullable(ComplianceStatus.class), nullable(String.class), anySet(), eq(false)))
             .thenReturn(bestPools);
 
         ConsumerType ctype = this.mockConsumerType(TestUtil.createConsumerType());
         Consumer consumer = TestUtil.createConsumer(ctype, owner);
 
-        AutobindData data = AutobindData.create(consumer, owner)
-            .forProducts(new String[] { product.getUuid() }).on(now);
+        AutobindData data = new AutobindData(consumer, owner)
+            .on(now)
+            .forProducts(Set.of(product.getId()));
 
         doNothing().when(mockPoolCurator).flush();
         doNothing().when(mockPoolCurator).clear();
@@ -1145,61 +1148,60 @@ public class PoolManagerTest {
 
     @Test
     public void testEntitleByProductRetry() {
-        Product product = TestUtil.createProduct();
-        List<Pool> pools = new ArrayList<>();
-        Pool pool1 = TestUtil.createPool(product);
-        pool1.setId("poolId1");
-        pools.add(pool1);
-        Pool pool2 = TestUtil.createPool(product);
-        pool2.setId("poolId2");
-        pools.add(pool2);
         Date now = new Date();
 
-        Map<String, ValidationResult> resultMap = new HashMap<>();
-        ValidationResult result = mock(ValidationResult.class);
-        resultMap.put("poolId1", result);
-        resultMap.put("poolId2", result);
-        Page<List<Pool>> page = mock(Page.class);
+        Consumer consumer = TestUtil.createConsumer(owner);
+        Product product = TestUtil.createProduct();
+        Pool pool1 = TestUtil.createPool(product)
+            .setId("poolId1");
+        Pool pool2 = TestUtil.createPool(product)
+            .setId("poolId2");
 
-        when(page.getPageData()).thenReturn(pools);
-        when(mockPoolCurator.listAvailableEntitlementPools(any(Consumer.class), any(String.class),
-            nullable(String.class), nullable(String.class), eq(now),
-            any(PoolFilterBuilder.class), nullable(PageRequest.class), anyBoolean(), anyBoolean(),
-            anyBoolean(), nullable(Date.class)))
-            .thenReturn(page);
+        List<Pool> pools = List.of(pool1, pool2);
+
+        ValidationResult validationResult = new ValidationResult();
+        validationResult.addError(new ValidationError("rulefailed.no.entitlements.available"));
+
+        Map<String, ValidationResult> resultMap = new HashMap<>();
+        resultMap.put("poolId1", validationResult);
+        resultMap.put("poolId2", validationResult);
+
+        Page<List<Pool>> page = new Page<>();
+        page.setPageData(pools);
+
+        doReturn(page).when(mockPoolCurator).listAvailableEntitlementPools(eq(consumer), any(String.class),
+            nullable(String.class), nullable(String.class), eq(now), any(PoolFilterBuilder.class),
+            nullable(PageRequest.class), anyBoolean(), anyBoolean(), anyBoolean(), nullable(Date.class));
+
+        doAnswer(iom -> iom.getArgument(1)).when(enforcerMock)
+            .filterPools(eq(consumer), anyList(), anyBoolean());
 
         CandlepinQuery mockQuery = mock(CandlepinQuery.class);
         when(mockPoolCurator.listAllByIds(nullable(Set.class))).thenReturn(mockQuery);
-        List<Pool> poolList = Arrays.asList(pool1);
-        when(mockQuery.iterator())
-            .thenReturn(poolList.listIterator())
-            .thenReturn(poolList.listIterator())
-            .thenReturn(poolList.listIterator())
-            .thenReturn(poolList.listIterator());
-        when(enforcerMock.preEntitlement(any(Consumer.class), anyCollection(),
-            any(CallerType.class))).thenReturn(resultMap);
 
-        when(result.isSuccessful()).thenReturn(false);
-        List<ValidationError> errors = new ArrayList<>();
-        errors.add(new ValidationError("rulefailed.no.entitlements.available"));
-        when(result.getErrors()).thenReturn(errors);
+        List<Pool> poolList = Arrays.asList(pool1);
+        doAnswer(iom -> poolList.iterator()).when(mockQuery).iterator();
+
+        when(enforcerMock.preEntitlement(any(Consumer.class), any(Pool.class), any(Integer.class),
+            any(CallerType.class))).thenReturn(validationResult);
+
+        // Impl note: this list *must* be mutable, or we'll cause an exception deep in the guts of
+        // the autobind flow
         List<PoolQuantity> bestPools = new ArrayList<>();
         bestPools.add(new PoolQuantity(pool1, 1));
-        when(autobindRules.selectBestPools(any(Consumer.class), any(String[].class), anyList(),
-            nullable(ComplianceStatus.class), nullable(String.class), anySet(), eq(false)))
-            .thenReturn(bestPools);
 
-        AutobindData data = AutobindData.create(TestUtil.createConsumer(owner), owner)
-            .forProducts(new String[] { product.getUuid() }).on(now);
+        AutobindData data = new AutobindData(consumer, owner)
+            .on(now)
+            .forProducts(Set.of(product.getId()));
 
-        doNothing().when(mockPoolCurator).flush();
+        assertThrows(EntitlementRefusedException.class, () -> manager.entitleByProducts(data));
 
-        assertThrows(EntitlementRefusedException.class, () ->
-            manager.entitleByProducts(data)
-        );
-        verify(autobindRules, times(4)).selectBestPools(any(Consumer.class), any(String[].class),
-            anyList(), nullable(ComplianceStatus.class), nullable(String.class), anySet(),
-            eq(false));
+        // Impl note: Enforcer.preEntitlement gets hit once per iteration for each pool, for a total
+        // of 8 times for this test.
+        verify(enforcerMock, times(4)).preEntitlement(eq(consumer), eq(pool1), any(Integer.class),
+            any(CallerType.class));
+        verify(enforcerMock, times(4)).preEntitlement(eq(consumer), eq(pool2), any(Integer.class),
+            any(CallerType.class));
     }
 
     @Test
@@ -1378,9 +1380,9 @@ public class PoolManagerTest {
 
         // Setup an installed product for the consumer, we'll make the bind request
         // with no products specified, so this should get used instead:
-        String[] installedPids = new String[] { product.getUuid() };
+        Set<String> installedPids = Set.of(product.getId());
         ComplianceStatus mockCompliance = new ComplianceStatus(now);
-        mockCompliance.addNonCompliantProduct(installedPids[0]);
+        mockCompliance.addNonCompliantProduct(product.getId());
         when(complianceRules.getStatus(any(Consumer.class),
             any(Date.class), any(Boolean.class))).thenReturn(mockCompliance);
 
@@ -1403,16 +1405,17 @@ public class PoolManagerTest {
 
         List<PoolQuantity> bestPools = new ArrayList<>();
         bestPools.add(new PoolQuantity(pool1, 1));
-        when(autobindRules.selectBestPools(any(Consumer.class), any(String[].class),
-            anyList(), any(ComplianceStatus.class), any(String.class),
-            anySet(), eq(false)))
+        when(autobindRules.selectBestPools(any(Consumer.class), anySet(), anyList(),
+            any(ComplianceStatus.class), any(String.class), anySet(), eq(false)))
             .thenReturn(bestPools);
 
         // Make the call but provide a null array of product IDs (simulates healing):
         ConsumerType ctype = this.mockConsumerType(TestUtil.createConsumerType());
         Consumer consumer = TestUtil.createConsumer(ctype, owner);
 
-        AutobindData data = AutobindData.create(consumer, owner).on(now);
+        AutobindData data = new AutobindData(consumer, owner)
+            .on(now);
+
         manager.entitleByProducts(data);
 
         verify(autobindRules).selectBestPools(any(Consumer.class), eq(installedPids),

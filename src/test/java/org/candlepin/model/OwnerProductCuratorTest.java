@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -532,11 +531,6 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Pool pool = TestUtil.createPool(owner, original);
         this.poolCurator.create(pool);
 
-        ActivationKey key = TestUtil.createActivationKey(owner, null);
-        key.setProducts(Util.asSet(original));
-
-        this.activationKeyCurator.create(key);
-
         assertTrue(this.isProductMappedToOwner(original, owner));
         assertFalse(this.isProductMappedToOwner(updated, owner));
         assertTrue(this.isProductMappedToOwner(untouched, owner));
@@ -550,11 +544,6 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertTrue(this.isProductMappedToOwner(updated, owner));
         assertTrue(this.isProductMappedToOwner(untouched, owner));
 
-        this.activationKeyCurator.refresh(key);
-        Collection<Product> products = key.getProducts();
-        assertEquals(1, products.size());
-        assertEquals(updated.getUuid(), products.iterator().next().getUuid());
-
         this.poolCurator.refresh(pool);
         assertEquals(updated.getUuid(), pool.getProduct().getUuid());
     }
@@ -562,23 +551,24 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testRemoveOwnerProductReferences() {
         Owner owner = this.createOwner();
-        Product original = this.createProduct();
-        this.createOwnerProductMapping(owner, original);
+        Product product = this.createProduct();
+        this.createOwnerProductMapping(owner, product);
 
-        ActivationKey key = TestUtil.createActivationKey(owner, null);
-        key.setProducts(Util.asSet(original));
+        ActivationKey key = TestUtil.createActivationKey(owner, null)
+            .addProduct(product);
 
         this.activationKeyCurator.create(key);
 
-        assertTrue(this.isProductMappedToOwner(original, owner));
+        assertTrue(this.isProductMappedToOwner(product, owner));
 
-        this.ownerProductCurator.removeOwnerProductReferences(owner, Arrays.asList(original.getUuid()));
+        this.ownerProductCurator.removeOwnerProductReferences(owner, List.of(product.getUuid()));
 
-        assertFalse(this.isProductMappedToOwner(original, owner));
+        assertFalse(this.isProductMappedToOwner(product, owner));
 
         this.activationKeyCurator.refresh(key);
-        Collection<Product> products = key.getProducts();
-        assertEquals(0, products.size());
+        Collection<String> productIds = key.getProductIds();
+        assertNotNull(productIds);
+        assertTrue(productIds.isEmpty());
     }
 
     @Test

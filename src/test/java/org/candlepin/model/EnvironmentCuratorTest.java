@@ -23,10 +23,9 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -53,39 +52,30 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         assertEquals(owner, e.getOwner());
     }
 
-    @Test public void delete() {
+    @Test
+    public void delete() {
         envCurator.delete(environment);
         assertEquals(0, envCurator.listAll().list().size());
     }
 
-    @Test public void listForOwner() {
+    @Test
+    public void listForOwner() {
         List<Environment> envs = envCurator.listForOwner(owner).list();
         assertEquals(1, envs.size());
         assertEquals(envs.get(0), environment);
     }
 
-    @Test public void listForOwnerByName() {
-        Environment e = envCurator.create(new Environment("env2", "Another Env", owner));
+    @Test
+    public void listForOwnerByName() {
+        Environment environment = new Environment()
+            .setId("env2")
+            .setName("Another Env")
+            .setOwner(owner);
+
+        this.envCurator.create(environment);
 
         List<Environment> envs = envCurator.listForOwnerByName(owner, "Another Env").list();
-        assertEquals(1, envs.size());
-        assertEquals(e, envs.get(0));
-    }
-
-    @Test
-    public void listWithContent() {
-        envCurator.create(new Environment("env2", "Another Env", owner));
-
-        final String contentId = "contentId";
-        Content content = this.createContent(contentId, "test content", this.owner);
-
-        envContentCurator.create(new EnvironmentContent(environment, content, true));
-
-        Set<String> ids = new HashSet<>();
-        ids.add(contentId);
-
-        List<Environment> envs = envCurator.listWithContent(ids);
-
+        assertNotNull(envs);
         assertEquals(1, envs.size());
         assertEquals(environment, envs.get(0));
     }
@@ -98,17 +88,14 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         Content content2 = this.createContent("c2", "c2", owner1);
         Content content3 = this.createContent("c3", "c3", owner2);
 
-        Environment environment1 = this.createEnvironment(
-            owner1, "test_env-1", "test_env-1", null, null, List.of(content1)
-        );
+        Environment environment1 = this.createEnvironment(owner1, "test_env-1", "test_env-1", null, null,
+            List.of(content1));
 
-        Environment environment2 = this.createEnvironment(
-            owner1, "test_env-2", "test_env-2", null, null, List.of(content2)
-        );
+        Environment environment2 = this.createEnvironment(owner1, "test_env-2", "test_env-2", null, null,
+            List.of(content2));
 
-        Environment environment3 = this.createEnvironment(
-            owner2, "test_env-3", "test_env-3", null, null, List.of(content3)
-        );
+        Environment environment3 = this.createEnvironment(owner2, "test_env-3", "test_env-3", null, null,
+            List.of(content3));
 
         int output = this.environmentCurator.deleteEnvironmentsForOwner(owner1);
         assertEquals(2, output);
@@ -124,9 +111,9 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         assertNull(environment2);
         assertNotNull(environment3);
 
-        assertEquals(1, environment3.getEnvironmentContent().size());
-        assertEquals(content3.getUuid(), environment3.getEnvironmentContent().iterator().next().getContent()
-            .getUuid());
+        Collection<EnvironmentContent> envcontent = environment3.getEnvironmentContent();
+        assertEquals(1, envcontent.size());
+        assertEquals(content3.getId(), envcontent.iterator().next().getContentId());
     }
 
     @Test

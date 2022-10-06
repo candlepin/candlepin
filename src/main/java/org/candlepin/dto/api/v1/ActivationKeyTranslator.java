@@ -24,7 +24,6 @@ import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.model.ContentOverride;
 import org.candlepin.model.Owner;
-import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyPool;
@@ -33,6 +32,7 @@ import org.candlepin.util.Util;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 
 
 /**
@@ -90,22 +90,13 @@ public class ActivationKeyTranslator implements ObjectTranslator<ActivationKey, 
             .role(source.getRole());
 
         // Set activation key product IDs
-        Set<Product> products = source.getProducts();
-        if (products != null) {
-            Set<String> productIds = new HashSet<>();
+        Set<String> productIds = source.getProductIds();
+        if (productIds != null) {
+            Set<ActivationKeyProductDTO> akpdtos = productIds.stream()
+                .map(pid -> new ActivationKeyProductDTO().productId(pid))
+                .collect(Collectors.toSet());
 
-            for (Product prod : products) {
-                if (prod != null && prod.getId() != null && !prod.getId().isEmpty()) {
-                    productIds.add(prod.getId());
-                }
-            }
-            Set<ActivationKeyProductDTO> productIdObjects = productIds.stream().map(productId ->  {
-                ActivationKeyProductDTO newProduct = new ActivationKeyProductDTO();
-                newProduct.setProductId(productId);
-                return newProduct;
-            }).collect(Collectors.toSet());
-
-            dest.setProducts(productIdObjects);
+            dest.setProducts(akpdtos);
         }
         else {
             dest.setProducts(null);

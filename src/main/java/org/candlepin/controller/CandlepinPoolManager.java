@@ -104,6 +104,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import javax.inject.Provider;
@@ -1126,7 +1128,6 @@ public class CandlepinPoolManager implements PoolManager {
                 boolean retry = false;
                 if (retries > 0) {
                     for (String poolId : e.getResults().keySet()) {
-
                         List<ValidationError> errors = e.getResults().get(poolId).getErrors();
                         if (errors.size() == 1 && errors.get(0).getResourceKey()
                             .equals("rulefailed.no.entitlements.available")) {
@@ -1164,7 +1165,7 @@ public class CandlepinPoolManager implements PoolManager {
     @Transactional
     protected List<Entitlement> entitleByProductsImpl(AutobindData data) throws EntitlementRefusedException {
         Consumer consumer = data.getConsumer();
-        String[] productIds = data.getProductIds();
+        SortedSet<String> productIds = data.getProductIds();
         Collection<String> fromPools = data.getPossiblePools();
         Date entitleDate = data.getOnDate();
         String ownerId = consumer.getOwnerId();
@@ -1213,6 +1214,7 @@ public class CandlepinPoolManager implements PoolManager {
             log.debug("Host {} and guest {} have different owners", host.getUuid(), guest.getUuid());
             return entitlements;
         }
+
         // Use the current date if one wasn't provided:
         if (entitleDate == null) {
             entitleDate = new Date();
@@ -1287,22 +1289,20 @@ public class CandlepinPoolManager implements PoolManager {
         List<Pool> filteredPools = new LinkedList<>();
 
         ComplianceStatus guestCompliance = complianceRules.getStatus(guest, entitleDate, false);
-        Set<String> tmpSet = new HashSet<>();
+
+        Set<String> productIds = new TreeSet<>();
+
         //we only want to heal red products, not yellow
-        tmpSet.addAll(guestCompliance.getNonCompliantProducts());
-        log.debug("Guest's non-compliant products: {}", Util.collectionToString(tmpSet));
+        productIds.addAll(guestCompliance.getNonCompliantProducts());
+        log.debug("Guest's non-compliant products: {}", productIds);
 
         /*Do not attempt to create subscriptions for products that
           already have virt_only pools available to the guest */
-        Set<String> productsToRemove = getProductsToRemove(allOwnerPoolsForGuest, tmpSet);
-        log.debug("Guest already will have virt-only pools to cover: {}",
-            Util.collectionToString(productsToRemove));
-        tmpSet.removeAll(productsToRemove);
-        String[] productIds = tmpSet.toArray(new String [] {});
+        Set<String> productsToRemove = getProductsToRemove(allOwnerPoolsForGuest, productIds);
+        log.debug("Guest already will have virt-only pools to cover: {}", productsToRemove);
 
-        if (log.isDebugEnabled()) {
-            log.debug("Attempting host autobind for guest products: {}", Util.collectionToString(tmpSet));
-        }
+        productIds.removeAll(productsToRemove);
+        log.debug("Attempting host autobind for guest products: {}", productIds);
 
         // Bulk fetch our provided and derived provided product IDs so we're not hitting the DB
         // several times for this lookup.
@@ -1529,9 +1529,8 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public List<PoolQuantity> getBestPools(Consumer consumer,
-        String[] productIds, Date entitleDate, String ownerId,
-        String serviceLevelOverride, Collection<String> fromPools)
+    public List<PoolQuantity> getBestPools(Consumer consumer, Collection<String> productIds, Date entitleDate,
+        String ownerId, String serviceLevelOverride, Collection<String> fromPools)
         throws EntitlementRefusedException {
 
         Map<String, ValidationResult> failedResults = new HashMap<>();
@@ -1552,20 +1551,16 @@ public class CandlepinPoolManager implements PoolManager {
         // array of product IDs with the array the consumer actually needs. (i.e. during
         // a healing request)
         ComplianceStatus compliance = complianceRules.getStatus(consumer, entitleDate, false);
-        if (productIds == null || productIds.length == 0) {
+
+        if (productIds == null || productIds.isEmpty()) {
             log.debug("No products specified for bind, checking compliance to see what is needed.");
-            Set<String> tmpSet = new HashSet<>();
-            tmpSet.addAll(compliance.getNonCompliantProducts());
-            tmpSet.addAll(compliance.getPartiallyCompliantProducts().keySet());
-            productIds = tmpSet.toArray(new String [] {});
+
+            productIds = new HashSet<>();
+            productIds.addAll(compliance.getNonCompliantProducts());
+            productIds.addAll(compliance.getPartiallyCompliantProducts().keySet());
         }
 
-        if (log.isDebugEnabled()) {
-            log.debug("Attempting for products on date: {}", entitleDate);
-            for (String productId : productIds) {
-                log.debug("  {}", productId);
-            }
-        }
+        log.debug("Attempting for products on date: {}: {}", entitleDate, productIds);
 
         // Bulk fetch our provided product IDs so we're not hitting the DB several times
         // for this lookup.
@@ -1627,7 +1622,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Only throw refused exception if we actually hit the rules:
-        if (filteredPools.size() == 0 && !failedResults.isEmpty()) {
+        if (filteredPools.isEmpty() && !failedResults.isEmpty()) {
             throw new EntitlementRefusedException(failedResults);
         }
 

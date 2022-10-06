@@ -67,9 +67,9 @@ public class PromotedContent {
 
         log.debug("Checking for promoted content in environment: {}", environment.getName());
         for (EnvironmentContent envContent : environment.getEnvironmentContent()) {
-            log.debug("  promoted content: {}", envContent.getContent());
+            log.debug("  promoted content: {}", envContent);
 
-            this.contents.putIfAbsent(envContent.getContent().getId(), envContent);
+            this.contents.putIfAbsent(envContent.getContentId(), envContent);
         }
 
         return this;

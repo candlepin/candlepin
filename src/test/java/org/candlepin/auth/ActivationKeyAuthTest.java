@@ -153,7 +153,7 @@ class ActivationKeyAuthTest {
 
     private void mockKey(String owner, String key) {
         when(this.activationKeyCurator.findByKeyNames(eq(owner), anyCollection()))
-            .thenReturn(List.of(new ActivationKey(key, new Owner())));
+            .thenReturn(List.of(new ActivationKey(key, new Owner().setId("test_owner"))));
     }
 
     private ActivationKeyAuth createActivationKeyAuth() {

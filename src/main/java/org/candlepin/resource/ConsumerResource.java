@@ -145,7 +145,6 @@ import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.core.ResteasyContext;
@@ -1970,8 +1969,10 @@ public class ConsumerResource implements ConsumerApi {
                 !guest.getInstalledProducts().isEmpty();
 
             if (guest.isAutoheal() && !deletableGuestEntitlements.isEmpty() && hasInstalledProducts) {
-                Owner owner = ownerCurator.findOwnerById(guest.getOwnerId());
-                AutobindData autobindData = AutobindData.create(guest, owner).on(new Date());
+                Owner owner = this.ownerCurator.findOwnerById(guest.getOwnerId());
+                AutobindData autobindData = new AutobindData(guest, owner)
+                    .on(new Date());
+
                 // Autobind could be disabled for the owner. If it is, we simply don't
                 // perform the autobind for the guest.
                 try {
@@ -2245,8 +2246,9 @@ public class ConsumerResource implements ConsumerApi {
         return allCerts;
     }
 
-    private void validateBindArguments(String poolIdString, Integer quantity,
-        String[] productIds, List<String> fromPools, Date entitleDate, Consumer consumer, boolean async) {
+    private void validateBindArguments(String poolIdString, Integer quantity, Collection<String> productIds,
+        Collection<String> fromPools, Date entitleDate, Consumer consumer, boolean async) {
+
         short parameters = 0;
 
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
@@ -2255,7 +2257,7 @@ public class ConsumerResource implements ConsumerApi {
             parameters++;
         }
 
-        if (ArrayUtils.isNotEmpty(productIds) || CollectionUtils.isNotEmpty(fromPools) ||
+        if (CollectionUtils.isNotEmpty(productIds) || CollectionUtils.isNotEmpty(fromPools) ||
             entitleDate != null) {
             parameters++;
         }
@@ -2276,7 +2278,7 @@ public class ConsumerResource implements ConsumerApi {
         @Verify(Consumer.class) String consumerUuid,
         @Verify(value = Pool.class, nullable = true, subResource = SubResource.ENTITLEMENTS)
         String poolIdString,
-        List<String> listOfProductIds,
+        List<String> productIds,
         Integer quantity,
         String email,
         String emailLocale,
@@ -2289,12 +2291,7 @@ public class ConsumerResource implements ConsumerApi {
            as a post body and hence result in a serialization error.
            ref: BZ: 1502807
          */
-        String[] productIds = null;
 
-        if (listOfProductIds != null) {
-            productIds = new String[listOfProductIds.size()];
-            productIds = listOfProductIds.toArray(productIds);
-        }
         // TODO: really should do this in a before we get to this call
         // so the method takes in a real Date object and not just a String.
         Date entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
@@ -2386,8 +2383,11 @@ public class ConsumerResource implements ConsumerApi {
         }
         else {
             try {
-                AutobindData autobindData = AutobindData.create(consumer, owner).on(entitleDate)
-                    .forProducts(productIds).withPools(fromPools);
+                AutobindData autobindData = new AutobindData(consumer, owner)
+                    .on(entitleDate)
+                    .forProducts(productIds)
+                    .withPools(fromPools);
+
                 entitlements = entitler.bindByProducts(autobindData);
             }
             catch (AutobindDisabledForOwnerException e) {

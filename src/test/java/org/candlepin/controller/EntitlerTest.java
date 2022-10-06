@@ -202,21 +202,24 @@ public class EntitlerTest {
         Owner owner = new Owner("o1");
         owner.setContentAccessMode("entitlement");
         owner.setId(TestUtil.randomString());
-        String[] pids = {"prod1", "prod2", "prod3"};
+        Set<String> pids = Set.of("prod1", "prod2", "prod3");
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
         when(consumer.getOwnerId()).thenReturn(owner.getOwnerId());
         when(ownerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
 
         entitler.bindByProducts(pids, "abcd1234", null, null);
 
-        AutobindData data = AutobindData.create(consumer, this.owner).forProducts(pids);
+        AutobindData data = new AutobindData(consumer, this.owner)
+            .forProducts(pids);
+
         verify(pm).entitleByProducts(eq(data));
     }
 
     @Test
     public void bindByProducts() throws Exception  {
-        String[] pids = {"prod1", "prod2", "prod3"};
-        AutobindData data = AutobindData.create(consumer, owner).forProducts(pids);
+        Set<String> pids = Set.of("prod1", "prod2", "prod3");
+        AutobindData data = new AutobindData(consumer, owner)
+            .forProducts(pids);
 
         entitler.bindByProducts(data);
 
@@ -350,14 +353,17 @@ public class EntitlerTest {
         assertThrows(ForbiddenException.class, () -> bindByProductErrorTest("generic.error"));
     }
 
-    private void bindByProductErrorTest(String msg)
-        throws EntitlementRefusedException, AutobindDisabledForOwnerException,
-        AutobindHypervisorDisabledException {
-        String[] pids = {"prod1", "prod2", "prod3"};
+    private void bindByProductErrorTest(String msg) throws EntitlementRefusedException,
+        AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+
+        Set<String> pids = Set.of("prod1", "prod2", "prod3");
         Map<String, ValidationResult> fakeResult = new HashMap<>();
         fakeResult.put("blah", fakeOutResult(msg));
+
         EntitlementRefusedException ere = new EntitlementRefusedException(fakeResult);
-        AutobindData data = AutobindData.create(consumer, owner).forProducts(pids);
+        AutobindData data = new AutobindData(consumer, owner)
+            .forProducts(pids);
+
         when(pm.entitleByProducts(data)).thenThrow(ere);
         entitler.bindByProducts(data);
     }
@@ -406,28 +412,29 @@ public class EntitlerTest {
         Date thirtySixHoursAgo = new Date(new Date().getTime() - 36L * 60L * 60L * 1000L);
         Date twelveHoursAgo = new Date(new Date().getTime() - 12L * 60L * 60L * 1000L);
 
-        Consumer c;
-        c = TestUtil.createConsumer(owner1);
-        c.setCreated(thirtySixHoursAgo);
-        c.setFact("virt.uuid", "1");
+        Consumer consumer = TestUtil.createConsumer(owner1);
+        consumer.setCreated(thirtySixHoursAgo);
+        consumer.setFact("virt.uuid", "1");
 
-        Entitlement e1 = TestUtil.createEntitlement(owner1, c, p1, null);
+        when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
+
+        Entitlement e1 = TestUtil.createEntitlement(owner1, consumer, p1, null);
         e1.setEndDateOverride(twelveHoursAgo);
-        Set<Entitlement> entitlementSet1 = new HashSet<>();
-        entitlementSet1.add(e1);
 
-        p1.setEntitlements(entitlementSet1);
+        p1.setEntitlements(Set.of(e1));
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Collections.singletonList(e1).iterator());
-        when(entitlementCurator.findByPoolAttribute(eq(c), eq("unmapped_guests_only"), eq("true")))
+        when(entitlementCurator.findByPoolAttribute(eq(consumer), eq("unmapped_guests_only"), eq("true")))
             .thenReturn(cqmock);
         when(config.getInt(ConfigProperties.ENTITLER_BULK_SIZE)).thenReturn(1000);
 
-        String[] pids = {product.getId(), "prod2"};
-        when(cc.findByUuid(eq("abcd1234"))).thenReturn(c);
+        Set<String> pids = Set.of(product.getId(), "prod2");
         entitler.bindByProducts(pids, "abcd1234", null, null);
-        AutobindData data = AutobindData.create(c, owner1).forProducts(pids);
+
+        AutobindData data = new AutobindData(consumer, owner1)
+            .forProducts(pids);
+
         verify(pm).entitleByProducts(eq(data));
         verify(pm).revokeEntitlements(Collections.singletonList(e1));
     }

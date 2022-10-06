@@ -201,23 +201,6 @@ public class OrphanCleanupJob implements AsyncJob  {
                 }
             }
         }
-
-        // Ensure no other environments are still (erroneously) referencing the orphaned content...
-        Map<String, Set<String>> contentEnvironmentReferences = this.contentCurator
-            .getEnvironmentsReferencingContent(orphanedContentUuids);
-
-        if (contentEnvironmentReferences != null && !contentEnvironmentReferences.isEmpty()) {
-            log.warn("Found {} orphaned content referenced by one or more environments; " +
-                "omitting content from cleanup:",
-                contentEnvironmentReferences.size());
-
-            for (Map.Entry<String, Set<String>> entry : contentEnvironmentReferences.entrySet()) {
-                log.warn("  Content UUID: {}, Referenced by environments: {}", entry.getKey(),
-                    entry.getValue());
-
-                orphanedContentUuids.remove(entry.getKey());
-            }
-        }
     }
 
     /**

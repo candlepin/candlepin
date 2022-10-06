@@ -28,7 +28,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
@@ -47,13 +46,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+
 
 /**
  * Responsible for handling activation keys for the Consumer creation in  {@link ConsumerResource}
@@ -171,23 +172,26 @@ public class ConsumerBindUtil {
 
     private void handleActivationKeyAutoBind(Consumer consumer, ActivationKey key)
         throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+
         try {
             Set<String> productIds = new HashSet<>();
-            List<String> poolIds = new ArrayList<>();
+            Set<String> poolIds = key.getPools().stream()
+                .map(ActivationKeyPool::getPoolId)
+                .collect(Collectors.toSet());
 
-            for (Product akp : key.getProducts()) {
-                productIds.add(akp.getId());
+            if (key.getProductIds() != null) {
+                productIds.addAll(key.getProductIds());
             }
+
             for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
                 productIds.add(cip.getProductId());
             }
-            for (ActivationKeyPool p : key.getPools()) {
-                poolIds.add(p.getPool().getId());
-            }
-            Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
-            AutobindData autobindData = AutobindData.create(consumer, owner)
-                .forProducts(productIds.toArray(new String[0]))
+
+            Owner owner = this.ownerCurator.findOwnerById(consumer.getOwnerId());
+            AutobindData autobindData = new AutobindData(consumer, owner)
+                .forProducts(productIds)
                 .withPools(poolIds);
+
             List<Entitlement> ents = entitler.bindByProducts(autobindData);
             entitler.sendEvents(ents);
         }

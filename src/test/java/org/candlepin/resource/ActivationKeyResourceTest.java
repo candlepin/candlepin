@@ -36,7 +36,6 @@ import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.activationkey.ActivationKeyRules;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -255,9 +254,7 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         akr.addPoolToKey("testKey", "testPool1", 1L);
         assertEquals(1, ak.getPools().size());
-        Set<ActivationKeyPool> akPools = new HashSet<>();
-        akPools.add(new ActivationKeyPool(ak, p1, 1L));
-        ak.setPools(akPools);
+
         akr.addPoolToKey("testKey", "testPool2", 1L);
         assertEquals(2, ak.getPools().size());
     }
@@ -344,9 +341,9 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
         assertNotNull(key.getId());
         activationKeyResource.addProductIdToKey(key.getId(), product.getId());
-        assertEquals(1, key.getProducts().size());
+        assertEquals(1, key.getProductIds().size());
         activationKeyResource.removeProductIdFromKey(key.getId(), product.getId());
-        assertEquals(0, key.getProducts().size());
+        assertEquals(0, key.getProductIds().size());
     }
 
     @Test
@@ -362,12 +359,11 @@ public class ActivationKeyResourceTest extends DatabaseTestFixture {
         assertNotNull(key.getId());
 
         activationKeyResource.addProductIdToKey(key.getId(), product.getId());
-        assertEquals(1, key.getProducts().size());
+        assertEquals(1, key.getProductIds().size());
 
         ActivationKey finalKey = key;
         assertThrows(BadRequestException.class, () ->
-            activationKeyResource.addProductIdToKey(finalKey.getId(), product.getId())
-        );
+            activationKeyResource.addProductIdToKey(finalKey.getId(), product.getId()));
     }
 
     @Test

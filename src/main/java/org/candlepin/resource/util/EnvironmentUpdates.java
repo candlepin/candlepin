@@ -34,9 +34,11 @@ public class EnvironmentUpdates {
     private final Map<String, List<String>> current = new HashMap<>();
     private final Map<String, List<String>> updated = new HashMap<>();
 
-    public void put(String consumerId, List<String> currentEnvs, List<String> updatedEnvs) {
+    public EnvironmentUpdates put(String consumerId, List<String> currentEnvs, List<String> updatedEnvs) {
         this.current.put(consumerId, currentEnvs);
         this.updated.put(consumerId, updatedEnvs);
+
+        return this;
     }
 
     /**

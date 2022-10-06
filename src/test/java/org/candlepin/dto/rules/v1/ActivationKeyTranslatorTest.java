@@ -67,9 +67,10 @@ public class ActivationKeyTranslatorTest extends
                 mktProduct.setAttribute("prod_attr-key" + j, "prod_attr-value" + j);
             }
 
-            ActivationKeyPool akp = new ActivationKeyPool(source, pool, 1L);
-
-            akpools.add(akp);
+            akpools.add(new ActivationKeyPool()
+                .setKey(source)
+                .setPool(pool)
+                .setQuantity(1L));
         }
 
         source.setPools(akpools);

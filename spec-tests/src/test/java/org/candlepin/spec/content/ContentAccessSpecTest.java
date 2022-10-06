@@ -421,7 +421,8 @@ public class ContentAccessSpecTest {
         env = adminClient.environments().getEnvironment(env.getId());
         assertThat(env.getEnvironmentContent())
             .singleElement()
-            .returns(content, EnvironmentContentDTO::getContent);
+            .returns(content.getId(), EnvironmentContentDTO::getContentId);
+
         certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
         assertThat(certs).singleElement();
         prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));

@@ -1302,46 +1302,322 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetEntitlementContentUUIDsWhenContent() {
+    public void testGetConsumerEntitlementIdMap() {
         Owner owner = this.createOwner("test_owner");
         Consumer consumer1 = this.createConsumer(owner);
         Consumer consumer2 = this.createConsumer(owner);
+        Consumer consumer3 = this.createConsumer(owner);
 
         Content content1 = this.createContent(owner);
-        Product product = TestUtil.createProduct("p1", "p1-prod");
-        product.setProductContent(Arrays.asList(new ProductContent(product, content1, false)));
-
         Content content2 = this.createContent(owner);
-        Product providedProduct = TestUtil.createProduct("p1-provided", "p1-provided-product");
-        providedProduct.setProductContent(
-            Arrays.asList(new ProductContent(providedProduct, content2, false)));
-        providedProduct = this.createProduct(providedProduct, owner);
+        Content content3 = this.createContent(owner);
 
-        product.setProvidedProducts(Arrays.asList(providedProduct));
+        Product product1 = new Product()
+            .setId("p1")
+            .setName("product 1");
+        product1.addContent(content1, true);
+        product1.addContent(content2, false);
 
-        product = this.createProduct(product, owner);
+        this.createProduct(product1, owner);
 
-        Pool pool = this.poolCurator.create(new Pool()
+        Product product2 = new Product()
+            .setId("p2")
+            .setName("product 2");
+        product2.addContent(content2, true);
+        product2.addContent(content3, false);
+
+        this.createProduct(product2, owner);
+
+        Pool pool1 = this.poolCurator.create(new Pool()
             .setOwner(owner)
-            .setProduct(product)
-            .setQuantity(100L)
+            .setProduct(product1)
+            .setQuantity(10L)
             .setStartDate(Util.yesterday())
             .setEndDate(Util.tomorrow()));
 
-        Entitlement ent1 = this.bind(consumer1, pool);
-        Entitlement ent2 = this.bind(consumer2, pool);
-        Set<String> entIds = Set.of(ent1.getId(), ent2.getId());
-        List<String> contentIds = Arrays.asList(content1.getUuid(), content2.getUuid());
-        List<String> consumerIds = Arrays.asList(consumer1.getId(), consumer2.getId());
-        Map<String, Set<String>> entitlementContentUUIDs = this.entitlementCurator
-            .getEntitlementContentUUIDs(consumerIds);
+        Pool pool2 = this.poolCurator.create(new Pool()
+            .setOwner(owner)
+            .setProduct(product2)
+            .setQuantity(10L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow()));
 
-        assertEquals(entitlementContentUUIDs.size(), 2);
-        assertTrue(CollectionUtils.isEqualCollection(entitlementContentUUIDs.keySet(), entIds));
+        Entitlement ent1 = this.bind(consumer1, pool1);
+        Entitlement ent2 = this.bind(consumer1, pool2);
+        Entitlement ent3 = this.bind(consumer2, pool2);
+        Entitlement ent4 = this.bind(consumer3, pool1);
+        Entitlement ent5 = this.bind(consumer3, pool2);
 
-        assertTrue(CollectionUtils.isEqualCollection(
-            entitlementContentUUIDs.get(ent1.getId()), contentIds));
-        assertTrue(CollectionUtils.isEqualCollection(
-            entitlementContentUUIDs.get(ent2.getId()), contentIds));
+        Map<String, String> consumerEntitlementIdMap = this.entitlementCurator
+            .getEntitlementConsumerIdMap(List.of(consumer1.getId(), consumer2.getId()));
+
+        assertNotNull(consumerEntitlementIdMap);
+        assertEquals(3, consumerEntitlementIdMap.size());
+
+        assertTrue(consumerEntitlementIdMap.containsKey(ent1.getId()));
+        assertTrue(consumerEntitlementIdMap.containsKey(ent2.getId()));
+        assertTrue(consumerEntitlementIdMap.containsKey(ent3.getId()));
+        assertFalse(consumerEntitlementIdMap.containsKey(ent4.getId()));
+        assertFalse(consumerEntitlementIdMap.containsKey(ent5.getId()));
+
+        assertEquals(consumer1.getId(), consumerEntitlementIdMap.get(ent1.getId()));
+        assertEquals(consumer1.getId(), consumerEntitlementIdMap.get(ent2.getId()));
+        assertEquals(consumer2.getId(), consumerEntitlementIdMap.get(ent3.getId()));
+    }
+
+    @Test
+    public void testGetEntitlementConsumerIdFetchesEmptyMapWithInvalidIDs() {
+        Owner owner = this.createOwner("test_owner");
+        Consumer consumer1 = this.createConsumer(owner);
+        Consumer consumer2 = this.createConsumer(owner);
+        Consumer consumer3 = this.createConsumer(owner);
+
+        Content content1 = this.createContent(owner);
+        Content content2 = this.createContent(owner);
+        Content content3 = this.createContent(owner);
+
+        Product product1 = new Product()
+            .setId("p1")
+            .setName("product 1");
+        product1.addContent(content1, true);
+        product1.addContent(content2, false);
+
+        this.createProduct(product1, owner);
+
+        Product product2 = new Product()
+            .setId("p2")
+            .setName("product 2");
+        product2.addContent(content2, true);
+        product2.addContent(content3, false);
+
+        this.createProduct(product2, owner);
+
+        Pool pool1 = this.poolCurator.create(new Pool()
+            .setOwner(owner)
+            .setProduct(product1)
+            .setQuantity(10L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow()));
+
+        Pool pool2 = this.poolCurator.create(new Pool()
+            .setOwner(owner)
+            .setProduct(product2)
+            .setQuantity(10L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow()));
+
+        Entitlement ent1 = this.bind(consumer1, pool1);
+        Entitlement ent2 = this.bind(consumer1, pool2);
+        Entitlement ent3 = this.bind(consumer2, pool2);
+        Entitlement ent4 = this.bind(consumer3, pool1);
+        Entitlement ent5 = this.bind(consumer3, pool2);
+
+        Map<String, String> consumerEntitlementIdMap = this.entitlementCurator
+            .getEntitlementConsumerIdMap(Arrays.asList("bad_id", "another_bad_id", null));
+
+        assertNotNull(consumerEntitlementIdMap);
+        assertTrue(consumerEntitlementIdMap.isEmpty());
+    }
+
+    @Test
+    public void testGetEntitlementConsumerIdFetchesEmptyMapWithNullInput() {
+        Map<String, String> consumerEntitlementIdMap = this.entitlementCurator
+            .getEntitlementConsumerIdMap(null);
+
+        assertNotNull(consumerEntitlementIdMap);
+        assertTrue(consumerEntitlementIdMap.isEmpty());
+    }
+
+    @Test
+    public void testGetEntitlementContentIdMapByConsumerFetchesContentFromBaseProduct() {
+        Owner owner = this.createOwner("test_owner");
+        Consumer consumer1 = this.createConsumer(owner);
+        Consumer consumer2 = this.createConsumer(owner);
+        Consumer consumer3 = this.createConsumer(owner);
+
+        Content content1 = this.createContent(owner);
+        Content content2 = this.createContent(owner);
+        Content content3 = this.createContent(owner);
+
+        Product product1 = new Product()
+            .setId("p1")
+            .setName("product 1");
+        product1.addContent(content1, true);
+        product1.addContent(content2, false);
+
+        this.createProduct(product1, owner);
+
+        Product product2 = new Product()
+            .setId("p2")
+            .setName("product 2");
+        product2.addContent(content2, true);
+        product2.addContent(content3, false);
+
+        this.createProduct(product2, owner);
+
+        Pool pool1 = this.poolCurator.create(new Pool()
+            .setOwner(owner)
+            .setProduct(product1)
+            .setQuantity(10L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow()));
+
+        Pool pool2 = this.poolCurator.create(new Pool()
+            .setOwner(owner)
+            .setProduct(product2)
+            .setQuantity(10L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow()));
+
+        Entitlement ent1 = this.bind(consumer1, pool1);
+        Entitlement ent2 = this.bind(consumer2, pool2);
+        Entitlement ent3 = this.bind(consumer3, pool1);
+
+        Map<String, Set<String>> entitlementContentIdMap = this.entitlementCurator
+            .getEntitlementContentIdMap(List.of(ent1.getId(), ent2.getId()));
+
+        assertNotNull(entitlementContentIdMap);
+        assertEquals(2, entitlementContentIdMap.size());
+
+        assertTrue(entitlementContentIdMap.containsKey(ent1.getId()));
+        assertTrue(entitlementContentIdMap.containsKey(ent2.getId()));
+        assertFalse(entitlementContentIdMap.containsKey(ent3.getId()));
+
+        assertEquals(Set.of(content1.getId(), content2.getId()), entitlementContentIdMap.get(ent1.getId()));
+        assertEquals(Set.of(content2.getId(), content3.getId()), entitlementContentIdMap.get(ent2.getId()));
+    }
+
+    @Test
+    public void testGetEntitlementContentIdMapByConsumerFetchesContentFromProvidedProducts() {
+        Owner owner = this.createOwner("test_owner");
+        Consumer consumer1 = this.createConsumer(owner);
+        Consumer consumer2 = this.createConsumer(owner);
+        Consumer consumer3 = this.createConsumer(owner);
+
+        Content content1 = this.createContent(owner);
+        Content content2 = this.createContent(owner);
+        Content content3 = this.createContent(owner);
+
+        Product provided1 = new Product()
+            .setId("prov1")
+            .setName("provided product 1");
+        provided1.addContent(content1, true);
+
+        this.createProduct(provided1, owner);
+
+        Product product1 = new Product()
+            .setId("p1")
+            .setName("product 1");
+        product1.addContent(content2, true);
+        product1.addProvidedProduct(provided1);
+
+        this.createProduct(product1, owner);
+
+        Product provided2 = new Product()
+            .setId("prov2")
+            .setName("provided product 2");
+        provided2.addContent(content3, true);
+
+        this.createProduct(provided2, owner);
+
+        Product product2 = new Product()
+            .setId("p2")
+            .setName("product 2");
+        product2.addContent(content2, true);
+        product2.addProvidedProduct(provided2);
+
+        this.createProduct(product2, owner);
+
+        Pool pool1 = this.poolCurator.create(new Pool()
+            .setOwner(owner)
+            .setProduct(product1)
+            .setQuantity(10L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow()));
+
+        Pool pool2 = this.poolCurator.create(new Pool()
+            .setOwner(owner)
+            .setProduct(product2)
+            .setQuantity(10L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow()));
+
+        Entitlement ent1 = this.bind(consumer1, pool1);
+        Entitlement ent2 = this.bind(consumer2, pool2);
+        Entitlement ent3 = this.bind(consumer3, pool1);
+
+        Map<String, Set<String>> entitlementContentIdMap = this.entitlementCurator
+            .getEntitlementContentIdMap(List.of(ent1.getId(), ent2.getId()));
+
+        assertNotNull(entitlementContentIdMap);
+        assertEquals(2, entitlementContentIdMap.size());
+
+        assertTrue(entitlementContentIdMap.containsKey(ent1.getId()));
+        assertTrue(entitlementContentIdMap.containsKey(ent2.getId()));
+        assertFalse(entitlementContentIdMap.containsKey(ent3.getId()));
+
+        assertEquals(Set.of(content1.getId(), content2.getId()), entitlementContentIdMap.get(ent1.getId()));
+        assertEquals(Set.of(content2.getId(), content3.getId()), entitlementContentIdMap.get(ent2.getId()));
+    }
+
+    @Test
+    public void testGetEntitlementContentIdMapByConsumerFetchesEmptyMapWithInvalidIDs() {
+        Owner owner = this.createOwner("test_owner");
+        Consumer consumer1 = this.createConsumer(owner);
+        Consumer consumer2 = this.createConsumer(owner);
+        Consumer consumer3 = this.createConsumer(owner);
+
+        Content content1 = this.createContent(owner);
+        Content content2 = this.createContent(owner);
+        Content content3 = this.createContent(owner);
+
+        Product product1 = new Product()
+            .setId("p1")
+            .setName("product 1");
+        product1.addContent(content1, true);
+        product1.addContent(content2, false);
+
+        this.createProduct(product1, owner);
+
+        Product product2 = new Product()
+            .setId("p2")
+            .setName("product 2");
+        product2.addContent(content2, true);
+        product2.addContent(content3, false);
+
+        this.createProduct(product2, owner);
+
+        Pool pool1 = this.poolCurator.create(new Pool()
+            .setOwner(owner)
+            .setProduct(product1)
+            .setQuantity(10L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow()));
+
+        Pool pool2 = this.poolCurator.create(new Pool()
+            .setOwner(owner)
+            .setProduct(product2)
+            .setQuantity(10L)
+            .setStartDate(Util.yesterday())
+            .setEndDate(Util.tomorrow()));
+
+        Entitlement ent1 = this.bind(consumer1, pool1);
+        Entitlement ent2 = this.bind(consumer2, pool2);
+        Entitlement ent3 = this.bind(consumer3, pool1);
+
+        Map<String, Set<String>> entitlementContentIdMap = this.entitlementCurator
+            .getEntitlementContentIdMap(Arrays.asList("bad_id", "nope", null));
+
+        assertNotNull(entitlementContentIdMap);
+        assertTrue(entitlementContentIdMap.isEmpty());
+    }
+
+    @Test
+    public void testGetEntitlementContentIdMapByConsumerFetchesEmptyMapWithNullInput() {
+        Map<String, Set<String>> entitlementContentIdMap = this.entitlementCurator
+            .getEntitlementContentIdMap(null);
+
+        assertNotNull(entitlementContentIdMap);
+        assertTrue(entitlementContentIdMap.isEmpty());
     }
 }

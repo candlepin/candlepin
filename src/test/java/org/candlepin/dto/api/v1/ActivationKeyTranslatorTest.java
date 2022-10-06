@@ -80,9 +80,6 @@ public class ActivationKeyTranslatorTest extends
         source.setServiceLevel("key-service-level");
         source.setAutoAttach(true);
 
-
-        Set<Product> products = new HashSet<>();
-        Set<ActivationKeyPool> akpools = new HashSet<>();
         Set<ActivationKeyContentOverride> overrides = new HashSet<>();
 
         for (int i = 0; i < 3; ++i) {
@@ -92,21 +89,17 @@ public class ActivationKeyTranslatorTest extends
             Pool pool = new Pool();
             pool.setId("test_pool-" + i);
 
-            ActivationKeyPool akp = new ActivationKeyPool(source, pool, 1L);
-
             ActivationKeyContentOverride override = new ActivationKeyContentOverride();
             override.setKey(source);
             override.setContentLabel("test_content_label-" + i);
             override.setName("test_name-" + i);
             override.setValue("test_value-" + i);
 
-            products.add(product);
-            akpools.add(akp);
+            source.addProduct(product);
+            source.addPool(pool, 1L);
             overrides.add(override);
         }
 
-        source.setProducts(products);
-        source.setPools(akpools);
         source.setContentOverrides(overrides);
 
         return source;
@@ -127,22 +120,20 @@ public class ActivationKeyTranslatorTest extends
             assertEquals(source.isAutoAttach(), dest.getAutoAttach());
 
             // Check product IDs
-            Collection<Product> products = source.getProducts();
+            Collection<String> productIds = source.getProductIds();
             Collection<ActivationKeyProductDTO> productDTOs = dest.getProducts();
 
-            if (products != null) {
+            if (productIds != null) {
                 assertNotNull(productDTOs);
-                assertEquals(products.size(), productDTOs.size());
+                assertEquals(productIds.size(), productDTOs.size());
 
-                for (Product product : products) {
-                    assertNotNull(product);
-                    assertNotNull(product.getId());
+                Set<String> dtoProductIds = productDTOs.stream()
+                    .map(ActivationKeyProductDTO::getProductId)
+                    .collect(Collectors.toSet());
 
-                    Collection<String> productIds = productDTOs.stream()
-                        .map(ActivationKeyProductDTO::getProductId)
-                        .collect(Collectors.toSet());
-
-                    assertTrue(productIds.contains(product.getId()));
+                for (String pid : productIds) {
+                    assertNotNull(pid);
+                    assertTrue(dtoProductIds.contains(pid));
                 }
             }
             else {
