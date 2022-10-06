@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.8
+Version: 4.2.9
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -244,6 +244,50 @@ fi
 
 #raw
 %changelog
+* Thu Oct 06 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.9-1
+- 2129177: Retain order of activation keys on db lookup (wpoteat@redhat.com)
+- 2128583: Updated GuestIdDeserializer to use existing ObjectMapper
+  (joshmalbrecht@gmail.com)
+- Bump logback-classic from 1.4.1 to 1.4.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- 2130671: Candlepin ignores the 'include' parameter (ojanus@redhat.com)
+- Updated the org migrator for recent changes to Candlepin's schema
+  (crog@redhat.com)
+- 2128583: Added deserializer for GuestIdDTO - deserializer that creates
+  GuestIdDTO from id string - deserializer that creates GuestIdDTO from
+  containing object (joshmalbrecht@gmail.com)
+- Bump artemis-server from 2.25.0 to 2.26.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Upgrade hibernate-jpamodelgen to 5.6.12 (nmoumoul@redhat.com)
+- Migrated refresh_pools_spec to Java - removed refresh_pools_spec.rb - split
+  up the certificate extraction method in CertificateUtil - made owner access
+  mode declarations public (joshmalbrecht@gmail.com)
+- Bump swagger-annotations from 1.6.6 to 1.6.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis-stomp-protocol from 2.25.0 to 2.26.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Added support for the device_auth capability and status (crog@redhat.com)
+- Bump junit-jupiter-api from 5.9.0 to 5.9.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Migrate activation_key_spec to Java (sbakaj@redhat.com)
+- Bump junit-jupiter from 5.9.0 to 5.9.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump junit-jupiter-engine from 5.9.0 to 5.9.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump mariadb-java-client from 3.0.7 to 3.0.8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump dependency-check-gradle from 7.2.0 to 7.2.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jaxb-impl from 4.0.0 to 4.0.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump jaxb-core from 4.0.0 to 4.0.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- Convert hypervisor_check_in_spec part 1 (wpoteat@redhat.com)
+- Migrate product_cert_spec to Java (sbakaj@redhat.com)
+- Add the compression settings for el8 tomcat (bcourt@redhat.com)
+- convert cert_revocation_spec to java spec (wpoteat@redhat.com)
+
 * Wed Sep 21 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.8-1
 - Add new translations using Weblate (noreply@weblate.org)
 - 2126954: syspurpose attributes should have entry when category is empty
