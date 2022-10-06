@@ -78,9 +78,6 @@ public class RefreshWorker {
      */
     private static final int VERSIONING_CONSTRAINT_VIOLATION_RETRIES = 4;
 
-    /** Default grace period for orphaned entities */
-    private static final int ORPHANED_ENTITY_DEFAULT_GRACE_PERIOD = -1;
-
     private final PoolCurator poolCurator;
     private final ContentCurator contentCurator;
     private final OwnerContentCurator ownerContentCurator;
@@ -90,8 +87,6 @@ public class RefreshWorker {
     private PoolMapper poolMapper;
     private ProductMapper productMapper;
     private ContentMapper contentMapper;
-
-    private int orphanedEntityGracePeriod;
 
 
     /**
@@ -111,8 +106,6 @@ public class RefreshWorker {
         this.poolMapper = new PoolMapper();
         this.productMapper = new ProductMapper();
         this.contentMapper = new ContentMapper();
-
-        this.orphanedEntityGracePeriod = ORPHANED_ENTITY_DEFAULT_GRACE_PERIOD;
     }
 
     /**
@@ -122,35 +115,6 @@ public class RefreshWorker {
         this.poolMapper.clear();
         this.productMapper.clear();
         this.contentMapper.clear();
-    }
-
-    /**
-     * Sets the orphaned entity grace period, which determines how long a given entity must be
-     * orphaned before it will be deleted as part of the cleanup step. The behavior of entity
-     * cleanup will differ depending on this value:
-     * <ul>
-     *  <li>
-     *  If the grace period is a positive integer, entities which have been orphaned for more
-     *  than the number of days will be removed
-     *  </li>
-     *  <li>
-     *  If the grace period is zero, entities which are orphaned will be cleaned up immediately
-     *  </li>
-     *  <li>
-     *  If the grace period is a negative integer, orphaned entities will not be removed at all
-     *  </li>
-     * </ul>
-     *
-     * @param period
-     *  the orphaned entity grace period in days, or a negative value to disable orphaned entity
-     *  cleanup
-     *
-     * @return
-     *  a reference to this refresh worker
-     */
-    public RefreshWorker setOrphanedEntityGracePeriod(int period) {
-        this.orphanedEntityGracePeriod = period;
-        return this;
     }
 
     /**
@@ -434,18 +398,6 @@ public class RefreshWorker {
     }
 
     /**
-     * Fetches the current orphaned entity grace period for this refresher. See the documentation
-     * associated with the setOrphanedEntityGracePeriod method for details on the meaning of
-     * specific values.
-     *
-     * @return
-     *  the current orphaned entity grace period for this refresher
-     */
-    public int getOrphanedEntityGracePeriod() {
-        return this.orphanedEntityGracePeriod;
-    }
-
-    /**
      * Fetches the compiled set of subscriptions to import, mapped by subscription ID. If no subscriptions
      * have been added, this method returns an empty map.
      *
@@ -612,8 +564,7 @@ public class RefreshWorker {
             NodeProcessor nodeProcessor = new NodeProcessor()
                 .setNodeMapper(nodeMapper)
                 .addVisitor(new PoolNodeVisitor(this.poolCurator))
-                .addVisitor(new ProductNodeVisitor(this.productCurator, this.ownerProductCurator,
-                    this.orphanedEntityGracePeriod))
+                .addVisitor(new ProductNodeVisitor(this.productCurator, this.ownerProductCurator))
                 .addVisitor(new ContentNodeVisitor(this.contentCurator, this.ownerContentCurator));
 
             // Obtain system locks on products and content so we don't need to worry about

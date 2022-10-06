@@ -38,13 +38,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,14 +58,8 @@ import java.util.stream.Stream;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ProductNodeVisitorTest extends DatabaseTestFixture {
 
-    private static final int DEFAULT_ORPHANED_ENTITY_GRACE_PERIOD = 30;
-
     public ProductNodeVisitor buildNodeVisitor() {
-        return this.buildNodeVisitor(DEFAULT_ORPHANED_ENTITY_GRACE_PERIOD);
-    }
-
-    public ProductNodeVisitor buildNodeVisitor(int orphanEntityGracePeriod) {
-        return new ProductNodeVisitor(this.productCurator, this.ownerProductCurator, orphanEntityGracePeriod);
+        return new ProductNodeVisitor(this.productCurator, this.ownerProductCurator);
     }
 
     @Test
@@ -405,9 +396,7 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
         assertEquals(importedEntity.getName(), pnode.getMergedEntity().getName());
     }
 
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(ints = { -1, 0, 30 })
-    public void testPruneNodeOmitsActiveRoot(int orphanedEntityGracePeriod) {
+    public void testPruneNodeOmitsActiveRoot() {
         Owner owner = this.createOwner();
         Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner)
             .setLocked(true);
@@ -419,16 +408,14 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
 
         assertNull(pnode.getNodeState());
 
-        ProductNodeVisitor visitor = this.buildNodeVisitor(orphanedEntityGracePeriod);
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
         visitor.processNode(pnode);
         visitor.pruneNode(pnode);
 
         assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
     }
 
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(ints = { -1, 0, 30 })
-    public void testPruneNodeNeverDeletesCustomProducts(int orphanedEntityGracePeriod) {
+    public void testPruneNodeNeverDeletesCustomProducts() {
         Owner owner = this.createOwner();
         Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner)
             .setLocked(false);
@@ -438,7 +425,7 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
 
         assertNull(pnode.getNodeState());
 
-        ProductNodeVisitor visitor = this.buildNodeVisitor(orphanedEntityGracePeriod);
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
         visitor.processNode(pnode);
         visitor.pruneNode(pnode);
 
@@ -452,91 +439,8 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
         assertNull(op.getOrphanedDate());
     }
 
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(ints = { 1, 5, 30 })
-    public void testPruneNodeDoesntFlagNewlyOrphanedEntitiesWithinGracePeriod(int orphanedEntityGracePeriod) {
-        Owner owner = this.createOwner();
-        Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner)
-            .setLocked(true);
-
-        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
-            .setExistingEntity(existingEntity);
-
-        assertNull(pnode.getNodeState());
-
-        ProductNodeVisitor visitor = this.buildNodeVisitor(orphanedEntityGracePeriod);
-        visitor.processNode(pnode);
-        visitor.pruneNode(pnode);
-
-        assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(ints = { 1, 5, 30 })
-    public void testPruneNodeDoesntFlagOrphanedEntitiesWithinGracePeriod(int orphanedEntityGracePeriod) {
-        Owner owner = this.createOwner();
-        Product existing = new Product()
-            .setId("test_product")
-            .setName("test product")
-            .setLocked(true);
-
-        Instant orphanedDate = Instant.now()
-            .minus(orphanedEntityGracePeriod / 2, ChronoUnit.DAYS);
-
-        OwnerProduct op = new OwnerProduct()
-            .setOwner(owner)
-            .setProduct(existing)
-            .setOrphanedDate(orphanedDate);
-
-        this.productCurator.create(existing);
-        this.ownerProductCurator.create(op);
-
-        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existing.getId())
-            .setExistingEntity(existing);
-
-        assertNull(pnode.getNodeState());
-
-        ProductNodeVisitor visitor = this.buildNodeVisitor(orphanedEntityGracePeriod);
-        visitor.processNode(pnode);
-        visitor.pruneNode(pnode);
-
-        assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(ints = { 1, 5, 30 })
-    public void testPruneNodeFlagsOrphanedEntitiesAfterGracePeriod(int orphanedEntityGracePeriod) {
-        Owner owner = this.createOwner();
-        Product existing = new Product()
-            .setId("test_product")
-            .setName("test product")
-            .setLocked(true);
-
-        Instant orphanedDate = Instant.now()
-            .minus(orphanedEntityGracePeriod + 5, ChronoUnit.DAYS);
-
-        OwnerProduct op = new OwnerProduct()
-            .setOwner(owner)
-            .setProduct(existing)
-            .setOrphanedDate(orphanedDate);
-
-        this.productCurator.create(existing);
-        this.ownerProductCurator.create(op);
-
-        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existing.getId())
-            .setExistingEntity(existing);
-
-        assertNull(pnode.getNodeState());
-
-        ProductNodeVisitor visitor = this.buildNodeVisitor(orphanedEntityGracePeriod);
-        visitor.processNode(pnode);
-        visitor.pruneNode(pnode);
-
-        assertEquals(NodeState.DELETED, pnode.getNodeState());
-    }
-
     @Test
-    public void testPruneNodeFlagsUnusedNodeForDeletionWithNoGracePeriod() {
+    public void testPruneNodeFlagsUnusedNodeForDeletion() {
         Owner owner = this.createOwner();
         Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner)
             .setLocked(true);
@@ -546,30 +450,11 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
 
         assertNull(pnode.getNodeState());
 
-        ProductNodeVisitor visitor = this.buildNodeVisitor(0);
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
         visitor.processNode(pnode);
         visitor.pruneNode(pnode);
 
         assertEquals(NodeState.DELETED, pnode.getNodeState());
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(ints = { -1, -5, -5000 })
-    public void testPruneNodeNeverFlagsNodesWithInfiniteGracePeriod(int orphanedEntityGracePeriod) {
-        Owner owner = this.createOwner();
-        Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner)
-            .setLocked(true);
-
-        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existingEntity.getId())
-            .setExistingEntity(existingEntity);
-
-        assertNull(pnode.getNodeState());
-
-        ProductNodeVisitor visitor = this.buildNodeVisitor(orphanedEntityGracePeriod);
-        visitor.processNode(pnode);
-        visitor.pruneNode(pnode);
-
-        assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
     }
 
     @Test
@@ -589,7 +474,7 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
 
         assertNull(pnode.getNodeState());
 
-        ProductNodeVisitor visitor = this.buildNodeVisitor(0);
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
         visitor.pruneNode(pnode);
 
         assertEquals(NodeState.DELETED, pnode.getNodeState());
@@ -612,7 +497,7 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
 
         assertNull(pnode.getNodeState());
 
-        ProductNodeVisitor visitor = this.buildNodeVisitor(0);
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
         visitor.pruneNode(pnode);
 
         assertNull(pnode.getNodeState());
@@ -815,128 +700,8 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
         assertEquals(product.getName(), updated.getName());
     }
 
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(ints = { 1, 5, 30 })
-    public void testFullCycleSetsOrphanedDateOnNewlyOrphanedEntitiesWithGracePeriod(int gracePeriod) {
-        Owner owner = this.createOwner();
-        Product existing = new Product()
-            .setId("test_product")
-            .setName("test product")
-            .setLocked(true);
-
-        Instant creationDate = Instant.now();
-
-        OwnerProduct op = new OwnerProduct()
-            .setOwner(owner)
-            .setProduct(existing);
-
-        this.productCurator.create(existing);
-        this.ownerProductCurator.create(op);
-
-        assertNull(op.getOrphanedDate());
-
-        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existing.getId())
-            .setExistingEntity(existing);
-
-        ProductNodeVisitor visitor = this.buildNodeVisitor(gracePeriod);
-        visitor.processNode(pnode);
-        visitor.pruneNode(pnode);
-        visitor.applyChanges(pnode);
-        visitor.complete();
-
-        assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
-        assertNull(pnode.getMergedEntity());
-
-        this.productCurator.flush();
-        this.productCurator.clear();
-
-        OwnerProduct updated = this.ownerProductCurator.getOwnerProduct(owner.getId(), existing.getId());
-        assertNotNull(updated);
-        assertNotNull(updated.getOrphanedDate());
-        assertTrue(creationDate.isBefore(updated.getOrphanedDate()));
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(ints = { 1, 5, 30 })
-    public void testFullCycleOmitsOrphanedEntitiesWithinGracePeriod(int gracePeriod) {
-        Owner owner = this.createOwner();
-        Product existing = new Product()
-            .setId("test_product")
-            .setName("test product")
-            .setLocked(true);
-
-        Instant orphanedDate = Instant.now()
-            .minus(gracePeriod / 2, ChronoUnit.DAYS);
-
-        OwnerProduct op = new OwnerProduct()
-            .setOwner(owner)
-            .setProduct(existing)
-            .setOrphanedDate(orphanedDate);
-
-        this.productCurator.create(existing);
-        this.ownerProductCurator.create(op);
-
-        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existing.getId())
-            .setExistingEntity(existing);
-
-        ProductNodeVisitor visitor = this.buildNodeVisitor(gracePeriod);
-        visitor.processNode(pnode);
-        visitor.pruneNode(pnode);
-        visitor.applyChanges(pnode);
-        visitor.complete();
-
-        assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
-        assertNull(pnode.getMergedEntity());
-
-        this.productCurator.flush();
-        this.productCurator.clear();
-
-        OwnerProduct updated = this.ownerProductCurator.getOwnerProduct(owner.getId(), existing.getId());
-        assertNotNull(updated);
-        assertEquals(orphanedDate, updated.getOrphanedDate());
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(ints = { 1, 5, 30 })
-    public void testFullCycleOmitsDeletedOrphanedEntitiesOutsideOfGracePeriod(int gracePeriod) {
-        Owner owner = this.createOwner();
-        Product existing = new Product()
-            .setId("test_product")
-            .setName("test product")
-            .setLocked(true);
-
-        Instant orphanedDate = Instant.now()
-            .minus(gracePeriod + 5, ChronoUnit.DAYS);
-
-        OwnerProduct op = new OwnerProduct()
-            .setOwner(owner)
-            .setProduct(existing)
-            .setOrphanedDate(orphanedDate);
-
-        this.productCurator.create(existing);
-        this.ownerProductCurator.create(op);
-
-        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existing.getId())
-            .setExistingEntity(existing);
-
-        ProductNodeVisitor visitor = this.buildNodeVisitor(gracePeriod);
-        visitor.processNode(pnode);
-        visitor.pruneNode(pnode);
-        visitor.applyChanges(pnode);
-        visitor.complete();
-
-        assertEquals(NodeState.DELETED, pnode.getNodeState());
-        assertNull(pnode.getMergedEntity());
-
-        this.productCurator.flush();
-        this.productCurator.clear();
-
-        Product deleted = this.ownerProductCurator.getProductById(owner, existing.getId());
-        assertNull(deleted);
-    }
-
     @Test
-    public void testFullCycleDeletesUnusedEntityWithNoGracePeriod() {
+    public void testFullCycleDeletesUnusedEntity() {
         Owner owner = this.createOwner();
 
         Product existing = this.createProduct("test_product", "product name", owner);
@@ -945,7 +710,7 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
         EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existing.getId())
             .setExistingEntity(existing);
 
-        ProductNodeVisitor visitor = this.buildNodeVisitor(0);
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
         visitor.processNode(pnode);
         visitor.pruneNode(pnode);
         visitor.applyChanges(pnode);
@@ -959,34 +724,6 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
 
         Product deleted = this.ownerProductCurator.getProductById(owner, existing.getId());
         assertNull(deleted);
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @ValueSource(ints = { -1, -5, -9000 })
-    public void testFullCycleOmitsUnusedEntityWithInfiniteGracePeriod(int gracePeriod) {
-        Owner owner = this.createOwner();
-
-        Product existing = this.createProduct("test_product", "product name", owner);
-        existing.setLocked(true);
-
-        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existing.getId())
-            .setExistingEntity(existing);
-
-        ProductNodeVisitor visitor = this.buildNodeVisitor(gracePeriod);
-        visitor.processNode(pnode);
-        visitor.pruneNode(pnode);
-        visitor.applyChanges(pnode);
-        visitor.complete();
-
-        assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
-        assertNull(pnode.getMergedEntity());
-
-        this.productCurator.flush();
-        this.productCurator.clear();
-
-        OwnerProduct updated = this.ownerProductCurator.getOwnerProduct(owner.getId(), existing.getId());
-        assertNotNull(updated);
-        assertNull(updated.getOrphanedDate());
     }
 
     /**
@@ -1022,7 +759,7 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
 
         assertEquals(1, count);
 
-        ProductNodeVisitor visitor = this.buildNodeVisitor(-1);
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
         visitor.processNode(pnode);
         visitor.pruneNode(pnode);
         visitor.applyChanges(pnode);

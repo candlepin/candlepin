@@ -32,8 +32,6 @@ import org.candlepin.service.model.ProductInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,20 +50,12 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
 
     private final ProductCurator productCurator;
     private final OwnerProductCurator ownerProductCurator;
-    private final int orphanProductGracePeriod;
-
     // Various cross-stage cache collections
     private Set<OwnerProduct> ownerProductEntities;
     private Map<Owner, Map<String, String>> ownerProductUuidMap;
     private Map<Owner, Set<String>> deletedProductUuids;
     private Map<Owner, Set<Long>> ownerEntityVersions;
     private Map<Owner, Map<String, List<Product>>> ownerVersionedEntityMap;
-
-    // Orphan date tracking and grace period state caching
-    private Map<Owner, Map<String, Instant>> ownerOrphanedDateMap;
-    private Map<Owner, Set<String>> ownerOrphanEntityIdPrecache;
-    private Map<Owner, Set<String>> ownerOrphanedEntities;
-    private Map<Owner, Set<String>> ownerUnorphanedEntities;
 
 
     /**
@@ -78,14 +68,10 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
      * @param ownerProductCurator
      *  the OwnerProductCurator to use for owner-product database operations
      *
-     * @param orphanProductGracePeriod
-     *  the number of days a product is allowed to be orphaned before it will be removed
-     *
      * @throws IllegalArgumentException
      *  if any of the provided curators are null
      */
-    public ProductNodeVisitor(ProductCurator productCurator, OwnerProductCurator ownerProductCurator,
-        int orphanProductGracePeriod) {
+    public ProductNodeVisitor(ProductCurator productCurator, OwnerProductCurator ownerProductCurator) {
 
         if (productCurator == null) {
             throw new IllegalArgumentException("productCurator is null");
@@ -97,18 +83,12 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
 
         this.productCurator = productCurator;
         this.ownerProductCurator = ownerProductCurator;
-        this.orphanProductGracePeriod = orphanProductGracePeriod;
 
         this.ownerProductEntities = new HashSet<>();
         this.ownerProductUuidMap = new HashMap<>();
         this.deletedProductUuids = new HashMap<>();
         this.ownerEntityVersions = new HashMap<>();
         this.ownerVersionedEntityMap = new HashMap<>();
-
-        this.ownerOrphanedDateMap = new HashMap<>();
-        this.ownerOrphanEntityIdPrecache = new HashMap<>();
-        this.ownerOrphanedEntities = new HashMap<>();
-        this.ownerUnorphanedEntities = new HashMap<>();
     }
 
     /**
@@ -142,10 +122,6 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
         node.setNodeState(NodeState.UNCHANGED);
 
         if (existingEntity != null) {
-            // Cache the ID of any existing entities for later bulk fetching orphan dates
-            this.ownerOrphanEntityIdPrecache.computeIfAbsent(node.getOwner(), key -> new HashSet<>())
-                .add(node.getEntityId());
-
             if (importedEntity != null) {
                 nodeChanged = ProductManager.isChangedBy(existingEntity, importedEntity);
             }
@@ -203,84 +179,7 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
         cleared = cleared && !node.getParentNodes()
             .anyMatch(elem -> elem.getNodeState() != NodeState.DELETED);
 
-        // If the grace period is set to infinity (negative values), we are never clear for deletion
-        cleared = cleared && this.orphanProductGracePeriod >= 0;
-
-        if (cleared) {
-            // At this point we're *almost* clear for deletion; just need to wait out the grace period:
-            // - If there is not a date set, it has not been previously cleared for deletion. Set the
-            //   date, update the owner-product ref to store the new date and return false
-            // - if there is a date set, check if we're beyond the grace period (in days). If the date
-            //   has been exceeded, flag the product for deletion
-            // - if the grace period is zero, we're setup to delete without delay; skip any further
-            //   checks
-
-            if (this.orphanProductGracePeriod > 0) {
-                Instant orphanedDate = this.getOwnerProductOrphanedDate(node);
-
-                if (orphanedDate == null) {
-                    this.ownerOrphanedEntities.computeIfAbsent(node.getOwner(), key -> new HashSet<>())
-                        .add(node.getEntityId());
-
-                    cleared = false;
-                }
-                else {
-                    Instant cutoff = Instant.now()
-                        .truncatedTo(ChronoUnit.DAYS)
-                        .minus(this.orphanProductGracePeriod, ChronoUnit.DAYS);
-
-                    cleared = orphanedDate.truncatedTo(ChronoUnit.DAYS)
-                        .isBefore(cutoff);
-                }
-            }
-        }
-        else {
-            // Entity is not cleared for deletion. Remove its orphaned date if it's been set.
-            if (this.getOwnerProductOrphanedDate(node) != null) {
-                this.ownerUnorphanedEntities.computeIfAbsent(node.getOwner(), key -> new HashSet<>())
-                    .add(node.getEntityId());
-            }
-        }
-
         return cleared;
-    }
-
-    /**
-     * Fetches the orphaned date of the entity represented by the given node. If the node does not
-     * represent an orphaned entity, this method returns null.
-     *
-     * @param node
-     *  the entity node for which to fetch the orphaned entity date
-     *
-     * @return
-     *  the date the entity represented by the given node was orphaned, or null if the node does not
-     *  represent an orphaned entity
-     */
-    private Instant getOwnerProductOrphanedDate(EntityNode<Product, ProductInfo> node) {
-        Map<String, Instant> orphanDateMap = this.ownerOrphanedDateMap
-            .computeIfAbsent(node.getOwner(), key -> new HashMap<>());
-
-        // Check if we have some precached IDs to convert...
-        Set<String> entityIdPrecache = this.ownerOrphanEntityIdPrecache.remove(node.getOwner());
-        if (entityIdPrecache != null) {
-            Map<String, Instant> fetched = this.ownerProductCurator
-                .getOwnerProductOrphanedDates(node.getOwner(), entityIdPrecache);
-
-            orphanDateMap.putAll(fetched);
-        }
-
-        // If this node somehow missed the processing/precaching step, do an individual lookup and
-        // cache the result
-        if (!orphanDateMap.containsKey(node.getEntityId())) {
-            OwnerProduct op = this.ownerProductCurator
-                .getOwnerProduct(node.getOwner().getId(), node.getEntityId());
-
-            if (op != null) {
-                orphanDateMap.put(node.getEntityId(), op.getOrphanedDate());
-            }
-        }
-
-        return orphanDateMap.get(node.getEntityId());
     }
 
     /**
@@ -380,17 +279,6 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
             this.ownerProductCurator.removeOwnerProductReferences(entry.getKey(), entry.getValue());
         }
 
-        // Clear orphaned dates on unorphaned products
-        for (Map.Entry<Owner, Set<String>> entry : this.ownerUnorphanedEntities.entrySet()) {
-            this.ownerProductCurator.updateOwnerProductOrphanedDates(entry.getKey(), entry.getValue(), null);
-        }
-
-        // Set orphaned dates on newly-orphaned products
-        for (Map.Entry<Owner, Set<String>> entry : this.ownerOrphanedEntities.entrySet()) {
-            this.ownerProductCurator.updateOwnerProductOrphanedDates(entry.getKey(), entry.getValue(),
-                Instant.now());
-        }
-
         // Save new owner-product entities
         this.ownerProductEntities.stream()
             .forEach(elem -> this.ownerProductCurator.create(elem, false));
@@ -407,11 +295,6 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
         this.deletedProductUuids.clear();
         this.ownerEntityVersions.clear();
         this.ownerVersionedEntityMap.clear();
-
-        this.ownerOrphanEntityIdPrecache.clear();
-        this.ownerOrphanedDateMap.clear();
-        this.ownerOrphanedEntities.clear();
-        this.ownerUnorphanedEntities.clear();
     }
 
     private EntityNode<Product, ProductInfo> lookupProductNode(EntityNode<Product, ProductInfo> parentNode,
