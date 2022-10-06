@@ -92,7 +92,7 @@ class CertRevocationSpecTest {
         ownerClient.createPool(owner.getKey(), Pools.random(virtual));
 
         system = consumerClient.createConsumer(Consumers.random(owner));
-        systemClient = ApiClients.trustedConsumer(system.getUuid()).consumers();
+        systemClient = ApiClients.ssl(system).consumers();
     }
 
     @Test
@@ -173,7 +173,7 @@ class CertRevocationSpecTest {
 
         ConsumerDTO newSystem = consumerClient.createConsumer(Consumers.random(owner)
             .facts(Map.of("system.certificate_version", "3.2")));
-        ConsumerClient newSystemClient = ApiClients.trustedConsumer(newSystem.getUuid()).consumers();
+        ConsumerClient newSystemClient = ApiClients.ssl(newSystem).consumers();
 
         List<CertificateSerialDTO> serials = newSystemClient.getEntitlementCertificateSerials(
             newSystem.getUuid());

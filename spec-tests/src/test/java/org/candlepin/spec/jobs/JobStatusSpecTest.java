@@ -130,7 +130,7 @@ class JobStatusSpecTest {
     public void shouldContainSystemIdForAsync() throws Exception {
         ownerApi.healEntire(owner.getKey());
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
+        ApiClient consumerClient = ApiClients.ssl(consumer);
         consumerApi = consumerClient.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
             null, List.of(product.getId()), null, null, null, true, null, null));
@@ -246,8 +246,8 @@ class JobStatusSpecTest {
     @Test
     public void shouldAllowUserToViewConsumerJobStatus() throws Exception {
         ConsumerDTO consumer = Consumers.random(owner);
-        consumer = consumerApi.createConsumer(consumer, user.getUsername(), owner.getKey(), null, false);
-        ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
+        consumer = consumerApi.createConsumer(consumer, user.getUsername(), owner.getKey(), null, true);
+        ApiClient consumerClient = ApiClients.ssl(consumer);
         consumerApi = consumerClient.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
             null, List.of(product.getId()), null, null, null, true, null, null));
@@ -313,7 +313,7 @@ class JobStatusSpecTest {
         jobsClient.setSchedulerStatus(false);
         try {
             ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
-            ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
+            ApiClient consumerClient = ApiClients.ssl(consumer);
             consumerApi = consumerClient.consumers();
             AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
                 null, List.of(product.getId()), null, null, null, true, null, null));
@@ -333,8 +333,8 @@ class JobStatusSpecTest {
 
         ConsumerDTO consumer = Consumers.random(otherOwner);
         consumer = consumerApi.createConsumer(consumer, otherUser.getUsername(), otherOwner.getKey(), null,
-            false);
-        ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
+            true);
+        ApiClient consumerClient = ApiClients.ssl(consumer);
         consumerApi = consumerClient.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
             null, List.of(product.getId()), null, null, null, true, null, null));
@@ -346,7 +346,7 @@ class JobStatusSpecTest {
     @Test
     public void shouldAllowConsumerToViewStatusOfOwnJob() throws Exception {
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
+        ApiClient consumerClient = ApiClients.ssl(consumer);
         consumerApi = consumerClient.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
             null, List.of(product.getId()), null, null, null, true, null, null));
@@ -360,7 +360,7 @@ class JobStatusSpecTest {
     @Test
     public void shouldNotAllowConsumerToAccessStatusOfOthersJob() throws Exception {
         ConsumerDTO consumer1 = client.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient1 = ApiClients.trustedConsumer(consumer1.getUuid());
+        ApiClient consumerClient1 = ApiClients.ssl(consumer1);
         ConsumerApi consumerApi1 = consumerClient1.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi1.bind(consumer1.getUuid(),
             null, List.of(product.getId()), null, null, null, true, null, null));
@@ -369,7 +369,7 @@ class JobStatusSpecTest {
         jobsClient.waitForJob(bindStatus);
 
         ConsumerDTO consumer2 = client.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient2 = ApiClients.trustedConsumer(consumer2.getUuid());
+        ApiClient consumerClient2 = ApiClients.ssl(consumer2);
 
         assertForbidden(() -> consumerClient2.jobs().getJobStatus(bindStatus.getId()));
     }
@@ -379,7 +379,7 @@ class JobStatusSpecTest {
         jobsClient.setSchedulerStatus(false);
         try {
             ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
-            ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
+            ApiClient consumerClient = ApiClients.ssl(consumer);
             consumerApi = consumerClient.consumers();
             AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
                 null, List.of(product.getId()), null, null, null, true, null, null));
@@ -394,7 +394,7 @@ class JobStatusSpecTest {
     @Test
     public void shouldFailToCancelTerminalJob() throws Exception {
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid());
+        ApiClient consumerClient = ApiClients.ssl(consumer);
         consumerApi = consumerClient.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi.bind(consumer.getUuid(),
             null, List.of(product.getId()), null, null, null, true, null, null));
@@ -406,7 +406,7 @@ class JobStatusSpecTest {
     @Test
     public void shouldNotAllowConsumerToCancelOthersJob() throws Exception {
         ConsumerDTO consumer1 = client.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient1 = ApiClients.trustedConsumer(consumer1.getUuid());
+        ApiClient consumerClient1 = ApiClients.ssl(consumer1);
         ConsumerApi consumerApi1 = consumerClient1.consumers();
         AsyncJobStatusDTO bindStatus = AsyncJobStatusDTO.fromJson(consumerApi1.bind(consumer1.getUuid(),
             null, List.of(product.getId()), null, null, null, true, null, null));
@@ -415,7 +415,7 @@ class JobStatusSpecTest {
         jobsClient.waitForJob(bindStatus);
 
         ConsumerDTO consumer2 = client.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient2 = ApiClients.trustedConsumer(consumer2.getUuid());
+        ApiClient consumerClient2 = ApiClients.ssl(consumer2);
 
         assertForbidden(() -> consumerClient2.jobs().cancelJob(bindStatus.getId()));
     }
