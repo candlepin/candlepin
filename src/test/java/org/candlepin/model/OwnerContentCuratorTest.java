@@ -517,11 +517,6 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
         assertTrue(original.getUuid() != modified.getUuid());
 
-        Environment environment1 = this.createEnvironment(owner1, "test_env-1", "test_env-1", null, null,
-            List.of(original));
-        Environment environment2 = this.createEnvironment(owner2, "test_env-2", "test_env-2", null, null,
-            List.of(original));
-
         assertTrue(this.isContentMappedToOwner(original, owner1));
         assertTrue(this.isContentMappedToOwner(original, owner2));
         assertFalse(this.isContentMappedToOwner(modified, owner1));
@@ -534,18 +529,6 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         assertTrue(this.isContentMappedToOwner(modified, owner1));
         assertTrue(this.isContentMappedToOwner(original, owner2));
         assertFalse(this.isContentMappedToOwner(modified, owner2));
-
-        this.environmentCurator.evict(environment1);
-        this.environmentCurator.evict(environment2);
-        environment1 = this.environmentCurator.get(environment1.getId());
-        environment2 = this.environmentCurator.get(environment2.getId());
-
-        assertEquals(1, environment1.getEnvironmentContent().size());
-        assertEquals(1, environment2.getEnvironmentContent().size());
-        assertEquals(modified.getUuid(), environment1.getEnvironmentContent().iterator().next().getContent()
-            .getUuid());
-        assertEquals(original.getUuid(), environment2.getEnvironmentContent().iterator().next().getContent()
-            .getUuid());
     }
 
     @Test
@@ -554,11 +537,6 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner("owner2");
         Content content = this.createContent("c1", "c1a", owner1, owner2);
 
-        Environment environment1 = this.createEnvironment(owner1, "test_env-1", "test_env-1", null, null,
-            List.of(content));
-        Environment environment2 = this.createEnvironment(owner2, "test_env-2", "test_env-2", null, null,
-            List.of(content));
-
         assertTrue(this.isContentMappedToOwner(content, owner1));
         assertTrue(this.isContentMappedToOwner(content, owner2));
 
@@ -566,16 +544,6 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
         assertFalse(this.isContentMappedToOwner(content, owner1));
         assertTrue(this.isContentMappedToOwner(content, owner2));
-
-        this.environmentCurator.evict(environment1);
-        this.environmentCurator.evict(environment2);
-        environment1 = this.environmentCurator.get(environment1.getId());
-        environment2 = this.environmentCurator.get(environment2.getId());
-
-        assertEquals(0, environment1.getEnvironmentContent().size());
-        assertEquals(1, environment2.getEnvironmentContent().size());
-        assertEquals(content.getUuid(), environment2.getEnvironmentContent().iterator().next().getContent()
-            .getUuid());
     }
 
     @Test

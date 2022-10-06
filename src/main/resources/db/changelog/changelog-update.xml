@@ -177,4 +177,6 @@
     <include file="db/changelog/20220621122940-add_pool_product_index.xml"/>
     <include file="db/changelog/20220722000000-add_delete_cascade_to_consumer_fks.xml"/>
     <include file="db/changelog/20220901113942-delete_unused_table_and_columns.xml"/>
+    <include file="db/changelog/20221003160605-remove_direct_ak_product_reference.xml"/>
+    <include file="db/changelog/20221003160623-remove_direct_env_content_reference.xml"/>
 </databaseChangeLog>

@@ -428,18 +428,6 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             return;
         }
 
-        this.updateOwnerContentJoinTable(owner, contentUuidMap);
-        this.updateOwnerContentEnvironments(owner, contentUuidMap);
-    }
-
-    /**
-     * Part of the updateOwnerContentReferences operation; updates the owner to content join table.
-     * See updateOwnerContentReferences for additional details.
-     *
-     * @param owner
-     * @param contentUuidMap
-     */
-    private void updateOwnerContentJoinTable(Owner owner, Map<String, String> contentUuidMap) {
         String sql = "UPDATE " + OwnerContent.DB_TABLE + " SET content_uuid = :updated " +
             "WHERE content_uuid = :current AND owner_id = :owner_id";
 
@@ -456,64 +444,6 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         log.debug("{} owner-content relations updated", count);
     }
-
-    /**
-     * Part of the updateOwnerContentReferences operation; updates the owner to content join table.
-     * See updateOwnerContentReferences for additional details.
-     *
-     * @param owner
-     * @param contentUuidMap
-     */
-    private void updateOwnerContentEnvironments(Owner owner, Map<String, String> contentUuidMap) {
-        EntityManager entityManager = this.getEntityManager();
-
-        String jpql = "SELECT env.id, content.uuid FROM EnvironmentContent ec " +
-            "JOIN ec.content content " +
-            "JOIN ec.environment env " +
-            "WHERE env.owner.id = :owner_id " +
-            "  AND content.uuid IN (:content_uuids)";
-
-        Query query = entityManager.createQuery(jpql)
-            .setParameter("owner_id", owner.getId());
-
-        Map<String, Set<String>> envMap = new HashMap<>();
-        for (List<String> block : this.partition(contentUuidMap.keySet())) {
-            List<Object> rows = query.setParameter("content_uuids", block)
-                .getResultList();
-
-            for (Object row : rows) {
-                String envid = (String) ((Object[]) row)[0];
-                String uuid = (String) ((Object[]) row)[1];
-
-                envMap.computeIfAbsent(uuid, key -> new HashSet<>())
-                    .add(envid);
-            }
-        }
-
-        int count = 0;
-        if (!envMap.isEmpty()) {
-            String sql = "UPDATE cp2_environment_content SET content_uuid = :updated " +
-                "WHERE environment_id = :env_id AND content_uuid = :current";
-
-            query = entityManager.createNativeQuery(sql);
-
-            for (Map.Entry<String, Set<String>> entry : envMap.entrySet()) {
-                String cUuid = entry.getKey();
-                String uUuid = contentUuidMap.get(cUuid);
-
-                query.setParameter("current", cUuid)
-                    .setParameter("updated", uUuid);
-
-                for (String envid : entry.getValue()) {
-                    count += query.setParameter("env_id", envid)
-                        .executeUpdate();
-                }
-            }
-        }
-
-        log.debug("{} environment-content relations updated", count);
-    }
-
 
     /**
      * Removes the content references currently pointing to the specified content for the given
@@ -553,30 +483,6 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
                     .executeUpdate();
 
                 log.info("{} owner-content relations removed", count);
-
-                // environment content
-                jpql = "SELECT e.id FROM Environment e WHERE e.owner.id = :owner_id";
-
-                List<String> envIds = entityManager.createQuery(jpql, String.class)
-                    .setParameter("owner_id", owner.getId())
-                    .getResultList();
-
-                count = 0;
-                if (envIds != null && !envIds.isEmpty()) {
-                    jpql = "DELETE FROM EnvironmentContent ec " +
-                        "WHERE ec.environment.id IN (:environment_ids) " +
-                        "AND ec.content.uuid IN (:content_uuids)";
-
-                    Query query = entityManager.createQuery(jpql)
-                        .setParameter("content_uuids", block);
-
-                    for (List<String> envBlock : this.partition(envIds)) {
-                        count += query.setParameter("environment_ids", envBlock)
-                            .executeUpdate();
-                    }
-                }
-
-                log.info("{} environment-content relations removed", count);
             }
         }
     }

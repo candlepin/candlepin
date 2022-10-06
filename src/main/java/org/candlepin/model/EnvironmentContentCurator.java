@@ -16,15 +16,16 @@ package org.candlepin.model;
 
 import com.google.common.collect.Iterables;
 
-import org.hibernate.criterion.Restrictions;
-
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Singleton;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
+
 
 
 /**
@@ -36,67 +37,79 @@ public class EnvironmentContentCurator extends AbstractHibernateCurator<Environm
         super(EnvironmentContent.class);
     }
 
-    public EnvironmentContent getByEnvironmentAndContent(Environment e, String contentId) {
-        return (EnvironmentContent) this.currentSession().createCriteria(EnvironmentContent.class)
-            .createAlias("content", "content")
-            .add(Restrictions.eq("environment", e))
-            .add(Restrictions.eq("content.id", contentId))
-            .uniqueResult();
+    public EnvironmentContent getByEnvironmentAndContent(Environment env, String contentId) {
+        if (env == null || contentId == null) {
+            return null;
+        }
+
+        try {
+            String jpql = "SELECT ec FROM Environment env JOIN env.environmentContent ec " +
+                "WHERE env.id = :env_id AND ec.contentId = :content_id";
+
+            return this.getEntityManager()
+                .createQuery(jpql, EnvironmentContent.class)
+                .setParameter("env_id", env.getId())
+                .setParameter("content_id", contentId)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            // intentionally left empty
+        }
+
+        return null;
     }
 
-    public EnvironmentContent getByEnvironmentAndContent(Environment e, Content content) {
-        return (EnvironmentContent) this.currentSession().createCriteria(EnvironmentContent.class)
-            .add(Restrictions.eq("environment", e))
-            .add(Restrictions.eq("content", content))
-            .uniqueResult();
+    public EnvironmentContent getByEnvironmentAndContent(Environment env, Content content) {
+        if (env == null || content == null) {
+            return null;
+        }
+
+        return this.getByEnvironmentAndContent(env, content.getId());
     }
 
     public List<EnvironmentContent> getByContent(Owner owner, String contentId) {
-        return this.currentSession().createCriteria(EnvironmentContent.class)
-            .createAlias("environment", "environment")
-            .createAlias("content", "content")
-            .add(Restrictions.eq("environment.owner", owner))
-            .add(Restrictions.eq("content.id", contentId))
-            .list();
+        String jpql = "SELECT ec FROM Environment env JOIN env.environmentContent ec " +
+            "WHERE env.owner.id = :owner_id AND ec.contentId = :content_id";
+
+        return this.getEntityManager()
+            .createQuery(jpql, EnvironmentContent.class)
+            .setParameter("owner_id", owner.getId())
+            .setParameter("content_id", contentId)
+            .getResultList();
     }
 
     /**
-     * Returns the map of environment ID & its respective content UUIDs
+     * Returns a mapping of environment IDs to the content IDs promoted to the environment. If none
+     * of the specified environments exist or none have content, this method returns an empty map.
      *
-     * @params environmentIds
-     *  List of environment IDs
+     * @param environmentIds
+     *  a collection of environment IDs for which to fetch content IDs
      *
      * @return
-     *  Map of environmentIds & respective contentUUIDs
+     *  a mapping of environment IDs to content IDs
      */
-    public Map<String, List<String>> getEnvironmentContentUUIDs(Iterable<String> environmentIds) {
-        Map<String, List<String>> contentUUIDMap = new HashMap<>();
+    public Map<String, Set<String>> getEnvironmentContentIdMap(Iterable<String> environmentIds) {
+        Map<String, Set<String>> envContentIdMap = new HashMap<>();
 
-        String jpql = "SELECT e.id, ec.content.uuid FROM EnvironmentContent ec " +
-            "JOIN Environment e ON ec.environment.id = e.id " +
-            "WHERE e.id IN (:envIDs)";
+        if (environmentIds != null) {
+            String jpql = "SELECT ec.environmentId, ec.contentId FROM EnvironmentContent ec " +
+                "WHERE ec.environmentId IN (:env_ids)";
 
-        Query query = this.getEntityManager().createQuery(jpql, Object[].class);
-        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() - 1);
+            Query query = this.getEntityManager()
+                .createQuery(jpql);
 
-        for (List<String> block : Iterables.partition(environmentIds, blockSize)) {
-            query.setParameter("envIDs", block);
-            processData(contentUUIDMap, query.getResultList());
+            for (List<String> block : this.partition(environmentIds)) {
+                List<Object[]> rows = query.setParameter("env_ids", block)
+                    .getResultList();
+
+                for (Object[] row : rows) {
+                    envContentIdMap.computeIfAbsent((String) row[0], (key) -> new HashSet<>())
+                        .add((String) row[1]);
+                }
+            }
         }
 
-        return contentUUIDMap;
+        return envContentIdMap;
     }
 
-    /**
-     * Process the result list (row) which contains entitlement ID & content UUID to
-     * build a map.
-     */
-    private void processData(Map<String, List<String>> contentUUIDMap, List<Object[]> resultList) {
-        for (Object[] result : resultList) {
-            String envId = result[0].toString();
-            List<String> ids = contentUUIDMap.getOrDefault(envId, new ArrayList<>());
-            ids.add(result[1].toString());
-            contentUUIDMap.put(envId, ids);
-        }
-    }
 }

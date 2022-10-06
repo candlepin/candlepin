@@ -905,7 +905,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         this.updateOwnerProductJoinTable(owner, productUuidMap);
         this.updateOwnerProductPools(owner, productUuidMap);
-        this.updateOwnerProductActivationKeys(owner, productUuidMap);
 
         // Looks like we don't need to do anything with product certificates, since we generate
         // them on request. By leaving them alone, they'll be generated as needed and we save some
@@ -974,13 +973,10 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      * changes made by this method on persist, nor trigger any errors on refresh.
      *
      * @param owner
-     *  The owners for which to apply the reference changes
+     *  The owner for which to remove product references
      *
      * @param productUuids
      *  The UUIDs of the products for which to remove references
-     *
-     * @throws IllegalStateException
-     *  if the any of the products are in use by one or more pools owned by the given owner
      */
     @Transactional
     @SuppressWarnings("checkstyle:indentation")
@@ -997,102 +993,82 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // from an owner if it is being used by a pool. As such, we shouldn't need to manually clean
         // the pool tables here.
 
-        if (productUuids != null && !productUuids.isEmpty()) {
-            EntityManager entityManager = this.getEntityManager();
-            log.info("Removing owner-product references for owner: {}, {}", owner, productUuids);
-
-            for (List<String> block : this.partition(productUuids)) {
-                // Owner-product relations
-                String jpql = "DELETE FROM OwnerProduct op " +
-                    "WHERE op.owner.id = :owner_id AND op.product.uuid IN (:product_uuids)";
-
-                int count = entityManager.createQuery(jpql)
-                    .setParameter("owner_id", owner.getId())
-                    .setParameter("product_uuids", block)
-                    .executeUpdate();
-
-                log.info("{} owner-product relations removed", count);
-
-                // Activation Key Products
-                jpql = "SELECT ak.id FROM ActivationKey ak WHERE ak.owner.id = :owner_id";
-
-                List<String> akIds = entityManager.createQuery(jpql, String.class)
-                    .setParameter("owner_id", owner.getId())
-                    .getResultList();
-
-                count = 0;
-                if (akIds != null && !akIds.isEmpty()) {
-                    String sql = "DELETE FROM cp2_activation_key_products " +
-                        "WHERE key_id IN (:ak_ids) " +
-                        "AND product_uuid IN (:product_uuids)";
-
-                    Query query = entityManager.createNativeQuery(sql)
-                        .setParameter("product_uuids", block);
-
-                    for (List<String> akBlock : this.partition(akIds)) {
-                        count += query.setParameter("ak_ids", akBlock)
-                            .executeUpdate();
-                    }
-                }
-
-                log.info("{} activation key product(s) removed", count);
-            }
+        if (productUuids == null || productUuids.isEmpty()) {
+            return;
         }
+
+        EntityManager entityManager = this.getEntityManager();
+        log.info("Removing owner-product references for owner: {}, {}", owner, productUuids);
+
+        // Owner-product relations
+        for (List<String> block : this.partition(productUuids)) {
+            String jpql = "DELETE FROM OwnerProduct op " +
+                "WHERE op.owner.id = :owner_id AND op.product.uuid IN (:product_uuids)";
+
+            int count = entityManager.createQuery(jpql)
+                .setParameter("owner_id", owner.getId())
+                .setParameter("product_uuids", block)
+                .executeUpdate();
+
+            log.info("{} owner-product relations removed", count);
+        }
+
+        // Activation key products
+        this.removeActivationKeyProductReferences(owner, productUuids);
     }
 
     /**
-     * Part of the updateOwnerProductReferences operation; updates the activation key to product
-     * join table. See updateOwnerProductReferences for additional details.
+     * Removes the product references from activation keys in the given organization. Called as part
+     * of the removeOwnerProductReferences operation.
      *
      * @param owner
-     * @param productUuidMap
+     *  the owner/organization in which to remove product references from activation keys
+     *
+     * @param productUuids
+     *  a collection of UUIDs representing products to remove from activation keys within the org
      */
-    private void updateOwnerProductActivationKeys(Owner owner, Map<String, String> productUuidMap) {
+    private void removeActivationKeyProductReferences(Owner owner, Collection<String> productUuids) {
         EntityManager entityManager = this.getEntityManager();
 
-        String sql = "SELECT key.id, prod.uuid FROM ActivationKey key JOIN key.products prod " +
-            "WHERE key.owner.id = :owner_id " +
-            "  AND prod.uuid IN (:product_uuids)";
-
-        Query query = entityManager.createQuery(sql)
-            .setParameter("owner_id", owner.getId());
-
-        Map<String, Set<String>> keyMap = new HashMap<>();
-        for (List<String> block : this.partition(productUuidMap.keySet())) {
-            List<Object> rows = query.setParameter("product_uuids", block)
-                .getResultList();
-
-            for (Object row : rows) {
-                String keyid = (String) ((Object[]) row)[0];
-                String uuid = (String) ((Object[]) row)[1];
-
-                keyMap.computeIfAbsent(uuid, key -> new HashSet<>())
-                    .add(keyid);
-            }
-        }
+        String jpql = "SELECT DISTINCT key.id FROM ActivationKey key WHERE key.owner.id = :owner_id";
+        List<String> keyIds = entityManager.createQuery(jpql, String.class)
+            .setParameter("owner_id", owner.getId())
+            .getResultList();
 
         int count = 0;
-        if (!keyMap.isEmpty()) {
-            sql = "UPDATE cp2_activation_key_products SET product_uuid = :updated " +
-                "WHERE key_id = :key_id AND product_uuid = :current";
+
+        if (keyIds != null && !keyIds.isEmpty()) {
+            Set<String> productIds = new HashSet<>();
+
+            // Convert the product UUIDs to product IDs for cleaning up activation keys
+            jpql = "SELECT prod.id FROM Product prod WHERE prod.uuid IN (:product_uuids)";
+            Query query = entityManager.createQuery(jpql, String.class);
+
+            for (List<String> block : this.partition(productUuids)) {
+                query.setParameter("product_uuids", block)
+                    .getResultList()
+                    .forEach(elem -> productIds.add(elem));
+            }
+
+            // Delete the entries
+            // Impl note: at the time of writing, JPA doesn't support doing this operation without
+            // interacting with the objects directly. So, we're doing it with native SQL to avoid
+            // even more work here.
+            String sql = "DELETE FROM cp_activation_key_products akp " +
+                "WHERE akp.key_id = :key_id AND product_id = :product_id";
 
             query = entityManager.createNativeQuery(sql);
 
-            for (Map.Entry<String, Set<String>> entry : keyMap.entrySet()) {
-                String cUuid = entry.getKey();
-                String uUuid = productUuidMap.get(cUuid);
-
-                query.setParameter("current", cUuid)
-                    .setParameter("updated", uUuid);
-
-                for (String keyid : entry.getValue()) {
-                    count += query.setParameter("key_id", keyid)
+            for (String keyId : keyIds) {
+                for (String productId : productIds) {
+                    count += query.setParameter("key_id", keyId)
+                        .setParameter("product_id", productId)
                         .executeUpdate();
                 }
             }
         }
 
-        log.debug("{} activation keys updated", count);
+        log.info("{} activation key product reference(s) removed", count);
     }
 
     /**
@@ -1142,20 +1118,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     }
 
     /**
-     * Clears the entity version for the given product. Calling this method will not unlink the
-     * product from any entities referencing it, but it will prevent further updates from converging
-     * on the product.
-     *
-     * @param entity
-     *  the product of which to clear the entity version
-     */
-    public void clearProductEntityVersion(Product entity) {
-        if (entity != null) {
-            this.clearProductEntityVersion(entity.getUuid());
-        }
-    }
-
-    /**
      * Clears the entity version for the product with the given UUID. Calling this method will not
      * unlink the product from any entities referencing it, but it will prevent further updates from
      * converging on the product.
@@ -1174,4 +1136,17 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .executeUpdate();
     }
 
+    /**
+     * Clears the entity version for the given product. Calling this method will not unlink the
+     * product from any entities referencing it, but it will prevent further updates from converging
+     * on the product.
+     *
+     * @param entity
+     *  the product of which to clear the entity version
+     */
+    public void clearProductEntityVersion(Product entity) {
+        if (entity != null) {
+            this.clearProductEntityVersion(entity.getUuid());
+        }
+    }
 }

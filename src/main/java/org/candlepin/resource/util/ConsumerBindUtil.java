@@ -28,7 +28,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
@@ -175,15 +174,18 @@ public class ConsumerBindUtil {
             Set<String> productIds = new HashSet<>();
             List<String> poolIds = new ArrayList<>();
 
-            for (Product akp : key.getProducts()) {
-                productIds.add(akp.getId());
+            if (key.getProductIds() != null) {
+                productIds.addAll(key.getProductIds());
             }
+
             for (ConsumerInstalledProduct cip : consumer.getInstalledProducts()) {
                 productIds.add(cip.getProductId());
             }
+
             for (ActivationKeyPool p : key.getPools()) {
                 poolIds.add(p.getPool().getId());
             }
+
             Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
             AutobindData autobindData = AutobindData.create(consumer, owner)
                 .forProducts(productIds.toArray(new String[0]))

@@ -191,8 +191,12 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @NotNull
     private String typeId;
 
-    @Column(name = "owner_id")
+    @Column(name = "owner_id", nullable = false)
     private String ownerId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", insertable = false, updatable = false)
+    private Owner owner;
 
     @Column(name = "entitlement_count")
     @NotNull
@@ -264,10 +268,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Basic(fetch = FetchType.LAZY)
     @Column(name = "annotations", length = 4194304)
     private String annotations;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", insertable = false, updatable = false)
-    private Owner owner;
 
     @Column(name = "rh_cloud_profile_modified")
     private Date rhCloudProfileModified;
@@ -471,12 +471,10 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      *  The owner of this consumer, if the owner ID is populated; null otherwise.
      */
     @Override
-    @JsonIgnore
     public Owner getOwner() {
         return this.owner;
     }
 
-    @JsonIgnore
     public Consumer setOwner(Owner owner) {
         if (owner == null || owner.getId() == null) {
             throw new IllegalArgumentException("owner is null or lacks an ID");

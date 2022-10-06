@@ -8805,8 +8805,8 @@ components:
     EnvironmentContentDTO:
       description: EnvironmentContent represents the promotion of content into a particular environment.
       properties:
-        content:
-          $ref: "#/components/schemas/ContentDTO"
+        contentId:
+          type: string
         enabled:
           type: boolean
 

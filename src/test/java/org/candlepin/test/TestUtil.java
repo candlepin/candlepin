@@ -46,7 +46,6 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.model.dto.ProductContentData;
 import org.candlepin.model.dto.ProductData;
@@ -652,17 +651,14 @@ public class TestUtil {
     }
 
     public static ActivationKey createActivationKey(Owner owner, List<Pool> pools) {
-        ActivationKey key = new ActivationKey();
-        key.setOwner(owner);
-        key.setName("A Test Key");
-        key.setServiceLevel("TestLevel");
-        key.setDescription("A test description for the test key.");
+        ActivationKey key = new ActivationKey()
+            .setOwner(owner)
+            .setName("A Test Key")
+            .setServiceLevel("TestLevel")
+            .setDescription("A test description for the test key.");
+
         if (pools != null) {
-            Set<ActivationKeyPool> akPools = new HashSet<>();
-            for (Pool p : pools) {
-                akPools.add(new ActivationKeyPool(key, p, (long) 1));
-            }
-            key.setPools(akPools);
+            pools.forEach(pool -> key.addPool(pool, 1L));
         }
 
         return key;

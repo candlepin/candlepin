@@ -16,18 +16,18 @@ package org.candlepin.dto.api.v1;
 
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.ObjectTranslator;
-import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentContentDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
-import org.candlepin.model.Content;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Owner;
 import org.candlepin.util.Util;
 
-import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+
 
 /**
  * The EnvironmentTranslator provides translation from Environment model objects to EnvironmentDTOs
@@ -85,24 +85,18 @@ public class EnvironmentTranslator implements ObjectTranslator<Environment, Envi
 
             Set<EnvironmentContent> envContents = source.getEnvironmentContent();
             if (envContents != null) {
-                Set<EnvironmentContentDTO> setOfEnvironmentContents = new HashSet<>();
+                Set<EnvironmentContentDTO> ecdtos = envContents.stream()
+                    .map(ec -> {
+                        return new EnvironmentContentDTO()
+                            .contentId(ec.getContentId())
+                            .enabled(ec.getEnabled());
+                    })
+                    .collect(Collectors.toSet());
 
-                ObjectTranslator<Content, ContentDTO> contentTranslator = translator
-                    .findTranslatorByClass(Content.class, ContentDTO.class);
-
-                for (EnvironmentContent ec : envContents) {
-                    if (ec != null) {
-                        ContentDTO dto = contentTranslator.translate(translator, ec.getContent());
-
-                        if (dto != null) {
-                            setOfEnvironmentContents.add(new EnvironmentContentDTO()
-                                .content(dto)
-                                .enabled(ec.getEnabled()));
-                        }
-                    }
-                }
-
-                dest.setEnvironmentContent(setOfEnvironmentContents);
+                dest.setEnvironmentContent(ecdtos);
+            }
+            else {
+                dest.setEnvironmentContent(null);
             }
         }
         else {

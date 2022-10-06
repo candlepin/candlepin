@@ -14,10 +14,12 @@
  */
 package org.candlepin.model;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.activationkeys.ActivationKey;
 
+import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 
@@ -28,6 +30,7 @@ import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.persistence.Column;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -38,9 +41,21 @@ import javax.validation.constraints.Size;
  */
 public class HibernateValidationAnnotationTest {
 
+    private static class NonNullColumnMatcher extends AbstractMatcher<AnnotatedElement> {
+
+        @Override
+        public boolean matches(AnnotatedElement elem) {
+            assertNotNull(elem);
+
+            Column annotation = elem.getAnnotation(Column.class);
+            return annotation != null && !annotation.nullable();
+        }
+    }
+
     private Matcher<AnnotatedElement> sizeAndNotNull = buildMatcher(Size.class, NotNull.class);
     private Matcher<AnnotatedElement> size = buildMatcher(Size.class);
     private Matcher<AnnotatedElement> notNull = buildMatcher(NotNull.class);
+    private Matcher<AnnotatedElement> nonNullableColumn = new NonNullColumnMatcher();
 
 
     @Test
@@ -56,7 +71,7 @@ public class HibernateValidationAnnotationTest {
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<>();
         fm.put(ActivationKey.class.getDeclaredField("id"), notNull);
         fm.put(ActivationKey.class.getDeclaredField("name"), sizeAndNotNull);
-        fm.put(ActivationKey.class.getDeclaredField("owner"), notNull);
+        fm.put(ActivationKey.class.getDeclaredField("ownerId"), nonNullableColumn);
         fm.put(ActivationKey.class.getDeclaredField("releaseVer"), size);
         fm.put(ActivationKey.class.getDeclaredField("serviceLevel"), size);
         runMap(fm);
@@ -218,8 +233,8 @@ public class HibernateValidationAnnotationTest {
     public void environmentContentTest() throws Exception {
         Map<Field, Matcher<AnnotatedElement>> fm = new HashMap<>();
         fm.put(EnvironmentContent.class.getDeclaredField("id"), notNull);
-        fm.put(EnvironmentContent.class.getDeclaredField("environment"), notNull);
-        fm.put(EnvironmentContent.class.getDeclaredField("content"), notNull);
+        fm.put(EnvironmentContent.class.getDeclaredField("environmentId"), nonNullableColumn);
+        fm.put(EnvironmentContent.class.getDeclaredField("contentId"), nonNullableColumn);
         runMap(fm);
     }
 

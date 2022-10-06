@@ -18,10 +18,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -532,11 +530,6 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Pool pool = TestUtil.createPool(owner, original);
         this.poolCurator.create(pool);
 
-        ActivationKey key = TestUtil.createActivationKey(owner, null);
-        key.setProducts(Util.asSet(original));
-
-        this.activationKeyCurator.create(key);
-
         assertTrue(this.isProductMappedToOwner(original, owner));
         assertFalse(this.isProductMappedToOwner(updated, owner));
         assertTrue(this.isProductMappedToOwner(untouched, owner));
@@ -550,11 +543,6 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertTrue(this.isProductMappedToOwner(updated, owner));
         assertTrue(this.isProductMappedToOwner(untouched, owner));
 
-        this.activationKeyCurator.refresh(key);
-        Collection<Product> products = key.getProducts();
-        assertEquals(1, products.size());
-        assertEquals(updated.getUuid(), products.iterator().next().getUuid());
-
         this.poolCurator.refresh(pool);
         assertEquals(updated.getUuid(), pool.getProduct().getUuid());
     }
@@ -565,20 +553,11 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         Product original = this.createProduct();
         this.createOwnerProductMapping(owner, original);
 
-        ActivationKey key = TestUtil.createActivationKey(owner, null);
-        key.setProducts(Util.asSet(original));
-
-        this.activationKeyCurator.create(key);
-
         assertTrue(this.isProductMappedToOwner(original, owner));
 
         this.ownerProductCurator.removeOwnerProductReferences(owner, Arrays.asList(original.getUuid()));
 
         assertFalse(this.isProductMappedToOwner(original, owner));
-
-        this.activationKeyCurator.refresh(key);
-        Collection<Product> products = key.getProducts();
-        assertEquals(0, products.size());
     }
 
     @Test

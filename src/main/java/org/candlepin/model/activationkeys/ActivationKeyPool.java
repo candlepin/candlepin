@@ -21,24 +21,22 @@ import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
-/**
- * SubscriptionToken
- */
-@XmlRootElement
+
+// TODO: This really should be immutable
+
+
 @Entity
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Table(name = ActivationKeyPool.DB_TABLE,
     uniqueConstraints = {@UniqueConstraint(columnNames = {"key_id", "pool_id"})})
 public class ActivationKeyPool extends AbstractHibernateObject implements Comparable<ActivationKeyPool> {
@@ -53,26 +51,25 @@ public class ActivationKeyPool extends AbstractHibernateObject implements Compar
     @NotNull
     private String id;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    @NotNull
-    private ActivationKey key;
+    @Column(name = "key_id", nullable = false)
+    private String activationKeyId;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "key_id", insertable = false, updatable = false)
+    private ActivationKey activationKey;
+
+    @Column(name = "pool_id", nullable = false)
+    private String poolId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "pool_id", insertable = false, updatable = false)
     private Pool pool;
 
     @Column(nullable = true, name = "quantity")
     private Long quantity;
 
     public ActivationKeyPool() {
-    }
-
-    public ActivationKeyPool(ActivationKey key, Pool pool, Long quantity) {
-        this.key = key;
-        this.pool = pool;
-        this.quantity = quantity;
+        // Intentionally left empty
     }
 
     public String getId() {
@@ -83,33 +80,42 @@ public class ActivationKeyPool extends AbstractHibernateObject implements Compar
         this.id = id;
     }
 
-    /**
-     * @return the key
-     */
-    @XmlTransient
+    public String getKeyId() {
+        return this.activationKeyId;
+    }
+
     public ActivationKey getKey() {
-        return key;
+        return this.activationKey;
     }
 
-    /**
-     * @param key the key to set
-     */
-    public void setKeyId(ActivationKey key) {
-        this.key = key;
+    public ActivationKeyPool setKey(ActivationKey key) {
+        if (key == null) {
+            throw new IllegalArgumentException("key is null");
+        }
+
+        this.activationKeyId = key.getId();
+        this.activationKey = key;
+
+        return this;
     }
 
-    /**
-     * @return the pool_Id
-     */
+    public String getPoolId() {
+        return this.poolId;
+    }
+
     public Pool getPool() {
-        return pool;
+        return this.pool;
     }
 
-    /**
-     * @param pool the pool to set
-     */
-    public void setPool(Pool pool) {
+    public ActivationKeyPool setPool(Pool pool) {
+        if (pool == null) {
+            throw new IllegalArgumentException("pool is null");
+        }
+
+        this.poolId = pool.getId();
         this.pool = pool;
+
+        return this;
     }
 
     /**
@@ -119,11 +125,44 @@ public class ActivationKeyPool extends AbstractHibernateObject implements Compar
         return quantity;
     }
 
-    /**
-     * @param quantity the quantity to set
-     */
-    public void setQuantity(Long quantity) {
+    public ActivationKeyPool setQuantity(Long quantity) {
         this.quantity = quantity;
+        return this;
+    }
+
+    private void resolveActivationKeyId() {
+        if (this.activationKeyId == null) {
+            if (this.activationKey == null) {
+                throw new IllegalStateException("No activation key provided for activation key pool");
+            }
+
+            if (this.activationKey.getId() == null) {
+                throw new IllegalStateException("activation key for activation key pool lacks a valid ID");
+            }
+
+            this.activationKeyId = this.activationKey.getId();
+        }
+    }
+
+    private void resolvePoolId() {
+        if (this.poolId == null) {
+            if (this.pool == null) {
+                throw new IllegalStateException("No pool provided for activation key pool");
+            }
+
+            if (this.pool.getId() == null) {
+                throw new IllegalStateException("pool for activation key pool lacks a valid ID");
+            }
+
+            this.poolId = this.pool.getId();
+        }
+    }
+
+    @PrePersist
+    @PreUpdate
+    protected void onPersist() {
+        this.resolveActivationKeyId();
+        this.resolvePoolId();
     }
 
     @Override
@@ -140,7 +179,11 @@ public class ActivationKeyPool extends AbstractHibernateObject implements Compar
 
     @Override
     public String toString() {
-        return "Activation key: " + this.getKey().getName() + ", Pool ID: " + this.getPool().getId();
+        ActivationKey key = this.getKey();
+        Pool pool = this.getPool();
+
+        return String.format("ActivationKeyPool [key: %s, pool: %s, quantity: %s]",
+            (key != null ? key.getName() : null), (pool != null ? pool.getId() : null), this.getQuantity());
     }
 
 }

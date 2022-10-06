@@ -247,7 +247,7 @@ class PromotedContentTest {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
         Environment environment = this.mockEnvironment(owner, consumer, content);
-        environment.getEnvironmentContent().add(new EnvironmentContent(environment, content, true));
+
         return environment;
     }
 
@@ -309,8 +309,19 @@ class PromotedContentTest {
     }
 
     private Environment mockEnvironment(Owner owner, Consumer consumer, Content content) {
-        Environment environment = new Environment("test_environment", "test_environment", owner);
-        environment.setEnvironmentContent(Util.asSet(new EnvironmentContent(environment, content, true)));
+        int rnd = (int) (Math.random() * 10000);
+
+        Environment environment = new Environment()
+            .setId("test_environment-" + rnd)
+            .setName("test environment " + rnd)
+            .setOwner(owner);
+
+        EnvironmentContent ec = new EnvironmentContent()
+            .setEnvironment(environment)
+            .setContent(content)
+            .setEnabled(true);
+
+        environment.addEnvironmentContent(ec);
 
         consumer.addEnvironment(environment);
 
@@ -327,9 +338,17 @@ class PromotedContentTest {
     }
 
     private PromotedContent createPromotedContent(String prefix) {
-        Environment environment = new Environment(ENV_ID, "env1", new Owner());
-        environment.getEnvironmentContent()
-            .add(new EnvironmentContent(environment, new Content(CONTENT_ID), true));
+        Environment environment = new Environment()
+            .setId(ENV_ID)
+            .setName("env1")
+            .setOwner(new Owner());
+
+        EnvironmentContent envcontent = new EnvironmentContent()
+            .setEnvironment(environment)
+            .setContent(new Content().setId(CONTENT_ID))
+            .setEnabled(true);
+
+        environment.addEnvironmentContent(envcontent);
 
         return new PromotedContent(prefix(prefix))
             .with(environment);

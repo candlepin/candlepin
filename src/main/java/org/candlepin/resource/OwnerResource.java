@@ -40,7 +40,6 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.server.v1.ActivationKeyPoolDTO;
-import org.candlepin.dto.api.server.v1.ActivationKeyProductDTO;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.server.v1.ContentAccessDTO;
@@ -649,21 +648,13 @@ public class OwnerResource implements OwnerApi {
         }
 
         if (dto.getProducts() != null) {
-            if (dto.getProducts().isEmpty()) {
-                entity.setProducts(new HashSet<>());
-            }
-            else {
-                Set<String> productIds = dto.getProducts().stream()
-                    .map(ActivationKeyProductDTO::getProductId)
-                    .collect(Collectors.toSet());
+            Set<String> pids = new HashSet<>();
 
-                for (String productId : productIds) {
-                    if (productId != null) {
-                        Product product = findProduct(entity.getOwner(), productId);
-                        entity.addProduct(product);
-                    }
-                }
-            }
+            dto.getProducts().stream()
+                .map(keyprod -> this.findProduct(entity.getOwner(), keyprod.getProductId()).getId())
+                .forEach(pids::add);
+
+            entity.setProductIds(pids);
         }
     }
 

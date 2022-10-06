@@ -33,17 +33,17 @@ import org.hibernate.annotations.GenericGenerator;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -80,21 +80,21 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
     @Size(max = 255)
     private String description;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    @NotNull
+    @Column(name = "owner_id", nullable = false)
+    private String ownerId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", insertable = false, updatable = false)
     private Owner owner;
 
-    @OneToMany(mappedBy = "key")
+    @OneToMany(mappedBy = "activationKey")
     @Cascade({CascadeType.ALL, CascadeType.DELETE_ORPHAN})
     private Set<ActivationKeyPool> pools = new HashSet<>();
 
-    @ManyToMany
-    @JoinTable(
-        name = "cp2_activation_key_products",
-        joinColumns = {@JoinColumn(name = "key_id")},
-        inverseJoinColumns = {@JoinColumn(name = "product_uuid")})
-    private Set<Product> products = new HashSet<>();
+    @ElementCollection
+    @CollectionTable(name = "cp_activation_key_products", joinColumns = @JoinColumn(name = "key_id"))
+    @Column(name = "product_id")
+    private Set<String> productIds = new HashSet<>();
 
     @OneToMany(targetEntity = ActivationKeyContentOverride.class, mappedBy = "key")
     @Cascade({CascadeType.ALL, CascadeType.DELETE_ORPHAN})
@@ -130,211 +130,102 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
     }
 
     public ActivationKey(String name, Owner owner) {
-        this.name = name;
-        this.owner = owner;
+        this.setName(name)
+            .setOwner(owner);
     }
 
     public ActivationKey(String name, Owner owner, String description) {
-        this.name = name;
-        this.owner = owner;
-        this.description = description;
+        this(name, owner);
+
+        this.setDescription(description);
     }
 
     public String getId() {
         return this.id;
     }
 
-    public void setId(String id) {
+    public ActivationKey setId(String id) {
         this.id = id;
+        return this;
     }
 
-    /**
-     * @return the name
-     */
     public String getName() {
         return name;
     }
 
-    /**
-     * @param name the name to set
-     */
-    public void setName(String name) {
+    public ActivationKey setName(String name) {
         this.name = name;
+        return this;
     }
 
     /**
-     * @return the set of Pools
-     */
-    public Set<ActivationKeyPool> getPools() {
-        return pools;
-    }
-
-    /**
-     * @param pools the set of Pools to set
-     */
-    public void setPools(Set<ActivationKeyPool> pools) {
-        this.pools = pools;
-    }
-
-    /**
-     * @return the products
-     */
-    public Set<Product> getProducts() {
-        return products;
-    }
-
-    /**
-     * @param products the set of product to set
-     */
-    public void setProducts(Set<Product> products) {
-        this.products = products;
-    }
-
-    /**
-     * @return the owner
-     */
-    public Owner getOwner() {
-        return owner;
-    }
-
-    /**
-     * @return the owner Id of this Consumer.
+     * {@inheritDoc}
      */
     @Override
     public String getOwnerId() {
-        return (owner == null) ? null : owner.getId();
+        return this.ownerId;
     }
 
     /**
-     * @param owner the owner to set
-     */
-    public void setOwner(Owner owner) {
-        this.owner = owner;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        return String.format("ActivationKey [id: %s, name: %s, description: %s]",
-                this.getId(), this.getName(), this.getDescription());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
-        }
-
-        boolean equals = false;
-
-        if (obj instanceof ActivationKey && super.equals(obj)) {
-            ActivationKey that = (ActivationKey) obj;
-
-            // Pull the owner IDs, as we're not interested in verifying that the owners
-            // themselves are equal; just so long as they point to the same owner.
-            String thisOwnerId = this.getOwner() != null ? this.getOwner().getId() : null;
-            String thatOwnerId = that.getOwner() != null ? that.getOwner().getId() : null;
-
-            equals = new EqualsBuilder()
-                .append(this.getId(), that.getId())
-                .append(this.getName(), that.getName())
-                .append(this.getDescription(), that.getDescription())
-                .append(thisOwnerId, thatOwnerId)
-                .append(this.getReleaseVer(), that.getReleaseVer())
-                .append(this.getServiceLevel(), that.getServiceLevel())
-                .append(this.isAutoAttach(), that.isAutoAttach())
-                .isEquals();
-
-            equals = equals && Util.collectionsAreEqual(this.getPools(), that.getPools(),
-                new Comparator<ActivationKeyPool>() {
-                    public int compare(ActivationKeyPool akp1, ActivationKeyPool akp2) {
-                        return akp1 == akp2 || (akp1 != null && akp1.equals(akp2)) ? 0 : 1;
-                    }
-                });
-
-            equals = equals && Util.collectionsAreEqual(this.getProducts(), that.getProducts(),
-                new Comparator<Product>() {
-                    public int compare(Product prod1, Product prod2) {
-                        return prod1 == prod2 || (prod1 != null && prod1.equals(prod2)) ? 0 : 1;
-                    }
-                });
-
-            return equals;
-        }
-
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int hashCode() {
-        HashCodeBuilder builder = new HashCodeBuilder(7, 17)
-            .append(this.id);
-        return builder.toHashCode();
-    }
-
-    public void addProduct(Product product) {
-        this.getProducts().add(product);
-    }
-
-    public void removeProduct(Product product) {
-        for (Product candidate : this.getProducts()) {
-            if (product.getId().equals(candidate.getId())) {
-                this.getProducts().remove(candidate);
-                break;
-            }
-        }
-    }
-
-    /**
-     * Checks if the specified product has been added to this activation key.
-     *
-     * @param product
-     *  The product to check
-     *
-     * @throws IllegalArgumentException
-     *  if product is null
+     * Fetches the owner of this activation key, if the owner ID is set. This may perform a lazy
+     * lookup of the owner, and should generally be avoided if the owner ID is sufficient.
      *
      * @return
-     *  true if the product has been added to this activation key; false otherwise.
+     *  The owner of this key, if the owner ID is populated; null otherwise.
      */
-    public boolean hasProduct(Product product) {
-        if (product == null) {
-            throw new IllegalArgumentException("product is null");
+    public Owner getOwner() {
+        return this.owner;
+    }
+
+    public ActivationKey setOwner(Owner owner) {
+        if (owner == null || owner.getId() == null) {
+            throw new IllegalArgumentException("owner is null or lacks an ID");
         }
 
-        for (Product candidate : this.getProducts()) {
-            if (product.getId().equals(candidate.getId())) {
-                return true;
+        this.owner = owner;
+        this.ownerId = owner.getId();
+
+        return this;
+    }
+
+    public Set<ActivationKeyPool> getPools() {
+        return this.pools;
+    }
+
+    public ActivationKey setPools(Collection<ActivationKeyPool> pools) {
+        this.pools.clear();
+
+        if (pools != null) {
+            this.pools.addAll(pools);
+        }
+
+        return this;
+    }
+
+    public ActivationKey addPool(Pool pool, Long quantity) {
+        ActivationKeyPool akpool = new ActivationKeyPool()
+            .setKey(this)
+            .setPool(pool)
+            .setQuantity(quantity);
+
+        this.pools.add(akpool);
+        return this;
+    }
+
+    public ActivationKey removePool(Pool pool) {
+        if (pool != null && pool.getId() != null) {
+            String poolId = pool.getId();
+            Iterator<ActivationKeyPool> iterator = this.pools.iterator();
+
+            while (iterator.hasNext()) {
+                ActivationKeyPool akp = iterator.next();
+                if (poolId.equals(akp.getPoolId())) {
+                    iterator.remove();
+                }
             }
         }
 
-        return false;
-    }
-
-    public void addPool(Pool pool, Long quantity) {
-        ActivationKeyPool akp = new ActivationKeyPool(this, pool, quantity);
-        this.getPools().add(akp);
-    }
-
-    public void removePool(Pool pool) {
-        ActivationKeyPool toRemove = null;
-
-        for (ActivationKeyPool akp : this.getPools()) {
-            if (akp.getPool().getId().equals(pool.getId())) {
-                toRemove = akp;
-                break;
-            }
-        }
-
-        this.getPools().remove(toRemove);
+        return this;
     }
 
     /**
@@ -354,38 +245,116 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
             throw new IllegalArgumentException("pool is null");
         }
 
-        for (ActivationKeyPool akp : this.getPools()) {
-            if (akp.getPool().getId().equals(pool.getId())) {
-                return true;
-            }
+        return this.pools.stream()
+            .map(ActivationKeyPool::getPoolId)
+            .anyMatch(pid -> pid.equals(pool.getId()));
+    }
+
+    public Set<String> getProductIds() {
+        return this.productIds;
+    }
+
+    public ActivationKey setProductIds(Collection<String> productIds) {
+        this.productIds.clear();
+
+        if (productIds != null) {
+            this.productIds.addAll(productIds);
         }
 
-        return false;
+        return this;
     }
 
     /**
-     * @return the contentOverrides
+     * Adds the specified product ID to this activation key. If the productId is null or empty, this
+     * method throws an exception.
+     *
+     * @param productId
+     *  the Red Hat ID of the product to add to this activation key; cannot be null or empty
+     *
+     * @throws IllegalArgumentException
+     *  if productId is null or empty
+     *
+     * @return
+     *  a reference to this activation key
      */
+    public ActivationKey addProductId(String productId) {
+        if (productId == null || productId.isEmpty()) {
+            throw new IllegalArgumentException("productId is null or empty");
+        }
+
+        this.productIds.add(productId);
+        return this;
+    }
+
+    /**
+     * Adds the specified product to this activation key, using its Red Hat product ID. If the
+     * product is null, or lacks a product ID, this method throws an exception.
+     *
+     * @param product
+     *  the product to add to this activation key; cannot be null and must have a valid product ID
+     *
+     * @throws IllegalArgumentException
+     *  if product is null or lacks a valid Red Hat product ID
+     *
+     * @return
+     *  a reference to this activation key
+     */
+    public ActivationKey addProduct(Product product) {
+        if (product == null) {
+            throw new IllegalArgumentException("product is null");
+        }
+
+        this.addProductId(product.getId());
+        return this;
+    }
+
+    public boolean removeProductId(String productId) {
+        return this.productIds.remove(productId);
+    }
+
+    public boolean removeProduct(Product product) {
+        return product != null && this.removeProductId(product.getId());
+    }
+
+    public boolean hasProductId(String productId) {
+        return this.productIds.contains(productId);
+    }
+
+    /**
+     * Checks if the specified product has been added to this activation key.
+     *
+     * @param product
+     *  The product to check
+     *
+     * @return
+     *  true if the product has been added to this activation key; false otherwise.
+     */
+    public boolean hasProduct(Product product) {
+        return product != null && this.hasProductId(product.getId());
+    }
+
     public Set<ActivationKeyContentOverride> getContentOverrides() {
         return contentOverrides;
     }
 
-    /**
-     * @param contentOverrides the contentOverrides to set
-     */
-    public void setContentOverrides(Set<ActivationKeyContentOverride> contentOverrides) {
+    public ActivationKey setContentOverrides(Set<ActivationKeyContentOverride> contentOverrides) {
         this.contentOverrides.clear();
         this.addContentOverrides(contentOverrides);
+
+        return this;
     }
 
-    public void addContentOverride(ActivationKeyContentOverride override) {
+    public ActivationKey addContentOverride(ActivationKeyContentOverride override) {
         this.addOrUpdate(override);
+        return this;
     }
 
-    public void addContentOverrides(Collection<ActivationKeyContentOverride> overrides) {
+    public ActivationKey addContentOverrides(Collection<ActivationKeyContentOverride> overrides) {
         for (ActivationKeyContentOverride newOverride : overrides) {
             this.addContentOverride(newOverride);
         }
+
+        return this;
     }
 
     public ActivationKeyContentOverride removeContentOverride(String overrideId) {
@@ -404,95 +373,66 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
         return toRemove;
     }
 
-    public void removeAllContentOverrides() {
+    public ActivationKey removeAllContentOverrides() {
         this.contentOverrides.clear();
+        return this;
     }
 
-    /**
-     * @return the releaseVer
-     */
     public Release getReleaseVer() {
         return new Release(releaseVer);
     }
 
-    /**
-     * @param releaseVer the releaseVer to set
-     */
-    public void setReleaseVer(Release releaseVer) {
+    public ActivationKey setReleaseVer(Release releaseVer) {
         this.releaseVer = releaseVer.getReleaseVer();
+        return this;
     }
 
-    /**
-     * @return the service level
-     */
     public String getServiceLevel() {
         return serviceLevel;
     }
 
-    /**
-     * @param serviceLevel the service level to set
-     */
-    public void setServiceLevel(String serviceLevel) {
+    public ActivationKey setServiceLevel(String serviceLevel) {
         this.serviceLevel = serviceLevel;
+        return this;
     }
 
-    /**
-     * @return the usage
-     */
     public String getUsage() {
         return usage;
     }
 
-    /**
-     * @param usage the usage to set
-     */
-    public void setUsage(String usage) {
+    public ActivationKey setUsage(String usage) {
         this.usage = usage;
+        return this;
     }
 
-    /**
-     * @return the role
-     */
     public String getRole() {
         return role;
     }
 
-    /**
-     * @param role the role to set
-     */
-    public void setRole(String role) {
+    public ActivationKey setRole(String role) {
         this.role = role;
+        return this;
     }
 
-    /**
-     * @return the addons
-     */
     public Set<String> getAddOns() {
         return addOns;
     }
 
-    /**
-     * @param addOns the addOns to set
-     */
-    public void setAddOns(Set<String> addOns) {
+    public ActivationKey setAddOns(Set<String> addOns) {
         this.addOns = addOns;
+        return this;
     }
 
-    /**
-     * @return the description
-     */
     public String getDescription() {
         return description;
     }
 
-    /**
-     * @param description
-     */
-    public void setDescription(String description) {
+    public ActivationKey setDescription(String description) {
         this.description = description;
+        return this;
     }
 
-    private void addOrUpdate(ActivationKeyContentOverride override) {
+    private ActivationKey addOrUpdate(ActivationKeyContentOverride override) {
         boolean found = false;
         for (ActivationKeyContentOverride existing : this.getContentOverrides()) {
             if (existing.getContentLabel().equalsIgnoreCase(override.getContentLabel()) &&
@@ -507,14 +447,75 @@ public class ActivationKey extends AbstractHibernateObject<ActivationKey> implem
             override.setKey(this);
             this.getContentOverrides().add(override);
         }
+
+        return this;
     }
 
-    public void setAutoAttach(Boolean autoAttach) {
+    public ActivationKey setAutoAttach(Boolean autoAttach) {
         this.autoAttach = autoAttach;
+        return this;
     }
 
     public Boolean isAutoAttach() {
         return autoAttach;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(7, 17)
+            .append(this.id)
+            .toHashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        boolean equals = false;
+
+        if (obj instanceof ActivationKey && super.equals(obj)) {
+            ActivationKey that = (ActivationKey) obj;
+
+            equals = new EqualsBuilder()
+                .append(this.getId(), that.getId())
+                .append(this.getName(), that.getName())
+                .append(this.getDescription(), that.getDescription())
+                .append(this.getOwnerId(), that.getOwnerId())
+                .append(this.getReleaseVer(), that.getReleaseVer())
+                .append(this.getServiceLevel(), that.getServiceLevel())
+                .append(this.isAutoAttach(), that.isAutoAttach())
+                .isEquals();
+
+            equals = equals && Util.collectionsAreEqual(this.getPools(), that.getPools(),
+                new Comparator<ActivationKeyPool>() {
+                    public int compare(ActivationKeyPool akp1, ActivationKeyPool akp2) {
+                        return akp1 == akp2 || (akp1 != null && akp1.equals(akp2)) ? 0 : 1;
+                    }
+                });
+
+            equals = equals && Util.collectionsAreEqual(this.getProductIds(), that.getProductIds());
+
+            return equals;
+        }
+
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return String.format("ActivationKey [id: %s, name: %s, description: %s]",
+            this.getId(), this.getName(), this.getDescription());
     }
 
 }

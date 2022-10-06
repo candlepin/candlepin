@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.util.SetView;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -98,8 +100,9 @@ public class Environment extends AbstractHibernateObject implements Serializable
         return id;
     }
 
-    public void setId(String id) {
+    public Environment setId(String id) {
         this.id = id;
+        return this;
     }
 
     public Owner getOwner() {
@@ -114,32 +117,67 @@ public class Environment extends AbstractHibernateObject implements Serializable
         return (owner == null) ? null : owner.getId();
     }
 
-    public void setOwner(Owner owner) {
+    public Environment setOwner(Owner owner) {
         this.owner = owner;
+        return this;
     }
 
     public Set<EnvironmentContent> getEnvironmentContent() {
-        return environmentContent;
+        return new SetView<>(this.environmentContent);
     }
 
-    public void setEnvironmentContent(Set<EnvironmentContent> environmentContent) {
-        this.environmentContent = environmentContent;
+    public Environment setEnvironmentContent(Set<EnvironmentContent> environmentContent) {
+        this.environmentContent = new HashSet<>();
+
+        if (environmentContent != null) {
+            environmentContent.forEach(this::addEnvironmentContent);
+        }
+
+        return this;
+    }
+
+    public Environment addEnvironmentContent(EnvironmentContent envcontent) {
+        if (envcontent == null) {
+            throw new IllegalArgumentException("envcontent is null");
+        }
+
+        // Ensure it's set to this environment. Really this should be immutable and created internally.
+        envcontent.setEnvironment(this);
+
+        this.environmentContent.add(envcontent);
+        return this;
+    }
+
+    public Environment addContent(Content content, boolean enabled) {
+        if (content == null) {
+            throw new IllegalArgumentException("content is null");
+        }
+
+        EnvironmentContent envcontent = new EnvironmentContent()
+            .setEnvironment(this)
+            .setContent(content)
+            .setEnabled(enabled);
+
+        this.environmentContent.add(envcontent);
+        return this;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public Environment setName(String name) {
         this.name = name;
+        return this;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public Environment setDescription(String description) {
         this.description = description;
+        return this;
     }
 
     @Override

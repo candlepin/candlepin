@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20221003160623-1" author="crog">
+        <createTable tableName="cp_environment_content">
+            <column name="id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created" type="${timestamp.type}"/>
+            <column name="updated" type="${timestamp.type}"/>
+            <column name="environment_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="enabled" type="boolean"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20221003160623-2" author="crog">
+        <addPrimaryKey tableName="cp_environment_content" columnNames="id" constraintName="cp_envcontent_pkey"/>
+
+        <addForeignKeyConstraint constraintName="cp_envcontent_fk1"
+            baseTableName="cp_environment_content"
+            baseColumnNames="environment_id"
+            referencedTableName="cp_environment"
+            referencedColumnNames="id"
+            deleteCascade="true"/>
+
+        <addUniqueConstraint constraintName="cp_envcontent_uidx1"
+            tableName="cp_environment_content"
+            columnNames="environment_id, content_id"/>
+    </changeSet>
+
+    <changeSet id="20221003160623-3" author="crog">
+        <createIndex indexName="cp_envcontent_idx1" tableName="cp_environment_content">
+            <column name="environment_id"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="20221003160623-4" author="crog">
+        <sql dbms="postgresql, mysql">
+            INSERT INTO cp_environment_content
+                SELECT ec.id, ec.created, ec.updated, ec.environment_id, c.content_id, ec.enabled
+                    FROM cp2_environment_content ec
+                    JOIN cp2_content c ON c.uuid = ec.content_uuid;
+        </sql>
+    </changeSet>
+
+<!--
+    <changeSet id="20221003160623-5" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="cp2_environment_content"/>
+        </preConditions>
+
+        <dropTable tableName="cp2_environment_content"/>
+    </changeSet>
+-->
+
+</databaseChangeLog>
