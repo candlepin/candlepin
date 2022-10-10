@@ -15,8 +15,10 @@
 package org.candlepin.resource.util;
 
 import org.candlepin.model.EntitlementFilterBuilder;
+import org.candlepin.model.dto.KeyValueParameter;
 
 import org.apache.commons.lang3.StringUtils;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.List;
 
@@ -26,15 +28,16 @@ import java.util.List;
 public class EntitlementFinderUtil {
 
     private EntitlementFinderUtil() {
+
     }
 
-    public static EntitlementFilterBuilder createFilter(
+    public static EntitlementFilterBuilder createFilter(I18n i18n,
         String matches, List<String> attrFilters) {
         EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
         if (attrFilters != null) {
             for (String filterParam : attrFilters) {
-                String[] keyValue = filterParam.split(":");
-                filters.addAttributeFilter(keyValue[0], keyValue[1]);
+                KeyValueParameter keyValueParameter = new KeyValueParameter(i18n, filterParam);
+                filters.addAttributeFilter(keyValueParameter.getKey(), keyValueParameter.getValue());
             }
         }
         if (!StringUtils.isEmpty(matches)) {

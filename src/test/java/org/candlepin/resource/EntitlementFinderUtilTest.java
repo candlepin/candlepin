@@ -21,19 +21,28 @@ import org.candlepin.model.EntitlementFilterBuilder;
 import org.candlepin.resource.util.EntitlementFinderUtil;
 
 import org.junit.jupiter.api.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
+
+import java.util.Locale;
 
 
 public class EntitlementFinderUtilTest {
 
+
+
     @Test
     public void nullFilterTest() {
-        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(null, null);
+        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(i18n, null, null);
         assertFalse(filters.hasMatchFilters());
     }
 
     @Test
     public void matchesFilterTest() {
-        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter("matchesFilterTest", null);
+        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(
+            i18n, "matchesFilterTest", null);
         assertTrue(filters.hasMatchFilters());
     }
 }

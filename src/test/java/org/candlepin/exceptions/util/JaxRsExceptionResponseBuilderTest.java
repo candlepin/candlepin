@@ -29,6 +29,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
+
+import java.util.Locale;
 
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
@@ -70,8 +74,9 @@ public class JaxRsExceptionResponseBuilderTest {
 
     @Test
     public void candlepinParserError() {
+        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         CandlepinParameterParseException parseEx =
-            new CandlepinParameterParseException("thisFormat");
+            new CandlepinParameterParseException(i18n, "thisFormat", "inValue");
         RuntimeException ex = new RuntimeException(parseEx);
         Response resp = exceptionBuilder.getResponse(ex);
         ExceptionMessage e =  (ExceptionMessage) resp.getEntity();

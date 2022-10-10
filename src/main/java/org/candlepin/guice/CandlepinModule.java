@@ -64,6 +64,7 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.exceptions.mappers.BadRequestExceptionMapper;
 import org.candlepin.exceptions.mappers.CandlepinExceptionMapper;
+import org.candlepin.exceptions.mappers.CandlepinParameterParseExceptionMapper;
 import org.candlepin.exceptions.mappers.DefaultOptionsMethodExceptionMapper;
 import org.candlepin.exceptions.mappers.FailureExceptionMapper;
 import org.candlepin.exceptions.mappers.InternalServerErrorExceptionMapper;
@@ -260,6 +261,7 @@ public class CandlepinModule extends AbstractModule {
         bind(InternalServerErrorExceptionMapper.class);
         bind(DefaultOptionsMethodExceptionMapper.class);
         bind(BadRequestExceptionMapper.class);
+        bind(CandlepinParameterParseExceptionMapper.class);
         bind(RollbackExceptionMapper.class);
         bind(ValidationExceptionMapper.class);
         bind(WebApplicationExceptionMapper.class);

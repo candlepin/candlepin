@@ -467,8 +467,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Pool pool2 = TestUtil.createPool(owner, p2);
         poolCurator.create(pool2);
 
-        List<KeyValueParamDTO> params = new ArrayList<>();
-        params.add(createKeyValueParam("cores", "12"));
+        List<String> params = new ArrayList<>();
+        params.add(("cores:12"));
 
         when(this.principalProvider.get()).thenReturn(principal);
         Stream<PoolDTO> result = ownerResource.listOwnerPools(owner.getKey(), null,
@@ -481,7 +481,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertModelEqualsDTO(pool2, pools.get(0));
 
         params.clear();
-        params.add(createKeyValueParam("virt_only", "true"));
+        params.add("virt_only:true");
 
         result = ownerResource.listOwnerPools(owner.getKey(), null, null,
             null, null, true, null, null, params, false, false, null, null, null, null, null, null);
@@ -507,7 +507,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Pool pool2 = TestUtil.createPool(owner, p2);
         poolCurator.create(pool2);
 
-        List<KeyValueParamDTO> params = new ArrayList<>();
+        List<String> params = new ArrayList<>();
 
         when(this.principalProvider.get()).thenReturn(principal);
         Stream<PoolDTO> result = ownerResource.listOwnerPools(owner.getKey(), null, null, null, null, true,
@@ -519,7 +519,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         assertEquals(2, pools.size());
 
         params = new ArrayList<>();
-        params.add(createKeyValueParam(Pool.Attributes.DEVELOPMENT_POOL, "!true"));
+        params.add("dev_pool:!true");
 
         result = ownerResource.listOwnerPools(owner.getKey(), null, null, null, null,
             true, null, null, params, false, false, null, null, null, null, null, null);
@@ -980,19 +980,13 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         // to bother checking that we got the exact ones we're expecting.
     }
 
-    private KeyValueParamDTO buildFactParam(String key, String value) {
-        return new KeyValueParamDTO()
-            .key(key)
-            .value(value);
-    }
-
     @Test
     public void testListConsumersByFact() {
-        List<KeyValueParamDTO> factsParam = Arrays.asList(
-            this.buildFactParam("fact-1", "value-1a"),
-            this.buildFactParam("fact-1", "value-1b"),
-            this.buildFactParam("fact-2", "value-2"),
-            this.buildFactParam("fact-3", "value-3"));
+        List<String> factsParam = List.of(
+            "fact-1:value-1a",
+            "fact-1:value-1b",
+            "fact-2:value-2",
+            "fact-3:value-3");
 
         Map<String, Collection<String>> factsMap = Map.of(
             "fact-1", Set.of("value-1a", "value-1b"),

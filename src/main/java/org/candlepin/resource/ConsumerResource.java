@@ -2510,7 +2510,7 @@ public class ConsumerResource implements ConsumerApi {
             revokeOnGuestMigration(consumer);
         }
 
-        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(null, attrFilters);
+        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(i18n, null, attrFilters);
         Page<List<Entitlement>> entitlementsPage = entitlementCurator.listByConsumer(consumer, productId,
             filters, pageRequest);
 

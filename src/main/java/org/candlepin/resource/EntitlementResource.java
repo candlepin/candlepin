@@ -142,7 +142,7 @@ public class EntitlementResource implements EntitlementsApi {
         List<String> attrFilters,
         Integer page, Integer perPage, String order, String sortBy) {
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
-        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
+        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(i18n, matches, attrFilters);
         Page<List<Entitlement>> p;
         if (consumerUuid != null) {
             Consumer consumer = consumerCurator.findByUuid(consumerUuid);

@@ -4767,7 +4767,8 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/KeyValueParamDTO'
+              type: string
+              format: key:value
         - $ref: "#/components/parameters/paging_page"
         - $ref: "#/components/parameters/paging_per_page"
         - $ref: "#/components/parameters/paging_order"
@@ -5613,7 +5614,8 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/KeyValueParamDTO'
+              type: string
+              format: key:value
         - name: add_future
           in: query
           description: |

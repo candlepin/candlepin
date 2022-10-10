@@ -17,8 +17,11 @@ package org.candlepin.resteasy.converter;
 import org.candlepin.dto.api.server.v1.KeyValueParamDTO;
 import org.candlepin.exceptions.CandlepinParameterParseException;
 
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xnap.commons.i18n.I18n;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -33,10 +36,16 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class KeyValueParamConverterProvider implements ParamConverterProvider {
 
+    private final com.google.inject.Provider<I18n> i18n;
+    @Inject
+    public KeyValueParamConverterProvider(com.google.inject.Provider<I18n> i18n) {
+        this.i18n = i18n;
+    }
+
     @Override
     public <T> ParamConverter<T> getConverter(Class<T> rawType, Type genericType, Annotation[] annotations) {
         if (rawType.isAssignableFrom(KeyValueParamDTO.class)) {
-            return (ParamConverter<T>) new KeyValueParamConverter();
+            return (ParamConverter<T>) new KeyValueParamConverter(i18n);
         }
         return null;
     }
@@ -47,6 +56,11 @@ public class KeyValueParamConverterProvider implements ParamConverterProvider {
     public static class KeyValueParamConverter implements ParamConverter<KeyValueParamDTO> {
 
         private static final Logger log = LoggerFactory.getLogger(KeyValueParamConverter.class);
+        private final com.google.inject.Provider<I18n> i18n;
+        @Inject
+        public KeyValueParamConverter(com.google.inject.Provider<I18n> i18n) {
+            this.i18n = i18n;
+        }
 
         @Override
         public KeyValueParamDTO fromString(String inValue) {
@@ -57,7 +71,7 @@ public class KeyValueParamConverterProvider implements ParamConverterProvider {
             // Maximum of two parts
             String[] parts = inValue.split(":", 2);
             if (parts.length <= 1) {
-                throw new CandlepinParameterParseException("name:value");
+                throw new CandlepinParameterParseException(i18n.get(), "name:value", inValue);
             }
 
             return new KeyValueParamDTO()

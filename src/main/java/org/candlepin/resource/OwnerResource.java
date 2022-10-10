@@ -48,7 +48,6 @@ import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.EntitlementDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.dto.api.server.v1.ImportRecordDTO;
-import org.candlepin.dto.api.server.v1.KeyValueParamDTO;
 import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.OwnerInfo;
@@ -101,6 +100,7 @@ import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
+import org.candlepin.model.dto.KeyValueParameter;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.server.v1.OwnerApi;
@@ -947,7 +947,7 @@ public class OwnerResource implements OwnerApi {
         Owner owner = findOwnerByKey(ownerKey);
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
 
-        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(null, attrFilters);
+        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(i18n, null, attrFilters);
         Page<List<Entitlement>> entitlementsPage = entitlementCurator
             .listByOwner(owner, productId, filters, pageRequest);
 
@@ -1099,7 +1099,7 @@ public class OwnerResource implements OwnerApi {
         Set<String> typeLabels,
         @Verify(value = Consumer.class, nullable = true) List<String> uuids,
         List<String> hypervisorIds,
-        List<KeyValueParamDTO> facts,
+        List<String> facts,
         Integer page, Integer perPage, String order, String sortBy) {
         Owner owner = findOwnerByKey(ownerKey);
         List<ConsumerType> types = this.consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
@@ -1112,8 +1112,9 @@ public class OwnerResource implements OwnerApi {
             .setHypervisorIds(hypervisorIds);
 
         if (facts != null) {
-            for (KeyValueParamDTO fact : facts) {
-                queryArgs.addFact(fact.getKey(), fact.getValue());
+            for (String fact : facts) {
+                KeyValueParameter keyValueParameter = new KeyValueParameter(i18n, fact);
+                queryArgs.addFact(keyValueParameter.getKey(), keyValueParameter.getValue());
             }
         }
 
@@ -1186,7 +1187,7 @@ public class OwnerResource implements OwnerApi {
         @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
         String consumerUuid, String activationKeyName,
         String productId, String subscriptionId, Boolean listAll, OffsetDateTime activeOn,
-        List<String> matches, List<KeyValueParamDTO> attrFilters, Boolean addFuture, Boolean onlyFuture,
+        List<String> matches, List<String> attrFilters, Boolean addFuture, Boolean onlyFuture,
         OffsetDateTime after, List<String> poolIds, Integer page, Integer perPage,
         String sortBy, String order) {
 
@@ -1239,8 +1240,9 @@ public class OwnerResource implements OwnerApi {
 
         // Process the filters passed for the attributes
         PoolFilterBuilder poolFilters = new PoolFilterBuilder();
-        for (KeyValueParamDTO filterParam : attrFilters) {
-            poolFilters.addAttributeFilter(filterParam.getKey(), filterParam.getValue());
+        for (String filterParam : attrFilters) {
+            KeyValueParameter keyValueParameter = new KeyValueParameter(i18n, filterParam);
+            poolFilters.addAttributeFilter(keyValueParameter.getKey(), keyValueParameter.getValue());
         }
 
         if (matches != null) {

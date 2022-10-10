@@ -20,8 +20,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.candlepin.dto.api.server.v1.KeyValueParamDTO;
 import org.candlepin.exceptions.CandlepinParameterParseException;
 
+import com.google.inject.Provider;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
+
+import java.util.Locale;
 
 import javax.ws.rs.ext.ParamConverter;
 
@@ -38,7 +44,8 @@ public class KeyValueParamConverterProviderTest {
 
     @BeforeEach
     void setUp() {
-        this.keyValConverter = new KeyValueParamConverterProvider()
+        Provider<I18n> i18n = () -> I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
+        this.keyValConverter = new KeyValueParamConverterProvider(i18n)
             .getConverter(KeyValueParamDTO.class, KeyValueParamDTO.class, null);
     }
 
