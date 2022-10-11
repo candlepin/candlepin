@@ -203,7 +203,7 @@ public class EntitlementCertificateV3SpecTest {
     public void shouldGenerateThreeFourCertRequestThreeZero() {
         ConsumerDTO v3System = consumerApi.createConsumer(Consumers.random(owner, ConsumerTypes.System)
             .facts(Map.of("system.certificate_version", "3.0", "uname.machine", "i386")));
-        ApiClient v3SystemClient = ApiClients.trustedConsumer(v3System.getUuid());
+        ApiClient v3SystemClient = ApiClients.ssl(v3System);
         v3SystemClient.consumers().bindProduct(v3System.getUuid(), product30.getId());
 
         List<EntitlementDTO> v3SystemEntitlements = v3SystemClient.consumers()
@@ -247,7 +247,7 @@ public class EntitlementCertificateV3SpecTest {
             .type(ConsumerTypes.Candlepin.value())
             .facts(Map.of("distributor_version", distName));
         distributor = consumerApi.createConsumer(distributor);
-        ApiClient consumerClient = ApiClients.trustedConsumer(distributor.getUuid());
+        ApiClient consumerClient = ApiClients.ssl(distributor);
         consumerClient.consumers().bindProduct(distributor.getUuid(), product30.getId());
         EntitlementDTO ent = consumerApi.listEntitlements(distributor.getUuid()).get(0);
         Optional<CertificateDTO> certificate = firstCertOf(ent);
@@ -403,7 +403,7 @@ public class EntitlementCertificateV3SpecTest {
             pool.setProductName(product.getName());
             pool = ownerApi.createPool(owner.getKey(), pool);
         }
-        ApiClient consumerClient = ApiClients.trustedConsumer(system.getUuid());
+        ApiClient consumerClient = ApiClients.ssl(system);
         ConsumerClient consumers = consumerClient.consumers();
         JsonNode bindResult = consumers.bindProduct(system.getUuid(), product.getId());
 
@@ -452,7 +452,7 @@ public class EntitlementCertificateV3SpecTest {
             pool.setProductName(product.getName());
             pool = ownerApi.createPool(owner.getKey(), pool);
         }
-        ApiClient consumerClient = ApiClients.trustedConsumer(system.getUuid());
+        ApiClient consumerClient = ApiClients.ssl(system);
         ConsumerClient consumers = consumerClient.consumers();
         JsonNode bindResult = consumers.bindProduct(system.getUuid(), product.getId());
 

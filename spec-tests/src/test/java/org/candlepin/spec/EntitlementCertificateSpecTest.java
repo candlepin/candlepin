@@ -96,7 +96,7 @@ public class EntitlementCertificateSpecTest {
         pool = ownerApi.createPool(owner.getKey(), pool);
 
         system = client.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient = ApiClients.trustedConsumer(system.getUuid());
+        ApiClient consumerClient = ApiClients.ssl(system);
         consumerApi = consumerClient.consumers();
         consumerApi.bindProduct(system.getUuid(), monitoring.getId());
     }
@@ -130,7 +130,7 @@ public class EntitlementCertificateSpecTest {
     public void shouldNotAllowConsumerToRegenerateAnothersCertsByEntitlement() throws Exception {
         List<EntitlementDTO> ents = consumerApi.listEntitlements(system.getUuid());
         ConsumerDTO system2 = client.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient = ApiClients.trustedConsumer(system2.getUuid());
+        ApiClient consumerClient = ApiClients.ssl(system2);
         ConsumerClient consumerApi2 = consumerClient.consumers();
         assertNotFound(
             () -> consumerApi2.regenerateEntitlementCertificates(
@@ -140,7 +140,7 @@ public class EntitlementCertificateSpecTest {
     @Test
     public void shouldNotAllowConsumerToRegenerateAnothersCerts() throws Exception {
         ConsumerDTO system2 = client.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient = ApiClients.trustedConsumer(system2.getUuid());
+        ApiClient consumerClient = ApiClients.ssl(system2);
         ConsumerClient consumerApi2 = consumerClient.consumers();
         assertNotFound(
             () -> consumerApi2.regenerateEntitlementCertificates(system.getUuid(), null, false));
@@ -197,13 +197,13 @@ public class EntitlementCertificateSpecTest {
             ownerProductApi.createProductByOwner(owner3.getKey(), safeProd)));
 
         ConsumerDTO system1 = client.consumers().createConsumer(Consumers.random(owner1));
-        ApiClient consumerClient1 = ApiClients.trustedConsumer(system1.getUuid());
+        ApiClient consumerClient1 = ApiClients.ssl(system1);
         ConsumerClient consumerApi1 = consumerClient1.consumers();
         ConsumerDTO system2 = client.consumers().createConsumer(Consumers.random(owner2));
-        ApiClient consumerClient2 = ApiClients.trustedConsumer(system2.getUuid());
+        ApiClient consumerClient2 = ApiClients.ssl(system2);
         ConsumerClient consumerApi2 = consumerClient2.consumers();
         ConsumerDTO system3 = client.consumers().createConsumer(Consumers.random(owner3));
-        ApiClient consumerClient3 = ApiClients.trustedConsumer(system3.getUuid());
+        ApiClient consumerClient3 = ApiClients.ssl(system3);
         ConsumerClient consumerApi3 = consumerClient3.consumers();
 
         consumerApi1.bindProduct(system1.getUuid(), prodId);
@@ -254,7 +254,7 @@ public class EntitlementCertificateSpecTest {
         public void beforeEach() throws ApiException {
             owner = ownerApi.createOwner(Owners.random());
             system = client.consumers().createConsumer(Consumers.random(owner));
-            ApiClient consumerClient = ApiClients.trustedConsumer(system.getUuid());
+            ApiClient consumerClient = ApiClients.ssl(system);
             consumerApi = consumerClient.consumers();
 
             ProductDTO prod = Products.randomEng().addAttributesItem(
@@ -336,7 +336,7 @@ public class EntitlementCertificateSpecTest {
                 jobApi.waitForJob(refresh.getId());
             }
             system = client.consumers().createConsumer(Consumers.random(owner));
-            ApiClient consumerClient = ApiClients.trustedConsumer(system.getUuid());
+            ApiClient consumerClient = ApiClients.ssl(system);
             consumerApi = consumerClient.consumers();
             consumerApi.bindProduct(system.getUuid(), monitoring.getId());
         }
