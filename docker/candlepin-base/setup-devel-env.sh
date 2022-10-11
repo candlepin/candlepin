@@ -14,6 +14,8 @@ export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION
 yum install -y epel-release
 
 PACKAGES=(
+    createrepo_c
+    expect
     gettext
     git
     hostname
@@ -23,16 +25,15 @@ PACKAGES=(
     mariadb
     openssl
     python-pip
+    python-requests
+    PyYAML
+    rpm-build
+    rpm-sign
     rsyslog
+    ruby-devel
     tomcat
     which
     wget
-    createrepo_c
-    rpm-build
-    rpm-sign
-    python-requests
-    expect
-    PyYAML
 )
 
 yum install -y ${PACKAGES[@]}
@@ -76,7 +77,7 @@ set -v
 
 # Install all ruby deps
 gem install bundler -v 1.16.1
-bundle install --without=proton
+bundle install --without=proton --retry=5 --verbose --full-index
 
 # Installs all Java deps into the image, big time saver
 ./gradlew --no-daemon dependencies

@@ -14,27 +14,27 @@ export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION
 dnf install -y epel-release
 
 PACKAGES=(
+    createrepo_c
+    expect
     gettext
     git
     hostname
     java-11-openjdk-devel
     java-$JAVA_VERSION-openjdk-devel
     jss
-    pki-servlet-engine
     mariadb
     openssl
+    pki-servlet-engine
     postgresql
+    procps
     python3-pip
+    python3-pyyaml
+    python3-requests
+    rpm-build
+    rpm-sign
     rsyslog
     wget
     which
-    createrepo_c
-    rpm-build
-    rpm-sign
-    python3-requests
-    expect
-    python3-pyyaml
-    procps
     zlib
     zlib-devel
 )
@@ -76,7 +76,7 @@ set -v
 
 # Install all ruby deps
 gem install bundler -v 1.16.1
-bundle install --without=proton
+bundle install --without=proton --retry=5 --verbose --full-index
 
 # Installs all Java deps into the image, big time saver
 ./gradlew --no-daemon dependencies
