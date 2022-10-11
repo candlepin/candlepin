@@ -589,7 +589,8 @@ public class X509V3ExtensionUtil extends X509Util {
                     // all grandparents with name now point to merged node
                     for (PathNode pn : toRemove.getParents()) {
                         for (NodePair child : pn.getChildren()) {
-                            if (child.getName().equals(name)) {
+                            if (child.getName().equals(name) &&
+                                child.getConnection().isEquivalentTo(merged)) {
                                 child.setConnection(merged);
                             }
                         }

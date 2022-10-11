@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.any;
@@ -84,6 +85,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -112,6 +116,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.stream.Stream;
 import java.util.zip.InflaterOutputStream;
 
 import javax.inject.Inject;
@@ -1961,6 +1966,55 @@ public class DefaultEntitlementCertServiceAdapterTest {
             Object found = v3extensionUtil.findHuffNodeValueByBits(trieParent, paths[idx++]);
             assertEquals(o, found);
         }
+    }
+
+    @ParameterizedTest
+    @MethodSource("pathTreeCondensationProvider")
+    public void testPathTreeCondensation(List<String> paths) {
+        List<org.candlepin.model.dto.Content> contentList = new ArrayList<>();
+        for (String path : paths) {
+            org.candlepin.model.dto.Content content = new org.candlepin.model.dto.Content();
+            content.setPath(path);
+            contentList.add(content);
+        }
+
+        PathNode location = v3extensionUtil.makePathTree(contentList, v3extensionUtil.new PathNode());
+        for (org.candlepin.model.dto.Content c : contentList) {
+            List<String> path = Arrays.asList(c.getPath().split("/"));
+            assertTrue(checkPath(location, path.subList(1, path.size())), "failed path " + c.getPath());
+        }
+    }
+
+    boolean checkPath(PathNode location, List<String> path) {
+        if (path.size() == 0) {
+            return true;
+        }
+        for (NodePair pn : location.getChildren()) {
+            if (path.get(0).equals(pn.getName())) {
+                if (path.size() == 1) {
+                    return true;
+                }
+                return checkPath(pn.getConnection(), path.subList(1, path.size()));
+            }
+        }
+        return false;
+    }
+
+    public static Stream<Arguments> pathTreeCondensationProvider() {
+        // BZ 2131312
+        Arguments block1 = arguments(List.of(
+            "/content/dist/rhel/server/6/$releasever/$basearch/satellite/6.0/os",
+            "/content/dist/rhel/server/6/$releasever/$basearch/satellite/6.0/source/SRPMS",
+            "/content/dist/layered/rhel9/x86_64/sat-client/6/source/SRPMS",
+            "/content/beta/layered/rhel8/x86_64/sat-tools/6/source/SRPMS",
+            "/content/beta/layered/rhel8/x86_64/sat-tools/6/os",
+            "/content/dist/layered/rhel8/x86_64/sat-tools/6.8/os",
+            "/content/dist/layered/rhel8/x86_64/sat-client/6/os",
+            "/content/dist/layered/rhel9/x86_64/sat-client/6/os",
+            "/content/dist/layered/rhel8/x86_64/sat-client/6/source/SRPMS"));
+        // add additional blocks if other test scenarios arrive
+
+        return Stream.of(block1);
     }
 
     private String processPayload(byte[] payload) throws IOException {
