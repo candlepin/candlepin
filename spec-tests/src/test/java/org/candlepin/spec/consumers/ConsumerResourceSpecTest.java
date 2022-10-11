@@ -17,6 +17,7 @@ package org.candlepin.spec.consumers;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
+import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.GuestIdDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
@@ -117,5 +118,32 @@ public class ConsumerResourceSpecTest {
         assertThat(actual)
             .isNotNull()
             .returns(expectedGuestId2, GuestIdDTO::getGuestId);
+    }
+
+    @Test
+    public void shouldFetchConsumersWithFacts() {
+        this.adminClient.consumers().createConsumer(Consumers.random(this.owner));
+
+        ConsumerDTO target = Consumers.random(this.owner)
+            .putFactsItem("fact1", "value1");
+
+        target = this.adminClient.consumers().createConsumer(target);
+
+        ConsumerDTO decoy = Consumers.random(this.owner)
+            .putFactsItem("fact2", "value2");
+
+        this.adminClient.consumers().createConsumer(decoy);
+
+
+        List<String> facts = List.of("fact1:value1");
+
+        List<ConsumerDTOArrayElement> output = this.adminClient.consumers()
+            .searchConsumers(null, null, this.owner.getKey(), null, null, facts, null, null, null, null);
+
+        assertThat(output)
+            .isNotNull()
+            .singleElement()
+            .isNotNull()
+            .returns(target.getUuid(), ConsumerDTOArrayElement::getUuid);
     }
 }

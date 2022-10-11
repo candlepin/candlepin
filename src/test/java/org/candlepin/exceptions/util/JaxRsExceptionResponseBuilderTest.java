@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.candlepin.exceptions.CandlepinParameterParseException;
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.mappers.TestExceptionMapperBase.MapperTestModule;
 
@@ -66,18 +65,6 @@ public class JaxRsExceptionResponseBuilderTest {
         //the following should throw IllegalArgumentException
 
         assertThrows(IllegalArgumentException.class, () -> exceptionBuilder.getResponse(ex));
-    }
-
-    @Test
-    public void candlepinParserError() {
-        CandlepinParameterParseException parseEx =
-            new CandlepinParameterParseException("thisFormat");
-        RuntimeException ex = new RuntimeException(parseEx);
-        Response resp = exceptionBuilder.getResponse(ex);
-        ExceptionMessage e =  (ExceptionMessage) resp.getEntity();
-
-        assertTrue(exceptionBuilder.canHandle(ex));
-        assertTrue(e.getDisplayMessage().contains("thisFormat"));
     }
 
     @Test

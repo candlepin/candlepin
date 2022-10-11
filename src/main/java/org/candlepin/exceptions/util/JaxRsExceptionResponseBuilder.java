@@ -14,7 +14,6 @@
  */
 package org.candlepin.exceptions.util;
 
-import org.candlepin.exceptions.CandlepinParameterParseException;
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.mappers.CandlepinExceptionMapper;
 import org.candlepin.version.VersionUtil;
@@ -80,10 +79,6 @@ public class JaxRsExceptionResponseBuilder {
      */
     public final boolean canHandle(final Exception exception) {
         Throwable cause = exception.getCause();
-
-        if (cause instanceof CandlepinParameterParseException) {
-            return true;
-        }
         String msg = exception.getMessage();
 
         if (StringUtils.isNotEmpty(msg)) {
@@ -123,22 +118,16 @@ public class JaxRsExceptionResponseBuilder {
             .header(VersionUtil.VERSION_HEADER, map.get("version") + "-" + map.get("release"));
 
         Throwable cause = exception.getCause();
-        if (cause instanceof CandlepinParameterParseException) {
-            String msg = i18n.get().tr("Invalid format for query parameter. " +
-                "Expected format: {0}",
-                ((CandlepinParameterParseException) cause).getExpectedFormat());
-            bldr.entity(new ExceptionMessage(msg));
-        }
-        else {
-            String msg = exception.getMessage();
-            Matcher paramMatcher = PARAM_REGEX.matcher(msg);
-            Matcher illegalValMatcher = ILLEGAL_VAL_REGEX.matcher(msg);
-            paramMatcher.find();
-            illegalValMatcher.find();
-            String errorMessage = i18n.get().tr("{0} is not a valid value for {1}",
-                illegalValMatcher.group(1), paramMatcher.group(1));
-            bldr.entity(new ExceptionMessage(errorMessage));
-        }
+
+        String msg = exception.getMessage();
+        Matcher paramMatcher = PARAM_REGEX.matcher(msg);
+        Matcher illegalValMatcher = ILLEGAL_VAL_REGEX.matcher(msg);
+        paramMatcher.find();
+        illegalValMatcher.find();
+        String errorMessage = i18n.get().tr("{0} is not a valid value for {1}",
+            illegalValMatcher.group(1), paramMatcher.group(1));
+        bldr.entity(new ExceptionMessage(errorMessage));
+
         return bldr.build();
     }
 

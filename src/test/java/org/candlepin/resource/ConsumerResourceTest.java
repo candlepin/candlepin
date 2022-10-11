@@ -59,7 +59,6 @@ import org.candlepin.dto.api.server.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.server.v1.ContentAccessDTO;
-import org.candlepin.dto.api.server.v1.KeyValueParamDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.NotFoundException;
@@ -1273,19 +1272,13 @@ public class ConsumerResourceTest {
         // to bother checking that we got the exact ones we're expecting.
     }
 
-    private KeyValueParamDTO buildFactParam(String key, String value) {
-        return new KeyValueParamDTO()
-            .key(key)
-            .value(value);
-    }
-
     @Test
     public void testFindConsumersByFact() {
-        List<KeyValueParamDTO> factsParam = Arrays.asList(
-            this.buildFactParam("fact-1", "value-1a"),
-            this.buildFactParam("fact-1", "value-1b"),
-            this.buildFactParam("fact-2", "value-2"),
-            this.buildFactParam("fact-3", "value-3"));
+        List<String> factsParam = List.of(
+            "fact-1:value-1a",
+            "fact-1:value-1b",
+            "fact-2:value-2",
+            "fact-3:value-3");
 
         Map<String, Collection<String>> factsMap = Map.of(
             "fact-1", Set.of("value-1a", "value-1b"),

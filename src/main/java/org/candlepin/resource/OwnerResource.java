@@ -48,7 +48,6 @@ import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.EntitlementDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.dto.api.server.v1.ImportRecordDTO;
-import org.candlepin.dto.api.server.v1.KeyValueParamDTO;
 import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.OwnerInfo;
@@ -106,7 +105,7 @@ import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.server.v1.OwnerApi;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
-import org.candlepin.resource.util.EntitlementFinderUtil;
+import org.candlepin.resource.util.KeyValueStringParser;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
@@ -947,7 +946,11 @@ public class OwnerResource implements OwnerApi {
         Owner owner = findOwnerByKey(ownerKey);
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
 
-        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(null, attrFilters);
+        EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
+
+        new KeyValueStringParser(this.i18n).parseKeyValuePairs(attrFilters)
+            .forEach(kvpair -> filters.addAttributeFilter(kvpair.getKey(), kvpair.getValue()));
+
         Page<List<Entitlement>> entitlementsPage = entitlementCurator
             .listByOwner(owner, productId, filters, pageRequest);
 
@@ -1099,7 +1102,7 @@ public class OwnerResource implements OwnerApi {
         Set<String> typeLabels,
         @Verify(value = Consumer.class, nullable = true) List<String> uuids,
         List<String> hypervisorIds,
-        List<KeyValueParamDTO> facts,
+        List<String> facts,
         Integer page, Integer perPage, String order, String sortBy) {
         Owner owner = findOwnerByKey(ownerKey);
         List<ConsumerType> types = this.consumerTypeValidator.findAndValidateTypeLabels(typeLabels);
@@ -1111,11 +1114,8 @@ public class OwnerResource implements OwnerApi {
             .setTypes(types)
             .setHypervisorIds(hypervisorIds);
 
-        if (facts != null) {
-            for (KeyValueParamDTO fact : facts) {
-                queryArgs.addFact(fact.getKey(), fact.getValue());
-            }
-        }
+        new KeyValueStringParser(this.i18n).parseKeyValuePairs(facts)
+            .forEach(kvpair -> queryArgs.addFact(kvpair.getKey(), kvpair.getValue()));
 
         long count = this.consumerCurator.getConsumerCount(queryArgs);
         log.debug("Consumer query will fetch {} consumers", count);
@@ -1186,7 +1186,7 @@ public class OwnerResource implements OwnerApi {
         @Verify(value = Owner.class, subResource = SubResource.POOLS) String ownerKey,
         String consumerUuid, String activationKeyName,
         String productId, String subscriptionId, Boolean listAll, OffsetDateTime activeOn,
-        List<String> matches, List<KeyValueParamDTO> attrFilters, Boolean addFuture, Boolean onlyFuture,
+        List<String> matches, List<String> attrFilters, Boolean addFuture, Boolean onlyFuture,
         OffsetDateTime after, List<String> poolIds, Integer page, Integer perPage,
         String sortBy, String order) {
 
@@ -1239,9 +1239,9 @@ public class OwnerResource implements OwnerApi {
 
         // Process the filters passed for the attributes
         PoolFilterBuilder poolFilters = new PoolFilterBuilder();
-        for (KeyValueParamDTO filterParam : attrFilters) {
-            poolFilters.addAttributeFilter(filterParam.getKey(), filterParam.getValue());
-        }
+
+        new KeyValueStringParser(this.i18n).parseKeyValuePairs(attrFilters)
+            .forEach(kvpair -> poolFilters.addAttributeFilter(kvpair.getKey(), kvpair.getValue()));
 
         if (matches != null) {
             matches.stream()
