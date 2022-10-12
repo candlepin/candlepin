@@ -3,6 +3,9 @@ LABEL author="Chris Rog <crog@redhat.com>"
 
 ENV LANG en_US.UTF-8
 
+# gai.conf is needed to avoid timeouts when accessing rubygems
+# https://help.rubygems.org/discussions/problems/31074-timeout-error
+COPY /gai.conf /etc/gai.conf
 COPY /base-scripts/dockerlib.sh /root/
 COPY /candlepin-base-cs8/setup-devel-env.sh /root/
 RUN /bin/bash /root/setup-devel-env.sh
