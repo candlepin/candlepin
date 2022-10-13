@@ -86,7 +86,7 @@ class EntitlementResourceSpecTest {
             .name(StringUtil.random("virtualization")));
 
         consumer = client.consumers().createConsumer(Consumers.random(owner));
-        consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).consumers();
+        consumerClient = ApiClients.ssl(consumer).consumers();
     }
 
     @Test

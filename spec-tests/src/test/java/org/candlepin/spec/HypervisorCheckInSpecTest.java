@@ -113,7 +113,7 @@ public class HypervisorCheckInSpecTest {
     public void beforeEach() throws ApiException, IOException {
         owner = ownerApi.createOwner(Owners.random());
         user = UserUtil.createUser(client, owner);
-        userClient = ApiClients.trustedUser(user.getUsername());
+        userClient = ApiClients.basic(user.getUsername(), user.getPassword());
 
         guest1VirtUuid = StringUtil.random("uuid");
         guest2VirtUuid = StringUtil.random("uuid");
@@ -128,7 +128,7 @@ public class HypervisorCheckInSpecTest {
             .hypervisorId(new HypervisorIdDTO().hypervisorId(expectedHostHypervisorId));
         hostConsumer = consumerApi.createConsumer(hostConsumer);
         hostUuid = hostConsumer.getUuid();
-        hostConsumerClient = ApiClients.trustedConsumer(hostConsumer.getUuid());
+        hostConsumerClient = ApiClients.ssl(hostConsumer);
 
         reporterId = StringUtil.random("reporter");
         hypervisorCheckin(owner, userClient, expectedHostName,
@@ -318,7 +318,7 @@ public class HypervisorCheckInSpecTest {
     @OnlyInStandalone
     public void shouldNotRevokeGuestEntitlementsWhenGuestNoLongerMapped() throws Exception {
         initConsumersAndPools();
-        ApiClient guest1Client = ApiClients.trustedConsumer(guestConsumer1.getUuid());
+        ApiClient guest1Client = ApiClients.ssl(guestConsumer1);
         guest1Client.consumers().bindPool(guestConsumer1.getUuid(), virtLimitPool.getId(), 1);
         assertEquals(1, guest1Client.consumers().listEntitlements(guestConsumer1.getUuid()).size());
         // Host stops reporting guest:
@@ -354,7 +354,7 @@ public class HypervisorCheckInSpecTest {
     @OnlyInStandalone
     public void shouldNotRevokeHostAndGuestEntitlementsWhenGuestIdListIsEmpty() throws Exception {
         initConsumersAndPools();
-        ApiClient guest1Client = ApiClients.trustedConsumer(guestConsumer1.getUuid());
+        ApiClient guest1Client = ApiClients.ssl(guestConsumer1);
         guest1Client.consumers().bindPool(guestConsumer1.getUuid(), virtLimitPool.getId(), 1);
         assertEquals(1, guest1Client.consumers().listEntitlements(guestConsumer1.getUuid()).size());
 
@@ -384,14 +384,16 @@ public class HypervisorCheckInSpecTest {
     public void shouldSupportMultipleOrgsReportingTheSameCluster() throws Exception {
         OwnerDTO owner1 = ownerApi.createOwner(Owners.random());
         OwnerDTO owner2 = ownerApi.createOwner(Owners.random());
-        ApiClient userClient1 = ApiClients.trustedUser(UserUtil.createUser(client, owner1).getUsername());
-        ApiClient userClient2 = ApiClients.trustedUser(UserUtil.createUser(client, owner2).getUsername());
+        UserDTO user1 = UserUtil.createUser(client, owner1);
+        UserDTO user2 = UserUtil.createUser(client, owner2);
+        ApiClient userClient1 = ApiClients.basic(user1.getUsername(), user1.getPassword());
+        ApiClient userClient2 = ApiClients.basic(user2.getUsername(), user2.getPassword());
         ConsumerDTO consumer1 = Consumers.random(owner1);
         consumer1 = userClient1.consumers().createConsumer(consumer1);
-        ApiClient consumerClient1 = ApiClients.trustedConsumer(consumer1.getUuid());
+        ApiClient consumerClient1 = ApiClients.ssl(consumer1);
         ConsumerDTO consumer2 = Consumers.random(owner2);
         consumer2 = userClient2.consumers().createConsumer(consumer2);
-        ApiClient consumerClient2 = ApiClients.trustedConsumer(consumer2.getUuid());
+        ApiClient consumerClient2 = ApiClients.ssl(consumer2);
         String hostHypId = StringUtil.random("host");
         String hostName = StringUtil.random("name");
         List<String> firstGuestList = List.of("guest1", "guest2", "guest3");
@@ -509,7 +511,7 @@ public class HypervisorCheckInSpecTest {
     public void shouldAllowASingleGuestToBeMigratedAndRevokeHostLimitedEnts() throws Exception {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(client, owner);
-        ApiClient userClient = ApiClients.trustedUser(user.getUsername());
+        ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
         String hypervisorId1 = StringUtil.random("hypervisor").toLowerCase();
         String hypervisorId2 = StringUtil.random("hypervisor").toLowerCase();
         String uuid1 = StringUtil.random("uuid");
@@ -539,9 +541,9 @@ public class HypervisorCheckInSpecTest {
         PoolDTO pool = Pools.random(superAwesome);
         ownerApi.createPool(owner.getKey(), pool);
 
-        ApiClient hostConsumerClient = ApiClients.trustedConsumer(hostConsumer.getUuid());
-        ApiClient newHostConsumerClient = ApiClients.trustedConsumer(newHostConsumer.getUuid());
-        ApiClient guestConsumerClient = ApiClients.trustedConsumer(guestConsumer.getUuid());
+        ApiClient hostConsumerClient = ApiClients.ssl(hostConsumer);
+        ApiClient newHostConsumerClient = ApiClients.ssl(newHostConsumer);
+        ApiClient guestConsumerClient = ApiClients.ssl(guestConsumer);
 
         hypervisorCheckin(owner, userClient, "tester",
             hypervisorId1, List.of(uuid1), null, reporterId, true);
@@ -592,7 +594,7 @@ public class HypervisorCheckInSpecTest {
             hostedTestApi = client.hosted();
             owner = ownerApi.createOwner(Owners.random());
             user = UserUtil.createUser(client, owner);
-            userClient = ApiClients.trustedUser(user.getUsername());
+            userClient = ApiClients.basic(user.getUsername(), user.getPassword());
 
             hostConsumer = Consumers.random(owner)
                 .name(expectedHostName)
@@ -601,7 +603,7 @@ public class HypervisorCheckInSpecTest {
                 .hypervisorId(new HypervisorIdDTO().hypervisorId(expectedHostHypervisorId));
             hostConsumer = consumerApi.createConsumer(hostConsumer);
             hostUuid = hostConsumer.getUuid();
-            hostConsumerClient = ApiClients.trustedConsumer(hostConsumer.getUuid());
+            hostConsumerClient = ApiClients.ssl(hostConsumer);
 
             hypervisorCheckin(owner, userClient, expectedHostName,
                 expectedHostHypervisorId, expectedGuestIds,
@@ -649,7 +651,7 @@ public class HypervisorCheckInSpecTest {
         @Test
         public void shouldNotRevokeGuestEntitlementsWhenGuestNoLongerMapped() throws Exception {
             initConsumersAndSubs();
-            ApiClient guest1Client = ApiClients.trustedConsumer(guestConsumer1.getUuid());
+            ApiClient guest1Client = ApiClients.ssl(guestConsumer1);
             guest1Client.consumers().bindPool(guestConsumer1.getUuid(), virtLimitPool.getId(), 1);
             assertEquals(1, guest1Client.consumers().listEntitlements(guestConsumer1.getUuid()).size());
             // Host stops reporting guest:
@@ -668,7 +670,7 @@ public class HypervisorCheckInSpecTest {
         @Test
         public void shouldNotRevokeHostAndGuestEntitlementsWhenGuestIdListIsEmpty() throws Exception {
             initConsumersAndSubs();
-            ApiClient guest1Client = ApiClients.trustedConsumer(guestConsumer1.getUuid());
+            ApiClient guest1Client = ApiClients.ssl(guestConsumer1);
             guest1Client.consumers().bindPool(guestConsumer1.getUuid(), virtLimitPool.getId(), 1);
             assertEquals(1, guest1Client.consumers().listEntitlements(guestConsumer1.getUuid()).size());
 
@@ -689,7 +691,7 @@ public class HypervisorCheckInSpecTest {
         public void shouldAllowASingleGuestToBeMigratedAndRevokeHostLimitedEntsHosted() throws Exception {
             OwnerDTO owner = ownerApi.createOwner(Owners.random());
             UserDTO user = UserUtil.createUser(client, owner);
-            ApiClient userClient = ApiClients.trustedUser(user.getUsername());
+            ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
             String hypervisorId1 = StringUtil.random("hypervisor").toLowerCase();
             String hypervisorId2 = StringUtil.random("hypervisor").toLowerCase();
             String uuid1 = StringUtil.random("uuid");
@@ -725,9 +727,9 @@ public class HypervisorCheckInSpecTest {
                 assertEquals("FINISHED", status.getState());
             }
 
-            ApiClient hostConsumerClient = ApiClients.trustedConsumer(hostConsumer.getUuid());
-            ApiClient newHostConsumerClient = ApiClients.trustedConsumer(newHostConsumer.getUuid());
-            ApiClient guestConsumerClient = ApiClients.trustedConsumer(guestConsumer.getUuid());
+            ApiClient hostConsumerClient = ApiClients.ssl(hostConsumer);
+            ApiClient newHostConsumerClient = ApiClients.ssl(newHostConsumer);
+            ApiClient guestConsumerClient = ApiClients.ssl(guestConsumer);
 
             hypervisorCheckin(owner, userClient, "tester",
                 hypervisorId1, List.of(uuid1), null, reporterId, true);
@@ -865,7 +867,7 @@ public class HypervisorCheckInSpecTest {
             .installedProducts(Set.of(
                 new ConsumerInstalledProductDTO().productId("installedProd").productName("Installed")));
         consumer = userClient.consumers().createConsumer(consumer);
-        return ApiClients.trustedConsumer(consumer.getUuid());
+        return ApiClients.ssl(consumer);
     }
 
     PoolDTO getVirtLimitPool(List<PoolDTO> pools) {

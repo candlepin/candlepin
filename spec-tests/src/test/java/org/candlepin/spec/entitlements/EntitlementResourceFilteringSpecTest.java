@@ -75,7 +75,7 @@ public class EntitlementResourceFilteringSpecTest {
         ownerClient.createPool(owner.getKey(), Pools.random(virtual));
 
         consumer = client.consumers().createConsumer(Consumers.random(owner));
-        consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).consumers();
+        consumerClient = ApiClients.ssl(consumer).consumers();
 
         consumerClient.bindProduct(consumer.getUuid(), monitoring.getId());
         consumerClient.bindProduct(consumer.getUuid(), virtual.getId());

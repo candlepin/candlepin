@@ -80,9 +80,9 @@ public class ApiClientFactory {
         return apiClient;
     }
 
-    public ApiClient createCloudAuthClient(String token) {
+    public ApiClient createBearerTokenAuthClient(String token) {
         ApiClient apiClient = createDefaultClient();
-        apiClient.setHttpClient(createOkHttpClient(new CloudAuthInterceptor(token)));
+        apiClient.setHttpClient(createOkHttpClient(new BearerTokenAuthInterceptor(token)));
 
         return apiClient;
     }
@@ -309,11 +309,11 @@ public class ApiClientFactory {
 
     }
 
-    public static class CloudAuthInterceptor implements Interceptor {
+    public static class BearerTokenAuthInterceptor implements Interceptor {
 
         private final String token;
 
-        public CloudAuthInterceptor(String token) {
+        public BearerTokenAuthInterceptor(String token) {
             this.token = token;
         }
 

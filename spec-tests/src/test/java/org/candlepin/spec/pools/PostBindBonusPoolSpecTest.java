@@ -73,7 +73,7 @@ class PostBindBonusPoolSpecTest {
         systemUser.setUsername("admin");
         systemUser = adminClient.consumers().createConsumer(systemUser, "admin",
         owner.getKey(), null, true);
-        ApiClient systemClient = ApiClients.trustedConsumer(systemUser.getUuid());
+        ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO limitedVirtProd = createLimitedVirtProduct(adminClient, ownerKey, 4);
         PoolDTO limitedMasterPool = Pools.randomUpstream(limitedVirtProd);
@@ -90,7 +90,7 @@ class PostBindBonusPoolSpecTest {
         systemUser.setUsername("admin");
         systemUser = adminClient.consumers().createConsumer(systemUser, "admin",
         owner.getKey(), null, true);
-        ApiClient systemClient = ApiClients.trustedConsumer(systemUser.getUuid());
+        ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO limitVirtProd = createLimitedVirtProduct(adminClient, ownerKey, 4);
         PoolDTO limitedMasterPool = Pools.randomUpstream(limitVirtProd);
@@ -105,7 +105,7 @@ class PostBindBonusPoolSpecTest {
         systemUser.setUsername("admin");
         systemUser = adminClient.consumers().createConsumer(systemUser, "admin",
         owner.getKey(), null, true);
-        ApiClient systemClient = ApiClients.trustedConsumer(systemUser.getUuid());
+        ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO hostLimitedProd = createHostLimitedProduct(adminClient, ownerKey);
         PoolDTO hostLimitedMasterPool = Pools.randomUpstream(hostLimitedProd);
@@ -121,7 +121,7 @@ class PostBindBonusPoolSpecTest {
         systemUser.setUsername("admin");
         systemUser = adminClient.consumers().createConsumer(systemUser, "admin",
         owner.getKey(), null, true);
-        ApiClient systemClient = ApiClients.trustedConsumer(systemUser.getUuid());
+        ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO virtLimitStackedProd = createVirtLimitStackedProduct(adminClient, ownerKey, 9);
         PoolDTO limitedMasterStackedPool = Pools.randomUpstream(virtLimitStackedProd);
@@ -137,7 +137,7 @@ class PostBindBonusPoolSpecTest {
         systemUser.setUsername("admin");
         systemUser = adminClient.consumers().createConsumer(systemUser, "admin",
         owner.getKey(), null, true);
-        ApiClient systemClient = ApiClients.trustedConsumer(systemUser.getUuid());
+        ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO hostLimitedStackedProd = createHostLimitedStackedProduct(adminClient, ownerKey, 9);
         PoolDTO hostLimitedMasterStackedPool = Pools.randomUpstream(hostLimitedStackedProd);
@@ -153,7 +153,7 @@ class PostBindBonusPoolSpecTest {
         systemUser.setUsername("admin");
         systemUser = adminClient.consumers().createConsumer(systemUser, "admin",
         owner.getKey(), null, true);
-        ApiClient systemClient = ApiClients.trustedConsumer(systemUser.getUuid());
+        ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO hostLimitedProd = createHostLimitedProduct(adminClient, ownerKey);
         PoolDTO hostLimitedMasterPool = Pools.randomUpstream(hostLimitedProd);
@@ -173,7 +173,7 @@ class PostBindBonusPoolSpecTest {
         throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
-        ApiClient candlepinClient = ApiClients.trustedConsumer(cpUser.getUuid());
+        ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         int virtLimit = 4;
         ProductDTO limitVirtProd = createLimitedVirtProduct(adminClient, ownerKey, virtLimit);
@@ -201,7 +201,7 @@ class PostBindBonusPoolSpecTest {
     void shouldUpdateBonusPoolQuantityWhenExportEntitlementQuantityIsUpdated() throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
-        ApiClient candlepinClient = ApiClients.trustedConsumer(cpUser.getUuid());
+        ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         int virtLimit = 4;
         ProductDTO limitVirtProd = createLimitedVirtProduct(adminClient, ownerKey, virtLimit);
@@ -239,7 +239,7 @@ class PostBindBonusPoolSpecTest {
         throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
-        ApiClient candlepinClient = ApiClients.trustedConsumer(cpUser.getUuid());
+        ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ProductDTO unlimitedVirtProd = createUnlimitedVirtProduct(adminClient, ownerKey);
         PoolDTO unlimitedMasterPool = Pools.randomUpstream(unlimitedVirtProd);
@@ -263,7 +263,7 @@ class PostBindBonusPoolSpecTest {
         throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
-        ApiClient candlepinClient = ApiClients.trustedConsumer(cpUser.getUuid());
+        ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ProductDTO unlimitedVirtProd = createUnlimitedVirtProduct(adminClient, ownerKey);
         int masterPoolQuantity = 10;
@@ -293,13 +293,13 @@ class PostBindBonusPoolSpecTest {
         guest.setUuid(StringUtil.random("guest"));
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
-        ApiClient guestClient = ApiClients.trustedConsumer(guest.getUuid());
+        ApiClient guestClient = ApiClients.ssl(guest);
 
         ConsumerDTO systemUser = Consumers.random(owner, ConsumerTypes.System);
         systemUser.setUsername("admin");
         systemUser = adminClient.consumers().createConsumer(systemUser, "admin",
         owner.getKey(), null, true);
-        ApiClient systemClient = ApiClients.trustedConsumer(systemUser.getUuid());
+        ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO unlimitedVirtProd = createUnlimitedVirtProduct(adminClient, ownerKey);
         PoolDTO unlimitedMasterPool = Pools.randomUpstream(unlimitedVirtProd);
@@ -330,7 +330,7 @@ class PostBindBonusPoolSpecTest {
         systemUser.setUsername("admin");
         systemUser = adminClient.consumers().createConsumer(systemUser, "admin",
         owner.getKey(), null, true);
-        ApiClient systemClient = ApiClients.trustedConsumer(systemUser.getUuid());
+        ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO hostLimitedProd = createHostLimitedProduct(adminClient, ownerKey);
         PoolDTO hostLimitedMasterPool = Pools.randomUpstream(hostLimitedProd);
@@ -371,7 +371,7 @@ class PostBindBonusPoolSpecTest {
         systemUser.setUsername("admin");
         systemUser = adminClient.consumers().createConsumer(systemUser, "admin",
         owner.getKey(), null, true);
-        ApiClient systemClient = ApiClients.trustedConsumer(systemUser.getUuid());
+        ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO unlimitedVirtProd = createUnlimitedVirtProduct(adminClient, ownerKey);
         PoolDTO unlimitedMasterPool = Pools.randomUpstream(unlimitedVirtProd);
@@ -412,7 +412,7 @@ class PostBindBonusPoolSpecTest {
         systemUser.setUsername("admin");
         systemUser = adminClient.consumers().createConsumer(systemUser, "admin",
         owner.getKey(), null, true);
-        ApiClient systemClient = ApiClients.trustedConsumer(systemUser.getUuid());
+        ApiClient systemClient = ApiClients.ssl(systemUser);
 
         int virtLimit = 4;
         ProductDTO limitedVirtProd = createLimitedVirtProduct(adminClient, ownerKey, virtLimit);
@@ -451,13 +451,13 @@ class PostBindBonusPoolSpecTest {
     void shouldRevokeExcessEntitlementsWhenFiniteVirtLimitedMasterPoolIsExported() throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
-        ApiClient candlepinClient = ApiClients.trustedConsumer(cpUser.getUuid());
+        ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
         guest.setUuid(StringUtil.random("guest"));
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
-        ApiClient guestClient = ApiClients.trustedConsumer(guest.getUuid());
+        ApiClient guestClient = ApiClients.ssl(guest);
 
         int virtLimit = 4;
         ProductDTO limitVirtProd = createLimitedVirtProduct(adminClient, ownerKey, virtLimit);
@@ -491,19 +491,19 @@ class PostBindBonusPoolSpecTest {
     void shouldRevokeOnlySufficientEntitlementsWhenFiniteVirtLimitedMasterPoolIsExported() throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
-        ApiClient candlepinClient = ApiClients.trustedConsumer(cpUser.getUuid());
+        ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
         guest.setUuid(StringUtil.random("guest"));
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
-        ApiClient guestClient = ApiClients.trustedConsumer(guest.getUuid());
+        ApiClient guestClient = ApiClients.ssl(guest);
 
         ConsumerDTO guest2 = Consumers.random(owner, ConsumerTypes.System);
         guest2.setUuid(StringUtil.random("guest"));
         guest2.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest2.getUuid()));
         guest2 = adminClient.consumers().createConsumer(guest2);
-        ApiClient guestClient2 = ApiClients.trustedConsumer(guest2.getUuid());
+        ApiClient guestClient2 = ApiClients.ssl(guest2);
 
         int virtLimit = 4;
         int masterPoolQuant = 10;
@@ -561,13 +561,13 @@ class PostBindBonusPoolSpecTest {
     void shouldRevokeSufficientEntitlementsWhenEntitlementQuantityIsUpdated() throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
-        ApiClient candlepinClient = ApiClients.trustedConsumer(cpUser.getUuid());
+        ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
         guest.setUuid(StringUtil.random("guest"));
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
-        ApiClient guestClient = ApiClients.trustedConsumer(guest.getUuid());
+        ApiClient guestClient = ApiClients.ssl(guest);
 
         int virtLimit = 4;
         int masterPoolQuant = 10;
@@ -618,13 +618,13 @@ class PostBindBonusPoolSpecTest {
         throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
-        ApiClient candlepinClient = ApiClients.trustedConsumer(cpUser.getUuid());
+        ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
         guest.setUuid(StringUtil.random("guest"));
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
-        ApiClient guestClient = ApiClients.trustedConsumer(guest.getUuid());
+        ApiClient guestClient = ApiClients.ssl(guest);
 
         ProductDTO unlimitedVirtProd = createUnlimitedVirtProduct(adminClient, ownerKey);
         PoolDTO unlimitedMasterPool = Pools.randomUpstream(unlimitedVirtProd);
@@ -656,19 +656,19 @@ class PostBindBonusPoolSpecTest {
         throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
-        ApiClient candlepinClient = ApiClients.trustedConsumer(cpUser.getUuid());
+        ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
         guest.setUuid(StringUtil.random("guest"));
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
-        ApiClient guestClient = ApiClients.trustedConsumer(guest.getUuid());
+        ApiClient guestClient = ApiClients.ssl(guest);
 
         ConsumerDTO guest2 = Consumers.random(owner, ConsumerTypes.System);
         guest2.setUuid(StringUtil.random("guest"));
         guest2.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest2.getUuid()));
         guest2 = adminClient.consumers().createConsumer(guest2);
-        ApiClient guestClient2 = ApiClients.trustedConsumer(guest2.getUuid());
+        ApiClient guestClient2 = ApiClients.ssl(guest2);
 
         ProductDTO unlimitedVirtProd = createUnlimitedVirtProduct(adminClient, ownerKey);
         PoolDTO unlimitedMasterPool = Pools.randomUpstream(unlimitedVirtProd);
@@ -706,7 +706,7 @@ class PostBindBonusPoolSpecTest {
         guest.setUuid(StringUtil.random("guest"));
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
-        ApiClient guestClient = ApiClients.trustedConsumer(guest.getUuid());
+        ApiClient guestClient = ApiClients.ssl(guest);
 
         ProductDTO unlimitedProd = createUnlimitedProduct(adminClient, ownerKey, 4);
         PoolDTO unlimitedProdMasterPool = Pools.randomUpstream(unlimitedProd).quantity(-1L);
@@ -737,7 +737,7 @@ class PostBindBonusPoolSpecTest {
         throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
-        ApiClient candlepinClient = ApiClients.trustedConsumer(cpUser.getUuid());
+        ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ProductDTO unlimitedProd = createUnlimitedProduct(adminClient, ownerKey, 4);
         PoolDTO unlimitedProdMasterPool = Pools.randomUpstream(unlimitedProd).quantity(-1L);
@@ -772,7 +772,7 @@ class PostBindBonusPoolSpecTest {
         guest.setUuid(StringUtil.random("guest"));
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
-        ApiClient guestClient = ApiClients.trustedConsumer(guest.getUuid());
+        ApiClient guestClient = ApiClients.ssl(guest);
 
         ProductDTO hostLimitedUnlimitedVirtProduct =
             createHostLimitedUnlimitedVirtProduct(adminClient, ownerKey);
@@ -797,13 +797,13 @@ class PostBindBonusPoolSpecTest {
         throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
-        ApiClient candlepinClient = ApiClients.trustedConsumer(cpUser.getUuid());
+        ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
         guest.setUuid(StringUtil.random("guest"));
         guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
         guest = adminClient.consumers().createConsumer(guest);
-        ApiClient guestClient = ApiClients.trustedConsumer(guest.getUuid());
+        ApiClient guestClient = ApiClients.ssl(guest);
 
         ProductDTO hostLimitedUnlimitedVirtProd =
             createHostLimitedUnlimitedVirtProduct(adminClient, ownerKey);
@@ -866,7 +866,7 @@ class PostBindBonusPoolSpecTest {
             guest.setUuid(StringUtil.random("guest"));
             guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
             guest = adminClient.consumers().createConsumer(guest);
-            ApiClient guestClient = ApiClients.trustedConsumer(guest.getUuid());
+            ApiClient guestClient = ApiClients.ssl(guest);
 
             PoolDTO unlimitedProdBonusPool =
                 getBonusPool(adminClient, ownerKey, unlimitedProdMasterPool.getSubscriptionId());
@@ -907,7 +907,7 @@ class PostBindBonusPoolSpecTest {
             throws Exception {
             ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
             cpUser = adminClient.consumers().createConsumer(cpUser);
-            ApiClient candlepinClient = ApiClients.trustedConsumer(cpUser.getUuid());
+            ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
             PoolDTO unlimitedProductBonusPool =
                 getBonusPool(adminClient, ownerKey, unlimitedProdMasterPool.getSubscriptionId());
@@ -950,13 +950,13 @@ class PostBindBonusPoolSpecTest {
             throws Exception {
             ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
             cpUser = adminClient.consumers().createConsumer(cpUser);
-            ApiClient candlepinClient = ApiClients.trustedConsumer(cpUser.getUuid());
+            ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
             ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
             guest.setUuid(StringUtil.random("guest"));
             guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
             guest = adminClient.consumers().createConsumer(guest);
-            ApiClient guestClient = ApiClients.trustedConsumer(guest.getUuid());
+            ApiClient guestClient = ApiClients.ssl(guest);
 
             PoolDTO hostLimitedUnlimitedVirtBonusPool =
                 getBonusPool(adminClient, ownerKey, hostAndVirtLimitedProdMasterPool.getSubscriptionId());

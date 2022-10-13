@@ -76,7 +76,7 @@ class OwnerContentSpecTest {
 
     private ApiClient createOrgAdminClient(ApiClient adminClient, OwnerDTO owner) {
         UserDTO user = UserUtil.createUser(adminClient, owner);
-        return ApiClients.trustedUser(user.getUsername(), true);
+        return ApiClients.basic(user.getUsername(), user.getPassword());
     }
 
     private ApiClient createConsumerClient(ApiClient adminClient, OwnerDTO owner) {

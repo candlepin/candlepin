@@ -164,7 +164,7 @@ public class EntitlementResourceConcurrentSpecTest {
         throws ApiException {
         ConsumerDTO consumer = client.consumers().createConsumer(
             Consumers.random(owner).type(new ConsumerTypeDTO().label(consumerType)));
-        ConsumerClient consumerClient = ApiClients.trustedConsumer(consumer.getUuid()).consumers();
+        ConsumerClient consumerClient = ApiClients.ssl(consumer).consumers();
         try {
             consumerClient.bindPool(consumer.getUuid(), poolId, quantity);
         }
