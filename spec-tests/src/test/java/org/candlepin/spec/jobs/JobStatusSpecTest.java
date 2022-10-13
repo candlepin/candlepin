@@ -82,7 +82,7 @@ class JobStatusSpecTest {
         owner = ownerApi.createOwner(Owners.random());
         user = UserUtil.createUser(client, owner);
 
-        userClient = ApiClients.trustedUser(user.getUsername());
+        userClient = ApiClients.basic(user.getUsername(), user.getPassword());
 
         product = Products.random();
         product = ownerProductApi.createProductByOwner(owner.getKey(), product);
@@ -268,7 +268,7 @@ class JobStatusSpecTest {
         try {
             AsyncJobStatusDTO job = userClient.owners().healEntire(owner.getKey());
             UserDTO otherUser = UserUtil.createUser(client, owner);
-            ApiClient otherUserClient = ApiClients.trustedUser(otherUser.getUsername());
+            ApiClient otherUserClient = ApiClients.basic(otherUser.getUsername(), otherUser.getPassword());
 
             assertForbidden(() -> otherUserClient.jobs().cancelJob(job.getId()));
             jobId = job.getId();
@@ -329,7 +329,7 @@ class JobStatusSpecTest {
     public void shouldNotAllowUserToViewJobStatusOutsideManagedOrg() throws Exception {
         OwnerDTO otherOwner = ownerApi.createOwner(Owners.random());
         UserDTO otherUser = UserUtil.createUser(client, otherOwner);
-        ApiClient otherUserClient = ApiClients.trustedUser(otherUser.getUsername());
+        ApiClient otherUserClient = ApiClients.basic(otherUser.getUsername(), otherUser.getPassword());
 
         ConsumerDTO consumer = Consumers.random(otherOwner);
         consumer = consumerApi.createConsumer(consumer, otherUser.getUsername(), otherOwner.getKey(), null,

@@ -120,7 +120,7 @@ class PoolSpecTest {
 
     private ApiClient createUserClient(ApiClient client, OwnerDTO owner) {
         UserDTO user = UserUtil.createUser(client, owner);
-        return ApiClients.trustedUser(user.getUsername(), true);
+        return ApiClients.basic(user.getUsername(), user.getPassword());
     }
 
     private ApiClient createConsumerClient(ApiClient client, OwnerDTO owner) {

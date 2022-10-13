@@ -109,7 +109,7 @@ class OwnerResourceSpecTest {
     void shouldRetrieveOnlyConsumerTypesForOwner() {
         OwnerDTO newOwner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, newOwner);
-        ApiClient userClient = ApiClients.trustedUser(user.getUsername());
+        ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
         userClient.consumers().createConsumer(Consumers.random(newOwner));
 
         List<ConsumerDTOArrayElement> consumers = userClient.owners()
@@ -131,7 +131,7 @@ class OwnerResourceSpecTest {
     void shouldRetrieveOnlyOwnersConsumers() {
         OwnerDTO testOwner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, testOwner);
-        ApiClient userClient = ApiClients.trustedUser(user.getUsername());
+        ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
         userClient.consumers().createConsumer(Consumers.random(testOwner));
 
         List<ConsumerDTOArrayElement> consumers = userClient.owners()
@@ -144,7 +144,7 @@ class OwnerResourceSpecTest {
     void shouldRetrieveConsumersServiceLevels() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);
-        ApiClient userClient = ApiClients.trustedUser(user.getUsername());
+        ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
 
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
@@ -166,7 +166,7 @@ class OwnerResourceSpecTest {
     void shouldRetrieveOnlyConsumersServiceLevels() {
         OwnerDTO testOwner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, testOwner);
-        ApiClient userClient = ApiClients.trustedUser(user.getUsername());
+        ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
         OwnerDTO testOwner2 = owners.createOwner(Owners.random());
 
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(testOwner));
@@ -243,7 +243,7 @@ class OwnerResourceSpecTest {
     void shouldLetOwnersListPoolsPagedForConsumer() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);
-        ApiClient userClient = ApiClients.trustedUser(user.getUsername());
+        ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ProductDTO product = createProduct(owner);
 
@@ -298,9 +298,10 @@ class OwnerResourceSpecTest {
         UserDTO readOnlyUser = UserUtil.createReadOnlyUser(admin, owner);
         UserDTO readWriteUser = UserUtil.createUser(admin, owner);
         UserDTO adminUser = UserUtil.createAdminUser(admin, owner);
-        ApiClient readOnlyClient = ApiClients.trustedUser(readOnlyUser.getUsername());
-        ApiClient readWriteClient = ApiClients.trustedUser(readWriteUser.getUsername());
-        ApiClient adminClient = ApiClients.trustedUser(adminUser.getUsername());
+        ApiClient readOnlyClient = ApiClients.basic(readOnlyUser.getUsername(), readOnlyUser.getPassword());
+        ApiClient readWriteClient = ApiClients.basic(readWriteUser.getUsername(),
+            readWriteUser.getPassword());
+        ApiClient adminClient = ApiClients.basic(adminUser.getUsername(), adminUser.getPassword());
 
         assertForbidden(() -> readOnlyClient.owners().refreshPools(owner.getKey(), false));
         assertForbidden(() -> readWriteClient.owners().refreshPools(owner.getKey(), false));
@@ -312,8 +313,9 @@ class OwnerResourceSpecTest {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO readOnlyUser = UserUtil.createReadOnlyUser(admin, owner);
         UserDTO readWriteUser = UserUtil.createUser(admin, owner);
-        ApiClient readOnlyClient = ApiClients.trustedUser(readOnlyUser.getUsername());
-        ApiClient readWriteClient = ApiClients.trustedUser(readWriteUser.getUsername());
+        ApiClient readOnlyClient = ApiClients.basic(readOnlyUser.getUsername(), readOnlyUser.getPassword());
+        ApiClient readWriteClient = ApiClients.basic(readWriteUser.getUsername(),
+            readWriteUser.getPassword());
 
         assertForbidden(() -> readOnlyClient.consumers().createConsumer(Consumers.random(owner)));
         ConsumerDTO consumer = readWriteClient.consumers().createConsumer(Consumers.random(owner));
@@ -325,7 +327,7 @@ class OwnerResourceSpecTest {
         OwnerDTO owner1 = owners.createOwner(Owners.random());
         OwnerDTO owner2 = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createReadOnlyUser(admin, owner1);
-        ApiClient ownerClient = ApiClients.trustedUser(user.getUsername());
+        ApiClient ownerClient = ApiClients.basic(user.getUsername(), user.getPassword());
 
         assertNotFound(() -> ownerClient.consumers().createConsumer(Consumers.random(owner2)));
     }
@@ -449,7 +451,7 @@ class OwnerResourceSpecTest {
     void shouldExemptServiceLevelFiltering() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);
-        ApiClient userClient = ApiClients.trustedUser(user.getUsername());
+        ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
@@ -538,7 +540,7 @@ class OwnerResourceSpecTest {
         owners.createPool(owner.getKey(), Pools.random(product));
 
         UserDTO user = UserUtil.createUser(admin, owner);
-        ApiClient userClient = ApiClients.trustedUser(user.getUsername());
+        ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
         ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
@@ -587,7 +589,7 @@ class OwnerResourceSpecTest {
     void shouldLookupByConsumerType() {
         OwnerDTO owner = owners.createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);
-        ApiClient userClient = ApiClients.trustedUser(user.getUsername());
+        ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
         userClient.consumers().createConsumer(Consumers.random(owner));
         userClient.consumers().createConsumer(Consumers.random(owner));
         userClient.consumers().createConsumer(Consumers.random(owner, ConsumerTypes.Hypervisor));

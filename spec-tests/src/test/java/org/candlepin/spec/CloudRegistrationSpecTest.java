@@ -64,7 +64,7 @@ class CloudRegistrationSpecTest {
         OwnerDTO owner = upstreamClient.createOwner(Owners.random());
         String key = cloudRegistration.cloudAuthorize(generateToken(owner.getKey(), "test_type",
             "test_signature"));
-        ConsumerDTO consumer = ApiClients.cloudAuthUser(key).consumers()
+        ConsumerDTO consumer = ApiClients.bearerToken(key).consumers()
             .createConsumer(Consumers.random(owner));
         assertNotNull(consumer);
     }
@@ -85,7 +85,7 @@ class CloudRegistrationSpecTest {
         OwnerDTO owner = upstreamClient.createOwner(Owners.random());
         String key = cloudRegistration.cloudAuthorize(generateToken(owner.getKey(),
             "test_type", ""));
-        ConsumerDTO consumer = ApiClients.cloudAuthUser(key).consumers()
+        ConsumerDTO consumer = ApiClients.bearerToken(key).consumers()
             .createConsumer(Consumers.random(owner));
         assertNotNull(consumer);
     }

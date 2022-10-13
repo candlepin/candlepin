@@ -226,7 +226,8 @@ public class ActivationKeySpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = createOwner(adminClient);
         UserDTO superadminUser = UserUtil.createAdminUser(adminClient, owner);
-        ApiClient superadminClient = ApiClients.trustedUser(superadminUser.getUsername());
+        ApiClient superadminClient = ApiClients.basic(superadminUser.getUsername(),
+            superadminUser.getPassword());
 
         ActivationKeyDTO activationKey = createActivationKey(superadminClient, owner);
         List<ActivationKeyDTO> listOfActivationKeys =
@@ -675,7 +676,7 @@ public class ActivationKeySpecTest {
 
     private ApiClient createUserClient(ApiClient client, OwnerDTO owner) {
         UserDTO user = UserUtil.createUser(client, owner);
-        return ApiClients.trustedUser(user.getUsername(), true);
+        return ApiClients.basic(user.getUsername(), user.getPassword());
     }
 
     private ProductDTO createProduct(ApiClient client, OwnerDTO owner, AttributeDTO... attributes) {
