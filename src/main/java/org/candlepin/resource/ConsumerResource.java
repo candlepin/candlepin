@@ -59,7 +59,6 @@ import org.candlepin.dto.api.server.v1.EntitlementDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.dto.api.server.v1.GuestIdDTO;
 import org.candlepin.dto.api.server.v1.HypervisorIdDTO;
-import org.candlepin.dto.api.server.v1.KeyValueParamDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.PoolQuantityDTO;
 import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
@@ -124,9 +123,9 @@ import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.EntitlementEnvironmentFilter;
-import org.candlepin.resource.util.EntitlementFinderUtil;
 import org.candlepin.resource.util.EnvironmentUpdates;
 import org.candlepin.resource.util.GuestMigration;
+import org.candlepin.resource.util.KeyValueStringParser;
 import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
@@ -563,7 +562,7 @@ public class ConsumerResource implements ConsumerApi {
         String ownerKey,
         List<String> uuids,
         List<String> hypervisorIds,
-        List<KeyValueParamDTO> facts,
+        List<String> facts,
         Integer page, Integer perPage, String order, String sortBy) {
 
         if ((username == null || username.isEmpty()) &&
@@ -586,11 +585,8 @@ public class ConsumerResource implements ConsumerApi {
             .setTypes(types)
             .setHypervisorIds(hypervisorIds);
 
-        if (facts != null) {
-            for (KeyValueParamDTO fact : facts) {
-                queryArgs.addFact(fact.getKey(), fact.getValue());
-            }
-        }
+        new KeyValueStringParser(this.i18n).parseKeyValuePairs(facts)
+            .forEach(kvpair -> queryArgs.addFact(kvpair.getKey(), kvpair.getValue()));
 
         long count = this.consumerCurator.getConsumerCount(queryArgs);
         log.debug("Consumer query will fetch {} consumers", count);
@@ -2510,7 +2506,11 @@ public class ConsumerResource implements ConsumerApi {
             revokeOnGuestMigration(consumer);
         }
 
-        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(null, attrFilters);
+        EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
+
+        new KeyValueStringParser(this.i18n).parseKeyValuePairs(attrFilters)
+            .forEach(kvpair -> filters.addAttributeFilter(kvpair.getKey(), kvpair.getValue()));
+
         Page<List<Entitlement>> entitlementsPage = entitlementCurator.listByConsumer(consumer, productId,
             filters, pageRequest);
 
@@ -2523,6 +2523,7 @@ public class ConsumerResource implements ConsumerApi {
         else {
             log.debug("Skipping certificate regeneration.");
         }
+
         // we need to supply the compliance type for the pools
         // the method in this class does not do quantity
         if (entitlementsPage.getPageData() != null) {
@@ -2535,6 +2536,7 @@ public class ConsumerResource implements ConsumerApi {
         for (Entitlement entitlement : entitlementsPage.getPageData()) {
             entitlementDTOs.add(this.translator.translate(entitlement, EntitlementDTO.class));
         }
+
         return entitlementDTOs;
     }
 
@@ -2692,21 +2694,6 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         return this.translator.translate(job, AsyncJobStatusDTO.class);
-    }
-
-    /**
-     * Builds a map of String -> String from a list of {@link KeyValueParamDTO} query parameters
-     * where param.key is the map key and param.value is the map value.
-     *
-     * @param params the query parameters to build the map from.
-     * @return {@code Map<String, String>} of the key/value pairs in the specified parameters.
-     */
-    private Map<String, String> getExtensionParamMap(List<KeyValueParamDTO> params) {
-        Map<String, String> paramMap = new HashMap<>();
-        for (KeyValueParamDTO param : params) {
-            paramMap.put(param.getKey(), param.getValue());
-        }
-        return paramMap;
     }
 
     /**

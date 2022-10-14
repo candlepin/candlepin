@@ -14,7 +14,9 @@
  */
 package org.candlepin.spec.entitlements;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.dto.api.client.v1.AttributeDTO;
@@ -23,6 +25,7 @@ import org.candlepin.dto.api.client.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.EntitlementDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
+import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.EntitlementsApi;
@@ -90,11 +93,18 @@ public class EntitlementResourceFilteringSpecTest {
 
     @Test
     public void shouldFilterEntitlementsByProductAttribute() {
-        List<EntitlementDTO> ents = entitlementsApi.listAllForConsumer(
-            consumer.getUuid(), null, List.of("variant:Satellite Starter Pack"), null, null, null, null);
-        assertThat(ents).hasSize(1);
-        assertEquals("Satellite Starter Pack",
-            ents.get(0).getPool().getProductAttributes().get(0).getValue());
+        List<EntitlementDTO> ents = entitlementsApi.listAllForConsumer(consumer.getUuid(), null,
+            List.of("variant:Satellite Starter Pack"), null, null, null, null);
+
+        assertThat(ents)
+            .isNotNull()
+            .singleElement()
+            .isNotNull()
+            .extracting(EntitlementDTO::getPool)
+            .isNotNull()
+            .extracting(PoolDTO::getProductAttributes, as(collection(AttributeDTO.class)))
+            .singleElement()
+            .returns("Satellite Starter Pack", AttributeDTO::getValue);
     }
 
     @Test

@@ -138,7 +138,6 @@ import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.MethodLocator;
-import org.candlepin.resteasy.converter.KeyValueParamConverterProvider;
 import org.candlepin.resteasy.converter.OffsetDateTimeParamConverterProvider;
 import org.candlepin.resteasy.filter.AuthenticationFilter;
 import org.candlepin.resteasy.filter.AuthorizationFeature;
@@ -271,7 +270,6 @@ public class CandlepinModule extends AbstractModule {
         bind(JAXBMarshalExceptionMapper.class);
         bind(JAXBUnmarshalExceptionMapper.class);
         bind(OffsetDateTimeParamConverterProvider.class);
-        bind(KeyValueParamConverterProvider.class);
         bind(AnnotationLocator.class).asEagerSingleton();
         bind(MethodLocator.class).asEagerSingleton();
 

@@ -85,7 +85,9 @@ public class PoolFilterBuilder extends FilterBuilder {
      * wildcards are supported for everything or a single character. (* and ? respectively)
      */
     public void addMatchesFilter(String matches) {
-        this.matchFilters.add(matches);
+        if (matches != null && !matches.isEmpty()) {
+            this.matchFilters.add(matches);
+        }
     }
 
     public boolean hasMatchFilters() {

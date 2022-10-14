@@ -654,7 +654,8 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/KeyValueParamDTO'
+              type: string
+              format: key:value
         - $ref: "#/components/parameters/paging_page"
         - $ref: "#/components/parameters/paging_per_page"
         - $ref: "#/components/parameters/paging_order"
@@ -4767,7 +4768,8 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/KeyValueParamDTO'
+              type: string
+              format: key:value
         - $ref: "#/components/parameters/paging_page"
         - $ref: "#/components/parameters/paging_per_page"
         - $ref: "#/components/parameters/paging_order"
@@ -5613,7 +5615,8 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/KeyValueParamDTO'
+              type: string
+              format: key:value
         - name: add_future
           in: query
           description: |
@@ -9048,15 +9051,6 @@ components:
               type: string
             type:
               $ref: '#/components/schemas/ConsumerTypeDTO'
-
-    KeyValueParamDTO:
-      required:
-        - key
-      properties:
-        key:
-          type: string
-        value:
-          type: string
 
     NestedConsumerDTO:
       description: A minimal view of a Consumer

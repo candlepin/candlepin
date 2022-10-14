@@ -624,6 +624,7 @@ public class Util {
             ZonedDateTime::from,
             LocalDateTime::from,
             LocalDate::from);
+
         if (temporalAccessor instanceof OffsetDateTime || temporalAccessor instanceof ZonedDateTime) {
             return OffsetDateTime.from(temporalAccessor);
         }

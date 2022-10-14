@@ -44,7 +44,7 @@ import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.server.v1.EntitlementsApi;
-import org.candlepin.resource.util.EntitlementFinderUtil;
+import org.candlepin.resource.util.KeyValueStringParser;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
@@ -141,8 +141,15 @@ public class EntitlementResource implements EntitlementsApi {
         String matches,
         List<String> attrFilters,
         Integer page, Integer perPage, String order, String sortBy) {
+
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
-        EntitlementFilterBuilder filters = EntitlementFinderUtil.createFilter(matches, attrFilters);
+
+        EntitlementFilterBuilder filters = new EntitlementFilterBuilder();
+        filters.addMatchesFilter(matches);
+
+        new KeyValueStringParser(this.i18n).parseKeyValuePairs(attrFilters)
+            .forEach(kvpair -> filters.addAttributeFilter(kvpair.getKey(), kvpair.getValue()));
+
         Page<List<Entitlement>> p;
         if (consumerUuid != null) {
             Consumer consumer = consumerCurator.findByUuid(consumerUuid);
