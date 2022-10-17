@@ -1475,10 +1475,6 @@ class Candlepin
     return delete('/jobs', params, nil, true)
   end
 
-  def import(owner_key, filename, params = {}, headers = {})
-    do_import("/owners/#{owner_key}/imports", filename, params, headers)
-  end
-
   def import_async(owner_key, filename, params = {}, headers = {})
     do_import("/owners/#{owner_key}/imports/async", filename, params, headers)
   end

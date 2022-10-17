@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anySet;
@@ -67,7 +66,6 @@ import org.candlepin.dto.api.server.v1.ContentAccessDTO;
 import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.EntitlementDTO;
-import org.candlepin.dto.api.server.v1.ImportRecordDTO;
 import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.PoolDTO;
@@ -80,7 +78,6 @@ import org.candlepin.dto.api.server.v1.UpstreamConsumerDTOArrayElement;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ConflictException;
 import org.candlepin.exceptions.ForbiddenException;
-import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AsyncJobStatus;
@@ -94,7 +91,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadataCurator;
-import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -1599,39 +1595,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testImportManifestSynchronousSuccess() throws IOException, ImporterException {
-        OwnerResource thisOwnerResource = new OwnerResource(
-            ownerCurator, null, null, i18n, this.mockEventSink, mockEventFactory, null,
-            this.mockManifestManager, null, null, null, null, importRecordCurator, null, null, null, null,
-            null, contentOverrideValidator, serviceLevelValidator, null, null, null, null,
-            this.modelTranslator, this.mockJobManager, null, null);
-
-        MultipartInput input = mock(MultipartInput.class);
-        InputPart part = mock(InputPart.class);
-        File archive = mock(File.class);
-        List<InputPart> parts = new ArrayList<>();
-        parts.add(part);
-        MultivaluedMap<String, String> mm = new MultivaluedMapImpl<>();
-        List<String> contDis = new ArrayList<>();
-        contDis.add("form-data; name=\"upload\"; filename=\"test_file.zip\"");
-        mm.put("Content-Disposition", contDis);
-
-        when(input.getParts()).thenReturn(parts);
-        when(part.getHeaders()).thenReturn(mm);
-        when(part.getBody(any(GenericType.class))).thenReturn(archive);
-
-        ImportRecord ir = new ImportRecord(owner);
-        when(this.mockManifestManager.importManifest(eq(owner), any(File.class), eq("test_file.zip"),
-            any(ConflictOverrides.class))).thenReturn(ir);
-
-        ImportRecordDTO expected = this.modelTranslator.translate(ir, ImportRecordDTO.class);
-        ImportRecordDTO response = thisOwnerResource.importManifest(owner.getKey(), new ArrayList<>(), input);
-
-        assertNotNull(response);
-        assertEquals(expected, response);
-    }
-
-    @Test
     public void testImportManifestAsyncSuccess() throws IOException, ImporterException, JobException {
         OwnerResource thisOwnerResource = new OwnerResource(
             this.mockOwnerCurator, null, null, i18n, this.mockEventSink, mockEventFactory, null,
@@ -1673,45 +1636,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         verify(this.mockManifestManager, never()).importManifest(eq(owner), any(File.class),
             any(String.class), any(ConflictOverrides.class));
-    }
-
-    @Test
-    public void testImportManifestFailure() throws IOException, ImporterException {
-        OwnerResource thisOwnerResource = new OwnerResource(
-            ownerCurator, null, null, i18n, this.mockEventSink, this.mockEventFactory,
-            contentAccessManager, this.mockManifestManager, null, null, null, null, importRecordCurator,
-            null, null, null, null, null, contentOverrideValidator, serviceLevelValidator, null, null,
-            null, null, null, null,
-            null, null);
-
-        MultipartInput input = mock(MultipartInput.class);
-        InputPart part = mock(InputPart.class);
-        File archive = mock(File.class);
-        List<InputPart> parts = new ArrayList<>();
-        parts.add(part);
-        MultivaluedMap<String, String> mm = new MultivaluedMapImpl<>();
-        List<String> contDis = new ArrayList<>();
-        contDis.add("form-data; name=\"upload\"; filename=\"test_file.zip\"");
-        mm.put("Content-Disposition", contDis);
-
-        when(input.getParts()).thenReturn(parts);
-        when(part.getHeaders()).thenReturn(mm);
-        when(part.getBody(any(GenericType.class))).thenReturn(archive);
-
-        ImporterException expectedException = new ImporterException("Bad import");
-        when(this.mockManifestManager.importManifest(eq(owner), any(File.class), any(String.class),
-            any(ConflictOverrides.class))).thenThrow(expectedException);
-
-        try {
-            thisOwnerResource.importManifest(owner.getKey(), new ArrayList<>(), input);
-            fail("Expected IseException was not thrown");
-        }
-        catch (IseException ise) {
-            // expected, so we catch and go on.
-        }
-
-        verify(this.mockManifestManager).recordImportFailure(eq(owner), eq(expectedException),
-            eq("test_file.zip"));
     }
 
     @Test

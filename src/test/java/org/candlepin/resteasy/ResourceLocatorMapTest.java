@@ -72,7 +72,7 @@ public class ResourceLocatorMapTest {
     public void testGetConsumesMediaTypesFromMethod() {
         Method m = null;
         try {
-            m = OwnerResource.class.getMethod("importManifest",
+            m = OwnerResource.class.getMethod("importManifestAsync",
                 String.class, List.class, MultipartInput.class);
         }
         catch (NoSuchMethodException nsme) {
