@@ -32,7 +32,16 @@ public final class Cdns {
         CdnDTO newCdn = new CdnDTO();
         newCdn.setLabel(StringUtil.random("cdn-label"));
         newCdn.setName(StringUtil.random("cdn-name"));
-        newCdn.setUrl("https://cdn.test.com");
+        newCdn.setUrl(StringUtil.random("https://cdn.test.com/apiUrl/"));
         return newCdn;
     }
+
+    public static ExportCdn toExport(CdnDTO cdn) {
+        return new ExportCdn(
+            cdn.getLabel(),
+            StringUtil.random("https://cdn.test.com/webUrl/"),
+            cdn.getUrl()
+        );
+    }
+
 }

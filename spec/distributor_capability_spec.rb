@@ -159,20 +159,14 @@ describe 'Distributor Capability' do
   end
 
   it 'can filter distributor version list' do
-    name1 = random_string("WidgetvBillion")
+    name1 = random_string("WidgetvTrillion")
     name2 = random_string("WidgetvBazillion")
-    dist_version = create_distributor_version(name1,
-                                    "Widget Billion",
-                                   ["midas touch",
-                                    "telepathy",
-                                    "lightning speed"])
-    dist_version = create_distributor_version(name2,
-                                    "Widget Bazillion",
-                                   ["midas touch",
-                                    "telekenesis",
-                                    "ludicrist speed",
-                                    "omlet maker"])
-    dist_vers = @cp.get_distributor_versions('Bill')
+    create_distributor_version(name1, "Widget Billion",
+                                   ["midas touch", "telepathy", "lightning speed"])
+    create_distributor_version(name2, "Widget Bazillion",
+                                   ["midas touch", "telekenesis", "ludicrist speed", "omlet maker"])
+    dist_vers = @cp.get_distributor_versions('Trill')
+    puts dist_vers
     dist_vers.size.should == 1
     dist_vers[0]['name'].should == name1
 

@@ -20,6 +20,7 @@ import org.candlepin.invoker.client.ApiClient;
 import org.candlepin.resource.client.v1.PoolsApi;
 
 import java.util.List;
+import java.util.Map;
 
 public class PoolsClient extends PoolsApi {
 
@@ -35,8 +36,15 @@ public class PoolsClient extends PoolsApi {
         return super.listPools(null, consumer, null, true, null, null, null, null, null);
     }
 
+    public List<PoolDTO> listPoolsByProduct(String ownerKey, String productId) {
+        return super.listPools(ownerKey, null, productId, true, null, null, null, null, null);
+    }
+
     public List<PoolDTO> listPoolsByOwnerAndProduct(String owner, String product) {
         return super.listPools(owner, null, product, true, null, null, null, null, null);
     }
 
+    public Map<String, String> getCert(String poolId) {
+        return (Map<String, String>) super.getSubCert(poolId);
+    }
 }

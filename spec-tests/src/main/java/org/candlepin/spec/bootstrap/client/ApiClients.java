@@ -16,6 +16,7 @@ package org.candlepin.spec.bootstrap.client;
 
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
+import org.candlepin.dto.api.client.v1.UserDTO;
 
 /**
  * Static factory created for easy selection of appropriate authentication method.
@@ -59,6 +60,16 @@ public final class ApiClients {
      */
     public static ApiClient basic(String username, String password) {
         return new ApiClient(CLIENT_FACTORY.createClient(username, password));
+    }
+
+    /**
+     * Returns a client to make API calls with, that uses basic username/password authentication.
+     *
+     * @param user user providing the username and password
+     * @return a client to make API calls with using basic username/password authentication
+     */
+    public static ApiClient basic(UserDTO user) {
+        return new ApiClient(CLIENT_FACTORY.createClient(user.getUsername(), user.getPassword()));
     }
 
     /**
