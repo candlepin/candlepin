@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.9
+Version: 4.2.10
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -244,6 +244,39 @@ fi
 
 #raw
 %changelog
+* Wed Oct 19 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.10-1
+- ENT-5447: Remove synchronous import endpoint (wpoteat@redhat.com)
+- 2134502: Satellite cannot enable or sync satellite-tools repo
+  (wpoteat@redhat.com)
+- Bump spotbugs-annotations from 4.7.2 to 4.7.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- Bump gradle-versions-plugin from 0.42.0 to 0.43.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump swagger-annotations from 1.6.7 to 1.6.8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Migrate import_spec to Java (ojanus@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Updated how key-value strings are handled at the API level (crog@redhat.com)
+- Eliminate trustedConsumer/trustedUser usage in spec tests
+  (nmoumoul@redhat.com)
+- Fix bundle install (ojanus@redhat.com)
+- Bump logback-classic from 1.4.3 to 1.4.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Updated spec test README in accordance with the testing guidelines
+  (crog@redhat.com)
+- Bump ehcache from 3.10.1 to 3.10.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Migrated refresh_pools_spec to Java (part 2) - removed refresh_pools_spec.rb
+  (joshmalbrecht@gmail.com)
+- Update spec tests for proper use of consumer clients (wpoteat@redhat.com)
+- Bump keycloak-servlet-filter-adapter from 19.0.2 to 19.0.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Migrate pool_unlimited_master_spec to Java (wpoteat@redhat.com)
+- Migrated instance_spec and multiplier_spec to Java - removed instance_spec.rb
+  - removed multiplier_spec.rb (joshmalbrecht@gmail.com)
+
 * Thu Oct 06 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.9-1
 - 2129177: Retain order of activation keys on db lookup (wpoteat@redhat.com)
 - 2128583: Updated GuestIdDeserializer to use existing ObjectMapper
