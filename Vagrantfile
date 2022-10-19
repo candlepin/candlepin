@@ -80,21 +80,18 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.define("el7", autostart: false) do |vm_config|
     vm_config.vm.box = "centos/7"
     vm_config.vm.host_name = "candlepin-el7.example.com"
-
-    # Uncomment these lines for forward the Candlepin standard dev ports to this guest
-    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8080, host: 8080
-    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8443, host: 8443
-
     vm_config.vm.provision "shell", inline: "yum update -y yum python ca-certificates"
     configure_ansible_provisioning(vm_config)
   end
 
   config.vm.define("el8", primary: true) do |vm_config|
     vm_config.vm.box = "centos/stream8"
-    # vm_config.vm.box_url = "https://cloud.centos.org/centos/8-stream/x86_64/images/CentOS-Stream-Vagrant-8-20220125.1.x86_64.vagrant-libvirt.box"
     vm_config.vm.host_name = "candlepin-el8.example.com"
 
-    # Uncomment these lines for forward the Candlepin standard dev ports to this guest.
+    # Vagrant allows to create a forwarded port mapping which allows access to a specific port
+    # within the guest machine from a port on the host machine.
+    #
+    # Uncomment these lines to forward the Candlepin standard dev ports to this guest machine.
     # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8080, host: 8080
     # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8443, host: 8443
 
@@ -102,14 +99,16 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     configure_ansible_provisioning(vm_config)
   end
 
+  config.vm.define("el9", autostart: false) do |vm_config|
+    vm_config.vm.box = "generic/centos9s"
+    vm_config.vm.host_name = "candlepin-el9.example.com"
+    vm_config.vm.provision "shell", inline: "dnf update -y dnf ca-certificates"
+    configure_ansible_provisioning(vm_config)
+  end
+
   config.vm.define("f35", autostart: false) do |vm_config|
     vm_config.vm.box = "fedora/35-cloud-base"
     vm_config.vm.host_name = "candlepin-f35.example.com"
-
-    # Uncomment these lines for forward the Candlepin standard dev ports to this guest
-    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8080, host: 8080
-    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8443, host: 8443
-
     vm_config.vm.provision "shell", inline: "dnf update -y dnf python ca-certificates"
     configure_ansible_provisioning(vm_config)
   end

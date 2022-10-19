@@ -4,7 +4,8 @@ roles:
     name: candlepin
     version: master
 
-  - src: rvm.ruby
+  - src: git+https://github.com/Januson/rvm1-ansible.git
+    version: skip-rubies
 
 collections:
   - name: ansible.posix
