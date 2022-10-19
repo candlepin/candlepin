@@ -78,7 +78,6 @@ import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
-import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
@@ -109,8 +108,6 @@ import org.candlepin.resource.util.KeyValueStringParser;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
-import org.candlepin.sync.ImporterException;
-import org.candlepin.sync.SyncDataFormatException;
 import org.candlepin.sync.file.ManifestFileServiceException;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
@@ -1460,56 +1457,8 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    @Deprecated
-    public ImportRecordDTO importManifest(
-        @Verify(Owner.class) String ownerKey,
-        List<String> force,
-        MultipartInput input) {
-
-        String[] overrideConflicts = force.isEmpty() ? new String[]{} : force.stream().toArray(String[]::new);
-        ConflictOverrides overrides = processConflictOverrideParams(overrideConflicts);
-        UploadMetadata fileData = new UploadMetadata();
-        Owner owner = findOwnerByKey(ownerKey);
-
-        try {
-            fileData = getArchiveFromResponse(input);
-            ImportRecord record = manifestManager.importManifest(owner, fileData.getData(),
-                fileData.getUploadedFilename(), overrides);
-
-            return this.translator.translate(record, ImportRecordDTO.class);
-        }
-        catch (IOException e) {
-            log.error("Reading error during importing", e);
-            manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
-            throw new IseException(i18n.tr("Error reading export archive"), e);
-        }
-        // These come back with internationalized messages, so we can transfer:
-        catch (SyncDataFormatException e) {
-            log.error("Format error of the data in a manifest", e);
-            manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
-            throw new BadRequestException(e.getMessage(), e);
-        }
-        catch (ImporterException e) {
-            log.error("Problem with archive", e);
-            manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
-            throw new IseException(e.getMessage(), e);
-        }
-        // Grab candlepin exceptions to record the error and then rethrow
-        // to pass on the http return code
-        catch (CandlepinException e) {
-            log.error("Recording import failure", e);
-            manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
-            throw e;
-        }
-        finally {
-            log.info("Import attempt completed for owner {}", owner.getDisplayName());
-        }
-    }
-
-    @Override
     public AsyncJobStatusDTO importManifestAsync(
-        @Verify(Owner.class) String ownerKey, List<String> force,
-        MultipartInput input) {
+        @Verify(Owner.class) String ownerKey, List<String> force, MultipartInput input) {
 
         String[] overrideConflicts = force.isEmpty() ? new String[]{} : force.stream().toArray(String[]::new);
         ConflictOverrides overrides = processConflictOverrideParams(overrideConflicts);

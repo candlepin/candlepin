@@ -21,7 +21,7 @@ describe 'Import Update', :serial => true do
       :required_tags => "dummy tags"
     })
 
-    @cp.import(@import_owner['key'], base_export.export_filename)
+    import_and_wait.call(@import_owner['key'], base_export.export_filename)
     @sublist = @cp.list_subscriptions(@import_owner['key'])
 
     # Verify the manifest changed our content
@@ -46,7 +46,7 @@ describe 'Import Update', :serial => true do
 
     updated_export = @exporter.create_candlepin_export_update()
 
-    @cp.import(@import_owner['key'], updated_export.export_filename)
+    import_and_wait.call(@import_owner['key'], updated_export.export_filename)
 
     @sublist.size().should == 6
     new_sublist = @cp.list_subscriptions(@import_owner['key'])
@@ -83,7 +83,7 @@ describe 'Import Update', :serial => true do
 
     no_ent_export = @exporter.create_candlepin_export_update_no_ent()
 
-    @cp.import(@import_owner['key'], no_ent_export.export_filename)
+    import_and_wait.call(@import_owner['key'], no_ent_export.export_filename)
     # manifest consumer
     @exporter.candlepin_client.list_entitlements().size.should == 0
     # import owner

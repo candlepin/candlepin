@@ -21,7 +21,7 @@ describe 'Import cleanup', :serial => true do
     @import_owner = @cp.create_owner(random_string("test_owner"))
     @import_username = random_string("import-user")
     @import_owner_client = user_client(@import_owner, @import_username)
-    import_record = @cp.import(@import_owner['key'], @cp_export_file)
+    import_record = import_and_wait.call(@import_owner['key'], @cp_export_file)
     import_record.status.should == 'SUCCESS'
     import_record.statusMessage.should == "#{@import_owner['key']} file imported successfully."
     @exporters = [@cp_export]
@@ -65,7 +65,7 @@ describe 'Import cleanup', :serial => true do
 
     #Create a new manifest without product_vdc subscription!
     updated_export = @cp_export.create_candlepin_export_update_no_ent()
-    @cp.import(@import_owner['key'], updated_export.export_filename)
+    import_and_wait.call(@import_owner['key'], updated_export.export_filename)
 
     # All the pools for that owner should be removed
     normal = @import_owner_client.list_pools({:owner => @import_owner['id']} )

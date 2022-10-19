@@ -81,7 +81,9 @@ describe 'Import', :serial => true do
 
     # import to make org at 'distributor'
     import_user_client = user_client(@dist_owner, random_string("user"))
-    import_user_client.import(@dist_owner['key'], @exporter.export_filename)
+    job =  import_user_client.import_async(@dist_owner['key'], @exporter.export_filename)
+    wait_for_job(job["id"], 30)
+
     @cp.refresh_pools(@dist_owner['key'])
     pools = @cp.list_owner_pools(@dist_owner['key'], {:product => stacked_datacenter_product.id})
     pools.size.should >= 1

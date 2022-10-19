@@ -120,7 +120,7 @@ if @owner_key != nil
     @cp = Candlepin.new('admin', 'admin', nil, nil, 'localhost', 8443)
   end
   begin
-    @cp.import(@owner_key, @output, {:force => ["SIGNATURE_CONFLICT", 'MANIFEST_SAME']})
+    import_and_wait.call(@owner_key, @output, {:force => ["SIGNATURE_CONFLICT", 'MANIFEST_SAME']})
     puts "done!"
   rescue Exception => e
       puts "#{e}, but probably a successful import!"

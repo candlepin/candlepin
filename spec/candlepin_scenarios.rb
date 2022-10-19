@@ -48,6 +48,21 @@ module CandlepinMethods
     return status
   end
 
+  def import_and_wait
+    lambda { |owner_key, export_file, param_map={}|
+      headers = { :correlation_id => @cp_correlation_id }
+      job = @cp.import_async(owner_key, export_file, param_map, headers)
+      # Wait a little longer here as import can take a bit of time
+      wait_for_job(job["id"], 60)
+      status = @cp.get_job(job["id"], true)
+      puts("status: %s" % status)
+      if status["state"] == "FAILED"
+        raise AsyncImportFailure.new(status)
+      end
+      status["resultData"]
+    }
+  end
+
   def create_product(id=nil, name=nil, params={})
     # If owner given in params, use it, if not, try to find @owner, if neither
     # is set error out.
@@ -792,6 +807,15 @@ class AsyncStandardExporter < StandardExporter
     result = status["resultData"]
     client.download_consumer_export(result["exportedConsumer"], result["exportId"], dest_dir)
   end
+end
+
+class AsyncImportFailure < Exception
+  attr_reader :data
+
+  def initialize(data)
+    @data = data
+  end
+
 end
 
 module SimpleContentAccessMethods

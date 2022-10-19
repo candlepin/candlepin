@@ -41,7 +41,7 @@ describe 'Import Into Environment', :serial => true do
     expect(custom_prod_pool_1).to_not be_nil
     expect(custom_prod_pool_2).to_not be_nil
 
-    import_record = @cp.import(import_owner['key'], cp_export_file)
+    import_record = import_and_wait.call(import_owner['key'], cp_export_file)
     import_record.status.should == 'SUCCESS'
     import_record.statusMessage.should == "#{import_owner['key']} file imported successfully."
 
@@ -76,7 +76,7 @@ describe 'Import Into Environment', :serial => true do
     expect(custom_sub_pool_1).to_not be_nil
     expect(custom_sub_pool_2).to_not be_nil
 
-    import_record = @cp.import(import_owner['key'], cp_export_file)
+    import_record = import_and_wait.call(import_owner['key'], cp_export_file)
     import_record.status.should == 'SUCCESS'
     import_record.statusMessage.should == "#{import_owner['key']} file imported successfully."
 

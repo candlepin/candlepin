@@ -17,7 +17,7 @@ describe 'Import Warning', :serial => true do
     @cp_export_file = @cp_export.export_filename
 
     @import_owner = @cp.create_owner(random_string("test_owner"))
-    @cp.import(@import_owner['key'], @cp_export_file)
+    import_and_wait.call(@import_owner['key'], @cp_export_file)
 
     @exporters = [@cp_export]
   end
@@ -74,9 +74,9 @@ describe 'Import Warning', :serial => true do
     }
 
     #verify we get a warning
-    import_record = @cp.import(@import_owner['key'],
+    import_record = import_and_wait.call(@import_owner['key'],
                       updated_export,
-                      {:force => ["SIGNATURE_CONFLICT", 'MANIFEST_SAME']})
+                      {:force => ["MANIFEST_SAME", "SIGNATURE_CONFLICT"]})
     import_record.status.should == 'SUCCESS_WITH_WARNING'
     import_record.statusMessage.should == "#{@import_owner['key']} file imported forcibly."\
        "One or more inactive subscriptions found in the file."
@@ -85,7 +85,7 @@ describe 'Import Warning', :serial => true do
 
   it 'warns about no active subscriptions' do
     empty_export = @cp_export.create_candlepin_export_update_no_ent()
-    import_record = @cp.import(@import_owner['key'], empty_export.export_filename)
+    import_record = import_and_wait.call(@import_owner['key'], empty_export.export_filename)
     import_record.status.should == 'SUCCESS_WITH_WARNING'
     import_record.statusMessage.should == "#{@import_owner['key']} file imported successfully.No active subscriptions found in the file."
   end

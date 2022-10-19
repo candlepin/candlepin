@@ -14,7 +14,7 @@ describe 'Import Update', :serial => true do
     @import_owner = @cp.create_owner(random_string("test_owner"))
     @import_username = random_string("import-user")
     @import_owner_client = user_client(@import_owner, @import_username)
-    @cp.import(@import_owner['key'], base_export.export_filename)
+    import_and_wait.call(@import_owner['key'], base_export.export_filename)
     @sublist = @cp.list_subscriptions(@import_owner['key'])
   end
 
@@ -40,7 +40,7 @@ describe 'Import Update', :serial => true do
     sleep 1
     # Now lets import
     updated_export = @exporter.create_candlepin_export_update()
-    @cp.import(@import_owner['key'], updated_export.export_filename)
+    import_and_wait.call(@import_owner['key'], updated_export.export_filename)
 
   end
 
