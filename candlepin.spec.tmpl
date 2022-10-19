@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.16
+Version: 4.1.17
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,10 @@ fi
 
 #raw
 %changelog
+* Wed Oct 19 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.17-1
+- 2134480: Satellite cannot enable or sync satellite-tools repo
+  (wpoteat@redhat.com)
+
 * Wed Oct 05 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.16-1
 - 2131997: Updated GuestIdDeserializer to use existing ObjectMapper
   (joshmalbrecht@gmail.com)
