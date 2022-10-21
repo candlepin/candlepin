@@ -15,12 +15,14 @@
 
 package org.candlepin.spec.bootstrap.client.api;
 
+import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.invoker.client.ApiClient;
 import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.OwnerApi;
 
+import java.io.File;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
@@ -215,4 +217,7 @@ public class OwnerClient extends OwnerApi {
             null);
     }
 
+    public AsyncJobStatusDTO importManifestAsync(String ownerKey, File input) throws ApiException {
+        return super.importManifestAsync(ownerKey, List.of(), input);
+    }
 }

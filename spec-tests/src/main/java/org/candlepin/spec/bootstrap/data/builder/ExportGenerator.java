@@ -119,9 +119,7 @@ public class ExportGenerator {
     public ExportGenerator withProduct(ProductDTO product, ContentDTO content) {
         String ownerKey = owner.getKey();
         ProductDTO createdProduct = ownerProductApi.createProductByOwner(ownerKey, product);
-
         ContentDTO createdContent = ownerContentApi.createContent(ownerKey, content);
-
         ownerProductApi.addContent(ownerKey, createdProduct.getId(), createdContent.getId(), true);
 
         Map<String, PoolDTO> poolIdToPool = createPoolsForProducts(ownerKey, createdProduct);
@@ -177,4 +175,9 @@ public class ExportGenerator {
 
         return ownerApi.createPool(ownerKey, pool);
     }
+
+    public ConsumerDTO getExportConsumer() {
+        return consumer;
+    }
+
 }
