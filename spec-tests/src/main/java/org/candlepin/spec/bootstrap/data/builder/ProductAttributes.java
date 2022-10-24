@@ -35,6 +35,7 @@ public enum ProductAttributes {
     Type("type"),
     Unlimited("unlimited_product"),
     Usage("usage"),
+    Variant("variant"),
     Version("version"),
     VirtLimit("virt_limit"),
     VirtOnly("virt_only"),

@@ -449,7 +449,7 @@ class ExportSpecTest {
             owner = ownerApi.createOwner(Owners.random());
             String ownerKey = owner.getKey();
 
-            RoleDTO role = rolesApi.createRole(Roles.all(owner));
+            RoleDTO role = rolesApi.createRole(Roles.ownerAll(owner));
             UserDTO user = usersApi.createUser(Users.random());
             role = rolesApi.addUserToRole(role.getName(), user.getUsername());
             consumer = consumerApi.createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin),

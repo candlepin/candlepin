@@ -17,32 +17,32 @@ package org.candlepin.spec.bootstrap.data.builder;
 
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PermissionBlueprintDTO;
-import org.candlepin.dto.api.client.v1.RoleDTO;
-import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
-import java.util.List;
+public enum Permissions {
 
-public final class Roles {
+    OWNER("OWNER"),
+    OWNER_POOLS("OWNER_POOLS"),
+    USERNAME_CONSUMERS("USERNAME_CONSUMERS"),
+    USERNAME_CONSUMERS_ENTITLEMENTS("USERNAME_CONSUMERS_ENTITLEMENTS"),
+    ATTACH("ATTACH"),
+    OWNER_HYPERVISORS("OWNER_HYPERVISORS");
 
-    private Roles() {
-        throw new UnsupportedOperationException();
+    private final String permission;
+    Permissions(String permission) {
+        this.permission = permission;
     }
 
-    public static RoleDTO ownerAll(OwnerDTO owner) {
-        return createRole(Permissions.OWNER.all(owner));
+    public PermissionBlueprintDTO all(OwnerDTO owner) {
+        return new PermissionBlueprintDTO()
+            .owner(Owners.toNested(owner))
+            .type(permission)
+            .access("ALL");
     }
 
-    public static RoleDTO ownerReadOnly(OwnerDTO owner) {
-        return createRole(Permissions.OWNER.readOnly(owner));
-    }
-
-    public static RoleDTO with(PermissionBlueprintDTO... permissions) {
-        return createRole(permissions);
-    }
-
-    private static RoleDTO createRole(PermissionBlueprintDTO... permissions) {
-        return new RoleDTO()
-            .name(StringUtil.random("test-role"))
-            .permissions(List.of(permissions));
+    public PermissionBlueprintDTO readOnly(OwnerDTO owner) {
+        return new PermissionBlueprintDTO()
+            .owner(Owners.toNested(owner))
+            .type(permission)
+            .access("READ_ONLY");
     }
 }
