@@ -1,0 +1,11 @@
+[req]
+distinguished_name = req
+x509_extensions = v3_ext
+[v3_ext]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid, issuer
+basicConstraints = critical, CA:true
+subjectAltName = @san
+[san]
+IP.1 = 127.0.0.1
+DNS.1 = localhost

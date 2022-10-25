@@ -1,0 +1,46 @@
+version: '3.4'
+services:
+  candlepin:
+    depends_on:
+      - db
+    ports:
+      - '8080:8080'
+      - '8443:8443'
+      - '5005:5005'
+    build:
+      context: '.'
+    environment:
+      - 'CATALINA_OPTS=-Djava.net.preferIPv4Stack=true -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
+      # If USE_LOCAL_BUILD is true then webapps/candlepin will be replaced with the local build
+      - USE_LOCAL_BUILD=${USE_LOCAL_BUILD}
+    command:
+      - "/tmp/wait-for-it.sh"
+      - "--timeout=600"
+      - "db:5432"
+      - "--"
+      - "/tmp/entrypoint.sh"
+    volumes:
+      - ./compose.d/wait-for-it.sh:/tmp/wait-for-it.sh:z
+      - ./compose.d/candlepin/entrypoint.sh:/tmp/entrypoint.sh:z
+      - ./compose.d/candlepin/liquibase.sh:/tmp/liquibase.sh:z
+      - ./compose.d/candlepin/candlepin.conf:/etc/candlepin/candlepin.conf:z
+      # Provide our own cert/key so one isn't baked into the official image
+      - ./compose.d/candlepin/candlepin-ca.crt:/etc/candlepin/certs/candlepin-ca.crt:z
+      - ./compose.d/candlepin/candlepin-ca.key:/etc/candlepin/certs/candlepin-ca.key:z
+      # Only used if USE_LOCAL_BUILD is set to true
+      - .:/tmp/candlepin:z
+  db:
+    image: registry.access.redhat.com/rhscl/postgresql-10-rhel7
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRESQL_USER: candlepin
+      POSTGRESQL_PASSWORD: candlepin
+      POSTGRESQL_DATABASE: candlepin
+      #POSTGRES_HOST_AUTH_METHOD: trust
+    #volumes:
+      #- ./compose.d/db/initdb.d:/docker-entrypoint-initdb.d:ro,z
+    #healthcheck:
+      #test: ["CMD", "pg_isready", "-d", "candlepin"]
+      #timeout: 5s
+      #retries: 3
