@@ -115,6 +115,7 @@ public class ActivationKeySpecTest {
             .hasSize(3)
             .usingRecursiveComparison()
             .ignoringFields("created", "updated")
+            .ignoringCollectionOrder()
             .isEqualTo(activationKeys);
     }
 
