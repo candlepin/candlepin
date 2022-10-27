@@ -12,7 +12,8 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.spec;
+
+package org.candlepin.spec.hypervisors;
 
 import static java.lang.Thread.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -56,6 +57,7 @@ import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Content;
+import org.candlepin.spec.bootstrap.data.builder.HypervisorTestData;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
@@ -125,7 +127,7 @@ public class HypervisorCheckInSpecTest {
     @Test
     public void shouldAddConsumerToCreatedWhenNewHostIdAndNoGuestsReported() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         HypervisorUpdateResultDTO resultData = hypervisorCheckin(owner, userClient,
             data.getExpectedHostName(), data.getExpectedHostHypervisorId(), new ArrayList<>(), null,
@@ -156,7 +158,7 @@ public class HypervisorCheckInSpecTest {
     @Test
     public void shouldAddConsumerToCreatedWhenNewHostIdAndGuestsWereReported() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         HypervisorUpdateResultDTO resultData = hypervisorCheckin(owner, userClient,
             data.getExpectedHostName(), data.getExpectedHostHypervisorId(), data.getExpectedGuestIds(),
@@ -178,7 +180,7 @@ public class HypervisorCheckInSpecTest {
     @Test
     public void shouldNotAddNewConsumerWhenCreateMissingIsFalse() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         HypervisorUpdateResultDTO resultData = hypervisorCheckin(owner, userClient,
             data.getExpectedHostName(), data.getExpectedHostHypervisorId(),  data.getExpectedGuestIds(),
@@ -190,7 +192,7 @@ public class HypervisorCheckInSpecTest {
     @Test
     public void shouldAddConsumerToUpdatedWhenGuestIdsAreUpdated() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         ConsumerDTO hostConsumer = createHostConsumer(owner, userClient, data);
         hypervisorCheckin(owner, userClient, data.getExpectedHostName(),
@@ -221,7 +223,7 @@ public class HypervisorCheckInSpecTest {
     @Test
     public void shouldAddConsumerToUnchangedWhenSameGuestIdsAreSent() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         ConsumerDTO hostConsumer = createHostConsumer(owner, userClient, data);
         hypervisorCheckin(owner, userClient, data.getExpectedHostName(),
@@ -277,7 +279,7 @@ public class HypervisorCheckInSpecTest {
     @Test
     public void shouldAddHostAndAssociateGuests() throws IOException {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         ConsumerDTO hostConsumer = createHostConsumer(owner, userClient, data);
         hypervisorCheckin(owner, userClient, data.getExpectedHostName(),
@@ -290,7 +292,7 @@ public class HypervisorCheckInSpecTest {
     @Test
     public void shouldUdateHostGuestIdsAsConsumer() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         ConsumerDTO hostConsumer = createHostConsumer(owner, userClient, data);
         hypervisorCheckin(owner, userClient, data.getExpectedHostName(),
@@ -303,7 +305,7 @@ public class HypervisorCheckInSpecTest {
     @Test
     public void shouldPersistReportedIdOnHostGuestMappingsUpdate() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         ConsumerDTO hostConsumer = createHostConsumer(owner, userClient, data);
         hypervisorCheckin(owner, userClient, data.getExpectedHostName(),
@@ -316,7 +318,7 @@ public class HypervisorCheckInSpecTest {
     @Test
     public void shouldUpdateHostGuestIdsAsUser() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         ConsumerDTO hostConsumer = createHostConsumer(owner, userClient, data);
         hypervisorCheckin(owner, userClient, data.getExpectedHostName(),
@@ -330,7 +332,7 @@ public class HypervisorCheckInSpecTest {
     @OnlyInStandalone
     public void shouldNotRevokeGuestEntitlementsWhenGuestNoLongerMapped() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         ConsumerDTO hostConsumer = createHostConsumer(owner, userClient, data);
         ConsumerDTO guestConsumer1 = createGuestConsumer(owner, userClient, data.getGuest1VirtUuid());
@@ -361,7 +363,7 @@ public class HypervisorCheckInSpecTest {
     @Test
     public void shouldNotRevokeHostEntitlementsWhenGuestIdListIsEmpty() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         ConsumerDTO hostConsumer = createHostConsumer(owner, userClient, data);
         createVirtLimitProductPools(owner, hostConsumer);
@@ -383,7 +385,7 @@ public class HypervisorCheckInSpecTest {
     @OnlyInStandalone
     public void shouldNotRevokeHostAndGuestEntitlementsWhenGuestIdListIsEmpty() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         ConsumerDTO hostConsumer = createHostConsumer(owner, userClient, data);
         ApiClient hostConsumerClient = ApiClients.ssl(hostConsumer);
@@ -472,7 +474,7 @@ public class HypervisorCheckInSpecTest {
     public void shouldAllowVirtWhoToUpdateMappings() throws Exception {
         setupOwnerUserClient();
         ApiClient virtClient = createVirtWhoClient(owner, userClient);
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         HypervisorUpdateResultDTO resultData = hypervisorCheckin(owner, virtClient,
             data.getExpectedHostName(), data.getExpectedHostHypervisorId(), data.getExpectedGuestIds(),
@@ -496,7 +498,7 @@ public class HypervisorCheckInSpecTest {
         setupOwnerUserClient();
         OwnerDTO owner2 = ownerApi.createOwner(Owners.random());
         ApiClient virtClient = createVirtWhoClient(owner, userClient);
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         hypervisorCheckin(owner, virtClient, data.getExpectedHostName(),
             data.getExpectedHostHypervisorId(), data.getExpectedGuestIds(), null, reporterId, true);
@@ -530,7 +532,7 @@ public class HypervisorCheckInSpecTest {
     public void shouldIgnoreHypervisorIdsEqualToTheEmptyString() throws Exception {
         setupOwnerUserClient();
         ApiClient virtClient = createVirtWhoClient(owner, userClient);
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         HypervisorUpdateResultDTO resultData = hypervisorCheckin(owner, virtClient,
             data.getExpectedHostName(), "", data.getExpectedGuestIds(),
@@ -542,7 +544,7 @@ public class HypervisorCheckInSpecTest {
     public void shouldIgnoreGuestIdsEqualToTheEmptyString() throws Exception {
         setupOwnerUserClient();
         ApiClient virtClient = createVirtWhoClient(owner, userClient);
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         HypervisorUpdateResultDTO resultData = hypervisorCheckin(owner, virtClient,
             data.getExpectedHostName(), data.getExpectedHostHypervisorId(),
@@ -558,8 +560,8 @@ public class HypervisorCheckInSpecTest {
     @OnlyInStandalone
     public void shouldAllowASingleGuestToBeMigratedAndRevokeHostLimitedEnts() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data1 = new CommonTestData();
-        CommonTestData data2 = new CommonTestData();
+        HypervisorTestData data1 = new HypervisorTestData();
+        HypervisorTestData data2 = new HypervisorTestData();
         String uuid1 = StringUtil.random("uuid");
 
         ConsumerDTO hostConsumer = createHostConsumer(owner, userClient, data1);
@@ -654,7 +656,7 @@ public class HypervisorCheckInSpecTest {
         @Test
         public void shouldNotRevokeGuestEntitlementsWhenGuestNoLongerMapped() throws Exception {
             setupOwnerUserClient();
-            CommonTestData data = new CommonTestData();
+            HypervisorTestData data = new HypervisorTestData();
 
             ConsumerDTO hostConsumer = createHostConsumer(owner, userClient, data);
             ConsumerDTO guestConsumer1 = createGuestConsumer(owner, userClient, data.getGuest1VirtUuid());
@@ -684,7 +686,7 @@ public class HypervisorCheckInSpecTest {
         @Test
         public void shouldNotRevokeHostAndGuestEntitlementsWhenGuestIdListIsEmpty() throws Exception {
             setupOwnerUserClient();
-            CommonTestData data = new CommonTestData();
+            HypervisorTestData data = new HypervisorTestData();
 
             ConsumerDTO hostConsumer = createHostConsumer(owner, userClient, data);
             String hostUuid = hostConsumer.getUuid();
@@ -712,8 +714,8 @@ public class HypervisorCheckInSpecTest {
         @Test
         public void shouldAllowASingleGuestToBeMigratedAndRevokeHostLimitedEntsHosted() throws Exception {
             setupOwnerUserClient();
-            CommonTestData data1 = new CommonTestData();
-            CommonTestData data2 = new CommonTestData();
+            HypervisorTestData data1 = new HypervisorTestData();
+            HypervisorTestData data2 = new HypervisorTestData();
             String uuid1 = StringUtil.random("uuid");
 
             ConsumerDTO hostConsumer = createHostConsumer(owner, userClient, data1);
@@ -922,7 +924,7 @@ public class HypervisorCheckInSpecTest {
     public void shouldMergeConsumerIntoHypervisorWithTheSameUuid() throws Exception {
         setupOwnerUserClient();
         ApiClient virtwho = createVirtWhoClient(owner, userClient);
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         HypervisorUpdateResultDTO resultData = hypervisorCheckin(owner, virtwho, data.getExpectedHostName(),
             data.getExpectedHostHypervisorId(), data.getExpectedGuestIds(),
@@ -946,7 +948,7 @@ public class HypervisorCheckInSpecTest {
         throws Exception {
         setupOwnerUserClient();
         ApiClient virtwho = createVirtWhoClient(owner, userClient);
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         HypervisorUpdateResultDTO resultData = hypervisorCheckin(owner, virtwho, data.getExpectedHostName(),
             data.getExpectedHostHypervisorId(), data.getExpectedGuestIds(),
@@ -969,7 +971,7 @@ public class HypervisorCheckInSpecTest {
     public void shouldMergeHypervisorIntoConsumerWithTheSameUuid() throws Exception {
         setupOwnerUserClient();
         ApiClient virtwho = createVirtWhoClient(owner, userClient);
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         Map<String, String> facts = Map.of("dmi.system.uuid", data.getExpectedHostHypervisorId(),
             "virt.is_guest", "false");
@@ -994,7 +996,7 @@ public class HypervisorCheckInSpecTest {
     public void shouldMergeHypervisorIntoConsumerWithTheSameUuidIgnoreCasing() throws Exception {
         setupOwnerUserClient();
         ApiClient virtwho = createVirtWhoClient(owner, userClient);
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         Map<String, String> facts = Map.of("dmi.system.uuid",
             data.getExpectedHostHypervisorId().toUpperCase(), "virt.is_guest", "false");
@@ -1019,7 +1021,7 @@ public class HypervisorCheckInSpecTest {
     public void shouldMergeHypervisorIntoConsumerWithTheSameUuidIgnoreCasingReverse() throws Exception {
         setupOwnerUserClient();
         ApiClient virtwho = createVirtWhoClient(owner, userClient);
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         Map<String, String> facts = Map.of("dmi.system.uuid", data.getExpectedHostHypervisorId(),
             "virt.is_guest", "false");
@@ -1044,7 +1046,7 @@ public class HypervisorCheckInSpecTest {
     public void shouldNotFailWhenFactsChangeButNotTheGuestList() throws Exception {
         setupOwnerUserClient();
         ApiClient virtwho = createVirtWhoClient(owner, userClient);
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
 
         ConsumerDTO testHost = createHostConsumer(owner, userClient, data);
 
@@ -1063,7 +1065,7 @@ public class HypervisorCheckInSpecTest {
     @Test
     public void shouldAllowTheHypervisorIdToBeChangedOnTheConsumer() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
         String hostHypId2 = StringUtil.random("hypervisor").toLowerCase();
         String hostSystemId = StringUtil.random("system");
 
@@ -1088,7 +1090,7 @@ public class HypervisorCheckInSpecTest {
     @Test
     public void shouldAllowTheHypervisorIdUpdateOnTheConsumerWithNoExistingHypervisorId() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
         String hostSystemId = StringUtil.random("system");
 
         ConsumerDTO testHost = Consumers.random(owner)
@@ -1152,11 +1154,11 @@ public class HypervisorCheckInSpecTest {
         setupOwnerUserClient();
         String hostSystemId1 = StringUtil.random("system");
         String hostSystemId2 = StringUtil.random("system");
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
         ConsumerDTO testHost = Consumers.random(owner)
             .name(data.getExpectedHostName())
             .type(ConsumerTypes.Hypervisor.value())
-            .hypervisorId(new HypervisorIdDTO().hypervisorId(data.expectedHostHypervisorId))
+            .hypervisorId(new HypervisorIdDTO().hypervisorId(data.getExpectedHostHypervisorId()))
             .facts(Map.of("virt.is_guest", "false", "dmi.system.uuid", hostSystemId1))
             .guestIds(data.getGuestIdDTOs());
         testHost = userClient.consumers().createConsumer(testHost);
@@ -1249,7 +1251,7 @@ public class HypervisorCheckInSpecTest {
     @Test
     public void shouldUpdateTheConsumerNameFromTheHypervisorCheckin() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
         String hostSystemId1 = StringUtil.random("system").toLowerCase();
         String newName = StringUtil.random("name");
 
@@ -1274,7 +1276,7 @@ public class HypervisorCheckInSpecTest {
     @Test
     public void shouldNotUpdateTheNullConsumerNameFromTheHypervisorCheckin() throws Exception {
         setupOwnerUserClient();
-        CommonTestData data = new CommonTestData();
+        HypervisorTestData data = new HypervisorTestData();
         String hostSystemId1 = StringUtil.random("system").toLowerCase();
         String newName = StringUtil.random("name");
 
@@ -1324,7 +1326,7 @@ public class HypervisorCheckInSpecTest {
         PoolDTO rh00051Pool = createRH00051Pool(owner, rh00051Product, rh00051EngProduct);
 
         // creating hypervisor 1
-        CommonTestData data1 = new CommonTestData();
+        HypervisorTestData data1 = new HypervisorTestData();
         ConsumerDTO hypervisor1 = createHostConsumer(owner, userClient, data1);
         ApiClient hypervisorClient1 = ApiClients.ssl(hypervisor1);
         // creating guest
@@ -1341,7 +1343,7 @@ public class HypervisorCheckInSpecTest {
         confirmResultDataCounts(resultData, 0, 1, 0, 0);
 
         // creating hypervisor 2
-        CommonTestData data2 = new CommonTestData();
+        HypervisorTestData data2 = new HypervisorTestData();
         ConsumerDTO hypervisor2 = createHostConsumer(owner, userClient, data2);
         ApiClient hypervisorClient2 = ApiClients.ssl(hypervisor2);
 
@@ -1527,7 +1529,7 @@ public class HypervisorCheckInSpecTest {
         return userClient.consumers().createConsumer(guest);
     }
 
-    private void executeMigration(OwnerDTO owner,  CommonTestData data1, CommonTestData data2,
+    private void executeMigration(OwnerDTO owner,  HypervisorTestData data1, HypervisorTestData data2,
         ApiClient virtwho, String guestUuid) {
         ObjectMapper om = ApiClient.MAPPER;
         ObjectNode afterMigration = om.createObjectNode();
@@ -1671,7 +1673,7 @@ public class HypervisorCheckInSpecTest {
         return null;
     }
 
-    ConsumerDTO createHostConsumer(OwnerDTO owner, ApiClient userClient, CommonTestData data) {
+    ConsumerDTO createHostConsumer(OwnerDTO owner, ApiClient userClient, HypervisorTestData data) {
         ConsumerDTO hostConsumer = Consumers.random(owner)
             .name(data.getExpectedHostName())
             .type(ConsumerTypes.Hypervisor.value())
@@ -1705,36 +1707,4 @@ public class HypervisorCheckInSpecTest {
         }
         return null;
     }
-
-    private class CommonTestData {
-        private String expectedHostHypervisorId = StringUtil.random("host");
-        private String expectedHostName = StringUtil.random("name");
-        private String guest1VirtUuid = StringUtil.random("uuid");
-        private String guest2VirtUuid = StringUtil.random("uuid");
-        private List<String> expectedGuestIds = List.of(guest1VirtUuid, guest2VirtUuid);
-
-        public String getExpectedHostHypervisorId() {
-            return this.expectedHostHypervisorId;
-        }
-        public String getExpectedHostName() {
-            return this.expectedHostName;
-        }
-        public String getGuest1VirtUuid() {
-            return this.guest1VirtUuid;
-        }
-        public String getGuest2VirtUuid() {
-            return this.guest2VirtUuid;
-        }
-        public List<String> getExpectedGuestIds() {
-            return this.expectedGuestIds;
-        }
-        public List<GuestIdDTO>  getGuestIdDTOs() {
-            List<GuestIdDTO> result = new ArrayList<>();
-            for (String id : expectedGuestIds) {
-                result.add(new GuestIdDTO().guestId(id));
-            }
-            return result;
-        }
-    }
-
 }
