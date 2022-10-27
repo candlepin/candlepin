@@ -68,6 +68,12 @@ public final class StatusCodeAssertions {
         return assertReturnCode(410, exception);
     }
 
+    public static AbstractThrowableAssert<?, ? extends Throwable> assertNotModified(
+        ThrowableAssert.ThrowingCallable callable) {
+        ApiException exception = catchApiException(callable);
+        return assertReturnCode(304, exception);
+    }
+
     public static CandlepinStatusAssert assertThatStatus(
         ThrowableAssert.ThrowingCallable callable) {
         ApiException exception = catchApiException(callable);

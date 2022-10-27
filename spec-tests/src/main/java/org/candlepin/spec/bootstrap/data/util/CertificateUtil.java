@@ -14,6 +14,8 @@
  */
 package org.candlepin.spec.bootstrap.data.util;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 
@@ -26,6 +28,7 @@ import org.mozilla.jss.netscape.security.util.DerValue;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -109,8 +112,11 @@ public final class CertificateUtil {
             return null;
         }
 
+        certificate = certificate.replace("\"", "")
+            .replace("\\n", Character.toString((char) 10));
+
         // Retrieve the compressed data body
-        certificate = certificate.split("-----BEGIN ENTITLEMENT DATA-----\n")[1];
+        certificate = certificate.split("-----BEGIN ENTITLEMENT DATA-----")[1];
         certificate = certificate.split("-----END ENTITLEMENT DATA-----")[0];
         byte[] compressedBody = fromBase64(certificate.getBytes());
 
@@ -119,6 +125,7 @@ public final class CertificateUtil {
         decompressor.setInput(compressedBody);
         byte[] decompressedBody = new byte[48000];
         decompressor.inflate(decompressedBody);
+        decompressor.end();
 
         return mapper.readTree(new String(decompressedBody));
     }
@@ -150,4 +157,30 @@ public final class CertificateUtil {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * Retrieves a map of product ID to content IDs from a provided certificate {@link JsonNode}.
+     *
+     * @param certNode
+     *  A certificate that contains products and content
+     * @return
+     *  a map of product ID to content IDs from the provided certificate
+     */
+    public static Map<String, List<String>> toProductContentIdMap(JsonNode certNode) {
+        Map<String, List<String>> output = new HashMap<>();
+        JsonNode products = certNode.get("products");
+        assertNotNull(products);
+        products.forEach(productNode -> {
+            String productId = productNode.get("id").asText();
+
+            List<String> contentIds = output.computeIfAbsent(productId, key -> new ArrayList<>());
+            JsonNode content = productNode.get("content");
+            if (content != null) {
+                content.forEach(contentNode -> contentIds.add(contentNode.get("id").asText()));
+            }
+        });
+
+        return output;
+    }
+
 }

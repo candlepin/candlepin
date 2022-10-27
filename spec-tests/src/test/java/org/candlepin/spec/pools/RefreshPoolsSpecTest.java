@@ -61,7 +61,6 @@ import org.junit.jupiter.api.Test;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -501,7 +500,7 @@ public class RefreshPoolsSpecTest {
         List<JsonNode> certificates = consumerClient.consumers().exportCertificates(user.getUuid(), null);
         assertEquals(1, certificates.size());
         JsonNode body = certificates.get(0);
-        Map<String, List<String>> prodIdToContentIds = toProductContentIdMap(body);
+        Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(body);
         assertThat(prodIdToContentIds)
             .isNotNull()
             .hasSize(1)
@@ -532,7 +531,7 @@ public class RefreshPoolsSpecTest {
         certificates = consumerClient.consumers().exportCertificates(user.getUuid(), null);
         assertEquals(1, certificates.size());
         body = certificates.get(0);
-        prodIdToContentIds = toProductContentIdMap(body);
+        prodIdToContentIds = CertificateUtil.toProductContentIdMap(body);
         assertThat(prodIdToContentIds)
             .isNotNull()
             .hasSize(1)
@@ -662,16 +661,14 @@ public class RefreshPoolsSpecTest {
         assertEquals(1, bindEnt1Certs.size());
         assertEquals(1, bindEnt2Certs.size());
 
-        Map<String, List<String>> prodIdToContentIds = toProductContentIdMap(bindEnt1Certs.get(0));
-        assertThat(prodIdToContentIds)
+        assertThat(CertificateUtil.toProductContentIdMap(bindEnt1Certs.get(0)))
             .isNotNull()
             .containsExactly(entry(engProd1.getId(), List.of(content1.getId())));
 
-        prodIdToContentIds = toProductContentIdMap(bindEnt2Certs.get(0));
-        assertThat(prodIdToContentIds)
+        assertThat(CertificateUtil.toProductContentIdMap(bindEnt2Certs.get(0)))
             .isNotNull()
-            .containsOnlyKeys(engProd2.getId());
-        assertThat(prodIdToContentIds.get(engProd2.getId()))
+            .containsOnlyKeys(engProd2.getId())
+            .extractingByKey(engProd2.getId(), as(collection(String.class)))
             .isNotNull()
             .containsExactlyInAnyOrder(content2.getId(), content3.getId());
 
@@ -698,14 +695,11 @@ public class RefreshPoolsSpecTest {
         JsonNode updatedCert = CertificateUtil
             .decodeAndUncompressCertificate(updatedEntCert.getCert(), ApiClient.MAPPER);
 
-        prodIdToContentIds = toProductContentIdMap(updatedCert);
-        assertThat(prodIdToContentIds)
+        assertThat(CertificateUtil.toProductContentIdMap(updatedCert))
             .isNotNull()
-            .containsOnlyKeys(engProd2.getId());
-
-        assertThat(prodIdToContentIds.get(engProd2.getId()))
+            .containsOnlyKeys(engProd2.getId())
+            .extractingByKey(engProd2.getId(), as(collection(String.class)))
             .isNotNull()
-            .hasSize(2)
             .containsExactlyInAnyOrder(content2.getId(), content3.getId());
 
         // Add a dependent product to content3 for a product the consumer is NOT entitled to
@@ -728,8 +722,7 @@ public class RefreshPoolsSpecTest {
         // Verify the content path is still present in the entitlement
         updatedCert = CertificateUtil.decodeAndUncompressCertificate(cert.getCert(), ApiClient.MAPPER);
 
-        prodIdToContentIds = toProductContentIdMap(updatedCert);
-        assertThat(prodIdToContentIds)
+        assertThat(CertificateUtil.toProductContentIdMap(updatedCert))
             .isNotNull()
             .containsExactly(entry(engProd2.getId(), List.of(content2.getId())));
     }
@@ -1769,19 +1762,4 @@ public class RefreshPoolsSpecTest {
             .containsExactlyInAnyOrderElementsOf(expected);
     }
 
-    private static Map<String, List<String>> toProductContentIdMap(JsonNode certNode) {
-        Map<String, List<String>> output = new HashMap<>();
-        JsonNode products = certNode.get("products");
-        assertNotNull(products);
-        products.forEach(productNode -> {
-            String productId = productNode.get("id").asText();
-
-            List<String> contentIds = output.computeIfAbsent(productId, key -> new ArrayList<>());
-            JsonNode content = productNode.get("content");
-            assertNotNull(content);
-            content.forEach(contentNode -> contentIds.add(contentNode.get("id").asText()));
-        });
-
-        return output;
-    }
 }
