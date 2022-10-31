@@ -1045,7 +1045,7 @@ class PostBindBonusPoolSpecTest {
     private ProductDTO createLimitedVirtProduct(ApiClient client, String ownerKey, int virtLimit)
         throws ApiException {
         ProductDTO limitedVirtProd = Products.withAttributes(
-            ProductAttributes.VirtLimit.withValue(String.valueOf(virtLimit)),
+            ProductAttributes.VirtualLimit.withValue(String.valueOf(virtLimit)),
             ProductAttributes.MultiEntitlement.withValue("yes"),
             ProductAttributes.Type.withValue("SVC"));
 
@@ -1054,7 +1054,7 @@ class PostBindBonusPoolSpecTest {
 
     private SubscriptionDTO createLimitedHostVirtSub() {
         ProductDTO hostAndVirtLimitedProd = Products.withAttributes(
-            ProductAttributes.VirtLimit.withValue(String.valueOf(4)),
+            ProductAttributes.VirtualLimit.withValue(String.valueOf(4)),
             ProductAttributes.MultiEntitlement.withValue("yes"),
             ProductAttributes.HostLimited.withValue("true"),
             ProductAttributes.Type.withValue("SVC"));
@@ -1068,7 +1068,7 @@ class PostBindBonusPoolSpecTest {
 
     private ProductDTO createUnlimitedVirtProduct(ApiClient client, String ownerKey) throws ApiException {
         ProductDTO unlimitedVirtProd = Products.withAttributes(
-            ProductAttributes.VirtLimit.withValue("unlimited"),
+            ProductAttributes.VirtualLimit.withValue("unlimited"),
             ProductAttributes.MultiEntitlement.withValue("yes"));
 
         return client.ownerProducts().createProductByOwner(ownerKey, unlimitedVirtProd);
@@ -1077,7 +1077,7 @@ class PostBindBonusPoolSpecTest {
     private ProductDTO createUnlimitedProduct(ApiClient client, String ownerKey, int virtLimit)
         throws ApiException {
         ProductDTO unlimitedProd = Products.withAttributes(
-            ProductAttributes.VirtLimit.withValue(String.valueOf(virtLimit)),
+            ProductAttributes.VirtualLimit.withValue(String.valueOf(virtLimit)),
             ProductAttributes.MultiEntitlement.withValue("yes"),
             ProductAttributes.Unlimited.withValue("true"));
 
@@ -1086,7 +1086,7 @@ class PostBindBonusPoolSpecTest {
 
     private SubscriptionDTO createUnlimitedProdSub() {
         ProductDTO unlimitedProd = Products.withAttributes(
-            ProductAttributes.VirtLimit.withValue(String.valueOf(4)),
+            ProductAttributes.VirtualLimit.withValue(String.valueOf(4)),
             ProductAttributes.MultiEntitlement.withValue("yes"),
             ProductAttributes.Unlimited.withValue("true"));
         unlimitedProd = adminClient.hosted().createProduct(unlimitedProd);
@@ -1098,7 +1098,7 @@ class PostBindBonusPoolSpecTest {
 
     private ProductDTO createHostLimitedProduct(ApiClient client, String ownerKey) throws ApiException {
         ProductDTO hostLimitedProd = Products.withAttributes(
-            ProductAttributes.VirtLimit.withValue("unlimited"),
+            ProductAttributes.VirtualLimit.withValue("unlimited"),
             ProductAttributes.MultiEntitlement.withValue("yes"),
             ProductAttributes.HostLimited.withValue("true"));
 
@@ -1108,7 +1108,7 @@ class PostBindBonusPoolSpecTest {
     private ProductDTO createVirtLimitStackedProduct(ApiClient client, String ownerKey, int virtLimit)
         throws ApiException {
         ProductDTO virtLimitStackedProd = Products.withAttributes(
-            ProductAttributes.VirtLimit.withValue(String.valueOf(virtLimit)),
+            ProductAttributes.VirtualLimit.withValue(String.valueOf(virtLimit)),
             ProductAttributes.MultiEntitlement.withValue("yes"),
             ProductAttributes.StackingId.withValue(StringUtil.random("stack-")));
 
@@ -1118,7 +1118,7 @@ class PostBindBonusPoolSpecTest {
     private ProductDTO createHostLimitedStackedProduct(ApiClient client, String ownerKey, int virtLimit)
         throws ApiException {
         ProductDTO hostLimitedStackedProd = Products.withAttributes(
-            ProductAttributes.VirtLimit.withValue(String.valueOf(virtLimit)),
+            ProductAttributes.VirtualLimit.withValue(String.valueOf(virtLimit)),
             ProductAttributes.MultiEntitlement.withValue("yes"),
             ProductAttributes.StackingId.withValue(StringUtil.random("stack-")),
             ProductAttributes.HostLimited.withValue("true"));
@@ -1129,7 +1129,7 @@ class PostBindBonusPoolSpecTest {
     private ProductDTO createHostLimitedUnlimitedVirtProduct(ApiClient client, String ownerKey)
         throws ApiException {
         ProductDTO hostLimitedUnlimitedVirtProd = Products.withAttributes(
-            ProductAttributes.VirtLimit.withValue("unlimited"),
+            ProductAttributes.VirtualLimit.withValue("unlimited"),
             ProductAttributes.MultiEntitlement.withValue("yes"),
             ProductAttributes.HostLimited.withValue("true"));
 

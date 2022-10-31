@@ -37,8 +37,7 @@ public enum ProductAttributes {
     Usage("usage"),
     Variant("variant"),
     Version("version"),
-    VirtLimit("virt_limit"),
-    VirtOnly("virt_only"),
+    VirtualOnly("virt_only"),
     VirtualLimit("virt_limit"),
     WarningPeriod("warning_period");
 

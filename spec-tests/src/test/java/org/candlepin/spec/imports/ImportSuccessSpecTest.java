@@ -101,7 +101,7 @@ public class ImportSuccessSpecTest {
     @Test
     public void shouldIgnoreMultiplierForPoolQuantity() {
         ProductDTO virtProduct = Products
-            .withAttributes(ProductAttributes.VirtOnly.withValue("true"));
+            .withAttributes(ProductAttributes.VirtualOnly.withValue("true"));
         Export export = generateWith(generator -> generator
             .withProduct(virtProduct));
         doImport(owner.getKey(), export.file());
@@ -314,7 +314,7 @@ public class ImportSuccessSpecTest {
 
     private boolean isVirtOnly(PoolDTO pool) {
         return pool.getAttributes().stream()
-            .anyMatch(ProductAttributes.VirtOnly::isKeyOf);
+            .anyMatch(ProductAttributes.VirtualOnly::isKeyOf);
     }
 
     private Set<PoolDTO> filterMappedPools(List<PoolDTO> pools) {

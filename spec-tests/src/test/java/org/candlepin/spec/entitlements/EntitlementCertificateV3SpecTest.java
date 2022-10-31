@@ -119,7 +119,7 @@ public class EntitlementCertificateV3SpecTest {
                 ProductAttributes.WarningPeriod.withValue("15"),
                 ProductAttributes.ManagementEnabled.withValue("true"),
                 ProductAttributes.StackingId.withValue("8888"),
-                ProductAttributes.VirtOnly.withValue("false"),
+                ProductAttributes.VirtualOnly.withValue("false"),
                 ProductAttributes.SupportLevel.withValue("standard"),
                 ProductAttributes.SupportType.withValue("excellent")
             ));
@@ -130,7 +130,7 @@ public class EntitlementCertificateV3SpecTest {
                 ProductAttributes.Sockets.withValue("4"),
                 ProductAttributes.WarningPeriod.withValue("15"),
                 ProductAttributes.ManagementEnabled.withValue("true"),
-                ProductAttributes.VirtOnly.withValue("false"),
+                ProductAttributes.VirtualOnly.withValue("false"),
                 ProductAttributes.SupportLevel.withValue("standard"),
                 ProductAttributes.SupportType.withValue("excellent")
             ));

@@ -556,7 +556,8 @@ class StandardExporter < Exporter
 
     @products[:product_dc] = create_product(random_string('prod-dc'), random_string(), {
         :attributes => {
-            :arch => "x86_64", 'stacking_id' => 'stack-dc'
+            :arch => "x86_64",
+            'stacking_id' => 'stack-dc'
         }
     })
 

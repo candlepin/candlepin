@@ -78,7 +78,7 @@ public class ExportGenerator {
     public Export export() {
         File manifest = createExport(consumer.getUuid(), cdn);
 
-        return new Export(manifest, consumer, cdn);
+        return new Export(manifest, consumer, cdn, owner);
     }
 
     /**
