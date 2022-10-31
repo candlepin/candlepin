@@ -21,8 +21,10 @@ import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.dto.api.server.v1.SubscriptionDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ConflictException;
+import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ProductContent;
+import org.candlepin.resource.util.AttachedFile;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.ContentInfo;
@@ -30,18 +32,28 @@ import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
+import org.candlepin.util.ObjectMapperFactory;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
+import java.util.zip.GZIPInputStream;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -66,6 +78,10 @@ import javax.ws.rs.core.MediaType;
 public class HostedTestResource {
     private static final Logger log = LoggerFactory.getLogger(HostedTestResource.class);
 
+    private static final Pattern ARCHIVE_FILENAME_REGEX = Pattern.compile("\\.(?i:gz)\\z");
+
+    private static final ObjectMapper OBJ_MAPPER = ObjectMapperFactory.getObjectMapper();
+
     private final HostedTestDataStore datastore;
     private final UniqueIdGenerator idGenerator;
     private final ModelTranslator translator;
@@ -73,6 +89,7 @@ public class HostedTestResource {
     @Inject
     public HostedTestResource(HostedTestDataStore datastore, UniqueIdGenerator idGenerator,
         ModelTranslator translator) {
+
         this.datastore = Objects.requireNonNull(datastore);
         this.idGenerator = Objects.requireNonNull(idGenerator);
         this.translator = Objects.requireNonNull(translator);
@@ -628,4 +645,113 @@ public class HostedTestResource {
 
         return this.removeContentFromProduct(productId, Collections.singletonList(contentId));
     }
+
+    /**
+     * Processes the attached file, deserializing it to the specified type, decompressing it if
+     * necessary.
+     *
+     * @throws IOException
+     *  if an exception occurs while deserializing the attached file
+     *
+     * @return
+     *  The processed attached file, deserialized into the specified type
+     */
+    private <T> T processAttachedFile(AttachedFile attached, TypeReference<T> typeref) {
+        boolean archive = ARCHIVE_FILENAME_REGEX.matcher(attached.getFilename("")).find();
+
+        try {
+            InputStream istream = null;
+
+            try {
+                istream = attached.getInputStream();
+                if (archive) {
+                    istream = new GZIPInputStream(istream);
+                }
+
+                return OBJ_MAPPER.readValue(istream, typeref);
+            }
+            finally {
+                if (istream != null) {
+                    istream.close();
+                }
+            }
+        }
+        catch (IOException e) {
+            log.error("Unable to deserialize attached file:", e);
+            throw new IseException("Unable to deserialize attached file", e);
+        }
+    }
+
+    @POST
+    @Path("import/subscriptions")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public String importSubscriptions(MultipartInput input) {
+        AttachedFile attached = AttachedFile.getAttachedFile(input);
+
+        TypeReference<List<SubscriptionDTO>> typeref = new TypeReference<List<SubscriptionDTO>>() {};
+        List<SubscriptionDTO> subscriptions = this.processAttachedFile(attached, typeref);
+
+        int created = 0;
+        int updated = 0;
+
+        for (SubscriptionDTO subscription : subscriptions) {
+            if (subscription == null) {
+                // Silently ignore null entries
+                continue;
+            }
+
+            // Impl note: if the subscription lacks an ID, this will return null and we'll create
+            // it, generating an ID for the subscription in the process.
+            if (this.datastore.getSubscription(subscription.getId()) == null) {
+                this.createSubscription(true, subscription);
+                ++created;
+            }
+            else {
+                this.updateSubscription(subscription.getId(), true, subscription);
+                ++updated;
+            }
+        }
+
+        return String.format("%d subscriptions imported (%d created; %d updated)\n",
+            created + updated, created, updated);
+    }
+
+    @POST
+    @Path("import/products")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public String importProducts(MultipartInput input) {
+        AttachedFile attached = AttachedFile.getAttachedFile(input);
+
+        TypeReference<List<ProductDTO>> typeref = new TypeReference<List<ProductDTO>>() {};
+        List<ProductDTO> products = this.processAttachedFile(attached, typeref);
+
+        int created = 0;
+        int updated = 0;
+
+        for (ProductDTO product : products) {
+            if (product == null) {
+                // Silently ignore null entries
+                continue;
+            }
+
+            if (product.getId() == null) {
+                throw new BadRequestException("product data contains one or more products lacking an ID");
+            }
+
+            if (this.datastore.getProduct(product.getId()) == null) {
+                this.createProduct(true, product);
+                ++created;
+            }
+            else {
+                this.updateProduct(product.getId(), true, product);
+                ++updated;
+            }
+        }
+
+        return String.format("%d products imported (%d created; %d updated)\n",
+            created + updated, created, updated);
+    }
+
 }
