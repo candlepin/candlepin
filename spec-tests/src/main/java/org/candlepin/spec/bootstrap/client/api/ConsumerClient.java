@@ -94,6 +94,16 @@ public class ConsumerClient extends ConsumerApi {
         }
     }
 
+    public JsonNode getContentAccessBodyJson(String consumerUuid, String ifModifiedSince) {
+        try {
+            String contentAccessBody = super.getContentAccessBody(consumerUuid, ifModifiedSince);
+            return mapper.readTree(contentAccessBody);
+        }
+        catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public List<EntitlementDTO> listEntitlements(String consumerUuid) {
         return super.listEntitlements(consumerUuid, null, false, null, null, null, null, null);
     }
