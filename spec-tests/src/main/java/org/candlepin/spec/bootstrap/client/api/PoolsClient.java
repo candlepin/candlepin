@@ -28,20 +28,24 @@ public class PoolsClient extends PoolsApi {
         super(client);
     }
 
-    public List<PoolDTO> listPoolsByOwner(String owner) {
-        return super.listPools(owner, null, null, true, null, null, null, null, null);
+    public List<PoolDTO> listPoolsByOwner(String ownerId) {
+        return super.listPools(ownerId, null, null, true, null, null, null, null, null);
     }
 
     public List<PoolDTO> listPoolsByConsumer(String consumer) {
         return super.listPools(null, consumer, null, true, null, null, null, null, null);
     }
 
-    public List<PoolDTO> listPoolsByProduct(String ownerKey, String productId) {
-        return super.listPools(ownerKey, null, productId, true, null, null, null, null, null);
+    public List<PoolDTO> listPoolsByConsumerAndProduct(String consumer, String productId) {
+        return super.listPools(null, consumer, productId, true, null, null, null, null, null);
     }
 
-    public List<PoolDTO> listPoolsByOwnerAndProduct(String owner, String product) {
-        return super.listPools(owner, null, product, true, null, null, null, null, null);
+    public List<PoolDTO> listPoolsByProduct(String ownerId, String productId) {
+        return super.listPools(ownerId, null, productId, true, null, null, null, null, null);
+    }
+
+    public List<PoolDTO> listPoolsByOwnerAndProduct(String ownerId, String product) {
+        return super.listPools(ownerId, null, product, true, null, null, null, null, null);
     }
 
     public Map<String, String> getCert(String poolId) {
