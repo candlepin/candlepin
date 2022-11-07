@@ -10,8 +10,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-06-09 03:02-0400\n"
-"PO-Revision-Date: 2022-08-25 05:35+0000\n"
-"Last-Translator: John Sefler <jsefler@redhat.com>\n"
+"PO-Revision-Date: 2022-10-30 06:19+0000\n"
+"Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-1-hotfix/ko/>\n"
 "Language: ko\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.13\n"
+"X-Generator: Weblate 4.14.1\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -586,12 +586,12 @@ msgstr "풀 ID ''{1} ''에 대해 여러 인타이틀먼트가 지원되지 않�
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:157
 #, java-format
 msgid "Pool \"{1}\" is restricted to guests running on host: \"{4}\"."
-msgstr "풀 ''{1}''은/는 호스트에서 실행 중인 게스트로 제한됩니다: ''{4}''."
+msgstr "풀 ''{1}''는 호스트에서 실행 중인 게스트로 제한됩니다: ''{4}''."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:159
 #, java-format
 msgid "Pool \"{1}\" is restricted to a specific consumer."
-msgstr "풀 ''{1}''은/는 특정 소비자로 제한됩니다."
+msgstr "풀 ''{1}''는 특정 소비자로 제한됩니다."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:161
 msgid "Pool not available to subscription management applications."
@@ -883,12 +883,12 @@ msgstr "조직 ''{1}''에 대한 활성화키 ''{0}''를 찾을 수 없습니다
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1312
 #, java-format
 msgid "User \"{0}\" has no roles for organization \"{1}\""
-msgstr "사용자 ''{0}''은/는 조직 ''{1}''에 대한 역할을 가지고 있지 않습니다"
+msgstr "사용자 ''{0}''는 조직 ''{1}''에 대한 역할을 가지고 있지 않습니다"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1325
 #, java-format
 msgid "User \"{0}\" has already registered a personal consumer"
-msgstr "사용자 {0}은/는 개별 고객으로 이미 등록되어 있습니다"
+msgstr "사용자 {0}는 개별 고객으로 이미 등록되어 있습니다"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1346
 msgid "Client is not authorized to register with any organization"
@@ -908,7 +908,7 @@ msgstr "조직 {0}이 존재하지 않습니다."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1380
 #, java-format
 msgid "{0} is not authorized to register with organization {1}"
-msgstr "{0}은/는 조직 {1}에 등록을 승인하지 않습니다"
+msgstr "{0}는 조직 {1}에 등록을 승인하지 않습니다"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1893,29 +1893,29 @@ msgstr "{0} 값 \"{1}\"은 {2}자를 초과해서는 안됩니다"
 #: src/main/java/org/candlepin/util/PropertyValidator.java:107
 #, java-format
 msgid "The {0} \"{1}\" must be an integer value"
-msgstr "{0} \"{1}\"은/는 정수 값이어야 합니다"
+msgstr "{0} \"{1}\"는 정수 값이어야 합니다"
 
 #: src/main/java/org/candlepin/util/PropertyValidator.java:126
 #: src/main/java/org/candlepin/util/PropertyValidator.java:131
 #, java-format
 msgid "The {0} \"{1}\" must be a positive, integer value"
-msgstr "{0} \"{1}\"은/는 양의 정수 값이어야 합니다"
+msgstr "{0} \"{1}\"는 양의 정수 값이어야 합니다"
 
 #: src/main/java/org/candlepin/util/PropertyValidator.java:150
 #, java-format
 msgid "The {0} \"{1}\" must be a long-integer value"
-msgstr "{0} \"{1}\"은/는 정수(Long) 값이어야 합니다"
+msgstr "{0} \"{1}\"는 정수(Long) 값이어야 합니다"
 
 #: src/main/java/org/candlepin/util/PropertyValidator.java:169
 #: src/main/java/org/candlepin/util/PropertyValidator.java:174
 #, java-format
 msgid "The {0} \"{1}\" must be a positive, long-integer value"
-msgstr "{0} \"{1}\"은/는 양의 정수(Long) 값이어야 합니다"
+msgstr "{0} \"{1}\"는 양의 정수(Long) 값이어야 합니다"
 
 #: src/main/java/org/candlepin/util/PropertyValidator.java:193
 #, java-format
 msgid "The {0} \"{1}\" must be a Boolean value"
-msgstr "{0} \"{1}\"은/는 부울 값이어야 합니다"
+msgstr "{0} \"{1}\"는 부울 값이어야 합니다"
 
 #: src/main/java/org/candlepin/util/ServiceLevelValidator.java:72
 #, java-format
