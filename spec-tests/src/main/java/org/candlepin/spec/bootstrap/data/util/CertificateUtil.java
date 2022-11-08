@@ -137,11 +137,15 @@ public final class CertificateUtil {
 
     public static byte[] compressedContentExtensionValueFromCert(String certString, String extensionId)
         throws IOException {
-        return getDerValueFromExtension(certString, extensionId).getOctetString();
+        DerValue value = getDerValueFromExtension(certString, extensionId);
+
+        return value != null ? value.getOctetString() : null;
     }
 
     public static String standardExtensionValueFromCert(String certString, String extensionId) {
-        return getDerValueFromExtension(certString, extensionId).toString();
+        DerValue value = getDerValueFromExtension(certString, extensionId);
+
+        return value != null ? value.toString() : null;
     }
 
     public static DerValue getDerValueFromExtension(String certString, String extensionId) {
@@ -149,7 +153,12 @@ public final class CertificateUtil {
             .replace("\\n", Character.toString((char) 10));
         X509Certificate cert = X509Cert.parseCertificate(certString);
         try {
-            DerValue value = new DerValue(cert.getExtensionValue(extensionId));
+            byte[] derOctetValue = cert.getExtensionValue(extensionId);
+            if (derOctetValue == null) {
+                return null;
+            }
+
+            DerValue value = new DerValue(derOctetValue);
             byte[] octetString = value.getOctetString();
             return new DerValue(octetString);
         }
