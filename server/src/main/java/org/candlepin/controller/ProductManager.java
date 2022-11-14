@@ -163,7 +163,7 @@ public class ProductManager {
      */
     private Map<String, Content> resolveContentRefs(Owner owner, ProductInfo pinfo) {
         Set<String> cids = new HashSet<>();
-        Map<String, Content> output;
+        Map<String, Content> output = new HashMap<>();
 
         Collection<? extends ProductContentInfo> productContent = pinfo.getProductContent();
         if (productContent != null) {
@@ -185,17 +185,13 @@ public class ProductManager {
         }
 
         if (!cids.isEmpty()) {
-            output = this.ownerContentCurator.getContentByIds(owner, cids).list().stream()
-                .collect(Collectors.toMap(c -> c.getId(), Function.identity()));
+            output = this.ownerContentCurator.getContentByIds(owner, cids);
 
             cids.removeAll(output.keySet());
             if (!cids.isEmpty()) {
                 throw new MalformedEntityReferenceException(
                     "product references one or more content which do not exist: " + cids);
             }
-        }
-        else {
-            output = new HashMap<>();
         }
 
         return output;
@@ -233,11 +229,11 @@ public class ProductManager {
             throw new IllegalArgumentException("productData is incomplete");
         }
 
+        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
+
         if (this.ownerProductCurator.productExists(owner, productData.getId())) {
             throw new IllegalStateException("product has already been created: " + productData.getId());
         }
-
-        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
 
         Map<String, Product> productMap = this.resolveProductRefs(owner, productData);
         Map<String, Content> contentMap = this.resolveContentRefs(owner, productData);
@@ -319,6 +315,8 @@ public class ProductManager {
             throw new IllegalArgumentException("productData is incomplete");
         }
 
+        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
+
         // Resolve the entity to ensure we're working with the merged entity, and to ensure it's
         // already been created.
         Product entity = this.ownerProductCurator.getProductById(owner, productData.getId());
@@ -332,8 +330,6 @@ public class ProductManager {
         if (!isChangedBy(entity, productData)) {
             return entity;
         }
-
-        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
 
         Map<String, Product> productMap = this.resolveProductRefs(owner, productData);
         Map<String, Content> contentMap = this.resolveContentRefs(owner, productData);
@@ -454,7 +450,7 @@ public class ProductManager {
             throw new IllegalArgumentException("entity is null");
         }
 
-        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
+        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
 
         Map<String, Product> productMap = this.resolveProductRefs(owner, entity);
         Map<String, Content> contentMap = this.resolveContentRefs(owner, entity);
@@ -555,6 +551,8 @@ public class ProductManager {
         if (productId == null) {
             throw new IllegalArgumentException("productId is null");
         }
+
+        this.ownerProductCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
 
         // Make sure the entity actually exists to be removed
         Product entity = this.ownerProductCurator.getProductById(owner, productId);

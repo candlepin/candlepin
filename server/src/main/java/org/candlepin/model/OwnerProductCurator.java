@@ -20,7 +20,6 @@ import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
@@ -463,49 +462,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .createQuery(jpql, String.class)
             .setParameter("owner_id", ownerId)
             .setParameter("pool_type", PoolType.DEVELOPMENT)
-            .getResultList();
-    }
-
-    /**
-     * Builds a query which can be used to fetch the current collection of orphaned products. Due
-     * to the nature of this request, it is highly advised that this query be run within a
-     * transaction, with a pessimistic lock mode set.
-     *
-     * @return
-     *  A CandlepinQuery for fetching the orphaned products
-     */
-    public CandlepinQuery<Product> getOrphanedProducts() {
-        // As with many of the owner=>product lookups, we have to do this in two queries. Since
-        // we need to start from product and do a left join back to owner products, we have to use
-        // a native query instead of any of the ORM query languages
-
-        List<String> uuids = this.getOrphanedProductUuids();
-
-        if (uuids != null && !uuids.isEmpty()) {
-            DetachedCriteria criteria = DetachedCriteria.forClass(Product.class)
-                .add(CPRestrictions.in("uuid", uuids))
-                .addOrder(Order.asc("uuid"));
-
-            return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
-        }
-
-        return this.cpQueryFactory.<Product>buildQuery();
-    }
-
-    /**
-     * Fetches a list of product UUIDs representing products which are no longer used by any owner.
-     * If no such products exist, this method returns an empty list.
-     *
-     * @return
-     *  a list of UUIDs of products no longer used by any organization
-     */
-    public List<String> getOrphanedProductUuids() {
-        String sql = "SELECT p.uuid " +
-            "FROM cp2_products p LEFT JOIN cp2_owner_products op ON p.uuid = op.product_uuid " +
-            "WHERE op.owner_id IS NULL";
-
-        return this.getEntityManager()
-            .createNativeQuery(sql)
             .getResultList();
     }
 
