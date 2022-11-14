@@ -19,21 +19,19 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.ProductManager;
-import org.candlepin.model.CandlepinQuery;
-import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
-import org.candlepin.model.OwnerContentCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.ProductCurator;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.persistence.LockModeType;
@@ -53,19 +51,13 @@ public class OrphanCleanupJob implements AsyncJob  {
     // Every Sunday at 3:00am
     public static final String DEFAULT_SCHEDULE = "0 0 3 ? * 1";
 
-    private ContentCurator contentCurator;
-    private OwnerContentCurator ownerContentCurator;
-    private ProductCurator productCurator;
-    private OwnerProductCurator ownerProductCurator;
+    private final ContentCurator contentCurator;
+    private final ProductCurator productCurator;
 
     @Inject
-    public OrphanCleanupJob(ContentCurator contentCurator, OwnerContentCurator ownerContentCurator,
-        ProductCurator productCurator, OwnerProductCurator ownerProductCurator) {
-
-        this.ownerContentCurator = ownerContentCurator;
-        this.contentCurator = contentCurator;
-        this.ownerProductCurator = ownerProductCurator;
-        this.productCurator = productCurator;
+    public OrphanCleanupJob(ContentCurator contentCurator, ProductCurator productCurator) {
+        this.contentCurator = Objects.requireNonNull(contentCurator);
+        this.productCurator = Objects.requireNonNull(productCurator);
     }
 
     @Override
@@ -75,60 +67,185 @@ public class OrphanCleanupJob implements AsyncJob  {
         this.contentCurator.getSystemLock(ContentManager.SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
         this.productCurator.getSystemLock(ProductManager.SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
 
+        log.debug("Fetching candidate orphaned entities...");
+        List<String> orphanedContentUuids = this.contentCurator.getOrphanedContentUuids();
+        List<String> orphanedProductUuids = this.productCurator.getOrphanedProductUuids();
+
+        // Impl note: products need to be filtered first, so we hold onto any orphaned content that
+        // is attached to an orphaned product which needs to be kept around due to some busted
+        // mappings
+        log.debug("Verifying orphaned entities are cleared for deletion...");
+        this.filterOrphanedProducts(orphanedProductUuids);
+        this.filterOrphanedContent(orphanedContentUuids, orphanedProductUuids);
+
         log.debug("Deleting orphaned entities...");
-        int orphanedContent = this.deleteOrphanedContent();
-        int orphanedProducts = this.deleteOrphanedProducts();
+        int orphanedContentRemoved = this.deleteOrphanedContent(orphanedContentUuids);
+        int orphanedProductsRemoved = this.deleteOrphanedProducts(orphanedProductUuids);
 
         String format = "Orphan cleanup completed;" +
             "\n  %d orphaned content deleted" +
             "\n  %d orphaned products deleted";
 
-        context.setJobResult(format, orphanedContent, orphanedProducts);
+        context.setJobResult(format, orphanedContentRemoved, orphanedProductsRemoved);
     }
 
-    private int deleteOrphanedContent() {
-        int count = 0;
-        CandlepinQuery<Content> contentQuery = this.ownerContentCurator.getOrphanedContent();
+    /**
+     * Filters the provided list of orphaned products by removing any that are detected to be in
+     * use -- even erroneously -- by one or more other entities, such as pools or other products.
+     *
+     * @param orphanedProductUuids
+     *  the list of orphaned product UUIDs to filter; must be a mutable list
+     */
+    private void filterOrphanedProducts(List<String> orphanedProductUuids) {
+        // Filter orphaned products still referenced by one or more pools
+        Map<String, Set<String>> productPoolReferences = this.productCurator
+            .getPoolsReferencingProducts(orphanedProductUuids);
 
-        for (Content content : contentQuery) {
-            this.contentCurator.delete(content);
-            ++count;
+        if (productPoolReferences != null && !productPoolReferences.isEmpty()) {
+            log.warn("Found {} orphaned products referenced by one or more pools; " +
+                "omitting products from cleanup:",
+                productPoolReferences.size());
+
+            for (Map.Entry<String, Set<String>> entry : productPoolReferences.entrySet()) {
+                log.warn("  Product UUID: {}, Referenced by pools: {}", entry.getKey(), entry.getValue());
+                orphanedProductUuids.remove(entry.getKey());
+            }
         }
 
-        this.productCurator.flush();
+        // Filter orphaned products still referenced by one or more active products
+        Map<String, Set<String>> productProductReferences = this.productCurator
+            .getProductsReferencingProducts(orphanedProductUuids);
+
+        if (productProductReferences != null) {
+            // Check our references so we don't get hung up on an orphaned product referencing
+            // another orphaned product. Such referents will hang around until the next invocation
+            // of this job, but that's better than either failing or needlessly yelling about it.
+            Iterator<Map.Entry<String, Set<String>>> iterator = productProductReferences.entrySet()
+                .iterator();
+
+            while (iterator.hasNext()) {
+                Map.Entry<String, Set<String>> entry = iterator.next();
+                String orphanedProductUuid = entry.getKey();
+                Set<String> referrers = entry.getValue();
+
+                if (orphanedProductUuids.containsAll(referrers)) {
+                    log.debug("Orphaned product {} is referenced by {} other orphaned products: {};" +
+                        "omitting referent from cleanup",
+                        orphanedProductUuid, referrers.size(), referrers);
+
+                    iterator.remove();
+                    orphanedProductUuids.remove(orphanedProductUuid);
+                }
+            }
+
+            // Complain about any remaining references
+            if (!productProductReferences.isEmpty()) {
+                log.warn("Found {} orphaned product(s) referenced by one or more products; " +
+                    "omitting products from cleanup:",
+                    productProductReferences.size());
+
+                for (Map.Entry<String, Set<String>> entry : productProductReferences.entrySet()) {
+                    log.warn("  Product UUID: {}, Referenced by products: {}", entry.getKey(),
+                        entry.getValue());
+
+                    orphanedProductUuids.remove(entry.getKey());
+                }
+            }
+        }
+    }
+
+    /**
+     * Filters the provided list of orphaned content by removing any that are detected to be in
+     * use -- even erroneously -- by one or more other entities, such as products or environments.
+     *
+     * @param orphanedContentUuids
+     *  the list of orphaned content UUIDs to filter; must be a mutable list
+     *
+     * @param orphanedProductUuids
+     *  a list of UUIDs representing detected orphaned products
+     */
+    private void filterOrphanedContent(List<String> orphanedContentUuids, List<String> orphanedProductUuids) {
+        // Filter orphaned content still referenced by one or more active products
+        Map<String, Set<String>> contentProductReferences = this.contentCurator
+            .getProductsReferencingContent(orphanedContentUuids);
+
+        if (contentProductReferences != null) {
+            // Continue cleanup on any referenced content if the references are all orphans themselves
+            Iterator<Map.Entry<String, Set<String>>> iterator = contentProductReferences.entrySet()
+                .iterator();
+
+            while (iterator.hasNext()) {
+                Map.Entry<String, Set<String>> entry = iterator.next();
+                String orphanedContentUuid = entry.getKey();
+                Set<String> referrers = entry.getValue();
+
+                if (orphanedProductUuids.containsAll(referrers)) {
+                    log.trace("Orphaned content {} is referenced by {} orphaned products: {}; " +
+                        "proceeding with cleanup",
+                        orphanedContentUuid, referrers.size(), referrers);
+
+                    iterator.remove();
+                }
+            }
+
+            if (!contentProductReferences.isEmpty()) {
+                log.warn("Found {} orphaned content(s) referenced by one or more products; " +
+                    "omitting content from cleanup:",
+                    contentProductReferences.size());
+
+                for (Map.Entry<String, Set<String>> entry : contentProductReferences.entrySet()) {
+                    log.warn("  Content UUID: {}, Referenced by products: {}", entry.getKey(),
+                        entry.getValue());
+
+                    orphanedContentUuids.remove(entry.getKey());
+                }
+            }
+        }
+
+        // Ensure no other environments are still (erroneously) referencing the orphaned content...
+        Map<String, Set<String>> contentEnvironmentReferences = this.contentCurator
+            .getEnvironmentsReferencingContent(orphanedContentUuids);
+
+        if (contentEnvironmentReferences != null && !contentEnvironmentReferences.isEmpty()) {
+            log.warn("Found {} orphaned content referenced by one or more environments; " +
+                "omitting content from cleanup:",
+                contentEnvironmentReferences.size());
+
+            for (Map.Entry<String, Set<String>> entry : contentEnvironmentReferences.entrySet()) {
+                log.warn("  Content UUID: {}, Referenced by environments: {}", entry.getKey(),
+                    entry.getValue());
+
+                orphanedContentUuids.remove(entry.getKey());
+            }
+        }
+    }
+
+    /**
+     * Deletes orphaned content specified by the list of content UUIDs.
+     *
+     * @param orphanedContentUuids
+     *  a collection of UUIDs of orphaned content to delete
+     *
+     * @return
+     *  the number of content entities deleted as a result of this operation
+     */
+    private int deleteOrphanedContent(List<String> orphanedContentUuids) {
+        int count = this.contentCurator.bulkDeleteByUuids(orphanedContentUuids);
         log.debug("{} orphaned content entities deleted", count);
 
         return count;
     }
 
-    private int deleteOrphanedProducts() {
-        List<String> orphanedProductUuids = this.ownerProductCurator.getOrphanedProductUuids();
-
-        Set<Pair<String, String>> activePoolProducts = this.productCurator
-            .getPoolsReferencingProducts(orphanedProductUuids);
-
-        if (activePoolProducts != null && !activePoolProducts.isEmpty()) {
-            log.warn("Found {} pools referencing orphaned products:", activePoolProducts.size());
-
-            for (Pair<String, String> pair : activePoolProducts) {
-                log.warn("  Pool: {}, Orphan product UUID: {}", pair.getValue(), pair.getKey());
-                orphanedProductUuids.remove(pair.getKey());
-            }
-        }
-
-        Set<Pair<String, String>> activeProductProducts = this.productCurator
-            .getProductsReferencingProducts(orphanedProductUuids);
-
-        if (activeProductProducts != null && !activeProductProducts.isEmpty()) {
-            log.warn("Found {} products referencing orphaned provided products:",
-                activeProductProducts.size());
-
-            for (Pair<String, String> pair : activeProductProducts) {
-                log.warn("  Product: {}, Orphan product UUID: {}", pair.getValue(), pair.getKey());
-                orphanedProductUuids.remove(pair.getKey());
-            }
-        }
-
+    /**
+     * Deletes orphaned products specified by the list of product UUIDs.
+     *
+     * @param orphanedProductUuids
+     *  a collection of UUIDs of orphaned products to delete
+     *
+     * @return
+     *  the number of product entities deleted as a result of this operation
+     */
+    private int deleteOrphanedProducts(List<String> orphanedProductUuids) {
         int count = this.productCurator.bulkDeleteByUuids(orphanedProductUuids);
         log.debug("{} orphaned product entities deleted", count);
 
