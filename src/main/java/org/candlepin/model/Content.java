@@ -124,6 +124,10 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @Column(nullable = true)
     private Long metadataExpire;
 
+    // Impl note:
+    // As of 2022-11-14, the FK for this table has a delete cascade for automated cleanup. It should
+    // be removed if the ridiculous limitations placed on @elementcollections are ever sorted at the
+    // JPA spec level.
     @BatchSize(size = 128)
     @ElementCollection
     @CollectionTable(name = "cp2_content_modified_products", joinColumns = @JoinColumn(name = "content_uuid"))

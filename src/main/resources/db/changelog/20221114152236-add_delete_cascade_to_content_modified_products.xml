@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20221114152236-1" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="cp2_cmp_fk1"/>
+        </preConditions>
+
+        <dropForeignKeyConstraint baseTableName="cp2_content_modified_products" constraintName="cp2_cmp_fk1"/>
+    </changeSet>
+
+    <changeSet id="20221114152236-2" author="crog">
+        <comment>
+            Add delete cascading on the foreign key to work around a limitation element collections
+            have with JPA-level cascading when their parent is manipulated with JPA bulk deletions.
+        </comment>
+
+        <addForeignKeyConstraint baseTableName="cp2_content_modified_products"
+            baseColumnNames="content_uuid"
+            referencedTableName="cp2_content"
+            referencedColumnNames="uuid"
+            constraintName="cp2_cmp_fk1"
+            onDelete="CASCADE" />
+    </changeSet>
+
+</databaseChangeLog>
