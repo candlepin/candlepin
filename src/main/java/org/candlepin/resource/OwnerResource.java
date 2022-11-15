@@ -102,6 +102,7 @@ import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.server.v1.OwnerApi;
+import org.candlepin.resource.util.AttachedFile;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.KeyValueStringParser;
@@ -124,7 +125,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.hibernate.exception.ConstraintViolationException;
 import org.jboss.resteasy.annotations.providers.jaxb.Wrapped;
 import org.jboss.resteasy.core.ResteasyContext;
-import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -143,15 +143,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.PersistenceException;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MultivaluedMap;
+
+
 
 /**
  * Owner Resource
@@ -1456,44 +1455,78 @@ public class OwnerResource implements OwnerApi {
         }
     }
 
+    private ConflictOverrides processConflictOverrideParams(List<String> overrideConflicts) {
+        if (overrideConflicts != null && overrideConflicts.size() == 1) {
+            // Impl note:
+            // To maintain backward compatibility, we need to process an override of "true" as
+            // overriding the MANIFEST_OLD conflict, and "false" as overriding nothing.
+            String override = overrideConflicts.get(0);
+
+            if ("true".equalsIgnoreCase(override)) {
+                overrideConflicts = List.of("MANIFEST_OLD");
+            }
+            else if ("false".equalsIgnoreCase(override)) {
+                overrideConflicts = List.of();
+            }
+        }
+
+        try {
+            ConflictOverrides overrides = new ConflictOverrides(overrideConflicts);
+
+            if (log.isDebugEnabled()) {
+                for (String override : overrides.asStringArray()) {
+                    log.debug("Overriding conflict if encountered: {}", override);
+                }
+            }
+
+            return overrides;
+        }
+        catch (IllegalArgumentException e) {
+            throw new BadRequestException(i18n.tr("Unknown conflict to force"), e);
+        }
+    }
+
     @Override
     public AsyncJobStatusDTO importManifestAsync(
         @Verify(Owner.class) String ownerKey, List<String> force, MultipartInput input) {
 
-        String[] overrideConflicts = force.isEmpty() ? new String[]{} : force.stream().toArray(String[]::new);
-        ConflictOverrides overrides = processConflictOverrideParams(overrideConflicts);
-        UploadMetadata fileData = new UploadMetadata();
-        Owner owner = findOwnerByKey(ownerKey);
+        ConflictOverrides overrides = this.processConflictOverrideParams(force);
+        Owner owner = this.findOwnerByKey(ownerKey);
+
+        String archiveFilename = "";
 
         try {
-            fileData = getArchiveFromResponse(input);
-            String archivePath = fileData.getData().getAbsolutePath();
-            log.info("Running async import of archive {} for owner {}", archivePath, owner.getDisplayName());
-            JobConfig config = manifestManager.importManifestAsync(owner, fileData.getData(),
-                fileData.getUploadedFilename(), overrides);
+            AttachedFile attached = AttachedFile.getAttachedFile(input);
+            File archive = attached.getFile();
+            archiveFilename = attached.getFilename("");
+
+            log.info("Running async import of archive {} for owner {}", archive.getAbsolutePath(), owner);
+
+            JobConfig config = this.manifestManager
+                .importManifestAsync(owner, archive, archiveFilename, overrides);
 
             try {
                 AsyncJobStatus job = this.jobManager.queueJob(config);
                 return this.translator.translate(job, AsyncJobStatusDTO.class);
             }
             catch (JobException e) {
-                String errmsg = this.i18n.tr(
-                    "An unexpected exception occurred while scheduling job \"{0}\"", config.getJobKey());
+                String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
+                    config.getJobKey());
+
                 log.error(errmsg, e);
                 throw new IseException(errmsg, e);
             }
         }
         catch (IOException e) {
-            manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
+            manifestManager.recordImportFailure(owner, e, archiveFilename);
             throw new IseException(i18n.tr("Error reading export archive"), e);
         }
         catch (ManifestFileServiceException e) {
-            manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
-            throw new
-                IseException(i18n.tr("Error storing uploaded archive for asynchronous processing."), e);
+            manifestManager.recordImportFailure(owner, e, archiveFilename);
+            throw new IseException(i18n.tr("Error storing uploaded archive for asynchronous processing"), e);
         }
         catch (CandlepinException e) {
-            manifestManager.recordImportFailure(owner, e, fileData.getUploadedFilename());
+            manifestManager.recordImportFailure(owner, e, archiveFilename);
             throw e;
         }
     }
@@ -1595,81 +1628,6 @@ public class OwnerResource implements OwnerApi {
             this.consumerCurator.getHypervisorsForOwner(owner.getId()) :
             this.consumerCurator.getHypervisorsBulk(hypervisorIds, owner.getId());
         return translator.translateQuery(query, ConsumerDTOArrayElement.class);
-    }
-
-    private ConflictOverrides processConflictOverrideParams(String[] overrideConflicts) {
-        if (overrideConflicts.length == 1) {
-            /*
-             * For backward compatibility, look for force=true and if found,
-             * treat it just like what it used to mean, ignore an old manifest
-             * creation date.
-             */
-            if (overrideConflicts[0].equalsIgnoreCase("true")) {
-                overrideConflicts = new String[]{"MANIFEST_OLD"};
-            }
-            else if (overrideConflicts[0].equalsIgnoreCase("false")) {
-                overrideConflicts = new String[]{};
-            }
-        }
-        if (log.isDebugEnabled()) {
-            for (String s : overrideConflicts) {
-                log.debug("Forcing conflict if encountered: " + s);
-            }
-        }
-
-        ConflictOverrides overrides = null;
-        try {
-            overrides = new ConflictOverrides(overrideConflicts);
-        }
-        catch (IllegalArgumentException e) {
-            throw new BadRequestException(i18n.tr("Unknown conflict to force"), e);
-        }
-
-        return overrides;
-    }
-
-    private UploadMetadata getArchiveFromResponse(MultipartInput input) throws IOException {
-        String filename = "";
-        InputPart part = input.getParts().get(0);
-        MultivaluedMap<String, String> headers = part.getHeaders();
-        String contDis = headers.getFirst("Content-Disposition");
-        StringTokenizer st = new StringTokenizer(contDis, ";");
-        while (st.hasMoreTokens()) {
-            String entry = st.nextToken().trim();
-            if (entry.startsWith("filename")) {
-                filename = entry.substring(entry.indexOf("=") + 2, entry.length() - 1);
-                break;
-            }
-        }
-        return new UploadMetadata(part.getBody(new GenericType<File>() {
-        }), filename);
-    }
-
-    /**
-     * A private class that stores data related to a file upload request.
-     */
-    private static class UploadMetadata {
-        private File data;
-        private String uploadedFilename;
-
-        public UploadMetadata(File data, String uploadedFilename) {
-            this.data = data;
-            this.uploadedFilename = uploadedFilename;
-        }
-
-        public UploadMetadata() {
-            this.data = null;
-            this.uploadedFilename = "";
-        }
-
-        public File getData() {
-            return data;
-        }
-
-        public String getUploadedFilename() {
-            return uploadedFilename;
-        }
-
     }
 
     /**

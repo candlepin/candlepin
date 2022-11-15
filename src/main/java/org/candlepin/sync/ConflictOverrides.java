@@ -14,10 +14,11 @@
  */
 package org.candlepin.sync;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+
 
 /**
  * ConflictOverrides: Manifest conflicts the caller requested we override and continue
@@ -25,33 +26,52 @@ import java.util.Set;
  */
 public class ConflictOverrides {
 
-    private Set<Importer.Conflict> conflictsToForce = new HashSet<>();
+    private Set<Importer.Conflict> conflictsToForce;
 
-    public ConflictOverrides(String [] conflictStrings) {
-        for (String c : conflictStrings) {
-            conflictsToForce.add(Importer.Conflict.valueOf(c));
-        }
+    public ConflictOverrides() {
+        this.conflictsToForce = new HashSet<>();
     }
 
     public ConflictOverrides(Importer.Conflict ... conflicts) {
-        for (Importer.Conflict c : conflicts) {
-            conflictsToForce.add(c);
+        this();
+
+        if (conflicts != null) {
+            for (Importer.Conflict conflict : conflicts) {
+                this.conflictsToForce.add(conflict);
+            }
         }
     }
 
-    public boolean isForced(Importer.Conflict c) {
-        return conflictsToForce.contains(c);
+    public ConflictOverrides(Iterable<String> conflictStrings) {
+        this();
+
+        if (conflictStrings != null) {
+            for (String conflict : conflictStrings) {
+                conflictsToForce.add(Importer.Conflict.valueOf(conflict));
+            }
+        }
+    }
+
+    public ConflictOverrides(String... conflictStrings) {
+        this(conflictStrings != null ? List.of(conflictStrings) : List.of());
+    }
+
+    public boolean isForced(Importer.Conflict conflict) {
+        return this.conflictsToForce.contains(conflict);
     }
 
     public boolean isEmpty() {
-        return conflictsToForce.size() == 0;
+        return this.conflictsToForce.isEmpty();
     }
 
     public String[] asStringArray() {
-        List<String> all = new ArrayList<>();
-        for (Importer.Conflict conflict : conflictsToForce) {
-            all.add(conflict.name());
+        String[] strings = new String[this.conflictsToForce.size()];
+        int offset = -1;
+
+        for (Importer.Conflict conflict : this.conflictsToForce) {
+            strings[++offset] = conflict.name();
         }
-        return all.toArray(new String[all.size()]);
+
+        return strings;
     }
 }
