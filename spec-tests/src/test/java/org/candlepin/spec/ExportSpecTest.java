@@ -481,7 +481,7 @@ class ExportSpecTest {
             product2 = ownerProductApi.createProductByOwner(ownerKey, product2);
             productIdToProduct.put(product2.getId(), product2);
 
-            ProductDTO virtProduct = Products.withAttributes(ProductAttributes.VirtOnly.withValue("true"));
+            ProductDTO virtProduct = Products.withAttributes(ProductAttributes.VirtualOnly.withValue("true"));
             virtProduct = ownerProductApi.createProductByOwner(ownerKey, virtProduct);
             productIdToProduct.put(virtProduct.getId(), virtProduct);
 

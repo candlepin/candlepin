@@ -300,7 +300,7 @@ public class RefreshPoolsSpecTest {
         derivedProduct = adminClient.hosted().createProduct(derivedProduct);
 
         ProductDTO dataCenterProduct = Products.random();
-        dataCenterProduct.setAttributes(List.of(ProductAttributes.VirtLimit.withValue("unlimited"),
+        dataCenterProduct.setAttributes(List.of(ProductAttributes.VirtualLimit.withValue("unlimited"),
             ProductAttributes.StackingId.withValue("stackme"),
             ProductAttributes.Sockets.withValue("2"),
             ProductAttributes.MultiEntitlement.withValue("yes")));
@@ -844,7 +844,7 @@ public class RefreshPoolsSpecTest {
     public void shouldDeleteBonusPoolsWhenVirtLimitAttributeIsRemovedFromMasterPool() throws Exception {
         ContentDTO content = adminClient.hosted().createContent(Content.random());
         ProductDTO prod = Products.random();
-        prod.setAttributes(List.of(ProductAttributes.VirtLimit.withValue("unlimited"),
+        prod.setAttributes(List.of(ProductAttributes.VirtualLimit.withValue("unlimited"),
             ProductAttributes.HostLimited.withValue("true")));
         prod = adminClient.hosted().createProduct(prod);
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
@@ -909,7 +909,7 @@ public class RefreshPoolsSpecTest {
     public void shouldInvalidateBonusPoolEntsWhenMasterPoolQuantityIsReduced() throws Exception {
         ContentDTO content = adminClient.hosted().createContent(Content.random());
         ProductDTO prod = Products.random();
-        prod.setAttributes(List.of(ProductAttributes.VirtLimit.withValue("1")));
+        prod.setAttributes(List.of(ProductAttributes.VirtualLimit.withValue("1")));
         prod = adminClient.hosted().createProduct(prod);
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
         Long subQuantity = 5L;
@@ -985,7 +985,7 @@ public class RefreshPoolsSpecTest {
         ProductDTO prod = Products.random();
 
         Long virtLimit = 5L;
-        prod.setAttributes(List.of(ProductAttributes.VirtLimit.withValue(String.valueOf(virtLimit))));
+        prod.setAttributes(List.of(ProductAttributes.VirtualLimit.withValue(String.valueOf(virtLimit))));
         prod = adminClient.hosted().createProduct(prod);
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
         Long subQuantity = 1L;
@@ -1029,7 +1029,7 @@ public class RefreshPoolsSpecTest {
             .hasSize(expectedNumberOfEnts);
 
         // Modify the subscription upstream
-        prod.setAttributes(List.of(ProductAttributes.VirtLimit.withValue("1")));
+        prod.setAttributes(List.of(ProductAttributes.VirtualLimit.withValue("1")));
         adminClient.hosted().updateProduct(prod.getId(), prod);
 
         refreshPools(adminClient, owner.getKey());

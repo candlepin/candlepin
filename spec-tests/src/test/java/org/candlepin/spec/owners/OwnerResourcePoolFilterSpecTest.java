@@ -112,7 +112,7 @@ public class OwnerResourcePoolFilterSpecTest {
         OwnerDTO owner = createOwner(adminClient);
         ApiClient userClient = createUserClient(adminClient, owner);
         ProductDTO product = createProduct(adminClient, owner,
-            ProductAttributes.VirtLimit.withValue("unlimited"));
+            ProductAttributes.VirtualLimit.withValue("unlimited"));
 
         PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.randomUpstream(product));
 

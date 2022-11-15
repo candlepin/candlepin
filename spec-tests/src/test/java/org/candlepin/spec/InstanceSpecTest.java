@@ -190,7 +190,7 @@ public class InstanceSpecTest {
         ProductDTO instanceProduct = Products.random();
         instanceProduct.attributes(List.of(
             ProductAttributes.InstanceMultiplier.withValue(String.valueOf(socketMultiplier)),
-            ProductAttributes.VirtLimit.withValue("1"),
+            ProductAttributes.VirtualLimit.withValue("1"),
             ProductAttributes.StackingId.withValue(StringUtil.random("stack")),
             ProductAttributes.Sockets.withValue(String.valueOf(socketCount)),
             ProductAttributes.HostLimited.withValue("true"),

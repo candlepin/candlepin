@@ -16,6 +16,7 @@
 package org.candlepin.spec.bootstrap.data.builder;
 
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
+import org.candlepin.dto.api.client.v1.OwnerDTO;
 
 import java.io.File;
 
@@ -27,13 +28,18 @@ public class Export {
     private final ConsumerDTO consumer;
     private final ExportCdn cdn;
     private final File file;
+    private final OwnerDTO owner;
 
-    public Export(File file, ConsumerDTO consumer, ExportCdn cdn) {
+    public Export(File file, ConsumerDTO consumer, ExportCdn cdn, OwnerDTO owner) {
         this.file = file;
         this.consumer = consumer;
         this.cdn = cdn;
+        this.owner = owner;
     }
 
+    public OwnerDTO owner() {
+        return owner;
+    }
     public ConsumerDTO consumer() {
         return consumer;
     }
