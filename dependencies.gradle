@@ -31,7 +31,7 @@ ext.plugins = [
     "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.5.0.2730",
 ]
 
-libraries["artemisServer"] = "org.apache.activemq:artemis-server:2.26.0"
+libraries["artemisServer"] = "org.apache.activemq:artemis-server:2.27.0"
 libraries["artemisStomp"] = "org.apache.activemq:artemis-stomp-protocol:2.27.0"
 libraries["assertj"] = 'org.assertj:assertj-core:3.23.1'
 libraries["checkstyle"] = "com.puppycrawl.tools:checkstyle:10.3"
