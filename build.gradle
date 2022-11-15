@@ -90,7 +90,7 @@ ext {
 ext {
     // Denotes BOM versions
     resteasy_version = "4.4.3.Final"
-    jackson_version = "2.12.3"
+    jackson_version = "2.14.0"
     guice_version = "4.2.3"
     junit_version = "5.7.0"
 }
@@ -175,8 +175,8 @@ dependencies {
     implementation "javax.cache:cache-api:1.0.0"
 
     // Artemis server & client
-    implementation "org.apache.activemq:artemis-server:2.26.0"
-    implementation "org.apache.activemq:artemis-stomp-protocol:2.26.0"
+    implementation "org.apache.activemq:artemis-server:2.27.0"
+    implementation "org.apache.activemq:artemis-stomp-protocol:2.27.0"
 
     // Javascript Engine
     implementation "org.mozilla:rhino:1.7R3"
