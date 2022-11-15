@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.17
+Version: 4.1.18
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,11 @@ fi
 
 #raw
 %changelog
+* Tue Nov 15 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.18-1
+- Upgrade to Artemis 2.27.0 & Jackson 2.14.0 (nmoumoul@redhat.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- Upgrade Artemis to 2.26.0 (nmoumoul@redhat.com)
+
 * Wed Oct 19 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.17-1
 - 2134480: Satellite cannot enable or sync satellite-tools repo
   (wpoteat@redhat.com)

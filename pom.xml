@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.candlepin</groupId>
   <artifactId>candlepin</artifactId>
-  <version>4.1.17</version>
+  <version>4.1.18</version>
   <packaging>war</packaging>
   <description>The Candlepin Entitlement Engine</description>
   <licenses>
