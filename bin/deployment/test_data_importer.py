@@ -549,16 +549,16 @@ def map_content_to_product(cp, owner_key, product_data, content_data):
         for content_id, enabled in product_data['content']:
             # Create a unique content specifically for this product-content pairing.
             content = find_content(content_id).copy()
-            content_id = '{pid}{cid}'.format(pid=product_data['id'], cid=content_id)
+            candlepin_content_id = '{pid}{cid}'.format(pid=product_data['id'], cid=content_id)
 
             # Modify the base content data so that it is unique for this product
-            content['id'] = content_id
+            content['id'] = candlepin_content_id
             content['name'] = '{name}-{uid}'.format(name=content['name'], uid=product_data['id'])
             content['label'] = '{label}-{uid}'.format(label=content['label'], uid=product_data['id'])
-            content['content_url'] = '{url}/{uid}'.format(url=content['content_url'], uid=content_id)
+            content['content_url'] = '{url}/{pid}-{cid}'.format(url=content['content_url'], pid=product_data['id'], cid=content_id)
 
             product_content.append(content)
-            content_map[content_id] = enabled
+            content_map[candlepin_content_id] = enabled
 
     if product_content:
         for content_data in product_content:
