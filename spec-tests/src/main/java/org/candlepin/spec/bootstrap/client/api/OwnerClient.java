@@ -150,6 +150,50 @@ public class OwnerClient extends OwnerApi {
             null);
     }
 
+    public List<PoolDTO> listOwnerPoolsByProductWithAttributes(
+        String ownerKey, String productId, List<String> attributes) throws ApiException {
+        return super.listOwnerPools(
+            ownerKey,
+            null,
+            null,
+            productId,
+            null,
+            null,
+            null,
+            null,
+            attributes,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
+    }
+
+    public List<PoolDTO> listOwnerPoolsByProduct(
+        String ownerKey, String productId) throws ApiException {
+        return super.listOwnerPools(
+            ownerKey,
+            null,
+            null,
+            productId,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
+    }
+
     public List<PoolDTO> listOwnerPoolsWithPoolIds(String ownerKey, List<String> poolId)
         throws ApiException {
         return super.listOwnerPools(
