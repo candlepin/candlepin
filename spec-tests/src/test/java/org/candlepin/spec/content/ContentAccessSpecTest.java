@@ -21,18 +21,26 @@ import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThat
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotModified;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
+import org.candlepin.dto.api.client.v1.CertificateDTO;
+import org.candlepin.dto.api.client.v1.CertificateSerialDTO;
+import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
 import org.candlepin.dto.api.client.v1.ContentToPromoteDTO;
+import org.candlepin.dto.api.client.v1.EntitlementDTO;
 import org.candlepin.dto.api.client.v1.EnvironmentContentDTO;
 import org.candlepin.dto.api.client.v1.EnvironmentDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
+import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
+import org.candlepin.dto.api.client.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.resource.client.v1.ConsumerApi;
 import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
 import org.candlepin.spec.bootstrap.client.ApiClient;
@@ -40,6 +48,7 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
+import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Content;
 import org.candlepin.spec.bootstrap.data.builder.Environment;
@@ -60,8 +69,10 @@ import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @SpecTest
 public class ContentAccessSpecTest {
@@ -69,6 +80,7 @@ public class ContentAccessSpecTest {
     private static final String CONTENT_ACCESS_INPUT_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z";
     private static final String ENT_DATA_OID = "1.3.6.1.4.1.2312.9.7";
     private static final String ENT_TYPE_OID = "1.3.6.1.4.1.2312.9.8";
+    private static final String CERT_VERSION_OID = "1.3.6.1.4.1.2312.9.6";
 
     @Test
     public void shouldFilterContentWithMismatchedArchitecture() throws Exception {
@@ -152,7 +164,6 @@ public class ContentAccessSpecTest {
             .returns(Owners.SCA_ACCESS_MODE, OwnerDTO::getContentAccessMode)
             .returns(Owners.ACCESS_MODE_LIST, OwnerDTO::getContentAccessModeList);
     }
-
 
     @Test
     public void shouldAssignTheDefaultModeAndListWhenEmptyStringsAreSpecified() throws Exception {
@@ -532,7 +543,7 @@ public class ContentAccessSpecTest {
         List<String> payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
         String extVal = CertificateUtil
-            .standardExtensionValueFromCert(payloadCerts.get(0), "1.3.6.1.4.1.2312.9.8");
+            .standardExtensionValueFromCert(payloadCerts.get(0), ENT_TYPE_OID);
         assertThat(extVal).isEqualTo("OrgLevel");
 
         consumerClient.consumers().regenerateEntitlementCertificates(consumer.getUuid(), null, true);
@@ -543,7 +554,7 @@ public class ContentAccessSpecTest {
         assertThat(updatedCerts).singleElement();
         payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
-        CertificateUtil.standardExtensionValueFromCert(payloadCerts.get(0), "1.3.6.1.4.1.2312.9.8");
+        CertificateUtil.standardExtensionValueFromCert(payloadCerts.get(0), ENT_TYPE_OID);
         assertThat(extVal).isEqualTo("OrgLevel");
 
         // verify certificate serials were updated.
@@ -784,6 +795,668 @@ public class ContentAccessSpecTest {
         assertEquals(content.getName(), certContent.get("name").asText());
     }
 
+    @Test
+    public void shouldUpdateSecondExistingContentAccessCertContentWhenProductDataChanges() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner));
+
+        ConsumerApi consumerApi = new ConsumerApi(adminClient.getApiClient());
+        Object consumer1Export = consumerApi.exportCertificates(consumer1.getUuid(), null);
+        List<String> cons1Certs = extractCertsFromPayload(consumer1Export);
+        assertThat(cons1Certs).singleElement();
+        String cons1InitialCert = cons1Certs.get(0);
+        Object consumer2Export = consumerApi.exportCertificates(consumer2.getUuid(), null);
+        List<String> cons2Certs = extractCertsFromPayload(consumer2Export);
+        assertThat(cons2Certs).singleElement();
+        String cons2InitialCert = cons2Certs.get(0);
+
+        String updatedName = StringUtil.random("name-");
+        content.setName(updatedName);
+        adminClient.ownerContent().updateContent(ownerKey, content.getId(), content);
+
+        consumer1Export = consumerApi.exportCertificates(consumer1.getUuid(), null);
+        cons1Certs = extractCertsFromPayload(consumer1Export);
+        assertThat(cons1Certs).singleElement();
+        String updatedCons1Cert = cons1Certs.get(0);
+        consumer2Export = consumerApi.exportCertificates(consumer2.getUuid(), null);
+        cons2Certs = extractCertsFromPayload(consumer2Export);
+        assertThat(cons2Certs).singleElement();
+        String updatedCons2Cert = cons2Certs.get(0);
+
+        // The cert should have changed due to the content change, but both consumers should still have the
+        // same cert
+        assertThat(updatedCons1Cert).isNotEqualTo(cons1InitialCert);
+        assertThat(updatedCons2Cert).isNotEqualTo(cons2InitialCert);
+
+        List<JsonNode> consumer2Certs = CertificateUtil
+            .extractEntitlementCertificatesFromPayload(consumer2Export, ApiClient.MAPPER);
+
+        assertThat(consumer2Certs).singleElement();
+        JsonNode consumer2ActualContent = consumer2Certs.get(0).get("products").get(0).get("content").get(0);
+        assertThat(consumer2ActualContent.get("name").asText())
+            .isNotNull()
+            .isEqualTo(updatedName);
+    }
+
+    @Test
+    public void shouldNotUpdateExistingContentAccessCertContentWhenNoDataChanges() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        // We need to sleep here to ensure enough time has passes from the last content update to when
+        // we fetch certificates.
+        Thread.sleep(1000);
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        List<CertificateDTO> certs = consumerClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certs)
+            .singleElement()
+            .extracting(CertificateDTO::getSerial)
+            .isNotNull();
+        Long expectedSerial = certs.get(0).getSerial().getSerial();
+        OffsetDateTime expectedUpdateDate = certs.get(0).getSerial().getUpdated();
+
+        certs = consumerClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certs)
+            .singleElement()
+            .extracting(CertificateDTO::getSerial)
+            .isNotNull();
+        Long updatedSerial = certs.get(0).getSerial().getSerial();
+        OffsetDateTime updatedUpdateDate = certs.get(0).getSerial().getUpdated();
+
+        assertThat(updatedSerial).isEqualTo(expectedSerial);
+        assertThat(updatedUpdateDate).isEqualTo(expectedUpdateDate);
+    }
+
+    @Test
+    public void shouldIncludeTheContentAccessCertSerialInSerialList() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        // We need to sleep here to ensure enough time has passes from the last content update to when
+        // we fetch certificates.
+        Thread.sleep(1000);
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        List<CertificateDTO> certs = adminClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certs)
+            .singleElement()
+            .doesNotReturn(null, CertificateDTO::getSerial);
+
+        Long expectedSerial = certs.get(0).getSerial().getSerial();
+        List<CertificateSerialDTO> certSerials = consumerClient.consumers()
+            .getEntitlementCertificateSerials(consumer.getUuid());
+        assertThat(certSerials)
+            .singleElement()
+            .returns(expectedSerial, CertificateSerialDTO::getSerial);
+    }
+
+    @Test
+    public void shouldSetTheCorrectContentAccessModeForAManifestConsumer() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer = adminClient.consumers()
+            .createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        consumer.contentAccessMode(Owners.ENTITLEMENT_ACCESS_MODE);
+        consumer.setReleaseVer(new ReleaseVerDTO().releaseVer(""));
+        consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
+        consumer = consumerClient.consumers().getConsumer(consumer.getUuid());
+        assertThat(consumer)
+            .isNotNull()
+            .returns(Owners.ENTITLEMENT_ACCESS_MODE, ConsumerDTO::getContentAccessMode);
+
+        consumer.contentAccessMode(Owners.SCA_ACCESS_MODE);
+        consumer.setReleaseVer(new ReleaseVerDTO().releaseVer(""));
+        consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
+        consumer = consumerClient.consumers().getConsumer(consumer.getUuid());
+        assertThat(consumer)
+            .isNotNull()
+            .returns(Owners.SCA_ACCESS_MODE, ConsumerDTO::getContentAccessMode);
+
+        ConsumerDTO invalidConsumer = consumer;
+        invalidConsumer.contentAccessMode("unknown mode");
+        consumer.setReleaseVer(new ReleaseVerDTO().releaseVer(""));
+        assertBadRequest(() -> consumerClient.consumers()
+            .updateConsumer(invalidConsumer.getUuid(), invalidConsumer));
+
+        // We should be able to remove the content access mode with an empty string
+        consumer.contentAccessMode("");
+        consumer.setReleaseVer(new ReleaseVerDTO().releaseVer(""));
+        consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
+        consumer = consumerClient.consumers().getConsumer(consumer.getUuid());
+        assertThat(consumer)
+            .isNotNull()
+            .returns(null, ConsumerDTO::getContentAccessMode);
+
+        // We should also be able to set the correct content access mode when registering
+        ConsumerDTO consumer2 = adminClient.consumers()
+            .createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin)
+            .contentAccessMode(Owners.SCA_ACCESS_MODE));
+        assertThat(consumer2)
+            .isNotNull()
+            .returns(Owners.SCA_ACCESS_MODE, ConsumerDTO::getContentAccessMode);
+    }
+
+    @Test
+    public void shouldNotSetThecontentAccessModeForARegularConsumer() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        consumer.setReleaseVer(new ReleaseVerDTO().releaseVer(""));
+
+        consumer.contentAccessMode(Owners.ENTITLEMENT_ACCESS_MODE);
+
+        assertBadRequest(() -> consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer));
+    }
+
+    @Test
+    public void shouldProduceAPredatedContentAccessCertificate() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        ConsumerApi consumerApi = new ConsumerApi(consumerClient.getApiClient());
+        Object export = consumerApi.exportCertificates(consumer.getUuid(), null);
+        List<String> certs = extractCertsFromPayload(export);
+        assertThat(certs).singleElement();
+
+        Date expectedBefore = Date.from(OffsetDateTime.now().minusHours(1).minusMinutes(1).toInstant());
+        Date actualNotBefore = CertificateUtil.getCertNotBefore(certs.get(0));
+        assertThat(actualNotBefore)
+            .isAfter(expectedBefore);
+    }
+
+    @Test
+    public void shouldNotAutoAttachWhenOrgEnvironmentIsSetForOwner() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ProductDTO prod1 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        adminClient.owners().createPool(ownerKey, Pools.random(prod1));
+        ProductDTO prod2 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        consumer.setReleaseVer(new ReleaseVerDTO().releaseVer(""));
+        consumer.installedProducts(Set.of(Products.toInstalled(prod2)));
+        consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
+
+        consumerClient.consumers()
+            .bind(consumer.getUuid(), null, List.of(), null, null, null, false, null, List.of());
+        List<EntitlementDTO> ents = consumerClient.consumers().listEntitlements(consumer.getUuid());
+        assertThat(ents).isEmpty();
+
+        // confirm that there is a content access cert
+        // and only a content access cert
+        List<JsonNode> certs = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        assertThat(certs).singleElement();
+        JsonNode certContent = certs.get(0).get("products").get(0).get("content");
+        assertThat(certContent).singleElement();
+        compareCertContent(content, certContent.get(0));
+        verifyCertContentPath(ownerKey, content.getContentUrl(), null, certContent.get(0)
+            .get("path").asText());
+    }
+
+    @Test
+    public void shouldRegenerateSCACertWhenEnvironmentContentChanges() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environment.random());
+        promoteContentToEnvironment(adminClient, env.getId(), content, false);
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner)
+            .environment(env));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        List<CertificateDTO> certs = consumerClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certs).singleElement();
+        String initialCert = certs.get(0).getCert();
+
+        content.contentUrl("/updated/path");
+        adminClient.ownerContent().updateContent(ownerKey, content.getId(), content);
+
+        certs = consumerClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certs).singleElement();
+        String updatedCert = certs.get(0).getCert();
+
+        assertThat(updatedCert).isNotEqualTo(initialCert);
+    }
+
+    @Test
+    public void shouldHonourTheContentDefaultsForOwnerInSCAMode() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO modifiedProd = adminClient.ownerProducts()
+            .createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO enabledContent = adminClient.ownerContent().createContent(ownerKey, Content.random()
+            .modifiedProductIds(Set.of(modifiedProd.getId())));
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), enabledContent.getId(), true);
+
+        ContentDTO disabledContent = adminClient.ownerContent().createContent(ownerKey, Content.random()
+            .modifiedProductIds(Set.of(modifiedProd.getId())));
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), disabledContent.getId(), false);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        List<JsonNode> entCerts = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        assertThat(entCerts).singleElement();
+        Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(entCerts.get(0));
+        assertThat(prodIdToContentIds)
+            .hasSize(1)
+            .extractingByKey("content_access", as(collection(String.class)))
+            .containsExactlyInAnyOrder(enabledContent.getId(), disabledContent.getId());
+
+        JsonNode content = entCerts.get(0).get("products").get(0).get("content");
+        JsonNode certEnabledContent = enabledContent.getId().equals(content.get(0).get("id").asText()) ?
+            content.get(0) : content.get(1);
+        JsonNode certDisabledContent = disabledContent.getId().equals(content.get(0).get("id").asText()) ?
+            content.get(0) : content.get(1);
+
+        assertNull(certEnabledContent.get("enabled"));
+        assertFalse(certDisabledContent.get("enabled").asBoolean());
+    }
+
+    @Test
+    public void shouldFilterOutContentNotPromotedToEnvironmentWhenOwnerIsInSCAMode() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environment.random());
+        ConsumerDTO consumer = adminClient.consumers()
+            .createConsumer(Consumers.random(owner).addEnvironmentsItem(env));
+        assertThat(consumer.getEnvironments()).singleElement().returns(env.getId(), EnvironmentDTO::getId);
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO promotedContent = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO notPromotedContent = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), promotedContent.getId(), true);
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), notPromotedContent.getId(), true);
+        promoteContentToEnvironment(adminClient, env.getId(), promotedContent, false);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerApi consumerApi = new ConsumerApi(consumerClient.getApiClient());
+        Object export = consumerApi.exportCertificates(consumer.getUuid(), null);
+        List<JsonNode> certs = CertificateUtil
+            .extractEntitlementCertificatesFromPayload(export, ApiClient.MAPPER);
+        assertThat(certs).singleElement();
+        Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(certs.get(0));
+        assertThat(prodIdToContentIds)
+            .hasSize(1)
+            .extractingByKey("content_access", as(collection(String.class)))
+            .hasSize(1)
+            .containsExactlyInAnyOrder(promotedContent.getId());
+
+        JsonNode actual = certs.get(0).get("products").get(0).get("content").get(0);
+        assertThat(actual.get("id").asText()).isEqualTo(promotedContent.getId());
+        assertFalse(actual.get("enabled").asBoolean());
+
+        List<String> payloadCerts = extractCertsFromPayload(export);
+        assertThat(payloadCerts).singleElement();
+        String extVal = CertificateUtil
+            .standardExtensionValueFromCert(payloadCerts.get(0), CERT_VERSION_OID);
+        assertThat(extVal).isEqualTo("3.4");
+    }
+
+    @Test
+    public void shouldHandleMixedEnabledmentOfContentForOwnerInSCAMode() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod1 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod2 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO cont1 = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO cont2 = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO cont3 = adminClient.ownerContent().createContent(ownerKey, Content.random());
+
+        // Content enabled in both product
+        adminClient.ownerProducts().addContent(ownerKey, prod1.getId(), cont1.getId(), true);
+        adminClient.ownerProducts().addContent(ownerKey, prod2.getId(), cont1.getId(), true);
+
+        // Mixed content enablement in both product
+        adminClient.ownerProducts().addContent(ownerKey, prod1.getId(), cont2.getId(), false);
+        adminClient.ownerProducts().addContent(ownerKey, prod2.getId(), cont2.getId(), true);
+
+        // Content disabled in both product
+        adminClient.ownerProducts().addContent(ownerKey, prod1.getId(), cont3.getId(), false);
+        adminClient.ownerProducts().addContent(ownerKey, prod2.getId(), cont3.getId(), false);
+
+        adminClient.owners().createPool(ownerKey, Pools.random(prod1));
+        adminClient.owners().createPool(ownerKey, Pools.random(prod2));
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        List<JsonNode> entCerts = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        assertThat(entCerts).singleElement();
+        Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(entCerts.get(0));
+        assertThat(prodIdToContentIds)
+            .hasSize(1)
+            .extractingByKey("content_access", as(collection(String.class)))
+            .hasSize(3)
+            .containsExactlyInAnyOrder(cont1.getId(), cont2.getId(), cont3.getId());
+
+        JsonNode content = entCerts.get(0).get("products").get(0).get("content");
+        content.iterator().forEachRemaining(cont -> {
+            if (cont1.getId().equals(cont.get("id").asText())) {
+                assertNull(cont.get("enabled"));
+            }
+
+            if (cont2.getId().equals(cont.get("id").asText())) {
+                assertNull(cont.get("enabled"));
+            }
+
+            if (cont3.getId().equals(cont.get("id").asText())) {
+                assertFalse(cont.get("enabled").asBoolean());
+            }
+        });
+    }
+
+    @Test
+    public void shouldOnlyAddContentFromActivePoolsOnTheSCACertificate() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO modifiedProd = adminClient.ownerProducts()
+            .createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod1 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod2 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO cont1 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+            .modifiedProductIds(Set.of(modifiedProd.getId())));
+        adminClient.ownerProducts().addContent(ownerKey, prod1.getId(), cont1.getId(), true);
+        ContentDTO cont2 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+            .modifiedProductIds(Set.of(modifiedProd.getId())));
+        adminClient.owners().createPool(ownerKey, Pools.random(prod2));
+        adminClient.ownerProducts().addContent(ownerKey, prod2.getId(), cont2.getId(), true);
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        // Make sure that content cont1 is not present in cert,
+        // since pro1 does not have active pool
+        List<JsonNode> entCerts = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        assertThat(entCerts).singleElement();
+        Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(entCerts.get(0));
+        assertThat(prodIdToContentIds)
+            .hasSize(1)
+            .extractingByKey("content_access", as(collection(String.class)))
+            .hasSize(1)
+            .containsOnly(cont2.getId());
+    }
+
+    @Test
+    public void shouldIncludeContentFromAllProductsAssociatedWithActivePoolToSCACert() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO modifiedProd = adminClient.ownerProducts()
+            .createProductByOwner(ownerKey, Products.random());
+        ProductDTO provProd = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ProductDTO derivedProd = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random()
+            .providedProducts(Set.of(provProd)));
+        ProductDTO engProd = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.randomEng());
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random()
+            .providedProducts(Set.of(engProd))
+            .derivedProduct(derivedProd));
+
+        ContentDTO cont1 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+            .modifiedProductIds(Set.of(modifiedProd.getId())));
+        ContentDTO cont2 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+            .modifiedProductIds(Set.of(modifiedProd.getId())));
+        ContentDTO cont3 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+            .modifiedProductIds(Set.of(modifiedProd.getId())));
+        ContentDTO cont4 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+            .modifiedProductIds(Set.of(modifiedProd.getId())));
+
+        adminClient.ownerProducts().addContent(ownerKey, engProd.getId(), cont1.getId(), true);
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), cont2.getId(), true);
+        adminClient.ownerProducts().addContent(ownerKey, derivedProd.getId(), cont3.getId(), true);
+        adminClient.ownerProducts().addContent(ownerKey, provProd.getId(), cont4.getId(), true);
+
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        List<JsonNode> entCerts = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
+        assertThat(entCerts).singleElement();
+        Map<String, List<String>> prodIdToContentIds = CertificateUtil.toProductContentIdMap(entCerts.get(0));
+        assertThat(prodIdToContentIds)
+            .hasSize(1)
+            .extractingByKey("content_access", as(collection(String.class)))
+            .hasSize(4)
+            .containsExactlyInAnyOrder(cont1.getId(), cont2.getId(), cont3.getId(), cont4.getId());
+    }
+
+    @Test
+    public void shouldRegenerateSCACertWhenContentChangesAffectContentView() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        List<CertificateDTO> certs = consumerClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certs).singleElement();
+        String initialCert = certs.get(0).getCert();
+
+        content.contentUrl("/updated/path");
+        adminClient.ownerContent().updateContent(ownerKey, content.getId(), content);
+
+        certs = consumerClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certs).singleElement();
+        String updatedCert = certs.get(0).getCert();
+
+        assertThat(updatedCert).isNotEqualTo(initialCert);
+    }
+
+    @Test
+    public void shouldRegenerateSCACertWhenProductChangesAffectContentView() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        List<CertificateDTO> certs = consumerClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certs).singleElement();
+        String initialCert = certs.get(0).getCert();
+
+        adminClient.ownerContent().remove(ownerKey, content.getId());
+
+        certs = consumerClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certs).singleElement();
+        String updatedCert = certs.get(0).getCert();
+
+        assertThat(updatedCert).isNotEqualTo(initialCert);
+    }
+
+    @Test
+    public void shouldRegenerateSCACertWhenPoolChangesAffectContentView() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        PoolDTO pool = adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        List<CertificateDTO> certs = consumerClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certs).singleElement();
+        String initialCert = certs.get(0).getCert();
+
+        pool.startDate(OffsetDateTime.now().plusDays(1));
+        adminClient.owners().updatePool(ownerKey, pool);
+
+        certs = consumerClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certs).singleElement();
+        String updatedCert = certs.get(0).getCert();
+
+        assertThat(updatedCert).isNotEqualTo(initialCert);
+    }
+
+    @Test
+    public void shouldHaveDisabledPurposeComplianceForOwnerInSCAMode() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        // System purpose status
+        SystemPurposeComplianceStatusDTO status = consumerClient.consumers()
+            .getSystemPurposeComplianceStatus(consumer.getUuid(), null);
+        assertThat(status)
+            .isNotNull()
+            .returns("disabled", SystemPurposeComplianceStatusDTO::getStatus);
+
+        // compliance status
+        ComplianceStatusDTO complianceStatus = consumerClient.consumers()
+            .getComplianceStatus(consumer.getUuid(), null);
+        assertThat(complianceStatus)
+            .isNotNull()
+            .returns("disabled", ComplianceStatusDTO::getStatus);
+    }
+
+    @Test
+    public void shouldRevokeSCACertsUponUnRegistration() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        List<CertificateDTO> certs = adminClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(certs).singleElement();
+        assertNotNull(certs.get(0).getSerial());
+        Long expectedSerial = certs.get(0).getSerial().getSerial();
+        boolean revoked = certs.get(0).getSerial().getRevoked();
+        assertFalse(revoked);
+
+        consumerClient.consumers().deleteConsumer(consumer.getUuid());
+        CertificateSerialDTO serialAfterUnReg = adminClient.certificateSerial()
+            .getCertificateSerial(expectedSerial);
+        assertThat(serialAfterUnReg)
+            .isNotNull()
+            .returns(true, CertificateSerialDTO::getRevoked);
+    }
+
+    @Test
+    public void shouldRegenerateSCACertificateOfAffectedConsumersWhenEnvIsDeleted() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+
+        EnvironmentDTO env1 = adminClient.owners().createEnv(ownerKey, Environment.random());
+        EnvironmentDTO env2 = adminClient.owners().createEnv(ownerKey, Environment.random());
+        promoteContentToEnvironment(adminClient, env2.getId(), content, true);
+
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner)
+            .environments(List.of(env1, env2)));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        List<CertificateDTO> oldCerts = consumerClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(oldCerts)
+            .singleElement()
+            .extracting(CertificateDTO::getSerial)
+            .isNotNull();
+        Long intialSerial = oldCerts.get(0).getSerial().getSerial();
+
+        adminClient.environments().deleteEnvironment(env1.getId());
+
+        List<CertificateDTO> newCerts = consumerClient.consumers().fetchCertificates(consumer.getUuid());
+        assertThat(newCerts)
+            .singleElement()
+            .extracting(CertificateDTO::getSerial)
+            .isNotNull()
+            .extracting(CertificateSerialDTO::getSerial)
+            .isNotEqualTo(intialSerial);
+    }
+
     private void promoteContentToEnvironment(ApiClient client, String envId, ContentDTO content,
         boolean enabled) {
         ContentToPromoteDTO contentToPromote = new ContentToPromoteDTO()
@@ -835,6 +1508,19 @@ public class ContentAccessSpecTest {
         return serialIds;
     }
 
+    private String getUpdatedFromCertExport(Object export) {
+        if (export == null) {
+            return null;
+        }
+
+        List<Map<String, String>> certs = ((List<Map<String, String>>) export);
+        if (certs.size() == 0) {
+            return null;
+        }
+
+        return certs.get(0).get("updated");
+    }
+
     private List<String> extractCertsFromPayload(Object jsonPayload) {
         if (jsonPayload == null) {
             return new ArrayList<>();
@@ -851,5 +1537,4 @@ public class ContentAccessSpecTest {
 
         return certs;
     }
-
 }

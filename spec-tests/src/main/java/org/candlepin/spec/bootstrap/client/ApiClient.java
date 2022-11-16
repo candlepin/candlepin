@@ -19,6 +19,7 @@ import org.candlepin.resource.client.v1.ActivationKeyApi;
 import org.candlepin.resource.client.v1.AdminApi;
 import org.candlepin.resource.client.v1.CdnApi;
 import org.candlepin.resource.client.v1.CertificateRevocationListApi;
+import org.candlepin.resource.client.v1.CertificateSerialApi;
 import org.candlepin.resource.client.v1.CloudRegistrationApi;
 import org.candlepin.resource.client.v1.ConsumerTypeApi;
 import org.candlepin.resource.client.v1.ContentApi;
@@ -81,6 +82,10 @@ public class ApiClient {
 
     public CdnApi cdns() {
         return new CdnApi(this.client);
+    }
+
+    public CertificateSerialApi certificateSerial() {
+        return new CertificateSerialApi(this.client);
     }
 
     public CloudRegistrationApi cloudAuthorization() {
