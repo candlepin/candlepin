@@ -1,0 +1,64 @@
+# These tasks must be run as the candlepin user. main.yml imports this file with become_user set to
+# {{ candlepin_user }}, but if these are included or imported anywhere else, that will likely need to
+# be done there as well.
+---
+- name: "Add JAVA_HOME to .bashrc"
+  ansible.builtin.lineinfile:
+    path: "{{ candlepin_user_home }}/.bashrc"
+    regexp: "^export JAVA_HOME="
+    line: "export JAVA_HOME=/usr/lib/jvm/java"
+    state: present
+    create: true
+    mode: '0644'
+  tags:
+    - candlepin
+    - user_env
+
+- name: "Set user prompt colors and features"
+  ansible.builtin.blockinfile:
+    path: "{{ candlepin_user_home }}/.bash_profile"
+    block: |
+      parse_git_branch() {
+        git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/'
+      }
+
+      # display current directory
+      PS1='\[\e[0;30;100m\](\t) \u@\h:\w $(parse_git_branch) \$\[\e[0m\] '
+
+      unset LS_COLORS
+    state: present
+    create: true
+    mode: "0644"
+  tags:
+    - candlepin
+    - user_env
+
+- name: "Standardize location of Candlepin repo"
+  block:
+    - name: "Check for Vagrant Candlepin repo mapping"
+      ansible.builtin.stat:
+        path: "{{ cp_vagrant_mapping }}"
+      register: cp_vagrant_mapping_file
+
+    - name: "Create user-space devel directory"
+      ansible.builtin.file:
+        path: "{{ candlepin_user_home }}/devel"
+        state: directory
+        mode: "0755"
+      when:
+        - cp_vagrant_mapping_file.stat.exists
+
+    - name: "Create devel symlink to Vagrant-mapped Candlepin repo"
+      ansible.builtin.file:
+        src: "{{ cp_vagrant_mapping }}"
+        path: "{{ candlepin_user_home }}/devel/candlepin"
+        state: link
+      when:
+        - cp_vagrant_mapping_file.stat.exists
+  vars:
+    cp_vagrant_mapping: "/vagrant"
+  when:
+    - candlepin_home != candlepin_user_home + "/devel/candlepin"
+  tags:
+    - candlepin
+    - user_env

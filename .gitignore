@@ -51,7 +51,8 @@ dataSources/
 **/bin/main/
 **/bin/test/
 **/bin/__init__.py
-ansible/roles
+ansible/roles/*
+!ansible/roles/candlepin
 
 buildconf/builder/config/local
 client.crt

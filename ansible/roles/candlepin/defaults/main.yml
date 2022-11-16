@@ -1,0 +1,20 @@
+---
+candlepin_user: candlepin
+candlepin_user_home: "/home/{{ candlepin_user }}"
+candlepin_home: "{{ candlepin_user_home }}/devel/candlepin"
+
+cp_configure_postgresql: true
+cp_configure_mariadb: true
+cp_configure_user_env: false
+cp_configure_debugging: false
+cp_configure_ruby: true
+
+cp_git_checkout: true
+cp_git_repo: "https://github.com/candlepin/candlepin"
+cp_git_ref: master
+
+cp_deploy: true
+cp_deploy_args: '-gta'
+
+cp_yourkit_library: "/opt/yjp/bin/linux-x86-64/libyjpagent.so"
+cp_yourkit_agent_port: 35675

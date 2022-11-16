@@ -1,0 +1,111 @@
+---
+- name: "Disable SELinux"
+  become: true
+  ansible.posix.selinux:
+    state: disabled
+  tags:
+    - system
+    - candlepin
+
+# FIXME: Update this task to use the dnf module once Ansible 2.10 or newer is readily available
+- name: "Update system packages"
+  become: true
+  ansible.builtin.command:
+    cmd: dnf update -y --allowerasing
+  changed_when: false
+  tags:
+    - system
+    - system_update
+    - candlepin
+
+- name: "Enable required DNF modules"
+  become: true
+  ansible.builtin.command:
+    cmd: dnf module enable -y pki-core pki-deps
+  changed_when: false
+  tags:
+    - base_deps
+    - candlepin
+
+- name: "Install Candlepin requirements"
+  become: true
+  ansible.builtin.package:
+    name:
+      - git
+      - gcc
+      - make
+      - java-1.8.0-openjdk-devel
+      - java-11-openjdk-devel
+      - gettext
+      - openssl
+      - jss
+      - pki-servlet-engine
+      - platform-python
+      - python36
+      - python3-libxml2
+      - python3-requests
+      - unzip
+      - wget
+      - zlib
+      - zlib-devel
+      - createrepo_c
+      - rpm-build
+      - rpm-sign
+    state: present
+  tags:
+    - base_deps
+    - candlepin
+
+# Impl note:
+# The invocations of alternatives need to be run in the context of the original user, but with
+# root permissions. Using become and the raw shell command invokes these in root's environment,
+# which will fail at best, or silently map the wrong command at worst.
+- name: "Configure alternatives: python"
+  ansible.builtin.shell: sh -c 'sudo alternatives --set python /usr/bin/python3'
+  changed_when: false
+  tags:
+    - base_deps
+    - candlepin
+
+- name: "Configure alternatives: java"
+  ansible.builtin.shell: sh -c 'sudo alternatives --set java /usr/lib/jvm/java-11-openjdk-*/bin/java'
+  changed_when: false
+  tags:
+    - base_deps
+    - candlepin
+
+- name: "Configure alternatives: javac"
+  ansible.builtin.shell: sh -c 'sudo alternatives --set javac /usr/lib/jvm/java-11-openjdk-*/bin/javac'
+  changed_when: false
+  tags:
+    - base_deps
+    - candlepin
+
+- name: "Update Tomcat configuration to use Alternatives-configured Java"
+  become: true
+  ansible.builtin.lineinfile:
+    dest: /etc/tomcat/tomcat.conf
+    regexp: "JAVA_HOME="
+    line: "JAVA_HOME=\"/usr/lib/jvm/java\""
+  tags:
+    - base_deps
+    - candlepin
+
+- name: "Enable necessary ports in firewalld"
+  become: true
+  ansible.posix.firewalld:
+    port: "{{ item }}/tcp"
+    state: enabled
+    permanent: true
+    offline: false
+  with_items:
+    - 22
+    - 443
+    - 8080    # Candlepin Tomcat server
+    - 8443    # ^
+  when:
+    - "'services' in ansible_facts"
+    - "'firewalld.service' in ansible_facts.services"
+  tags:
+    - system
+    - candlepin

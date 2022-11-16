@@ -1,0 +1,40 @@
+# These tasks must be run as the candlepin user. main.yml imports this file with become_user set to
+# {{ candlepin_user }}, but if these are included or imported anywhere else, that will likely need to
+# be done there as well.
+---
+# Ensure Candlepin exists before attempting to run deployment
+- name: "Deploy Candlepin"
+  block:
+    - name: "Ensure the Candlepin directory exists"
+      ansible.builtin.stat:
+        path: "{{ candlepin_home }}"
+      register: candlepin_home_dir
+
+    - name: "Check for legacy Candlepin deploy script"
+      ansible.builtin.stat:
+        path: "{{ candlepin_home }}/server/bin/deploy"
+      register: cp_deploy_script_file
+      when:
+        - candlepin_home_dir.stat.isdir
+
+    - name: "Update Candlepin deploy script path to use legacy path"
+      ansible.builtin.set_fact:
+        cp_deploy_script: "{{ candlepin_home }}/server/bin/deploy"
+      when:
+        - candlepin_home_dir.stat.isdir
+        - cp_deploy_script_file.stat.exists
+
+    - name: "Execute deploy script"
+      ansible.builtin.command:
+        cmd: "env QUIET=1 {{ cp_deploy_script }} {{ cp_deploy_args }}"
+        chdir: "{{ candlepin_home }}"
+      changed_when: false
+      when:
+        - candlepin_home_dir.stat.isdir
+  environment:
+    JAVA_HOME: "/usr/lib/jvm/java"
+  vars:
+    cp_deploy_script: "{{ candlepin_home }}/bin/deployment/deploy"
+  tags:
+    - candlepin
+    - candlepin-deploy

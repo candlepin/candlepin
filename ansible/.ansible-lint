@@ -1,0 +1,12 @@
+# warn_list:
+#   - command-instead-of-shell
+#   - command-instead-of-module
+#   - no-changed-when
+
+skip_list:
+  - no-handler
+  - package-latest
+  - role-name
+  - command-instead-of-shell
+  - command-instead-of-module
+  - no-changed-when
