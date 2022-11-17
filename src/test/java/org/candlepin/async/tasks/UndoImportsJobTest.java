@@ -60,8 +60,8 @@ import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -133,8 +133,10 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         this.ownerCurator.merge(owner2);
 
         // Create metadata
-        ExporterMetadata metadata1 = new ExporterMetadata(ExporterMetadata.TYPE_PER_USER, new Date(), owner1);
-        ExporterMetadata metadata2 = new ExporterMetadata(ExporterMetadata.TYPE_PER_USER, new Date(), owner2);
+        ExporterMetadata metadata1 = new ExporterMetadata(ExporterMetadata.TYPE_PER_USER,
+            OffsetDateTime.now(), owner1);
+        ExporterMetadata metadata2 = new ExporterMetadata(ExporterMetadata.TYPE_PER_USER,
+            OffsetDateTime.now(), owner2);
         this.exportCurator.create(metadata1);
         this.exportCurator.create(metadata2);
 

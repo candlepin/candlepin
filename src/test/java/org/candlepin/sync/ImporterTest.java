@@ -89,6 +89,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.net.URISyntaxException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -189,8 +190,8 @@ public class ImporterTest {
             this.modelTranslator);
     }
 
-    private File createFile(String filename, String version, Date date, String username, String prefix)
-        throws JsonGenerationException, JsonMappingException, IOException {
+    private File createFile(String filename, String version, OffsetDateTime date, String username,
+        String prefix) throws JsonGenerationException, JsonMappingException, IOException {
 
         File file = new File(this.tmpFolder, filename);
         Meta meta = new Meta(version, date, username, prefix, null);
@@ -275,12 +276,12 @@ public class ImporterTest {
          * make sure created date is XYZ
          * make sure version is > ABC
          */
-        Date now = new Date();
+        OffsetDateTime now = OffsetDateTime.now();
         File file = createFile("meta", "0.0.3", now, "test_user", "prefix");
         File actual = createFile("meta.json", "0.0.3", now, "test_user", "prefix");
 
         ExporterMetadata em = new ExporterMetadata();
-        Date daybefore = getDateBeforeDays(1);
+        OffsetDateTime daybefore = now.minusDays(1L);
         em.setExported(daybefore);
         em.setId("42");
         em.setType(ExporterMetadata.TYPE_SYSTEM);
@@ -295,7 +296,7 @@ public class ImporterTest {
         Meta fileMeta = mapper.readValue(file, Meta.class);
         Meta actualMeta = mapper.readValue(actual, Meta.class);
         assertEquals(fileMeta.getPrincipalName(), actualMeta.getPrincipalName());
-        assertEquals(fileMeta.getCreated().getTime(), actualMeta.getCreated().getTime());
+        assertEquals(fileMeta.getCreated(), actualMeta.getCreated());
         assertEquals(fileMeta.getWebAppPrefix(), actualMeta.getWebAppPrefix());
 
         assertTrue(file.delete());
@@ -305,8 +306,8 @@ public class ImporterTest {
 
     @Test
     public void firstRun() throws Exception {
-        File file = createFile("meta", "0.0.3", new Date(), "test_user", "prefix");
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
+        File file = createFile("meta", "0.0.3", OffsetDateTime.now(), "test_user", "prefix");
+        File actualmeta = createFile("meta.json", "0.0.3", OffsetDateTime.now(), "test_user", "prefix");
 
         Importer importer = this.buildImporter();
         importer.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, new ConflictOverrides());
@@ -319,10 +320,11 @@ public class ImporterTest {
     @Test
     public void oldImport() throws Exception {
         // actualmeta is the mock for the import itself
-        File actualmeta = createFile("meta.json", "0.0.3", getDateBeforeDays(10), "test_user", "prefix");
+        File actualmeta = createFile("meta.json", "0.0.3", OffsetDateTime.now().minusDays(10L),
+            "test_user", "prefix");
 
         ExporterMetadata em = new ExporterMetadata();
-        em.setExported(getDateBeforeDays(3));
+        em.setExported(OffsetDateTime.now().minusDays(3L));
         em.setId("42");
         em.setType(ExporterMetadata.TYPE_SYSTEM);
 
@@ -348,7 +350,7 @@ public class ImporterTest {
     @Test
     public void sameImport() throws Exception {
         // actualmeta is the mock for the import itself
-        Date date = getDateBeforeDays(10);
+        OffsetDateTime date = OffsetDateTime.now().minusDays(10);
         File actualmeta = createFile("meta.json", "0.0.3", date, "test_user", "prefix");
 
         ExporterMetadata em = new ExporterMetadata();
@@ -396,13 +398,13 @@ public class ImporterTest {
     @Test
     public void newerImport() throws Exception {
         // this tests bz #790751
-        Date importDate = getDateBeforeDays(10);
+        OffsetDateTime importDate = OffsetDateTime.now().minusDays(10);
 
         // actualmeta is the mock for the import itself
         File actualmeta = createFile("meta.json", "0.0.3", importDate, "test_user", "prefix");
 
         ExporterMetadata em = new ExporterMetadata();
-        em.setExported(getDateBeforeDays(30));
+        em.setExported(OffsetDateTime.now().minusDays(30));
         em.setId("42");
         em.setType(ExporterMetadata.TYPE_SYSTEM);
 
@@ -413,12 +415,12 @@ public class ImporterTest {
         Importer importer = this.buildImporter();
         importer.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, new ConflictOverrides());
 
-        assertEquals(em.getExported(), importDate);
+        assertEquals(em.getExported().toEpochSecond(), importDate.toEpochSecond());
     }
 
     @Test
     public void nullType() throws ImporterException, IOException {
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
+        File actualmeta = createFile("meta.json", "0.0.3", OffsetDateTime.now(), "test_user", "prefix");
 
         Importer importer = this.buildImporter();
 
@@ -432,7 +434,7 @@ public class ImporterTest {
     @Test
     public void expectOwner() throws ImporterException, IOException {
         ConflictOverrides overrides = new ConflictOverrides();
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
+        File actualmeta = createFile("meta.json", "0.0.3", OffsetDateTime.now(), "test_user", "prefix");
 
         Importer importer = this.buildImporter();
 
@@ -624,7 +626,7 @@ public class ImporterTest {
         File ruleDir = mock(File.class);
         File[] rulesFiles = createMockJsFile(mockJsPath);
         when(ruleDir.listFiles()).thenReturn(rulesFiles);
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
+        File actualmeta = createFile("meta.json", "0.0.3", OffsetDateTime.now(), "test_user", "prefix");
 
         // this is the hook to stop testing. we confirm that the archive component tests
         //  are passed and then jump out instead of trying to fake the actual file
@@ -667,7 +669,7 @@ public class ImporterTest {
         File[] rulesFiles = createMockJsFile(mockJsPath);
         when(ruleDir.listFiles()).thenReturn(rulesFiles);
 
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
+        File actualmeta = createFile("meta.json", "0.0.3", OffsetDateTime.now(), "test_user", "prefix");
         importFiles.put(ImportFile.META.fileName(), actualmeta);
 
         ConsumerDTO consumerDTO = new ConsumerDTO();
@@ -773,7 +775,7 @@ public class ImporterTest {
         ConflictOverrides forcedConflicts = mock(ConflictOverrides.class);
         when(forcedConflicts.isForced(any(Importer.Conflict.class))).thenReturn(false);
 
-        Meta meta = new Meta("1.0", new Date(), "admin", "/candlepin/owners", null);
+        Meta meta = new Meta("1.0", OffsetDateTime.now(), "admin", "/candlepin/owners", null);
 
         Importer importer = this.buildImporter();
         importer.importConsumer(owner, consumerfile, upstream, forcedConflicts, meta);
@@ -863,7 +865,7 @@ public class ImporterTest {
         File ruleDir = mock(File.class);
         when(ruleDir.listFiles()).thenReturn(rulesFiles);
 
-        File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
+        File actualmeta = createFile("meta.json", "0.0.3", OffsetDateTime.now(), "test_user", "prefix");
 
         Map<String, File> importFiles = this.getTestImportFiles();
         importFiles.put(ImportFile.META.fileName(), actualmeta);
@@ -884,7 +886,7 @@ public class ImporterTest {
     public void testRecordImportSuccess() {
         String expectedOwnerKey = "TEST_OWNER";
         Owner owner = new Owner(expectedOwnerKey);
-        Meta meta = new Meta("1.0", new Date(), "test-user", "candlepin", "testcdn");
+        Meta meta = new Meta("1.0", OffsetDateTime.now(), "test-user", "candlepin", "testcdn");
 
         List<SubscriptionDTO> subscriptions = new ArrayList<>();
         SubscriptionDTO subscription = new SubscriptionDTO();
@@ -917,7 +919,7 @@ public class ImporterTest {
         uc.setContentAccessMode("mode");
         owner.setUpstreamConsumer(uc);
 
-        Meta meta = new Meta("1.0", new Date(), "test-user", "candlepin", "testcdn");
+        Meta meta = new Meta("1.0", OffsetDateTime.now(), "test-user", "candlepin", "testcdn");
 
         Map<String, Object> data = new HashMap<>();
         data.put("meta", meta);
@@ -944,7 +946,7 @@ public class ImporterTest {
         String expectedOwnerKey = "TEST_OWNER";
         Owner owner = new Owner(expectedOwnerKey);
 
-        Meta meta = new Meta("1.0", new Date(), "test-user", "candlepin", "testcdn");
+        Meta meta = new Meta("1.0", OffsetDateTime.now(), "test-user", "candlepin", "testcdn");
 
         Map<String, Object> data = new HashMap<>();
         data.put("meta", meta);

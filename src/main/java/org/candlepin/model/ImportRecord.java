@@ -16,7 +16,7 @@ package org.candlepin.model;
 
 import org.hibernate.annotations.GenericGenerator;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -82,7 +82,7 @@ public class ImportRecord extends AbstractHibernateObject {
     private String generatedBy;
 
     @Column(name = "generated_date", nullable = true)
-    private Date generatedDate;
+    private OffsetDateTime generatedDate;
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "upstream_id")
@@ -147,11 +147,11 @@ public class ImportRecord extends AbstractHibernateObject {
         this.generatedBy = generatedBy;
     }
 
-    public Date getGeneratedDate() {
+    public OffsetDateTime getGeneratedDate() {
         return generatedDate;
     }
 
-    public void setGeneratedDate(Date generatedDate) {
+    public void setGeneratedDate(OffsetDateTime generatedDate) {
         this.generatedDate = generatedDate;
     }
 

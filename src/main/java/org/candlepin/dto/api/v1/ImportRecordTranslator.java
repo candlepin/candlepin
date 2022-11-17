@@ -71,7 +71,7 @@ public class ImportRecordTranslator implements
             .statusMessage(source.getStatusMessage())
             .fileName(source.getFileName())
             .generatedBy(source.getGeneratedBy())
-            .generatedDate(Util.toDateTime(source.getGeneratedDate()))
+            .generatedDate(source.getGeneratedDate())
             .created(Util.toDateTime(source.getCreated()))
             .updated(Util.toDateTime(source.getUpdated()));
 

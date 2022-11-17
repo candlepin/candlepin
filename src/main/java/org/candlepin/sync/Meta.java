@@ -14,23 +14,24 @@
  */
 package org.candlepin.sync;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 /**
  * Meta
  */
 public class Meta {
     private String version;
-    private Date created;
+    private OffsetDateTime created;
     private String principalName;
     private String webAppPrefix;
     private String cdnLabel;
 
     public Meta() {
-        this("0.0.0", new Date(), "", null, null);
+        this("0.0.0", OffsetDateTime.now(), "", null, null);
     }
 
-    public Meta(String version, Date creation, String userName, String webAppPrefix, String cdnLabel) {
+    public Meta(String version, OffsetDateTime creation, String userName, String webAppPrefix,
+        String cdnLabel) {
         this.version = version;
         this.created = creation;
 
@@ -39,7 +40,7 @@ public class Meta {
         }
 
         if (creation == null) {
-            this.created = new Date();
+            this.created = OffsetDateTime.now();
         }
 
         this.principalName = userName;
@@ -55,7 +56,7 @@ public class Meta {
         return version;
     }
 
-    public Date getCreated() {
+    public OffsetDateTime getCreated() {
         return created;
     }
 
@@ -71,7 +72,7 @@ public class Meta {
         this.version = version;
     }
 
-    public void setCreated(Date created) {
+    public void setCreated(OffsetDateTime created) {
         this.created = created;
     }
 

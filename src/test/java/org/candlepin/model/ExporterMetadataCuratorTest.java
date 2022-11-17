@@ -22,7 +22,7 @@ import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 import javax.inject.Inject;
 
@@ -36,7 +36,7 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
     public void testCreation() {
         ExporterMetadata em = new ExporterMetadata();
         em.setType(ExporterMetadata.TYPE_SYSTEM);
-        em.setExported(new Date());
+        em.setExported(OffsetDateTime.now());
         assertNull(em.getId());
         ExporterMetadata emdb = emc.create(em);
         assertNotNull(emdb);
@@ -48,7 +48,7 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
     public void testLookup() {
         ExporterMetadata em = new ExporterMetadata();
         em.setType(ExporterMetadata.TYPE_SYSTEM);
-        em.setExported(new Date());
+        em.setExported(OffsetDateTime.now());
         assertNull(em.getId());
         ExporterMetadata emdb = emc.create(em);
         ExporterMetadata emfound = emc.get(emdb.getId());
@@ -61,7 +61,7 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
     public void getByType() {
         ExporterMetadata em = new ExporterMetadata();
         em.setType(ExporterMetadata.TYPE_SYSTEM);
-        em.setExported(new Date());
+        em.setExported(OffsetDateTime.now());
         assertNull(em.getId());
         ExporterMetadata emdb = emc.create(em);
 
@@ -73,7 +73,7 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
     public void setOwner() {
         ExporterMetadata em = new ExporterMetadata();
         em.setType(ExporterMetadata.TYPE_PER_USER);
-        em.setExported(new Date());
+        em.setExported(OffsetDateTime.now());
         em.setOwner(createOwner());
         ExporterMetadata emdb = emc.create(em);
         assertNotNull(emdb);
@@ -86,7 +86,7 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
         ExporterMetadata em = new ExporterMetadata();
         Owner owner = createOwner();
         em.setType(ExporterMetadata.TYPE_PER_USER);
-        em.setExported(new Date());
+        em.setExported(OffsetDateTime.now());
         em.setOwner(owner);
         ExporterMetadata emdb = emc.create(em);
 

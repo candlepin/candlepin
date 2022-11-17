@@ -17,7 +17,7 @@ package org.candlepin.model;
 
 import org.hibernate.annotations.GenericGenerator;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -56,7 +56,7 @@ public class ExporterMetadata extends AbstractHibernateObject {
 
     @Column(nullable = false)
     @NotNull
-    private Date exported;
+    private OffsetDateTime exported;
 
     @OneToOne
     @JoinColumn(name = "owner_id", nullable = true)
@@ -65,14 +65,14 @@ public class ExporterMetadata extends AbstractHibernateObject {
     public ExporterMetadata() {
         id = null;
         type = TYPE_SYSTEM;
-        exported = new Date();
+        exported = OffsetDateTime.now();
     }
 
-    public ExporterMetadata(String type, Date exported, Owner owner) {
+    public ExporterMetadata(String type, OffsetDateTime exported, Owner owner) {
         this(null, type, exported, owner);
     }
 
-    public ExporterMetadata(String id, String type, Date exported, Owner owner) {
+    public ExporterMetadata(String id, String type, OffsetDateTime exported, Owner owner) {
         this.id = id;
         this.type = type;
         this.exported = exported;
@@ -104,14 +104,14 @@ public class ExporterMetadata extends AbstractHibernateObject {
     /**
      * @return the exported
      */
-    public Date getExported() {
+    public OffsetDateTime getExported() {
         return exported;
     }
 
     /**
      * @param exported the exported to set
      */
-    public void setExported(Date exported) {
+    public void setExported(OffsetDateTime exported) {
         this.exported = exported;
     }
 

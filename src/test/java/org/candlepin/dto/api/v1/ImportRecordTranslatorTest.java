@@ -24,6 +24,7 @@ import org.candlepin.model.ImportRecord;
 import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.util.Util;
 
+import java.time.OffsetDateTime;
 import java.util.Date;
 
 
@@ -60,7 +61,7 @@ public class ImportRecordTranslatorTest extends
         source.recordStatus(ImportRecord.Status.SUCCESS, "test-status-msg");
         source.setFileName("test-filename");
         source.setGeneratedBy("test-source");
-        source.setGeneratedDate(new Date());
+        source.setGeneratedDate(OffsetDateTime.now());
         source.setUpstreamConsumer(consumer);
         source.setCreated(new Date());
         source.setUpdated(new Date());

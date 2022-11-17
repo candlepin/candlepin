@@ -340,7 +340,7 @@ public class Importer {
             lastrun = expMetaCurator.create(lastrun);
         }
         else {
-            if (lastrun.getExported().after(m.getCreated())) {
+            if (lastrun.getExported().isAfter(m.getCreated())) {
                 if (!forcedConflicts.isForced(Importer.Conflict.MANIFEST_OLD)) {
                     throw new ImportConflictException(i18n.tr("Import is older than existing data"),
                         Importer.Conflict.MANIFEST_OLD);
@@ -357,8 +357,8 @@ public class Importer {
                  *  the created date in the cp_export_metadata table.  So we throw away
                  *  the fractions of a second.
                  */
-                long exported = lastrun.getExported().getTime() / 1000;
-                long created = m.getCreated().getTime() / 1000;
+                long exported = lastrun.getExported().toEpochSecond();
+                long created = m.getCreated().toEpochSecond();
                 if (exported == created) {
                     if (!forcedConflicts.isForced(Importer.Conflict.MANIFEST_SAME)) {
                         throw new ImportConflictException(i18n.tr("Import is the same as existing data"),

@@ -83,6 +83,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -329,7 +330,8 @@ public class ExporterTest {
     @Test
     public void exportMetadata() throws ExportCreationException, IOException {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
-        Date start = new Date();
+        // account for some drift between systems
+        OffsetDateTime start = OffsetDateTime.now().minusSeconds(1L);
         Rules mrules = mock(Rules.class);
         Consumer consumer = mock(Consumer.class);
         Principal principal = mock(Principal.class);
@@ -896,9 +898,9 @@ public class ExporterTest {
     }
 
     public static class VerifyMetadata implements Verify {
-        private Date start;
+        private OffsetDateTime start;
 
-        public VerifyMetadata(Date start) {
+        public VerifyMetadata(OffsetDateTime start) {
             this.start = start;
         }
 
@@ -922,7 +924,7 @@ public class ExporterTest {
 
             assertNotNull(m);
             assertEquals(vmap.get("version") + '-' + vmap.get("release"), m.getVersion());
-            assertTrue(start.before(m.getCreated()));
+            assertTrue(start.isBefore(m.getCreated()));
         }
     }
 

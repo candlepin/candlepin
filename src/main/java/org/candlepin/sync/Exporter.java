@@ -58,8 +58,8 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.OffsetDateTime;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -328,7 +328,7 @@ public class Exporter {
         FileWriter writer = null;
         try {
             writer = new FileWriter(file);
-            Meta m = new Meta(getVersion(), new Date(),
+            Meta m = new Meta(getVersion(), OffsetDateTime.now(),
                 principalProvider.get().getName(),
                 null, cdnKey);
             meta.export(mapper, writer, m);

@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,7 +43,7 @@ public class MetaExporterTest {
         MetaExporter metaEx = new MetaExporter();
         StringWriter writer = new StringWriter();
         Meta meta = new Meta();
-        Date now = new Date();
+        OffsetDateTime now = OffsetDateTime.now();
         String nowString = mapper.convertValue(now, String.class);
         meta.setVersion("0.1.0");
         meta.setCreated(now);

@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -187,7 +187,7 @@ public class UndoImportsJob implements AsyncJob {
     private void recordManifestDeletion(Owner owner, String principalName, UpstreamConsumer uc) {
         ImportRecord record = new ImportRecord(owner);
         record.setGeneratedBy(principalName);
-        record.setGeneratedDate(new Date());
+        record.setGeneratedDate(OffsetDateTime.now());
         String msg = this.i18n.tr("Subscriptions deleted by {0}", principalName);
         record.recordStatus(ImportRecord.Status.DELETE, msg);
         record.setUpstreamConsumer(this.createImportUpstreamConsumer(owner, uc));
