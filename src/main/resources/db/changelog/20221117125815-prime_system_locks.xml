@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20221117125815-1" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(id) FROM cp_system_locks WHERE id = 'content'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="cp_system_locks">
+            <column name="id" value="content"/>
+        </insert>
+    </changeSet>
+
+    <changeSet id="20221117125815-2" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(id) FROM cp_system_locks WHERE id = 'products'
+            </sqlCheck>
+        </preConditions>
+
+        <insert tableName="cp_system_locks">
+            <column name="id" value="products"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>

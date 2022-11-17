@@ -420,7 +420,10 @@ public class DatabaseTestFixture {
 
     protected Content createContent(Content content, Owner... owners) {
         content = this.contentCurator.create(content);
-        this.ownerContentCurator.mapContentToOwners(content, owners);
+
+        if (owners != null & owners.length > 0) {
+            this.ownerContentCurator.mapContentToOwners(content, owners);
+        }
 
         return content;
     }

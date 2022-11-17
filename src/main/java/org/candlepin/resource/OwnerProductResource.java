@@ -260,6 +260,7 @@ public class OwnerProductResource implements OwnerProductApi {
         if (!this.ownerProductCurator.lockOwnerProduct(owner, productId, LockModeType.PESSIMISTIC_WRITE)) {
             throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
         }
+
         Product product = this.ownerProductCurator.getProductById(owner, productId);
 
         if (product.isLocked()) {
@@ -295,8 +296,7 @@ public class OwnerProductResource implements OwnerProductApi {
         }
         else if (!StringUtils.equals(update.getId(), productId)) {
             throw new BadRequestException(
-                i18n.tr("Contradictory ids in update request: {0}, {1}", productId, update.getId())
-            );
+                i18n.tr("Contradictory ids in update request: {0}, {1}", productId, update.getId()));
         }
 
         this.validator.validateCollectionElementsNotNull(
@@ -309,6 +309,7 @@ public class OwnerProductResource implements OwnerProductApi {
         if (!this.ownerProductCurator.lockOwnerProduct(owner, productId, LockModeType.PESSIMISTIC_WRITE)) {
             throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
         }
+
         Product existing = this.ownerProductCurator.getProductById(owner, productId);
 
         if (existing.isLocked()) {

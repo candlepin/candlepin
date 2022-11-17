@@ -26,6 +26,9 @@ import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
+import org.candlepin.dto.api.client.v1.ContentToPromoteDTO;
+import org.candlepin.dto.api.client.v1.EnvironmentContentDTO;
+import org.candlepin.dto.api.client.v1.EnvironmentDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductContentDTO;
@@ -40,6 +43,7 @@ import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Content;
+import org.candlepin.spec.bootstrap.data.builder.Environment;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
@@ -57,8 +61,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 
@@ -795,6 +804,175 @@ class OwnerContentSpecTest {
 
             assertForbidden(() -> adminClient.ownerContent()
                 .remove(this.owner.getKey(), this.targetEntity.getId()));
+        }
+    }
+
+    /**
+     * This test attempts to verify that performing multiple modifications to content entity
+     * does not cause unintended side effects or unexpected loss of data.
+     *
+     * The expected result of this test is that in the case of parallel modification, a content
+     * entity should be in the last state received by Candlepin, and should not lose any external
+     * links back to the content, such as those coming from products, or environments.
+     */
+    @Test
+    @SuppressWarnings("MethodLength")
+    public void shouldPermitSafeParallelModification() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = this.createOwner(adminClient);
+
+        EnvironmentDTO env = adminClient.owners().createEnv(owner.getKey(), Environment.random());
+        assertNotNull(env);
+
+        int products = 10;  // number of products to create
+        int content = 3;    // number of content to create per product
+
+        Map<String, Set<String>> productContentIdMap = new HashMap<>();
+        Map<String, ContentDTO> contentMap = Collections.synchronizedMap(new HashMap<>());
+
+        // Setup initial state
+        for (int pcount = 0; pcount < products; ++pcount) {
+            ProductDTO pdto = Products.randomSKU()
+                .id(String.format("prod_%d", pcount));
+
+            pdto = adminClient.ownerProducts().createProductByOwner(owner.getKey(), pdto);
+            assertNotNull(pdto);
+
+            for (int ccount = 0; ccount < content; ++ccount) {
+                // Create content
+                ContentDTO cdto = Content.random()
+                    .id(String.format("%s-cont_%d", pdto.getId(), ccount));
+
+                cdto = adminClient.ownerContent().createContent(owner.getKey(), cdto);
+                assertNotNull(cdto);
+
+                // Promote it in the environment
+                ContentToPromoteDTO promotion = new ContentToPromoteDTO()
+                    .environmentId(env.getId())
+                    .contentId(cdto.getId())
+                    .enabled(true);
+
+                adminClient.environments().promoteContent(env.getId(), List.of(promotion), null);
+
+                // Attach it to the product
+                adminClient.ownerProducts().addContent(owner.getKey(), pdto.getId(), cdto.getId(), true);
+
+                // Store the mapping so we can reference this relationship later (maybe?)
+                contentMap.put(cdto.getId(), cdto);
+
+                productContentIdMap.computeIfAbsent(pdto.getId(), key -> new HashSet<>())
+                    .add(cdto.getId());
+            }
+        }
+
+        // Actual test: Modify the contents in as parallel as possible.
+        Set<Thread> threads = new HashSet<>();
+        int iterations = 10;
+        long maxThreadRuntime = 60000;
+
+        AtomicInteger changes = new AtomicInteger(0);
+        for (String contentId : contentMap.keySet()) {
+            final String cid = contentId;
+
+            threads.add(new Thread(() -> {
+                for (int i = 0; i < iterations; ++i) {
+                    ContentDTO update = new ContentDTO()
+                        .id(cid)
+                        .gpgUrl(StringUtil.random("gpgurl-", 8, StringUtil.CHARSET_ALPHANUMERIC))
+                        .arches(StringUtil.random("arches-", 8, StringUtil.CHARSET_ALPHANUMERIC))
+                        .requiredTags(StringUtil.random("tags-", 8, StringUtil.CHARSET_ALPHANUMERIC));
+
+                    ContentDTO cdto = adminClient.ownerContent()
+                        .updateContent(owner.getKey(), cid, update);
+
+                    assertThat(cdto)
+                        .isNotNull()
+                        .returns(cid, ContentDTO::getId)
+                        .returns(update.getGpgUrl(), ContentDTO::getGpgUrl)
+                        .returns(update.getArches(), ContentDTO::getArches)
+                        .returns(update.getRequiredTags(), ContentDTO::getRequiredTags);
+
+                    // Potentially dangerous since we're not synchronized at all, but sure.
+                    contentMap.put(cid, cdto);
+
+                    changes.incrementAndGet();
+                }
+            }));
+        }
+
+        // Manually invoke the orphan cleanup job three or four times throughout
+        threads.add(new Thread(() -> {
+            int maxChanges = iterations * products * content;
+            int minChanges = Math.min(maxChanges >>> 2, 1);
+
+            int prev = 0;
+            int current = 0;
+            long endTime = System.currentTimeMillis() + maxThreadRuntime;
+
+            try {
+                while (current < maxChanges && System.currentTimeMillis() < endTime) {
+                    current = changes.get();
+
+                    if (current - prev >= minChanges) {
+                        AsyncJobStatusDTO orphanCleanupJob = adminClient.jobs()
+                            .scheduleJob("OrphanCleanupJob");
+                        assertNotNull(orphanCleanupJob);
+
+                        orphanCleanupJob = adminClient.jobs().waitForJob(orphanCleanupJob);
+                        assertEquals("FINISHED", orphanCleanupJob.getState());
+
+                        prev = current;
+                    }
+
+                    Thread.sleep(500);
+                }
+            }
+            catch (InterruptedException e) {
+                // intentionally left empty
+            }
+        }));
+
+        threads.forEach(thread -> {
+            thread.setDaemon(true);
+            thread.start();
+        });
+
+        threads.forEach(thread -> {
+            try {
+                while (thread.isAlive()) {
+                    thread.join(maxThreadRuntime);
+                }
+            }
+            catch (InterruptedException e) {
+                // intentionally left empty
+            }
+        });
+
+        // Verify environment still lists our expected content
+        env = adminClient.environments().getEnvironment(env.getId());
+        assertNotNull(env);
+
+        assertThat(env.getEnvironmentContent())
+            .isNotNull()
+            .hasSize(contentMap.size())
+            .map(EnvironmentContentDTO::getContent)
+            .map(ContentDTO::getId)
+            .containsExactlyInAnyOrderElementsOf(contentMap.keySet());
+
+        // Verify that the products still link to valid instances of the content we just modified
+        for (Map.Entry<String, Set<String>> entry : productContentIdMap.entrySet()) {
+            String pid = entry.getKey();
+            Set<String> cids = entry.getValue();
+
+            ProductDTO pdto = adminClient.ownerProducts().getProductByOwner(owner.getKey(), pid);
+            assertNotNull(pdto);
+
+            assertThat(pdto.getProductContent())
+                .isNotNull()
+                .hasSize(cids.size())
+                .map(ProductContentDTO::getContent)
+                .map(ContentDTO::getId)
+                .containsExactlyInAnyOrderElementsOf(cids);
         }
     }
 
