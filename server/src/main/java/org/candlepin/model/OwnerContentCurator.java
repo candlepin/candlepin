@@ -16,9 +16,7 @@ package org.candlepin.model;
 
 import com.google.inject.persist.Transactional;
 
-import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
-import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
@@ -173,34 +171,59 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         return this.cpQueryFactory.<Content>buildQuery();
     }
 
-    public CandlepinQuery<Content> getContentByIds(Owner owner, Collection<String> contentIds) {
-        return this.getContentByIds(owner.getId(), contentIds);
+    /**
+     * Fetches content within the given organization by content ID as a mapping of content ID to
+     * content entity. If the organization or specified content cannot be found, this method returns
+     * an empty map. If the lookup finds only a subset of the requested content, the map will only
+     * contain entries for the existing content.
+     *
+     * @param ownerId
+     *  the ID of the organization in which to lookup content
+     *
+     * @param contentIds
+     *  a collection of content IDs (not UUID) by which to lookup content
+     *
+     * @return
+     *  a mapping of content ID to content entity for matching content in the given organization
+     */
+    public Map<String, Content> getContentByIds(String ownerId, Collection<String> contentIds) {
+        Map<String, Content> output = new HashMap<>();
+
+        if (contentIds != null && !contentIds.isEmpty()) {
+            String jpql = "SELECT oc.content FROM OwnerContent oc JOIN oc.content content " +
+                "WHERE oc.ownerId = :owner_id AND content.id IN (:content_ids)";
+
+            TypedQuery<Content> query = this.getEntityManager()
+                .createQuery(jpql, Content.class)
+                .setParameter("owner_id", ownerId);
+
+            for (List<String> block : this.partition(contentIds)) {
+                query.setParameter("content_ids", block)
+                    .getResultList()
+                    .forEach(elem -> output.put(elem.getId(), elem));
+            }
+        }
+
+        return output;
     }
 
-    public CandlepinQuery<Content> getContentByIds(String ownerId, Collection<String> contentIds) {
-        if (contentIds == null || contentIds.isEmpty()) {
-            return this.cpQueryFactory.<Content>buildQuery();
-        }
-
-        // Impl note: See getOwnersByContent for details on why we're doing this in two queries
-        Session session = this.currentSession();
-
-        List<String> uuids = session.createCriteria(OwnerContent.class)
-            .createAlias("owner", "owner")
-            .createAlias("content", "content")
-            .add(Restrictions.eq("owner.id", ownerId))
-            .add(CPRestrictions.in("content.id", contentIds))
-            .setProjection(Projections.property("content.uuid"))
-            .list();
-
-        if (uuids != null && !uuids.isEmpty()) {
-            DetachedCriteria criteria = this.createSecureDetachedCriteria(Content.class, null)
-                .add(CPRestrictions.in("uuid", uuids));
-
-            return this.cpQueryFactory.<Content>buildQuery(session, criteria);
-        }
-
-        return this.cpQueryFactory.<Content>buildQuery();
+    /**
+     * Fetches content within the given organization by content ID as a mapping of content ID to
+     * content entity. If the organization or specified content cannot be found, this method returns
+     * an empty map. If the lookup finds only a subset of the requested content, the map will only
+     * contain entries for the existing content.
+     *
+     * @param owner
+     *  the owner instance representing the organization in which to lookup content
+     *
+     * @param contentIds
+     *  a collection of content IDs (not UUID) by which to lookup content
+     *
+     * @return
+     *  a mapping of content ID to content entity for matching content in the given organization
+     */
+    public Map<String, Content> getContentByIds(Owner owner, Collection<String> contentIds) {
+        return this.getContentByIds(owner != null ? owner.getId() : null, contentIds);
     }
 
     @Transactional
@@ -363,39 +386,6 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
     }
 
     /**
-     * Builds a query which can be used to fetch the current collection of orphaned content. Due
-     * to the nature of this request, it is highly advised that this query be run within a
-     * transaction, with a pessimistic lock mode set.
-     *
-     * @return
-     *  A CandlepinQuery for fetching the orphaned content
-     */
-    public CandlepinQuery<Content> getOrphanedContent() {
-        // As with many of the owner=>content lookups, we have to do this in two queries. Since
-        // we need to start from content and do a left join back to owner content, we have to use
-        // a native query instead of any of the ORM query languages
-
-        String sql = "SELECT c.uuid " +
-            "FROM cp2_content c LEFT JOIN cp2_owner_content oc ON c.uuid = oc.content_uuid " +
-            "WHERE oc.owner_id IS NULL";
-
-        List<String> uuids = this.getEntityManager()
-            .createNativeQuery(sql)
-            .getResultList();
-
-        if (uuids != null && !uuids.isEmpty()) {
-            DetachedCriteria criteria = DetachedCriteria.forClass(Content.class)
-                .add(CPRestrictions.in("uuid", uuids))
-                .addOrder(Order.asc("uuid"));
-
-            return this.cpQueryFactory.<Content>buildQuery(this.currentSession(), criteria);
-        }
-
-        return this.cpQueryFactory.<Content>buildQuery();
-    }
-
-
-    /**
      * Updates the content references currently pointing to the original content to instead point to
      * the updated content for the specified owners.
      * <p/></p>
@@ -427,8 +417,6 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             // Nothing to update
             return;
         }
-
-        Session session = this.currentSession();
 
         // FIXME: remove usage of bulkSQLUpdate. While it's a clever use of an SQL CASE to avoid
         // a ton of individual update statements, it still runs over the parameter limit in some

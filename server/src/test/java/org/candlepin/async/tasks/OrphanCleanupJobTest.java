@@ -22,6 +22,8 @@ import static org.mockito.Mockito.*;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Content;
+import org.candlepin.model.Environment;
+import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -40,8 +42,7 @@ import java.util.Set;
 public class OrphanCleanupJobTest extends DatabaseTestFixture {
 
     private OrphanCleanupJob createJobInstance() {
-        return new OrphanCleanupJob(this.contentCurator, this.ownerContentCurator, this.productCurator,
-            this.ownerProductCurator);
+        return new OrphanCleanupJob(this.contentCurator, this.productCurator);
     }
 
     private Content createOrphanedContent() {
@@ -134,7 +135,7 @@ public class OrphanCleanupJobTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCleanupDoesNotRemoveOrphansReferencedByPools() throws Exception {
+    public void testCleanupDoesNotRemoveOrphanedProductsReferencedByPools() throws Exception {
         Owner owner1 = this.createOwner();
         Owner owner2 = this.createOwner();
 
@@ -164,7 +165,7 @@ public class OrphanCleanupJobTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCleanupDoesNotRemoveOrphansReferencedByProducts() throws Exception {
+    public void testCleanupDoesNotRemoveOrphanedProductsReferencedByProducts() throws Exception {
         Owner owner1 = this.createOwner();
         Owner owner2 = this.createOwner();
 
@@ -197,5 +198,113 @@ public class OrphanCleanupJobTest extends DatabaseTestFixture {
 
         // Verify unreferenced orphans were
         assertNull(this.productCurator.get(product3.getUuid()));
+    }
+
+    @Test
+    public void testCleanupDoesNotRemoveOrphanedContentReferencedByProducts() throws Exception {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Content orphanedContent1 = this.createOrphanedContent();
+        Content orphanedContent2 = this.createOrphanedContent();
+        Content orphanedContent3 = this.createOrphanedContent();
+
+        Product refProduct1 = TestUtil.createProduct("ref_p1", "ref product 1");
+        refProduct1.addContent(orphanedContent1, true);
+
+        Product refProduct2 = TestUtil.createProduct("ref_p2", "ref product 2");
+        refProduct2.addContent(orphanedContent2, false);
+
+        refProduct1 = this.createProduct(refProduct1, owner1);
+        refProduct2 = this.createProduct(refProduct2, owner2);
+
+        // Execute job
+        OrphanCleanupJob job = this.createJobInstance();
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = new JobExecutionContext(status);
+
+        job.execute(context);
+
+        this.ownerCurator.flush();
+        this.ownerCurator.clear();
+
+        // Verify referenced orphans were not removed
+        assertNotNull(this.contentCurator.get(orphanedContent1.getUuid()));
+        assertNotNull(this.contentCurator.get(orphanedContent2.getUuid()));
+
+        // Verify unreferenced orphans were
+        assertNull(this.contentCurator.get(orphanedContent3.getUuid()));
+    }
+
+    @Test
+    public void testCleanupRemovesOrphanedContentReferencedByOrphanedProducts() throws Exception {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Content orphanedContent1 = this.createOrphanedContent();
+        Content orphanedContent2 = this.createOrphanedContent();
+        Content orphanedContent3 = this.createOrphanedContent();
+
+        Product orphanedProduct1 = TestUtil.createProduct("ref_p1", "ref product 1");
+        orphanedProduct1.addContent(orphanedContent1, true);
+
+        Product orphanedProduct2 = TestUtil.createProduct("ref_p2", "ref product 2");
+        orphanedProduct2.addContent(orphanedContent2, false);
+
+        orphanedProduct1 = this.productCurator.create(orphanedProduct1);
+        orphanedProduct2 = this.productCurator.create(orphanedProduct2);
+
+        // Execute job
+        OrphanCleanupJob job = this.createJobInstance();
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = new JobExecutionContext(status);
+
+        job.execute(context);
+
+        this.ownerCurator.flush();
+        this.ownerCurator.clear();
+
+        // Verify referenced orphans were removed, as they were only referenced by orphaned products
+        assertNull(this.contentCurator.get(orphanedContent1.getUuid()));
+        assertNull(this.contentCurator.get(orphanedContent2.getUuid()));
+
+        // Verify unreferenced orphans were also removed as normal
+        assertNull(this.contentCurator.get(orphanedContent3.getUuid()));
+    }
+
+    @Test
+    public void testCleanupDoesNotRemoveOrphanedContentReferencedByEnvironments() throws Exception {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Content orphanedContent1 = this.createOrphanedContent();
+        Content orphanedContent2 = this.createOrphanedContent();
+        Content orphanedContent3 = this.createOrphanedContent();
+
+        Environment refEnv1 = new Environment("ref_env_1", "ref environment 1", owner1);
+        refEnv1.setEnvironmentContent(Set.of(new EnvironmentContent(refEnv1, orphanedContent1, true)));
+
+        Environment refEnv2 = new Environment("ref_env_2", "ref environment 2", owner2);
+        refEnv2.setEnvironmentContent(Set.of(new EnvironmentContent(refEnv2, orphanedContent2, true)));
+
+        refEnv1 = this.environmentCurator.create(refEnv1);
+        refEnv2 = this.environmentCurator.create(refEnv2);
+
+        // Execute job
+        OrphanCleanupJob job = this.createJobInstance();
+        AsyncJobStatus status = mock(AsyncJobStatus.class);
+        JobExecutionContext context = new JobExecutionContext(status);
+
+        job.execute(context);
+
+        this.ownerCurator.flush();
+        this.ownerCurator.clear();
+
+        // Verify referenced orphans were not removed
+        assertNotNull(this.contentCurator.get(orphanedContent1.getUuid()));
+        assertNotNull(this.contentCurator.get(orphanedContent2.getUuid()));
+
+        // Verify unreferenced orphans were
+        assertNull(this.contentCurator.get(orphanedContent3.getUuid()));
     }
 }

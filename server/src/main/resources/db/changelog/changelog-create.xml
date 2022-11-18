@@ -1259,4 +1259,6 @@
     <include file="db/changelog/20220314130000-64bit_entity_versions.xml"/>
     <include file="db/changelog/20220420165513-drop_pool_derived_product_constraint.xml"/>
     <include file="db/changelog/20220517162755-add_owner_product_orphaned_date.xml"/>
+    <include file="db/changelog/20221114152236-add_delete_cascade_to_content_modified_products.xml"/>
+    <include file="db/changelog/20221117125815-prime_system_locks.xml"/>
 </databaseChangeLog>

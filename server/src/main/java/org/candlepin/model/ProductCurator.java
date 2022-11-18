@@ -20,7 +20,6 @@ import org.candlepin.util.AttributeValidator;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.DetachedCriteria;
@@ -31,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -358,18 +358,36 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Returns a set of pairs consisting of products which are in use by one or more pools. The
-     * pairs returned by this method provide the product UUID mapped to the ID of the pool
-     * referencing it.
-     *
-     * @param productUuids
-     *  a collection of product UUIDs to check for use
+     * Fetches a list of product UUIDs representing products which are no longer used by any owner.
+     * If no such products exist, this method returns an empty list.
      *
      * @return
-     *  a set of product UUIDs representing products which are used by one or more pool
+     *  a list of UUIDs of products no longer used by any organization
      */
-    public Set<Pair<String, String>> getPoolsReferencingProducts(Collection<String> productUuids) {
-        Set<Pair<String, String>> output = new HashSet<>();
+    public List<String> getOrphanedProductUuids() {
+        String sql = "SELECT p.uuid " +
+            "FROM cp2_products p LEFT JOIN cp2_owner_products op ON p.uuid = op.product_uuid " +
+            "WHERE op.owner_id IS NULL";
+
+        return this.getEntityManager()
+            .createNativeQuery(sql)
+            .getResultList();
+    }
+
+    /**
+     * Returns a mapping of product UUIDs to collections of pools referencing them. That is, for
+     * a given entry in the returned map, the key will be one of the input product UUIDs, and the
+     * value will be the set of pool IDs which reference it. If no pools reference any of the
+     * specified products by UUID, this method returns an empty map.
+     *
+     * @param productUuids
+     *  a collection product UUIDs for which to fetch referencing pools
+     *
+     * @return
+     *  a mapping of product UUIDs to sets of IDs of the pools referencing them
+     */
+    public Map<String, Set<String>> getPoolsReferencingProducts(Collection<String> productUuids) {
+        Map<String, Set<String>> output = new HashMap<>();
 
         if (productUuids != null && !productUuids.isEmpty()) {
             String jpql = "SELECT p.product.uuid, p.id FROM Pool p " +
@@ -383,7 +401,8 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                     .getResultList();
 
                 for (Object[] row : rows) {
-                    output.add(Pair.of((String) row[0], (String) row[1]));
+                    output.computeIfAbsent((String) row[0], (key) -> new HashSet<>())
+                        .add((String) row[1]);
                 }
             }
         }
@@ -392,18 +411,19 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Returns a set of pairs consisting of products currently referencing one or more of the
-     * given products as provided products. The pairs returned by this method provide the product
-     * UUID mapped to the UUID of the product referencing it.
+     * Returns a mapping of product UUIDs to collections of products referencing them. That is, for
+     * a given entry in the returned map, the key will be one of the input product UUIDs, and the
+     * value will be the set of product UUIDs which reference it. If no products reference any of
+     * the specified products by UUID, this method returns an empty map.
      *
      * @param productUuids
-     *  a collection of product UUIDs to check for use
+     *  a collection product UUIDs for which to fetch referencing products
      *
      * @return
-     *  a set of product UUIDs representing products which are used by one or more pool
+     *  a mapping of product UUIDs to sets of UUIDs of the products referencing them
      */
-    public Set<Pair<String, String>> getProductsReferencingProducts(Collection<String> productUuids) {
-        Set<Pair<String, String>> output = new HashSet<>();
+    public Map<String, Set<String>> getProductsReferencingProducts(Collection<String> productUuids) {
+        Map<String, Set<String>> output = new HashMap<>();
 
         if (productUuids != null && !productUuids.isEmpty()) {
             // Impl note:
@@ -415,15 +435,20 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                 "SELECT pp.provided_product_uuid, pp.product_uuid FROM cp2_product_provided_products pp " +
                 "WHERE pp.provided_product_uuid IN (:product_uuids)";
 
+            // The block has to be included twice, so ensure we don't exceed the parameter limit
+            // with large blocks
+            int blockSize = Math.min(this.getQueryParameterLimit() / 2, this.getInBlockSize());
+
             Query query = this.getEntityManager()
                 .createNativeQuery(sql);
 
-            for (List<String> block : this.partition(productUuids)) {
+            for (List<String> block : this.partition(productUuids, blockSize)) {
                 List<Object[]> rows = query.setParameter("product_uuids", block)
                     .getResultList();
 
                 for (Object[] row : rows) {
-                    output.add(Pair.of((String) row[0], (String) row[1]));
+                    output.computeIfAbsent((String) row[0], (key) -> new HashSet<>())
+                        .add((String) row[1]);
                 }
             }
         }

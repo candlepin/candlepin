@@ -136,11 +136,11 @@ public class ContentManager {
             throw new IllegalArgumentException("contentData is incomplete");
         }
 
+        this.ownerContentCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
+
         if (this.ownerContentCurator.contentExists(owner, contentData.getId())) {
             throw new IllegalStateException("content has already been created: " + contentData.getId());
         }
-
-        this.ownerContentCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
 
         log.debug("Creating new content for org: {}, {}", contentData, owner);
 
@@ -220,6 +220,8 @@ public class ContentManager {
             throw new IllegalArgumentException("contentData is incomplete");
         }
 
+        this.ownerContentCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
+
         // Resolve the entity to ensure we're working with the merged entity, and to ensure it's
         // already been created.
         Content entity = this.ownerContentCurator.getContentById(owner, contentData.getId());
@@ -233,8 +235,6 @@ public class ContentManager {
         if (!isChangedBy(entity, contentData)) {
             return entity;
         }
-
-        this.ownerContentCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_READ);
 
         log.debug("Applying content update for org: {} => {}, {}", contentData, entity, owner);
 
@@ -352,6 +352,8 @@ public class ContentManager {
         if (contentId == null) {
             throw new IllegalArgumentException("contentId is null");
         }
+
+        this.ownerContentCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
 
         Content entity = this.ownerContentCurator.getContentById(owner, contentId);
         if (entity == null) {

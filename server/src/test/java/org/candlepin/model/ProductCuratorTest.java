@@ -33,8 +33,6 @@ import org.candlepin.util.PropertyValidationException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.HibernateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,6 +52,8 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import javax.validation.ConstraintViolationException;
+
+
 
 public class ProductCuratorTest extends DatabaseTestFixture {
     private static Logger log = LoggerFactory.getLogger(ProductCuratorTest.class);
@@ -515,13 +515,13 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     @Test
     public void testPoolProvidedProducts() {
         Set<String> uuids = productCurator.getPoolProvidedProductUuids(pool.getId());
-        assertEquals(new HashSet<>(Arrays.asList(providedProduct.getUuid())), uuids);
+        assertEquals(Set.of(providedProduct.getUuid()), uuids);
     }
 
     @Test
     public void testDerivedPoolProvidedProducts() {
         Set<String> uuids = productCurator.getDerivedPoolProvidedProductUuids(pool.getId());
-        assertEquals(new HashSet<>(Arrays.asList(derivedProvidedProduct.getUuid())), uuids);
+        assertEquals(Set.of(derivedProvidedProduct.getUuid()), uuids);
     }
 
     @Test
@@ -659,14 +659,17 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Pool pool2 = this.createPool(owner1, product2);
         Pool pool3 = this.createPool(owner2, product3);
 
-        Set<Pair<String, String>> output = this.productCurator.getPoolsReferencingProducts(
+        Map<String, Set<String>> output = this.productCurator.getPoolsReferencingProducts(
             Arrays.asList(product1.getUuid(), product2.getUuid()));
 
         assertNotNull(output);
         assertEquals(2, output.size());
-        assertThat(output, containsInAnyOrder(
-            new ImmutablePair<String, String>(product1.getUuid(), pool1.getId()),
-            new ImmutablePair<String, String>(product2.getUuid(), pool2.getId())));
+
+        assertTrue(output.containsKey(product1.getUuid()));
+        assertEquals(Set.of(pool1.getId()), output.get(product1.getUuid()));
+
+        assertTrue(output.containsKey(product2.getUuid()));
+        assertEquals(Set.of(pool2.getId()), output.get(product2.getUuid()));
     }
 
     @Test
@@ -682,7 +685,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Pool pool2 = this.createPool(owner1, product2);
         Pool pool3 = this.createPool(owner2, product3);
 
-        Set<Pair<String, String>> output = this.productCurator.getPoolsReferencingProducts(
+        Map<String, Set<String>> output = this.productCurator.getPoolsReferencingProducts(
             Arrays.asList("bad uuid", "another bad uuid"));
 
         assertNotNull(output);
@@ -691,7 +694,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetPoolsReferencingProductsWithEmptyInput() {
-        Set<Pair<String, String>> output = this.productCurator.getPoolsReferencingProducts(
+        Map<String, Set<String>> output = this.productCurator.getPoolsReferencingProducts(
             Collections.emptyList());
 
         assertNotNull(output);
@@ -700,7 +703,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetPoolsReferencingProductsWithNullInput() {
-        Set<Pair<String, String>> output = this.productCurator.getPoolsReferencingProducts(null);
+        Map<String, Set<String>> output = this.productCurator.getPoolsReferencingProducts(null);
 
         assertNotNull(output);
         assertEquals(0, output.size());
@@ -728,14 +731,17 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         refProduct2 = this.createProduct(refProduct2, owner1);
         refProduct3 = this.createProduct(refProduct3, owner2);
 
-        Set<Pair<String, String>> output = this.productCurator.getProductsReferencingProducts(
+        Map<String, Set<String>> output = this.productCurator.getProductsReferencingProducts(
             Arrays.asList(product1.getUuid(), product2.getUuid()));
 
         assertNotNull(output);
         assertEquals(2, output.size());
-        assertThat(output, containsInAnyOrder(
-            new ImmutablePair<String, String>(product1.getUuid(), refProduct1.getUuid()),
-            new ImmutablePair<String, String>(product2.getUuid(), refProduct2.getUuid())));
+
+        assertTrue(output.containsKey(product1.getUuid()));
+        assertEquals(Set.of(refProduct1.getUuid()), output.get(product1.getUuid()));
+
+        assertTrue(output.containsKey(product2.getUuid()));
+        assertEquals(Set.of(refProduct2.getUuid()), output.get(product2.getUuid()));
     }
 
     @Test
@@ -760,7 +766,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         refProduct2 = this.createProduct(refProduct2, owner1);
         refProduct3 = this.createProduct(refProduct3, owner2);
 
-        Set<Pair<String, String>> output = this.productCurator.getProductsReferencingProducts(
+        Map<String, Set<String>> output = this.productCurator.getProductsReferencingProducts(
             Arrays.asList("bad uuid", "another bad uuid"));
 
         assertNotNull(output);
@@ -769,7 +775,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetProductsReferencingProductsWithEmptyInput() {
-        Set<Pair<String, String>> output = this.productCurator.getProductsReferencingProducts(
+        Map<String, Set<String>> output = this.productCurator.getProductsReferencingProducts(
             Collections.emptyList());
 
         assertNotNull(output);
@@ -778,7 +784,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetProductsReferencingProductsWithNullInput() {
-        Set<Pair<String, String>> output = this.productCurator.getProductsReferencingProducts(null);
+        Map<String, Set<String>> output = this.productCurator.getProductsReferencingProducts(null);
 
         assertNotNull(output);
         assertEquals(0, output.size());
