@@ -83,6 +83,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -329,7 +330,7 @@ public class ExporterTest {
     @Test
     public void exportMetadata() throws ExportCreationException, IOException {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
-        Date start = new Date();
+        Instant start = Instant.now().minusSeconds(1L);
         Rules mrules = mock(Rules.class);
         Consumer consumer = mock(Consumer.class);
         Principal principal = mock(Principal.class);
@@ -369,7 +370,7 @@ public class ExporterTest {
         // VERIFY
         assertNotNull(export);
         assertTrue(export.exists());
-        verifyContent(export, "export/meta.json", new VerifyMetadata(start));
+        verifyContent(export, "export/meta.json", new VerifyMetadata(new Date(start.toEpochMilli())));
 
         // cleanup the mess
         FileUtils.deleteDirectory(export.getParentFile());
