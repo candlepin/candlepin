@@ -183,13 +183,19 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         this.createOwnerContentMapping(owner, content2);
 
         Collection<String> ids = Arrays.asList(content1.getId(), content2.getId(), content3.getId(), "dud");
-        Collection<Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids).list();
-        Collection<Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids).list();
+        Map<String, Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids);
+        Map<String, Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids);
 
         assertEquals(2, contentA.size());
-        assertTrue(contentA.contains(content1));
-        assertTrue(contentA.contains(content2));
-        assertFalse(contentA.contains(content3));
+
+        assertTrue(contentA.containsKey(content1.getId()));
+        assertEquals(content1, contentA.get(content1.getId()));
+
+        assertTrue(contentA.containsKey(content2.getId()));
+        assertEquals(content2, contentA.get(content2.getId()));
+
+        assertFalse(contentA.containsKey(content3.getId()));
+
         assertEquals(contentA, contentB);
     }
 
@@ -203,8 +209,8 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         this.createOwnerContentMapping(owner, content2);
 
         Collection<String> ids = null;
-        Collection<Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids).list();
-        Collection<Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids).list();
+        Map<String, Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids);
+        Map<String, Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids);
 
         assertTrue(contentA.isEmpty());
         assertTrue(contentB.isEmpty());
@@ -220,8 +226,8 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         this.createOwnerContentMapping(owner, content2);
 
         Collection<String> ids = Collections.<String>emptyList();
-        Collection<Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids).list();
-        Collection<Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids).list();
+        Map<String, Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids);
+        Map<String, Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids);
 
         assertTrue(contentA.isEmpty());
         assertTrue(contentB.isEmpty());
