@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.0.19
+Version: 4.0.20
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -233,6 +233,12 @@ fi
 
 #raw
 %changelog
+* Wed Nov 23 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.20-1
+- 2142944: API-level product/content updates no longer occur in parallel
+  (crog@redhat.com)
+- Removed setting encoding on FileConfiguration implementation
+  (crog@redhat.com)
+
 * Mon Jul 25 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.0.19-1
 - Use jdbc jars from java dependencies instead of rpm (nmoumoul@redhat.com)
 - Added support for skipping pool creation while processing test data
