@@ -292,8 +292,19 @@ public class ContentAccessManagerTest {
     }
 
     private Environment mockEnvironment(Owner owner, Consumer consumer, Content content) {
-        Environment environment = new Environment("test_environment", "test_environment", owner);
-        environment.setEnvironmentContent(Util.asSet(new EnvironmentContent(environment, content, true)));
+        int rnd = TestUtil.randomInt();
+
+        Environment environment = new Environment()
+            .setId("test_environment-" + rnd)
+            .setName("test_environment-" + rnd)
+            .setOwner(owner);
+
+        EnvironmentContent ec = new EnvironmentContent()
+            .setEnvironment(environment)
+            .setContent(content)
+            .setEnabled(true);
+
+        environment.addEnvironmentContent(ec);
 
         consumer.addEnvironment(environment);
 

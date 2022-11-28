@@ -52,7 +52,6 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCertificateCurator;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
-import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.IdentityCertificateCurator;
@@ -539,21 +538,17 @@ public class DatabaseTestFixture {
     protected Environment createEnvironment(Owner owner, String id, String name, String description,
         Collection<Consumer> consumers, Collection<Content> content) {
 
-        Environment environment = new Environment(id, name, owner);
-        environment.setDescription(description);
+        Environment environment = new Environment()
+            .setId(id)
+            .setName(name)
+            .setOwner(owner)
+            .setDescription(description);
 
         if (content != null) {
-            for (Content elem : content) {
-                EnvironmentContent envContent = new EnvironmentContent(environment, elem, true);
-
-                // Impl note:
-                // At the time of writing, this line is redundant. But if we ever fix environment,
-                // this will be good to have as a backup.
-                environment.getEnvironmentContent().add(envContent);
-            }
+            content.forEach(elem -> environment.addContent(elem, true));
         }
 
-        environment = this.environmentCurator.create(environment);
+        this.environmentCurator.create(environment);
 
         // Update consumers to point to the new environment
         if (consumers != null) {

@@ -66,6 +66,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.SortedSet;
 
 import javax.inject.Provider;
 
@@ -130,10 +131,10 @@ public class Entitler {
         }
     }
 
-    public List<Entitlement> bindByPoolQuantities(String consumeruuid,
+    public List<Entitlement> bindByPoolQuantities(String consumerUuid,
         Map<String, Integer> poolIdAndQuantities) throws EntitlementRefusedException {
 
-        Consumer c = consumerCurator.findByUuid(consumeruuid);
+        Consumer c = consumerCurator.findByUuid(consumerUuid);
         return bindByPoolQuantities(c, poolIdAndQuantities);
     }
 
@@ -165,13 +166,18 @@ public class Entitler {
         }
     }
 
-    public List<Entitlement> bindByProducts(String[] productIds,
-        String consumeruuid, Date entitleDate, Collection<String> fromPools)
+    public List<Entitlement> bindByProducts(Collection<String> productIds, String consumerUuid,
+        Date entitleDate, Collection<String> fromPools)
         throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
-        Consumer c = consumerCurator.findByUuid(consumeruuid);
-        Owner o = ownerCurator.findOwnerById(c.getOwnerId());
-        AutobindData data = AutobindData.create(c, o).on(entitleDate)
-            .forProducts(productIds).withPools(fromPools);
+
+        Consumer consumer = consumerCurator.findByUuid(consumerUuid);
+        Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
+
+        AutobindData data = new AutobindData(consumer, owner)
+            .on(entitleDate)
+            .forProducts(productIds)
+            .withPools(fromPools);
+
         return bindByProducts(data);
     }
 
@@ -189,6 +195,7 @@ public class Entitler {
      */
     public List<Entitlement> bindByProducts(AutobindData data)
         throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+
         return bindByProducts(data, false);
     }
 
@@ -310,8 +317,9 @@ public class Entitler {
                 poolManager.deletePool(devPool);
             }
             devPool = poolManager.createPool(assembleDevPool(consumer, owner, sku));
-            data.setPossiblePools(Arrays.asList(devPool.getId()));
-            data.setProductIds(new String[]{sku});
+
+            data.setPossiblePools(Arrays.asList(devPool.getId()))
+                .setProductIds(Arrays.asList(sku));
         }
 
         // Attempt to create entitlements:
@@ -323,11 +331,10 @@ public class Entitler {
         }
         catch (EntitlementRefusedException e) {
             // TODO: Could be multiple errors, but we'll just report the first one for now
-            String productId = "Unknown Product";
-
-            if (data.getProductIds().length > 0) {
-                productId = data.getProductIds()[0];
-            }
+            SortedSet<String> productIds = data.getProductIds();
+            String productId = productIds != null && productIds.size() > 0 ?
+                productIds.first() :
+                "Unknown Product";
 
             throw new ForbiddenException(messageTranslator.productErrorToMessage(
                 productId, e.getResults().values().iterator().next().getErrors().get(0)), e);

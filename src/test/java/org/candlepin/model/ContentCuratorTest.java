@@ -21,7 +21,6 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,23 +51,6 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         }
 
         return this.createProduct(product, owner);
-    }
-
-    private Environment createEnvironmentWithContent(Owner owner, Content... contents) {
-        String environmentId = "test-env-" + TestUtil.randomInt();
-        Environment environment = new Environment(environmentId, environmentId, owner);
-
-        if (contents != null && contents.length > 0) {
-            Set<EnvironmentContent> envContent = new HashSet<>();
-
-            for (Content content : contents) {
-                envContent.add(new EnvironmentContent(environment, content, true));
-            }
-
-            environment.setEnvironmentContent(envContent);
-        }
-
-        return this.environmentCurator.create(environment);
     }
 
     @Test
@@ -285,97 +267,6 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetProductsReferencingContentHandlesNullInput() {
         Map<String, Set<String>> output = this.contentCurator.getProductsReferencingContent(null);
-        assertNotNull(output);
-        assertTrue(output.isEmpty());
-    }
-
-    @Test
-    public void testGetEnvironmentsReferencingContent() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-
-        Content content1 = this.createContent(owner1);
-        Content content2 = this.createContent(owner2);
-        Content content3 = this.createContent(owner1);
-
-        Environment environment1 = this.createEnvironmentWithContent(owner1, content1);
-        Environment environment2 = this.createEnvironmentWithContent(owner2, content2, content3);
-        Environment environment3 = this.createEnvironmentWithContent(owner1);
-
-        Set<String> input = Set.of(content1.getUuid(), content2.getUuid(), content3.getUuid());
-
-        Map<String, Set<String>> output = this.contentCurator.getEnvironmentsReferencingContent(input);
-        assertNotNull(output);
-        assertEquals(3, output.size());
-
-        assertTrue(output.containsKey(content1.getUuid()));
-        assertEquals(Set.of(environment1.getId()), output.get(content1.getUuid()));
-
-        assertTrue(output.containsKey(content2.getUuid()));
-        assertEquals(Set.of(environment2.getId()), output.get(content2.getUuid()));
-
-        assertTrue(output.containsKey(content3.getUuid()));
-        assertEquals(Set.of(environment2.getId()), output.get(content3.getUuid()));
-    }
-
-    @Test
-    public void testGetEnvironmentsRefrencingContentWithMultipleReferences() {
-        Owner owner = this.createOwner();
-
-        Content content1 = this.createContent(owner);
-        Content content2 = this.createContent(owner);
-        Content content3 = this.createContent(owner);
-
-        Environment environment1 = this.createEnvironmentWithContent(owner, content1, content2);
-        Environment environment2 = this.createEnvironmentWithContent(owner, content2, content3);
-        Environment environment3 = this.createEnvironmentWithContent(owner, content3, content1);
-
-        Set<String> input = Set.of(content1.getUuid(), content2.getUuid(), content3.getUuid());
-
-        Map<String, Set<String>> output = this.contentCurator.getEnvironmentsReferencingContent(input);
-        assertNotNull(output);
-        assertEquals(3, output.size());
-
-        assertTrue(output.containsKey(content1.getUuid()));
-        assertEquals(Set.of(environment1.getId(), environment3.getId()), output.get(content1.getUuid()));
-
-        assertTrue(output.containsKey(content2.getUuid()));
-        assertEquals(Set.of(environment1.getId(), environment2.getId()), output.get(content2.getUuid()));
-
-        assertTrue(output.containsKey(content3.getUuid()));
-        assertEquals(Set.of(environment2.getId(), environment3.getId()), output.get(content3.getUuid()));
-    }
-
-    @Test
-    public void testGetEnvironmentsReferencingContentWithNoReferences() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-
-        Content content1 = this.createContent(owner1);
-        Content content2 = this.createContent(owner2);
-        Content content3 = this.createContent(owner1);
-
-        Environment environment1 = this.createEnvironment(owner1);
-        Environment environment2 = this.createEnvironment(owner2);
-        Environment environment3 = this.createEnvironment(owner1);
-
-        Set<String> input = Set.of(content1.getUuid(), content2.getUuid(), content3.getUuid());
-
-        Map<String, Set<String>> output = this.contentCurator.getEnvironmentsReferencingContent(input);
-        assertNotNull(output);
-        assertTrue(output.isEmpty());
-    }
-
-    @Test
-    public void testGetEnvironmentsReferencingContentHandlesEmptyInput() {
-        Map<String, Set<String>> output = this.contentCurator.getEnvironmentsReferencingContent(Set.of());
-        assertNotNull(output);
-        assertTrue(output.isEmpty());
-    }
-
-    @Test
-    public void testGetEnvironmentsReferencingContentHandlesNullInput() {
-        Map<String, Set<String>> output = this.contentCurator.getEnvironmentsReferencingContent(null);
         assertNotNull(output);
         assertTrue(output.isEmpty());
     }

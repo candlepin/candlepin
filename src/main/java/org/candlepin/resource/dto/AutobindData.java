@@ -20,94 +20,136 @@ import org.candlepin.model.Owner;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.LinkedList;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
+
 
 /**
  * Encapsulates data for an autobind
  */
 public class AutobindData {
 
-    private Date onDate;
-    private String[] productIds;
-    private Collection<String> possiblePools;
-    private Consumer consumer;
     private Owner owner;
+    private Consumer consumer;
+
+    private Date onDate;
+    private Set<String> poolIds;
+    private SortedSet<String> productIds;
 
     public AutobindData(Consumer consumer, Owner owner) {
-        // Consumer is always required
-        this.consumer = consumer;
+        this.setOwner(owner)
+            .setConsumer(consumer);
+
+        this.poolIds = new HashSet<>();
+        this.productIds = new TreeSet<>();
+    }
+
+    public AutobindData setOwner(Owner owner) {
         this.owner = owner;
-        possiblePools = new LinkedList<>();
+        return this;
     }
 
-    public static AutobindData create(Consumer consumer, Owner owner) {
-        return new AutobindData(consumer, owner);
+    public Owner getOwner() {
+        return this.owner;
     }
 
-    public AutobindData on(Date date) {
+    public AutobindData setConsumer(Consumer consumer) {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        this.consumer = consumer;
+        return this;
+    }
+
+    public Consumer getConsumer() {
+        return this.consumer;
+    }
+
+    public AutobindData setOnDate(Date date) {
         this.onDate = date;
         return this;
     }
 
-    public AutobindData withPools(Collection<String> possiblePools) {
-        if (possiblePools != null && !possiblePools.isEmpty()) {
-            this.possiblePools = possiblePools;
-        }
-        else {
-            this.possiblePools.clear();
-        }
-        return this;
-    }
-
-    public AutobindData forProducts(String[] productIds) {
-        this.setProductIds(productIds);
-        return this;
+    /**
+     * Alias of setOnDate; retained for legacy purposes.
+     *
+     * @param date
+     *  the start date or effective date of the bind operation
+     *
+     * @return
+     *  a reference to this AutobindData instance
+     */
+    public AutobindData on(Date date) {
+        return this.setOnDate(date);
     }
 
     public Date getOnDate() {
-        return onDate;
+        return this.onDate;
     }
 
-    public void setOnDate(Date onDate) {
-        this.onDate = onDate;
-    }
+    public AutobindData setPossiblePools(Collection<String> poolIds) {
+        this.poolIds.clear();
 
-    public String[] getProductIds() {
-        return productIds;
-    }
-
-    public void setProductIds(String[] productIds) {
-        if (productIds != null) {
-            Arrays.sort(productIds);
+        if (poolIds != null) {
+            poolIds.stream()
+                .filter(Objects::nonNull)
+                .forEach(pid -> this.poolIds.add(pid));
         }
-        this.productIds = productIds;
+
+        return this;
     }
 
-    public Collection<String> getPossiblePools() {
-        return possiblePools;
+    /**
+     * Alias of setPossiblePools; retained for legacy purposes.
+     *
+     * @param poolIds
+     *  a collection of possible pool IDs to use for the bind operation
+     *
+     * @return
+     *  a reference to this AutobindData instance
+     */
+    public AutobindData withPools(Collection<String> poolIds) {
+        return this.setPossiblePools(poolIds);
     }
 
-    public void setPossiblePools(Collection<String> possiblePools) {
-        this.possiblePools = possiblePools;
+    public Set<String> getPossiblePools() {
+        return this.poolIds;
     }
 
-    public Consumer getConsumer() {
-        return consumer;
+    public AutobindData setProductIds(Collection<String> productIds) {
+        this.productIds.clear();
+
+        if (productIds != null) {
+            productIds.stream()
+                .filter(Objects::nonNull)
+                .forEach(pid -> this.productIds.add(pid));
+        }
+
+        return this;
     }
 
-    public void setConsumer(Consumer consumer) {
-        this.consumer = consumer;
+    /**
+     * Alias of setProductIds; retained for legacy purposes
+     *
+     * @param productIds
+     *  a collection of product IDs to use for the bind operation
+     *
+     * @return
+     *  a reference to this AutobindData instance
+     */
+    public AutobindData forProducts(Collection<String> productIds) {
+        return this.setProductIds(productIds);
     }
 
-    public Owner getOwner() {
-        return owner;
-    }
-
-    public void setOwner(Owner owner) {
-        this.owner = owner;
+    public SortedSet<String> getProductIds() {
+        return this.productIds;
     }
 
     @Override
@@ -115,38 +157,34 @@ public class AutobindData {
         if (!(other instanceof AutobindData)) {
             return false;
         }
+
         AutobindData that = (AutobindData) other;
+
+        // TODO: FIXME: Why is owner not part of this!?
+
         return new EqualsBuilder()
             .append(this.onDate, that.onDate)
             .append(this.productIds, that.productIds)
             .append(this.consumer, that.consumer)
-            .append(this.possiblePools, that.possiblePools)
+            .append(this.poolIds, that.poolIds)
             .isEquals();
     }
 
     @Override
     public int hashCode() {
         return new HashCodeBuilder()
-            .append(onDate)
-            .append(productIds)
-            .append(consumer)
-            .append(possiblePools)
+            .append(this.onDate)
+            .append(this.productIds)
+            .append(this.consumer)
+            .append(this.poolIds)
             .hashCode();
     }
 
     @Override
     public String toString() {
-        return new StringBuffer()
-            .append("onDate: ")
-            .append(this.onDate)
-            .append(", productIds: ")
-            .append(this.productIds)
-            .append(", consumer: ")
-            .append(this.consumer)
-            .append(", owner: ")
-            .append(this.owner)
-            .append(", possiblePools: ")
-            .append(this.possiblePools)
-            .toString();
+        return String.format(
+            "AutobindData [owner: %s, consumer: %s, onDate: %s, pool IDs: %s, product IDs: %s]",
+            this.getOwner(), this.getConsumer(), this.getOnDate(), this.getPossiblePools(),
+            this.getProductIds());
     }
 }

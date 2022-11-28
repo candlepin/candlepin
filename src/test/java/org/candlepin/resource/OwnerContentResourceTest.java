@@ -231,19 +231,12 @@ public class OwnerContentResourceTest extends DatabaseTestFixture {
     public void deleteContent() {
         Owner owner = this.createOwner("test_owner");
         Content content = this.createContent("test_content", "test_content", owner);
-        Environment environment = this.createEnvironment(owner, "test_env", "test_env", null, null,
-            Arrays.asList(content));
 
         assertNotNull(this.ownerContentCurator.getContentById(owner, content.getId()));
 
         this.ownerContentResource.remove(owner.getKey(), content.getId());
 
         assertNull(this.ownerContentCurator.getContentById(owner, content.getId()));
-
-        this.environmentCurator.evict(environment);
-        environment = this.environmentCurator.get(environment.getId());
-
-        assertEquals(0, environment.getEnvironmentContent().size());
     }
 
     @Test

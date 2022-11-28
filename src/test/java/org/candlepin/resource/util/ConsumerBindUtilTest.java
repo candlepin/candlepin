@@ -110,26 +110,28 @@ public class ConsumerBindUtilTest {
     @Test
     public void registerWithKeyWithPoolAndInstalledProductsAutoAttach() throws Exception {
         Product prod = TestUtil.createProduct();
-        String[] prodIds = new String[]{prod.getId()};
+        Set<String> prodIds = Set.of(prod.getId());
 
-        Pool pool = TestUtil.createPool(owner, prod);
-        pool.setId("id-string");
-        List<String> poolIds = new ArrayList<>();
-        poolIds.add(pool.getId());
+        Pool pool = TestUtil.createPool(owner, prod)
+            .setId("id-string");
 
-        List<ActivationKey> keys = new ArrayList<>();
-        ActivationKey key1 = new ActivationKey("key1", owner);
-        keys.add(key1);
-        key1.addPool(pool, 0L);
-        key1.setAutoAttach(true);
+        List<String> poolIds = List.of(pool.getId());
+
+        ActivationKey key1 = new ActivationKey("key1", owner)
+            .addPool(pool, 0L)
+            .setAutoAttach(true);
+
+        List<ActivationKey> keys = List.of(key1);
+
 
         Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
-        Set<ConsumerInstalledProduct> cips = new HashSet<>();
         ConsumerInstalledProduct cip = new ConsumerInstalledProduct(consumer, prod);
-        cips.add(cip);
-        consumer.setInstalledProducts(cips);
+        consumer.setInstalledProducts(Set.of(cip));
 
-        AutobindData ad = new AutobindData(consumer, owner).withPools(poolIds).forProducts(prodIds);
+        AutobindData ad = new AutobindData(consumer, owner)
+            .withPools(poolIds)
+            .forProducts(prodIds);
+
         ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
         verify(entitler).bindByProducts(eq(ad));
@@ -138,7 +140,7 @@ public class ConsumerBindUtilTest {
     @Test
     public void registerWithKeyWithInstalledProductsAutoAttach() throws Exception {
         Product prod = TestUtil.createProduct();
-        String[] prodIds = new String[]{prod.getId()};
+        Set<String> prodIds = Set.of(prod.getId());
 
         List<ActivationKey> keys = new ArrayList<>();
         ActivationKey key1 = new ActivationKey("key1", owner);
@@ -151,7 +153,9 @@ public class ConsumerBindUtilTest {
         cips.add(cip);
         consumer.setInstalledProducts(cips);
 
-        AutobindData ad = new AutobindData(consumer, owner).forProducts(prodIds);
+        AutobindData ad = new AutobindData(consumer, owner)
+            .forProducts(prodIds);
+
         ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
         verify(entitler).bindByProducts(eq(ad));
@@ -163,7 +167,7 @@ public class ConsumerBindUtilTest {
         Product prod1 = TestUtil.createProduct();
         // key product
         Product prod2 = TestUtil.createProduct();
-        String[] prodIds = new String[]{prod1.getId(), prod2.getId()};
+        Set<String> prodIds = Set.of(prod1.getId(), prod2.getId());
 
         List<ActivationKey> keys = new ArrayList<>();
         ActivationKey key1 = new ActivationKey("key1", owner);
@@ -177,7 +181,9 @@ public class ConsumerBindUtilTest {
         cips.add(cip);
         consumer.setInstalledProducts(cips);
 
-        AutobindData ad = new AutobindData(consumer, owner).forProducts(prodIds);
+        AutobindData ad = new AutobindData(consumer, owner)
+            .forProducts(prodIds);
+
         ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
         consumerBindUtil.handleActivationKeys(consumer, keys, false);
         verify(entitler).bindByProducts(eq(ad));

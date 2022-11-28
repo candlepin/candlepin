@@ -23,11 +23,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
+
 
 
 @Singleton
@@ -121,15 +121,6 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
             .add(Restrictions.eq("name", envName));
 
         return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
-    }
-
-    @SuppressWarnings("unchecked")
-    public List<Environment> listWithContent(Set<String> contentIds) {
-        return currentSession().createCriteria(Environment.class)
-            .createCriteria("environmentContent")
-            .createCriteria("content")
-            .add(Restrictions.in("id", contentIds))
-            .list();
     }
 
     /**

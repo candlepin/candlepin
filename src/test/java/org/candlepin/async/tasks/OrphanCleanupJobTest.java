@@ -22,8 +22,6 @@ import static org.mockito.Mockito.*;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Content;
-import org.candlepin.model.Environment;
-import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -272,39 +270,4 @@ public class OrphanCleanupJobTest extends DatabaseTestFixture {
         assertNull(this.contentCurator.get(orphanedContent3.getUuid()));
     }
 
-    @Test
-    public void testCleanupDoesNotRemoveOrphanedContentReferencedByEnvironments() throws Exception {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-
-        Content orphanedContent1 = this.createOrphanedContent();
-        Content orphanedContent2 = this.createOrphanedContent();
-        Content orphanedContent3 = this.createOrphanedContent();
-
-        Environment refEnv1 = new Environment("ref_env_1", "ref environment 1", owner1);
-        refEnv1.setEnvironmentContent(Set.of(new EnvironmentContent(refEnv1, orphanedContent1, true)));
-
-        Environment refEnv2 = new Environment("ref_env_2", "ref environment 2", owner2);
-        refEnv2.setEnvironmentContent(Set.of(new EnvironmentContent(refEnv2, orphanedContent2, true)));
-
-        refEnv1 = this.environmentCurator.create(refEnv1);
-        refEnv2 = this.environmentCurator.create(refEnv2);
-
-        // Execute job
-        OrphanCleanupJob job = this.createJobInstance();
-        AsyncJobStatus status = mock(AsyncJobStatus.class);
-        JobExecutionContext context = new JobExecutionContext(status);
-
-        job.execute(context);
-
-        this.ownerCurator.flush();
-        this.ownerCurator.clear();
-
-        // Verify referenced orphans were not removed
-        assertNotNull(this.contentCurator.get(orphanedContent1.getUuid()));
-        assertNotNull(this.contentCurator.get(orphanedContent2.getUuid()));
-
-        // Verify unreferenced orphans were
-        assertNull(this.contentCurator.get(orphanedContent3.getUuid()));
-    }
 }

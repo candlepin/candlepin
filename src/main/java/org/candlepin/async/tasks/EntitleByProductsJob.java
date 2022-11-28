@@ -70,8 +70,9 @@ public class EntitleByProductsJob implements AsyncJob {
             final String[] prodIds = arguments.getAs(PROD_IDS_KEY, String[].class);
             final String[] pools = arguments.getAs(FROM_POOLS_KEY, String[].class);
 
-            final List<Entitlement> ents = this.entitler.bindByProducts(
-                prodIds, consumerUuid, entitleDate, Arrays.asList(pools));
+            final List<Entitlement> ents = this.entitler
+                .bindByProducts(Arrays.asList(prodIds), consumerUuid, entitleDate, Arrays.asList(pools));
+
             entitler.sendEvents(ents);
 
             context.setJobResult("%d entitlements created for owner", ents.size());
@@ -108,12 +109,12 @@ public class EntitleByProductsJob implements AsyncJob {
             return this;
         }
 
-        public EntitleByProductsJobConfig setProductIds(final String[] prodIds) {
+        public EntitleByProductsJobConfig setProductIds(final Collection<String> prodIds) {
             if (prodIds == null) {
                 throw new IllegalArgumentException("Product ids is null");
             }
 
-            this.setJobArgument(PROD_IDS_KEY, prodIds);
+            this.setJobArgument(PROD_IDS_KEY, prodIds.toArray());
 
             return this;
         }

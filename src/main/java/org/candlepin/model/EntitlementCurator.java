@@ -1310,60 +1310,84 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
     }
 
     /**
-     * Returns the map of entitlement ID & its content UUIDs for consumers.
-     * Note - Both of the queries below, covers the case when
-     * 1) Content is present in provided products (eng products).
-     * 2) Content is present in main products.
+     * Returns a mapping of entitlement ID to consumer IDs for the given collection of consumer IDs.
+     * If none of the consumers have entitlements, this method returns an empty map.
      *
      * @param consumerIds
-     *  list of consumers for which entitlement IDs & content UUIDs to be returned
+     *  a collection of consumer IDs for which to fetch an entitlement-consumer mapping
      *
      * @return
-     *  Map of entitlement IDs & its associated content UUIDs
+     *  the entitlement-consumer map for the given consumers
      */
-    public Map<String, Set<String>> getEntitlementContentUUIDs(Collection<String> consumerIds) {
-        Map<String, Set<String>> contentMap = new HashMap<>();
-        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() - 1);
+    public Map<String, String> getEntitlementConsumerIdMap(Iterable<String> consumerIds) {
+        Map<String, String> entConsumerIdMap = new HashMap<>();
 
-        String getContentFromProduct = "SELECT ce.id, c2pc.content_uuid FROM cp2_product_content c2pc " +
-            "JOIN cp_pool cp on c2pc.product_uuid = cp.product_uuid " +
-            "JOIN cp_entitlement ce on cp.id = ce.pool_id " +
-            "JOIN cp_consumer cc on ce.consumer_id = cc.id " +
-            "WHERE cc.id IN (:consumerIds) ";
+        if (consumerIds != null) {
+            String jpql = "SELECT ent.id, consumer.id FROM Entitlement ent JOIN ent.consumer consumer " +
+                "WHERE consumer.id IN (:consumer_ids)";
 
-        String getContentFromProvidedProducts =
-            "SELECT ce.id, c2pc.content_uuid from cp_consumer cc " +
-            "JOIN cp_entitlement ce on cc.id = ce.consumer_id " +
-            "JOIN cp_pool cp on ce.pool_id = cp.id " +
-            "JOIN cp2_product_provided_products c2ppp on cp.product_uuid = c2ppp.product_uuid " +
-            "JOIN cp2_product_content c2pc on c2ppp.provided_product_uuid = c2pc.product_uuid " +
-            "WHERE cc.id IN (:consumerIds) ";
+            Query query = this.getEntityManager()
+                .createQuery(jpql);
 
-        for (List<String> block : Iterables.partition(consumerIds, blockSize)) {
-            List<Object[]> contentFromProduct = this.getEntityManager()
-                .createNativeQuery(getContentFromProduct)
-                .setParameter("consumerIds", block)
-                .getResultList();
-            getMapOfEntIDAndContentUUID(contentFromProduct, contentMap);
+            for (List<String> block : this.partition(consumerIds)) {
+                List<Object[]> rows = query.setParameter("consumer_ids", block)
+                    .getResultList();
+
+                rows.forEach(row -> entConsumerIdMap.put((String) row[0], (String) row[1]));
+            }
         }
 
-        for (List<String> block : Iterables.partition(consumerIds, blockSize)) {
-            List<Object[]> contentFromProvidedProducts = this.getEntityManager()
-                .createNativeQuery(getContentFromProvidedProducts)
-                .setParameter("consumerIds", block)
-                .getResultList();
-            getMapOfEntIDAndContentUUID(contentFromProvidedProducts, contentMap);
-        }
-
-        return contentMap;
+        return entConsumerIdMap;
     }
 
-    private void getMapOfEntIDAndContentUUID(List<Object[]> rawData, Map<String, Set<String>> map) {
-        for (Object[] obj : rawData) {
-            String entitlementId = obj[0].toString();
-            Set<String> listOfContentUUIDs = map.getOrDefault(entitlementId, new HashSet<>());
-            listOfContentUUIDs.add(obj[1].toString());
-            map.put(entitlementId, listOfContentUUIDs);
+    /**
+     * Returns a mapping of entitlement ID to content IDs attached to the base product and provided
+     * products for the pool of the entitlement. Entitlements which do not have any content will not
+     * have an entry in the map. If none of the specified entitlements exist, or none of the
+     * entitlements contain any content, this method returns an empty map.
+     *
+     * @param entitlementIds
+     *  a collection of entitlements for which to fetch an entitlement-content mapping
+     *
+     * @return
+     *  the entitlement-content map for the given entitlements
+     */
+    public Map<String, Set<String>> getEntitlementContentIdMap(Iterable<String> entitlementIds) {
+        Map<String, Set<String>> entContentIdMap = new HashMap<>();
+
+        if (entitlementIds != null) {
+            String sql = "SELECT ent.id, content.content_id FROM cp_entitlement ent " +
+                "    JOIN cp_pool pool ON pool.id = ent.pool_id " +
+                "    JOIN cp2_product_content pc ON pc.product_uuid = pool.product_uuid " +
+                "    JOIN cp2_content content ON content.uuid = pc.content_uuid " +
+                "    WHERE ent.id IN (:ent_ids_1) " +
+                "UNION " +
+                "SELECT ent.id, content.content_id FROM cp_entitlement ent " +
+                "    JOIN cp_pool pool ON pool.id = ent.pool_id " +
+                "    JOIN cp2_product_provided_products ppp ON ppp.product_uuid = pool.product_uuid " +
+                "    JOIN cp2_product_content pc ON pc.product_uuid = ppp.provided_product_uuid " +
+                "    JOIN cp2_content content ON content.uuid = pc.content_uuid " +
+                "    WHERE ent.id IN (:ent_ids_2) ";
+
+            // Since we're using a union and slaping down the ID block twice, we have to halve our
+            // block size to not risk running over the parameter limit
+            int blockSize = this.getInBlockSize() / 2;
+
+            Query query = this.getEntityManager()
+                .createNativeQuery(sql);
+
+            for (List<String> block : this.partition(entitlementIds, blockSize)) {
+                List<Object[]> rows = query.setParameter("ent_ids_1", block)
+                    .setParameter("ent_ids_2", block)
+                    .getResultList();
+
+                for (Object[] row : rows) {
+                    entContentIdMap.computeIfAbsent((String) row[0], (key) -> new HashSet<>())
+                        .add((String) row[1]);
+                }
+            }
         }
+
+        return entContentIdMap;
     }
 }

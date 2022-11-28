@@ -149,7 +149,10 @@ public class HealEntireOrgJob implements AsyncJob {
         Owner owner = (Owner) args[1];
         Date date = (Date) args[2];
 
-        List<Entitlement> ents = entitler.bindByProducts(AutobindData.create(consumer, owner).on(date), true);
+        AutobindData autobindData = new AutobindData(consumer, owner)
+            .on(date);
+
+        List<Entitlement> ents = entitler.bindByProducts(autobindData, true);
         entitler.sendEvents(ents);
 
         return String.format("Successfully healed consumer with UUID: %s\n", consumer.getUuid());

@@ -620,7 +620,7 @@ public class ConsumerResourceUpdateTest {
         );
 
         verify(poolManager).revokeEntitlement(eq(entitlement));
-        verify(entitler).bindByProducts(AutobindData.create(guest1, owner));
+        verify(entitler).bindByProducts(new AutobindData(guest1, owner));
     }
 
     @Test

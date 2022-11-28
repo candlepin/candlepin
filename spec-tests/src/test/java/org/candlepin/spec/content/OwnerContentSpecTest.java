@@ -955,8 +955,7 @@ class OwnerContentSpecTest {
         assertThat(env.getEnvironmentContent())
             .isNotNull()
             .hasSize(contentMap.size())
-            .map(EnvironmentContentDTO::getContent)
-            .map(ContentDTO::getId)
+            .map(EnvironmentContentDTO::getContentId)
             .containsExactlyInAnyOrderElementsOf(contentMap.keySet());
 
         // Verify that the products still link to valid instances of the content we just modified

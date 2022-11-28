@@ -47,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -87,7 +88,7 @@ public class AutobindRules {
         jsRules.init("autobind_name_space");
     }
 
-    public List<PoolQuantity> selectBestPools(Consumer consumer, String[] productIds,
+    public List<PoolQuantity> selectBestPools(Consumer consumer, Collection<String> productIds,
         List<Pool> pools, ComplianceStatus compliance, String serviceLevelOverride,
         Set<String> exemptLevels, boolean considerDerived) {
 
@@ -146,7 +147,7 @@ public class AutobindRules {
         args.put("owner", this.translator.translate(owner, OwnerDTO.class));
         args.put("serviceLevelOverride", serviceLevelOverride);
         args.put("pools", poolDTOs.toArray());
-        args.put("products", productIds);
+        args.put("products", productIds.toArray());
         args.put("log", log, false);
         args.put("compliance", this.translator.translate(compliance, ComplianceStatusDTO.class));
         args.put("exemptList", exemptLevels);
@@ -191,7 +192,9 @@ public class AutobindRules {
         return bestPools;
     }
 
-    private void logProducts(String message, String[] productIds, Consumer consumer, boolean debug) {
+    private void logProducts(String message, Collection<String> productIds, Consumer consumer,
+        boolean debug) {
+
         List<String> consumerProducts = new LinkedList<>();
         if (consumer != null && consumer.getInstalledProducts() != null) {
             for (ConsumerInstalledProduct product: consumer.getInstalledProducts()) {

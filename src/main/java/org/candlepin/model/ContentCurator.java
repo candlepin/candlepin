@@ -156,41 +156,4 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         return output;
     }
 
-    /**
-     * Returns a mapping of content UUIDs to collections of environments referencing them. That is,
-     * for a given entry in the returned map, the key will be one of the input content UUIDs, and
-     * the value will be the set of product UUIDs which reference it. If no environments reference
-     * any of the specified contents by UUID, this method returns an empty map.
-     *
-     * @param contentUuids
-     *  a collection content UUIDs for which to fetch referencing environments
-     *
-     * @return
-     *  a mapping of content UUIDs to sets of UUIDs of the environments referencing them
-     */
-    public Map<String, Set<String>> getEnvironmentsReferencingContent(Collection<String> contentUuids) {
-        Map<String, Set<String>> output = new HashMap<>();
-
-        if (contentUuids != null && !contentUuids.isEmpty()) {
-            String jpql = "SELECT ec.content.uuid, env.id FROM Environment env " +
-                "JOIN env.environmentContent ec " +
-                "WHERE ec.content.uuid IN (:content_uuids)";
-
-            Query query = this.getEntityManager()
-                .createQuery(jpql);
-
-            for (List<String> block : this.partition(contentUuids)) {
-                List<Object[]> rows = query.setParameter("content_uuids", block)
-                    .getResultList();
-
-                for (Object[] row : rows) {
-                    output.computeIfAbsent((String) row[0], (key) -> new HashSet<>())
-                        .add((String) row[1]);
-                }
-            }
-        }
-
-        return output;
-    }
-
 }

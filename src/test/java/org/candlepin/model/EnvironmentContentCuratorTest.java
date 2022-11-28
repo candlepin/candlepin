@@ -34,7 +34,7 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
     private EnvironmentContent envContent;
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws Exception {
         owner = this.createOwner("test-owner", "Test Owner");
 
         e = this.createEnvironment(owner, "env1", "Env 1");
@@ -44,8 +44,14 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
         p.addContent(c, true);
         p = this.createProduct(p, owner);
 
-        envContent = new EnvironmentContent(e, c, true);
+        envContent = new EnvironmentContent()
+            .setEnvironment(e)
+            .setContent(c)
+            .setEnabled(true);
+
         envContent = environmentContentCurator.create(envContent);
+        environmentContentCurator.flush();
+        environmentContentCurator.clear();
     }
 
     @Test
@@ -68,7 +74,11 @@ public class EnvironmentContentCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void createDuplicate() {
-        envContent = new EnvironmentContent(e, c, true);
+        envContent = new EnvironmentContent()
+            .setEnvironment(e)
+            .setContent(c)
+            .setEnabled(true);
+
         assertThrows(PersistenceException.class, () -> environmentContentCurator.create(envContent));
     }
 

@@ -260,6 +260,7 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
+    @Transactional
     public AsyncJobStatusDTO promoteContent(@Verify(Environment.class) String envId,
         List<ContentToPromoteDTO> contentToPromote, Boolean lazyRegen) {
 
@@ -307,6 +308,7 @@ public class EnvironmentResource implements EnvironmentApi {
     }
 
     @Override
+    @Transactional
     public AsyncJobStatusDTO demoteContent(@Verify(Environment.class) String envId,
         List<String> contentIds, Boolean lazyRegen) {
 
@@ -350,6 +352,7 @@ public class EnvironmentResource implements EnvironmentApi {
 
     @Override
     @SecurityHole(activationKey = true)
+    @Transactional
     public ConsumerDTO createConsumerInEnvironment(String envId, ConsumerDTO consumer,
         String userName, String activationKeys) throws BadRequestException {
 
@@ -436,23 +439,31 @@ public class EnvironmentResource implements EnvironmentApi {
      * @param env
      * @return contentIds Ids of the promoted content
      */
-    @Transactional
-    public Set<String> batchCreate(List<ContentToPromoteDTO> contentToPromote, Environment env) {
-        Set<String> contentIds = new HashSet<>();
+    private Set<String> batchCreate(List<ContentToPromoteDTO> contentToPromote, Environment env) {
+        Map<String, EnvironmentContent> resolved = new HashMap<>();
 
-        for (ContentToPromoteDTO promoteMe : contentToPromote) {
-            // Make sure the content exists:
-            EnvironmentContent envcontent = new EnvironmentContent();
+        for (ContentToPromoteDTO prequest : contentToPromote) {
+            // TODO: This could probably be done in bulk to improve response times in multi-content
+            // requests
+            Content content = this.resolveContent(env, prequest.getContentId());
 
-            envcontent.setEnvironment(env);
-            envcontent.setContent(this.resolveContent(env, promoteMe.getContentId()));
-            envcontent.setEnabled(promoteMe.getEnabled());
+            EnvironmentContent envcontent = new EnvironmentContent()
+                .setEnvironment(env)
+                .setContent(content)
+                .setEnabled(prequest.getEnabled());
 
-            envContentCurator.create(envcontent);
-            env.getEnvironmentContent().add(envcontent);
-            contentIds.add(promoteMe.getContentId());
+            resolved.put(content.getId(), envcontent);
         }
 
-        return contentIds;
+        // If we made it here, all the content resolved properly; update our environment and persist
+        // the changes
+        for (EnvironmentContent envcontent : resolved.values()) {
+            env.addEnvironmentContent(envcontent);
+        }
+
+        this.envCurator.merge(env);
+
+        // Return the final set of content IDs that were promoted
+        return resolved.keySet();
     }
 }

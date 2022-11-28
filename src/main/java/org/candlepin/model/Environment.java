@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.util.SetView;
+
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,6 +23,7 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -51,9 +54,11 @@ public class Environment extends AbstractHibernateObject implements Serializable
     public static final String DB_TABLE = "cp_environment";
     private static final long serialVersionUID = 4162471699021316341L;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
-    @NotNull
+    @Column(name = "owner_id", nullable = false)
+    private String ownerId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "owner_id", insertable = false, updatable = false)
     private Owner owner;
 
     @Column(nullable = false)
@@ -79,9 +84,12 @@ public class Environment extends AbstractHibernateObject implements Serializable
     }
 
     public Environment(String id, String name, Owner owner) {
-        this.id = id;
-        this.owner = owner;
-        this.name = name;
+        this.setId(id)
+            .setName(name);
+
+        if (owner != null) {
+            this.setOwner(owner);
+        }
     }
 
     /**
@@ -98,48 +106,97 @@ public class Environment extends AbstractHibernateObject implements Serializable
         return id;
     }
 
-    public void setId(String id) {
+    public Environment setId(String id) {
         this.id = id;
-    }
-
-    public Owner getOwner() {
-        return owner;
+        return this;
     }
 
     /**
-     * @return the owner Id of this Environment.
+     * {@inheritDoc}
      */
     @Override
     public String getOwnerId() {
-        return (owner == null) ? null : owner.getId();
+        return this.ownerId;
     }
 
-    public void setOwner(Owner owner) {
+    /**
+     * Fetches the owner of this environment, if the owner ID is set. This may perform a lazy
+     * lookup of the owner, and should generally be avoided if the owner ID is sufficient.
+     *
+     * @return
+     *  The owner of this environment, if the owner ID is populated; null otherwise.
+     */
+    public Owner getOwner() {
+        return this.owner;
+    }
+
+    public Environment setOwner(Owner owner) {
+        if (owner == null || owner.getId() == null) {
+            throw new IllegalArgumentException("owner is null or lacks an ID");
+        }
+
         this.owner = owner;
+        this.ownerId = owner.getId();
+
+        return this;
     }
 
     public Set<EnvironmentContent> getEnvironmentContent() {
-        return environmentContent;
+        return new SetView<>(this.environmentContent);
     }
 
-    public void setEnvironmentContent(Set<EnvironmentContent> environmentContent) {
-        this.environmentContent = environmentContent;
+    public Environment setEnvironmentContent(Set<EnvironmentContent> environmentContent) {
+        this.environmentContent = new HashSet<>();
+
+        if (environmentContent != null) {
+            environmentContent.forEach(this::addEnvironmentContent);
+        }
+
+        return this;
+    }
+
+    public Environment addEnvironmentContent(EnvironmentContent envcontent) {
+        if (envcontent == null) {
+            throw new IllegalArgumentException("envcontent is null");
+        }
+
+        // Ensure it's set to this environment. Really this should be immutable and created internally.
+        envcontent.setEnvironment(this);
+
+        this.environmentContent.add(envcontent);
+        return this;
+    }
+
+    public Environment addContent(Content content, boolean enabled) {
+        if (content == null) {
+            throw new IllegalArgumentException("content is null");
+        }
+
+        EnvironmentContent envcontent = new EnvironmentContent()
+            .setEnvironment(this)
+            .setContent(content)
+            .setEnabled(enabled);
+
+        this.environmentContent.add(envcontent);
+        return this;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    public Environment setName(String name) {
         this.name = name;
+        return this;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
+    public Environment setDescription(String description) {
         this.description = description;
+        return this;
     }
 
     @Override

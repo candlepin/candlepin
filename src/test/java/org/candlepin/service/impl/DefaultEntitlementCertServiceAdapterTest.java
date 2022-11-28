@@ -527,9 +527,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         throws CertificateSizeException {
 
         // Environment, with promoted content:
-        Environment e = this.mockEnvironment(new Environment("env1", "Env 1", owner));
+        Environment e = this.mockEnvironment(new Environment("env1", "Env 1", owner))
+            .addContent(content, true);
 
-        e.getEnvironmentContent().add(new EnvironmentContent(e, content, true));
         this.consumer.addEnvironment(e);
 
         PromotedContent promotedContent = new PromotedContent(prefix(""))
@@ -546,11 +546,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testContentExtensionIncludesPromotedContentFromMultipleEnvs()
         throws CertificateSizeException {
 
-        Environment e1 = this.mockEnvironment(new Environment("env1", "Env 1", owner));
-        Environment e2 = this.mockEnvironment(new Environment("env2", "Env 2", owner));
-        e1.getEnvironmentContent().add(new EnvironmentContent(e1, content, true));
+        Environment e1 = this.mockEnvironment(new Environment("env1", "Env 1", owner))
+            .addContent(content, true);
+
+        Environment e2 = this.mockEnvironment(new Environment("env2", "Env 2", owner))
+            .addContent(noArchContent, true);
+
         this.consumer.addEnvironment(e1);
-        e2.getEnvironmentContent().add(new EnvironmentContent(e2, noArchContent, true));
         this.consumer.addEnvironment(e2);
 
         PromotedContent promotedContent = new PromotedContent(prefix(""))
@@ -662,7 +664,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         // Make sure that we filter by environment when asked.
         Environment environment = this.mockEnvironment(new Environment());
-        environment.getEnvironmentContent().add(new EnvironmentContent(environment, normalContent, true));
+
+        environment.addEnvironmentContent(new EnvironmentContent()
+            .setEnvironment(environment)
+            .setContent(normalContent)
+            .setEnabled(true));
+
         consumer.addEnvironment(environment);
 
         promotedContent.with(environment);
