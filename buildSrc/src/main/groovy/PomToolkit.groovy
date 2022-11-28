@@ -19,13 +19,12 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 
 class PomToolkit implements Plugin<Project> {
-    
+
     void apply(Project project) {
     }
 
     public static void generatePomDependencies(
         Node parent,
-        DefaultDependencySet annotationProcessorDependencies, 
         DefaultDependencySet compileOnlyDependencies,
         DefaultDependencySet implementationDependencies,
         DefaultDependencySet providedCompileDependencies,
@@ -35,10 +34,7 @@ class PomToolkit implements Plugin<Project> {
 
         def dependenciesNode = parent.appendNode('dependencies')
         createDependencyNode(dependenciesNode, 'org.mozilla', 'jss', '${jssVersion}', 'system', '${jssLocation}')
-        annotationProcessorDependencies.each { dependency ->
-            createDependencyNode(dependenciesNode, dependency.group, dependency.name, dependency.version, 'compile', null)
-        }
-        
+
         compileOnlyDependencies.each { dependency ->
             createDependencyNode(dependenciesNode, dependency.group, dependency.name, dependency.version, 'provided', null)
         }
@@ -72,7 +68,7 @@ class PomToolkit implements Plugin<Project> {
         createRepoNode(repositoriesNode, 'barnabycourt', 'barnabycourt.fedorapeople.org', 'https://barnabycourt.fedorapeople.org/repo/candlepin/')
     }
 
-    public static void generateBuild(Node parent) {
+    public static void generateBuild(Node parent, DefaultDependencySet annotationProcessorDependencies) {
         def buildNode = parent.appendNode('build')
         def resourcesNode = buildNode.appendNode('resources')
         def resource1 = resourcesNode.appendNode('resource')
@@ -94,13 +90,13 @@ class PomToolkit implements Plugin<Project> {
         createBuilderHelperMavenPlugin(pluginsNode)
         createGettextMavenPlugin(pluginsNode)
         createMavenResourcePlugin(pluginsNode)
-        createMavenCompilerPlugin(pluginsNode)
+        createMavenCompilerPlugin(pluginsNode, annotationProcessorDependencies)
         createMavenSurefirePlugin(pluginsNode)
         createMavenAssemblyPlugin(pluginsNode)
         createMavenCleanPlugin(pluginsNode)
-        createMavenHelpPlugin(pluginsNode)        
+        createMavenHelpPlugin(pluginsNode)
     }
-    
+
     public static void generateProfiles(Node parent) {
         def profilesNode = parent.appendNode('profiles')
         createProfileNode(profilesNode, 'build-with-jss4', '/usr/lib64/jss/jss4.jar', '4.9.1')
@@ -242,7 +238,7 @@ class PomToolkit implements Plugin<Project> {
         includesNode.appendNode('include', 'candlepin-api-spec.yaml')
     }
 
-    private static void createMavenCompilerPlugin(Node parentNode) {
+    private static void createMavenCompilerPlugin(Node parentNode, DefaultDependencySet annotationProcessorDependencies) {
         def plugin = parentNode.appendNode('plugin')
         plugin.appendNode('artifactId', 'maven-compiler-plugin')
         plugin.appendNode('version', '3.8.0')
@@ -252,6 +248,22 @@ class PomToolkit implements Plugin<Project> {
         configurationsNode.appendNode('debug', 'true')
         configurationsNode.appendNode('debuglevel', 'lines,vars,source')
         configurationsNode.appendNode('compilerArgument', '-proc:none')
+
+        def annotationProcessors = configurationsNode.appendNode('annotationProcessorPaths')
+        annotationProcessorDependencies.each { dependency ->
+            createAnnotationProcessorPath(annotationProcessors, dependency.group, dependency.name, dependency.version)
+        }
+    }
+
+    private static void createAnnotationProcessorPath(Node parent, String groupId, String artifactId, String version) {
+        if (groupId) {
+            def annotationProcessorPath = parent.appendNode('annotationProcessorPath')
+            annotationProcessorPath.appendNode('groupId', groupId)
+            annotationProcessorPath.appendNode('artifactId', artifactId)
+            if (version != null) {
+                annotationProcessorPath.appendNode('version', version)
+            }
+        }
     }
 
     private static void createMavenSurefirePlugin(Node parentNode) {
