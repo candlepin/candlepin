@@ -43,6 +43,7 @@ import org.candlepin.spec.bootstrap.data.builder.Content;
 import org.candlepin.spec.bootstrap.data.builder.Export;
 import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
+import org.candlepin.spec.bootstrap.data.builder.PoolAttributes;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
@@ -64,7 +65,6 @@ import java.util.stream.Collectors;
 @OnlyInStandalone
 public class ImportSuccessSpecTest {
 
-    private static final String UNMAPPED_ATTRIBUTE_NAME = "unmapped_guests_only";
     private static final String EXPECTED_CONTENT_URL = "/path/to/arch/specific/content";
 
     private ApiClient admin;
@@ -329,7 +329,7 @@ public class ImportSuccessSpecTest {
         }
 
         boolean isUnmapped = pool.getAttributes().stream()
-            .filter(attribute -> UNMAPPED_ATTRIBUTE_NAME.equalsIgnoreCase(attribute.getName()))
+            .filter(PoolAttributes.UnmappedGuestsOnly::isKeyOf)
             .map(AttributeDTO::getValue)
             .anyMatch(Boolean::parseBoolean);
 

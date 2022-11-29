@@ -17,33 +17,12 @@ package org.candlepin.spec.bootstrap.data.builder;
 
 import org.candlepin.dto.api.client.v1.AttributeDTO;
 
-public enum ProductAttributes {
-    Addons("addons"),
-    Arch("arch"),
-    Cores("cores"),
-    GuestLimit("guest_limit"),
-    HostLimited("host_limited"),
-    InstanceMultiplier("instance_multiplier"),
-    ManagementEnabled("management_enabled"),
-    MultiEntitlement("multi-entitlement"),
-    Ram("ram"),
-    Roles("roles"),
-    Sockets("sockets"),
-    StackingId("stacking_id"),
-    SupportLevel("support_level"),
-    SupportLevelExempt("support_level_exempt"),
-    SupportType("support_type"),
-    Type("type"),
-    Unlimited("unlimited_product"),
-    Usage("usage"),
-    Variant("variant"),
-    Version("version"),
-    VirtualOnly("virt_only"),
-    VirtualLimit("virt_limit"),
-    WarningPeriod("warning_period");
+public enum PoolAttributes {
+    UnmappedGuestsOnly("unmapped_guests_only");
 
     private final String key;
-    ProductAttributes(String key) {
+
+    PoolAttributes(String key) {
         this.key = key;
     }
 
