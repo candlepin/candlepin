@@ -1,3 +1,4 @@
 # Variables used by various tasks in the role. These should only be updated with respect to changes
 # in the Candlepin repo itself, or the tasks surrounding its setup.
 ---
+ruby_version: ruby-2.4

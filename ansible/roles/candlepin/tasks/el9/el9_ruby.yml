@@ -1,0 +1,48 @@
+---
+- name: "Install rvm/ruby"
+  ansible.builtin.include_role:
+    name: rvm1-ansible
+  vars:
+    rvm1_rubies: []
+    rvm1_user: "{{ candlepin_user | default('candlepin') }}"
+    rvm1_bundler_install: false
+  tags:
+    - molecule-idempotence-notest
+    - ruby
+
+- name: Detect rubies
+  ansible.builtin.command: "rvm list strings"
+  register: rvm_list_strings
+  changed_when: False
+  tags:
+    - ruby
+
+- name: Ensure required openssl is installed
+  ansible.builtin.command: "rvm pkg install openssl"
+  tags:
+    - ruby
+
+- name: Ensure correct ruby version is installed
+  ansible.builtin.command: "rvm install {{ ruby_version }} --with-openssl-dir=$HOME/.rvm/usr"
+  when:
+    - not ruby_version in rvm_list_strings.stdout_lines
+  tags:
+    - ruby
+
+- name: Ensure correct ruby version is set as default
+  ansible.builtin.command: "{{ item }}"
+  loop:
+    - "rvm alias create default {{ ruby_version }}"
+    - "rvm --default use {{ ruby_version }}"
+  tags:
+    - ruby
+
+- name: "Install rubygems cli"
+  ansible.builtin.command: "rvm rubygems latest"
+  tags:
+    - ruby
+
+- name: Ensure bundler is installed
+  ansible.builtin.command: "bash -lc 'gem install bundler'"
+  tags:
+    - ruby

@@ -26,15 +26,3 @@ galaxy_info:
   galaxy_tags:
     - candlepin
     - entitlement
-
-dependencies:
-  - role: rvm.ruby
-    vars:
-      rvm1_rubies:
-        - 'ruby-2.4'
-      rvm1_user: "{{ candlepin_user | default('candlepin') }}"
-      rvm1_bundler_install: true
-    tags:
-      - molecule-idempotence-notest
-    when:
-      - cp_configure_ruby | bool

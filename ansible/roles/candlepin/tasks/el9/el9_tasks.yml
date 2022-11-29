@@ -1,18 +1,18 @@
 ---
 - name: "Include base deps tasks"
-  ansible.builtin.import_tasks: el8_base_deps.yml
+  ansible.builtin.import_tasks: el9_base_deps.yml
 
 - name: "Include ruby tasks"
-  ansible.builtin.import_tasks: el8_ruby.yml
+  ansible.builtin.import_tasks: el9_ruby.yml
   when:
     - cp_configure_ruby | bool
 
 - name: "Include postgresql tasks"
-  ansible.builtin.import_tasks: el8_postgresql.yml
+  ansible.builtin.import_tasks: el9_postgresql.yml
   when:
     - cp_configure_postgresql | bool
 
 - name: "Include mariadb tasks"
-  ansible.builtin.import_tasks: el8_mariadb.yml
+  ansible.builtin.import_tasks: el9_mariadb.yml
   when:
     - cp_configure_mariadb | bool
