@@ -15,6 +15,7 @@
 package org.candlepin.spec.bootstrap.data.builder;
 
 import org.candlepin.dto.api.client.v1.CdnDTO;
+import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 /**
@@ -42,6 +43,12 @@ public final class Cdns {
             StringUtil.random("https://cdn.test.com/webUrl/"),
             cdn.getUrl()
         );
+    }
+
+    public static CdnDTO withCert() {
+        return random().certificate(new CertificateDTO()
+            .key(StringUtil.random("test_key"))
+            .cert(StringUtil.random("test_cert")));
     }
 
 }
