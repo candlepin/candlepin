@@ -37,7 +37,7 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Content;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
@@ -679,8 +679,8 @@ public class OneSubPoolPerStackSpecTest {
     }
 
     private void createTargetPoolAndProducts(OwnerDTO owner, String stackingId) {
-        ContentDTO ownerContent1 = ownerContentApi.createContent(owner.getKey(), Content.random());
-        ContentDTO ownerContent2 = ownerContentApi.createContent(owner.getKey(), Content.random());
+        ContentDTO ownerContent1 = ownerContentApi.createContent(owner.getKey(), Contents.random());
+        ContentDTO ownerContent2 = ownerContentApi.createContent(owner.getKey(), Contents.random());
         ProductDTO ownerDerivedEngProduct = ownerProductApi.createProductByOwner(
             owner.getKey(), Products.random());
         ownerProductApi.addBatchContent(owner.getKey(), ownerDerivedEngProduct.getId(),

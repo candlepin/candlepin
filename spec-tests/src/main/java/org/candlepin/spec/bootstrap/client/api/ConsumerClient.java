@@ -28,6 +28,7 @@ import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -89,9 +90,23 @@ public class ConsumerClient extends ConsumerApi {
             "", false, "", new ArrayList<>()));
     }
 
+    public List<EntitlementDTO> bindPoolSync(String consumerUuid, String poolId, Integer quantity) {
+        return parseEntitlements(super.bind(consumerUuid, poolId, null, quantity, "",
+            "", false, "", new ArrayList<>()));
+    }
+
     private JsonNode getJsonNode(String consumerUuid) {
         try {
             return mapper.readTree(consumerUuid);
+        }
+        catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private List<EntitlementDTO> parseEntitlements(String json) {
+        try {
+            return this.mapper.readValue(json, new TypeReference<>(){});
         }
         catch (JsonProcessingException e) {
             throw new RuntimeException(e);

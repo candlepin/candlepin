@@ -30,7 +30,7 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.client.cert.X509Cert;
-import org.candlepin.spec.bootstrap.data.builder.Content;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
@@ -86,9 +86,9 @@ public class UeberCertSpecTest {
         ProductDTO prod3 = ownerProductApi.createProductByOwner(
             owner1.getKey(), Products.randomEng().name("test product 3"));
 
-        ContentDTO content1 = ownerContentApi.createContent(owner1.getKey(), Content.random());
-        ContentDTO content2 = ownerContentApi.createContent(owner1.getKey(), Content.random());
-        ContentDTO content3 = ownerContentApi.createContent(owner1.getKey(), Content.random());
+        ContentDTO content1 = ownerContentApi.createContent(owner1.getKey(), Contents.random());
+        ContentDTO content2 = ownerContentApi.createContent(owner1.getKey(), Contents.random());
+        ContentDTO content3 = ownerContentApi.createContent(owner1.getKey(), Contents.random());
 
         prod1 = ownerProductApi.addContent(owner1.getKey(), prod1.getId(), content1.getId(), true);
         prod1 = ownerProductApi.addContent(owner1.getKey(), prod1.getId(), content2.getId(), true);

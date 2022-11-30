@@ -17,7 +17,7 @@ package org.candlepin.spec.content;
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.candlepin.spec.bootstrap.assertions.CertificateAssert.assertThatCert;
 
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
@@ -29,8 +29,10 @@ import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Content;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.OID;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
@@ -51,10 +53,9 @@ import java.util.Set;
 
 @SpecTest
 public class ConditionalContentSpecTest {
-    private static final String CONTENT_OID = "1.3.6.1.4.1.2312.9.2.";
 
     @Test
-    public void shouldIncludeConditionalContentSets() throws Exception {
+    public void shouldIncludeConditionalContentSets() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
@@ -73,15 +74,15 @@ public class ConditionalContentSpecTest {
         // requires one of the provided products above
         ProductDTO dependentProvProd = adminClient.ownerProducts()
             .createProductByOwner(ownerKey, Products.randomEng());
-        ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd1.getId())));
-        ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd2.getId())));
-        ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
@@ -106,17 +107,15 @@ public class ConditionalContentSpecTest {
         // Bind to the dependent subscription which requires the product(s) provided by the previously
         // bound subscription:
         JsonNode ents = consumerClient.consumers().bindProduct(consumer.getUuid(), dependentProd.getId());
-        String cert = getCertFromEnt(ents.get(0));
-        assertThat(getContentRepoType(cert, conditionalContent1.getId()))
-            .isEqualTo(conditionalContent1.getType());
-        assertThat(getContentRepoType(cert, conditionalContent2.getId()))
-            .isEqualTo(conditionalContent2.getType());
-        assertThat(getContentRepoType(cert, conditionalContent3.getId()))
-            .isEqualTo(conditionalContent3.getType());
+
+        assertThatCert(X509Cert.fromEnt(ents.get(0)))
+            .hasContentRepoType(conditionalContent1)
+            .hasContentRepoType(conditionalContent2)
+            .hasContentRepoType(conditionalContent3);
     }
 
     @Test
-    public void shouldIncludeConditionalContentSetsSelectively() throws Exception {
+    public void shouldIncludeConditionalContentSetsSelectively() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
@@ -139,15 +138,15 @@ public class ConditionalContentSpecTest {
         // requires one of the provided products above
         ProductDTO dependentProvProd = adminClient.ownerProducts()
             .createProductByOwner(ownerKey, Products.randomEng());
-        ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd1.getId())));
-        ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd2.getId())));
-        ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
@@ -172,16 +171,14 @@ public class ConditionalContentSpecTest {
         // Bind to the dependent subscription which requires the product(s) provided by the previously
         // bound subscription:
         JsonNode ents = consumerClient.consumers().bindProduct(consumer.getUuid(), dependentProd.getId());
-        String cert = getCertFromEnt(ents.get(0));
-        assertThat(getContentRepoType(cert, conditionalContent1.getId()))
-            .isEqualTo(conditionalContent1.getType());
-        assertThat(getContentRepoType(cert, conditionalContent2.getId()))
-            .isEqualTo(conditionalContent2.getType());
-        assertNull(getContentRepoType(cert, conditionalContent3.getId()));
+        assertThatCert(X509Cert.fromEnt(ents.get(0)))
+            .hasContentRepoType(conditionalContent1)
+            .hasContentRepoType(conditionalContent2)
+            .doesNotHaveContentRepoType(conditionalContent3);
     }
 
     @Test
-    public void shouldNotIncludeConditionalContentWithoutTheRequiredProducts() throws Exception {
+    public void shouldNotIncludeConditionalContentWithoutTheRequiredProducts() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
@@ -196,11 +193,11 @@ public class ConditionalContentSpecTest {
         // requires one of the provided products above
         ProductDTO dependentProvProd = adminClient.ownerProducts()
             .createProductByOwner(ownerKey, Products.random());
-        ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(reqProd1.getId())));
-        ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(reqProd2.getId())));
-        ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(reqProd3.getId())));
         adminClient.ownerProducts()
             .addContent(ownerKey, dependentProvProd.getId(), conditionalContent1.getId(), true);
@@ -219,10 +216,10 @@ public class ConditionalContentSpecTest {
             .facts(Map.of("system.certificate_version", "1.0")));
         ApiClient consumerClient = ApiClients.ssl(consumer);
         JsonNode ents = consumerClient.consumers().bindProduct(consumer.getUuid(), dependentProd.getId());
-        String cert = getCertFromEnt(ents.get(0));
-        assertNull(getContentRepoType(cert, conditionalContent1.getId()));
-        assertNull(getContentRepoType(cert, conditionalContent2.getId()));
-        assertNull(getContentRepoType(cert, conditionalContent3.getId()));
+        assertThatCert(X509Cert.fromEnt(ents.get(0)))
+            .doesNotHaveContentRepoType(conditionalContent1)
+            .doesNotHaveContentRepoType(conditionalContent2)
+            .doesNotHaveContentRepoType(conditionalContent3);
     }
 
     @Test
@@ -243,15 +240,15 @@ public class ConditionalContentSpecTest {
 
         ProductDTO dependentProvProd = adminClient.ownerProducts()
             .createProductByOwner(ownerKey, Products.randomEng());
-        ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd1.getId())));
-        ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd2.getId())));
-        ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
@@ -274,10 +271,10 @@ public class ConditionalContentSpecTest {
         JsonNode ents = consumerClient.consumers().bindProduct(consumer.getUuid(), dependentProd.getId());
 
         // Resulting dependent cert should not contain any of the conditional content sets
-        String dependentProdCert = getCertFromEnt(ents.get(0));
-        assertNull(getContentRepoType(dependentProdCert, conditionalContent1.getId()));
-        assertNull(getContentRepoType(dependentProdCert, conditionalContent2.getId()));
-        assertNull(getContentRepoType(dependentProdCert, conditionalContent3.getId()));
+        assertThatCert(X509Cert.fromEnt(ents.get(0)))
+            .doesNotHaveExtension(OID.contentRepoType(conditionalContent1))
+            .doesNotHaveExtension(OID.contentRepoType(conditionalContent2))
+            .doesNotHaveExtension(OID.contentRepoType(conditionalContent3));
         JsonNode dependentProdCerts = ents.get(0).get("certificates");
         Long dependentProdCertSerial = dependentProdCerts.get(0).get("serial").get("serial").asLong();
 
@@ -302,16 +299,14 @@ public class ConditionalContentSpecTest {
         serialToCert.remove(bundledProdSerial);
         String newCertValue = serialToCert.entrySet().iterator().next().getValue();
         // And it should have the conditional content set
-        assertThat(getContentRepoType(newCertValue, conditionalContent1.getId()))
-            .isEqualTo(conditionalContent1.getType());
-        assertThat(getContentRepoType(newCertValue, conditionalContent2.getId()))
-            .isEqualTo(conditionalContent2.getType());
-        assertThat(getContentRepoType(newCertValue, conditionalContent3.getId()))
-            .isEqualTo(conditionalContent3.getType());
+        assertThatCert(X509Cert.from(newCertValue))
+            .hasContentRepoType(conditionalContent1)
+            .hasContentRepoType(conditionalContent2)
+            .hasContentRepoType(conditionalContent3);
     }
 
     @Test
-    public void shouldRegenerateWhenTheConsumerLosesAccessToRequiredProducts() throws Exception {
+    public void shouldRegenerateWhenTheConsumerLosesAccessToRequiredProducts() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
@@ -334,15 +329,15 @@ public class ConditionalContentSpecTest {
         // requires one of the provided products above
         ProductDTO dependentProvProd = adminClient.ownerProducts()
             .createProductByOwner(ownerKey, Products.randomEng());
-        ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd1.getId())));
-        ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd2.getId())));
-        ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
@@ -367,10 +362,10 @@ public class ConditionalContentSpecTest {
         String dependentProdEntId = ents.get(0).get("id").asText();
 
         // Verify that we don't have any content repos yet...
-        String cert = getCertFromEnt(ents.get(0));
-        assertNull(getContentRepoType(cert, conditionalContent1.getId()));
-        assertNull(getContentRepoType(cert, conditionalContent2.getId()));
-        assertNull(getContentRepoType(cert, conditionalContent3.getId()));
+        assertThatCert(X509Cert.fromEnt(ents.get(0)))
+            .doesNotHaveContentRepoType(conditionalContent1)
+            .doesNotHaveContentRepoType(conditionalContent2)
+            .doesNotHaveContentRepoType(conditionalContent3);
 
         // Bind to a normal subscription...
         ents = consumerClient.consumers().bindProduct(consumer.getUuid(), bundledProd2.getId());
@@ -387,12 +382,11 @@ public class ConditionalContentSpecTest {
             .singleElement();
 
         // Modifier certificate should now contain some conditional content...
-        String entCert = entitlement.getCertificates().iterator().next().getCert();
-        assertThat(getContentRepoType(entCert, conditionalContent1.getId()))
-            .isEqualTo(conditionalContent1.getType());
-        assertThat(getContentRepoType(entCert, conditionalContent2.getId()))
-            .isEqualTo(conditionalContent2.getType());
-        assertNull(getContentRepoType(entCert, conditionalContent3.getId()));
+        CertificateDTO entCert = entitlement.getCertificates().iterator().next();
+        assertThatCert(X509Cert.from(entCert))
+            .hasContentRepoType(conditionalContent1)
+            .hasContentRepoType(conditionalContent2)
+            .doesNotHaveContentRepoType(conditionalContent3);
 
         // Bind to another normal subscription...
         ents = consumerClient.consumers().bindProduct(consumer.getUuid(), bundledProd1.getId());
@@ -408,13 +402,11 @@ public class ConditionalContentSpecTest {
             .singleElement();
 
         // Modifier certificate should now contain all conditional content...
-        entCert = entitlement.getCertificates().iterator().next().getCert();
-        assertThat(getContentRepoType(entCert, conditionalContent1.getId()))
-            .isEqualTo(conditionalContent1.getType());
-        assertThat(getContentRepoType(entCert, conditionalContent2.getId()))
-            .isEqualTo(conditionalContent2.getType());
-        assertThat(getContentRepoType(entCert, conditionalContent3.getId()))
-            .isEqualTo(conditionalContent3.getType());
+        entCert = entitlement.getCertificates().iterator().next();
+        assertThatCert(X509Cert.from(entCert))
+            .hasContentRepoType(conditionalContent1)
+            .hasContentRepoType(conditionalContent2)
+            .hasContentRepoType(conditionalContent3);
 
         // Unbind the pools to revoke our entitlements...
         revokeEnts(consumerClient, consumer.getUuid(), entsToRevoke);
@@ -427,14 +419,15 @@ public class ConditionalContentSpecTest {
             .singleElement();
 
         // Verify that we don't have any content repos anymore
-        entCert = entitlement.getCertificates().iterator().next().getCert();
-        assertNull(getContentRepoType(entCert, conditionalContent1.getId()));
-        assertNull(getContentRepoType(entCert, conditionalContent2.getId()));
-        assertNull(getContentRepoType(entCert, conditionalContent3.getId()));
+        entCert = entitlement.getCertificates().iterator().next();
+        assertThatCert(X509Cert.from(entCert))
+            .doesNotHaveContentRepoType(conditionalContent1)
+            .doesNotHaveContentRepoType(conditionalContent2)
+            .doesNotHaveContentRepoType(conditionalContent3);
     }
 
     @Test
-    public void shouldRegenerateWhenTheRequiredProductSubscriptionDisappears() throws Exception {
+    public void shouldRegenerateWhenTheRequiredProductSubscriptionDisappears() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
@@ -457,15 +450,15 @@ public class ConditionalContentSpecTest {
         // requires one of the provided products above
         ProductDTO dependentProvProd = adminClient.ownerProducts()
             .createProductByOwner(ownerKey, Products.randomEng());
-        ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd1.getId())));
-        ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd2.getId())));
-        ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO conditionalContent3 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(5, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(reqProd3.getId())));
@@ -490,10 +483,10 @@ public class ConditionalContentSpecTest {
         String dependentProdEntId = ents.get(0).get("id").asText();
 
         // Verify that we don't have any content repos yet...
-        String cert = getCertFromEnt(ents.get(0));
-        assertNull(getContentRepoType(cert, conditionalContent1.getId()));
-        assertNull(getContentRepoType(cert, conditionalContent2.getId()));
-        assertNull(getContentRepoType(cert, conditionalContent3.getId()));
+        assertThatCert(X509Cert.fromEnt(ents.get(0)))
+            .doesNotHaveContentRepoType(conditionalContent1)
+            .doesNotHaveContentRepoType(conditionalContent2)
+            .doesNotHaveContentRepoType(conditionalContent3);
 
         // Bind to a normal subscription...
         ents = consumerClient.consumers().bindProduct(consumer.getUuid(), bundledProd2.getId());
@@ -510,12 +503,11 @@ public class ConditionalContentSpecTest {
             .singleElement();
 
         // Modifier certificate should now contain some conditional content...
-        String entCert = entitlement.getCertificates().iterator().next().getCert();
-        assertThat(getContentRepoType(entCert, conditionalContent1.getId()))
-            .isEqualTo(conditionalContent1.getType());
-        assertThat(getContentRepoType(entCert, conditionalContent2.getId()))
-            .isEqualTo(conditionalContent2.getType());
-        assertNull(getContentRepoType(entCert, conditionalContent3.getId()));
+        CertificateDTO entCert = entitlement.getCertificates().iterator().next();
+        assertThatCert(X509Cert.from(entCert))
+            .hasContentRepoType(conditionalContent1)
+            .hasContentRepoType(conditionalContent2)
+            .doesNotHaveContentRepoType(conditionalContent3);
 
         // Bind to another normal subscription...
         ents = consumerClient.consumers().bindProduct(consumer.getUuid(), bundledProd1.getId());
@@ -531,13 +523,11 @@ public class ConditionalContentSpecTest {
             .singleElement();
 
         // Modifier certificate should now contain all conditional content...
-        entCert = entitlement.getCertificates().iterator().next().getCert();
-        assertThat(getContentRepoType(entCert, conditionalContent1.getId()))
-            .isEqualTo(conditionalContent1.getType());
-        assertThat(getContentRepoType(entCert, conditionalContent2.getId()))
-            .isEqualTo(conditionalContent2.getType());
-        assertThat(getContentRepoType(entCert, conditionalContent3.getId()))
-            .isEqualTo(conditionalContent3.getType());
+        entCert = entitlement.getCertificates().iterator().next();
+        assertThatCert(X509Cert.from(entCert))
+            .hasContentRepoType(conditionalContent1)
+            .hasContentRepoType(conditionalContent2)
+            .hasContentRepoType(conditionalContent3);
 
         // Unbind the pools to revoke our entitlements...
         adminClient.pools().deletePool(bundledPool1.getId());
@@ -551,15 +541,15 @@ public class ConditionalContentSpecTest {
             .singleElement();
 
         // Verify that we don't have any content repos anymore
-        entCert = entitlement.getCertificates().iterator().next().getCert();
-        assertNull(getContentRepoType(entCert, conditionalContent1.getId()));
-        assertNull(getContentRepoType(entCert, conditionalContent2.getId()));
-        assertNull(getContentRepoType(entCert, conditionalContent3.getId()));
+        entCert = entitlement.getCertificates().iterator().next();
+        assertThatCert(X509Cert.from(entCert))
+            .doesNotHaveContentRepoType(conditionalContent1)
+            .doesNotHaveContentRepoType(conditionalContent2)
+            .doesNotHaveContentRepoType(conditionalContent3);
     }
 
     @Test
-    public void shouldIncludeConditionalContentInV3CertAfterAutoAttachThatEntitlesTheRequiredProduct()
-        throws Exception {
+    public void shouldIncludeConditionalContentInV3CertAfterAutoAttachThatEntitlesTheRequiredProduct() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
@@ -582,12 +572,12 @@ public class ConditionalContentSpecTest {
             .multiplier(1L)
             .attributes(List.of(ProductAttributes.StackingId.withValue(prod2Id))));
 
-        ContentDTO engProd2Content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO engProd2Content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
 
         // Content that has a required/modified product 'engProd2' (this eng product needs to be entitled
         // to the consumer already, or otherwise this content will get filtered out during entitlement
         // cert generation)
-        ContentDTO engProd1Content = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO engProd1Content = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(engProd2.getId())));
 
         adminClient.ownerProducts().addContent(ownerKey, engProd2.getId(), engProd2Content.getId(), true);
@@ -635,8 +625,7 @@ public class ConditionalContentSpecTest {
     }
 
     @Test
-    public void shouldIncludeConditionalContentInV1CertAfterAutoAttachThatEntitlesTheRequiredProduct()
-        throws Exception {
+    public void shouldIncludeConditionalContentInV1CertAfterAutoAttachThatEntitlesTheRequiredProduct() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
@@ -663,14 +652,14 @@ public class ConditionalContentSpecTest {
 
         // Note: for v1 certificates, we only support certain types of content type, like 'yum', so we
         // must set the type to yum here, and also only numeric ids
-        ContentDTO engProd2Content = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO engProd2Content = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(6, StringUtil.CHARSET_NUMERIC))
             .type("yum"));
 
         // Content that has a required/modified product 'engProd2' (this eng product needs to be entitled
         // to the consumer already, or otherwise this content will get filtered out during entitlement
         // cert generation)
-        ContentDTO engProd1Content = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO engProd1Content = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .id(StringUtil.random(6, StringUtil.CHARSET_NUMERIC))
             .type("yum")
             .modifiedProductIds(Set.of(engProd2.getId())));
@@ -703,16 +692,13 @@ public class ConditionalContentSpecTest {
             getCertFromEnt(ents.get(1));
         String prod2Cert = firstPoolId.equals(prod2Pool.getId()) ? getCertFromEnt(ents.get(0)) :
             getCertFromEnt(ents.get(1));
-        assertThat(prod1Cert).isNotNull();
-        assertThat(prod2Cert).isNotNull();
-        assertThat(getContentRepoType(prod1Cert, engProd1Content.getId()))
-            .isEqualTo(engProd1Content.getType());
-        assertThat(getContentName(prod1Cert, engProd1Content.getId()))
-            .isEqualTo(engProd1Content.getName());
-        assertThat(getContentRepoType(prod2Cert, engProd2Content.getId()))
-            .isEqualTo(engProd2Content.getType());
-        assertThat(getContentName(prod2Cert, engProd2Content.getId()))
-            .isEqualTo(engProd2Content.getName());
+
+        assertThatCert(X509Cert.from(prod1Cert))
+            .hasContentRepoType(engProd1Content)
+            .hasContentName(engProd1Content);
+        assertThatCert(X509Cert.from(prod2Cert))
+            .hasContentRepoType(engProd2Content)
+            .hasContentName(engProd2Content);
     }
 
     private Map<Long, String> getSerialToCert(Collection<CertificateDTO> certs)  {
@@ -739,13 +725,4 @@ public class ConditionalContentSpecTest {
         return certs.get(0).get("cert").asText();
     }
 
-    private String getContentRepoType(String cert, String contentId) {
-        return CertificateUtil
-            .standardExtensionValueFromCert(cert, CONTENT_OID + contentId + ".1");
-    }
-
-    private String getContentName(String cert, String contentId) {
-        return CertificateUtil
-            .standardExtensionValueFromCert(cert, CONTENT_OID + contentId + ".1.1");
-    }
 }

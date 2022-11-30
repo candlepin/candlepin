@@ -45,7 +45,7 @@ import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.data.builder.Branding;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Content;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
@@ -411,7 +411,7 @@ public class RefreshPoolsSpecTest {
     @Test
     @OnlyInHosted
     public void shouldRegenerateEntitlementsWhenContentForAnEntitledPoolChanges() {
-        ContentDTO content = adminClient.hosted().createContent(Content.random());
+        ContentDTO content = adminClient.hosted().createContent(Contents.random());
         ProductDTO prod = adminClient.hosted().createProduct(Products.random());
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
         adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
@@ -474,7 +474,7 @@ public class RefreshPoolsSpecTest {
         OwnerDTO scaOwner = adminClient.owners().createOwner(Owners.randomSca());
         String scaOwnerKey = scaOwner.getKey();
 
-        ContentDTO content = Content.random().contentUrl(StringUtil.random("/url-"));
+        ContentDTO content = Contents.random().contentUrl(StringUtil.random("/url-"));
         content = adminClient.hosted().createContent(content);
         ProductDTO prod = adminClient.hosted().createProduct(Products.random());
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
@@ -601,9 +601,9 @@ public class RefreshPoolsSpecTest {
     public void shouldRegenEntitlementsWhenRequiredProductsChanges() throws Exception {
         ProductDTO engProd1 = adminClient.hosted().createProduct(Products.randomEng());
         ProductDTO engProd2 = adminClient.hosted().createProduct(Products.randomEng());
-        ContentDTO content1 = adminClient.hosted().createContent(Content.random());
-        ContentDTO content2 = adminClient.hosted().createContent(Content.random());
-        ContentDTO content3 = adminClient.hosted().createContent(Content.random());
+        ContentDTO content1 = adminClient.hosted().createContent(Contents.random());
+        ContentDTO content2 = adminClient.hosted().createContent(Contents.random());
+        ContentDTO content3 = adminClient.hosted().createContent(Contents.random());
 
         engProd1 = adminClient.hosted().addContentToProduct(engProd1.getId(), content1.getId(), true);
         engProd2 = adminClient.hosted().addContentToProduct(engProd2.getId(), content2.getId(), true);
@@ -842,7 +842,7 @@ public class RefreshPoolsSpecTest {
     @Test
     @OnlyInHosted
     public void shouldDeleteBonusPoolsWhenVirtLimitAttributeIsRemovedFromMasterPool() throws Exception {
-        ContentDTO content = adminClient.hosted().createContent(Content.random());
+        ContentDTO content = adminClient.hosted().createContent(Contents.random());
         ProductDTO prod = Products.random();
         prod.setAttributes(List.of(ProductAttributes.VirtualLimit.withValue("unlimited"),
             ProductAttributes.HostLimited.withValue("true")));
@@ -907,7 +907,7 @@ public class RefreshPoolsSpecTest {
     @Test
     @OnlyInHosted
     public void shouldInvalidateBonusPoolEntsWhenMasterPoolQuantityIsReduced() throws Exception {
-        ContentDTO content = adminClient.hosted().createContent(Content.random());
+        ContentDTO content = adminClient.hosted().createContent(Contents.random());
         ProductDTO prod = Products.random();
         prod.setAttributes(List.of(ProductAttributes.VirtualLimit.withValue("1")));
         prod = adminClient.hosted().createProduct(prod);
@@ -981,7 +981,7 @@ public class RefreshPoolsSpecTest {
     @Test
     @OnlyInHosted
     public void shouldInvalidateBonusPoolEntsWhenBonusPoolQuantityIsReduced() throws Exception {
-        ContentDTO content = adminClient.hosted().createContent(Content.random());
+        ContentDTO content = adminClient.hosted().createContent(Contents.random());
         ProductDTO prod = Products.random();
 
         Long virtLimit = 5L;
@@ -1049,7 +1049,7 @@ public class RefreshPoolsSpecTest {
     @Test
     @OnlyInHosted
     public void shouldRegenerateEntsWhenModifiedProductIdsOfContentChange() throws Exception {
-        ContentDTO content = adminClient.hosted().createContent(Content.random());
+        ContentDTO content = adminClient.hosted().createContent(Contents.random());
         ProductDTO prod = adminClient.hosted().createProduct(Products.random());
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
         adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
@@ -1090,11 +1090,11 @@ public class RefreshPoolsSpecTest {
     @OnlyInHosted
     public void shouldRegenerateEntsWhenModifiedProductidsOfContentOfAProvidedProductChange()
         throws Exception {
-        ContentDTO provProdContent = adminClient.hosted().createContent(Content.random());
+        ContentDTO provProdContent = adminClient.hosted().createContent(Contents.random());
         ProductDTO provProd = adminClient.hosted().createProduct(Products.random());
         provProd = adminClient.hosted().addContentToProduct(provProd.getId(), provProdContent.getId(), true);
 
-        ContentDTO content = adminClient.hosted().createContent(Content.random());
+        ContentDTO content = adminClient.hosted().createContent(Contents.random());
         ProductDTO prod = adminClient.hosted().createProduct(Products.random()
             .providedProducts(Set.of(provProd)));
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
@@ -1138,7 +1138,7 @@ public class RefreshPoolsSpecTest {
     @OnlyInHosted
     public void shouldRegenerateEntsWhenModifiedProductIdsOfContentOfADerivedProvidedProductChange()
         throws Exception {
-        ContentDTO derivedProvProdContent = adminClient.hosted().createContent(Content.random());
+        ContentDTO derivedProvProdContent = adminClient.hosted().createContent(Contents.random());
         ProductDTO derivedProvProd = adminClient.hosted().createProduct(Products.random());
         derivedProvProd = adminClient.hosted()
             .addContentToProduct(derivedProvProd.getId(), derivedProvProdContent.getId(), true);
@@ -1146,11 +1146,11 @@ public class RefreshPoolsSpecTest {
         ProductDTO derivedProd = adminClient.hosted()
             .createProduct(Products.random().providedProducts(Set.of(derivedProvProd)));
 
-        ContentDTO provProdContent = adminClient.hosted().createContent(Content.random());
+        ContentDTO provProdContent = adminClient.hosted().createContent(Contents.random());
         ProductDTO provProd = adminClient.hosted().createProduct(Products.random());
         provProd = adminClient.hosted().addContentToProduct(provProd.getId(), provProdContent.getId(), true);
 
-        ContentDTO content = adminClient.hosted().createContent(Content.random());
+        ContentDTO content = adminClient.hosted().createContent(Contents.random());
         ProductDTO prod = adminClient.hosted().createProduct(Products.random()
             .providedProducts(Set.of(provProd))
             .derivedProduct(derivedProd));
@@ -1213,7 +1213,7 @@ public class RefreshPoolsSpecTest {
         JsonNode serialBeforeUpdate = cert.get("serial").get("serial");
 
         // Update the modifiedProductIds of content
-        ContentDTO provProdContent = adminClient.hosted().createContent(Content.random());
+        ContentDTO provProdContent = adminClient.hosted().createContent(Contents.random());
         ProductDTO provProd = adminClient.hosted().createProduct(Products.random());
         provProd = adminClient.hosted().addContentToProduct(provProd.getId(), provProdContent.getId(), true);
         prod.setProvidedProducts(Set.of(provProd));
@@ -1237,11 +1237,11 @@ public class RefreshPoolsSpecTest {
     @Test
     @OnlyInHosted
     public void shouldRegenerateEntsWhenProvidedProductIsRemoved() throws Exception {
-        ContentDTO provProdContent = adminClient.hosted().createContent(Content.random());
+        ContentDTO provProdContent = adminClient.hosted().createContent(Contents.random());
         ProductDTO provProd = adminClient.hosted().createProduct(Products.random());
         provProd = adminClient.hosted().addContentToProduct(provProd.getId(), provProdContent.getId(), true);
 
-        ContentDTO content = adminClient.hosted().createContent(Content.random());
+        ContentDTO content = adminClient.hosted().createContent(Contents.random());
         ProductDTO prod = adminClient.hosted().createProduct(Products.random()
             .providedProducts(Set.of(provProd)));
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
@@ -1283,7 +1283,7 @@ public class RefreshPoolsSpecTest {
     @Test
     @OnlyInHosted
     public void shouldRegenerateEntsWhenLabelOfAContentChanges() throws Exception {
-        ContentDTO content = adminClient.hosted().createContent(Content.random().label("label"));
+        ContentDTO content = adminClient.hosted().createContent(Contents.random().label("label"));
         ProductDTO prod = adminClient.hosted().createProduct(Products.random());
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
         adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
@@ -1324,7 +1324,7 @@ public class RefreshPoolsSpecTest {
     @Test
     @OnlyInHosted
     public void shouldRegenerateEntsWhenReleaseVerOfAContentChanges() throws Exception {
-        ContentDTO content = adminClient.hosted().createContent(Content.random().releaseVer("relVer"));
+        ContentDTO content = adminClient.hosted().createContent(Contents.random().releaseVer("relVer"));
         ProductDTO prod = adminClient.hosted().createProduct(Products.random());
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
         adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
@@ -1365,7 +1365,7 @@ public class RefreshPoolsSpecTest {
     @Test
     @OnlyInHosted
     public void shouldRegenerateEntsWhenVendorOfAContentChanges() throws Exception {
-        ContentDTO content = adminClient.hosted().createContent(Content.random().vendor("vendor"));
+        ContentDTO content = adminClient.hosted().createContent(Contents.random().vendor("vendor"));
         ProductDTO prod = adminClient.hosted().createProduct(Products.random());
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
         adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
@@ -1425,7 +1425,7 @@ public class RefreshPoolsSpecTest {
         JsonNode serialBeforeUpdate = cert.get("serial").get("serial");
 
         // Add content to product
-        ContentDTO content = adminClient.hosted().createContent(Content.random().vendor("vendor"));
+        ContentDTO content = adminClient.hosted().createContent(Contents.random().vendor("vendor"));
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
 
         refreshPools(adminClient, owner.getKey());
@@ -1445,7 +1445,7 @@ public class RefreshPoolsSpecTest {
     @Test
     @OnlyInHosted
     public void shouldRegenerateEntsWhenDeletingContent() throws Exception {
-        ContentDTO content = adminClient.hosted().createContent(Content.random().vendor("vendor"));
+        ContentDTO content = adminClient.hosted().createContent(Contents.random().vendor("vendor"));
         ProductDTO prod = adminClient.hosted().createProduct(Products.random());
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
         adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
@@ -1621,7 +1621,7 @@ public class RefreshPoolsSpecTest {
             - That derived pool that was marked for deletion is attempted to be locked+updated later on, which
             results on some kind of error
          */
-        ContentDTO derivedProvProdContent = adminClient.hosted().createContent(Content.random());
+        ContentDTO derivedProvProdContent = adminClient.hosted().createContent(Contents.random());
         ProductDTO derivedProvProd = adminClient.hosted().createProduct(Products.random());
         derivedProvProd = adminClient.hosted()
             .addContentToProduct(derivedProvProd.getId(), derivedProvProdContent.getId(), true);
@@ -1629,7 +1629,7 @@ public class RefreshPoolsSpecTest {
         ProductDTO derivedProd = adminClient.hosted()
             .createProduct(Products.random().providedProducts(Set.of(derivedProvProd)));
 
-        ContentDTO content = adminClient.hosted().createContent(Content.random());
+        ContentDTO content = adminClient.hosted().createContent(Contents.random());
         ProductDTO prod = adminClient.hosted().createProduct(Products.random()
             .derivedProduct(derivedProd));
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
@@ -1725,7 +1725,7 @@ public class RefreshPoolsSpecTest {
     }
 
     private ProductDTO createProductWithContent() {
-        ContentDTO content = adminClient.hosted().createContent(Content.random());
+        ContentDTO content = adminClient.hosted().createContent(Contents.random());
         ProductDTO prod = adminClient.hosted().createProduct(Products.random());
         prod = adminClient.hosted().addContentToProduct(prod.getId(), content.getId(), true);
 

@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 /**
  * Class providing factory functions for BrandingDTO instances.
  */
-public final class Content {
+public final class Contents {
 
     /**
      * Throws an UnsupportedOperationException; individual instantiation of this class is not
@@ -35,7 +35,7 @@ public final class Content {
      *
      * @throws UnsupportedOperationException
      */
-    private Content() {
+    private Contents() {
         throw new UnsupportedOperationException();
     }
 
@@ -78,30 +78,15 @@ public final class Content {
      *  a ContentDTO instance with the required fields populated with semi-random values
      */
     public static ContentDTO random() {
-        return random("test_content");
-    }
-
-    /**
-     * Builds a ContentDTO instance with the required fields populated with semi-random values,
-     * using the provided prefix for the ID field.
-     *
-     * @param idPrefix
-     *  a prefix string to use for the ID field
-     *
-     * @return
-     *  a ContentDTO instance with the required fields populated with semi-random values, using the
-     *  provided prefix for the ID field.
-     */
-    public static ContentDTO random(String idPrefix) {
-        String cid = StringUtil.random(8, StringUtil.CHARSET_NUMERIC_HEX);
+        String cid = StringUtil.random(18, StringUtil.CHARSET_NUMERIC);
 
         return new ContentDTO()
-            .id(idPrefix + '-' + cid)
-            .name("test content " + cid)
+            .id(cid)
+            .name("test_content" + cid)
             .label("test label " + cid)
-            .type("test")
+            .type("yum")
             .vendor("test vendor")
-            .contentUrl("/url " + cid);
+            .contentUrl("/url_" + cid);
 
         // perhaps add optional fields here?
     }

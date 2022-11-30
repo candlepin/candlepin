@@ -39,7 +39,7 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.data.builder.Branding;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Content;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Export;
 import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
@@ -165,7 +165,7 @@ public class ImportSuccessSpecTest {
         ProductDTO archProduct = Products.withAttributes(
             ProductAttributes.Arch.withValue("x86_64")
         );
-        ContentDTO archContent = Content.random()
+        ContentDTO archContent = Contents.random()
             .metadataExpire(6000L)
             .contentUrl("/path/to/arch/specific/content")
             .requiredTags("TAG1,TAG2")

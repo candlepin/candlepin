@@ -17,6 +17,7 @@ package org.candlepin.spec.content;
 import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
+import static org.candlepin.spec.bootstrap.assertions.CertificateAssert.assertThatCert;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotModified;
@@ -46,18 +47,18 @@ import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Content;
-import org.candlepin.spec.bootstrap.data.builder.Environment;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.Environments;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
-import org.candlepin.spec.bootstrap.data.util.X509HuffmanDecodeUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -75,28 +76,26 @@ import java.util.Map;
 import java.util.Set;
 
 @SpecTest
+@SuppressWarnings("indentation")
 public class ContentAccessSpecTest {
     private static final String CONTENT_ACCESS_OUTPUT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
     private static final String CONTENT_ACCESS_INPUT_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss z";
-    private static final String ENT_DATA_OID = "1.3.6.1.4.1.2312.9.7";
-    private static final String ENT_TYPE_OID = "1.3.6.1.4.1.2312.9.8";
-    private static final String CERT_VERSION_OID = "1.3.6.1.4.1.2312.9.6";
 
     @Test
-    public void shouldFilterContentWithMismatchedArchitecture() throws Exception {
+    public void shouldFilterContentWithMismatchedArchitecture() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         // We expect this content to NOT be filtered out due to a match with the system's architecture
         ContentDTO content1 = adminClient.ownerContent()
-            .createContent(ownerKey, Content.random().arches("ppc64"));
+            .createContent(ownerKey, Contents.random().arches("ppc64"));
         // We expect this content to be filtered out due to a mismatch with the system's architecture
         ContentDTO content2 = adminClient.ownerContent()
-            .createContent(ownerKey, Content.random().arches("x86_64"));
+            .createContent(ownerKey, Contents.random().arches("x86_64"));
         // We expect this content to NOT be filtered out due it not specifying an architecture
         ContentDTO content3 = adminClient.ownerContent()
-            .createContent(ownerKey, Content.random().arches(""));
+            .createContent(ownerKey, Contents.random().arches(""));
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content1.getId(), true);
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content2.getId(), true);
@@ -131,7 +130,7 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldAllowChangingTheContentAccessModeAndModeList() throws Exception {
+    public void shouldAllowChangingTheContentAccessModeAndModeList() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners()
             .createOwner(Owners.random().contentAccessMode(Owners.SCA_ACCESS_MODE));
@@ -151,7 +150,7 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldAssignTheDefaultModeAndListWhenNoneIsSpecified() throws Exception {
+    public void shouldAssignTheDefaultModeAndListWhenNoneIsSpecified() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = new OwnerDTO()
             .id(StringUtil.random("id-"))
@@ -166,7 +165,7 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldAssignTheDefaultModeAndListWhenEmptyStringsAreSpecified() throws Exception {
+    public void shouldAssignTheDefaultModeAndListWhenEmptyStringsAreSpecified() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = Owners.random()
             .contentAccessMode("")
@@ -205,7 +204,7 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldNotAllowModeThatDoesNotExistInContentAccessModeList() throws Exception {
+    public void shouldNotAllowModeThatDoesNotExistInContentAccessModeList() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = Owners.random()
             .contentAccessMode(Owners.ENTITLEMENT_ACCESS_MODE)
@@ -220,8 +219,7 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldSetModeToDefaultWhenTheListIsUpdatedToNoLongerHaveTheOriginalModeValue()
-        throws Exception {
+    public void shouldSetModeToDefaultWhenTheListIsUpdatedToNoLongerHaveTheOriginalModeValue() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO scaOwner = adminClient.owners().createOwner(Owners.randomSca());
         assertThat(scaOwner)
@@ -239,13 +237,13 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldProduceAContentAccessCertificateForTheConsumerOnRegistration() throws Exception {
+    public void shouldProduceAContentAccessCertificateForTheConsumerOnRegistration() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -268,25 +266,23 @@ public class ContentAccessSpecTest {
 
         List<String> payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
-        byte[] value = CertificateUtil
-            .compressedContentExtensionValueFromCert(payloadCerts.get(0), ENT_DATA_OID);
-        X509HuffmanDecodeUtil decode = new X509HuffmanDecodeUtil();
-        List<String> urls = decode.hydrateContentPackage(value);
-        assertThat(urls).contains(CandlepinMode.isStandalone() ? "/" + ownerKey : "/sca/" + ownerKey);
 
-        String extVal = CertificateUtil
-            .standardExtensionValueFromCert(payloadCerts.get(0), ENT_TYPE_OID);
-        assertThat(extVal).isEqualTo("OrgLevel");
+        assertThatCert(X509Cert.from(payloadCerts.get(0)))
+            .hasEntitlementType("OrgLevel")
+            .extractingEntitlementPayload()
+            .containsOnly(
+                contentUrl(ownerKey)
+            );
     }
 
     @Test
-    public void shouldNotReproduceAContentAccessCertificateWithV1ConsumerOnRegistration() throws Exception {
+    public void shouldNotReproduceAContentAccessCertificateWithV1ConsumerOnRegistration() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -299,17 +295,17 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldIncludeEnvironmentForTheContentAccessCertOnlyInStandaloneMode() throws Exception {
+    public void shouldIncludeEnvironmentForTheContentAccessCertOnlyInStandaloneMode() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
-        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environment.random());
+        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environments.random());
         promoteContentToEnvironment(adminClient, env.getId(), content, false);
 
         ConsumerDTO consumer = adminClient.consumers()
@@ -336,29 +332,27 @@ public class ContentAccessSpecTest {
 
         List<String> payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
-        byte[] value = CertificateUtil
-            .compressedContentExtensionValueFromCert(payloadCerts.get(0), ENT_DATA_OID);
-        X509HuffmanDecodeUtil decode = new X509HuffmanDecodeUtil();
-        List<String> urls = decode.hydrateContentPackage(value);
-        boolean isStandalone = CandlepinMode.isStandalone();
-        assertThat(urls)
-            .contains(isStandalone ? "/" + ownerKey + "/" + env.getName() : "/sca/" + ownerKey);
+        assertThatCert(X509Cert.from(payloadCerts.get(0)))
+            .extractingEntitlementPayload()
+            .containsOnly(
+                contentUrl(ownerKey, env)
+            );
     }
 
     @Test
-    public void shouldHandleMultipleEnvironmentsWithContentAccessCert() throws Exception {
+    public void shouldHandleMultipleEnvironmentsWithContentAccessCert() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
-        EnvironmentDTO env1 = adminClient.owners().createEnv(ownerKey, Environment.random());
-        EnvironmentDTO env2 = adminClient.owners().createEnv(ownerKey, Environment.random());
+        EnvironmentDTO env1 = adminClient.owners().createEnv(ownerKey, Environments.random());
+        EnvironmentDTO env2 = adminClient.owners().createEnv(ownerKey, Environments.random());
         ContentDTO content2 = adminClient.ownerContent()
-            .createContent(ownerKey, Content.random().arches("x86_64"));
+            .createContent(ownerKey, Contents.random().arches("x86_64"));
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content2.getId(), true);
         promoteContentToEnvironment(adminClient, env1.getId(), content, true);
         promoteContentToEnvironment(adminClient, env2.getId(), content2, true);
@@ -394,27 +388,25 @@ public class ContentAccessSpecTest {
 
         List<String> payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
-        byte[] value = CertificateUtil
-            .compressedContentExtensionValueFromCert(payloadCerts.get(0), ENT_DATA_OID);
-        X509HuffmanDecodeUtil decode = new X509HuffmanDecodeUtil();
-        List<String> urls = decode.hydrateContentPackage(value);
-        boolean isStandalone = CandlepinMode.isStandalone();
-        String expectedUrl1 = isStandalone ? "/" + ownerKey + "/" + env1.getName() : "/sca/" + ownerKey;
-        String expectedUrl2 = isStandalone ? "/" + ownerKey + "/" + env1.getName() : "/sca/" + ownerKey;
-        assertThat(urls).contains(expectedUrl1, expectedUrl2);
+        assertThatCert(X509Cert.from(payloadCerts.get(0)))
+            .extractingEntitlementPayload()
+            .containsOnly(
+                contentUrl(ownerKey, env1),
+                contentUrl(ownerKey, env2)
+            );
     }
 
     @Test
-    public void shouldShowEnvironmentContentChangeInContentAccessCert() throws Exception {
+    public void shouldShowEnvironmentContentChangeInContentAccessCert() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
-        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environment.random());
+        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environments.random());
         ConsumerDTO consumer = adminClient.consumers()
             .createConsumer(Consumers.random(owner).addEnvironmentsItem(env));
         ApiClient consumerClient = ApiClients.ssl(consumer);
@@ -457,16 +449,16 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldShowEnvironmentChangeInContentAccessCert() throws Exception {
+    public void shouldShowEnvironmentChangeInContentAccessCert() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
-        EnvironmentDTO env1 = adminClient.owners().createEnv(ownerKey, Environment.random());
+        EnvironmentDTO env1 = adminClient.owners().createEnv(ownerKey, Environments.random());
         promoteContentToEnvironment(adminClient, env1.getId(), content, true);
 
         ConsumerDTO consumer = adminClient.consumers()
@@ -487,14 +479,13 @@ public class ContentAccessSpecTest {
 
         List<String> payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
-        byte[] value = CertificateUtil
-            .compressedContentExtensionValueFromCert(payloadCerts.get(0), ENT_DATA_OID);
-        X509HuffmanDecodeUtil decode = new X509HuffmanDecodeUtil();
-        List<String> urls = decode.hydrateContentPackage(value);
-        boolean isStandalone = CandlepinMode.isStandalone();
-        assertThat(urls).contains(isStandalone ? "/" + ownerKey + "/" + env1.getName() : "/sca/" + ownerKey);
+        assertThatCert(X509Cert.from(payloadCerts.get(0)))
+            .extractingEntitlementPayload()
+            .containsOnly(
+                contentUrl(ownerKey, env1)
+            );
 
-        EnvironmentDTO env2 = adminClient.owners().createEnv(ownerKey, Environment.random());
+        EnvironmentDTO env2 = adminClient.owners().createEnv(ownerKey, Environments.random());
         consumer.environments(List.of(env2));
         consumer.setReleaseVer(new ReleaseVerDTO().releaseVer(""));
         consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
@@ -506,20 +497,21 @@ public class ContentAccessSpecTest {
         export = consumerApi.exportCertificates(consumer.getUuid(), null);
         payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
-        value = CertificateUtil
-            .compressedContentExtensionValueFromCert(payloadCerts.get(0), ENT_DATA_OID);
-        urls = decode.hydrateContentPackage(value);
-        assertThat(urls).contains(isStandalone ? "/" + ownerKey + "/" + env2.getName() : "/sca/" + ownerKey);
+        assertThatCert(X509Cert.from(payloadCerts.get(0)))
+            .extractingEntitlementPayload()
+            .containsOnly(
+                contentUrl(ownerKey, env2)
+            );
     }
 
     @Test
-    public void shouldCreateNewContentAccessCertWithRefreshCommand() throws Exception {
+    public void shouldCreateNewContentAccessCertWithRefreshCommand() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -542,9 +534,8 @@ public class ContentAccessSpecTest {
 
         List<String> payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
-        String extVal = CertificateUtil
-            .standardExtensionValueFromCert(payloadCerts.get(0), ENT_TYPE_OID);
-        assertThat(extVal).isEqualTo("OrgLevel");
+        assertThatCert(X509Cert.from(payloadCerts.get(0)))
+            .hasEntitlementType("OrgLevel");
 
         consumerClient.consumers().regenerateEntitlementCertificates(consumer.getUuid(), null, true);
 
@@ -554,8 +545,8 @@ public class ContentAccessSpecTest {
         assertThat(updatedCerts).singleElement();
         payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
-        CertificateUtil.standardExtensionValueFromCert(payloadCerts.get(0), ENT_TYPE_OID);
-        assertThat(extVal).isEqualTo("OrgLevel");
+        assertThatCert(X509Cert.from(payloadCerts.get(0)))
+            .hasEntitlementType("OrgLevel");
 
         // verify certificate serials were updated.
         List<String> updatedSerialIds = getSerialIdsFromCertExport(export);
@@ -565,14 +556,13 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldRemoveTheContentAccessCertificateFromTheConsumerWhenOrgContentAccessModeIsRemoved()
-        throws Exception {
+    public void shouldRemoveTheContentAccessCertificateFromTheConsumerWhenOrgContentAccessModeIsRemoved() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -594,14 +584,13 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldCreateTheContentAccessCertificateForTheConsumerWhenOrgContentAccessModeIsAdded()
-        throws Exception {
+    public void shouldCreateTheContentAccessCertificateForTheConsumerWhenOrgContentAccessModeIsAdded() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -620,13 +609,13 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldRetrieveTheContentAccessCertBodyForTheConsumer() throws Exception {
+    public void shouldRetrieveTheContentAccessCertBodyForTheConsumer() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -642,11 +631,11 @@ public class ContentAccessSpecTest {
         JsonNode certContent = cert.get("products").get(0).get("content").get(0);
         verifyCertContentPath(ownerKey, content.getContentUrl(), null, certContent.get("path").asText());
 
-        byte[] value = CertificateUtil
-            .compressedContentExtensionValueFromCert(listings.get(0).asText(), ENT_DATA_OID);
-        X509HuffmanDecodeUtil decode = new X509HuffmanDecodeUtil();
-        List<String> urls = decode.hydrateContentPackage(value);
-        assertThat(urls).contains(CandlepinMode.isStandalone() ? "/" + ownerKey : "/sca/" + ownerKey);
+        assertThatCert(listings.get(0).asText())
+            .extractingEntitlementPayload()
+            .containsOnly(
+                contentUrl(ownerKey)
+            );
     }
 
     @Test
@@ -656,7 +645,7 @@ public class ContentAccessSpecTest {
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -696,11 +685,11 @@ public class ContentAccessSpecTest {
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
-        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environment.random());
+        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environments.random());
         promoteContentToEnvironment(adminClient, env.getId(), content, true);
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -739,7 +728,7 @@ public class ContentAccessSpecTest {
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -765,13 +754,13 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldUpdateExistingContentAccessCertContentWhenProductDataChanges() throws Exception {
+    public void shouldUpdateExistingContentAccessCertContentWhenProductDataChanges() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -796,13 +785,13 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldUpdateSecondExistingContentAccessCertContentWhenProductDataChanges() throws Exception {
+    public void shouldUpdateSecondExistingContentAccessCertContentWhenProductDataChanges() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -854,7 +843,7 @@ public class ContentAccessSpecTest {
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -892,7 +881,7 @@ public class ContentAccessSpecTest {
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -916,13 +905,13 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldSetTheCorrectContentAccessModeForAManifestConsumer() throws Exception {
+    public void shouldSetTheCorrectContentAccessModeForAManifestConsumer() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -971,7 +960,7 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldNotSetThecontentAccessModeForARegularConsumer() throws Exception {
+    public void shouldNotSetThecontentAccessModeForARegularConsumer() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -984,13 +973,13 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldProduceAPredatedContentAccessCertificate() throws Exception {
+    public void shouldProduceAPredatedContentAccessCertificate() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -1008,13 +997,13 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldNotAutoAttachWhenOrgEnvironmentIsSetForOwner() throws Exception {
+    public void shouldNotAutoAttachWhenOrgEnvironmentIsSetForOwner() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -1046,17 +1035,17 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldRegenerateSCACertWhenEnvironmentContentChanges() throws Exception {
+    public void shouldRegenerateSCACertWhenEnvironmentContentChanges() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
-        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environment.random());
+        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environments.random());
         promoteContentToEnvironment(adminClient, env.getId(), content, false);
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner)
@@ -1077,7 +1066,7 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldHonourTheContentDefaultsForOwnerInSCAMode() throws Exception {
+    public void shouldHonourTheContentDefaultsForOwnerInSCAMode() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
@@ -1085,11 +1074,11 @@ public class ContentAccessSpecTest {
         ProductDTO modifiedProd = adminClient.ownerProducts()
             .createProductByOwner(ownerKey, Products.random());
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO enabledContent = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO enabledContent = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), enabledContent.getId(), true);
 
-        ContentDTO disabledContent = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO disabledContent = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), disabledContent.getId(), false);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
@@ -1116,20 +1105,20 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldFilterOutContentNotPromotedToEnvironmentWhenOwnerIsInSCAMode() throws Exception {
+    public void shouldFilterOutContentNotPromotedToEnvironmentWhenOwnerIsInSCAMode() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
-        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environment.random());
+        EnvironmentDTO env = adminClient.owners().createEnv(ownerKey, Environments.random());
         ConsumerDTO consumer = adminClient.consumers()
             .createConsumer(Consumers.random(owner).addEnvironmentsItem(env));
         assertThat(consumer.getEnvironments()).singleElement().returns(env.getId(), EnvironmentDTO::getId);
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO promotedContent = adminClient.ownerContent().createContent(ownerKey, Content.random());
-        ContentDTO notPromotedContent = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO promotedContent = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        ContentDTO notPromotedContent = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), promotedContent.getId(), true);
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), notPromotedContent.getId(), true);
         promoteContentToEnvironment(adminClient, env.getId(), promotedContent, false);
@@ -1153,22 +1142,21 @@ public class ContentAccessSpecTest {
 
         List<String> payloadCerts = extractCertsFromPayload(export);
         assertThat(payloadCerts).singleElement();
-        String extVal = CertificateUtil
-            .standardExtensionValueFromCert(payloadCerts.get(0), CERT_VERSION_OID);
-        assertThat(extVal).isEqualTo("3.4");
+        assertThatCert(X509Cert.from(payloadCerts.get(0)))
+            .hasVersion("3.4");
     }
 
     @Test
-    public void shouldHandleMixedEnabledmentOfContentForOwnerInSCAMode() throws Exception {
+    public void shouldHandleMixedEnabledmentOfContentForOwnerInSCAMode() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod1 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
         ProductDTO prod2 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO cont1 = adminClient.ownerContent().createContent(ownerKey, Content.random());
-        ContentDTO cont2 = adminClient.ownerContent().createContent(ownerKey, Content.random());
-        ContentDTO cont3 = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO cont1 = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        ContentDTO cont2 = adminClient.ownerContent().createContent(ownerKey, Contents.random());
+        ContentDTO cont3 = adminClient.ownerContent().createContent(ownerKey, Contents.random());
 
         // Content enabled in both product
         adminClient.ownerProducts().addContent(ownerKey, prod1.getId(), cont1.getId(), true);
@@ -1213,7 +1201,7 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldOnlyAddContentFromActivePoolsOnTheSCACertificate() throws Exception {
+    public void shouldOnlyAddContentFromActivePoolsOnTheSCACertificate() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
@@ -1222,10 +1210,10 @@ public class ContentAccessSpecTest {
             .createProductByOwner(ownerKey, Products.random());
         ProductDTO prod1 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
         ProductDTO prod2 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO cont1 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO cont1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
         adminClient.ownerProducts().addContent(ownerKey, prod1.getId(), cont1.getId(), true);
-        ContentDTO cont2 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO cont2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
         adminClient.owners().createPool(ownerKey, Pools.random(prod2));
         adminClient.ownerProducts().addContent(ownerKey, prod2.getId(), cont2.getId(), true);
@@ -1246,7 +1234,7 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldIncludeContentFromAllProductsAssociatedWithActivePoolToSCACert() throws Exception {
+    public void shouldIncludeContentFromAllProductsAssociatedWithActivePoolToSCACert() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
@@ -1261,13 +1249,13 @@ public class ContentAccessSpecTest {
             .providedProducts(Set.of(engProd))
             .derivedProduct(derivedProd));
 
-        ContentDTO cont1 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO cont1 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
-        ContentDTO cont2 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO cont2 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
-        ContentDTO cont3 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO cont3 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
-        ContentDTO cont4 = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO cont4 = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
 
         adminClient.ownerProducts().addContent(ownerKey, engProd.getId(), cont1.getId(), true);
@@ -1290,13 +1278,13 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldRegenerateSCACertWhenContentChangesAffectContentView() throws Exception {
+    public void shouldRegenerateSCACertWhenContentChangesAffectContentView() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -1317,13 +1305,13 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldRegenerateSCACertWhenProductChangesAffectContentView() throws Exception {
+    public void shouldRegenerateSCACertWhenProductChangesAffectContentView() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -1343,13 +1331,13 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldRegenerateSCACertWhenPoolChangesAffectContentView() throws Exception {
+    public void shouldRegenerateSCACertWhenPoolChangesAffectContentView() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         PoolDTO pool = adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -1371,7 +1359,7 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldHaveDisabledPurposeComplianceForOwnerInSCAMode() throws Exception {
+    public void shouldHaveDisabledPurposeComplianceForOwnerInSCAMode() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
@@ -1393,13 +1381,13 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldRevokeSCACertsUponUnRegistration() throws Exception {
+    public void shouldRevokeSCACertsUponUnRegistration() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -1422,17 +1410,17 @@ public class ContentAccessSpecTest {
     }
 
     @Test
-    public void shouldRegenerateSCACertificateOfAffectedConsumersWhenEnvIsDeleted() throws Exception {
+    public void shouldRegenerateSCACertificateOfAffectedConsumersWhenEnvIsDeleted() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
 
-        EnvironmentDTO env1 = adminClient.owners().createEnv(ownerKey, Environment.random());
-        EnvironmentDTO env2 = adminClient.owners().createEnv(ownerKey, Environment.random());
+        EnvironmentDTO env1 = adminClient.owners().createEnv(ownerKey, Environments.random());
+        EnvironmentDTO env2 = adminClient.owners().createEnv(ownerKey, Environments.random());
         promoteContentToEnvironment(adminClient, env2.getId(), content, true);
 
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner)
@@ -1444,7 +1432,7 @@ public class ContentAccessSpecTest {
             .singleElement()
             .extracting(CertificateDTO::getSerial)
             .isNotNull();
-        Long intialSerial = oldCerts.get(0).getSerial().getSerial();
+        Long initialSerial = oldCerts.get(0).getSerial().getSerial();
 
         adminClient.environments().deleteEnvironment(env1.getId());
 
@@ -1454,7 +1442,15 @@ public class ContentAccessSpecTest {
             .extracting(CertificateDTO::getSerial)
             .isNotNull()
             .extracting(CertificateSerialDTO::getSerial)
-            .isNotEqualTo(intialSerial);
+            .isNotEqualTo(initialSerial);
+    }
+
+    private String contentUrl(String ownerKey, EnvironmentDTO env) {
+        return CandlepinMode.isStandalone() ? "/" + ownerKey + "/" + env.getName() : "/sca/" + ownerKey;
+    }
+
+    private String contentUrl(String ownerKey) {
+        return CandlepinMode.isStandalone() ? "/" + ownerKey : "/sca/" + ownerKey;
     }
 
     private void promoteContentToEnvironment(ApiClient client, String envId, ContentDTO content,

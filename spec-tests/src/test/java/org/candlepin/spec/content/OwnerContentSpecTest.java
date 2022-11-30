@@ -42,8 +42,8 @@ import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Content;
-import org.candlepin.spec.bootstrap.data.builder.Environment;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
+import org.candlepin.spec.bootstrap.data.builder.Environments;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
@@ -78,9 +78,9 @@ class OwnerContentSpecTest {
         return client.owners().createOwner(Owners.random());
     }
 
-    private ContentDTO createContent(ApiClient client, OwnerDTO owner, String idPrefix) {
+    private ContentDTO createContent(ApiClient client, OwnerDTO owner) {
         return client.ownerContent()
-            .createContent(owner.getKey(), Content.random(idPrefix));
+            .createContent(owner.getKey(), Contents.random());
     }
 
     private ApiClient createOrgAdminClient(ApiClient adminClient, OwnerDTO owner) {
@@ -176,7 +176,7 @@ class OwnerContentSpecTest {
             // At the time of writing, this is only the ID field
             OwnerDTO owner = OwnerContentSpecTest.this.createOwner(this.client);
 
-            ContentDTO content = Content.random()
+            ContentDTO content = Contents.random()
                 .id(null);
 
             assertBadRequest(() -> this.client.ownerContent().createContent(owner.getKey(), content));
@@ -189,7 +189,7 @@ class OwnerContentSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = OwnerContentSpecTest.this.createOwner(adminClient);
 
-        ContentDTO content = Content.random()
+        ContentDTO content = Contents.random()
             .id(null);
 
         assertBadRequest(() -> adminClient.ownerContent().createContent(owner.getKey(), content));
@@ -201,7 +201,7 @@ class OwnerContentSpecTest {
         OwnerDTO owner = this.createOwner(adminClient);
 
         ApiClient orgAdminClient = this.createOrgAdminClient(adminClient, owner);
-        assertForbidden(() -> orgAdminClient.ownerContent().createContent(owner.getKey(), Content.random()));
+        assertForbidden(() -> orgAdminClient.ownerContent().createContent(owner.getKey(), Contents.random()));
     }
 
     @Test
@@ -210,7 +210,7 @@ class OwnerContentSpecTest {
         OwnerDTO owner = this.createOwner(adminClient);
 
         ApiClient consumerClient = this.createConsumerClient(adminClient, owner);
-        assertForbidden(() -> consumerClient.ownerContent().createContent(owner.getKey(), Content.random()));
+        assertForbidden(() -> consumerClient.ownerContent().createContent(owner.getKey(), Contents.random()));
     }
 
     @Test
@@ -218,7 +218,7 @@ class OwnerContentSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
-        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Content.random());
+        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
         assertNotNull(created);
 
         ContentDTO fetched = adminClient.ownerContent().getOwnerContent(owner.getKey(), created.getId());
@@ -231,7 +231,7 @@ class OwnerContentSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
-        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Content.random());
+        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
         assertNotNull(created);
 
         ApiClient orgAdminClient = this.createOrgAdminClient(adminClient, owner);
@@ -245,7 +245,7 @@ class OwnerContentSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
-        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Content.random());
+        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
         assertNotNull(created);
 
         ApiClient consumerClient = this.createConsumerClient(adminClient, owner);
@@ -260,11 +260,11 @@ class OwnerContentSpecTest {
         // The creation order here is important. By default, Candlepin sorts in descending order of the
         // entity's creation time, so we need to create them backward to let the default sorting order
         // let us page through them in ascending order.
-        ContentDTO content3 = this.createContent(adminClient, owner, "test_content-3");
+        ContentDTO content3 = this.createContent(adminClient, owner);
         Thread.sleep(1000);
-        ContentDTO content2 = this.createContent(adminClient, owner, "test_content-2");
+        ContentDTO content2 = this.createContent(adminClient, owner);
         Thread.sleep(1000);
-        ContentDTO content1 = this.createContent(adminClient, owner, "test_content-1");
+        ContentDTO content1 = this.createContent(adminClient, owner);
 
         List<ContentDTO> content = List.of(content1, content2, content3);
 
@@ -330,7 +330,7 @@ class OwnerContentSpecTest {
             .addQueryParam("per_page", "1")
             .execute();
 
-        List<ContentDTO> c4set = response.deserialize(new TypeReference<List<ContentDTO>>() {});
+        List<ContentDTO> c4set = response.deserialize(new TypeReference<>() {});
         assertThat(c4set)
             .isNotNull()
             .isEmpty();
@@ -344,11 +344,11 @@ class OwnerContentSpecTest {
         // The creation order here is important. By default, Candlepin sorts in descending order of the
         // entity's creation time, so we need to create them backward to let the default sorting order
         // let us page through them in ascending order.
-        ContentDTO content3 = this.createContent(adminClient, owner, "test_content-3");
+        ContentDTO content3 = this.createContent(adminClient, owner);
         Thread.sleep(1000);
-        ContentDTO content2 = this.createContent(adminClient, owner, "test_content-2");
+        ContentDTO content2 = this.createContent(adminClient, owner);
         Thread.sleep(1000);
-        ContentDTO content1 = this.createContent(adminClient, owner, "test_content-1");
+        ContentDTO content1 = this.createContent(adminClient, owner);
 
         Response response = Request.from(adminClient)
             .setPath("/owners/{owner_key}/content")
@@ -501,14 +501,14 @@ class OwnerContentSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
-        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Content.random());
+        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
         assertNotNull(created);
 
         // Cache the ID since we're about to clobber it
         String id = created.getId();
 
         // These fields should be silently ignored during an update
-        ContentDTO update = Content.copy(created)
+        ContentDTO update = Contents.copy(created)
             .uuid("updated_uuid")
             .id("updated_id");
 
@@ -531,7 +531,7 @@ class OwnerContentSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
-        ContentDTO content = adminClient.ownerContent().createContent(owner.getKey(), Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
         assertNotNull(content);
 
         ProductDTO product = adminClient.ownerProducts()
@@ -548,7 +548,7 @@ class OwnerContentSpecTest {
             .map(ProductContentDTO::getContent)
             .contains(content);
 
-        ContentDTO update = Content.copy(content)
+        ContentDTO update = Contents.copy(content)
             .name("updated_content");
 
         ContentDTO updatedContent = adminClient.ownerContent()
@@ -578,7 +578,7 @@ class OwnerContentSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
-        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Content.random());
+        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
         assertNotNull(created);
 
         created.setName("updated content");
@@ -593,7 +593,7 @@ class OwnerContentSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
-        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Content.random());
+        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
         assertNotNull(created);
 
         created.setName("updated content");
@@ -608,7 +608,7 @@ class OwnerContentSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
-        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Content.random());
+        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
         assertNotNull(created);
 
         ContentDTO fetched = adminClient.ownerContent().getOwnerContent(owner.getKey(), created.getId());
@@ -625,7 +625,7 @@ class OwnerContentSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
-        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Content.random());
+        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
         assertNotNull(created);
 
         ApiClient orgAdminClient = this.createOrgAdminClient(adminClient, owner);
@@ -637,7 +637,7 @@ class OwnerContentSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
-        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Content.random());
+        ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
         assertNotNull(created);
 
         ApiClient consumerClient = this.createConsumerClient(adminClient, owner);
@@ -649,7 +649,7 @@ class OwnerContentSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
-        ContentDTO content = adminClient.ownerContent().createContent(owner.getKey(), Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
         assertNotNull(content);
 
         ProductDTO product = adminClient.ownerProducts()
@@ -689,7 +689,7 @@ class OwnerContentSpecTest {
         OwnerDTO owner = this.createOwner(adminClient);
 
         // Create a pool to consume
-        ContentDTO content = adminClient.ownerContent().createContent(owner.getKey(), Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
         assertNotNull(content);
 
         ProductDTO product = adminClient.ownerProducts()
@@ -718,7 +718,7 @@ class OwnerContentSpecTest {
         assertEquals(1, certSerials1.size());
 
         // Update the content
-        ContentDTO contentUpdate = Content.copy(content)
+        ContentDTO contentUpdate = Contents.copy(content)
             .gpgUrl("https://www.gpg.url/test");
 
         ContentDTO updatedContent = adminClient.ownerContent()
@@ -756,7 +756,7 @@ class OwnerContentSpecTest {
 
             OwnerDTO owner = Owners.random();
 
-            ContentDTO content = Content.random();
+            ContentDTO content = Contents.random();
 
             ProductContentDTO pc = new ProductContentDTO()
                 .content(content)
@@ -790,7 +790,7 @@ class OwnerContentSpecTest {
         public void shouldNotAllowUpdatingLockedContent() throws Exception {
             ApiClient adminClient = ApiClients.admin();
 
-            ContentDTO update = Content.copy(this.targetEntity)
+            ContentDTO update = Contents.copy(this.targetEntity)
                 .name("updated content name")
                 .label("updated label");
 
@@ -821,7 +821,7 @@ class OwnerContentSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 
-        EnvironmentDTO env = adminClient.owners().createEnv(owner.getKey(), Environment.random());
+        EnvironmentDTO env = adminClient.owners().createEnv(owner.getKey(), Environments.random());
         assertNotNull(env);
 
         int products = 10;  // number of products to create
@@ -840,7 +840,7 @@ class OwnerContentSpecTest {
 
             for (int ccount = 0; ccount < content; ++ccount) {
                 // Create content
-                ContentDTO cdto = Content.random()
+                ContentDTO cdto = Contents.random()
                     .id(String.format("%s-cont_%d", pdto.getId(), ccount));
 
                 cdto = adminClient.ownerContent().createContent(owner.getKey(), cdto);

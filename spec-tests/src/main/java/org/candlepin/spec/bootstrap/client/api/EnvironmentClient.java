@@ -12,25 +12,21 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.spec.bootstrap.data.builder;
+package org.candlepin.spec.bootstrap.client.api;
 
-import org.candlepin.dto.api.client.v1.EnvironmentDTO;
-import org.candlepin.spec.bootstrap.data.util.StringUtil;
+import org.candlepin.dto.api.client.v1.ConsumerDTO;
+import org.candlepin.invoker.client.ApiClient;
+import org.candlepin.invoker.client.ApiException;
+import org.candlepin.resource.client.v1.EnvironmentApi;
 
-/**
- * Class providing factory functions for EnvironmentDTO instances.
- */
-public class Environment {
+public class EnvironmentClient extends EnvironmentApi {
 
-    private Environment() {
-        throw new UnsupportedOperationException();
+    public EnvironmentClient(ApiClient client) {
+        super(client);
     }
 
-    public static EnvironmentDTO random() {
-        return new EnvironmentDTO()
-            .id(StringUtil.random("id-"))
-            .name(StringUtil.random("name-"))
-            .description(StringUtil.random("desc-"));
+    public ConsumerDTO createConsumerInEnvironment(String envId, ConsumerDTO consumer) throws ApiException {
+        return super.createConsumerInEnvironment(envId, consumer, consumer.getUsername(), null);
     }
 
 }

@@ -24,6 +24,7 @@ import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.cert.X509Cert;
+import org.candlepin.spec.bootstrap.data.builder.OID;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 
@@ -64,8 +65,7 @@ public class ProductCertSpecTest {
 
     @Test
     public void shouldHaveTheCorrectProductName() {
-        byte[] extensionValue = certificate.getExtensionValue(
-            String.format("1.3.6.1.4.1.2312.9.1.%s.1", product.getId()));
+        byte[] extensionValue = certificate.getExtensionValue(OID.productName(product));
         String productName = new String(extensionValue);
         assertThat(productName)
             .contains(product.getName());
