@@ -24,7 +24,20 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 
 @ExtendWith(MockitoExtension.class)
-public class PoolMapperTest extends AbstractMapperTest<Pool, SubscriptionInfo> {
+public class PoolMapperTest extends AbstractEntityMapperTest<Pool, SubscriptionInfo> {
+
+    /** Used to ensure generated instances have some differences between them */
+    private static int generatedEntityCount = 0;
+
+    @Override
+    protected String getEntityId(Pool entity) {
+        return entity != null ? entity.getId() : null;
+    }
+
+    @Override
+    protected String getEntityId(SubscriptionInfo entity) {
+        return entity != null ? entity.getId() : null;
+    }
 
     @Override
     protected EntityMapper<Pool, SubscriptionInfo> buildEntityMapper() {
@@ -35,14 +48,16 @@ public class PoolMapperTest extends AbstractMapperTest<Pool, SubscriptionInfo> {
     protected Pool buildLocalEntity(Owner owner, String entityId) {
         return new Pool()
             .setId(entityId)
-            .setOwner(owner);
+            .setOwner(owner)
+            .setQuantity(10000L + ++generatedEntityCount);
     }
 
     @Override
     protected SubscriptionInfo buildImportedEntity(Owner owner, String entityId) {
         return new Pool()
             .setId(entityId)
-            .setOwner(owner);
+            .setOwner(owner)
+            .setQuantity(10000L + ++generatedEntityCount);
     }
 
 }

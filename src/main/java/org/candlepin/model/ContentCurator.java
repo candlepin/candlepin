@@ -30,6 +30,7 @@ import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 
 
 
@@ -156,4 +157,32 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         return output;
     }
 
+    /**
+     * Fetches a set consisting of the content of the  products specified by the given UUIDs. If the
+     * given products do not have any content or no products exist with the provided UUIDs, this
+     * method returns an empty set.
+     *
+     * @param productUuids
+     *  a collection of UUIDs of products for which to fetch children content
+     *
+     * @return
+     *  a set consisting of the content of the products specified by the given UUIDs
+     */
+    public Set<Content> getChildrenContentOfProductsByUuids(Collection<String> productUuids) {
+        Set<Content> output = new HashSet<>();
+
+        if (productUuids != null && !productUuids.isEmpty()) {
+            String jpql = "SELECT pc.content FROM Product p JOIN p.productContent pc " +
+                "WHERE p.uuid IN (:product_uuids)";
+
+            TypedQuery<Content> query = this.getEntityManager()
+                .createQuery(jpql, Content.class);
+
+            for (List<String> block : this.partition(productUuids)) {
+                output.addAll(query.setParameter("product_uuids", block).getResultList());
+            }
+        }
+
+        return output;
+    }
 }

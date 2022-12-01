@@ -257,11 +257,14 @@ public class ContentAccessManagerTest {
     }
 
     private Product mockProduct(Owner owner, Content content) {
-        Product product = new Product("test_product_id", "test_product", null);
-        product.setAttribute(Product.Attributes.VERSION, "version");
-        product.setAttribute(Product.Attributes.VARIANT, "variant");
-        product.setAttribute(Product.Attributes.TYPE, "SVC");
-        product.setAttribute(Product.Attributes.ARCHITECTURE, "x86_64");
+        Product product = new Product()
+            .setId(TestUtil.randomString("test_product-"))
+            .setName("test_product")
+            .setAttribute(Product.Attributes.VERSION, "version")
+            .setAttribute(Product.Attributes.VARIANT, "variant")
+            .setAttribute(Product.Attributes.TYPE, "SVC")
+            .setAttribute(Product.Attributes.ARCHITECTURE, "x86_64");
+
         product.addContent(content, false);
         List<Product> productList = Arrays.asList(product);
 

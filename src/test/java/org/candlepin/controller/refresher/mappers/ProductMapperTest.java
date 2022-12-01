@@ -30,7 +30,20 @@ import org.mockito.quality.Strictness;
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class ProductMapperTest extends AbstractMapperTest<Product, ProductInfo> {
+public class ProductMapperTest extends AbstractEntityMapperTest<Product, ProductInfo> {
+
+    /** Used to ensure generated instances have some differences between them */
+    private static int generatedEntityCount = 0;
+
+    @Override
+    protected String getEntityId(Product entity) {
+        return entity != null ? entity.getId() : null;
+    }
+
+    @Override
+    protected String getEntityId(ProductInfo entity) {
+        return entity != null ? entity.getId() : null;
+    }
 
     @Override
     protected EntityMapper<Product, ProductInfo> buildEntityMapper() {
@@ -40,13 +53,15 @@ public class ProductMapperTest extends AbstractMapperTest<Product, ProductInfo> 
     @Override
     protected Product buildLocalEntity(Owner owner, String entityId) {
         return new Product()
-            .setId(entityId);
+            .setId(entityId)
+            .setName(String.format("%s-%d", entityId, ++generatedEntityCount));
     }
 
     @Override
     protected ProductInfo buildImportedEntity(Owner owner, String entityId) {
         return new Product()
-            .setId(entityId);
+            .setId(entityId)
+            .setName(String.format("%s-%d", entityId, ++generatedEntityCount));
     }
 
 }

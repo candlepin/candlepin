@@ -17,11 +17,15 @@ package org.candlepin.controller.refresher.mappers;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.service.model.ServiceAdapterModel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 
@@ -38,8 +42,11 @@ import java.util.Set;
 public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I extends ServiceAdapterModel>
     implements EntityMapper<E, I> {
 
+    private static final Logger log = LoggerFactory.getLogger(AbstractEntityMapper.class);
+
     private Map<String, E> existingEntities;
     private Map<String, I> importedEntities;
+    private Set<String> dirtyEntityRefs;
 
     /**
      * Creates a new AbstractEntityMapper instance
@@ -47,6 +54,7 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
     public AbstractEntityMapper() {
         this.existingEntities = new HashMap<>();
         this.importedEntities = new HashMap<>();
+        this.dirtyEntityRefs = new HashSet<>();
     }
 
     /**
@@ -103,71 +111,136 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
     }
 
     /**
-     * {@inheritDoc}
+     * Fetches the ID of the specified entity. If the given entity is null or does not have a
+     * mappable ID, this method should throw an exception.
+     *
+     * @param entity
+     *  the entity for which to fetch the ID
+     *
+     * @return
+     *  the ID of the entity, or null if the entity could not be fetched
      */
-    @Override
-    public boolean addExistingEntity(String id, E entity) {
-        if (id == null || id.isEmpty()) {
-            throw new IllegalArgumentException("id is null or empty");
-        }
+    protected abstract String getEntityId(E entity);
 
-        if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
-        }
-
-        return this.existingEntities.put(id, entity) != entity;
-    }
+    /**
+     * Fetches the ID of the specified entity. If the given entity is null or does not have a
+     * mappable ID, this method should throw an exception.
+     *
+     * @param entity
+     *  the entity for which to fetch the ID
+     *
+     * @return
+     *  the ID of the entity, or null if the entity could not be fetched
+     */
+    protected abstract String getEntityId(I entity);
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int addExistingEntities(Collection<E> entities) {
-        int count = 0;
+    public EntityMapper<E, I> addExistingEntity(E entity) {
+        if (entity != null) {
+            String eid = this.getEntityId(entity);
 
-        if (entities != null) {
-            for (E entity : entities) {
-                if (this.addExistingEntity(entity)) {
-                    ++count;
+            this.existingEntities.compute(eid, (id, existing) -> {
+                if (existing != null && !existing.equals(entity)) {
+                    this.dirtyEntityRefs.add(id);
+                    log.warn("Remapping existing entity with a different entity version; " +
+                        "discarding previous... {} -> {} != {}", id, existing, entity);
                 }
-            }
+
+                return entity;
+            });
         }
 
-        return count;
+        return this;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean addImportedEntity(String id, I entity) {
-        if (id == null || id.isEmpty()) {
-            throw new IllegalArgumentException("id is null or empty");
-        }
-
-        if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
-        }
-
-        return this.importedEntities.put(id, entity) != entity;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int addImportedEntities(Collection<I> entities) {
-        int count = 0;
-
+    public EntityMapper<E, I> addExistingEntities(Collection<? extends E> entities) {
         if (entities != null) {
-            for (I entity : entities) {
-                if (this.addImportedEntity(entity)) {
-                    ++count;
-                }
-            }
+            entities.forEach(this::addExistingEntity);
         }
 
-        return count;
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EntityMapper<E, I> addImportedEntity(I entity) {
+        if (entity != null) {
+            String eid = this.getEntityId(entity);
+
+            this.importedEntities.compute(eid, (id, existing) -> {
+                if (existing != null && !existing.equals(entity)) {
+                    log.warn("Remapping imported entity with a different entity version; " +
+                        "discarding previous... {} -> {} != {}", id, existing, entity);
+                }
+
+                return entity;
+            });
+        }
+
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EntityMapper<E, I> addImportedEntities(Collection<? extends I> entities) {
+        if (entities != null) {
+            entities.forEach(this::addImportedEntity);
+        }
+
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isDirty() {
+        return !this.dirtyEntityRefs.isEmpty();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isDirty(String id) {
+        return this.dirtyEntityRefs.contains(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean containsOnlyExistingEntityIds(Collection<String> ids) {
+        return ids != null ?
+            ids.containsAll(this.existingEntities.keySet()) :
+            this.existingEntities.isEmpty();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean containsOnlyExistingEntities(Collection<? extends E> entities) {
+        if (entities != null && !entities.isEmpty()) {
+            Collection<String> ids = entities.stream()
+                .map(this::getEntityId)
+                .collect(Collectors.toSet());
+
+            return this.containsOnlyExistingEntityIds(ids);
+        }
+
+        return this.existingEntities.isEmpty();
     }
 
     /**
@@ -185,6 +258,7 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
     @Override
     public void clearExistingEntities() {
         this.existingEntities.clear();
+        this.dirtyEntityRefs.clear();
     }
 
     /**

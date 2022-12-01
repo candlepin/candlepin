@@ -117,45 +117,23 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
     Map<String, I> getImportedEntities();
 
     /**
-     * Adds an existing entity to this mapper. The entity must not be null and it must have a valid
-     * entity ID.
+     * Adds an existing entity to this mapper. Null values will be silently ignored, but the entity
+     * must have a valid, mappable ID.
      *
      * @param entity
      *  the existing entity to add to this mapper
      *
      * @throws IllegalArgumentException
-     *  if the provided entity is null or does not have a valid entity ID
+     *  if the provided entity does not have a valid entity ID
      *
      * @return
-     *  true if the entity is mapped successfully; false if the mapping already existed
+     *  a reference to this entity mapper
      */
-    boolean addExistingEntity(E entity);
+    EntityMapper<E, I> addExistingEntity(E entity);
 
     /**
-     * Adds an existing entity to this mapper. The entity must not be null and the entity ID must
-     * be valid.
-     * <p></p>
-     * Note that this method is provided for compatibility with entities which may not have a
-     * "standard" method for fetching the entity ID. The single-parameter <tt>addExistingEntity</tt>
-     * should be used instead wherever possible.
-     *
-     * @param id
-     *  the entity ID to use for mapping the given entity
-     *
-     * @param entity
-     *  the existing entity to add to this mapper
-     *
-     * @throws IllegalArgumentException
-     *  if the provided entity is null, or the entity ID is null or invalid
-     *
-     * @return
-     *  true if the entity is mapped successfully; false if the mapping already existed
-     */
-    boolean addExistingEntity(String id, E entity);
-
-    /**
-     * Adds the collection of existing entities to this mapper. The entities must not be null and
-     * must have valid entity IDs.
+     * Adds the collection of existing entities to this mapper. Null values will be silently
+     * ignored, but all non-null entities must have a valid ID
      *
      * @param entities
      *  a collection of existing entities to add to this mapper
@@ -165,46 +143,24 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
      *  IDs
      *
      * @return
-     *  the number of new entity mappings created as a result of this operation
+     *  a reference to this entity mapper
      */
-    int addExistingEntities(Collection<E> entities);
+    EntityMapper<E, I> addExistingEntities(Collection<? extends E> entities);
 
     /**
-     * Adds an imported entity to this mapper. The entity must not be null and it must have a valid
-     * entity ID.
+     * Adds an imported entity to this mapper. Null values will be silently ignored, but the entity
+     * must have a valid, mappable ID.
      *
      * @param entity
      *  the imported entity to add to this mapper
      *
      * @throws IllegalArgumentException
-     *  if the provided entity is null or does not have a valid entity ID
+     *  if the provided entity does not have a valid entity ID
      *
      * @return
-     *  true if the entity is mapped successfully; false if the mapping already existed
+     *  a reference to this entity mapper
      */
-    boolean addImportedEntity(I entity);
-
-    /**
-     * Adds an imported entity to this mapper. The entity must not be null and the entity ID must
-     * be valid.
-     * <p></p>
-     * Note that this method is provided for compatibility with entities which may not have a
-     * "standard" method for fetching the entity ID. The single-parameter <tt>addImportedEntity</tt>
-     * should be used instead wherever possible.
-     *
-     * @param id
-     *  the entity ID to use for mapping the given entity
-     *
-     * @param entity
-     *  the imported entity to add to this mapper
-     *
-     * @throws IllegalArgumentException
-     *  if the provided entity is null, or the entity ID is null or invalid
-     *
-     * @return
-     *  true if the entity is mapped successfully; false if the mapping already existed
-     */
-    boolean addImportedEntity(String id, I entity);
+    EntityMapper<E, I> addImportedEntity(I entity);
 
     /**
      * Adds the collection of imported entities to this mapper. The entities must not be null and
@@ -220,7 +176,65 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
      * @return
      *  the number of new entity mappings created as a result of this operation
      */
-    int addImportedEntities(Collection<I> entities);
+    EntityMapper<E, I> addImportedEntities(Collection<? extends I> entities);
+
+    /**
+     * Checks if any existing entity mapped by this mapper is "dirty," indicating it has been given
+     * two or more different versions of the same entity, or it contains a reference to an entity
+     * which is not mapped to the owning organization.
+     *
+     * @return
+     *  true if any mapped existing entities have dirty references
+     */
+    boolean isDirty();
+
+    /**
+     * Checks if the existing entity mapped to the given ID is "dirty," indicating it has been
+     * mapped to two or more different versions of the entity, or is mapped to an entity which
+     * is not mapped to the owning organization. If the given ID is null or empty, this method
+     * returns false.
+     *
+     * @param id
+     *  the ID of the entity to check
+     *
+     * @return
+     *  true if the existing entity mapped to the given ID is dirty; false otherwise
+     */
+    boolean isDirty(String id);
+
+    /**
+     * Checks that this mapper only contains only existing entity mappings for entities with the
+     * given IDs. If the given collection is null or empty, this method will return true if, and
+     * only if, the mapper contains no existing entity mappings.
+     * <p></p>
+     * <strong>Note:</strong> This method has no effect on the state of the dirty flag for any
+     * mapped existing entity.
+     *
+     * @param ids
+     *  a collection of entity IDs representing the superset of expected mapped existing entities
+     *
+     * @return
+     *  true if this mapper contains only existing entities with IDs that are not present in the
+     *  provided collection of IDs; false otherwise
+     */
+    boolean containsOnlyExistingEntityIds(Collection<String> ids);
+
+    /**
+     * Checks that this mapper only contains only existing entity mappings for entities contained in
+     * the given collection of entities. If the given collection is null or empty, this method will
+     * return true if, and only if, the mapper contains no existing entity mappings.
+     * <p></p>
+     * <strong>Note:</strong> This method has no effect on the state of the dirty flag for any
+     * mapped existing entity.
+     *
+     * @param entities
+     *  a collection of entities representing the superset of expected mapped existing entities
+     *
+     * @return
+     *  true if this mapper contains only existing entities that are not present in the
+     *  provided entity collection; false otherwise
+     */
+    boolean containsOnlyExistingEntities(Collection<? extends E> entities);
 
     /**
      * Clears this entity mapper, removing all known existing and imported entities
@@ -228,7 +242,8 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
     void clear();
 
     /**
-     * Clears any existing entities from this mapper
+     * Clears any existing entities from this mapper, and clears any dirty flags set for existing
+     * entities.
      */
     void clearExistingEntities();
 

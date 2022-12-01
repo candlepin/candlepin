@@ -42,6 +42,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -240,12 +241,11 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @NotNull
     private Date endDate;
 
-    /*
-     * After Jackson version is upgraded:
-     */
-    @ManyToOne
-    @JoinColumn(name = "product_uuid", nullable = false)
-    @NotNull
+    @Column(name = "product_uuid", nullable = false)
+    private String productUuid;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_uuid", insertable = false, updatable = false)
     private Product product;
 
     @ElementCollection
@@ -830,10 +830,24 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     /**
-     * Retrieves the Product representing the top-level product for this pool.
+     * Fetches the UUID of the top-level product for this pool. If the UUID has not been set, this
+     * method returns null.
      *
      * @return
-     *  the top-level product for this pool.
+     *  the UUID of the top-level product for this pool if the product UUID is populated; null
+     *  otherwise
+     */
+    public String getProductUuid() {
+        return this.productUuid;
+    }
+
+    /**
+     * Fetches the product representing the top-level product for this pool if the product UUID has
+     * been set. This may perform a lazy lookup of the product and should generally be avoided in
+     * cases where the product UUID is sufficient.
+     *
+     * @return
+     *  the top-level product for this pool if the product UUID is populated; null otherwise
      */
     public Product getProduct() {
         return this.product;
@@ -843,14 +857,29 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      * Sets the Product to represent the top-level product for this pool.
      *
      * @param product
-     *  The Product to assign as the top-level product for this pool.
+     *  the Product to assign as the top-level product for this pool
      *
      * @return
      *  a reference to this pool instance
      */
     public Pool setProduct(Product product) {
         this.product = product;
+        this.productUuid = product != null ? product.getUuid() : null;
+
         return this;
+    }
+
+    /**
+     * Sets the product UUID from the product instance if, and only if, the product UUID is
+     * currently null, but the product is not.
+     *
+     * This method is used by the persist and update hooks to ensure the productUuid field is
+     * populated even in instances where the product was set before it was persisted.
+     */
+    private void synchronizeProductUuid() {
+        if (this.productUuid == null && this.product != null) {
+            this.productUuid = this.product.getUuid();
+        }
     }
 
     /**
@@ -1209,18 +1238,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         return this;
     }
 
-    @Override
-    protected void onCreate() {
-        super.onCreate();
-        this.type = this.getType();
-    }
-
-    @Override
-    protected void onUpdate() {
-        super.onCreate();
-        this.type = this.getType();
-    }
-
     public String getUpstreamPoolId() {
         return upstreamPoolId;
     }
@@ -1287,4 +1304,21 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
         return String.format("Pool [id: %s, type: %s, product: %s, productName: %s, quantity: %s]",
             this.getId(), this.getType(), this.getProductId(), this.getProductName(), this.getQuantity());
     }
+
+    @Override
+    protected void onCreate() {
+        super.onCreate();
+
+        this.synchronizeProductUuid();
+        this.type = this.getType();
+    }
+
+    @Override
+    protected void onUpdate() {
+        super.onCreate();
+
+        this.synchronizeProductUuid();
+        this.type = this.getType();
+    }
+
 }

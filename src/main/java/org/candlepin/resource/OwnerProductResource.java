@@ -216,10 +216,11 @@ public class OwnerProductResource implements OwnerProductApi {
     @Override
     public CandlepinQuery<ProductDTO> getProductsByOwner(@Verify(Owner.class) String ownerKey,
         List<String> productIds) {
+
         Owner owner = getOwnerByKey(ownerKey);
         CandlepinQuery<Product> query = productIds != null && !productIds.isEmpty() ?
             this.ownerProductCurator.getProductsByIds(owner, productIds) :
-            this.ownerProductCurator.getProductsByOwner(owner);
+            this.ownerProductCurator.getProductsByOwnerCPQ(owner);
 
         return this.translator.translateQuery(query, ProductDTO.class);
     }

@@ -23,6 +23,8 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -144,7 +146,185 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testGetContentByOwnerId() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("content1", owner);
+        Content content2 = this.createContent("content2", owner);
+        Content content3 = this.createContent("content3", owner);
+
+        List<Content> expected = List.of(content1, content2, content3);
+        List<Content> actual = this.ownerContentCurator.getContentByOwner(owner.getId());
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+        expected.forEach(content -> assertTrue(actual.contains(content)));
+    }
+
+    @Test
+    public void testGetContentByOwnerIdDoesNotIncludeUnmappedContent() {
+        Owner owner = this.createOwner();
+
+        Content content1 = this.createContent("content1", owner);
+        Content content2 = this.createContent("content2", owner);
+        Content content3 = this.createContent("content3", owner);
+
+        Content contentU = this.createContent("unmapped_content");
+        Product product = new Product()
+            .setId("product1")
+            .setName("product1");
+        product.addContent(contentU, true);
+
+        this.createProduct(product, owner);
+
+        List<Content> expected = List.of(content1, content2, content3);
+        List<Content> actual = this.ownerContentCurator.getContentByOwner(owner.getId());
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+        expected.forEach(content -> assertTrue(actual.contains(content)));
+    }
+
+    @Test
+    public void testGetContentByOwnerIdDoesNotIncludeOtherOrgContent() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Content content1 = this.createContent("content1", owner1);
+        Content content2 = this.createContent("content2", owner2);
+        Content content3 = this.createContent("content3", owner1, owner2);
+
+        List<Content> expected = List.of(content1, content3);
+        List<Content> actual = this.ownerContentCurator.getContentByOwner(owner1.getId());
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+        expected.forEach(content -> assertTrue(actual.contains(content)));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testGetContentByOwnerIdAcceptsNullAndEmptyInput(String input) {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("content1", owner);
+        Content content2 = this.createContent("content2", owner);
+        Content content3 = this.createContent("content3", owner);
+
+        List<Content> output = this.ownerContentCurator.getContentByOwner(input);
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
+    }
+
+    @Test
+    public void testGetContentByOwnerIdAcceptsInvalidInput() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("content1", owner);
+        Content content2 = this.createContent("content2", owner);
+        Content content3 = this.createContent("content3", owner);
+
+        List<Content> output = this.ownerContentCurator.getContentByOwner("invalid owner id");
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
+    }
+
+    @Test
     public void testGetContentByOwner() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("content1", owner);
+        Content content2 = this.createContent("content2", owner);
+        Content content3 = this.createContent("content3", owner);
+
+        List<Content> expected = List.of(content1, content2, content3);
+        List<Content> actual = this.ownerContentCurator.getContentByOwner(owner);
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+        expected.forEach(content -> assertTrue(actual.contains(content)));
+    }
+
+    @Test
+    public void testGetContentByOwnerDoesNotIncludeUnmappedContent() {
+        Owner owner = this.createOwner();
+
+        Content content1 = this.createContent("content1", owner);
+        Content content2 = this.createContent("content2", owner);
+        Content content3 = this.createContent("content3", owner);
+
+        Content contentU = this.createContent("unmapped_content");
+        Product product = new Product()
+            .setId("product1")
+            .setName("product1");
+        product.addContent(contentU, true);
+
+        this.createProduct(product, owner);
+
+        List<Content> expected = List.of(content1, content2, content3);
+        List<Content> actual = this.ownerContentCurator.getContentByOwner(owner);
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+        expected.forEach(content -> assertTrue(actual.contains(content)));
+    }
+
+    @Test
+    public void testGetContentByOwnerDoesNotIncludeOtherOrgContent() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Content content1 = this.createContent("content1", owner1);
+        Content content2 = this.createContent("content2", owner2);
+        Content content3 = this.createContent("content3", owner1, owner2);
+
+        List<Content> expected = List.of(content1, content3);
+        List<Content> actual = this.ownerContentCurator.getContentByOwner(owner1);
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+        expected.forEach(content -> assertTrue(actual.contains(content)));
+    }
+
+    @Test
+    public void testGetContentByOwnerAcceptsNullInput() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("content1", owner);
+        Content content2 = this.createContent("content2", owner);
+        Content content3 = this.createContent("content3", owner);
+
+        List<Content> output = this.ownerContentCurator.getContentByOwner((Owner) null);
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testGetContentByOwnerAcceptsOwnerWithNullAndEmptyId(String ownerId) {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("content1", owner);
+        Content content2 = this.createContent("content2", owner);
+        Content content3 = this.createContent("content3", owner);
+
+        Owner input = new Owner().setId(ownerId);
+
+        List<Content> output = this.ownerContentCurator.getContentByOwner(input);
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
+    }
+
+    @Test
+    public void testGetContentByOwnerAcceptsOwnerWithInvalidId() {
+        Owner owner = this.createOwner();
+        Content content1 = this.createContent("content1", owner);
+        Content content2 = this.createContent("content2", owner);
+        Content content3 = this.createContent("content3", owner);
+
+        Owner input = new Owner().setId("invalid owner id");
+
+        List<Content> output = this.ownerContentCurator.getContentByOwner(input);
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
+    }
+
+    @Test
+    public void testGetContentByOwnerCPQ() {
         Owner owner = this.createOwner();
         Content content1 = this.createContent();
         Content content2 = this.createContent();
@@ -152,8 +332,8 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
         this.createOwnerContentMapping(owner, content1);
         this.createOwnerContentMapping(owner, content2);
 
-        Collection<Content> contentA = this.ownerContentCurator.getContentByOwner(owner).list();
-        Collection<Content> contentB = this.ownerContentCurator.getContentByOwner(owner.getId()).list();
+        Collection<Content> contentA = this.ownerContentCurator.getContentByOwnerCPQ(owner).list();
+        Collection<Content> contentB = this.ownerContentCurator.getContentByOwnerCPQ(owner.getId()).list();
 
         assertTrue(contentA.contains(content1));
         assertTrue(contentA.contains(content2));
@@ -162,14 +342,14 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetContentByOwnerWithUnmappedContent() {
+    public void testGetContentByOwnerCPQWithUnmappedContent() {
         Owner owner = this.createOwner();
         Content content1 = this.createContent();
         Content content2 = this.createContent();
         Content content3 = this.createContent();
 
-        Collection<Content> contentA = this.ownerContentCurator.getContentByOwner(owner).list();
-        Collection<Content> contentB = this.ownerContentCurator.getContentByOwner(owner.getId()).list();
+        Collection<Content> contentA = this.ownerContentCurator.getContentByOwnerCPQ(owner).list();
+        Collection<Content> contentB = this.ownerContentCurator.getContentByOwnerCPQ(owner.getId()).list();
 
         assertTrue(contentA.isEmpty());
         assertTrue(contentB.isEmpty());
@@ -910,5 +1090,125 @@ public class OwnerContentCuratorTest extends DatabaseTestFixture {
 
         assertNotNull(fetched2);
         assertEquals(version2, fetched2);
+    }
+
+    @Test
+    public void testRebuildOwnerContentMapping() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+        Owner owner3 = this.createOwner("test_owner-3");
+
+        Content content1 = this.createContent("test_content-1", owner1, owner2);
+        Content content2 = this.createContent("test_content-2", owner1, owner2);
+        Content content3 = this.createContent("test_content-3", owner2);
+        Content content4 = this.createContent("test_content-4", owner3);
+        Content content5 = this.createContent("test_content-5", owner3);
+
+        // Remap owner2 to contents: 2, 3, and 4
+        Map<String, String> pidMap = Map.of(
+            content2.getId(), content2.getUuid(),
+            content3.getId(), content3.getUuid(),
+            content4.getId(), content4.getUuid());
+
+        this.ownerContentCurator.rebuildOwnerContentMapping(owner2, pidMap);
+
+        // Verify owner1 mappings are unaffected
+        assertTrue(this.isContentMappedToOwner(content1, owner1));
+        assertTrue(this.isContentMappedToOwner(content2, owner1));
+        assertFalse(this.isContentMappedToOwner(content3, owner1));
+        assertFalse(this.isContentMappedToOwner(content4, owner1));
+        assertFalse(this.isContentMappedToOwner(content5, owner1));
+
+        // Verify owner3 mappings are unaffected
+        assertFalse(this.isContentMappedToOwner(content1, owner3));
+        assertFalse(this.isContentMappedToOwner(content2, owner3));
+        assertFalse(this.isContentMappedToOwner(content3, owner3));
+        assertTrue(this.isContentMappedToOwner(content4, owner3));
+        assertTrue(this.isContentMappedToOwner(content5, owner3));
+
+        // Verify owner2 is mapped according to the config above
+        assertFalse(this.isContentMappedToOwner(content1, owner2));
+        assertTrue(this.isContentMappedToOwner(content2, owner2));
+        assertTrue(this.isContentMappedToOwner(content3, owner2));
+        assertTrue(this.isContentMappedToOwner(content4, owner2));
+        assertFalse(this.isContentMappedToOwner(content5, owner2));
+    }
+
+    @Test
+    public void testRebuildOwnerContentMappingWithConflictingContentIDs() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+
+        Content content1v1 = TestUtil.createContent("test_content-1", "test content 1 v1");
+        Content content1v2 = TestUtil.createContent("test_content-1", "test content 1 v2");
+
+        this.createContent(content1v1, owner1, owner2);
+        this.createContent(content1v2);
+
+        Map<String, String> pidMap = Map.of(content1v2.getId(), content1v2.getUuid());
+        this.ownerContentCurator.rebuildOwnerContentMapping(owner2, pidMap);
+
+        // owner 2 should now point to v2 of the content; owner1 should remain unaffected
+        assertTrue(this.isContentMappedToOwner(content1v1, owner1));
+        assertFalse(this.isContentMappedToOwner(content1v2, owner1));
+
+        assertFalse(this.isContentMappedToOwner(content1v1, owner2));
+        assertTrue(this.isContentMappedToOwner(content1v2, owner2));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testRebuildOwnerContentMappingAcceptsNullAndEmptyPIDMap(Map<String, String> pidMap) {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+        Owner owner3 = this.createOwner("test_owner-3");
+
+        Content content1 = this.createContent("test_content-1", owner1, owner2);
+        Content content2 = this.createContent("test_content-2", owner1, owner2);
+        Content content3 = this.createContent("test_content-3", owner2);
+        Content content4 = this.createContent("test_content-4", owner3);
+        Content content5 = this.createContent("test_content-5", owner3);
+
+        // As designed, passing a null or empty map should result in the org being mapped to nothing
+        this.ownerContentCurator.rebuildOwnerContentMapping(owner2, pidMap);
+
+        // Verify owner1 mappings are unaffected
+        assertTrue(this.isContentMappedToOwner(content1, owner1));
+        assertTrue(this.isContentMappedToOwner(content2, owner1));
+        assertFalse(this.isContentMappedToOwner(content3, owner1));
+        assertFalse(this.isContentMappedToOwner(content4, owner1));
+        assertFalse(this.isContentMappedToOwner(content5, owner1));
+
+        // Verify owner3 mappings are unaffected
+        assertFalse(this.isContentMappedToOwner(content1, owner3));
+        assertFalse(this.isContentMappedToOwner(content2, owner3));
+        assertFalse(this.isContentMappedToOwner(content3, owner3));
+        assertTrue(this.isContentMappedToOwner(content4, owner3));
+        assertTrue(this.isContentMappedToOwner(content5, owner3));
+
+        // Verify owner2 isn't mapped to anything
+        assertFalse(this.isContentMappedToOwner(content1, owner2));
+        assertFalse(this.isContentMappedToOwner(content2, owner2));
+        assertFalse(this.isContentMappedToOwner(content3, owner2));
+        assertFalse(this.isContentMappedToOwner(content4, owner2));
+        assertFalse(this.isContentMappedToOwner(content5, owner2));
+    }
+
+    @Test
+    public void testRebuildOwnerContentMappingRequiresOwner() {
+        Map<String, String> pidMap = Map.of("p1", "p1_uuid");
+
+        assertThrows(IllegalArgumentException.class, () ->
+            this.ownerContentCurator.rebuildOwnerContentMapping(null, pidMap));
+    }
+
+    @Test
+    public void testRebuildOwnerContentMappingRequiresOwnerWithID() {
+        Map<String, String> pidMap = Map.of("p1", "p1_uuid");
+
+        Owner owner = new Owner();
+
+        assertThrows(IllegalArgumentException.class, () ->
+            this.ownerContentCurator.rebuildOwnerContentMapping(owner, pidMap));
     }
 }

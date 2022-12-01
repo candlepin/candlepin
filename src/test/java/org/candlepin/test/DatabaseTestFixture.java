@@ -409,6 +409,10 @@ public class DatabaseTestFixture {
         return this.createContent(contentId, contentId, owners);
     }
 
+    protected Content createContent(String id, Owner... owners) {
+        return this.createContent(id, id, owners);
+    }
+
     protected Content createContent(String id, String name, Owner... owners) {
         Content content = TestUtil.createContent(id, name);
         content = this.contentCurator.create(content);
@@ -604,8 +608,12 @@ public class DatabaseTestFixture {
     }
 
     protected Product createProduct(Owner... owners) {
-        String productId = "test-product-" + TestUtil.randomInt();
+        String productId = "test_product-" + TestUtil.randomInt();
         return this.createProduct(productId, productId, owners);
+    }
+
+    protected Product createProduct(String id, Owner... owners) {
+        return this.createProduct(id, id, owners);
     }
 
     protected Product createProduct(String id, String name, Owner... owners) {

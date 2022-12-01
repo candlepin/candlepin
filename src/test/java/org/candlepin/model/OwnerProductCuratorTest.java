@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -150,8 +151,190 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertTrue(ownersB.isEmpty());
     }
 
+
+    @Test
+    public void testGetProductsByOwnerId() {
+        Owner owner = this.createOwner();
+        Product product1 = this.createProduct("product1", owner);
+        Product product2 = this.createProduct("product2", owner);
+        Product product3 = this.createProduct("product3", owner);
+
+        List<Product> expected = List.of(product1, product2, product3);
+        List<Product> actual = this.ownerProductCurator.getProductsByOwner(owner.getId());
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+        expected.forEach(product -> assertTrue(actual.contains(product)));
+    }
+
+    @Test
+    public void testGetProductsByOwnerIdDoesNotIncludeUnmappedProducts() {
+        Owner owner = this.createOwner();
+
+        Product product1 = this.createProduct("product1", owner);
+        Product product2 = this.createProduct("product2", owner);
+        Product product3 = this.createProduct("product3", owner);
+
+        Product productU = this.createProduct("unmapped_product");
+        Product product4 = new Product()
+            .setId("product4")
+            .setName("product4")
+            .setDerivedProduct(productU);
+
+        this.createProduct(product4, owner);
+
+        List<Product> expected = List.of(product1, product2, product3, product4);
+        List<Product> actual = this.ownerProductCurator.getProductsByOwner(owner.getId());
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+        expected.forEach(product -> assertTrue(actual.contains(product)));
+    }
+
+    @Test
+    public void testGetProductsByOwnerIdDoesNotIncludeOtherOrgProduct() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product product1 = this.createProduct("product1", owner1);
+        Product product2 = this.createProduct("product2", owner2);
+        Product product3 = this.createProduct("product3", owner1, owner2);
+
+        List<Product> expected = List.of(product1, product3);
+        List<Product> actual = this.ownerProductCurator.getProductsByOwner(owner1.getId());
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+        expected.forEach(product -> assertTrue(actual.contains(product)));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testGetProductsByOwnerIdAcceptsNullAndEmptyInput(String input) {
+        Owner owner = this.createOwner();
+        Product product1 = this.createProduct("product1", owner);
+        Product product2 = this.createProduct("product2", owner);
+        Product product3 = this.createProduct("product3", owner);
+
+        List<Product> output = this.ownerProductCurator.getProductsByOwner(input);
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
+    }
+
+    @Test
+    public void testGetProductsByOwnerIdAcceptsInvalidInput() {
+        Owner owner = this.createOwner();
+        Product product1 = this.createProduct("product1", owner);
+        Product product2 = this.createProduct("product2", owner);
+        Product product3 = this.createProduct("product3", owner);
+
+        List<Product> output = this.ownerProductCurator.getProductsByOwner("invalid owner id");
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
+    }
+
     @Test
     public void testGetProductsByOwner() {
+        Owner owner = this.createOwner();
+        Product product1 = this.createProduct("product1", owner);
+        Product product2 = this.createProduct("product2", owner);
+        Product product3 = this.createProduct("product3", owner);
+
+        List<Product> expected = List.of(product1, product2, product3);
+        List<Product> actual = this.ownerProductCurator.getProductsByOwner(owner);
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+        expected.forEach(product -> assertTrue(actual.contains(product)));
+    }
+
+    @Test
+    public void testGetProductsByOwnerDoesNotIncludeUnmappedProduct() {
+        Owner owner = this.createOwner();
+
+        Product product1 = this.createProduct("product1", owner);
+        Product product2 = this.createProduct("product2", owner);
+        Product product3 = this.createProduct("product3", owner);
+
+        Product productU = this.createProduct("unmapped_product");
+        Product product4 = new Product()
+            .setId("product4")
+            .setName("product4")
+            .setDerivedProduct(productU);
+
+        this.createProduct(product4, owner);
+
+        List<Product> expected = List.of(product1, product2, product3, product4);
+        List<Product> actual = this.ownerProductCurator.getProductsByOwner(owner);
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+        expected.forEach(product -> assertTrue(actual.contains(product)));
+    }
+
+    @Test
+    public void testGetProductsByOwnerDoesNotIncludeOtherOrgProduct() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product product1 = this.createProduct("product1", owner1);
+        Product product2 = this.createProduct("product2", owner2);
+        Product product3 = this.createProduct("product3", owner1, owner2);
+
+        List<Product> expected = List.of(product1, product3);
+        List<Product> actual = this.ownerProductCurator.getProductsByOwner(owner1);
+
+        assertNotNull(actual);
+        assertEquals(expected.size(), actual.size());
+        expected.forEach(product -> assertTrue(actual.contains(product)));
+    }
+
+    @Test
+    public void testGetProductsByOwnerAcceptsNullInput() {
+        Owner owner = this.createOwner();
+        Product product1 = this.createProduct("product1", owner);
+        Product product2 = this.createProduct("product2", owner);
+        Product product3 = this.createProduct("product3", owner);
+
+        List<Product> output = this.ownerProductCurator.getProductsByOwner((Owner) null);
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testGetProductsByOwnerAcceptsOwnerWithNullAndEmptyId(String ownerId) {
+        Owner owner = this.createOwner();
+        Product product1 = this.createProduct("product1", owner);
+        Product product2 = this.createProduct("product2", owner);
+        Product product3 = this.createProduct("product3", owner);
+
+        Owner input = new Owner().setId(ownerId);
+
+        List<Product> output = this.ownerProductCurator.getProductsByOwner(input);
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
+    }
+
+    @Test
+    public void testGetProductsByOwnerAcceptsOwnerWithInvalidId() {
+        Owner owner = this.createOwner();
+        Product product1 = this.createProduct("product1", owner);
+        Product product2 = this.createProduct("product2", owner);
+        Product product3 = this.createProduct("product3", owner);
+
+        Owner input = new Owner().setId("invalid owner id");
+
+        List<Product> output = this.ownerProductCurator.getProductsByOwner(input);
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
+    }
+
+
+
+
+    @Test
+    public void testGetProductsByOwnerCPQ() {
         Owner owner = this.createOwner();
         Product product1 = this.createProduct();
         Product product2 = this.createProduct();
@@ -159,8 +342,8 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         this.createOwnerProductMapping(owner, product1);
         this.createOwnerProductMapping(owner, product2);
 
-        Collection<Product> productsA = this.ownerProductCurator.getProductsByOwner(owner).list();
-        Collection<Product> productsB = this.ownerProductCurator.getProductsByOwner(owner.getId()).list();
+        Collection<Product> productsA = this.ownerProductCurator.getProductsByOwnerCPQ(owner).list();
+        Collection<Product> productsB = this.ownerProductCurator.getProductsByOwnerCPQ(owner.getId()).list();
 
         assertTrue(productsA.contains(product1));
         assertTrue(productsA.contains(product2));
@@ -169,14 +352,14 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetProductsByOwnerWithUnmappedProduct() {
+    public void testGetProductsByOwnerCPQWithUnmappedProduct() {
         Owner owner = this.createOwner();
         Product product1 = this.createProduct();
         Product product2 = this.createProduct();
         Product product3 = this.createProduct();
 
-        Collection<Product> productsA = this.ownerProductCurator.getProductsByOwner(owner).list();
-        Collection<Product> productsB = this.ownerProductCurator.getProductsByOwner(owner.getId()).list();
+        Collection<Product> productsA = this.ownerProductCurator.getProductsByOwnerCPQ(owner).list();
+        Collection<Product> productsB = this.ownerProductCurator.getProductsByOwnerCPQ(owner.getId()).list();
 
         assertTrue(productsA.isEmpty());
         assertTrue(productsB.isEmpty());
@@ -804,16 +987,6 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertEquals(result, getEmptySyspurposeAttributeMap());
     }
 
-    private Product createProduct() {
-        String id = "test_product-" + TestUtil.randomInt();
-
-        Product product = new Product()
-            .setId(id)
-            .setName(id);
-
-        return this.productCurator.create(product);
-    }
-
     private List<OwnerProduct> buildOwnerProductData(List<Owner> owners, List<Product> products) {
         Instant last = Instant.now();
         List<OwnerProduct> output = new ArrayList<>();
@@ -1420,6 +1593,133 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
 
         assertNotNull(fetched2);
         assertEquals(version2, fetched2);
+    }
+
+    @Test
+    public void testRebuildOwnerProductMapping() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+        Owner owner3 = this.createOwner("test_owner-3");
+
+        Product product1 = this.createProduct("test_product-1", owner1, owner2);
+        Product product2 = this.createProduct("test_product-2", owner1, owner2);
+        Product product3 = this.createProduct("test_product-3", owner2);
+        Product product4 = this.createProduct("test_product-4", owner3);
+        Product product5 = this.createProduct("test_product-5", owner3);
+
+        // Remap owner2 to products: 2, 3, and 4
+        Map<String, String> pidMap = Map.of(
+            product2.getId(), product2.getUuid(),
+            product3.getId(), product3.getUuid(),
+            product4.getId(), product4.getUuid());
+
+        this.ownerProductCurator.rebuildOwnerProductMapping(owner2, pidMap);
+
+        // Verify owner1 mappings are unaffected
+        assertTrue(this.isProductMappedToOwner(product1, owner1));
+        assertTrue(this.isProductMappedToOwner(product2, owner1));
+        assertFalse(this.isProductMappedToOwner(product3, owner1));
+        assertFalse(this.isProductMappedToOwner(product4, owner1));
+        assertFalse(this.isProductMappedToOwner(product5, owner1));
+
+        // Verify owner3 mappings are unaffected
+        assertFalse(this.isProductMappedToOwner(product1, owner3));
+        assertFalse(this.isProductMappedToOwner(product2, owner3));
+        assertFalse(this.isProductMappedToOwner(product3, owner3));
+        assertTrue(this.isProductMappedToOwner(product4, owner3));
+        assertTrue(this.isProductMappedToOwner(product5, owner3));
+
+        // Verify owner2 is mapped according to the config above
+        assertFalse(this.isProductMappedToOwner(product1, owner2));
+        assertTrue(this.isProductMappedToOwner(product2, owner2));
+        assertTrue(this.isProductMappedToOwner(product3, owner2));
+        assertTrue(this.isProductMappedToOwner(product4, owner2));
+        assertFalse(this.isProductMappedToOwner(product5, owner2));
+    }
+
+    @Test
+    public void testRebuildOwnerProductMappingWithConflictingProductIDs() {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+
+        Product product1v1 = new Product()
+            .setId("test_product-1")
+            .setName("test product 1 v1");
+
+        Product product1v2 = new Product()
+            .setId("test_product-1")
+            .setName("test product 1 v2");
+
+        this.createProduct(product1v1, owner1, owner2);
+        this.createProduct(product1v2);
+
+        this.ownerProductCurator.flush();
+
+        Map<String, String> pidMap = Map.of(product1v2.getId(), product1v2.getUuid());
+        this.ownerProductCurator.rebuildOwnerProductMapping(owner2, pidMap);
+
+        // owner 2 should now point to v2 of the product; owner1 should remain unaffected
+        assertTrue(this.isProductMappedToOwner(product1v1, owner1));
+        assertFalse(this.isProductMappedToOwner(product1v2, owner1));
+
+        assertFalse(this.isProductMappedToOwner(product1v1, owner2));
+        assertTrue(this.isProductMappedToOwner(product1v2, owner2));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testRebuildOwnerProductMappingAcceptsNullAndEmptyPIDMap(Map<String, String> pidMap) {
+        Owner owner1 = this.createOwner("test_owner-1");
+        Owner owner2 = this.createOwner("test_owner-2");
+        Owner owner3 = this.createOwner("test_owner-3");
+
+        Product product1 = this.createProduct("test_product-1", owner1, owner2);
+        Product product2 = this.createProduct("test_product-2", owner1, owner2);
+        Product product3 = this.createProduct("test_product-3", owner2);
+        Product product4 = this.createProduct("test_product-4", owner3);
+        Product product5 = this.createProduct("test_product-5", owner3);
+
+        // As designed, passing a null or empty map should result in the org being mapped to nothing
+        this.ownerProductCurator.rebuildOwnerProductMapping(owner2, pidMap);
+
+        // Verify owner1 mappings are unaffected
+        assertTrue(this.isProductMappedToOwner(product1, owner1));
+        assertTrue(this.isProductMappedToOwner(product2, owner1));
+        assertFalse(this.isProductMappedToOwner(product3, owner1));
+        assertFalse(this.isProductMappedToOwner(product4, owner1));
+        assertFalse(this.isProductMappedToOwner(product5, owner1));
+
+        // Verify owner3 mappings are unaffected
+        assertFalse(this.isProductMappedToOwner(product1, owner3));
+        assertFalse(this.isProductMappedToOwner(product2, owner3));
+        assertFalse(this.isProductMappedToOwner(product3, owner3));
+        assertTrue(this.isProductMappedToOwner(product4, owner3));
+        assertTrue(this.isProductMappedToOwner(product5, owner3));
+
+        // Verify owner2 isn't mapped to anything
+        assertFalse(this.isProductMappedToOwner(product1, owner2));
+        assertFalse(this.isProductMappedToOwner(product2, owner2));
+        assertFalse(this.isProductMappedToOwner(product3, owner2));
+        assertFalse(this.isProductMappedToOwner(product4, owner2));
+        assertFalse(this.isProductMappedToOwner(product5, owner2));
+    }
+
+    @Test
+    public void testRebuildOwnerProductMappingRequiresOwner() {
+        Map<String, String> pidMap = Map.of("p1", "p1_uuid");
+
+        assertThrows(IllegalArgumentException.class, () ->
+            this.ownerProductCurator.rebuildOwnerProductMapping(null, pidMap));
+    }
+
+    @Test
+    public void testRebuildOwnerProductMappingRequiresOwnerWithID() {
+        Map<String, String> pidMap = Map.of("p1", "p1_uuid");
+
+        Owner owner = new Owner();
+
+        assertThrows(IllegalArgumentException.class, () ->
+            this.ownerProductCurator.rebuildOwnerProductMapping(owner, pidMap));
     }
 
 }
