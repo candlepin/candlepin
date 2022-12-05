@@ -13,7 +13,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.10
+Version: 4.2.11
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -251,6 +251,109 @@ fi
 
 #raw
 %changelog
+* Mon Dec 05 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.11-1
+- Bump artemis-server from 2.27.0 to 2.27.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-148: Migrate ram_spec to Java (wpoteat@redhat.com)
+- CANDLEPIN-109: Migrate one_sub_pool_per_stack_spec to Java
+  (wpoteat@redhat.com)
+- Migrate virt_spec to Java (ojanus@redhat.com)
+- CANDLEPIN-209: Enable RPM build on RHEL 9 (ojanus@redhat.com)
+- Bump postgresql from 42.5.0 to 42.5.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ehcache from 3.10.5 to 3.10.8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-187: Migrate content_delivery_network_spec to Java
+  (sbakaj@redhat.com)
+- Bump dependency-check-gradle from 7.3.0 to 7.3.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump logback-classic from 1.4.4 to 1.4.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Reverted product/content link from activation key and environments
+  (crog@redhat.com)
+- CANDLEPIN-442: Unit test failure from date issue (wpoteat@redhat.com)
+- 1931913: API-level product/content updates no longer occur in parallel
+  (crog@redhat.com)
+- CANDLEPIN-83: Migrate system_admin_spec to Java (wpoteat@redhat.com)
+- Bump ehcache from 3.10.4 to 3.10.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-241: Migrate system_purpose_compliance_spec to Java
+  (sbakaj@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Upgrade to Jackson 2.14.0 (nmoumoul@redhat.com)
+- Bump mariadb-java-client from 3.0.9 to 3.1.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Migrated conditional_content_spec to Java - created
+  ConditionalContentSpecTest.java - removed conditional_content_spec.rb
+  (joshmalbrecht@gmail.com)
+- Bump artemis-server from 2.26.0 to 2.27.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- test_data_importer: fix invalid content_url (ptoscano@redhat.com)
+- Bump artemis-stomp-protocol from 2.26.0 to 2.27.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump swagger-annotations from 1.6.8 to 1.6.9
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ehcache from 3.10.3 to 3.10.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump mockito-junit-jupiter from 4.8.1 to 4.9.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Migrate import_update_single_pool_spec and import_warning_spec - removed
+  import_update_single_pool_spec.rb - removed import_warning_spec.rb
+  (joshmalbrecht@gmail.com)
+- Migrate import_environment_spec and import_cleanup_spec to Java
+  (sbakaj@redhat.com)
+- Bump gradle-versions-plugin from 0.43.0 to 0.44.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump mariadb-java-client from 3.0.8 to 3.0.9
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ehcache from 3.10.2 to 3.10.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump keycloak-servlet-filter-adapter from 20.0.0 to 20.0.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- ENT-5460: Migrate ueber_cert_spec to Java (wpoteat@redhat.com)
+- ENT-5462: Migrate storage_band_spec to Java (wpoteat@redhat.com)
+- ENT-5457: Migrate vcpu_spec to Java (wpoteat@redhat.com)
+- Migrated user_resource_spec to Java - migrated user_resource_spec.rb to
+  UserResourceSpecTest.java - removed user_resource_spec.rb
+  (joshmalbrecht@gmail.com)
+- ENT-5459: Migrate unmapped_guest spec to Java (wpoteat@redhat.com)
+- Ported the upstream data injector to Java in the HostedTestResource
+  (crog@redhat.com)
+- ENT-5458: Migrate unbind and subscription_resource specs to Java
+  (wpoteat@redhat.com)
+- ENT-5455: Migrate hypervisor_heartbeat and virt_only specs to Java
+  (wpoteat@redhat.com)
+- Migrate content_access_spec to Java (Part 1) - migrated half of the spec
+  tests in content_access_spec.rb - removed the migrated tests from
+  content_access_spec.rb (joshmalbrecht@gmail.com)
+- ENT-5453: Migrate product_versioning_spec to Java (wpoteat@redhat.com)
+- Bump picocli from 4.6.3 to 4.7.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump keycloak-servlet-filter-adapter from 19.0.3 to 20.0.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump gradle-lint-plugin from 17.7.0 to 17.7.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump sonarqube-gradle-plugin from 3.3 to 3.5.0.2730
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- ENT-5377: Migrate import_update and import_excess spec to Java
+  (wpoteat@redhat.com)
+- Fix flaky activation key list test (nmoumoul@redhat.com)
+- Migrate content_versioning_spec to Java - Removed content_versioning_spec.rb
+  (joshmalbrecht@gmail.com)
+- Bump gson from 2.9.1 to 2.10
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump hsqldb from 2.7.0 to 2.7.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Migrate rest of the owner_resource_spec to Java (sbakaj@redhat.com)
+- Bump dependency-check-gradle from 7.2.1 to 7.3.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Migrate oauth_spec to Java (sbakaj@redhat.com)
+- Bump mockito-junit-jupiter from 4.8.0 to 4.8.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Migrate hypervisor_check_in to Java pt 2 (wpoteat@redhat.com)
+- SELinux: Update based on packaging guide (vmojzis@redhat.com)
+
 * Wed Oct 19 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.10-1
 - ENT-5447: Remove synchronous import endpoint (wpoteat@redhat.com)
 - 2134502: Satellite cannot enable or sync satellite-tools repo
