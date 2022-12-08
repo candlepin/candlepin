@@ -82,8 +82,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     vm_config.vm.host_name = "candlepin-el7.example.com"
 
     # Uncomment these lines for forward the Candlepin standard dev ports to this guest
-    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8080, host: 8080
-    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8443, host: 8443
+    # vm_config.vm.network "forwarded_port", protocol: "tcp", guest: 8080, host: 8080
+    # vm_config.vm.network "forwarded_port", protocol: "tcp", guest: 8443, host: 8443
 
     vm_config.vm.provision "shell", inline: "yum update -y yum python ca-certificates"
     configure_ansible_provisioning(vm_config)
@@ -95,8 +95,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     vm_config.vm.host_name = "candlepin-el8.example.com"
 
     # Uncomment these lines for forward the Candlepin standard dev ports to this guest.
-    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8080, host: 8080
-    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8443, host: 8443
+    # vm_config.vm.network "forwarded_port", protocol: "tcp", guest: 8080, host: 8080
+    # vm_config.vm.network "forwarded_port", protocol: "tcp", guest: 8443, host: 8443
 
     vm_config.vm.provision "shell", inline: "dnf update -y dnf ca-certificates"
     configure_ansible_provisioning(vm_config)
@@ -107,8 +107,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     vm_config.vm.host_name = "candlepin-f35.example.com"
 
     # Uncomment these lines for forward the Candlepin standard dev ports to this guest
-    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8080, host: 8080
-    # vm_config.vm.networking "forwarded_port", protocol: "tcp", guest: 8443, host: 8443
+    # vm_config.vm.network "forwarded_port", protocol: "tcp", guest: 8080, host: 8080
+    # vm_config.vm.network "forwarded_port", protocol: "tcp", guest: 8443, host: 8443
 
     vm_config.vm.provision "shell", inline: "dnf update -y dnf python ca-certificates"
     configure_ansible_provisioning(vm_config)
