@@ -34,6 +34,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.annotations.QueryHints;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
@@ -1304,6 +1305,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         this.getEntityManager()
             .createNativeQuery(String.format(query, (Object[]) pieces))
             .setParameter("lock_name", lockName)
+            .setHint(QueryHints.NATIVE_SPACES, SystemLock.class.getName())
             .executeUpdate();
     }
 

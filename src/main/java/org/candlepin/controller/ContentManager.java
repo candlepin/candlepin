@@ -309,7 +309,10 @@ public class ContentManager {
 
         if (updated.getUuid() == null) {
             log.debug("Creating new content instance and applying update: {}", updated);
-            updated = this.contentCurator.create(updated);
+            // We need to make sure this is flushed to the DB as the
+            // ownerContentCurator.updateOwnerContentReferences will immediately try to create a link using
+            // it and will fail a foreign key check if we don't.
+            updated = this.contentCurator.create(updated, true);
 
             this.ownerContentCurator.updateOwnerContentReferences(owner,
                 Map.of(entity.getUuid(), updated.getUuid()));

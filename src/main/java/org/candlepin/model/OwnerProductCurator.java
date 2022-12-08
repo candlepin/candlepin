@@ -20,6 +20,7 @@ import org.candlepin.util.Util;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Session;
+import org.hibernate.annotations.QueryHints;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -847,6 +848,10 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         // which prevents it from updating collections backed by a join table.
         // As an added bonus, it's quicker, but we'll have to be mindful of the memory vs backend
         // state divergence.
+        //
+        // Because we are using native SQL to do this and the query hint is limiting the table space
+        // to OwnerContent all methods that call this need to ensure all new products have been
+        // flushed to the db before this is called.
 
         if (productUuidMap == null || productUuidMap.isEmpty()) {
             // Nothing to update
@@ -878,7 +883,8 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         Query query = this.getEntityManager()
             .createNativeQuery(sql)
-            .setParameter("owner_id", owner.getId());
+            .setParameter("owner_id", owner.getId())
+            .setHint(QueryHints.NATIVE_SPACES, OwnerProduct.class.getName());
 
         int count = 0;
         for (Map.Entry<String, String> entry : productUuidMap.entrySet()) {
@@ -903,7 +909,8 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         Query query = this.getEntityManager()
             .createNativeQuery(sql)
-            .setParameter("owner_id", owner.getId());
+            .setParameter("owner_id", owner.getId())
+            .setHint(QueryHints.NATIVE_SPACES, Pool.class.getName());
 
         int count = 0;
         for (Map.Entry<String, String> entry : productUuidMap.entrySet()) {
@@ -915,60 +922,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         log.debug("{} pools updated", count);
     }
 
-    /**
-     * Part of the updateOwnerProductReferences operation; updates the activation key to product
-     * join table. See updateOwnerProductReferences for additional details.
-     *
-     * @param owner
-     * @param productUuidMap
-     */
-    private void updateOwnerProductActivationKeys(Owner owner, Map<String, String> productUuidMap) {
-        EntityManager entityManager = this.getEntityManager();
-
-        String sql = "SELECT key.id, prod.uuid FROM ActivationKey key JOIN key.products prod " +
-            "WHERE key.owner.id = :owner_id " +
-            "  AND prod.uuid IN (:product_uuids)";
-
-        Query query = entityManager.createQuery(sql)
-            .setParameter("owner_id", owner.getId());
-
-        Map<String, Set<String>> keyMap = new HashMap<>();
-        for (List<String> block : this.partition(productUuidMap.keySet())) {
-            List<Object> rows = query.setParameter("product_uuids", block)
-                .getResultList();
-
-            for (Object row : rows) {
-                String keyid = (String) ((Object[]) row)[0];
-                String uuid = (String) ((Object[]) row)[1];
-
-                keyMap.computeIfAbsent(uuid, key -> new HashSet<>())
-                    .add(keyid);
-            }
-        }
-
-        int count = 0;
-        if (!keyMap.isEmpty()) {
-            sql = "UPDATE cp2_activation_key_products SET product_uuid = :updated " +
-                "WHERE key_id = :key_id AND product_uuid = :current";
-
-            query = entityManager.createNativeQuery(sql);
-
-            for (Map.Entry<String, Set<String>> entry : keyMap.entrySet()) {
-                String cUuid = entry.getKey();
-                String uUuid = productUuidMap.get(cUuid);
-
-                query.setParameter("current", cUuid)
-                    .setParameter("updated", uUuid);
-
-                for (String keyid : entry.getValue()) {
-                    count += query.setParameter("key_id", keyid)
-                        .executeUpdate();
-                }
-            }
-        }
-
-        log.debug("{} activation keys updated", count);
-    }
 
     /**
      * Removes the product references currently pointing to the specified product for the given
@@ -1119,7 +1072,8 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
             Query query = this.getEntityManager()
                 .createNativeQuery(sql)
-                .setParameter("owner_id", owner.getId());
+                .setParameter("owner_id", owner.getId())
+                .setHint(QueryHints.NATIVE_SPACES, OwnerProduct.class.getName());
 
             int icount = 0;
             for (Map.Entry<String, String> entry : productIdMap.entrySet()) {

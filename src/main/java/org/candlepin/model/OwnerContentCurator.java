@@ -16,6 +16,7 @@ package org.candlepin.model;
 
 import com.google.inject.persist.Transactional;
 
+import org.hibernate.annotations.QueryHints;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
@@ -412,6 +413,10 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         // prevents it from updating collections backed by a join table.
         // As an added bonus, it's quicker, but we'll have to be mindful of the memory vs backend
         // state divergence.
+        //
+        // Because we are using native SQL to do this and the query hint is limiting the table space
+        // to OwnerContent all methods that call this need to ensure all new content items have been
+        // flushed to the db before this is called.
 
         if (contentUuidMap == null || contentUuidMap.isEmpty()) {
             // Nothing to update
@@ -423,7 +428,8 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
 
         Query query = this.getEntityManager()
             .createNativeQuery(sql)
-            .setParameter("owner_id", owner.getId());
+            .setParameter("owner_id", owner.getId())
+            .setHint(QueryHints.NATIVE_SPACES, OwnerContent.class.getName());
 
         int count = 0;
         for (Map.Entry<String, String> entry : contentUuidMap.entrySet()) {
@@ -526,7 +532,8 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             Iterable<List<String>> eidBlocks = this.partition(envIds, blockSize);
             Iterable<List<String>> cidBlocks = this.partition(contentIds, blockSize);
 
-            query = entityManager.createNativeQuery(sql);
+            query = entityManager.createNativeQuery(sql)
+                .setHint(QueryHints.NATIVE_SPACES, EnvironmentContent.class.getName());
 
             for (List<String> eidBlock : eidBlocks) {
                 query.setParameter("env_ids", eidBlock);

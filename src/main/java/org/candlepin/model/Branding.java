@@ -18,6 +18,8 @@ import org.candlepin.service.model.BrandingInfo;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Immutable;
 
@@ -45,6 +47,7 @@ import javax.validation.constraints.Size;
  */
 @Entity
 @Immutable
+@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 @Table(name = Branding.DB_TABLE)
 public class Branding extends AbstractHibernateObject<Branding> implements BrandingInfo,
     Cloneable {
