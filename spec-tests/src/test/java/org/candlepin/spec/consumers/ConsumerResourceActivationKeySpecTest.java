@@ -25,6 +25,7 @@ import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.resource.client.v1.ActivationKeyApi;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
+import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
@@ -38,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Set;
 
-
+@SpecTest
 public class ConsumerResourceActivationKeySpecTest {
 
     static ApiClient client;

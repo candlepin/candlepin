@@ -69,8 +69,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
@@ -1606,10 +1604,7 @@ public class HypervisorCheckInSpecTest {
      * @throws IOException
      */
     private HypervisorUpdateResultDTO getResultData(AsyncJobStatusDTO status) throws IOException {
-        Map resultData = (Map) status.getResultData();
-        Gson gson = new GsonBuilder().create();
-        String json = gson.toJson(resultData);
-        return HypervisorUpdateResultDTO.fromJson(json);
+        return ApiClient.MAPPER.convertValue(status.getResultData(), HypervisorUpdateResultDTO.class);
     }
 
     private void confirmResultDataCounts(HypervisorUpdateResultDTO resultData, int created, int updated,
