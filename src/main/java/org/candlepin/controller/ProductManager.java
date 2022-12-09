@@ -408,6 +408,10 @@ public class ProductManager {
             log.debug("Creating new product instance and applying update: {}", updated);
             updated = this.productCurator.create(updated);
 
+            // Flush the newly created object to the db because the native SQL in updateOwnerProductReferences
+            // won't trigger it otherwise
+            this.ownerProductCurator.flush();
+
             this.ownerProductCurator.updateOwnerProductReferences(owner,
                 Collections.singletonMap(entity.getUuid(), updated.getUuid()));
         }
@@ -548,6 +552,10 @@ public class ProductManager {
         if (updated.getUuid() == null) {
             log.debug("Creating new product instance and updating child references: {}", updated);
             updated = this.productCurator.create(updated);
+
+            // Flush the newly created object to the db because the native SQL in updateOwnerProductReferences
+            // won't trigger it otherwise
+            this.ownerProductCurator.flush();
 
             this.ownerProductCurator.updateOwnerProductReferences(owner,
                 Collections.singletonMap(entity.getUuid(), updated.getUuid()));

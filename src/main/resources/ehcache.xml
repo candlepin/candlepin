@@ -16,7 +16,7 @@
         <key-type copier="org.ehcache.impl.copy.IdentityCopier">java.lang.Object</key-type>
         <value-type copier="org.ehcache.impl.copy.IdentityCopier">java.lang.Object</value-type>
         <expiry>
-            <ttl unit="seconds">86400</ttl>
+            <tti unit="hours">24</tti>
         </expiry>
         <heap unit="entries">100000</heap>
         <jsr107:mbeans enable-statistics="false" enable-management="false"/>
