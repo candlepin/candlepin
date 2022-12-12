@@ -52,7 +52,7 @@ public class ImportErrorSpecTest {
     private ApiClient userClient;
 
     @BeforeEach
-    public void beforeAll() {
+    public void beforeEach() {
         admin = ApiClients.admin();
         owner = admin.owners().createOwner(Owners.random());
         UserDTO user = UserUtil.createUser(admin, owner);
