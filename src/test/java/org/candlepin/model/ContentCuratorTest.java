@@ -76,6 +76,34 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testDeleteCannotDeleteContentReferencedByProducts() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent(owner);
+        Product product = this.createProductWithContent(owner, content);
+
+        this.contentCurator.flush();
+
+        assertThrows(PersistenceException.class, () -> {
+            this.contentCurator.delete(content);
+            this.contentCurator.flush();
+        });
+    }
+
+    @Test
+    public void testDeleteCannotDeleteOrphanedContentReferencedByProducts() {
+        Owner owner = this.createOwner();
+        Content content = this.createOrphanedContent();
+        Product product = this.createProductWithContent(owner, content);
+
+        this.contentCurator.flush();
+
+        assertThrows(PersistenceException.class, () -> {
+            this.contentCurator.delete(content);
+            this.contentCurator.flush();
+        });
+    }
+
+    @Test
     public void testBulkDeleteByUuids() {
         Content content1 = this.createContent();
         Content content2 = this.createContent();
@@ -131,6 +159,30 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
         assertNull(this.contentCurator.get(content1.getUuid()));
         assertNull(this.contentCurator.get(content2.getUuid()));
+    }
+
+    @Test
+    public void testBulkDeleteByUuidsCannotDeleteContentReferencedByProducts() {
+        Owner owner = this.createOwner();
+        Content content = this.createContent(owner);
+        Product product = this.createProductWithContent(owner, content);
+
+        this.contentCurator.flush();
+
+        assertThrows(PersistenceException.class, () ->
+            this.contentCurator.bulkDeleteByUuids(Set.of(content.getUuid())));
+    }
+
+    @Test
+    public void testBulkDeleteByUuidsCannotDeleteOrphanedContentReferencedByProducts() {
+        Owner owner = this.createOwner();
+        Content content = this.createOrphanedContent();
+        Product product = this.createProductWithContent(owner, content);
+
+        this.contentCurator.flush();
+
+        assertThrows(PersistenceException.class, () ->
+            this.contentCurator.bulkDeleteByUuids(Set.of(content.getUuid())));
     }
 
     @Test

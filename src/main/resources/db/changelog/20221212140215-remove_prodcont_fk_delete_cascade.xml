@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20221212140215-1" author="crog">
+        <preConditions onFail="MARK_RAN">
+            <foreignKeyConstraintExists foreignKeyName="cp2_product_content_fk2"/>
+        </preConditions>
+
+        <dropForeignKeyConstraint
+            baseTableName="cp2_product_content"
+            constraintName="cp2_product_content_fk2"/>
+    </changeSet>
+
+    <changeSet id="20221212140215-2" author="crog">
+        <addForeignKeyConstraint
+            baseTableName="cp2_product_content"
+            baseColumnNames="content_uuid"
+            referencedTableName="cp2_content"
+            referencedColumnNames="uuid"
+            constraintName="cp2_product_content_fk2"/>
+    </changeSet>
+
+</databaseChangeLog>

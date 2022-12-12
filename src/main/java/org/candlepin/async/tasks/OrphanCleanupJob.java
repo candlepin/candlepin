@@ -79,8 +79,10 @@ public class OrphanCleanupJob implements AsyncJob  {
         this.filterOrphanedContent(orphanedContentUuids, orphanedProductUuids);
 
         log.debug("Deleting orphaned entities...");
-        int orphanedContentRemoved = this.deleteOrphanedContent(orphanedContentUuids);
+        // Impl note: again, process/delete products first, so we don't fail out trying to delete
+        // a content that's used by a product we're also removing
         int orphanedProductsRemoved = this.deleteOrphanedProducts(orphanedProductUuids);
+        int orphanedContentRemoved = this.deleteOrphanedContent(orphanedContentUuids);
 
         String format = "Orphan cleanup completed;" +
             "\n  %d orphaned content deleted" +
