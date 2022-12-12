@@ -1,0 +1,110 @@
+---
+- name: "Set up repository that includes PostgreSQL 12"
+  become: true
+  ansible.builtin.yum:
+    name: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+    state: present
+  tags:
+    - postgresql
+    - candlepin
+
+- name: "Enable PostgreSQL 12 repository"
+  become: true
+  ansible.builtin.command: yum-config-manager --enable pgdg12
+  changed_when: false
+  tags:
+    - postgresql
+    - candlepin
+
+- name: "Install PostgreSQL packages"
+  become: true
+  ansible.builtin.package:
+    name:
+      - postgresql12-server
+      - postgresql12
+      - postgresql-jdbc
+      - python-psycopg2
+    state: present
+  tags:
+    - postgresql
+    - candlepin
+
+- name: "Initialize PostgreSQL database"
+  become: true
+  ansible.builtin.command:
+    cmd: postgresql-12-setup initdb
+    creates: "/var/lib/pgsql/12/data/PG_VERSION"
+  tags:
+    - postgresql
+    - candlepin
+
+- name: "Configure PostgreSQL to trust local connections (1 of 3)"
+  become: true
+  community.postgresql.postgresql_pg_hba:
+    dest: /var/lib/pgsql/12/data/pg_hba.conf
+    contype: local
+    databases: all
+    users: all
+    method: trust
+    create: true
+    state: present
+  tags:
+    - postgresql
+    - candlepin
+
+- name: "Configure PostgreSQL to trust local connections (2 of 3)"
+  become: true
+  community.postgresql.postgresql_pg_hba:
+    dest: /var/lib/pgsql/12/data/pg_hba.conf
+    contype: host
+    databases: all
+    users: all
+    address: ::1/128
+    method: trust
+    create: true
+    state: present
+  tags:
+    - postgresql
+    - candlepin
+
+- name: "Configure PostgreSQL to trust local connections (3 of 3)"
+  become: true
+  community.postgresql.postgresql_pg_hba:
+    dest: /var/lib/pgsql/12/data/pg_hba.conf
+    contype: host
+    databases: all
+    users: all
+    address: 127.0.0.1/32
+    method: trust
+    create: true
+    state: present
+  tags:
+    - postgresql
+    - candlepin
+
+- name: "Enable and start the PostgreSQL service"
+  become: true
+  ansible.builtin.service:
+    name: postgresql-12.service
+    enabled: true
+    state: started
+  tags:
+    - postgresql
+    - candlepin
+
+- name: "Create the 'candlepin' PostgreSQL user"
+  community.postgresql.postgresql_user:
+    name: candlepin
+    password: candlepin
+    role_attr_flags: CREATEDB
+  tags:
+    - postgresql
+    - candlepin
+
+- name: "Create the 'candlepin' PostgreSQL database"
+  community.postgresql.postgresql_db:
+    name: candlepin
+    owner: candlepin
+  tags:
+    - postgresql
+    - candlepin

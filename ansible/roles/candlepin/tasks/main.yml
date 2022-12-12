@@ -1,0 +1,57 @@
+---
+- name: "Gather system facts"
+  ansible.builtin.service_facts:
+    # intentionally left empty
+  tags:
+    - always
+
+- name: "Include EL7 tasks"
+  ansible.builtin.include_tasks:
+    file: el7/el7_tasks.yml
+  when:
+    - ansible_facts['distribution'] in ["CentOS", "RedHat"]
+    - ansible_facts['distribution_major_version'] == "7"
+  tags:
+    - always
+
+- name: "Include EL8 tasks"
+  ansible.builtin.include_tasks:
+    file: el8/el8_tasks.yml
+  when:
+    - ansible_facts['distribution'] in ["CentOS", "RedHat"]
+    - ansible_facts['distribution_major_version'] == "8"
+  tags:
+    - always
+
+- name: "Include F35+ tasks"
+  ansible.builtin.include_tasks:
+    file: f35/f35_tasks.yml
+  when:
+    - ansible_facts['distribution'] == "Fedora"
+    - ansible_facts['distribution_major_version'] >= "35"
+  tags:
+    - always
+
+- name: "Include Candlepin debug tasks"
+  ansible.builtin.import_tasks: common/cp_debugging.yml
+  when:
+    - cp_configure_debugging | bool
+
+- name: "Include Candleping setup tasks"
+  ansible.builtin.import_tasks: common/cp_setup.yml
+  become: true
+  become_user: "{{ candlepin_user }}"
+
+- name: "Include Candlepin deploy tasks"
+  ansible.builtin.import_tasks: common/cp_deploy.yml
+  become: true
+  become_user: "{{ candlepin_user }}"
+  when:
+    - cp_deploy | bool
+
+- name: "Include user env tasks"
+  ansible.builtin.import_tasks: common/user_env.yml
+  become: true
+  become_user: "{{ candlepin_user }}"
+  when:
+    - cp_configure_user_env | bool

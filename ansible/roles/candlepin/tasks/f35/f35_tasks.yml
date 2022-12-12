@@ -1,0 +1,13 @@
+---
+- name: "Include base deps tasks"
+  ansible.builtin.import_tasks: f35_base_deps.yml
+
+- name: "Include postresql tasks"
+  ansible.builtin.import_tasks: f35_postgresql.yml
+  when:
+    - cp_configure_postgresql | bool
+
+- name: "Include mariadb tasks"
+  ansible.builtin.import_tasks: f35_mariadb.yml
+  when:
+    - cp_configure_mariadb | bool
