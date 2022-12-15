@@ -5,30 +5,21 @@
   tags:
     - always
 
-- name: "Include EL7 tasks"
-  ansible.builtin.include_tasks:
-    file: el7/el7_tasks.yml
-  when:
-    - ansible_facts['distribution'] in ["CentOS", "RedHat"]
-    - ansible_facts['distribution_major_version'] == "7"
-  tags:
-    - always
-
 - name: "Include EL8 tasks"
   ansible.builtin.include_tasks:
     file: el8/el8_tasks.yml
   when:
-    - ansible_facts['distribution'] in ["CentOS", "RedHat"]
-    - ansible_facts['distribution_major_version'] == "8"
+    - ansible_distribution in ["CentOS", "RedHat"]
+    - ansible_distribution_major_version == "8"
   tags:
     - always
 
-- name: "Include F35+ tasks"
+- name: "Include EL9 tasks"
   ansible.builtin.include_tasks:
-    file: f35/f35_tasks.yml
+    file: el9/el9_tasks.yml
   when:
-    - ansible_facts['distribution'] == "Fedora"
-    - ansible_facts['distribution_major_version'] >= "35"
+    - ansible_distribution in ["CentOS", "RedHat"]
+    - ansible_distribution_major_version == "9"
   tags:
     - always
 

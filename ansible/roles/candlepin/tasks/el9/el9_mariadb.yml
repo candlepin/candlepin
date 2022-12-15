@@ -4,8 +4,8 @@
   ansible.builtin.package:
     name:
       - mariadb
-      - mariadb-server
       - mariadb-java-client
+      - mariadb-server
       - python3-PyMySQL
     state: present
   tags:

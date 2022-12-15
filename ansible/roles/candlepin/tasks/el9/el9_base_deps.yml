@@ -22,26 +22,26 @@
   become: true
   ansible.builtin.package:
     name:
-      - git
+      - createrepo_c
       - gcc
-      - make
+      - gettext
+      - git
       - java-1.8.0-openjdk-devel
       - java-11-openjdk-devel
-      - gettext
-      - openssl
       - jss
-      - tomcat
+      - make
+      - openssl
+      - pki-servlet-engine
+      - platform-python
       - python3
       - python3-libxml2
       - python3-requests
-      - python-unversioned-command
+      - rpm-build
+      - rpm-sign
       - unzip
       - wget
       - zlib
       - zlib-devel
-      - createrepo_c
-      - rpm-build
-      - rpm-sign
     state: present
   tags:
     - base_deps
