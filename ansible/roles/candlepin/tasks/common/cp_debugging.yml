@@ -15,13 +15,16 @@
         - candlepin
         - debugging
 
-    - name: "Enable Tomcat debugging port in firewalld"
+    - name: "Enable debugging ports in firewalld"
       become: true
       ansible.posix.firewalld:
-        port: "8000/tcp"
+        port: "{{ item }}/tcp"
         state: enabled
         permanent: true
         offline: false
+      with_items:
+        - 8000 # Tomcat remote debugging port
+        - 5005 # Gradle remote debugging port
       when:
         - "'services' in ansible_facts"
         - "'firewalld.service' in ansible_facts.services"

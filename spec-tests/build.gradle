@@ -53,6 +53,10 @@ task spec(type: Test) {
     group = 'Verification'
     outputs.upToDateWhen { false }
 
+    debugOptions {
+        host = '*'
+    }
+
     useJUnitPlatform()
 
     // We have to propagate the -D params if we want them available in tests

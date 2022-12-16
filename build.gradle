@@ -307,6 +307,10 @@ msgfmt {
 }
 
 test {
+    debugOptions {
+        host = '*'
+    }
+
     useJUnitPlatform ()
 
     // Sometimes causes out of memory on vagrant
