@@ -46,17 +46,23 @@ gendb() {
     info_msg "$MESSAGE"
     LQCOMMAND="${PROJECT_DIR}/bin/deployment/liquibase.sh --driver=${JDBC_DRIVER} \
       --classpath=build/classes/java/main/:${JDBC_JAR} --changelog-file=db/changelog/$CHANGELOG \
-      --url=${JDBC_URL} --username=candlepin --headless=true --hub-mode=OFF"
+      --url=${JDBC_URL} --username=candlepin --hub-mode=OFF "
+
     if [ -n "$DBPASSWORD" ] ; then
         LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
     fi
 
+    LQCOMMAND="$LQCOMMAND update -Dcommunity=True"
+
+    # At the time of writing, Liquibase does not respect any log-level parameter for reasons.
+    # So unless we're running with verbose mode set to on, we'll just pipe everything to the void.
     if [ "$VERBOSE" == "1" ]; then
-        LQCOMMAND="$LQCOMMAND --log-level=debug "
+        LQOUT=/dev/stdout
+    else
+        LQOUT=/dev/null
     fi
 
-    LQCOMMAND="$LQCOMMAND update -Dcommunity=True"
-    (cd $PROJECT_DIR && $LQCOMMAND)
+    (cd $PROJECT_DIR && $LQCOMMAND >$LQOUT 2>&1)
     evalrc $? "Liquibase command failed"
 }
 
