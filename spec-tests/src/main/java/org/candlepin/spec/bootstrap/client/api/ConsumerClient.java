@@ -120,6 +120,10 @@ public class ConsumerClient extends ConsumerApi {
             "", "", false, "", new ArrayList<>()));
     }
 
+    public JsonNode bindProduct(String consumerUuid, @NotNull ProductDTO product) {
+        return bindProduct(consumerUuid, product.getId());
+    }
+
     public List<EntitlementDTO> bindProductSync(String consumerUuid, @NotNull ProductDTO product) {
         return parseEntitlements(super.bind(consumerUuid, null, List.of(product.getId()), null,
             "", "", false, "", new ArrayList<>()));
@@ -127,6 +131,11 @@ public class ConsumerClient extends ConsumerApi {
 
     public JsonNode autoBind(String consumerUuid) {
         return getJsonNode(super.bind(consumerUuid, null, null, null,
+            "", "", false, "", new ArrayList<>()));
+    }
+
+    public List<EntitlementDTO> autoBindSync(String consumerUuid) {
+        return parseEntitlements(super.bind(consumerUuid, null, null, null,
             "", "", false, "", new ArrayList<>()));
     }
 
