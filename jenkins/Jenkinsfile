@@ -87,6 +87,7 @@ pipeline {
                     agent { label 'candlepin' }
                     environment {
                         CANDLEPIN_DATABASE = 'postgresql'
+                        OS_IMAGE = 'cs9'
                         CP_TEST_ARGS = '-r'
                     }
                     steps {

@@ -19,6 +19,8 @@ Basic invocations of `build-images` are as follows:
 # build only one image
 # see the top level of docker-compose-build.yml under 'services:' for a list of image names
 ./build-images <image_name>
+# build only one image and push to a registry
+./build-images -p <image_name>
 ```
 These options can be combined.  See `build-images -h` for more information.
 
