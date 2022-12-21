@@ -82,7 +82,7 @@ if [ "$1" != "" ]; then
   IMAGE=$1
 fi
 
-DEFAULT_IMAGES='candlepin-base candlepin-base-cs8'
+DEFAULT_IMAGES='candlepin-base candlepin-base-cs8 candlepin-base-cs9'
 IMAGES=${IMAGE:-$DEFAULT_IMAGES}
 
 echo "Building images..."

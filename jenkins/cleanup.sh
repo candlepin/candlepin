@@ -7,7 +7,7 @@ cd $DIR
 
 # Run the cleanup
 PROJ_NAME="${STAGE_NAME}-${BUILD_TAG}"
-docker-compose -p $PROJ_NAME down
+    podman pod rm -f $PROJ_NAME
 RETVAL=$?
 
 cd -

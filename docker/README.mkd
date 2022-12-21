@@ -19,34 +19,32 @@ Basic invocations of `build-images` are as follows:
 # build only one image
 # see the top level of docker-compose-build.yml under 'services:' for a list of image names
 ./build-images <image_name>
+# build only one image and push to a registry
+./build-images -p <image_name>
 ```
 These options can be combined.  See `build-images -h` for more information.
 
 ## Running containers
-The main interface for this is the `test` script.  This script is designed as a basic wrapper around `docker-compose`
+The main interface for this is the `test` script.  This script is designed as a basic wrapper around `podman pod`
 in order to stop and clean up existing running containers, as well as invoking the candlepin test script with default
 options.  This script will mount your current development checkout of candlepin (this repo) into `/candlepin-dev/`
 and bring up a database at hostname `db` on the running container
 
 By default the `test` script will run candlepin against a postgres database.  You can change this behavior with the
-`-m` or `-p` flags which will use mysql or postgres respectively. To change the default permanently,
-run the `switch-defaults` script. Additionally, you can use the `-x` flag which will use no database at all (useful
-for running tasks that do not require a running server and database, such as unit tests, checkstyle, translation
-validation). Finally, the `-q` flag does what the `-x` flag does already, plus requires a sonarqube server certificate
-(used for running the sonarqube analysis upload task).
+`-m` or `-p` flags which will use mysql or postgres respectively.
 
 To run multiple candlepin containers simultaneously, give each invocation of `test` a unique name with the `-n` flag.
 
 You can also use the `-d` option which will run containers in detached mode, keeping them from being removed
 when the test script exits.
 
-Using the `-e` flag will expose ports 8443, 8080 and 22 to the host.
+Using the `-e` flag will expose ports 8443 and 8080 to the host.
 
 Some useful invocations of the `test` command:
 
 ```sh
 # run only unit tests
-./test -x -c '/usr/bin/cp-test -u'
+./test -o cs8 -c '/usr/bin/cp-test -u'
 
 # screw tests, give me a shell and a mysql db
 ./test -m -c '/bin/bash'
@@ -55,8 +53,11 @@ Some useful invocations of the `test` command:
 ./test -m -n "my_mysql_tests"
 ./test -p -n "my_postgres_tests"
 
+# specify os on which candlepin will be running
+./test -p -o cs8
+
 # Run containers detached, don't remove containers when ./test exits, and expose ports
-# 8443/8080/22 to the host. The cp-test -R option will generate test data, content & rpms,
+# 8443/8080 to the host. The cp-test -R option will generate test data, content & rpms,
 # and the -s option will make sure the candlepin container will drop into the shell once the
 # data generation is done, to avoid the container shutting down.
 ./test -d -e -c '/usr/bin/cp-test -R -s'

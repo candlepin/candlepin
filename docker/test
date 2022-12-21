@@ -1,8 +1,10 @@
 #!/bin/bash
 
+REGISTRY="quay.io/candlepin"
 TEST_CMD="/usr/bin/cp-test -t -u -r"
 DIR="$(git rev-parse --show-toplevel)/docker/"
 OPERATING_SYSTEM="cs8" # Changing this variable, change default OS
+PROJ_NAME="pod"
 
 usage() {
   cat << USAGE
@@ -15,20 +17,19 @@ OPTIONS:
   -o OS     Specify operating system where candlepin will be running
               For postgres are supported:
                 cs8 - Centos Stream 8 (default)
+                cs9 - Centos Stream 9
               For mysql are supported:
                 cs8 - Centos Stream 8 (default)
-              Without database are supported:
-                cs8 - Centos Stream 8 (default)
-              For sonarqube are supported:
-                cs8 - Centos Stream 8 (default)
+                cs9 - Centos Stream 9
   -m        use mysql
-  -n NAME   Sets the project name for the docker-compose run
+  -n NAME   Sets the name for the pod where containers will be running
+              and also is used as prefix for containers
   -p        use postgres
-  -l        skip docker pull and use local images
+  -l        skip podman pull and use local images
   -d        run containers detached and do not
               automatically shut down & remove the
               containers on the script's exit
-  -e        expose ports 8443, 8080 and 22 to the host machine
+  -e        expose ports 8443 and 8080 to the host machine
 
 USAGE
 }
@@ -36,13 +37,12 @@ USAGE
 while getopts ":c:mn:o:plde" opt; do
   case $opt in
     c) TEST_CMD="$OPTARG";;
-    m)
-       COMPOSE_ARGS="-f $DIR/docker-compose-mysql";
-       chcon -Rt svirt_sandbox_file_t $DIR/mysql.cnf;
+    m) DB="mariadb:10.2";
+       sudo chcon -Rt svirt_sandbox_file_t $DIR/mysql.cnf;
        sudo chown 999:999 $DIR/mysql.cnf;;
-    n) PROJ_NAME="-p $OPTARG";;
+    n) PROJ_NAME=$OPTARG;;
     o) OPERATING_SYSTEM=$OPTARG;;
-    p) COMPOSE_ARGS="-f $DIR/docker-compose-postgres";;
+    p) DB="postgres:12";;
     l) USE_CACHE="1";;
     d) DETACHED="1";;
     e) EXPOSE_PORTS="1";;
@@ -59,38 +59,83 @@ while getopts ":c:mn:o:plde" opt; do
   esac
 done
 
-COMPOSE_ARGS="$COMPOSE_ARGS-$OPERATING_SYSTEM.yml"
-
-if ! [ $COMPOSE_ARGS ];
-then
-  echo "Operating system: $OPERATING_SYSTEM not supported!"
-  usage
-  exit 1
-fi
-
 # PROJ_NAME should be set in a jenkins environment. It allows multiple
 #  instances of the compose to run without clobbering each other.
 cd $DIR
-docker-compose $PROJ_NAME stop
-docker-compose $PROJ_NAME rm -f
-
-if [ "$USE_CACHE" != "1" ]; then
-  docker-compose $COMPOSE_ARGS pull
-fi
 
 SERVICE_PORTS_ARG=""
 if [ "$EXPOSE_PORTS" == "1" ]; then
-  SERVICE_PORTS_ARG="--service-ports"
+  SERVICE_PORTS_ARG="-p 8080:8080 -p 8443:8443"
 fi
+
+podman pod rm -f $PROJ_NAME
+
+if [ "$USE_CACHE" != "1" ]; then
+  podman pull "$REGISTRY/candlepin-base-$OPERATING_SYSTEM"
+  podman pull "$REGISTRY/$DB"
+fi
+
+podman pod create --name $PROJ_NAME
+podman network create network-$PROJ_NAME
+
+ENV_DATABASE=""
+if [[ $DB == postgres* ]]; then
+  ENV_DATABASE="-e USING_POSTGRES=true -e DBHOSTNAME=db"
+  podman create --name="$PROJ_NAME-db" \
+    --pod "$PROJ_NAME" \
+    -e POSTGRES_USER=candlepin \
+    -e POSTGRES_PASSWORD= \
+    -e POSTGRES_DB=candlepin \
+    -e POSTGRES_HOST_AUTH_METHOD=trust \
+    --net network-$PROJ_NAME \
+    --network-alias db \
+    --restart always \
+    $REGISTRY/$DB
+elif [[ $DB == mariadb* ]]; then
+  ENV_DATABASE="-e USING_MYSQL=true -e DBHOSTNAME=db"
+  podman create --name="$PROJ_NAME-db" \
+    --pod "$PROJ_NAME" \
+    -e MYSQL_ROOT_PASSWORD=password \
+    -v ./mysql.cnf:/etc/mysql/conf.d/mysql.cnf \
+    --net network-$PROJ_NAME \
+    --network-alias db \
+    --restart always \
+    $REGISTRY/$DB
+fi
+
+if [[ $OPERATING_SYSTEM == cs8 ]] || [[ $OPERATING_SYSTEM == cs9 ]]; then
+  podman create --name="$PROJ_NAME-candlepin" \
+     --pod $PROJ_NAME \
+     $ENV_DATABASE \
+     -v ../:/candlepin-dev \
+     -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+     $SERVICE_PORTS_ARG \
+     --net network-$PROJ_NAME \
+     --network-alias candlepin \
+     --privileged \
+     --requires "$PROJ_NAME-db" \
+     "$REGISTRY/candlepin-base-$OPERATING_SYSTEM"
+else
+  echo "We do not support this operating system: $OPERATING_SYSTEM"
+  usage
+  podman pod rm -f $PROJ_NAME
+  podman network rm network-$PROJ_NAME
+  exit 1
+fi
+
+
+podman pod start $PROJ_NAME
+sleep 5 # Waiting to start systemd
 
 if [ "$DETACHED" == "1" ]; then
     # Run detached, and don't remove the containers
-    docker-compose $PROJ_NAME $COMPOSE_ARGS run -d $SERVICE_PORTS_ARG candlepin $TEST_CMD
+    podman exec -d $PROJ_NAME-candlepin $TEST_CMD
     RETVAL=$?
-else
-    docker-compose $PROJ_NAME $COMPOSE_ARGS run --rm $SERVICE_PORTS_ARG candlepin $TEST_CMD
+  else
+    podman exec -t $PROJ_NAME-candlepin $TEST_CMD
     RETVAL=$?
-    docker-compose $PROJ_NAME down
+    podman pod rm -f $PROJ_NAME
+    podman network rm network-$PROJ_NAME
 fi
 
 echo "return value: $RETVAL"
