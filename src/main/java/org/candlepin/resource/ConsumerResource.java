@@ -2294,7 +2294,7 @@ public class ConsumerResource implements ConsumerApi {
 
         // TODO: really should do this in a before we get to this call
         // so the method takes in a real Date object and not just a String.
-        Date entitleDate = ResourceDateParser.parseDateString(entitleDateStr);
+        Date entitleDate = ResourceDateParser.parseDateString(this.i18n, entitleDateStr);
 
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumerWithEntitlements(consumerUuid);
@@ -2871,7 +2871,7 @@ public class ConsumerResource implements ConsumerApi {
         ComplianceStatus status = null;
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-        Date date = ResourceDateParser.parseDateString(onDate);
+        Date date = ResourceDateParser.parseDateString(this.i18n, onDate);
         status = this.complianceRules.getStatus(consumer, date);
 
         return this.translator.translate(status, ComplianceStatusDTO.class);
@@ -2883,7 +2883,7 @@ public class ConsumerResource implements ConsumerApi {
         @Verify(Consumer.class) String uuid, String onDate) {
         SystemPurposeComplianceStatus status = null;
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
-        Date date = ResourceDateParser.parseDateString(onDate);
+        Date date = ResourceDateParser.parseDateString(this.i18n, onDate);
         status = this.systemPurposeComplianceRules.getStatus(consumer, consumer.getEntitlements(), null,
             date, true);
 

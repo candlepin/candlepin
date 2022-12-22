@@ -772,7 +772,7 @@ class VirtSpecTest {
         return user.consumers().createConsumer(Consumers.random(owner).facts(Map.ofEntries(
             Facts.VirtUuid.withValue(virtUuid),
             Facts.VirtIsGuest.withValue("true"),
-            Facts.UnameMachine.withValue("x86_64")
+            Facts.Arch.withValue("x86_64")
         )));
     }
 

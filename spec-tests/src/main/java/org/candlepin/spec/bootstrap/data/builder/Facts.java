@@ -18,13 +18,13 @@ package org.candlepin.spec.bootstrap.data.builder;
 import java.util.Map;
 
 public enum Facts {
+    Arch("uname.machine"),
     CertificateVersion("system.certificate_version"),
     CoresPerSocket("cpu.core(s)_per_socket"),
     CpuSockets("cpu.cpu_socket(s)"),
     MemoryTotal("memory.memtotal"),
     MultiEntitlement("multi-entitlement"),
-    UnameMachine("uname.machine"),
-    UnameSystem("uname.system"),
+    OperatingSystem("uname.system"),
     VirtIsGuest("virt.is_guest"),
     VirtLimit("virt_limit"),
     VirtUuid("virt.uuid");

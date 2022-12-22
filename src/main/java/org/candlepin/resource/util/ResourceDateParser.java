@@ -17,6 +17,7 @@ package org.candlepin.resource.util;
 import org.candlepin.exceptions.BadRequestException;
 
 import org.apache.commons.lang3.StringUtils;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 
@@ -28,37 +29,9 @@ import javax.xml.bind.DatatypeConverter;
 public class ResourceDateParser {
 
     private ResourceDateParser() {
-
     }
 
-    public static Date getFromDate(String from, String to, String days) {
-        if (days != null && !days.trim().equals("") &&
-            (to != null && !to.trim().equals("") || from != null && !from.trim().equals(""))) {
-
-            throw new BadRequestException(
-                "You can use either the to/from date parameters or the number of days parameter, but not both"
-            );
-        }
-
-        Date daysDate = null;
-        if (days != null && !days.trim().equals("")) {
-            long mills = 1000L * 60 * 60 * 24;
-            int number = Integer.parseInt(days);
-            daysDate = new Date(new Date().getTime() - (number * mills));
-        }
-
-        Date fromDate = null;
-        if (daysDate != null) {
-            fromDate = daysDate;
-        }
-        else {
-            fromDate = parseDateString(from);
-        }
-
-        return fromDate;
-    }
-
-    public static Date parseDateString(String activeOn) {
+    public static Date parseDateString(I18n i18n, String activeOn) {
         Date d;
         if (StringUtils.isBlank(activeOn)) {
             return null;
@@ -68,7 +41,7 @@ public class ResourceDateParser {
             d = DatatypeConverter.parseDateTime(activeOn).getTime();
         }
         catch (IllegalArgumentException e) {
-            throw new BadRequestException("Invalid date, must use ISO 8601 format", e);
+            throw new BadRequestException(i18n.tr("Invalid date, {0} must use ISO 8601 format", activeOn), e);
         }
 
         return d;

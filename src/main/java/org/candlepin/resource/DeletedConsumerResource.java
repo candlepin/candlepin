@@ -22,26 +22,33 @@ import org.candlepin.resource.server.v1.DeletedConsumerApi;
 import org.candlepin.resource.util.ResourceDateParser;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+
+import org.xnap.commons.i18n.I18n;
+
+import java.util.Objects;
 
 /**
  * DeletedConsumerResource
  */
 public class DeletedConsumerResource implements DeletedConsumerApi {
-    private DeletedConsumerCurator deletedConsumerCurator;
-    private ModelTranslator translator;
+    private final DeletedConsumerCurator deletedConsumerCurator;
+    private final ModelTranslator translator;
+    private final Provider<I18n> i18nProvider;
 
     @Inject
     public DeletedConsumerResource(DeletedConsumerCurator deletedConsumerCurator,
-        ModelTranslator translator) {
-
-        this.deletedConsumerCurator = deletedConsumerCurator;
-        this.translator = translator;
+        ModelTranslator translator, Provider<I18n> i18nProvider) {
+        this.deletedConsumerCurator = Objects.requireNonNull(deletedConsumerCurator);
+        this.translator = Objects.requireNonNull(translator);
+        this.i18nProvider = Objects.requireNonNull(i18nProvider);
     }
 
     @Override
     public CandlepinQuery<DeletedConsumerDTO> listByDate(String dateStr) {
         return this.translator.translateQuery(dateStr != null ?
-            this.deletedConsumerCurator.findByDate(ResourceDateParser.parseDateString(dateStr)) :
+            this.deletedConsumerCurator.findByDate(
+                ResourceDateParser.parseDateString(this.i18nProvider.get(), dateStr)) :
             this.deletedConsumerCurator.listAll(), DeletedConsumerDTO.class);
     }
 }

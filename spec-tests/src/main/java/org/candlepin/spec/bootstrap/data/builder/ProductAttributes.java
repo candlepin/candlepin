@@ -37,6 +37,7 @@ public enum ProductAttributes {
     Unlimited("unlimited_product"),
     Usage("usage"),
     Variant("variant"),
+    Vcpu("vcpu"),
     Version("version"),
     VirtualOnly("virt_only"),
     VirtualLimit("virt_limit"),
