@@ -13,7 +13,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.11
+Version: 4.2.12
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -251,6 +251,34 @@ fi
 
 #raw
 %changelog
+* Mon Jan 02 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.12-1
+- Updated deploy script to silence irritating Liquibase spam (crog@redhat.com)
+- Added remote debug configurations for Gradle - Updated cp_debugging task to
+  open port 5005 - Updated gradle to 7.6 (joshmalbrecht@gmail.com)
+- Bump mockito-junit-jupiter from 4.9.0 to 4.10.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-292: Introduce Centos Stream 9 vagrant setup (ojanus@redhat.com)
+- Bump keycloak-servlet-filter-adapter from 20.0.1 to 20.0.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-116: Migrate consumer_resource_spec to Java (Part 1)
+  (joshmalbrecht@gmail.com)
+- Copy the candlepin ansible role into the Candlepin repo (ojanus@redhat.com)
+- Prevent layer 2 cache eviction & improve caching of branding
+  (bcourt@redhat.com)
+- Bump dependency-check-gradle from 7.4.0 to 7.4.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Updated Vagrant networking configuration (wpoteat@redhat.com)
+- CANDLEPIN-266: Migrate consumer_checkin_spec to Java - migrated tests to
+  ConsumerCheckinSpecTest.java - removed consumer_checkin_spec.rb
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-202: Migrate guestid_resource_spec to Java (sbakaj@redhat.com)
+- Bump dependency-check-gradle from 7.3.2 to 7.4.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump artemis-stomp-protocol from 2.27.0 to 2.27.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-242: Migrate derived_product_import_spec to Java
+  (wpoteat@redhat.com)
+
 * Mon Dec 05 2022 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.11-1
 - Bump artemis-server from 2.27.0 to 2.27.1
   (49699333+dependabot[bot]@users.noreply.github.com)
