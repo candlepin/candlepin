@@ -16,14 +16,17 @@
 package org.candlepin.spec.bootstrap.client.api;
 
 import org.candlepin.dto.api.client.v1.CertificateDTO;
+import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.EntitlementDTO;
+import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.invoker.client.ApiClient;
 import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.ConsumerApi;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -69,6 +72,11 @@ public class ConsumerClient extends ConsumerApi {
             "", false, "", new ArrayList<>()));
     }
 
+    public List<EntitlementDTO> bindPoolSync(String consumerUuid, String poolId, Integer quantity) {
+        return parseEntitlements(super.bind(consumerUuid, poolId, null, quantity, "",
+            "", false, "", new ArrayList<>()));
+    }
+
     private JsonNode getJsonNode(String consumerUuid) {
         try {
             return mapper.readTree(consumerUuid);
@@ -78,8 +86,22 @@ public class ConsumerClient extends ConsumerApi {
         }
     }
 
+    private List<EntitlementDTO> parseEntitlements(String json) {
+        try {
+            return this.mapper.readValue(json, new TypeReference<>(){});
+        }
+        catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public JsonNode bindProduct(String consumerUuid, @NotNull String productId) {
         return getJsonNode(super.bind(consumerUuid, null, List.of(productId), null,
+            "", "", false, "", new ArrayList<>()));
+    }
+
+    public List<EntitlementDTO> bindProductSync(String consumerUuid, @NotNull ProductDTO product) {
+        return parseEntitlements(super.bind(consumerUuid, null, List.of(product.getId()), null,
             "", "", false, "", new ArrayList<>()));
     }
 
@@ -124,4 +146,7 @@ public class ConsumerClient extends ConsumerApi {
         return super.listEntitlements(consumerUuid, productId, true, null, null, null, null, null);
     }
 
+    public ComplianceStatusDTO getComplianceStatus(String consumerUuid) throws ApiException {
+        return super.getComplianceStatus(consumerUuid, null);
+    }
 }
