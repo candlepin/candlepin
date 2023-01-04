@@ -15,6 +15,7 @@
 
 package org.candlepin.spec.bootstrap.data.builder;
 
+import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ContentOverrideDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
@@ -34,4 +35,9 @@ public class ContentOverrides {
             .value(StringUtil.random("value"))
             .contentLabel(StringUtil.random("contentlabel"));
     }
+
+    public static ContentOverrideDTO withValue(ConsumerDTO consumer) {
+        return random().value(consumer.getUuid());
+    }
+
 }
