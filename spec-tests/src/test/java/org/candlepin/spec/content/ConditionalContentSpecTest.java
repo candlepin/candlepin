@@ -29,8 +29,6 @@ import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
-import org.candlepin.spec.bootstrap.client.request.Request;
-import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Content;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
@@ -40,7 +38,6 @@ import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.junit.jupiter.api.Test;
@@ -292,17 +289,10 @@ public class ConditionalContentSpecTest {
         JsonNode bundledProdCerts = ents.get(0).get("certificates");
         Long bundledProdSerial = bundledProdCerts.get(0).get("serial").get("serial").asLong();
 
-        // Impl note: The use of the Request/Reply objects are to avoid a Gson de-serialization
-        // issue that occurs in the generated org.candlepin.invoker.client.JSON class. Gson de-serializes
-        // the cert serial to a double by default and changes the serial value to an unexpected value.
-        Response response = Request.from(consumerClient)
-            .setPath("/consumers/{consumer_uuid}/certificates")
-            .setPathParam("consumer_uuid", consumer.getUuid())
-            .addHeader("accept", "application/json")
-            .execute();
+        List<CertificateDTO> certs = adminClient.consumers().fetchCertificates(consumer.getUuid());
 
         // Old certificate should be gone
-        Map<Long, String> serialToCert = getSerialToCert(response.getBodyAsString());
+        Map<Long, String> serialToCert = getSerialToCert(certs);
         assertThat(serialToCert.keySet())
             .hasSize(2)
             .doesNotContain(dependentProdCertSerial)
@@ -725,14 +715,12 @@ public class ConditionalContentSpecTest {
             .isEqualTo(engProd2Content.getName());
     }
 
-    private Map<Long, String> getSerialToCert(String export) throws JsonProcessingException {
+    private Map<Long, String> getSerialToCert(Collection<CertificateDTO> certs)  {
         Map<Long, String> serialToCert = new HashMap<>();
-        JsonNode root = ApiClient.MAPPER.readTree(export);
-        root.forEach(cert -> {
-            long serial = cert.get("serial").get("serial").asLong();
-            String certValue = cert.get("cert").asText();
-
-            serialToCert.put(serial, certValue);
+        certs.forEach(cert -> {
+            if (cert.getSerial() != null) {
+                serialToCert.put(cert.getSerial().getSerial(), cert.getCert());
+            }
         });
 
         return serialToCert;

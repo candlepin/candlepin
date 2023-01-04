@@ -15,12 +15,16 @@
 
 package org.candlepin.spec.bootstrap.client.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.EntitlementDTO;
 import org.candlepin.invoker.client.ApiClient;
 import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.ConsumerApi;
+import org.candlepin.spec.bootstrap.client.request.Request;
+import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -51,7 +55,23 @@ public class ConsumerClient extends ConsumerApi {
     }
 
     public List<CertificateDTO> fetchCertificates(String consumerUuid, String serials) {
-        return ((List<Map<String, String>>) super.exportCertificates(consumerUuid, serials)).stream()
+        // Impl note: We cannot use the OpenApi generated ApiClient as it uses a static Gson object
+        // for deserialization that has a ToNumberPolicy that defaults to a double data type. This
+        // causes this causes inaccuracies to the serial value on the certificates.
+        Request request = Request.from(new org.candlepin.spec.bootstrap.client.ApiClient(this.getApiClient()))
+            .setPath("/consumers/{consumer_uuid}/certificates")
+            .setPathParam("consumer_uuid", consumerUuid)
+            .addHeader("accept", "application/json");
+
+        if (serials != null) {
+            request.addQueryParam("serials", serials);
+        }
+
+        Response response = request.execute();
+        assertThat(response).returns(200, Response::getCode);
+        List<Map<String, String>> certs = response.deserialize(List.class);
+
+        return certs.stream()
             .map(stringStringMap -> mapper.convertValue(stringStringMap, CertificateDTO.class))
             .collect(Collectors.toList());
     }

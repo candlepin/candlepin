@@ -28,6 +28,7 @@ import org.mozilla.jss.netscape.security.util.DerValue;
 import java.io.IOException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -165,6 +166,27 @@ public final class CertificateUtil {
         catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Retrieves not before date from the validity period of the provided certificate.
+     * Returns null if the provided certificate is null or empty.
+     *
+     * @param certString
+     *  certificate used to retrieve the not before date
+     *
+     * @return
+     *  not before date from the validity period of the provided certificate
+     */
+    public static Date getCertNotBefore(String certString) {
+        if (certString == null || certString.length() == 0) {
+            return null;
+        }
+
+        certString = certString.replace("\"", "")
+            .replace("\\n", Character.toString((char) 10));
+
+        return X509Cert.parseCertificate(certString).getNotBefore();
     }
 
     /**

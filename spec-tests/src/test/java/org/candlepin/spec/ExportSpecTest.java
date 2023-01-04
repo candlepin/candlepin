@@ -14,6 +14,7 @@
  */
 package org.candlepin.spec;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -50,6 +51,8 @@ import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
 import org.candlepin.spec.bootstrap.client.api.JobsClient;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
+import org.candlepin.spec.bootstrap.client.request.Request;
+import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.Branding;
 import org.candlepin.spec.bootstrap.data.builder.Cdns;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
@@ -68,6 +71,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import org.apache.commons.codec.binary.Base64;
+import org.assertj.core.util.Files;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -75,6 +79,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.OffsetDateTime;
@@ -101,6 +106,7 @@ class ExportSpecTest {
     private static final String ENTITILEMENT_CERTIFICATES_PATH = "export/entitlement_certificates/";
     private static final String DISTRIBUTOR_VERSION_PATH = "export/distributor_version/";
     private static final String CONSUMER_TYPE_PATH = "export/consumer_types/";
+    private static final String CONTENT_ACCESS_CERTS_PATH = "export/content_access_certificates/";
     private static final String CDN_PATH = "export/content_delivery_network/";
     private static final String RULES_PATH = "export/rules2/";
 
@@ -122,6 +128,75 @@ class ExportSpecTest {
         assertEquals(owner.getId(), actualConsumer.getOwner().getId());
         assertEquals(owner.getKey(), actualConsumer.getOwner().getKey());
         assertEquals(owner.getDisplayName(), actualConsumer.getOwner().getDisplayName());
+    }
+
+    @Test
+    public void shouldShowContentAccessModeChangeInExportForTheDistributorConsumer() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        String ownerKey = owner.getKey();
+
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
+        adminClient.owners().createPool(ownerKey, Pools.random(prod));
+
+        ConsumerDTO consumer = adminClient.consumers()
+            .createConsumer(Consumers.random(owner, ConsumerTypes.Candlepin));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        owner.contentAccessMode(Owners.ENTITLEMENT_ACCESS_MODE);
+        adminClient.owners().updateOwner(ownerKey, owner);
+        consumer.contentAccessMode(Owners.ENTITLEMENT_ACCESS_MODE);
+        consumer.setReleaseVer(new ReleaseVerDTO().releaseVer(""));
+        consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
+
+        File manifest = createExport(consumerClient, consumer.getUuid(), null);
+        ZipFile export = ExportUtil.getExportArchive(manifest);
+        String path = EXPORT_PATH + "consumer.json";
+
+        ConsumerDTO actualConsumer = ExportUtil
+            .deserializeJsonFile(export, path, ConsumerDTO.class);
+
+        assertThat(actualConsumer)
+            .returns(Owners.ENTITLEMENT_ACCESS_MODE, ConsumerDTO::getContentAccessMode);
+    }
+
+    @Test
+    public void shouldImportContentAccessCertsForAConsumerBelongingToOwnerInSCAMode() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.randomSca());
+        String ownerKey = owner.getKey();
+
+        ProductDTO modifiedProd = adminClient.ownerProducts()
+            .createProductByOwner(ownerKey, Products.random());
+        ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
+        ContentDTO cont = adminClient.ownerContent().createContent(ownerKey, Content.random()
+            .modifiedProductIds(Set.of(modifiedProd.getId())));
+        adminClient.ownerProducts().addContent(ownerKey, prod.getId(), cont.getId(), true);
+        PoolDTO pool = adminClient.owners().createPool(ownerKey, Pools.random(prod));
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
+
+        File manifest = createCertExport(consumerClient, consumer.getUuid());
+        ZipFile export = ExportUtil.getExportArchive(manifest);
+
+        // Check if content access certs are present in exported zip file.
+        List<ZipEntry> caCerts = export.stream()
+            .filter(entry -> entry.getName().startsWith(CONTENT_ACCESS_CERTS_PATH))
+            .filter(entry -> entry.getName().lastIndexOf('/') == CONTENT_ACCESS_CERTS_PATH.length() - 1)
+            .collect(Collectors.toList());
+
+        assertThat(caCerts).singleElement();
+
+        // Check if entitlement certs are present in exported zip file.
+        List<ZipEntry> entitlementCerts = export.stream()
+            .filter(entry -> entry.getName().startsWith(ENTITILEMENT_CERTIFICATES_PATH))
+            .filter(entry -> entry.getName().lastIndexOf('/') == ENTITILEMENT_CERTIFICATES_PATH.length() - 1)
+            .collect(Collectors.toList());
+
+        assertThat(entitlementCerts).singleElement();
     }
 
     @Nested
@@ -533,6 +608,7 @@ class ExportSpecTest {
 
             cdn = cdnApi.createCdn(Cdns.random());
         }
+
     }
 
     private File createExport(ApiClient apiClient, String consumerUuid, CdnDTO cdn)
@@ -542,6 +618,23 @@ class ExportSpecTest {
         String cdnUrl = cdn == null ? null : cdn.getUrl();
         File export = apiClient.consumers().exportData(consumerUuid, cdnLabel, cdnName, cdnUrl);
         export.deleteOnExit();
+
+        return export;
+    }
+
+    private File createCertExport(ApiClient client, String consumerUuid) throws IOException {
+        Response response = Request.from(client)
+            .setPath("/consumers/{consumer_uuid}/certificates")
+            .setPathParam("consumer_uuid", consumerUuid)
+            .addHeader("accept", "application/zip")
+            .execute();
+
+        assertThat(response).returns(200, Response::getCode);
+        File export = Files.newTemporaryFile();
+        export.deleteOnExit();
+        try (FileOutputStream os = new FileOutputStream(export)) {
+            os.write(response.getBody());
+        }
 
         return export;
     }
