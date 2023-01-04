@@ -228,18 +228,23 @@ public class UeberCertificateGenerator {
 
         private Product createUeberProductForOwner(UniqueIdGenerator idGenerator, Owner owner) {
             String ueberProductName = owner.getKey() + UEBER_PRODUCT_POSTFIX;
-            return new Product(idGenerator.generateId(), ueberProductName, 1L);
+
+            return new Product()
+                .setId(idGenerator.generateId())
+                .setName(ueberProductName)
+                .setMultiplier(1L);
         }
 
         private Content createUeberContent(UniqueIdGenerator idGenerator, Owner owner, Product product) {
-            Content ueberContent = new Content(idGenerator.generateId());
-            ueberContent.setName(UEBER_CONTENT_NAME);
-            ueberContent.setType("yum");
-            ueberContent.setLabel(product.getId() + "_" + UEBER_CONTENT_NAME);
-            ueberContent.setVendor("Custom");
-            ueberContent.setContentUrl("/" + owner.getKey());
-            ueberContent.setGpgUrl("");
-            ueberContent.setArches("");
+            Content ueberContent = new Content()
+                .setId(idGenerator.generateId())
+                .setName(UEBER_CONTENT_NAME)
+                .setType("yum")
+                .setLabel(product.getId() + "_" + UEBER_CONTENT_NAME)
+                .setVendor("Custom")
+                .setContentUrl("/" + owner.getKey())
+                .setGpgUrl("")
+                .setArches("");
 
             return ueberContent;
         }

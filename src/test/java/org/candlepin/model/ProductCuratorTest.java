@@ -36,6 +36,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hibernate.HibernateException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +49,9 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.persistence.PersistenceException;
@@ -789,4 +793,126 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertNotNull(output);
         assertEquals(0, output.size());
     }
+
+    private Product createProductWithChildren(String productId, int provided, boolean derived,
+        Owner... owners) {
+
+        Product product = new Product()
+            .setId(productId)
+            .setName(productId);
+
+        for (int i = 0; i < provided; ++i) {
+            String pid = productId + "_provided-" + i;
+            Product providedProduct = this.createProduct(pid, owners);
+
+            product.addProvidedProduct(providedProduct);
+        }
+
+        if (derived) {
+            String pid = productId + "_derived";
+            Product derivedProduct = this.createProduct(pid, owners);
+
+            product.setDerivedProduct(derivedProduct);
+        }
+
+        return this.createProduct(product, owners);
+    }
+
+    @Test
+    public void testGetChildrenProductsOfProductsByUuidsIncludesProvidedProducts() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product product1 = this.createProductWithChildren("p1", 0, false);
+        Product product2 = this.createProductWithChildren("p2", 1, false, owner1);
+        Product product3 = this.createProductWithChildren("p3", 2, false, owner2);
+        Product product4 = this.createProductWithChildren("p4", 3, false, owner1, owner2);
+
+        List<Product> products = List.of(product1, product2, product3, product4);
+
+        Set<Product> expected = products.stream()
+            .flatMap(product -> product.getProvidedProducts().stream())
+            .collect(Collectors.toSet());
+
+        List<String> input = products.stream()
+            .map(Product::getUuid)
+            .collect(Collectors.toList());
+
+        Set<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
+        assertNotNull(output);
+        assertEquals(expected, output);
+    }
+
+    @Test
+    public void testGetChildrenProductsOfProductsByUuidsIncludesDerivedProducts() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product product1 = this.createProductWithChildren("p1", 0, false);
+        Product product2 = this.createProductWithChildren("p2", 0, true, owner1);
+        Product product3 = this.createProductWithChildren("p3", 0, false, owner2);
+        Product product4 = this.createProductWithChildren("p4", 0, true, owner1, owner2);
+
+        List<Product> products = List.of(product1, product2, product3, product4);
+
+        Set<Product> expected = products.stream()
+            .map(Product::getDerivedProduct)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+
+        List<String> input = products.stream()
+            .map(Product::getUuid)
+            .collect(Collectors.toList());
+
+        Set<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
+        assertNotNull(output);
+        assertEquals(expected, output);
+    }
+
+    @Test
+    public void testGetChildrenProductsOfProductsByUuidsIgnoresInvalidProductUuids() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product product1 = this.createProductWithChildren("p1", 1, true);
+        Product product2 = this.createProductWithChildren("p2", 2, true, owner1);
+        Product product3 = this.createProductWithChildren("p3", 3, true, owner2);
+        Product product4 = this.createProductWithChildren("p4", 4, true, owner1, owner2);
+
+        List<Product> products = List.of(product2, product3);
+
+        Set<Product> expected = new HashSet<>();
+
+        products.stream()
+            .flatMap(product -> product.getProvidedProducts().stream())
+            .forEach(child -> expected.add(child));
+
+        products.stream()
+            .map(Product::getDerivedProduct)
+            .filter(Objects::nonNull)
+            .forEach(child -> expected.add(child));
+
+        List<String> input = Arrays.asList(product2.getUuid(), "invalid", product3.getUuid(), null);
+
+        Set<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
+        assertNotNull(output);
+        assertEquals(expected, output);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testGetChildrenProductsOfProductsByUuidsHandlesNullAndEmptyCollections(List<String> input) {
+        // Create some products just to ensure it doesn't pull random existing things for this case
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+        Product product1 = this.createProduct("p1", "product_1");
+        Product product2 = this.createProduct("p2", "product_2", owner1);
+        Product product3 = this.createProduct("p3", "product_3", owner2);
+        Product product4 = this.createProduct("p4", "product_4", owner2);
+
+        Set<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
+    }
+
 }

@@ -97,8 +97,9 @@ public class OwnerContentResource implements OwnerContentApi {
 
     @Override
     public CandlepinQuery<ContentDTO> listOwnerContent(@Verify(Owner.class) String ownerKey) {
-        final Owner owner = this.getOwnerByKey(ownerKey);
-        CandlepinQuery<Content> query = this.ownerContentCurator.getContentByOwner(owner);
+        Owner owner = this.getOwnerByKey(ownerKey);
+        CandlepinQuery<Content> query = this.ownerContentCurator.getContentByOwnerCPQ(owner);
+
         return this.translator.translateQuery(query, ContentDTO.class);
     }
 

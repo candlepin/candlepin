@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -233,7 +234,49 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
     }
 
     /**
+     * Fetches a list containing all products mapped to the organization specified by the specified
+     * organization ID. If a given product is utilized by an organization but has not been properly
+     * mapped via owner-product mapping, it will not be included in the output of this method. If
+     * the specified organization ID is null or no matching organization exists, this method returns
+     * an empty list.
+     *
+     * @param ownerId
+     *  the ID of the organization for which to fetch all mapped products
+     *
+     * @return
+     *  a list containing all mapped products for the given organization
+     */
+    public List<Product> getProductsByOwner(String ownerId) {
+        String jpql = "SELECT op.product FROM OwnerProduct op WHERE op.ownerId = :owner_id";
+
+        return this.getEntityManager()
+            .createQuery(jpql, Product.class)
+            .setParameter("owner_id", ownerId)
+            .getResultList();
+    }
+
+    /**
+     * Fetches a list containing all products mapped to the specified organization. If a given
+     * product is utilized by an organization but has not been properly mapped via owner-product
+     * mapping, it will not be included in the output of this method. If the specified organization
+     * is null or no matching organization exists, this method returns an empty list.
+     *
+     * @param owner
+     *  the organization for which to fetch all mapped products
+     *
+     * @return
+     *  a list containing all mapped products for the given organization
+     */
+    public List<Product> getProductsByOwner(Owner owner) {
+        return owner != null ? this.getProductsByOwner(owner.getId()) : new ArrayList();
+    }
+
+    /**
      * Builds a query for fetching the products currently mapped to the given owner.
+     *
+     * @deprecated
+     *  this method utilizes CandlepinQuery, which itself is backed by deprecated Hibernate APIs,
+     *  and should not be used. New code should use the untagged getProductsByOwner call instead.
      *
      * @param owner
      *  The owner for which to fetch products
@@ -241,12 +284,17 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      * @return
      *  a query for fetching the products belonging to the given owner
      */
-    public CandlepinQuery<Product> getProductsByOwner(Owner owner) {
-        return this.getProductsByOwner(owner.getId());
+    @Deprecated
+    public CandlepinQuery<Product> getProductsByOwnerCPQ(Owner owner) {
+        return this.getProductsByOwnerCPQ(owner.getId());
     }
 
     /**
      * Builds a query for fetching the products currently mapped to the given owner.
+     *
+     * @deprecated
+     *  this method utilizes CandlepinQuery, which itself is backed by deprecated Hibernate APIs,
+     *  and should not be used. New code should use the untagged getProductsByOwner call instead.
      *
      * @param ownerId
      *  The ID of the owner for which to fetch products
@@ -254,7 +302,8 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      * @return
      *  a query for fetching the products belonging to the given owner
      */
-    public CandlepinQuery<Product> getProductsByOwner(String ownerId) {
+    @Deprecated
+    public CandlepinQuery<Product> getProductsByOwnerCPQ(String ownerId) {
         // Impl note: See getOwnersByProduct for details on why we're doing this in two queries
         Collection<String> uuids = this.getProductUuidsByOwner(ownerId);
 

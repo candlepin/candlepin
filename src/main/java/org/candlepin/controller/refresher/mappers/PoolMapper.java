@@ -16,6 +16,7 @@ package org.candlepin.controller.refresher.mappers;
 
 import org.candlepin.model.Pool;
 import org.candlepin.service.model.SubscriptionInfo;
+import org.candlepin.util.Util;
 
 
 
@@ -51,7 +52,7 @@ public class PoolMapper extends AbstractEntityMapper<Pool, SubscriptionInfo> {
      * {@inheritDoc}
      */
     @Override
-    public boolean addExistingEntity(Pool entity) {
+    protected String getEntityId(Pool entity) {
         if (entity == null) {
             throw new IllegalArgumentException("entity is null");
         }
@@ -59,25 +60,31 @@ public class PoolMapper extends AbstractEntityMapper<Pool, SubscriptionInfo> {
         // Impl note:
         // Local pools are mapped to upstream pools by the subscription ID (after reconciliation*).
         // If a subscription ID is present, use that. Otherwise, default to its local ID.
-        String id = entity.getSubscriptionId();
+        String id = Util.firstOf(elem -> elem != null && !elem.isEmpty(),
+            entity.getSubscriptionId(), entity.getId());
 
         if (id == null || id.isEmpty()) {
-            id = entity.getId();
+            throw new IllegalArgumentException("entity lacks a mappable ID: " + entity);
         }
 
-        return this.addExistingEntity(entity.getId(), entity);
+        return id;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean addImportedEntity(SubscriptionInfo entity) {
+    protected String getEntityId(SubscriptionInfo entity) {
         if (entity == null) {
             throw new IllegalArgumentException("entity is null");
         }
 
-        return this.addImportedEntity(entity.getId(), entity);
+        String id = entity.getId();
+        if (id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("entity lacks a mappable ID: " + entity);
+        }
+
+        return id;
     }
 
 }

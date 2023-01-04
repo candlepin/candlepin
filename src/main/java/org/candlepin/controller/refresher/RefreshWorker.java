@@ -16,6 +16,7 @@ package org.candlepin.controller.refresher;
 
 import org.candlepin.controller.ContentManager;
 import org.candlepin.controller.ProductManager;
+import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.refresher.builders.ContentNodeBuilder;
 import org.candlepin.controller.refresher.builders.NodeFactory;
 import org.candlepin.controller.refresher.builders.PoolNodeBuilder;
@@ -29,12 +30,15 @@ import org.candlepin.controller.refresher.visitors.NodeProcessor;
 import org.candlepin.controller.refresher.visitors.PoolNodeVisitor;
 import org.candlepin.controller.refresher.visitors.ProductNodeVisitor;
 import org.candlepin.controller.util.EntityVersioningRetryWrapper;
+import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolCurator;
+import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductContentInfo;
@@ -49,8 +53,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;
@@ -146,16 +153,16 @@ public class RefreshWorker {
     }
 
     /**
-     * Adds the specified subscriptions to this refresher. If a given subscription has already
-     * been added, but differs from the existing version, a warning will be generated and the
-     * previous entry will be replaced. Products and content attached to the subscriptions will be
-     * mapped by this compiler. Null subscriptions will be silently ignored.
+     * Adds the specified subscriptions to this refresher, and any children entities each
+     * subscription contains. If a given subscription has already been added, but differs from the
+     * existing version, a warning will be generated and the previous entry will be replaced. Null
+     * entities within the collection will be silently discarded.
      *
      * @param subscriptions
-     *  The subscriptions to add to this compiler
+     *  a collection of subscriptions to add to this refresher
      *
      * @throws IllegalArgumentException
-     *  if any provided subscription does not contain a valid subscription ID
+     *  if any of the given subscriptions lacks a valid, mappable ID
      *
      * @return
      *  a reference to this refresh worker
@@ -169,45 +176,64 @@ public class RefreshWorker {
     }
 
     /**
-     * Adds the specified subscriptions to this refresher. If a given subscription has already
-     * been added, but differs from the existing version, a warning will be generated and the
-     * previous entry will be replaced. Products and content attached to the subscriptions will be
-     * mapped by this compiler. Null subscriptions will be silently ignored.
+     * Adds the specified subscriptions to this refresher, and any children entities each
+     * subscription contains. If a given subscription has already been added, but differs from the
+     * existing version, a warning will be generated and the previous entry will be replaced. Null
+     * entities within the collection will be silently discarded.
      *
      * @param subscriptions
-     *  The subscriptions to add to this compiler
+     *  a collection of subscriptions to add to this refresher
      *
      * @throws IllegalArgumentException
-     *  if any provided subscription does not contain a valid subscription ID
+     *  if any of the given subscriptions lacks a valid, mappable ID
      *
      * @return
      *  a reference to this refresh worker
      */
     public RefreshWorker addSubscriptions(Collection<? extends SubscriptionInfo> subscriptions) {
         if (subscriptions != null) {
-            for (SubscriptionInfo subscription : subscriptions) {
-                if (subscription == null) {
+            this.poolMapper.addImportedEntities(subscriptions);
+
+            Collection<ProductInfo> products = subscriptions.stream()
+                .map(SubscriptionInfo::getProduct)
+                .collect(Collectors.toList());
+
+            this.addProducts(products);
+        }
+
+        return this;
+    }
+
+    /**
+     * Adds the specified upstream products to this refresher, and any children entities each
+     * product contains. If a given product has already been added, but differs from the existing
+     * version, a warning will be generated and the previous entry will be replaced. Null entities
+     * within the collection will be silently discarded.
+     *
+     * @param products
+     *  a collection of upstream products to add to this refresher
+     *
+     * @throws IllegalArgumentException
+     *  if any of the given products lacks a valid, mappable ID
+     *
+     * @return
+     *  a reference to this refresh worker
+     */
+    public RefreshWorker addProducts(Collection<? extends ProductInfo> products) {
+        if (products != null) {
+            this.productMapper.addImportedEntities(products);
+
+            for (ProductInfo product : products) {
+                if (product == null) {
                     continue;
                 }
 
-                if (subscription.getId() == null || subscription.getId().isEmpty()) {
-                    String msg = String.format(
-                        "subscription does not contain a mappable Red Hat ID: %s", subscription);
+                // Add any nested products
+                this.addProducts(product.getDerivedProduct());
+                this.addProducts(product.getProvidedProducts());
 
-                    log.error(msg);
-                    throw new IllegalArgumentException(msg);
-                }
-
-                SubscriptionInfo existing = this.poolMapper.getImportedEntity(subscription.getId());
-                if (existing != null && !existing.equals(subscription)) {
-                    log.warn("Multiple versions of the same subscription received during refresh; " +
-                        "discarding previous: {} => {}, {}", subscription.getId(), existing, subscription);
-                }
-
-                this.poolMapper.addImportedEntity(subscription);
-
-                // Add any products attached to this subscription...
-                this.addProducts(subscription.getProduct());
+                // Add any content attached to this product...
+                this.addProductContent(product.getProductContent());
             }
         }
 
@@ -215,16 +241,16 @@ public class RefreshWorker {
     }
 
     /**
-     * Adds the specified products to this refresher. If a given product has already
-     * been added, but differs from the existing version, a warning will be generated and the
-     * previous entry will be replaced. Content attached to the products will be mapped by this
-     * compiler. Null products will be silently ignored.
+     * Adds the specified products to this refresher, and any children entities each product
+     * contains. If a given product has already been added, but differs from the existing version,
+     * a warning will be generated and the previous entry will be replaced. Null entities within the
+     * collection will be silently discarded.
      *
      * @param products
-     *  The products to add to this compiler
+     *  the products to add to this refresher
      *
      * @throws IllegalArgumentException
-     *  if any provided product does not contain a valid product ID
+     *  if any of the given products lacks a valid, mappable ID
      *
      * @return
      *  a reference to this refresh worker
@@ -238,63 +264,39 @@ public class RefreshWorker {
     }
 
     /**
-     * Adds the specified products to this refresher. If a given product has already
-     * been added, but differs from the existing version, a warning will be generated and the
-     * previous entry will be replaced.
-     * <p></p>
-     * Child entities attached to the product (such as provided products and content) will also be
-     * added to this refresher. Null products and children will be silently discarded.
+     * Utility method for unpacking collections of upstream product content to add to this refresher.
      *
-     * @param products
-     *  The products to add to this compiler
+     * @param productContent
+     *  a collection of upstream product content to add to this refresher
      *
      * @throws IllegalArgumentException
-     *  if any provided product does not contain a valid product ID
-     *
-     * @return
-     *  a reference to this refresh worker
+     *  if any of the given content lacks a valid, mappable ID, or any product-content instance has
+     *  a null content
      */
-    public RefreshWorker addProducts(Collection<? extends ProductInfo> products) {
-        if (products != null) {
-            for (ProductInfo product : products) {
-                if (product == null) {
-                    continue;
-                }
+    private void addProductContent(Collection<? extends ProductContentInfo> productContent) {
+        if (productContent != null) {
+            Collection<ContentInfo> filtered = productContent.stream()
+                .filter(Objects::nonNull)
+                .map(container -> {
+                    ContentInfo content = container.getContent();
+                    if (content == null) {
+                        String errmsg = "Content collection contains an incomplete product-content mapping!";
+                        throw new IllegalArgumentException(errmsg);
+                    }
 
-                if (product.getId() == null || product.getId().isEmpty()) {
-                    String msg = String.format("product does not contain a mappable Red Hat ID: %s", product);
+                    return content;
+                }).collect(Collectors.toList());
 
-                    log.error(msg);
-                    throw new IllegalArgumentException(msg);
-                }
-
-                ProductInfo existing = this.productMapper.getImportedEntity(product.getId());
-                if (existing != null && !existing.equals(product)) {
-                    log.warn("Multiple versions of the same product received during refresh; " +
-                        "discarding previous: {} => {}, {}", product.getId(), existing, product);
-                }
-
-                this.productMapper.addImportedEntity(product);
-
-                // Add any nested products
-                this.addProducts(product.getDerivedProduct());
-                this.addProducts(product.getProvidedProducts());
-
-                // Add any content attached to this product...
-                this.addProductContent(product.getProductContent());
-
-            }
+            this.addContent(filtered);
         }
-
-        return this;
     }
 
     /**
-     * Adds the specified content to this refresher. If a given content has already
-     * been added, but differs from the existing version, a warning will be generated and the
-     * previous entry will be replaced. Null content will be silently ignored.
+     * Adds the specified content to this refresher. If a given content has already been added, but
+     * differs from the existing version, a warning will be generated and the previous entry will be
+     * replaced. Null entities within the collection will be silently discarded.
      *
-     * @param contents
+     * @param content
      *  The content to add to this compiler
      *
      * @throws IllegalArgumentException
@@ -303,20 +305,17 @@ public class RefreshWorker {
      * @return
      *  a reference to this refresh worker
      */
-    public RefreshWorker addProductContent(ProductContentInfo... contents) {
-        if (contents != null) {
-            this.addProductContent(Arrays.asList(contents));
-        }
-
+    public RefreshWorker addContent(Collection<? extends ContentInfo> content) {
+        this.contentMapper.addImportedEntities(content);
         return this;
     }
 
     /**
-     * Adds the specified content to this refresher. If a given content has already
-     * been added, but differs from the existing version, a warning will be generated and the
-     * previous entry will be replaced. Null content will be silently ignored.
+     * Adds the specified content to this refresher. If a given content has already been added, but
+     * differs from the existing version, a warning will be generated and the previous entry will be
+     * replaced. Null entities within the collection will be silently discarded.
      *
-     * @param contents
+     * @param content
      *  The content to add to this compiler
      *
      * @throws IllegalArgumentException
@@ -325,101 +324,9 @@ public class RefreshWorker {
      * @return
      *  a reference to this refresh worker
      */
-    public RefreshWorker addProductContent(Collection<? extends ProductContentInfo> contents) {
-        if (contents != null) {
-            for (ProductContentInfo container : contents) {
-                if (container == null) {
-                    continue;
-                }
-
-                ContentInfo content = container.getContent();
-
-                // Do some simple mapping validation
-                if (content == null) {
-                    String msg = "collection contains an incomplete product-content mapping";
-
-                    log.error(msg);
-                    throw new IllegalArgumentException(msg);
-                }
-
-                if (content.getId() == null || content.getId().isEmpty()) {
-                    String msg = String.format("content does not contain a mappable Red Hat ID: %s", content);
-
-                    log.error(msg);
-                    throw new IllegalArgumentException(msg);
-                }
-
-                ContentInfo existing = this.contentMapper.getImportedEntity(content.getId());
-                if (existing != null && !existing.equals(content)) {
-                    log.warn("Multiple versions of the same content received during refresh; " +
-                        "discarding previous: {} => {}, {}", content.getId(), existing, content);
-                }
-
-                this.contentMapper.addImportedEntity(content);
-            }
-        }
-
-        return this;
-    }
-
-    /**
-     * Adds the specified content to this refresher. If a given content has already
-     * been added, but differs from the existing version, a warning will be generated and the
-     * previous entry will be replaced. Null content will be silently ignored.
-     *
-     * @param contents
-     *  The content to add to this compiler
-     *
-     * @throws IllegalArgumentException
-     *  if any provided content does not contain a valid content ID
-     *
-     * @return
-     *  a reference to this refresh worker
-     */
-    public RefreshWorker addContent(ContentInfo... contents) {
-        if (contents != null) {
-            this.addContent(Arrays.asList(contents));
-        }
-
-        return this;
-    }
-
-    /**
-     * Adds the specified content to this refresher. If a given content has already
-     * been added, but differs from the existing version, a warning will be generated and the
-     * previous entry will be replaced. Null content will be silently ignored.
-     *
-     * @param contents
-     *  The content to add to this compiler
-     *
-     * @throws IllegalArgumentException
-     *  if any provided content does not contain a valid content ID
-     *
-     * @return
-     *  a reference to this refresh worker
-     */
-    public RefreshWorker addContent(Collection<? extends ContentInfo> contents) {
-        if (contents != null) {
-            for (ContentInfo content : contents) {
-                if (content == null) {
-                    continue;
-                }
-
-                if (content.getId() == null || content.getId().isEmpty()) {
-                    String msg = String.format("content does not contain a mappable Red Hat ID: %s", content);
-
-                    log.error(msg);
-                    throw new IllegalArgumentException(msg);
-                }
-
-                ContentInfo existing = this.contentMapper.getImportedEntity(content.getId());
-                if (existing != null && !existing.equals(content)) {
-                    log.warn("Multiple versions of the same content received during refresh; " +
-                        "discarding previous: {} => {}, {}", content.getId(), existing, content);
-                }
-
-                this.contentMapper.addImportedEntity(content);
-            }
+    public RefreshWorker addContent(ContentInfo... content) {
+        if (content != null) {
+            this.addContent(Arrays.asList(content));
         }
 
         return this;
@@ -471,6 +378,113 @@ public class RefreshWorker {
     }
 
     /**
+     * Maps the given collection of existing pools, and their refresh-critical children entities.
+     *
+     * @param pools
+     *  the collection of pool entities to map
+     */
+    private void mapExistingPools(Collection<Pool> pools) {
+        if (pools == null || pools.isEmpty()) {
+            return;
+        }
+
+        this.poolMapper.addExistingEntities(pools);
+
+        Set<String> productUuids = pools.stream()
+            .map(Pool::getProductUuid)
+            .collect(Collectors.toSet());
+
+        // TODO: This lookup may not be necessary once the native query cache invalidation issue
+        // is resolved.
+
+        Set<Product> products = this.productCurator.getProductsByUuidCached(productUuids);
+
+        this.mapExistingProducts(products);
+    }
+
+    /**
+     * Maps the given collection of existing products, and their refresh-critical children entities.
+     *
+     * @param products
+     *  the collection of product entities to map
+     */
+    private void mapExistingProducts(Collection<Product> products) {
+        if (products == null || products.isEmpty()) {
+            return;
+        }
+
+        this.productMapper.addExistingEntities(products);
+
+        Set<String> productUuids = products.stream()
+            .map(Product::getUuid)
+            .collect(Collectors.toSet());
+
+        // TODO: These lookups may not be necessary once the native query cache invalidation issue
+        // is resolved.
+
+        Set<Product> childrenProducts = this.productCurator
+            .getChildrenProductsOfProductsByUuids(productUuids);
+
+        this.mapExistingProducts(childrenProducts);
+
+        Set<Content> content = this.contentCurator.getChildrenContentOfProductsByUuids(productUuids);
+
+        this.mapExistingContent(content);
+    }
+
+    /**
+     * Maps the given collection of existing content.
+     *
+     * @param content
+     *  the collection of content entities to map
+     */
+    private void mapExistingContent(Collection<Content> content) {
+        if (content == null || content.isEmpty()) {
+            return;
+        }
+
+        this.contentMapper.addExistingEntities(content);
+    }
+
+    /**
+     * Collects and builds a mapping of products that should exist in the org as a result of the
+     * refresh operation, and recreates the org-product mappings for those products.
+     *
+     * @param owner
+     *  the org for which the refresh was performed
+     *
+     * @param result
+     *  a RefreshResult instance containing the products to map to the org
+     */
+    private void rebuildOwnerProductMapping(Owner owner, RefreshResult result) {
+        Set<EntityState> states = Set.of(EntityState.CREATED, EntityState.UPDATED, EntityState.UNCHANGED);
+
+        Map<String, String> entityIdMap = result.streamEntities(Product.class, states)
+            .collect(Collectors.toMap(Product::getId, Product::getUuid));
+
+        this.ownerProductCurator.rebuildOwnerProductMapping(owner, entityIdMap);
+    }
+
+    /**
+     * Collects and builds a mapping of content that should exist in the org as a result of the
+     * refresh operation, and recreates the org-product mappings for those content.
+     *
+     * @param owner
+     *  the org for which the refresh was performed
+     *
+     * @param result
+     *  a RefreshResult instance containing the content to map to the org
+     */
+    private void rebuildOwnerContentMapping(Owner owner, RefreshResult result) {
+        Set<EntityState> states = Set.of(EntityState.CREATED, EntityState.UPDATED, EntityState.UNCHANGED);
+
+        Map<String, String> entityIdMap = result.streamEntities(Content.class, states)
+            .collect(Collectors.toMap(Content::getId, Content::getUuid));
+
+        this.ownerContentCurator.rebuildOwnerContentMapping(owner, entityIdMap);
+    }
+
+    /**
      * Performs the import operation on the currently compiled objects
      *
      * @return
@@ -508,18 +522,41 @@ public class RefreshWorker {
             this.contentMapper.clearExistingEntities();
 
             // Add in our existing entities
-            this.poolMapper.addExistingEntities(
-                this.poolCurator.listByOwnerAndTypes(owner.getId(), PoolType.NORMAL, PoolType.DEVELOPMENT));
+            List<Pool> pools = this.poolCurator
+                .listByOwnerAndTypes(owner.getId(), PoolType.NORMAL, PoolType.DEVELOPMENT);
+            this.mapExistingPools(pools);
 
-            this.productMapper.addExistingEntities(this.ownerProductCurator.getProductsByOwner(owner).list());
-            this.contentMapper.addExistingEntities(this.ownerContentCurator.getContentByOwner(owner).list());
+            // Add in the org-mapped entities to ensure we catch everything for this org, as well
+            // verifying there aren't any dangling references to out-of-org entities
+            Collection<Product> ownerProducts = this.ownerProductCurator.getProductsByOwner(owner);
+            this.mapExistingProducts(ownerProducts);
+
+            Collection<Content> ownerContent = this.ownerContentCurator.getContentByOwner(owner);
+            this.mapExistingContent(ownerContent);
 
             // Have our node factory build the node trees
             nodeFactory.buildNodes(owner);
 
             // Process our nodes, starting at the roots, letting the processors build up any persistence
             // state necessary to finalize everything
-            return nodeProcessor.processNodes();
+            RefreshResult result = nodeProcessor.processNodes();
+
+            // If we had any dirty mappings, rebuild the org's mappings to ensure no leftover shenanigans
+            if (this.productMapper.isDirty() ||
+                !this.productMapper.containsOnlyExistingEntities(ownerProducts)) {
+
+                log.warn("Found one or more dirty product mappings for org {}; remapping products", owner);
+                this.rebuildOwnerProductMapping(owner, result);
+            }
+
+            if (this.contentMapper.isDirty() ||
+                !this.contentMapper.containsOnlyExistingEntities(ownerContent)) {
+
+                log.warn("Found one or more dirty content mappings for org {}; remapping content", owner);
+                this.rebuildOwnerContentMapping(owner, result);
+            }
+
+            return result;
         });
 
         // Attempt to retry if we're not already in a transaction

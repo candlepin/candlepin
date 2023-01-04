@@ -66,7 +66,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import java.util.ArrayList;
+import java.util.List;
 
 
 
@@ -187,6 +187,7 @@ public class EventSinkImplTest {
     @Test
     public void poolCreatedShouldEmitSuccessfully() throws Exception {
         Pool pool = TestUtil.createPool(o, TestUtil.createProduct());
+
         eventSinkImpl.emitPoolCreated(pool);
         eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));
@@ -218,10 +219,10 @@ public class EventSinkImplTest {
 
     @Test
     public void keyWithPoolsShouldEmitSuccessfully() throws Exception {
-        ArrayList<Pool> pools = new ArrayList<>();
-        pools.add(TestUtil.createPool(o, TestUtil.createProduct()));
-        pools.add(TestUtil.createPool(o, TestUtil.createProduct()));
-        ActivationKey key = TestUtil.createActivationKey(this.o, pools);
+        Pool pool1 = TestUtil.createPool(this.o, TestUtil.createProduct());
+        Pool pool2 = TestUtil.createPool(this.o, TestUtil.createProduct());
+
+        ActivationKey key = TestUtil.createActivationKey(this.o, List.of(pool1, pool2));
         eventSinkImpl.emitActivationKeyCreated(key);
         eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));

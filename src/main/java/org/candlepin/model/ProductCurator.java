@@ -148,6 +148,41 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
+     * Fetches a set consisting of the children products (derived and provided products) of the
+     * products specified by the given UUIDs. If the given products do not have any children
+     * products or no products exist with the provided UUIDs, this method returns an empty set.
+     *
+     * @param productUuids
+     *  a collection of UUIDs of products for which to fetch children products
+     *
+     * @return
+     *  a set consisting of the children products of the products specified by the given UUIDs
+     */
+    public Set<Product> getChildrenProductsOfProductsByUuids(Collection<String> productUuids) {
+        Set<Product> output = new HashSet<>();
+
+        if (productUuids != null && !productUuids.isEmpty()) {
+            String ppJpql = "SELECT pp FROM Product p JOIN p.providedProducts pp " +
+                "WHERE p.uuid IN (:product_uuids)";
+            String dpJpql = "SELECT p.derivedProduct FROM Product p " +
+                "WHERE p.derivedProduct IS NOT NULL AND p.uuid IN (:product_uuids)";
+
+            TypedQuery<Product> ppQuery = this.getEntityManager()
+                .createQuery(ppJpql, Product.class);
+
+            TypedQuery<Product> dpQuery = this.getEntityManager()
+                .createQuery(dpJpql, Product.class);
+
+            for (List<String> block : this.partition(productUuids)) {
+                output.addAll(ppQuery.setParameter("product_uuids", block).getResultList());
+                output.addAll(dpQuery.setParameter("product_uuids", block).getResultList());
+            }
+        }
+
+        return output;
+    }
+
+    /**
      * Gets products by Id from JCache or database
      *
      * The retrieved objects are fully hydrated. If an entity is not present in the cache,
@@ -156,7 +191,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @param productUuids
      * @return Fully hydrated Product objects
      */
-    public Set<Product> getProductsByUuidCached(Set<String> productUuids) {
+    public Set<Product> getProductsByUuidCached(Collection<String> productUuids) {
         if (productUuids.size() == 0) {
             return new HashSet<>();
         }

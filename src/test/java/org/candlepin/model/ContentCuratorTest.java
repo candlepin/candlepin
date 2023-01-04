@@ -20,10 +20,14 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.PersistenceException;
 
@@ -323,4 +327,85 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         assertTrue(output.isEmpty());
     }
 
+    private Product createProductWithContent(String productId, int contentCount, Owner... owners) {
+        Product product = new Product()
+            .setId(productId)
+            .setName(productId);
+
+        for (int i = 0; i < contentCount; ++i) {
+            String cid = productId + "_content-" + i;
+            Content content = this.createContent(cid, owners);
+
+            product.addContent(content, true);
+        }
+
+        return this.createProduct(product, owners);
+    }
+
+    @Test
+    public void testGetChildrenContentOfProductsByUuids() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product product1 = this.createProductWithContent("p1", 0);
+        Product product2 = this.createProductWithContent("p2", 1, owner1);
+        Product product3 = this.createProductWithContent("p3", 2, owner2);
+        Product product4 = this.createProductWithContent("p4", 3, owner1, owner2);
+
+        List<Product> products = List.of(product1, product2, product3, product4);
+
+        Set<Content> expected = products.stream()
+            .flatMap(product -> product.getProductContent().stream())
+            .map(ProductContent::getContent)
+            .collect(Collectors.toSet());
+
+        List<String> input = products.stream()
+            .map(Product::getUuid)
+            .collect(Collectors.toList());
+
+        Set<Content> output = this.contentCurator.getChildrenContentOfProductsByUuids(input);
+        assertNotNull(output);
+        assertEquals(expected, output);
+    }
+
+    @Test
+    public void testGetChildrenContentOfProductsByUuidsIgnoresInvalidProductUuids() {
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product product1 = this.createProductWithContent("p1", 1);
+        Product product2 = this.createProductWithContent("p2", 2, owner1);
+        Product product3 = this.createProductWithContent("p3", 3, owner2);
+        Product product4 = this.createProductWithContent("p4", 4, owner1, owner2);
+
+        List<Product> products = List.of(product2, product3);
+
+        Set<Content> expected = products.stream()
+            .flatMap(product -> product.getProductContent().stream())
+            .map(ProductContent::getContent)
+            .collect(Collectors.toSet());
+
+        List<String> input = Arrays.asList(product2.getUuid(), "invalid", product3.getUuid(), null);
+
+        Set<Content> output = this.contentCurator.getChildrenContentOfProductsByUuids(input);
+        assertNotNull(output);
+        assertEquals(expected, output);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    public void testGetChildrenContentOfProductsByUuidsHandlesNullAndEmptyCollections(List<String> input) {
+        // Create some products just to ensure it doesn't pull random existing things for this case
+        Owner owner1 = this.createOwner();
+        Owner owner2 = this.createOwner();
+
+        Product product1 = this.createProductWithContent("p1", 1);
+        Product product2 = this.createProductWithContent("p2", 2, owner1);
+        Product product3 = this.createProductWithContent("p3", 3, owner2);
+        Product product4 = this.createProductWithContent("p4", 4, owner1, owner2);
+
+        Set<Content> output = this.contentCurator.getChildrenContentOfProductsByUuids(input);
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
+    }
 }

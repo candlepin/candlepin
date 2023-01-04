@@ -51,24 +51,25 @@ public class ContentMapper extends AbstractEntityMapper<Content, ContentInfo> {
      * {@inheritDoc}
      */
     @Override
-    public boolean addExistingEntity(Content entity) {
+    protected String getEntityId(ContentInfo entity) {
         if (entity == null) {
             throw new IllegalArgumentException("entity is null");
         }
 
-        return this.addExistingEntity(entity.getId(), entity);
+        String id = entity.getId();
+        if (id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("entity lacks a mappable ID: " + entity);
+        }
+
+        return id;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean addImportedEntity(ContentInfo entity) {
-        if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
-        }
-
-        return this.addImportedEntity(entity.getId(), entity);
+    protected String getEntityId(Content entity) {
+        return this.getEntityId((ContentInfo) entity);
     }
 
 }

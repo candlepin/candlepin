@@ -51,24 +51,25 @@ public class ProductMapper extends AbstractEntityMapper<Product, ProductInfo> {
      * {@inheritDoc}
      */
     @Override
-    public boolean addExistingEntity(Product entity) {
+    protected String getEntityId(ProductInfo entity) {
         if (entity == null) {
             throw new IllegalArgumentException("entity is null");
         }
 
-        return this.addExistingEntity(entity.getId(), entity);
+        String id = entity.getId();
+        if (id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("entity lacks a mappable ID: " + entity);
+        }
+
+        return id;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean addImportedEntity(ProductInfo entity) {
-        if (entity == null) {
-            throw new IllegalArgumentException("entity is null");
-        }
-
-        return this.addImportedEntity(entity.getId(), entity);
+    protected String getEntityId(Product entity) {
+        return this.getEntityId((ProductInfo) entity);
     }
 
 }

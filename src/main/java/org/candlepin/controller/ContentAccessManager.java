@@ -482,23 +482,22 @@ public class ContentAccessManager {
         return v3extensionUtil.getByteExtensions(products);
     }
 
-    private byte[] createContentAccessDataPayload(Owner owner, Consumer consumer)
-        throws IOException {
-        Product container = new Product();
-        container.setId("content_access");
-        container.setName(" Content Access");
+    private byte[] createContentAccessDataPayload(Owner owner, Consumer consumer) throws IOException {
+        Product container = new Product()
+            .setId("content_access")
+            .setName(" Content Access");
 
         this.ownerContentCurator.getActiveContentByOwner(owner.getId())
             .forEach(container::addContent);
 
-        Product skuProduct = new Product();
-        skuProduct.setName("Content Access");
-        skuProduct.setId("content_access");
+        Product skuProduct = new Product()
+            .setId("content_access")
+            .setName("Content Access");
 
-        Pool emptyPool = new Pool();
-        emptyPool.setProduct(skuProduct);
-        emptyPool.setStartDate(new Date());
-        emptyPool.setEndDate(new Date());
+        Pool emptyPool = new Pool()
+            .setProduct(skuProduct)
+            .setStartDate(new Date())
+            .setEndDate(new Date());
 
         Entitlement emptyEnt = new Entitlement();
         emptyEnt.setPool(emptyPool);
@@ -517,8 +516,7 @@ public class ContentAccessManager {
         List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();
         productModels.add(productModel);
 
-        return v3extensionUtil.createEntitlementDataPayload(productModels,
-            consumer, emptyPool, null);
+        return v3extensionUtil.createEntitlementDataPayload(productModels, consumer, emptyPool, null);
     }
 
     /**

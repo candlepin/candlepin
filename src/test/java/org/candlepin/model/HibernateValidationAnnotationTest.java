@@ -336,7 +336,7 @@ public class HibernateValidationAnnotationTest {
         fm.put(Pool.class.getDeclaredField("quantity"), notNull);
         fm.put(Pool.class.getDeclaredField("startDate"), notNull);
         fm.put(Pool.class.getDeclaredField("endDate"), notNull);
-        fm.put(Pool.class.getDeclaredField("product"), notNull);
+        fm.put(Pool.class.getDeclaredField("productUuid"), nonNullableColumn);
         fm.put(Pool.class.getDeclaredField("restrictedToUsername"), size);
         fm.put(Pool.class.getDeclaredField("contractNumber"), size);
         fm.put(Pool.class.getDeclaredField("accountNumber"), size);

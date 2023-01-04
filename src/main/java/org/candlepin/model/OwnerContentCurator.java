@@ -23,6 +23,7 @@ import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -137,7 +138,50 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
     }
 
     /**
+     * Fetches a list containing all content mapped to the organization specified by the specified
+     * organization ID. If a given content instance is utilized by an organization but has not been
+     * properly mapped via owner-content mapping, it will not be included in the output of this
+     * method. If the specified organization ID is null or no matching organization exists, this
+     * method returns an empty list.
+     *
+     * @param ownerId
+     *  the ID of the organization for which to fetch all mapped content
+     *
+     * @return
+     *  a list containing all mapped content for the given organization
+     */
+    public List<Content> getContentByOwner(String ownerId) {
+        String jpql = "SELECT oc.content FROM OwnerContent oc WHERE oc.ownerId = :owner_id";
+
+        return this.getEntityManager()
+            .createQuery(jpql, Content.class)
+            .setParameter("owner_id", ownerId)
+            .getResultList();
+    }
+
+    /**
+     * Fetches a list containing all content mapped to the specified organization. If a given
+     * content instance is utilized by an organization but has not been properly mapped via
+     * owner-content mapping, it will not be included in the output of this method. If the
+     * specified organization is null or no matching organization exists, this method returns an
+     * empty list.
+     *
+     * @param owner
+     *  the organization for which to fetch all mapped content
+     *
+     * @return
+     *  a list containing all mapped content for the given organization
+     */
+    public List<Content> getContentByOwner(Owner owner) {
+        return owner != null ? this.getContentByOwner(owner.getId()) : new ArrayList();
+    }
+
+    /**
      * Builds a query for fetching the content currently mapped to the given owner.
+     *
+     * @deprecated
+     *  this method utilizes CandlepinQuery, which itself is backed by deprecated Hibernate APIs,
+     *  and should not be used. New code should use the untagged getContentByOwner call instead.
      *
      * @param owner
      *  The owner for which to fetch content
@@ -145,12 +189,17 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      * @return
      *  a query for fetching the content belonging to the given owner
      */
-    public CandlepinQuery<Content> getContentByOwner(Owner owner) {
-        return this.getContentByOwner(owner.getId());
+    @Deprecated
+    public CandlepinQuery<Content> getContentByOwnerCPQ(Owner owner) {
+        return this.getContentByOwnerCPQ(owner.getId());
     }
 
     /**
      * Builds a query for fetching the content currently mapped to the given owner.
+     *
+     * @deprecated
+     *  this method utilizes CandlepinQuery, which itself is backed by deprecated Hibernate APIs,
+     *  and should not be used. New code should use the untagged getContentByOwner call instead.
      *
      * @param ownerId
      *  The ID of the owner for which to fetch content
@@ -158,7 +207,8 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
      * @return
      *  a query for fetching the content belonging to the given owner
      */
-    public CandlepinQuery<Content> getContentByOwner(String ownerId) {
+    @Deprecated
+    public CandlepinQuery<Content> getContentByOwnerCPQ(String ownerId) {
         // Impl note: See getOwnersByContent for details on why we're doing this in two queries
         Collection<String> uuids = this.getContentUuidsByOwner(ownerId);
 
@@ -485,6 +535,54 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         }
 
         this.removeEnvironmentContentReferences(owner, contentUuids);
+    }
+
+    /**
+     * Clears and rebuilds the content mapping for the given owner, using the provided map of
+     * content IDs to UUIDs.
+     *
+     * @param owner
+     *  the owner for which to rebuild content mappings
+     *
+     * @param contentIdMap
+     *  a mapping of content IDs to content UUIDs to use as the new content mappings for this
+     *  organization. If null or empty, the organization will be left without any content mappings.
+     *
+     * @throws IllegalArgumentException
+     *  if owner is null, or lacks an ID
+     */
+    public void rebuildOwnerContentMapping(Owner owner, Map<String, String> contentIdMap) {
+        if (owner == null || owner.getId() == null) {
+            throw new IllegalArgumentException("owner is null, or lacks an ID");
+        }
+
+        EntityManager entityManager = this.getEntityManager();
+
+        int rcount = entityManager.createQuery("DELETE FROM OwnerContent oc WHERE oc.owner.id = :owner_id")
+            .setParameter("owner_id", owner.getId())
+            .executeUpdate();
+
+        log.debug("Removed {} owner-content mappings for owner: {}", rcount, owner);
+
+        if (contentIdMap != null) {
+            // TODO: content ID isn't part of the owner_content table, but it probably should be. Update
+            // this query to also include the content ID in the inserts if the column is added to the table.
+            String sql = "INSERT INTO " + OwnerContent.DB_TABLE + " (owner_id, content_uuid) " +
+                "VALUES(:owner_id, :content_uuid)";
+
+            Query query = this.getEntityManager()
+                .createNativeQuery(sql)
+                .setHint(QueryHints.NATIVE_SPACES, OwnerContent.class.getName())
+                .setParameter("owner_id", owner.getId());
+
+            int icount = 0;
+            for (Map.Entry<String, String> entry : contentIdMap.entrySet()) {
+                icount += query.setParameter("content_uuid", entry.getValue())
+                    .executeUpdate();
+            }
+
+            log.debug("Inserted {} owner-content mappings for owner: {}", icount, owner);
+        }
     }
 
     /**
