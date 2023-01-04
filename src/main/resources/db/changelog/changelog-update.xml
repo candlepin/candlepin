@@ -181,4 +181,5 @@
     <include file="db/changelog/20221117125815-prime_system_locks.xml"/>
     <include file="db/changelog/20221003160605-remove_direct_ak_product_reference.xml"/>
     <include file="db/changelog/20221003160623-remove_direct_env_content_reference.xml"/>
+    <include file="db/changelog/20221212140215-remove_prodcont_fk_delete_cascade.xml"/>
 </databaseChangeLog>
