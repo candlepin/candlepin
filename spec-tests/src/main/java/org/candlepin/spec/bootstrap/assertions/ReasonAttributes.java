@@ -13,33 +13,29 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.spec.bootstrap.data.builder;
+package org.candlepin.spec.bootstrap.assertions;
 
 import java.util.Map;
 
-public enum Facts {
-    CertificateVersion("system.certificate_version"),
-    CoresPerSocket("cpu.core(s)_per_socket"),
-    CpuSockets("cpu.cpu_socket(s)"),
-    MemoryTotal("memory.memtotal"),
-    MultiEntitlement("multi-entitlement"),
-    UnameMachine("uname.machine"),
-    VirtIsGuest("virt.is_guest"),
-    VirtLimit("virt_limit"),
-    VirtUuid("virt.uuid");
+public enum ReasonAttributes {
+    Covered("covered"),
+    EntitlementId("entitlement_id"),
+    Has("has"),
+    Name("name"),
+    ProductId("product_id"),
+    StackId("stack_id");
 
     private final String key;
 
-    Facts(String key) {
+    ReasonAttributes(String key) {
         this.key = key;
     }
 
     public String key() {
-        return this.key;
+        return key;
     }
 
     public Map.Entry<String, String> withValue(String value) {
         return Map.entry(this.key, value);
     }
-
 }
