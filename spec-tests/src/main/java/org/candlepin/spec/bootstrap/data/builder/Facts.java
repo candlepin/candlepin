@@ -24,6 +24,7 @@ public enum Facts {
     MemoryTotal("memory.memtotal"),
     MultiEntitlement("multi-entitlement"),
     UnameMachine("uname.machine"),
+    UnameSystem("uname.system"),
     VirtIsGuest("virt.is_guest"),
     VirtLimit("virt_limit"),
     VirtUuid("virt.uuid");
