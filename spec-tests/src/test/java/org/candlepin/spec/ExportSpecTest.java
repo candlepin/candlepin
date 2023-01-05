@@ -57,7 +57,7 @@ import org.candlepin.spec.bootstrap.data.builder.Branding;
 import org.candlepin.spec.bootstrap.data.builder.Cdns;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Content;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
@@ -137,7 +137,7 @@ class ExportSpecTest {
         String ownerKey = owner.getKey();
 
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(ownerKey, Contents.random());
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), content.getId(), true);
         adminClient.owners().createPool(ownerKey, Pools.random(prod));
 
@@ -171,7 +171,7 @@ class ExportSpecTest {
         ProductDTO modifiedProd = adminClient.ownerProducts()
             .createProductByOwner(ownerKey, Products.random());
         ProductDTO prod = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ContentDTO cont = adminClient.ownerContent().createContent(ownerKey, Content.random()
+        ContentDTO cont = adminClient.ownerContent().createContent(ownerKey, Contents.random()
             .modifiedProductIds(Set.of(modifiedProd.getId())));
         adminClient.ownerProducts().addContent(ownerKey, prod.getId(), cont.getId(), true);
         PoolDTO pool = adminClient.owners().createPool(ownerKey, Pools.random(prod));
@@ -575,12 +575,12 @@ class ExportSpecTest {
             ProductDTO productUp = ownerProductApi.createProductByOwner(ownerKey, Products.random());
             productIdToProduct.put(productUp.getId(), productUp);
 
-            ContentDTO content1 = Content.random()
+            ContentDTO content1 = Contents.random()
                 .metadataExpire(6000L)
                 .requiredTags("TAG1,TAG2");
             content1 = ownerContentApi.createContent(ownerKey, content1);
 
-            ContentDTO archContent = Content.random()
+            ContentDTO archContent = Contents.random()
                 .metadataExpire(6000L)
                 .contentUrl("/path/to/arch/specific/content")
                 .requiredTags("TAG1,TAG2")

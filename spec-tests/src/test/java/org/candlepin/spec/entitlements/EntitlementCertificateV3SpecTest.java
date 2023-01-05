@@ -17,6 +17,7 @@ package org.candlepin.spec.entitlements;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.assertions.CertificateAssert.assertThatCert;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -46,18 +47,17 @@ import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
+import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 import org.candlepin.spec.bootstrap.data.builder.Branding;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Content;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
-import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
-import org.candlepin.spec.bootstrap.data.util.X509HuffmanDecodeUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -67,15 +67,15 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 
 @SpecTest
+@SuppressWarnings("indentation")
 public class EntitlementCertificateV3SpecTest {
 
-    public static final String EXTENSION_ID = "1.3.6.1.4.1.2312.9.6";
     private static ApiClient client;
     private static OwnerClient ownerApi;
     private static OwnerContentApi ownerContentApi;
@@ -135,13 +135,13 @@ public class EntitlementCertificateV3SpecTest {
                 ProductAttributes.SupportType.withValue("excellent")
             ));
 
-        content = Content.random()
+        content = Contents.random()
             .type("yum")
             .gpgUrl("gpg_url")
             .contentUrl("/content/dist/rhel/$releasever/$basearch/os")
             .metadataExpire(6400L)
             .requiredTags("TAG1,TAG2");
-        archContent = Content.random()
+        archContent = Contents.random()
             .type("yum")
             .gpgUrl("gpg_url")
             .contentUrl("/content/dist/rhel/arch/specific/$releasever/$basearch/os")
@@ -208,30 +208,23 @@ public class EntitlementCertificateV3SpecTest {
 
         List<EntitlementDTO> v3SystemEntitlements = v3SystemClient.consumers()
             .listEntitlements(v3System.getUuid());
-        Optional<CertificateDTO> certificate = v3SystemEntitlements.stream()
+        CertificateDTO certificate = v3SystemEntitlements.stream()
             .map(this::firstCertOf)
-            .flatMap(Optional::stream)
-            .findFirst();
+            .findFirst()
+            .orElseThrow();
 
-        assertExtensionValue(certificate, "3.4");
+        assertThatCert(certificate)
+            .hasVersion("3.4");
     }
 
     @Test
     public void shouldGenerateThreeFourCert() {
         consumerApi.bindProduct(system.getUuid(), product.getId());
         EntitlementDTO ent = consumerApi.listEntitlements(system.getUuid()).get(0);
-        Optional<CertificateDTO> certificate = firstCertOf(ent);
+        CertificateDTO certificate = firstCertOf(ent);
 
-        assertExtensionValue(certificate, "3.4");
-    }
-
-    private Optional<CertificateDTO> firstCertOf(EntitlementDTO ent) {
-        if (ent == null || ent.getCertificates() == null) {
-            return Optional.empty();
-        }
-        return ent.getCertificates().stream()
-            .filter(Objects::nonNull)
-            .findFirst();
+        assertThatCert(certificate)
+            .hasVersion("3.4");
     }
 
     @Test
@@ -250,8 +243,11 @@ public class EntitlementCertificateV3SpecTest {
         ApiClient consumerClient = ApiClients.ssl(distributor);
         consumerClient.consumers().bindProduct(distributor.getUuid(), product30.getId());
         EntitlementDTO ent = consumerApi.listEntitlements(distributor.getUuid()).get(0);
-        Optional<CertificateDTO> certificate = firstCertOf(ent);
-        assertExtensionValue(certificate, "3.4");
+        CertificateDTO certificate = firstCertOf(ent);
+
+        assertThatCert(certificate)
+            .hasVersion("3.4");
+
         client.distributorVersions().delete(version.getId());
     }
 
@@ -375,10 +371,10 @@ public class EntitlementCertificateV3SpecTest {
     }
 
     @Test
-    public void shouldEncodeTheContentUrls() throws Exception {
-        ContentDTO content1 = Content.random();
+    public void shouldEncodeTheContentUrls() {
+        ContentDTO content1 = Contents.random();
         content1.setContentUrl("/content/dist/rhel/$releasever/$basearch/debug");
-        ContentDTO content2 = Content.random();
+        ContentDTO content2 = Contents.random();
         content2.setContentUrl("/content/beta/rhel/$releasever/$basearch/source/SRPMS");
 
         if (CandlepinMode.isHosted()) {
@@ -412,20 +408,19 @@ public class EntitlementCertificateV3SpecTest {
         JsonNode jsonBody = jsonNodes.get(0);
         assertThat(jsonBody.get("products").get(0).get("content")).hasSize(4);
 
-        byte[] value = CertificateUtil.compressedContentExtensionValueFromCert(bindResult.get(0)
-            .get("certificates").get(0).get("cert").toString(), "1.3.6.1.4.1.2312.9.7");
-        X509HuffmanDecodeUtil decode = new X509HuffmanDecodeUtil();
-        List<String> urls = decode.hydrateContentPackage(value);
-
-        assertThat(urls).containsAll(List.of("/content/dist/rhel/$releasever/$basearch/os",
-            "/content/dist/rhel/$releasever/$basearch/debug",
-            "/content/beta/rhel/$releasever/$basearch/source/SRPMS"));
+        assertThatCert(X509Cert.fromEnt(bindResult.get(0)))
+            .extractingEntitlementPayload()
+            .contains(
+                "/content/dist/rhel/$releasever/$basearch/os",
+                "/content/dist/rhel/$releasever/$basearch/debug",
+                "/content/beta/rhel/$releasever/$basearch/source/SRPMS"
+            );
     }
 
     @Test
-    public void shouldEncodeManyContentUrls() throws Exception {
+    public void shouldEncodeManyContentUrls() {
         for (int i = 0; i < 100; i++) {
-            ContentDTO content = Content.random();
+            ContentDTO content = Contents.random();
             content.setContentUrl(
                 String.format("/content/dist/rhel/$releasever-%s/$basearch-%s/debug-%s", i, i, i));
             if (CandlepinMode.isHosted()) {
@@ -464,27 +459,26 @@ public class EntitlementCertificateV3SpecTest {
         assertThat(jsonBody.get("products").get(0).get("content")).hasSize(102);
 
         // confirm encoded urls
-        byte[] value = CertificateUtil.compressedContentExtensionValueFromCert(bindResult.get(0)
-            .get("certificates").get(0).get("cert").toString(), "1.3.6.1.4.1.2312.9.7");
-        X509HuffmanDecodeUtil decode = new X509HuffmanDecodeUtil();
-        List<String> urls = decode.hydrateContentPackage(value);
-        assertThat(urls).hasSize(102);
-
-        // spot check the data
-        assertThat(urls).containsAll(List.of("/content/dist/rhel/$releasever-0/$basearch-0/debug-0",
-            "/content/dist/rhel/$releasever-29/$basearch-29/debug-29",
-            "/content/dist/rhel/$releasever-41/$basearch-41/debug-41",
-            "/content/dist/rhel/$releasever-75/$basearch-75/debug-75",
-            "/content/dist/rhel/$releasever-99/$basearch-99/debug-99"));
+        assertThatCert(X509Cert.fromEnt(bindResult.get(0)))
+            .extractingEntitlementPayload()
+            .hasSize(102)
+            .contains(
+                "/content/dist/rhel/$releasever-0/$basearch-0/debug-0",
+                "/content/dist/rhel/$releasever-29/$basearch-29/debug-29",
+                "/content/dist/rhel/$releasever-41/$basearch-41/debug-41",
+                "/content/dist/rhel/$releasever-75/$basearch-75/debug-75",
+                "/content/dist/rhel/$releasever-99/$basearch-99/debug-99"
+            );
     }
 
-    private void assertExtensionValue(Optional<CertificateDTO> certificate, String expectedValue) {
-        assertThat(certificate)
-            .as("Cert is missing!")
-            .isPresent()
-            .map(CertificateDTO::getCert)
-            .map(cert -> CertificateUtil.standardExtensionValueFromCert(cert, EXTENSION_ID))
-            .hasValue(expectedValue);
+    private CertificateDTO firstCertOf(EntitlementDTO ent) {
+        if (ent == null || ent.getCertificates() == null) {
+            throw new NoSuchElementException();
+        }
+        return ent.getCertificates().stream()
+            .filter(Objects::nonNull)
+            .findFirst()
+            .orElseThrow();
     }
 
 }

@@ -56,7 +56,7 @@ import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Content;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.HypervisorTestData;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
@@ -1468,7 +1468,7 @@ public class HypervisorCheckInSpecTest {
     }
 
     private ContentDTO createRH00051Content(OwnerDTO owner) {
-        ContentDTO rh00051Content = Content.random()
+        ContentDTO rh00051Content = Contents.random()
             .name("cname-c1")
             .id("test-content-c1")
             .label(StringUtil.random("clabel"))
@@ -1479,7 +1479,7 @@ public class HypervisorCheckInSpecTest {
     }
 
     private ContentDTO createRH00271Content(OwnerDTO owner, ProductDTO rh00051Product) {
-        ContentDTO rh00271Content = Content.random()
+        ContentDTO rh00271Content = Contents.random()
             .name("cname-c2")
             .id("test-content-c2")
             .label(StringUtil.random("clabel"))

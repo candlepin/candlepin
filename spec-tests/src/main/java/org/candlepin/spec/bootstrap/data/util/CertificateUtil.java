@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.spec.bootstrap.client.cert.X509Cert;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -61,8 +62,8 @@ public final class CertificateUtil {
      * @throws DataFormatException
      *  if unable to decompress the body of the certificate or parse the json
      */
-    public static List<JsonNode> extractEntitlementCertificatesFromPayload(Object jsonPayload,
-        ObjectMapper mapper) throws IOException, DataFormatException {
+    public static List<JsonNode> extractEntitlementCertificatesFromPayload(
+        Object jsonPayload, ObjectMapper mapper) {
         if (jsonPayload == null) {
             return new ArrayList<>();
         }
@@ -107,8 +108,7 @@ public final class CertificateUtil {
      * @throws DataFormatException
      *  if unable to decompress the body of the certificate or parse the json
      */
-    public static JsonNode decodeAndUncompressCertificate(String certificate, ObjectMapper mapper)
-        throws IOException, DataFormatException {
+    public static JsonNode decodeAndUncompressCertificate(String certificate, ObjectMapper mapper) {
         if (certificate == null || certificate.length() == 0) {
             return null;
         }
@@ -125,10 +125,20 @@ public final class CertificateUtil {
         Inflater decompressor = new Inflater();
         decompressor.setInput(compressedBody);
         byte[] decompressedBody = new byte[48000];
-        decompressor.inflate(decompressedBody);
+        try {
+            decompressor.inflate(decompressedBody);
+        }
+        catch (DataFormatException e) {
+            throw new RuntimeException(e);
+        }
         decompressor.end();
 
-        return mapper.readTree(new String(decompressedBody));
+        try {
+            return mapper.readTree(new String(decompressedBody));
+        }
+        catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private static byte[] fromBase64(byte[] data) {

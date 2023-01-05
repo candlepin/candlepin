@@ -111,7 +111,7 @@ public class ExportGenerator {
     }
 
     public ExportGenerator withProduct(ProductDTO product) {
-        return withProduct(product, Content.random()
+        return withProduct(product, Contents.random()
             .metadataExpire(6000L)
             .requiredTags("TAG1,TAG2"));
     }

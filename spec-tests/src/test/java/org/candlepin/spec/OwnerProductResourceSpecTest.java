@@ -53,7 +53,7 @@ import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.ActivationKeys;
 import org.candlepin.spec.bootstrap.data.builder.Branding;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Content;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
@@ -180,7 +180,7 @@ public class OwnerProductResourceSpecTest {
     public void shouldRemoveContentFromProducts() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         ProductDTO prod = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
-        ContentDTO content = ownerContentApi.createContent(owner.getKey(), Content.random());
+        ContentDTO content = ownerContentApi.createContent(owner.getKey(), Contents.random());
         ownerProductApi.addContent(owner.getKey(), prod.getId(), content.getId(), true);
         prod = ownerProductApi.getProductByOwner(owner.getKey(), prod.getId());
         assertEquals(1, prod.getProductContent().size());

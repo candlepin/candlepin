@@ -40,7 +40,7 @@ import org.candlepin.spec.bootstrap.client.SpecTest;
 import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Content;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Export;
 import org.candlepin.spec.bootstrap.data.builder.ExportGenerator;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
@@ -81,7 +81,7 @@ public class ImportUpdateSpecTest {
             .addAttributesItem(new AttributeDTO().name("virt_limit").value("5"))
             .addAttributesItem(new AttributeDTO().name("multi-entitlement").value("yes"))
             .addAttributesItem(new AttributeDTO().name("host_limited").value("true"));
-        ContentDTO content = Content.random();
+        ContentDTO content = Contents.random();
         ExportGenerator exportGenerator = new ExportGenerator(admin);
         Export export = exportGenerator.minimal().withProduct(product, content).export();
         String exportOwnerKey = exportGenerator.getExportConsumer().getOwner().getKey();
@@ -110,7 +110,7 @@ public class ImportUpdateSpecTest {
     @Test
     public void shouldSuccessfullyUpdateTheImport() {
         ProductDTO product = Products.randomEng();
-        ContentDTO content = Content.random();
+        ContentDTO content = Contents.random();
         ExportGenerator exportGenerator = new ExportGenerator(admin);
         Export export = exportGenerator.minimal().withProduct(product, content).export();
 
@@ -164,7 +164,7 @@ public class ImportUpdateSpecTest {
             .addAttributesItem(new AttributeDTO().name("virt_limit").value("5"))
             .addAttributesItem(new AttributeDTO().name("multi-entitlement").value("yes"))
             .addAttributesItem(new AttributeDTO().name("host_limited").value("true"));
-        ContentDTO content = Content.random();
+        ContentDTO content = Contents.random();
         ExportGenerator exportGenerator = new ExportGenerator(admin);
         Export export = exportGenerator.minimal().withProduct(product, content).export();
 
@@ -198,7 +198,7 @@ public class ImportUpdateSpecTest {
     @Test
     public void shouldRemoveAllImportedSubscriptionsIfImportHasNoEntitlements() throws Exception {
         ProductDTO product = Products.randomEng();
-        ContentDTO content = Content.random();
+        ContentDTO content = Contents.random();
         ExportGenerator exportGenerator = new ExportGenerator(admin);
         Export export = exportGenerator.minimal().withProduct(product, content).export();
 

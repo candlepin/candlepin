@@ -17,6 +17,8 @@ package org.candlepin.spec.bootstrap.client.api;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
+import org.candlepin.dto.api.client.v1.EnvironmentDTO;
+import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.invoker.client.ApiClient;
 import org.candlepin.invoker.client.ApiException;
@@ -263,6 +265,14 @@ public class OwnerClient extends OwnerApi {
 
     public AsyncJobStatusDTO importManifestAsync(String ownerKey, File input) throws ApiException {
         return super.importManifestAsync(ownerKey, List.of(), input);
+    }
+
+    public List<EnvironmentDTO> listEnvironments(OwnerDTO owner) throws ApiException {
+        return super.listEnvironments(owner.getKey(), null);
+    }
+
+    public List<EnvironmentDTO> listEnvironments(OwnerDTO owner, String name) throws ApiException {
+        return super.listEnvironments(owner.getKey(), name);
     }
 
 }

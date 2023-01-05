@@ -26,7 +26,7 @@ import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
-import org.candlepin.spec.bootstrap.data.builder.Content;
+import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
@@ -42,7 +42,7 @@ public class ContentVersioningSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
-        ContentDTO expectedContent = Content.random();
+        ContentDTO expectedContent = Contents.random();
 
         ContentDTO owner1Content = adminClient.ownerContent().createContent(owner.getKey(), expectedContent);
         ContentDTO owner2Content = adminClient.ownerContent().createContent(owner2.getKey(), expectedContent);
@@ -62,7 +62,7 @@ public class ContentVersioningSpecTest {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
-        ContentDTO expectedContent1 = Content.random();
+        ContentDTO expectedContent1 = Contents.random();
         ContentDTO expectedContent2 = new ContentDTO()
             .id(expectedContent1.getId())
             .name(expectedContent1.getName() + "-2")
@@ -87,7 +87,7 @@ public class ContentVersioningSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner3 = adminClient.owners().createOwner(Owners.random());
-        ContentDTO expectedContent = Content.random();
+        ContentDTO expectedContent = Contents.random();
 
         ContentDTO owner1Content = adminClient.ownerContent().createContent(owner.getKey(), expectedContent);
         ContentDTO owner2Content = adminClient.ownerContent().createContent(owner2.getKey(), expectedContent);
@@ -119,7 +119,7 @@ public class ContentVersioningSpecTest {
     public void shouldCreateANewInstanceWhenMakingChangesToAnExistingInstance() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
-        ContentDTO content = adminClient.ownerContent().createContent(owner.getKey(), Content.random());
+        ContentDTO content = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
 
         content.setName(content.getName() + "-2");
         ContentDTO updatedContent = adminClient.ownerContent()
@@ -143,7 +143,7 @@ public class ContentVersioningSpecTest {
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner3 = adminClient.owners().createOwner(Owners.random());
 
-        ContentDTO expectedContent = Content.random();
+        ContentDTO expectedContent = Contents.random();
         ContentDTO owner1Content = adminClient.ownerContent().createContent(owner.getKey(), expectedContent);
         ContentDTO owner2Content = adminClient.ownerContent().createContent(owner2.getKey(), expectedContent);
         String contentOriginalName = expectedContent.getName();
@@ -182,7 +182,7 @@ public class ContentVersioningSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
 
-        ContentDTO expectedContent = Content.random();
+        ContentDTO expectedContent = Contents.random();
         ContentDTO owner1Content = adminClient.ownerContent().createContent(owner.getKey(), expectedContent);
         ContentDTO owner2Content = adminClient.ownerContent().createContent(owner2.getKey(), expectedContent);
 
@@ -217,7 +217,7 @@ public class ContentVersioningSpecTest {
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
 
-        ContentDTO expectedContent = Content.random();
+        ContentDTO expectedContent = Contents.random();
         ContentDTO owner1Content = adminClient.ownerContent().createContent(owner.getKey(), expectedContent);
         ContentDTO owner2Content = adminClient.ownerContent().createContent(owner2.getKey(), expectedContent);
 
@@ -257,7 +257,7 @@ public class ContentVersioningSpecTest {
             Set<String> owner2CreatedContentUuids = new HashSet<>();
             for (int j = batchOffset; j < batchOffset + numberOfContent; j++) {
                 String id = contentIdPrefix + j;
-                adminClient.ownerContent().createContent(owner.getKey(), Content.random().id(id));
+                adminClient.ownerContent().createContent(owner.getKey(), Contents.random().id(id));
             }
 
             // Attempt to update and create new contents to get into some funky race conditions with
@@ -267,7 +267,7 @@ public class ContentVersioningSpecTest {
                     try {
                         String id = contentIdPrefix + j;
                         ContentDTO createdContent = adminClient.ownerContent()
-                            .updateContent(owner.getKey(), id, Content.random().id(id));
+                            .updateContent(owner.getKey(), id, Contents.random().id(id));
                         owner1CreatedContentUuids.add(createdContent.getUuid());
                     }
                     catch (Exception e) {
@@ -280,7 +280,7 @@ public class ContentVersioningSpecTest {
                 for (int j = batchOffset; j < batchOffset + numberOfContent; j++) {
                     String id = contentIdPrefix + j;
                     ContentDTO createdContent = adminClient.ownerContent()
-                        .createContent(owner2.getKey(), Content.random().id(id));
+                        .createContent(owner2.getKey(), Contents.random().id(id));
                     owner2CreatedContentUuids.add(createdContent.getUuid());
                 }
             });

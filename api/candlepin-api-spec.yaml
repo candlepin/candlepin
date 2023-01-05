@@ -3136,7 +3136,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/ConsumerDTO'
-      security: []
+      security:
+        - ActivationKey: []
+          ActivationKeyOwner: []
       responses:
         200:
           description: Consumer was successfully created.
@@ -9600,6 +9602,14 @@ components:
     basicAuth:
       type: http
       scheme: basic
+    ActivationKey:
+      name: activation-key
+      in: query
+      type: apiKey
+    ActivationKeyOwner:
+      name: owner
+      in: query
+      type: apiKey
 
   parameters:
     paging_page:

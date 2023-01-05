@@ -50,7 +50,7 @@ import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Environment;
+import org.candlepin.spec.bootstrap.data.builder.Environments;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Permissions;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
@@ -525,7 +525,7 @@ public class ConsumerResourceSpecTest {
         ApiClient userClient = ApiClients.basic(user);
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        EnvironmentDTO env = adminClient.owners().createEnv(owner.getKey(), Environment.random());
+        EnvironmentDTO env = adminClient.owners().createEnv(owner.getKey(), Environments.random());
         assertNull(consumer.getEnvironment());
 
         consumerClient.consumers().updateConsumer(consumer.getUuid(), new ConsumerDTO()
@@ -543,7 +543,7 @@ public class ConsumerResourceSpecTest {
         ApiClient userClient = ApiClients.basic(user);
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        EnvironmentDTO env = adminClient.owners().createEnv(owner.getKey(), Environment.random());
+        EnvironmentDTO env = adminClient.owners().createEnv(owner.getKey(), Environments.random());
         assertNull(consumer.getEnvironment());
 
         consumerClient.consumers().updateConsumer(consumer.getUuid(), new ConsumerDTO()
@@ -561,7 +561,7 @@ public class ConsumerResourceSpecTest {
         ApiClient userClient = ApiClients.basic(user);
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        adminClient.owners().createEnv(owner.getKey(), Environment.random());
+        adminClient.owners().createEnv(owner.getKey(), Environments.random());
         assertNull(consumer.getEnvironment());
 
         assertNotFound(() -> consumerClient.consumers().updateConsumer(consumer.getUuid(), new ConsumerDTO()

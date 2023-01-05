@@ -239,7 +239,7 @@ public class X509ExtensionUtil  extends X509Util{
                 pc.getContent().getGpgUrl()));
 
             Boolean enabled = pc.isEnabled();
-            log.debug("default enabled flag = " + enabled);
+            log.debug("default enabled flag = {}", enabled);
 
             // sku level content enable override. if on both lists, active wins.
             if (skuDisabled.contains(pc.getContent().getId())) {
