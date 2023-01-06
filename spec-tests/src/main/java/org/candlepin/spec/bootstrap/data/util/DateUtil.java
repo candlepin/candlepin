@@ -27,4 +27,8 @@ public final class DateUtil {
         return OffsetDateTime.now().plusDays(1);
     }
 
+    public static OffsetDateTime yesterday() {
+        return OffsetDateTime.now().minusDays(1);
+    }
+
 }
