@@ -33,7 +33,6 @@ import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.resource.client.v1.ProductsApi;
 import org.candlepin.resource.client.v1.RolesApi;
 import org.candlepin.resource.client.v1.RootApi;
-import org.candlepin.resource.client.v1.RulesApi;
 import org.candlepin.resource.client.v1.StatusApi;
 import org.candlepin.resource.client.v1.SubscriptionApi;
 import org.candlepin.resource.client.v1.UsersApi;
@@ -42,6 +41,7 @@ import org.candlepin.spec.bootstrap.client.api.EnvironmentClient;
 import org.candlepin.spec.bootstrap.client.api.JobsClient;
 import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.client.api.PoolsClient;
+import org.candlepin.spec.bootstrap.client.api.RulesClient;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -180,7 +180,7 @@ public class ApiClient {
         return new UsersApi(this.client);
     }
 
-    public RulesApi rules() {
-        return new RulesApi(this.client);
+    public RulesClient rules() {
+        return new RulesClient(this.client);
     }
 }
