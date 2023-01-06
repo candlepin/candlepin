@@ -33,7 +33,7 @@ ext.plugins = [
 
 libraries["artemisServer"] = "org.apache.activemq:artemis-server:2.27.1"
 libraries["artemisStomp"] = "org.apache.activemq:artemis-stomp-protocol:2.27.1"
-libraries["assertj"] = 'org.assertj:assertj-core:3.23.1'
+libraries["assertj"] = 'org.assertj:assertj-core:3.24.0'
 libraries["checkstyle"] = "com.puppycrawl.tools:checkstyle:10.3"
 libraries["checkstyleSevntu"] = "com.github.sevntu-checkstyle:sevntu-checks:1.42.0"
 libraries["commonsCodec"] = "commons-codec:commons-codec:1.15"
