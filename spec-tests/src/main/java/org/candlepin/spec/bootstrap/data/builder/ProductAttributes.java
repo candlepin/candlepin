@@ -20,6 +20,8 @@ import org.candlepin.dto.api.client.v1.AttributeDTO;
 public enum ProductAttributes {
     Addons("addons"),
     Arch("arch"),
+    ContentOverrideEnabled("content_override_enabled"),
+    ContentOverrideDisabled("content_override_disabled"),
     Cores("cores"),
     GuestLimit("guest_limit"),
     HostLimited("host_limited"),
