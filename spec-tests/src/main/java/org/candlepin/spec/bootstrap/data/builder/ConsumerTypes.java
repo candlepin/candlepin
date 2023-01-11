@@ -19,6 +19,7 @@ import org.candlepin.dto.api.client.v1.ConsumerTypeDTO;
 
 public enum ConsumerTypes {
     Candlepin("candlepin"),
+    Domain("domain"),
     Hypervisor("hypervisor"),
     Person("person"),
     System("system");

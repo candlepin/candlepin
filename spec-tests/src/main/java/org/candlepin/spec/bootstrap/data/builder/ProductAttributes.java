@@ -29,6 +29,7 @@ public enum ProductAttributes {
     ManagementEnabled("management_enabled"),
     MultiEntitlement("multi-entitlement"),
     Ram("ram"),
+    RequiresConsumer("requires_consumer_type"),
     Roles("roles"),
     Sockets("sockets"),
     StackingId("stacking_id"),
