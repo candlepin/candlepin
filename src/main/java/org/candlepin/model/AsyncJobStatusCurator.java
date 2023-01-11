@@ -53,7 +53,8 @@ public class AsyncJobStatusCurator extends AbstractHibernateCurator<AsyncJobStat
     /**
      * Container object for providing various arguments to the job status lookup method(s).
      */
-    public static class AsyncJobStatusQueryArguments extends QueryArguments<AsyncJobStatusQueryArguments> {
+    public static class AsyncJobStatusQueryArguments
+        extends QueryArguments<AsyncJobStatus, AsyncJobStatusQueryArguments> {
 
         private Collection<String> jobIds;
         private Collection<String> jobKeys;

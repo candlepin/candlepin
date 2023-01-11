@@ -74,7 +74,7 @@ public class ConsumerEnricher {
             productIds.add(cip.getProductId());
         }
 
-        for (Product product : this.ownerProductCurator.getProductsByIds(consumer.getOwnerId(), productIds)) {
+        for (Product product : this.ownerProductCurator.getProductsByIdsCPQ(consumer.getOwnerId(), productIds)) {
             productMap.put(product.getId(), product);
         }
 

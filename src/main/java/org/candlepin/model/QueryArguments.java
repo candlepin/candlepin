@@ -20,15 +20,20 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import java.util.Collection;
 import java.util.LinkedList;
 
+import javax.persistence.metamodel.Attribute;
+
 
 
 /**
  * Container object for providing various arguments to the consumerlookup method(s).
  *
  * @param <T>
- *  The type of the QueryArguments subclass; used for method chaining
+ *  The type of the result these query arguments will be used to generate
+ *
+ * @param <C>
+ *  the class type of a given QueryArguments instance; used for method chaining
  */
-public class QueryArguments<T extends QueryArguments> {
+public class QueryArguments<T, C extends QueryArguments<T, C>> {
 
     /** The number of elements a given collection in the query builder may have */
     public static final int COLLECTION_SIZE_LIMIT = 512;
@@ -56,6 +61,15 @@ public class QueryArguments<T extends QueryArguments> {
             }
 
             this.column = column;
+            this.reverse = reverse;
+        }
+
+        public Order(Attribute<?, ?> attribute, boolean reverse) {
+            if (attribute == null) {
+                throw new IllegalArgumentException("no attribute provided");
+            }
+
+            this.column = attribute.getName();
             this.reverse = reverse;
         }
 
@@ -127,14 +141,18 @@ public class QueryArguments<T extends QueryArguments> {
      * @return
      *  a reference to this QueryArguments
      */
-    public T setOffset(Integer offset) {
+    public C setOffset(Integer offset) {
+        if (offset != null && offset < 0) {
+            throw new IllegalArgumentException("offset is a negative value: " + offset);
+        }
+
         this.offset = offset;
-        return (T) this;
+        return (C) this;
     }
 
     /**
      * Gets the offset at which to begin fetching results. If an offset has not yet been defined,
-     * this method returns null.that
+     * this method returns null.
      *
      * @return
      *  the offset at which to begin fetching results, or null if the offset has not been defined
@@ -153,9 +171,13 @@ public class QueryArguments<T extends QueryArguments> {
      * @return
      *  a reference to this QueryArguments
      */
-    public T setLimit(Integer limit) {
+    public C setLimit(Integer limit) {
+        if (limit != null && limit < 1) {
+            throw new IllegalArgumentException("limit is not a positive integer: " + limit);
+        }
+
         this.limit = limit;
-        return (T) this;
+        return (C) this;
     }
 
     /**
@@ -170,6 +192,44 @@ public class QueryArguments<T extends QueryArguments> {
     }
 
     /**
+     * Utility method for setting the query offset and limit from page and page size values.
+     *
+     * @param page
+     *
+     * @param pageSize
+     *
+     * @throws IllegalArgumentException
+     *  if page or pageSize are non-positive integers, or exactly one value is null
+     *
+     * @return
+     *  a reference to this QueryArguments
+     */
+    public C setLimits(Integer page, Integer pageSize) {
+        if ((page == null && pageSize != null) || (page != null && pageSize == null)) {
+            throw new IllegalArgumentException("page and page size must be specified together");
+        }
+
+        if (page != null) {
+            if (page < 1) {
+                throw new IllegalArgumentException("page is a non-positive integer value: " + page);
+            }
+
+            if (pageSize < 1) {
+                throw new IllegalArgumentException("pageSize is a non-positive integer value: " + pageSize);
+            }
+
+            this.setLimit(pageSize);
+            this.setOffset(pageSize * (page - 1));
+        }
+        else {
+            this.setLimit(null);
+            this.setOffset(null);
+        }
+
+        return (C) this;
+    }
+
+    /**
      * Sets or clears the collection of result ordering to apply to the query. If null, any
      * previously set order is cleared.
      *
@@ -180,9 +240,9 @@ public class QueryArguments<T extends QueryArguments> {
      * @return
      *  a reference to this QueryArguments
      */
-    public T setOrder(Collection<Order> order) {
+    public C setOrder(Collection<Order> order) {
         this.order = order;
-        return (T) this;
+        return (C) this;
     }
 
     /**
@@ -200,13 +260,22 @@ public class QueryArguments<T extends QueryArguments> {
      * @return
      *  a reference to this QueryArguments
      */
-    public T addOrder(String column, boolean reverse) {
+    public C addOrder(String column, boolean reverse) {
         if (this.order == null) {
             this.order = new LinkedList<>();
         }
 
         this.order.add(new Order(column, reverse));
-        return (T) this;
+        return (C) this;
+    }
+
+    public C addOrder(Attribute<T, ?> attribute, boolean reverse) {
+        if (this.order == null) {
+            this.order = new LinkedList<>();
+        }
+
+        this.order.add(new Order(attribute, reverse));
+        return (C) this;
     }
 
     /**

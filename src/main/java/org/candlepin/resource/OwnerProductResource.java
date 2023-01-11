@@ -38,19 +38,24 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerProductCurator;
+import org.candlepin.model.PagingInfo;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.model.QueryArguments;
+import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.server.v1.OwnerProductApi;
 import org.candlepin.resource.util.InfoAdapter;
+import org.candlepin.resource.util.PagingUtil;
 import org.candlepin.resource.validation.DTOValidator;
 
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -58,12 +63,16 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import javax.persistence.LockModeType;
 
+
+
 public class OwnerProductResource implements OwnerProductApi {
 
-    private static Logger log = LoggerFactory.getLogger(OwnerProductResource.class);
+    private static final Logger log = LoggerFactory.getLogger(OwnerProductResource.class);
+
     private OwnerCurator ownerCurator;
     private DTOValidator validator;
     private ModelTranslator translator;
@@ -75,6 +84,7 @@ public class OwnerProductResource implements OwnerProductApi {
     private ProductCertificateCurator productCertCurator;
     private JobManager jobManager;
     private OwnerContentCurator ownerContentCurator;
+    private PagingUtil pagingUtil;
 
     @Inject
     @SuppressWarnings("checkstyle:parameternumber")
@@ -88,7 +98,8 @@ public class OwnerProductResource implements OwnerProductApi {
         OwnerContentCurator ownerContentCurator,
         ProductManager productManager,
         ProductCertificateCurator productCertCurator,
-        ProductCurator productCurator) {
+        ProductCurator productCurator,
+        PagingUtil pagingUtil) {
 
         this.ownerCurator = ownerCurator;
         this.i18n = i18n;
@@ -101,6 +112,7 @@ public class OwnerProductResource implements OwnerProductApi {
         this.productManager = productManager;
         this.productCertCurator = productCertCurator;
         this.productCurator = productCurator;
+        this.pagingUtil = pagingUtil;
     }
 
     @Override
@@ -214,15 +226,28 @@ public class OwnerProductResource implements OwnerProductApi {
     }
 
     @Override
-    public CandlepinQuery<ProductDTO> getProductsByOwner(@Verify(Owner.class) String ownerKey,
+    public Stream<ProductDTO> getProductsByOwner(@Verify(Owner.class) String ownerKey,
         List<String> productIds) {
 
-        Owner owner = getOwnerByKey(ownerKey);
-        CandlepinQuery<Product> query = productIds != null && !productIds.isEmpty() ?
-            this.ownerProductCurator.getProductsByIds(owner, productIds) :
-            this.ownerProductCurator.getProductsByOwnerCPQ(owner);
+        QueryArguments<Product, ?> queryArgs = this.pagingUtil.getPagingQueryArguments(Product.class, false);
+        Owner owner = this.getOwnerByKey(ownerKey);
 
-        return this.translator.translateQuery(query, ProductDTO.class);
+        List<Product> products;
+        long recordCount;
+
+        if (productIds != null && !productIds.isEmpty()) {
+            recordCount = this.ownerProductCurator.getProductCount(owner.getId(), productIds);
+            products = this.ownerProductCurator.getProductsByIds(owner, productIds, queryArgs);
+        }
+        else {
+            recordCount = this.ownerProductCurator.getProductCount(owner.getId());
+            products = this.ownerProductCurator.getProductsByOwner(owner, queryArgs);
+        }
+
+        this.pagingUtil.updatePagingRecordCount(recordCount);
+
+        return products.stream()
+            .map(this.translator.getStreamMapper(Product.class, ProductDTO.class));
     }
 
     @Override

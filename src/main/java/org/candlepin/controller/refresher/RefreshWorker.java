@@ -528,7 +528,7 @@ public class RefreshWorker {
 
             // Add in the org-mapped entities to ensure we catch everything for this org, as well
             // verifying there aren't any dangling references to out-of-org entities
-            Collection<Product> ownerProducts = this.ownerProductCurator.getProductsByOwner(owner);
+            Collection<Product> ownerProducts = this.ownerProductCurator.getProductsByOwner(owner, null);
             this.mapExistingProducts(ownerProducts);
 
             Collection<Content> ownerContent = this.ownerContentCurator.getContentByOwner(owner);

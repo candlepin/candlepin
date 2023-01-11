@@ -128,7 +128,7 @@ public class ProductManager {
         }
 
         if (!pids.isEmpty()) {
-            output = this.ownerProductCurator.getProductsByIds(owner, pids).list().stream()
+            output = this.ownerProductCurator.getProductsByIdsCPQ(owner, pids).list().stream()
                 .collect(Collectors.toMap(Product::getId, Function.identity()));
 
             pids.removeAll(output.keySet());

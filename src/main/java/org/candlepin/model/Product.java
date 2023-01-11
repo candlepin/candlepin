@@ -84,8 +84,8 @@ import javax.validation.constraints.Size;
 @Immutable
 @Table(name = Product.DB_TABLE)
 @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
-public class Product extends AbstractHibernateObject implements SharedEntity, Linkable, Cloneable, Eventful,
-    ProductInfo {
+public class Product extends AbstractHibernateObject<Product> implements SharedEntity, Linkable, Cloneable,
+    Eventful, ProductInfo {
 
     private static final Logger log = LoggerFactory.getLogger(Product.class);
 

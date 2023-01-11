@@ -105,6 +105,7 @@ import org.candlepin.resource.util.AttachedFile;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.KeyValueStringParser;
+import org.candlepin.resource.util.PagingUtil;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.sync.ConflictOverrides;
@@ -191,6 +192,7 @@ public class OwnerResource implements OwnerApi {
     private JobManager jobManager;
     private DTOValidator validator;
     private PrincipalProvider principalProvider;
+    private PagingUtil pagingUtil;
 
     @Inject
     @SuppressWarnings("checkstyle:parameternumber")
@@ -221,7 +223,8 @@ public class OwnerResource implements OwnerApi {
         ModelTranslator translator,
         JobManager jobManager,
         DTOValidator validator,
-        PrincipalProvider principalProvider) {
+        PrincipalProvider principalProvider,
+        PagingUtil pagingUtil) {
 
         this.ownerCurator = ownerCurator;
         this.ownerInfoCurator = ownerInfoCurator;
@@ -251,6 +254,7 @@ public class OwnerResource implements OwnerApi {
         this.jobManager = jobManager;
         this.validator = validator;
         this.principalProvider = principalProvider;
+        this.pagingUtil = pagingUtil;
     }
 
     /**
@@ -1101,35 +1105,18 @@ public class OwnerResource implements OwnerApi {
             .setTypes(types)
             .setHypervisorIds(hypervisorIds);
 
+        this.pagingUtil.getPagingQueryArguments(Consumer.class, queryArgs, false);
+
         new KeyValueStringParser(this.i18n).parseKeyValuePairs(facts)
             .forEach(kvpair -> queryArgs.addFact(kvpair.getKey(), kvpair.getValue()));
 
         long count = this.consumerCurator.getConsumerCount(queryArgs);
         log.debug("Consumer query will fetch {} consumers", count);
 
-        // Do paging bits, if necessary
-        PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
-        if (pageRequest != null) {
-            Page<Stream<ConsumerDTOArrayElement>> pageResponse = new Page<>();
-            pageResponse.setPageRequest(pageRequest);
+        this.pagingUtil.updatePagingRecordCount(count);
 
-            if (pageRequest.isPaging()) {
-                queryArgs.setOffset((pageRequest.getPage() - 1) * pageRequest.getPerPage())
-                    .setLimit(pageRequest.getPerPage());
-            }
-
-            if (pageRequest.getSortBy() != null) {
-                boolean reverse = pageRequest.getOrder() == PageRequest.Order.DESCENDING;
-                queryArgs.addOrder(pageRequest.getSortBy(), reverse);
-            }
-
-            pageResponse.setMaxRecords((int) count);
-
-            // Store the page for the LinkHeaderResponseFilter
-            ResteasyContext.pushContext(Page.class, pageResponse);
-        }
         // If no paging was specified, force a limit on amount of results
-        else {
+        if (!this.pagingUtil.isPaging()) {
             if (count > MAX_CONSUMERS_PER_REQUEST) {
                 String errmsg = this.i18n.tr("This endpoint does not support returning more than {0} " +
                     "results at a time, please use paging.", MAX_CONSUMERS_PER_REQUEST);

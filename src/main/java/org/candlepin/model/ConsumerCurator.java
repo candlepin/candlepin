@@ -92,7 +92,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Container object for providing various arguments to the consumer lookup method(s).
      */
-    public static class ConsumerQueryArguments extends QueryArguments<ConsumerQueryArguments> {
+    public static class ConsumerQueryArguments extends QueryArguments<Consumer, ConsumerQueryArguments> {
 
         private Owner owner;
         private String username;

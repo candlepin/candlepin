@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,7 @@ import javax.persistence.LockModeType;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.TypedQuery;
+import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.From;
@@ -268,8 +270,12 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return this.cpQueryFactory.<E>buildQuery(this.currentSession(), criteria);
     }
 
+    // This old paging stuff shouldn't be used anymore. It's tied to deprecated Hibernate criteria queries
+    // and generally
+
     @SuppressWarnings("unchecked")
     @Transactional
+    @Deprecated
     public Page<List<E>> listAll(PageRequest pageRequest, boolean postFilter) {
         Page<List<E>> resultsPage;
         if (postFilter) {
@@ -296,6 +302,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @SuppressWarnings("unchecked")
     @Transactional
+    @Deprecated
     public Page<List<E>> listAll(PageRequest pageRequest) {
         Page<List<E>> page = new Page<>();
 
@@ -329,7 +336,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     }
 
     private List<E> loadPageData(CriteriaQuery<E> criteria, PageRequest pageRequest) {
-        TypedQuery<E> query = this.entityManager.get().createQuery(criteria);
+        TypedQuery<E> query = this.getEntityManager().createQuery(criteria);
         if (pageRequest.isPaging()) {
             query.setFirstResult((pageRequest.getPage() - 1) * pageRequest.getPerPage());
             query.setMaxResults(pageRequest.getPerPage());
@@ -355,7 +362,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
     private javax.persistence.criteria.Order createPagingOrder(Root<?> root, PageRequest p) {
         String sortBy = (p.getSortBy() == null) ? AbstractHibernateObject.DEFAULT_SORT_FIELD : p.getSortBy();
         PageRequest.Order order = (p.getOrder() == null) ? PageRequest.DEFAULT_ORDER : p.getOrder();
-        CriteriaBuilder criteriaBuilder = this.entityManager.get().getCriteriaBuilder();
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
 
         if (order == PageRequest.Order.ASCENDING) {
             return criteriaBuilder.asc(root.get(sortBy));
@@ -364,19 +371,21 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         return criteriaBuilder.desc(root.get(sortBy));
     }
 
+
     private Integer findRowCount(Criteria c) {
         c.setProjection(Projections.rowCount());
         return ((Long) c.uniqueResult()).intValue();
     }
 
     private Long findRowCount() {
-        CriteriaBuilder criteriaBuilder = this.entityManager.get().getCriteriaBuilder();
+        CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
         CriteriaQuery<Long> countQuery = criteriaBuilder.createQuery(Long.class);
         countQuery.select(criteriaBuilder.count(countQuery.from(this.entityType)));
-        return this.entityManager.get().createQuery(countQuery).getSingleResult();
+        return this.getEntityManager().createQuery(countQuery).getSingleResult();
     }
 
     @SuppressWarnings("unchecked")
+    @Deprecated
     public Page<ResultIterator<E>> paginateResults(CandlepinQuery<E> query, PageRequest pageRequest) {
         Page<ResultIterator<E>> page = new Page<>();
 
@@ -411,6 +420,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
 
     @SuppressWarnings("unchecked")
     @Transactional
+    @Deprecated
     public Page<List<E>> listByCriteria(Criteria query, PageRequest pageRequest, boolean postFilter) {
         Page<List<E>> resultsPage;
         if (postFilter) {
@@ -1463,7 +1473,7 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      *  a list of order instances to sort the query results
      */
     protected List<javax.persistence.criteria.Order> buildJPAQueryOrder(CriteriaBuilder criteriaBuilder,
-        Root<?> root, QueryArguments<?> queryArguments) {
+        Root<?> root, QueryArguments<?, ?> queryArguments) {
 
         List<javax.persistence.criteria.Order> orderList = new ArrayList<>();
 
@@ -1482,5 +1492,82 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
         }
 
         return orderList;
+    }
+
+    protected String applyQueryOrdering(String jpql, QueryArguments<?, ?> queryArguments, String alias) {
+        if (queryArguments == null) {
+            return jpql;
+        }
+
+        Collection<QueryArguments.Order> qaOrder = queryArguments.getOrder();
+        if (qaOrder == null || qaOrder.isEmpty()) {
+            return jpql;
+        }
+
+        StringBuilder builder = jpql != null && !jpql.isEmpty() ?
+            new StringBuilder(jpql).append(" ORDER BY ") :
+            new StringBuilder("ORDER BY ");
+
+        String prefix = alias != null && !alias.isEmpty() ? alias + '.' : "";
+
+        Iterator<QueryArguments.Order> iterator = qaOrder.iterator();
+        while (iterator.hasNext()) {
+            QueryArguments.Order order = iterator.next();
+
+            builder.append(prefix)
+                .append(order.column())
+                .append(order.reverse() ? " DESC" : " ASC");
+
+            if (iterator.hasNext()) {
+                builder.append(", ");
+            }
+        }
+
+        return builder.toString();
+    }
+
+    protected String applyQueryOrdering(String jpql, QueryArguments<?, ?> queryArguments) {
+        return this.applyQueryOrdering(jpql, queryArguments, null);
+    }
+
+    protected Query applyQueryLimits(Query query, QueryArguments<?, ?> queryArguments) {
+        if (query == null || queryArguments == null) {
+            return query;
+        }
+
+        if (queryArguments.getOffset() != null) {
+            query.setFirstResult(queryArguments.getOffset());
+        }
+
+        if (queryArguments.getLimit() != null) {
+            query.setMaxResults(queryArguments.getLimit());
+        }
+
+        return query;
+    }
+
+    protected <T extends AbstractHibernateObject> TypedQuery<T> createPagedQuery(String jpql,
+        Class<T> entityType, QueryArguments<T, ?> queryArguments, String alias) {
+
+        if (jpql == null || jpql.isEmpty()) {
+            throw new IllegalArgumentException("jpql string is null or empty");
+        }
+
+        if (entityType == null) {
+            throw new IllegalArgumentException("entityType is null");
+        }
+
+        TypedQuery<T> query = this.getEntityManager()
+            .createQuery(this.applyQueryOrdering(jpql, queryArguments, alias), entityType);
+
+        this.applyQueryLimits(query, queryArguments);
+
+        return query;
+    }
+
+    protected <T extends AbstractHibernateObject> TypedQuery<T> createPagedQuery(String jpql,
+        Class<T> entityType, QueryArguments<T, ?> queryArguments) {
+
+        return this.createPagedQuery(jpql, entityType, queryArguments, null);
     }
 }

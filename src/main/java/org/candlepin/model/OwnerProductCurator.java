@@ -246,11 +246,10 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      * @return
      *  a list containing all mapped products for the given organization
      */
-    public List<Product> getProductsByOwner(String ownerId) {
+    public List<Product> getProductsByOwner(String ownerId, QueryArguments<Product, ?> queryArguments) {
         String jpql = "SELECT op.product FROM OwnerProduct op WHERE op.ownerId = :owner_id";
 
-        return this.getEntityManager()
-            .createQuery(jpql, Product.class)
+        return this.createPagedQuery(jpql, Product.class, queryArguments, "op.product")
             .setParameter("owner_id", ownerId)
             .getResultList();
     }
@@ -267,8 +266,8 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
      * @return
      *  a list containing all mapped products for the given organization
      */
-    public List<Product> getProductsByOwner(Owner owner) {
-        return owner != null ? this.getProductsByOwner(owner.getId()) : new ArrayList();
+    public List<Product> getProductsByOwner(Owner owner, QueryArguments<Product, ?> queryArguments) {
+        return owner != null ? this.getProductsByOwner(owner.getId(), queryArguments) : new ArrayList<>();
     }
 
     /**
@@ -317,11 +316,50 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         return this.cpQueryFactory.<Product>buildQuery();
     }
 
-    public CandlepinQuery<Product> getProductsByIds(Owner owner, Collection<String> productIds) {
-        return this.getProductsByIds(owner.getId(), productIds);
+    public List<Product> getProductsByIds(String ownerId, Collection<String> productIds,
+        QueryArguments<Product, ?> queryArguments) {
+
+        String jpql = "SELECT op.product FROM OwnerProduct op " +
+            "WHERE op.ownerId = :owner_id AND op.productId IN (:product_ids)";
+
+        return this.createPagedQuery(jpql, Product.class, queryArguments, "op.product")
+            .setParameter("owner_id", ownerId)
+            .setParameter("product_ids", productIds)
+            .getResultList();
     }
 
-    public CandlepinQuery<Product> getProductsByIds(String ownerId, Collection<String> productIds) {
+    public List<Product> getProductsByIds(Owner owner, Collection<String> productIds,
+        QueryArguments<Product, ?> queryArguments) {
+
+        return owner != null ? this.getProductsByIds(owner.getId(), productIds, queryArguments) : new ArrayList<>();
+    }
+
+    public long getProductCount(String ownerId) {
+        String jpql = "SELECT count(op) FROM OwnerProduct op WHERE op.ownerId = :owner_id";
+
+        return (Long) this.getEntityManager()
+            .createQuery(jpql, Long.class)
+            .setParameter("owner_id", ownerId)
+            .getSingleResult();
+    }
+
+    public long getProductCount(String ownerId, Collection<String> productIds) {
+        String jpql = "SELECT count(op) FROM OwnerProduct op " +
+            "WHERE op.ownerId = :owner_id AND op.productId IN (:product_ids)";
+
+        return (Long) this.getEntityManager()
+            .createQuery(jpql, Long.class)
+            .setParameter("owner_id", ownerId)
+            .setParameter("product_ids", productIds)
+            .getSingleResult();
+    }
+
+
+    public CandlepinQuery<Product> getProductsByIdsCPQ(Owner owner, Collection<String> productIds) {
+        return this.getProductsByIdsCPQ(owner.getId(), productIds);
+    }
+
+    public CandlepinQuery<Product> getProductsByIdsCPQ(String ownerId, Collection<String> productIds) {
         if (productIds == null || productIds.isEmpty()) {
             return this.cpQueryFactory.<Product>buildQuery();
         }
