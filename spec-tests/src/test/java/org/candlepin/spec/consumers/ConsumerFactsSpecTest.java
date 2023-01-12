@@ -73,13 +73,13 @@ public class ConsumerFactsSpecTest {
         ConsumerDTO consumer = createConsumer();
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        consumer.putFactsItem(Facts.UnameSystem.key(), "BSD");
+        consumer.putFactsItem(Facts.OperatingSystem.key(), "BSD");
         consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
 
         ConsumerDTO updatedConsumer = consumerClient.consumers().getConsumer(consumer.getUuid());
 
         assertThat(updatedConsumer.getFacts())
-            .containsEntry(Facts.UnameSystem.key(), "BSD");
+            .containsEntry(Facts.OperatingSystem.key(), "BSD");
     }
 
     @Test
@@ -87,13 +87,13 @@ public class ConsumerFactsSpecTest {
         ConsumerDTO consumer = createConsumer();
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        consumer.getFacts().remove(Facts.UnameSystem.key());
+        consumer.getFacts().remove(Facts.OperatingSystem.key());
         consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
 
         ConsumerDTO updatedConsumer = consumerClient.consumers().getConsumer(consumer.getUuid());
 
         assertThat(updatedConsumer.getFacts())
-            .doesNotContainKey(Facts.UnameSystem.key());
+            .doesNotContainKey(Facts.OperatingSystem.key());
     }
 
     @Test
@@ -104,7 +104,7 @@ public class ConsumerFactsSpecTest {
 
         // MySQL drops millis, we need to wait a bit longer
         Thread.sleep(1000);
-        consumer.getFacts().remove(Facts.UnameSystem.key());
+        consumer.getFacts().remove(Facts.OperatingSystem.key());
         consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
 
         ConsumerDTO updatedConsumer = consumerClient.consumers().getConsumer(consumer.getUuid());
@@ -161,13 +161,13 @@ public class ConsumerFactsSpecTest {
         ConsumerDTO consumer = createConsumer();
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        consumer.putFactsItem(Facts.UnameMachine.key(), "a".repeat(256));
+        consumer.putFactsItem(Facts.Arch.key(), "a".repeat(256));
         consumerClient.consumers().updateConsumer(consumer.getUuid(), consumer);
 
         ConsumerDTO updatedConsumer = consumerClient.consumers().getConsumer(consumer.getUuid());
 
         assertThat(updatedConsumer.getFacts())
-            .containsEntry(Facts.UnameMachine.key(), "a".repeat(252) + "...");
+            .containsEntry(Facts.Arch.key(), "a".repeat(252) + "...");
     }
 
     private ConsumerDTO createConsumer() {
@@ -176,8 +176,8 @@ public class ConsumerFactsSpecTest {
             .productName("Installed");
 
         return ownerClient.consumers().createConsumer(Consumers.random(this.owner)
-            .putFactsItem(Facts.UnameMachine.key(), "i686")
-            .putFactsItem(Facts.UnameSystem.key(), "Linux")
+            .putFactsItem(Facts.Arch.key(), "i686")
+            .putFactsItem(Facts.OperatingSystem.key(), "Linux")
             .addInstalledProductsItem(installedProduct)
         );
     }

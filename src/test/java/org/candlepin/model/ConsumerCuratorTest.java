@@ -814,7 +814,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void updateCheckinTime() {
         Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
         consumer = consumerCurator.create(consumer);
-        Date dt = ResourceDateParser.parseDateString("2011-09-26T18:10:50.184081+00:00");
+        Date dt = ResourceDateParser.parseDateString(this.i18n, "2011-09-26T18:10:50.184081+00:00");
         consumerCurator.updateLastCheckin(consumer, dt);
         consumerCurator.refresh(consumer);
         consumer = consumerCurator.get(consumer.getId());

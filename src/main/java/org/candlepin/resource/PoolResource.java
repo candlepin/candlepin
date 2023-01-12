@@ -110,7 +110,7 @@ public class PoolResource implements PoolsApi {
         }
 
         Date activeOnDate = activeOn != null ?
-            ResourceDateParser.parseDateString(activeOn) :
+            ResourceDateParser.parseDateString(this.i18n, activeOn) :
             (new Date());
 
         Consumer c = null;
@@ -193,7 +193,7 @@ public class PoolResource implements PoolsApi {
         if (toReturn != null) {
             Date activeOnDate = new Date();
             if (activeOn != null) {
-                activeOnDate = ResourceDateParser.parseDateString(activeOn);
+                activeOnDate = ResourceDateParser.parseDateString(this.i18n, activeOn);
             }
 
             toReturn.setCalculatedAttributes(

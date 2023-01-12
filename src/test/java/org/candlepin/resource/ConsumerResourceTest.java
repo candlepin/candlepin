@@ -582,7 +582,7 @@ public class ConsumerResourceTest {
         when(cc.verifyAndLookupConsumerWithEntitlements(eq(consumer.getUuid()))).thenReturn(consumer);
 
         String dtStr = "2011-09-26T18:10:50.184081+00:00";
-        Date dt = ResourceDateParser.parseDateString(dtStr);
+        Date dt = ResourceDateParser.parseDateString(this.i18n, dtStr);
 
         consumerResource.bind(consumer.getUuid(), null, null, null, null, null, false, dtStr, null);
         AutobindData data = new AutobindData(consumer, owner)

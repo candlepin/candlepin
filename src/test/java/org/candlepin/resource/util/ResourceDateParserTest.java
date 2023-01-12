@@ -20,10 +20,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.candlepin.exceptions.BadRequestException;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Locale;
 import java.util.TimeZone;
 
 /**
@@ -31,64 +35,16 @@ import java.util.TimeZone;
  */
 public class ResourceDateParserTest {
 
-    @Test
-    public void errorFromAndToPlusDays() {
-        assertThrows(BadRequestException.class,
-            () -> ResourceDateParser.getFromDate("2012/01/01", "2012/10/10", "3"));
-    }
+    private I18n i18n;
 
-    @Test
-    public void errorFromPlusDays() {
-        assertThrows(BadRequestException.class,
-            () -> ResourceDateParser.getFromDate("2012/01/01", null, "3"));
-    }
-
-    @Test
-    public void errorToPlusDays() {
-        assertThrows(BadRequestException.class,
-            () -> ResourceDateParser.getFromDate(null, "2012/01/01", "3"));
-    }
-
-    @Test
-    public void onlyDays() {
-        Calendar cal = Calendar.getInstance();
-        // the 3 here should match the value given to getFromDate
-        // below.
-        cal.add(Calendar.DATE, -3);
-        int expected = cal.get(Calendar.DATE);
-        Date from = ResourceDateParser.getFromDate(null, null, "3");
-        cal.setTime(from);
-        assertEquals(expected, cal.get(Calendar.DATE));
-    }
-
-    @Test
-    public void allEmpty() {
-        assertNull(ResourceDateParser.getFromDate(null, null, null));
-        assertNull(ResourceDateParser.getFromDate("", "", ""));
-        assertNull(ResourceDateParser.getFromDate(null, null, ""));
-        assertNull(ResourceDateParser.getFromDate("    ", "    ", "    "));
-        assertNull(ResourceDateParser.getFromDate("", "", null));
-    }
-
-    @Test
-    public void fromAndTo() {
-        Date from = ResourceDateParser.getFromDate("2012-01-01",
-            "2012-01-10", null);
-
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(from);
-        assertEquals(1, cal.get(Calendar.DATE));
-    }
-
-    @Test
-    public void nonNumberForDays() {
-        assertThrows(NumberFormatException.class,
-            () -> ResourceDateParser.getFromDate(null, null, "ABC"));
+    @BeforeEach
+    void setUp() {
+        this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
     }
 
     @Test
     public void parseDate() {
-        Date parsed = ResourceDateParser.parseDateString("2012-05-29");
+        Date parsed = ResourceDateParser.parseDateString(this.i18n, "2012-05-29");
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(parsed);
@@ -101,7 +57,7 @@ public class ResourceDateParserTest {
 
     @Test
     public void parseDateTime() {
-        Date parsed = ResourceDateParser.parseDateString("1997-07-16T19:20:30-00:00");
+        Date parsed = ResourceDateParser.parseDateString(this.i18n, "1997-07-16T19:20:30-00:00");
 
         Calendar cal = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
         cal.setTime(parsed);
@@ -117,14 +73,14 @@ public class ResourceDateParserTest {
 
     @Test
     public void nullParseDate() {
-        assertNull(ResourceDateParser.parseDateString(null));
-        assertNull(ResourceDateParser.parseDateString(""));
-        assertNull(ResourceDateParser.parseDateString("    "));
+        assertNull(ResourceDateParser.parseDateString(this.i18n, null));
+        assertNull(ResourceDateParser.parseDateString(this.i18n, ""));
+        assertNull(ResourceDateParser.parseDateString(this.i18n, "    "));
     }
 
     @Test
     public void parseDateError() {
         assertThrows(BadRequestException.class,
-            () -> ResourceDateParser.parseDateString("2012/13/64"));
+            () -> ResourceDateParser.parseDateString(this.i18n, "2012/13/64"));
     }
 }
