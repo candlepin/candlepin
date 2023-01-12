@@ -6,7 +6,12 @@
     rvm1_rubies:
       - "{{ ruby_version }}"
     rvm1_user: "{{ candlepin_user | default('candlepin') }}"
-    rvm1_bundler_install: true
+    rvm1_bundler_install: false
   tags:
     - molecule-idempotence-notest
+    - ruby
+
+- name: Ensure bundler is installed
+  ansible.builtin.command: "bash -lc 'gem install bundler -v 2.3.26'"
+  tags:
     - ruby
