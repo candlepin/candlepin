@@ -20,6 +20,7 @@ import org.candlepin.dto.api.client.v1.AttributeDTO;
 public enum ProductAttributes {
     Addons("addons"),
     Arch("arch"),
+    BrandType("brand_type"),
     ContentOverrideEnabled("content_override_enabled"),
     ContentOverrideDisabled("content_override_disabled"),
     Cores("cores"),
@@ -42,6 +43,7 @@ public enum ProductAttributes {
     Variant("variant"),
     Vcpu("vcpu"),
     Version("version"),
+    VirtualCpu("vcpu"),
     VirtualOnly("virt_only"),
     VirtualLimit("virt_limit"),
     WarningPeriod("warning_period");
