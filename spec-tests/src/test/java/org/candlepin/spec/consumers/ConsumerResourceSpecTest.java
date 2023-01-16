@@ -14,49 +14,36 @@
  */
 package org.candlepin.spec.consumers;
 
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.collection;
-import static org.assertj.core.api.InstanceOfAssertFactories.map;
-import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertGone;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
-import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.CertificateDTO;
 import org.candlepin.dto.api.client.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTOArrayElement;
-import org.candlepin.dto.api.client.v1.ContentAccessDTO;
-import org.candlepin.dto.api.client.v1.EntitlementDTO;
-import org.candlepin.dto.api.client.v1.EnvironmentDTO;
+import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.client.v1.GuestIdDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
-import org.candlepin.dto.api.client.v1.PoolDTO;
-import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
 import org.candlepin.dto.api.client.v1.RoleDTO;
-import org.candlepin.dto.api.client.v1.SubscriptionDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
-import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
+import org.candlepin.invoker.client.ApiException;
+import org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
+import org.candlepin.spec.bootstrap.client.api.OwnerClient;
 import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.client.request.Response;
 import org.candlepin.spec.bootstrap.data.builder.ConsumerTypes;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
-import org.candlepin.spec.bootstrap.data.builder.Environments;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Permissions;
-import org.candlepin.spec.bootstrap.data.builder.Pools;
-import org.candlepin.spec.bootstrap.data.builder.Products;
 import org.candlepin.spec.bootstrap.data.builder.Roles;
-import org.candlepin.spec.bootstrap.data.builder.Subscriptions;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
@@ -70,14 +57,18 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 @SpecTest
 public class ConsumerResourceSpecTest {
     private static final String LIST_CONSUMERS_PATH = "/owners/{owner_key}/consumers";
-    private static final String LIST_ENTS_PATH = "/consumers/{consumer_uuid}/entitlements";
 
     private ApiClient adminClient;
     private OwnerDTO owner;
@@ -158,33 +149,6 @@ public class ConsumerResourceSpecTest {
     }
 
     @Test
-    public void shouldFetchConsumersWithFacts() {
-        this.adminClient.consumers().createConsumer(Consumers.random(this.owner));
-
-        ConsumerDTO target = Consumers.random(this.owner)
-            .putFactsItem("fact1", "value1");
-
-        target = this.adminClient.consumers().createConsumer(target);
-
-        ConsumerDTO decoy = Consumers.random(this.owner)
-            .putFactsItem("fact2", "value2");
-
-        this.adminClient.consumers().createConsumer(decoy);
-
-
-        List<String> facts = List.of("fact1:value1");
-
-        List<ConsumerDTOArrayElement> output = this.adminClient.consumers()
-            .searchConsumers(null, null, this.owner.getKey(), null, null, facts, null, null, null, null);
-
-        assertThat(output)
-            .isNotNull()
-            .singleElement()
-            .isNotNull()
-            .returns(target.getUuid(), ConsumerDTOArrayElement::getUuid);
-    }
-
-    @Test
     public void shouldNotAllowSettingEntitlementCountOnRegister() {
         ConsumerDTO consumer = adminClient.consumers()
             .createConsumer(Consumers.random(owner).entitlementCount(3L));
@@ -205,166 +169,6 @@ public class ConsumerResourceSpecTest {
         assertThat(newConsumer)
             .isNotNull()
             .doesNotReturn(expectedIdCert, ConsumerDTO::getIdCert);
-    }
-
-    @Test
-    public void shouldGetConsumerContentAccess() {
-        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
-
-        ContentAccessDTO contAccess = adminClient.consumers().getContentAccessForConsumer(consumer.getUuid());
-
-        assertThat(contAccess)
-            .returns(Owners.ENTITLEMENT_ACCESS_MODE, ContentAccessDTO::getContentAccessMode)
-            .extracting(ContentAccessDTO::getContentAccessModeList, as(collection(String.class)))
-            .containsExactlyInAnyOrder(Owners.ENTITLEMENT_ACCESS_MODE, Owners.SCA_ACCESS_MODE);
-    }
-
-    @Test
-    public void shouldReceivePagedDataBackWhenRequested() {
-        String ownerKey = owner.getKey();
-        ProductDTO prod1 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ProductDTO prod2 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ProductDTO prod3 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-        ProductDTO prod4 = adminClient.ownerProducts().createProductByOwner(ownerKey, Products.random());
-
-        adminClient.owners().createPool(ownerKey, Pools.random(prod1));
-        adminClient.owners().createPool(ownerKey, Pools.random(prod2));
-        adminClient.owners().createPool(ownerKey, Pools.random(prod3));
-        adminClient.owners().createPool(ownerKey, Pools.random(prod4));
-
-        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
-        adminClient.consumers().bindProduct(consumer.getUuid(), prod1.getId());
-        adminClient.consumers().bindProduct(consumer.getUuid(), prod2.getId());
-        adminClient.consumers().bindProduct(consumer.getUuid(), prod3.getId());
-        adminClient.consumers().bindProduct(consumer.getUuid(), prod4.getId());
-
-        Response response = Request.from(adminClient)
-            .setPath(LIST_ENTS_PATH)
-            .setPathParam("consumer_uuid", consumer.getUuid())
-            .addQueryParam("page", "1")
-            .addQueryParam("per_page", "2")
-            .addQueryParam("sort_by", "id")
-            .addQueryParam("order", "asc")
-            .execute();
-        assertNotNull(response);
-        assertEquals(200, response.getCode());
-        List<EntitlementDTO> ents = response.deserialize(new TypeReference<List<EntitlementDTO>>() {});
-        assertThat(ents).hasSize(2);
-        assertThat(ents.get(0).getId()).isLessThan(ents.get(1).getId());
-
-        response = Request.from(adminClient)
-            .setPath(LIST_ENTS_PATH)
-            .setPathParam("consumer_uuid", consumer.getUuid())
-            .addQueryParam("page", "2")
-            .addQueryParam("per_page", "2")
-            .addQueryParam("sort_by", "id")
-            .addQueryParam("order", "asc")
-            .execute();
-        assertNotNull(response);
-        assertEquals(200, response.getCode());
-        ents = response.deserialize(new TypeReference<List<EntitlementDTO>>() {});
-        assertThat(ents).hasSize(2);
-        assertThat(ents.get(0).getId()).isLessThan(ents.get(1).getId());
-
-        response = Request.from(adminClient)
-            .setPath(LIST_ENTS_PATH)
-            .setPathParam("consumer_uuid", consumer.getUuid())
-            .addQueryParam("page", "3")
-            .addQueryParam("per_page", "2")
-            .addQueryParam("sort_by", "id")
-            .addQueryParam("order", "asc")
-            .execute();
-        assertNotNull(response);
-        assertEquals(200, response.getCode());
-        ents = response.deserialize(new TypeReference<List<EntitlementDTO>>() {});
-        assertThat(ents).isEmpty();
-    }
-
-    @Test
-    public void shouldNotAllowAConsumerToViewEntitlementsFromADifferentConsumer() {
-        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
-        OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
-        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner2));
-        ApiClient consumer2Client = ApiClients.ssl(consumer2);
-
-        assertNotFound(() -> consumer2Client.consumers().listEntitlements(consumer.getUuid()));
-    }
-
-    @Test
-    public void shouldNotRecalculateQuantityAttributesWhenFetchingEntitlements() {
-        ProductDTO prod = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
-        adminClient.owners().createPool(owner.getKey(), Pools.random(prod));
-        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient = ApiClients.ssl(consumer);
-        adminClient.consumers().bindProduct(consumer.getUuid(), prod.getId());
-
-        List<EntitlementDTO> ents = consumerClient.consumers().listEntitlements(consumer.getUuid());
-
-        assertThat(ents)
-            .singleElement()
-            .extracting(EntitlementDTO::getPool)
-            .isNotNull()
-            .extracting(PoolDTO::getCalculatedAttributes, as(map(String.class, String.class)))
-            .doesNotContainKeys("suggested_quantity", "quantity_increment")
-            .containsKeys("compliance_type")
-            .containsEntry("compliance_type", "Standard");
-    }
-
-    @Test
-    @OnlyInHosted
-    public void shouldNotRecalculateQuantityAttributesWhenFetchingEntitlementsHosted() {
-        ProductDTO prod =  adminClient.hosted().createProduct(Products.random());
-        adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
-        AsyncJobStatusDTO job = adminClient.owners().refreshPools(this.owner.getKey(), false);
-        job = adminClient.jobs().waitForJob(job.getId());
-        assertThatJob(job).isFinished();
-        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient = ApiClients.ssl(consumer);
-        adminClient.consumers().bindProduct(consumer.getUuid(), prod.getId());
-
-        List<EntitlementDTO> ents = consumerClient.consumers().listEntitlements(consumer.getUuid());
-
-        assertThat(ents)
-            .singleElement()
-            .extracting(EntitlementDTO::getPool)
-            .isNotNull()
-            .extracting(PoolDTO::getCalculatedAttributes, as(map(String.class, String.class)))
-            .doesNotContainKeys("suggested_quantity", "quantity_increment")
-            .containsKeys("compliance_type")
-            .containsEntry("compliance_type", "Standard");
-    }
-
-    @Test
-    public void shouldBlockConsumersFromUsingOtherOrgsPools() {
-        ProductDTO prod = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
-        PoolDTO pool = adminClient.owners().createPool(owner.getKey(), Pools.random(prod));
-        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
-        adminClient.consumers().bindProduct(consumer.getUuid(), prod.getId());
-
-        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient2 = ApiClients.ssl(consumer2);
-
-        assertNotFound(() -> consumerClient2.consumers().bindPool(consumer.getUuid(), pool.getId(), 1));
-    }
-
-    @Test
-    @OnlyInHosted
-    public void shouldBlockConsumersFromUsingOtherOrgsPoolsHosted() {
-        ProductDTO prod =  adminClient.hosted().createProduct(Products.random());
-        SubscriptionDTO sub = adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
-        AsyncJobStatusDTO job = adminClient.owners().refreshPools(this.owner.getKey(), false);
-        job = adminClient.jobs().waitForJob(job.getId());
-        assertThatJob(job).isFinished();
-        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
-        adminClient.consumers().bindProduct(consumer.getUuid(), prod.getId());
-
-        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient2 = ApiClients.ssl(consumer2);
-
-        assertNotFound(() -> consumerClient2.consumers()
-            .bindPool(consumer.getUuid(), sub.getUpstreamPoolId(), 1));
     }
 
     @Test
@@ -428,54 +232,6 @@ public class ConsumerResourceSpecTest {
     }
 
     @Test
-    public void shouldSetComplianceStatusAndUpdateComplianceStatus() {
-        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
-        assertThat(consumer).returns("valid", ConsumerDTO::getEntitlementStatus);
-        ProductDTO prod = adminClient.ownerProducts()
-            .createProductByOwner(owner.getKey(), Products.random());
-
-        consumer.installedProducts(Set.of(Products.toInstalled(prod)));
-        adminClient.consumers().updateConsumer(consumer.getUuid(), consumer);
-        consumer = adminClient.consumers().getConsumer(consumer.getUuid());
-        PoolDTO pool = Pools.random(prod)
-            .upstreamPoolId(StringUtil.random("pool-"))
-            .subscriptionId(StringUtil.random("sub-"))
-            .subscriptionSubKey(StringUtil.random("subKey-"));
-        pool = adminClient.owners().createPool(owner.getKey(), pool);
-        adminClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
-        consumer = adminClient.consumers().getConsumer(consumer.getUuid());
-
-        assertThat(consumer)
-            .isNotNull()
-            .returns("valid", ConsumerDTO::getEntitlementStatus);
-    }
-
-    @Test
-    @OnlyInHosted
-    public void shouldSetComplianceStatusAndUpdateComplianceStatusHosted() {
-        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
-        assertThat(consumer).returns("valid", ConsumerDTO::getEntitlementStatus);
-        ProductDTO prod =  adminClient.hosted().createProduct(Products.random());
-
-        consumer.installedProducts(Set.of(Products.toInstalled(prod)));
-        adminClient.consumers().updateConsumer(consumer.getUuid(), consumer);
-        consumer = adminClient.consumers().getConsumer(consumer.getUuid());
-        adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
-        AsyncJobStatusDTO job = adminClient.owners().refreshPools(this.owner.getKey(), false);
-        job = adminClient.jobs().waitForJob(job.getId());
-        assertThatJob(job).isFinished();
-        List<PoolDTO> pools = adminClient.owners().listOwnerPools(owner.getKey());
-        assertThat(pools).singleElement();
-
-        adminClient.consumers().bindPool(consumer.getUuid(), pools.get(0).getId(), 1);
-        consumer = adminClient.consumers().getConsumer(consumer.getUuid());
-
-        assertThat(consumer)
-            .isNotNull()
-            .returns("valid", ConsumerDTO::getEntitlementStatus);
-    }
-
-    @Test
     public void shouldListCompliances() {
         UserDTO user1 = createUserTypeAllAccess(adminClient, owner);
         ApiClient user1Client = ApiClients.basic(user1);
@@ -505,67 +261,6 @@ public class ConsumerResourceSpecTest {
         assertThat(compliance)
             .hasSize(1)
             .containsKeys(consumer1.getUuid());
-    }
-
-    @Test
-    public void shouldNotLetConsumerUpdateEnvironmentWithIncorrectEnvName() {
-        UserDTO user = createUserTypeAllAccess(adminClient, owner);
-        ApiClient userClient = ApiClients.basic(user);
-        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient = ApiClients.ssl(consumer);
-
-        assertNotFound(() -> consumerClient.consumers()
-            .updateConsumer(StringUtil.random("uuid-"), new ConsumerDTO()
-            .environment(new EnvironmentDTO().name(StringUtil.random("name-")))));
-    }
-
-    @Test
-    public void shouldLetConsumerUpdateEnvironmentWithValidEnvNameOnly() {
-        UserDTO user = createUserTypeAllAccess(adminClient, owner);
-        ApiClient userClient = ApiClients.basic(user);
-        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient = ApiClients.ssl(consumer);
-        EnvironmentDTO env = adminClient.owners().createEnv(owner.getKey(), Environments.random());
-        assertNull(consumer.getEnvironment());
-
-        consumerClient.consumers().updateConsumer(consumer.getUuid(), new ConsumerDTO()
-            .environments(List.of(new EnvironmentDTO().name(env.getName()))));
-        consumer = adminClient.consumers().getConsumer(consumer.getUuid());
-
-        assertThat(consumer.getEnvironments())
-            .singleElement()
-            .returns(env.getId(), EnvironmentDTO::getId);
-    }
-
-    @Test
-    public void shouldLetConsumerUpdateEnvironmentWithValidEnvIdOnly() {
-        UserDTO user = createUserTypeAllAccess(adminClient, owner);
-        ApiClient userClient = ApiClients.basic(user);
-        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient = ApiClients.ssl(consumer);
-        EnvironmentDTO env = adminClient.owners().createEnv(owner.getKey(), Environments.random());
-        assertNull(consumer.getEnvironment());
-
-        consumerClient.consumers().updateConsumer(consumer.getUuid(), new ConsumerDTO()
-            .environments(List.of(new EnvironmentDTO().id(env.getId()))));
-        consumer = adminClient.consumers().getConsumer(consumer.getUuid());
-
-        assertThat(consumer.getEnvironments())
-            .singleElement()
-            .returns(env.getId(), EnvironmentDTO::getId);
-    }
-
-    @Test
-    public void shouldLetNotConsumerUpdateEnvironmentWithIncorrectEnvId() {
-        UserDTO user = createUserTypeAllAccess(adminClient, owner);
-        ApiClient userClient = ApiClients.basic(user);
-        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient = ApiClients.ssl(consumer);
-        adminClient.owners().createEnv(owner.getKey(), Environments.random());
-        assertNull(consumer.getEnvironment());
-
-        assertNotFound(() -> consumerClient.consumers().updateConsumer(consumer.getUuid(), new ConsumerDTO()
-            .environments(List.of(new EnvironmentDTO().id(StringUtil.random("invalid-"))))));
     }
 
     @Test
@@ -711,6 +406,485 @@ public class ConsumerResourceSpecTest {
         adminClient.consumers().createConsumer(Consumers.random(owner));
 
         assertNotFound(() -> adminClient.consumers().consumerExists(StringUtil.random("unknown")));
+    }
+
+    @Test
+    public void shouldReturnA204WhenCheckingIfARealConsumerExists() {
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        Response response = Request.from(adminClient)
+            .setPath("/consumers/{consumer_uuid}/exists")
+            .setMethod("HEAD")
+            .setPathParam("consumer_uuid", consumer.getUuid())
+            .execute();
+
+        assertThat(response)
+            .isNotNull()
+            .returns(204, Response::getCode);
+    }
+
+    @Test
+    public void shouldReturnA410WhenCheckingIfADeletedConsumerExists() {
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        adminClient.consumers().deleteConsumer(consumer.getUuid());
+        StatusCodeAssertions.assertThatStatus(() ->
+            adminClient.consumers().consumerExists(consumer.getUuid()))
+            .isGone();
+    }
+
+    @Test
+    public void shouldAllowConsumerToCheckForSelfExistence() {
+        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        consumerClient.consumers().consumerExists(consumer.getUuid());
+    }
+
+    @Test
+    public void shouldNotAllowConsumerToCheckExistenceOfOtherConsumers() {
+        // This test should expect a 404 rather than a 503, as we're explicitly minimizing the amount
+        //  of information provided in the no-permission case. Consumer 1 has no access to consumer 2,
+        //  and should not be able to determine whether consumer 2 even exists.
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer1);
+        assertNotFound(() -> consumerClient.consumers().consumerExists(consumer2.getUuid()));
+    }
+
+    @Test
+    public void shouldAllowAdminToCheckIfAnyConsumerExists() {
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        adminClient.consumers().consumerExists(consumer1.getUuid());
+        adminClient.consumers().consumerExists(consumer2.getUuid());
+    }
+
+    @Test
+    public void shouldNotAllowBulkCheckExistenceWhenNullInputIsProvided() {
+        assertBadRequest(() -> adminClient.consumers().consumerExistsBulk(null));
+    }
+
+    @Test
+    public void shouldReturnEmptyBodyWhenAllConsumerUuidExistsForBulkConsumerExistenceCheck() {
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        Response response = Request.from(adminClient)
+            .setPath("/consumers/exists")
+            .setMethod("POST")
+            .setBody(List.of(consumer1.getUuid()))
+            .execute();
+        assertThat(response.getBody()).isEmpty();
+    }
+
+    @Test
+    public void shouldRaiseResourceNotFoundWhenConsumerDoesNotExistForBulkConsumerExistenceCheck() {
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        Set consumerUuids = Set.of(consumer1.getUuid(), "test_uuid", "more_test_uuid");
+        assertNotFound(() -> adminClient.consumers().consumerExistsBulk(consumerUuids));
+    }
+
+    @Test
+    public void shouldReturnNonExistingIdsForBulkConsumerExistenceCheck() {
+        ConsumerDTO consumer1 = adminClient.consumers().createConsumer(Consumers.random(owner));
+        Set<String> consumerUuids = Set.of(consumer1.getUuid(), "test_uuid_1", "test_uuid_2");
+        assertNotFound(() -> adminClient.consumers().consumerExistsBulk(consumerUuids))
+            .hasMessageContainingAll("test_uuid_1", "test_uuid_2");
+    }
+
+    @Test
+    public void shouldLetAConsumerViewTheirOwnInformation() {
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        assertThat(consumerClient.consumers().getConsumer(consumer.getUuid()))
+            .returns(consumer.getUuid(), ConsumerDTO::getUuid);
+    }
+
+    @Test
+    public void shouldNotLetAConsumerViewAnotherConsumersInformation() {
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        ConsumerDTO consumer1 = userClient.consumers().createConsumer(Consumers.random(owner));
+        ConsumerDTO consumer2 = userClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumer1Client = ApiClients.ssl(consumer1);
+        assertNotFound(() -> consumer1Client.consumers().getConsumer(consumer2.getUuid()));
+    }
+
+    @Test
+    public void shouldLetAConsumerRegisterWithContentTags() {
+        OwnerClient ownerClient = adminClient.owners();
+        OwnerDTO someOwner = ownerClient.createOwner(Owners.random());
+        ApiClient someUser = ApiClients.basic(UserUtil.createUser(adminClient, someOwner));
+        Set<String> tags = Set.of("awesomeos", "awesomeos-workstation", "otherproduct");
+        ConsumerDTO consumer = someUser.consumers().createConsumer(
+            Consumers.random(someOwner).contentTags(tags));
+        assertThat(consumer.getContentTags())
+            .containsAll(tags);
+    }
+
+    @Test
+    public void shouldLetAConsumerRegisterWithAnnotations() {
+        OwnerClient ownerClient = adminClient.owners();
+        OwnerDTO someOwner = ownerClient.createOwner(Owners.random());
+        ApiClient someUser = ApiClients.basic(UserUtil.createUser(adminClient, someOwner));
+        String annotations = "here is a piece of information, here is another piece.";
+        ConsumerDTO consumer = someUser.consumers().createConsumer(
+            Consumers.random(someOwner).annotations(annotations));
+        assertThat(consumer)
+            .returns(annotations, ConsumerDTO::getAnnotations);
+    }
+
+    @Test
+    public void shouldLetAConsumerRegisterAndSetCreatedAndLastCheckinDates() {
+        OwnerClient ownerClient = adminClient.owners();
+        OwnerDTO someOwner = ownerClient.createOwner(Owners.random());
+        ApiClient someUser = ApiClients.basic(UserUtil.createUser(adminClient, someOwner));
+        OffsetDateTime created = OffsetDateTime.now().minusDays(2L).truncatedTo(ChronoUnit.SECONDS);
+        OffsetDateTime checkin = OffsetDateTime.now().minusDays(1L).truncatedTo(ChronoUnit.SECONDS);
+
+        ConsumerDTO consumer = someUser.consumers().createConsumer(
+            Consumers.random(someOwner).created(created).lastCheckin(checkin));
+        assertThat(consumer)
+            .returns(true, x -> created.isEqual(x.getCreated()))
+            .returns(true, x -> checkin.isEqual(x.getLastCheckin()));
+        // reload to be sure it was persisted
+        consumer = someUser.consumers().getConsumer(consumer.getUuid());
+        assertThat(consumer)
+            .returns(true, x -> created.isEqual(x.getCreated()))
+            .returns(true, x -> checkin.isEqual(x.getLastCheckin()));
+    }
+
+    @Test
+    public void shouldLetAConsumerRegisterAndDisableAutoheal() {
+        OwnerClient ownerClient = adminClient.owners();
+        OwnerDTO someOwner = ownerClient.createOwner(Owners.random());
+        ApiClient someUser = ApiClients.basic(UserUtil.createUser(adminClient, someOwner));
+
+        String serviceLevel = "test_service_level";
+        ConsumerDTO consumer = someUser.consumers().createConsumer(
+            Consumers.random(someOwner).autoheal(false));
+        assertThat(consumer)
+            .returns(false, ConsumerDTO::getAutoheal);
+        // reload to be sure it was persisted
+        consumer = someUser.consumers().getConsumer(consumer.getUuid());
+        assertThat(consumer)
+            .returns(false, ConsumerDTO::getAutoheal);
+    }
+
+    @Test
+    public void shouldAllowAConsumerToUpdateTheirAutohealFlag() {
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        consumer = consumerClient.consumers().getConsumer(consumer.getUuid());
+        assertThat(consumer.getAutoheal()).isTrue();
+
+        consumerClient.consumers().updateConsumer(consumer.getUuid(), new ConsumerDTO().autoheal(false));
+        consumer = consumerClient.consumers().getConsumer(consumer.getUuid());
+        assertThat(consumer.getAutoheal()).isFalse();
+
+        // Null update shouldn't modify the setting:
+        consumerClient.consumers().updateConsumer(consumer.getUuid(), new ConsumerDTO());
+        consumer = consumerClient.consumers().getConsumer(consumer.getUuid());
+        assertThat(consumer.getAutoheal()).isFalse();
+    }
+
+    @Test
+    public void shouldNotLetAnOwnerReregisterAnotherOwnersConsumer() {
+        OwnerClient ownerClient = adminClient.owners();
+        OwnerDTO linuxNet = ownerClient.createOwner(Owners.random());
+        OwnerDTO greenfield = ownerClient.createOwner(Owners.random());
+
+        ApiClient linuxBill = ApiClients.basic(UserUtil.createUser(adminClient, linuxNet));
+        ApiClient greenRalph = ApiClients.basic(UserUtil.createUser(adminClient, greenfield));
+
+        ConsumerDTO system1 = linuxBill.consumers().createConsumer(Consumers.random(linuxNet));
+        assertNotFound(() -> greenRalph.consumers().regenerateIdentityCertificates(system1.getUuid()));
+    }
+
+    @Test
+    public void shouldAllowConsumerToSpecifyTheirOwnUuid() {
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        ConsumerDTO consumer = Consumers.random(owner)
+            .uuid("custom-uuid");
+        assertThat(consumer).returns("custom-uuid", ConsumerDTO::getUuid);
+    }
+
+    @Test
+    public void shouldNotAllowTheSameUuidToBeRegisteredTwice() {
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        String testUuid = StringUtil.random("ALF");
+        // Register the UUID initially
+        userClient.consumers().createConsumer(Consumers.random(owner).uuid(testUuid));
+
+        // Second registration should be denied
+        assertBadRequest(() -> userClient.consumers().createConsumer(Consumers.random(owner).uuid(testUuid)));
+    }
+
+    @Test
+    public void shouldNotLetAnOwnerRegisterWithUuidOfAnotherOwnersConsumer() {
+        OwnerClient ownerClient = adminClient.owners();
+        OwnerDTO linuxNet = ownerClient.createOwner(Owners.random());
+        OwnerDTO greenfield = ownerClient.createOwner(Owners.random());
+
+        ApiClient linuxBill = ApiClients.basic(UserUtil.createUser(adminClient, linuxNet));
+        ApiClient greenRalph = ApiClients.basic(UserUtil.createUser(adminClient, greenfield));
+
+        ConsumerDTO system1 = linuxBill.consumers().createConsumer(Consumers.random(linuxNet));
+        assertBadRequest(() -> greenRalph.consumers().createConsumer(
+            Consumers.random(greenfield).uuid(system1.getUuid())));
+    }
+
+    @Test
+    public void shouldNotAllowTheSystemUuidToBeUsedToMatchAConsumerAcrossOrgs() {
+        OwnerDTO owner1 = adminClient.owners().createOwner(Owners.random());
+        ApiClient userClient1 = ApiClients.basic(UserUtil.createUser(adminClient, owner1));
+        OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
+        ApiClient userClient2 = ApiClients.basic(UserUtil.createUser(adminClient, owner2));
+
+        String hostName = StringUtil.random("hostname");
+        String systemId = StringUtil.random("system");
+
+        ConsumerDTO test1 = Consumers.random(owner1)
+            .name(hostName)
+            .facts(Map.of("dmi.system.uuid", systemId, "virt.is_guest", "false"));
+        test1 = userClient1.consumers().createConsumer(test1);
+
+        // different org should not use the same consumer record because of system uuid
+        ConsumerDTO test2 = Consumers.random(owner2)
+            .name(hostName)
+            .facts(Map.of("dmi.system.uuid", systemId, "virt.is_guest", "false"));
+        test2 = userClient2.consumers().createConsumer(test2);
+        assertThat(adminClient.consumers().getConsumer(test2.getUuid()))
+            .doesNotReturn(test1.getUuid(), ConsumerDTO::getUuid);
+
+        // same org should use the same consumer record because of system uuid
+        ConsumerDTO test3 = Consumers.random(owner1)
+            .name(hostName)
+            .facts(Map.of("dmi.system.uuid", systemId, "virt.is_guest", "false"));
+        test3 = userClient1.consumers().createConsumer(test3);
+        assertThat(adminClient.consumers().getConsumer(test3.getUuid()))
+            .returns(test1.getUuid(), ConsumerDTO::getUuid);
+
+    }
+
+    @Test
+    public void shouldAllowAConsumerToRegisterAndUpdateInstalledProducts() {
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        String pid1 = "918237";
+        String pid2 = "871234";
+        String pid3 = "712717";
+        Set<ConsumerInstalledProductDTO> installed = Set.of(
+            new ConsumerInstalledProductDTO().productId(pid1).productName("My Installed Product"),
+            new ConsumerInstalledProductDTO().productId(pid2).productName("Another Installed Product"));
+
+        // Set a single fact, so we can make sure it doesn't get clobbered:
+        Map<String, String> facts = Map.of("system.machine", "x86_64");
+        ConsumerDTO consumer = Consumers.random(owner)
+            .installedProducts(installed);
+        consumer = userClient.consumers().createConsumer(consumer);
+        assertThat(consumer.getInstalledProducts())
+            .hasSize(2)
+            .map(ConsumerInstalledProductDTO::getProductId)
+            .containsAll(List.of(pid1, pid2));
+
+        // Now update the installed packages:
+        installed = Set.of(
+            new ConsumerInstalledProductDTO().productId(pid1).productName("My Installed Product"),
+            new ConsumerInstalledProductDTO().productId(pid3).productName("Third Installed Product"));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        consumerClient.consumers().updateConsumer(consumer.getUuid(),
+            new ConsumerDTO().installedProducts(installed));
+        consumer = userClient.consumers().getConsumer(consumer.getUuid());
+        assertThat(consumer.getInstalledProducts())
+            .hasSize(2)
+            .map(ConsumerInstalledProductDTO::getProductId)
+            .containsAll(List.of(pid1, pid3));
+
+        // Make sure facts weren't clobbered:
+        assertThat(consumer.getFacts()).hasSize(1);
+    }
+
+    @Test
+    public void shouldNotAllowAnRhsmClientToRegisterAManifestConsumer() {
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        userClient.getApiClient().addDefaultHeader("user-agent", "RHSM/1.0 (cmd=subscription-manager)");
+        ConsumerDTO consumer = Consumers.random(owner).type(ConsumerTypes.Candlepin.value());
+        assertBadRequest(() -> userClient.consumers().createConsumer(consumer));
+    }
+
+    @Test
+    public void shouldAllowAConsumerFactToBeRemovedWhenUpdatedBadly() {
+        // typing for certain facts. violation means value for fact is entirely removed
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        // Set a single fact, so we can make sure it doesn't get clobbered:
+        Map<String, String> facts = Map.of("system.machine", "x86_64",
+            "lscpu.socket(s)", "4",
+            "cpu.cpu(s)", "12");
+        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner).facts(facts));
+
+        // Now update the facts, must send all:
+        facts = Map.of("system.machine", "x86_64",
+            "lscpu.socket(s)", "four",
+            "cpu.cpu(s)", "8",
+            // these facts don't need to be an int, they are ranges
+            "lscpu.numa_node0_cpu(s)", "0-3",
+            "lscpu.on-line_cpu(s)_list", "0-3");
+
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+        consumerClient.consumers().updateConsumer(consumer.getUuid(), new ConsumerDTO().facts(facts));
+        consumer = consumerClient.consumers().getConsumer(consumer.getUuid());
+
+        // Make sure facts weren't clobbered:
+        assertThat(consumer.getFacts())
+            .returns("x86_64", x -> x.get("system.machine"))
+            .returns(null, x -> x.get("lscpu.socket(s)"))
+            .returns("8", x -> x.get("cpu.cpu(s)"))
+            // range facts should be left alone, rhbz #950462 shows
+            // them being ignored
+            .returns("0-3", x -> x.get("lscpu.numa_node0_cpu(s)"))
+            .returns("0-3", x -> x.get("lscpu.on-line_cpu(s)_list"));
+    }
+
+    @Test
+    public void shouldReturnCorrectExceptionForConstraintViolations() {
+        final ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        assertBadRequest(() ->
+            userClient.consumers().createConsumer(Consumers.random(owner).name("a".repeat(256))));
+        assertBadRequest(() ->
+            userClient.consumers().createConsumer(Consumers.random(owner), "a".repeat(256), owner.getKey(),
+            null, true));
+        assertBadRequest(() ->
+            userClient.consumers().createConsumer(Consumers.random(owner).name(null).username(null)));
+    }
+
+    @Test
+    public void shouldReturn404Or410WhenConcurrentRegisterIsDeletedByAnotherRequest() throws Exception {
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
+
+        int totalThreads = 50;
+        AtomicInteger threadCount = new AtomicInteger();
+        List<Exception> unexpectedExceptions = new ArrayList<>();
+        List<ApiException> expectedExceptions = new ArrayList<>();
+        List<Thread> threads = new ArrayList<>();
+        IntStream.range(0, totalThreads).forEach(entry -> {
+            Thread t = new Thread(() -> {
+                try {
+                    userClient.consumers().deleteConsumer(consumer.getUuid());
+                }
+                catch (ApiException e) {
+                    if (e.getCode() == 410 || e.getCode() == 404) {
+                        expectedExceptions.add(e);
+                    }
+                    else {
+                        unexpectedExceptions.add(e);
+                    }
+                }
+                catch (Exception e) {
+                    unexpectedExceptions.add(e);
+                }
+                threadCount.getAndIncrement();
+            });
+            threads.add(t);
+        });
+
+        threads.forEach(Thread::start);
+        for (Thread thread : threads) {
+            thread.join();
+        }
+        assertThat(threadCount.get()).isEqualTo(totalThreads);
+        assertThat(unexpectedExceptions).isEmpty();
+        assertThat(expectedExceptions).isNotEmpty();
+
+        // Note: 404 can be returned in cases where a request was made after the initial deletion.
+        //  With a large number of requests, we should expect 1 or more of each.
+        assertThat(expectedExceptions)
+            .filteredOn(x -> x.getCode() == 410 || x.getCode() == 404)
+            .hasSize(expectedExceptions.size());
+    }
+
+    @Test
+    public void shouldFetchConsumersWithFacts() {
+        this.adminClient.consumers().createConsumer(Consumers.random(this.owner));
+
+        ConsumerDTO target = Consumers.random(this.owner)
+            .putFactsItem("fact1", "value1");
+
+        target = this.adminClient.consumers().createConsumer(target);
+
+        ConsumerDTO decoy = Consumers.random(this.owner)
+            .putFactsItem("fact2", "value2");
+
+        this.adminClient.consumers().createConsumer(decoy);
+
+
+        List<String> facts = List.of("fact1:value1");
+
+        List<ConsumerDTOArrayElement> output = this.adminClient.consumers()
+            .searchConsumers(null, null, this.owner.getKey(), null, null, facts, null, null, null, null);
+
+        assertThat(output)
+            .isNotNull()
+            .singleElement()
+            .isNotNull()
+            .returns(target.getUuid(), ConsumerDTOArrayElement::getUuid);
+    }
+
+    @Test
+    public void shouldIgnoreDuplicateFacts() {
+        ApiClient userClient = ApiClients.basic(UserUtil.createUser(adminClient, owner));
+        Map<String, String> facts = Map.of("system.machine", "x86_64",
+            "System.machine", "x86_64",
+            "System.Machine", "x86_64",
+            "SYSTEM.MACHINE", "x86_64");
+        ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner).facts(facts));
+        assertThat(consumer.getFacts()).hasSize(1);
+    }
+
+    @Test
+    public void shouldFilterConsumersByFactsAndNothingElse() {
+        UserDTO user = UserUtil.createUser(adminClient, owner);
+        ApiClient userClient = ApiClients.basic(user);
+        String valueRand = StringUtil.random("");
+        userClient.consumers().createConsumer(Consumers.random(owner)
+            .facts(Map.of("key", valueRand, "otherkey", "other" + valueRand)));
+        userClient.consumers().createConsumer(Consumers.random(owner)
+            .facts(Map.of("key", valueRand, "otherkey", "some" + valueRand)));
+        userClient.consumers().createConsumer(Consumers.random(owner)
+            .facts(Map.of("newkey", "some" + valueRand)));
+        assertThat(adminClient.consumers().searchConsumers(null, null, null, null,
+            null, List.of("*key*:*" + valueRand + "*"), null, null, null, null))
+            .hasSize(3);
+    }
+
+    @Test
+    public void shouldFilterConsumersByFactsAndUuids() {
+        UserDTO user = UserUtil.createUser(adminClient, owner);
+        ApiClient userClient = ApiClients.basic(user);
+        String valueRand = StringUtil.random("");
+        ConsumerDTO consumer1 = userClient.consumers().createConsumer(Consumers.random(owner)
+            .facts(Map.of("key", valueRand, "otherkey", "other" + valueRand)));
+        ConsumerDTO consumer2 = userClient.consumers().createConsumer(Consumers.random(owner)
+            .facts(Map.of("key", valueRand, "otherkey", "some" + valueRand)));
+        ConsumerDTO consumer3 = userClient.consumers().createConsumer(Consumers.random(owner)
+            .facts(Map.of("newkey", "some" + valueRand)));
+
+        List<String> expectedUuids = List.of(consumer1.getUuid(), consumer2.getUuid());
+        List<ConsumerDTOArrayElement> consumers = adminClient.consumers().searchConsumers(null, null, null,
+            expectedUuids, null, List.of("oth*key*:*" + valueRand), null, null, null, null);
+        assertThat(consumers).hasSize(2)
+            .map(x -> x.getUuid())
+            .containsAll(expectedUuids);
+    }
+
+    @Test
+    public void shouldProperlyEscapeValuesToAvoidSqlInjection() {
+        UserDTO user = UserUtil.createUser(adminClient, owner);
+        ApiClient userClient = ApiClients.basic(user);
+        String valueRand = StringUtil.random("");
+        ConsumerDTO consumer1 = userClient.consumers().createConsumer(Consumers.random(owner)
+            .facts(Map.of("trolol", valueRand + "); DROP TABLE cp_consumer;")));
+        assertThat(adminClient.consumers().searchConsumers(null, null, null, null,
+            null, List.of("trolol:" + valueRand + "); DROP TABLE cp_consumer;"), null, null, null, null))
+            .singleElement()
+            .returns(consumer1.getUuid(), x -> x.getUuid());
     }
 
     private UserDTO createUserTypeAllAccess(ApiClient client, OwnerDTO owner) {
