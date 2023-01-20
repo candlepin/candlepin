@@ -8,7 +8,7 @@ gem 'pmd'
 gem 'stringex'
 gem 'digest-murmurhash'
 gem 'httpclient'
-gem 'activesupport', '~> 4.2'
+gem 'activesupport', '~> 6.1'
 gem 'rubyzip', '~> 1.3.0'
 
 # Remove this once we are fully using the new Ruby bindings
