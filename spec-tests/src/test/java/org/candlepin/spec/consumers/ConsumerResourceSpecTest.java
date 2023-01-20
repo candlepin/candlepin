@@ -598,8 +598,9 @@ public class ConsumerResourceSpecTest {
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
         ConsumerDTO consumer2 = adminClient.consumers().createConsumer(Consumers.random(owner2));
 
+        List<String> uuids = List.of(consumer1.getUuid(), consumer2.getUuid());
         List<ConsumerDTOArrayElement> consumers = adminClient.consumers()
-            .searchConsumers(null, Set.of("system"), null, null, null, null, null, null, null, null);
+            .searchConsumers(null, Set.of("system"), null, uuids, null, null, null, null, null, null);
 
         assertThat(consumers)
             .extracting(ConsumerDTOArrayElement::getUuid)

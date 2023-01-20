@@ -108,7 +108,7 @@ public class TransactionalTest  {
     }
 
     private <O> Transactional<O> buildTransactional() {
-        return new Transactional<O>(this.entityManager);
+        return new Transactional<>(this.entityManager);
     }
 
     @Test
@@ -149,6 +149,7 @@ public class TransactionalTest  {
         assertThrows(IllegalArgumentException.class, () -> transactional.onCommit(null));
     }
 
+    @Test
     public void testSetRollbackListener() {
         Transactional transactional = this.buildTransactional();
 
@@ -211,7 +212,7 @@ public class TransactionalTest  {
     public void testCannotExecuteWithoutAction() {
         Transactional transactional = this.buildTransactional();
 
-        assertThrows(IllegalStateException.class, () -> transactional.execute());
+        assertThrows(IllegalStateException.class, transactional::execute);
     }
 
     @Test
@@ -220,11 +221,11 @@ public class TransactionalTest  {
         Transactional.Action action = mock(Transactional.Action.class);
 
         Object expected = "output";
-        doReturn(expected).when(action).execute(new Object[] {});
+        doReturn(expected).when(action).execute();
 
         Object actual = transactional.execute(action);
 
-        verify(action, times(1)).execute(new Object[] {});
+        verify(action, times(1)).execute();
         assertEquals(expected, actual);
     }
 
@@ -234,11 +235,11 @@ public class TransactionalTest  {
         Transactional.Action action = mock(Transactional.Action.class);
 
         Object expected = "output";
-        doReturn(expected).when(action).execute(any());
+        doReturn(expected).when(action).execute(any(Object[].class));
 
         Object actual = transactional.execute(action, "arg1", "arg2", "arg3");
 
-        verify(action, times(1)).execute(new Object[] { "arg1", "arg2", "arg3" });
+        verify(action, times(1)).execute("arg1", "arg2", "arg3");
         assertEquals(expected, actual);
     }
 
@@ -256,12 +257,12 @@ public class TransactionalTest  {
         Transactional.Action action = mock(Transactional.Action.class);
         Object expected = "output";
 
-        doReturn(expected).when(action).execute(any());
+        doReturn(expected).when(action).execute(any(Object[].class));
 
         Object actual = transactional.run(action)
             .execute();
 
-        verify(action, times(1)).execute(new Object[0]);
+        verify(action, times(1)).execute();
         assertEquals(expected, actual);
     }
 
@@ -271,12 +272,12 @@ public class TransactionalTest  {
         Transactional.Action action = mock(Transactional.Action.class);
         Object expected = "output";
 
-        doReturn(expected).when(action).execute(any());
+        doReturn(expected).when(action).execute(any(Object[].class));
 
         Object actual = transactional.run(action)
             .execute("arg1", "arg2", "arg3");
 
-        verify(action, times(1)).execute(new Object[] { "arg1", "arg2", "arg3" });
+        verify(action, times(1)).execute("arg1", "arg2", "arg3");
         assertEquals(expected, actual);
     }
 
@@ -287,7 +288,7 @@ public class TransactionalTest  {
 
         this.transaction.begin();
 
-        assertThrows(IllegalStateException.class, () -> { transactional.execute(); });
+        assertThrows(IllegalStateException.class, transactional::execute);
     }
 
     @Test
@@ -313,8 +314,8 @@ public class TransactionalTest  {
 
         transactional.run(action);
 
-        doThrow(new SecurityException("kaboom")).when(action).execute(any());
-        assertThrows(TransactionExecutionException.class, () -> transactional.execute());
+        doThrow(new SecurityException("kaboom")).when(action).execute(any(Object[].class));
+        assertThrows(TransactionExecutionException.class, transactional::execute);
 
         verify(this.transaction, times(1)).begin();
         verify(this.transaction, times(1)).rollback();
@@ -407,7 +408,7 @@ public class TransactionalTest  {
 
         transactional.run(args -> { transaction.commit(); return null; });
 
-        assertThrows(IllegalStateException.class, () -> transactional.execute());
+        assertThrows(IllegalStateException.class, transactional::execute);
     }
 
     @Test
@@ -417,7 +418,7 @@ public class TransactionalTest  {
 
         transactional.run(args -> { transaction.rollback(); return null; });
 
-        assertThrows(IllegalStateException.class, () -> transactional.execute());
+        assertThrows(IllegalStateException.class, transactional::execute);
     }
 
     @Test
@@ -482,10 +483,10 @@ public class TransactionalTest  {
 
     @Test
     public void testSingleCommitValidatorCommitsOnPass() {
-        Transactional<String> transactional = this.<String>buildTransactional();
+        Transactional<String> transactional = this.buildTransactional();
 
         transactional.run(args -> "abc")
-            .commitIf(output -> "abc".equals(output))
+            .commitIf("abc"::equals)
             .execute();
 
         verify(this.transaction, times(1)).begin();
@@ -494,11 +495,11 @@ public class TransactionalTest  {
     }
 
     @Test
-    public void testSingleCommitValidatorRollsbackOnFail() {
-        Transactional<String> transactional = this.<String>buildTransactional();
+    public void testSingleCommitValidatorRollbacksOnFail() {
+        Transactional<String> transactional = this.buildTransactional();
 
         transactional.run(args -> "abc")
-            .commitIf(output -> "123".equals(output))
+            .commitIf("123"::equals)
             .execute();
 
         verify(this.transaction, times(1)).begin();
@@ -508,7 +509,7 @@ public class TransactionalTest  {
 
     @Test
     public void testMultiCommitValidatorCommitIfAllPass() {
-        Transactional<String> transactional = this.<String>buildTransactional();
+        Transactional<String> transactional = this.buildTransactional();
 
         transactional.run(args -> "abc")
             .commitIf(output -> output.startsWith("a"))
@@ -524,7 +525,7 @@ public class TransactionalTest  {
     @ParameterizedTest
     @ValueSource(strings = {"1", "2", "3"})
     public void testMultiCommitValidatorRollbackIfAnyFail(String fail) {
-        Transactional<String> transactional = this.<String>buildTransactional();
+        Transactional<String> transactional = this.buildTransactional();
 
         transactional.run(args -> fail)
             .commitIf(output -> !"1".equals(output))
@@ -539,10 +540,10 @@ public class TransactionalTest  {
 
     @Test
     public void testSingleRollbackValidatorRollbackOnPass() {
-        Transactional<String> transactional = this.<String>buildTransactional();
+        Transactional<String> transactional = this.buildTransactional();
 
         transactional.run(args -> "abc")
-            .rollbackIf(output -> "abc".equals(output))
+            .rollbackIf("abc"::equals)
             .execute();
 
         verify(this.transaction, times(1)).begin();
@@ -552,10 +553,10 @@ public class TransactionalTest  {
 
     @Test
     public void testSingleRollbackValidatorCommitsOnFail() {
-        Transactional<String> transactional = this.<String>buildTransactional();
+        Transactional<String> transactional = this.buildTransactional();
 
         transactional.run(args -> "abc")
-            .rollbackIf(output -> "123".equals(output))
+            .rollbackIf("123"::equals)
             .execute();
 
         verify(this.transaction, times(1)).begin();
@@ -566,7 +567,7 @@ public class TransactionalTest  {
     @ParameterizedTest
     @ValueSource(strings = {"1", "2", "3"})
     public void testMultiRollbackValidatorRollbackIfAnyPass(String fail) {
-        Transactional<String> transactional = this.<String>buildTransactional();
+        Transactional<String> transactional = this.buildTransactional();
 
         transactional.run(args -> fail)
             .rollbackIf(output -> !"1".equals(output))
@@ -581,7 +582,7 @@ public class TransactionalTest  {
 
     @Test
     public void testMultiRollbackValidatorCommitIfAllFail() {
-        Transactional<String> transactional = this.<String>buildTransactional();
+        Transactional<String> transactional = this.buildTransactional();
 
         transactional.run(args -> "abc")
             .rollbackIf(output -> output.startsWith("x"))
