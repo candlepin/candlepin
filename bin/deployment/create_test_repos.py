@@ -284,14 +284,13 @@ def add_packages_to_repo(packages_list, repo_path, package_definitions):
             log.info("  Package {pkg_name} not defined".format(pkg_name=pkg_name))
 
 
-def get_owners():
+def get_owners(session):
     """
     Get list of owner names.
     """
     try:
-        response = requests.get(
+        response = session.get(
             CANLDEPIN_SERVER_BASE_URL + 'owners/',
-            auth=(CANDLEPIN_USER, CANDLEPIN_PASS),
             verify=False)
     except Exception as err:
         log.error('Unable to get owner: {err}'.format(err=str(err)))
@@ -348,6 +347,9 @@ def generate_repositories(repo_definitions, package_definitions):
         )
         return None
 
+    session = requests.Session()
+    session.auth = (CANDLEPIN_USER, CANDLEPIN_PASS)
+
     for repo in repo_definitions:
         repo_path = REPO_ROOT_DIR + repo['content_url']
         log.info("creating repository %s in %s" % (repo['name'], repo_path ))
@@ -369,7 +371,7 @@ def generate_repositories(repo_definitions, package_definitions):
         run_command('createrepo_c %s' % repo_path)
 
         # Try to get product certificate from candlepin server and add it to repository
-        cert = get_productid_cert(repo)
+        cert = get_productid_cert(session, repo)
         if cert is not None:
             # Note: the cert has to have name 'productid', because modifyrepo
             # command creates new record in repomd.xml according name of file
@@ -394,11 +396,11 @@ def generate_repositories(repo_definitions, package_definitions):
 
     # Create symbolic links for owners (golden ticket)
     log.info("\nCreating symbolic links for owners...")
-    owner_names = get_owners()
+    owner_names = get_owners(session)
     generate_symlinks_for_owners(owner_names)
 
 
-def get_productid_cert(repo_definition, owner='admin'):
+def get_productid_cert(session, repo_definition, owner='admin'):
     """
     This function tries to get product-id certificate for given repository
     """
@@ -417,9 +419,8 @@ def get_productid_cert(repo_definition, owner='admin'):
     # When the certificate cannot be found on the disk, then try to get certificate
     # from the candlepin server
     try:
-        r = requests.get(
+        r = session.get(
             CANLDEPIN_SERVER_BASE_URL + 'owners/' + owner + '/products/' + str(product_id) + '/certificate',
-            auth=(CANDLEPIN_USER, CANDLEPIN_PASS),
             verify=False)
     except Exception as err:
         log.error('Unable to get product certificate: {err}'.format(err=str(err)))

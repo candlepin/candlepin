@@ -81,6 +81,9 @@ class Candlepin:
         self.password = password
         self.prefix = prefix
 
+        self.session = requests.Session()
+        self.session.auth = (self.username, self.password)
+
         self.determine_mode()
 
     def build_url(self, endpoint):
@@ -136,9 +139,8 @@ class Candlepin:
         log.debug('Sending request: %s %s (params: %s, headers: %s, data: %s)',
             req_type, endpoint, query_params, headers, data)
 
-        response = requests.request(req_type, self.build_url(endpoint),
+        response = self.session.request(req_type, self.build_url(endpoint),
             json=data,
-            auth=(self.username, self.password),
             params=query_params,
             headers=headers,
             verify=False)
