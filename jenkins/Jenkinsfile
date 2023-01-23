@@ -88,6 +88,7 @@ pipeline {
                     environment {
                         CANDLEPIN_DATABASE = 'postgresql'
                         CP_TEST_ARGS = '-r'
+                        OS_IMAGE = 'cs9'
                     }
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
@@ -128,6 +129,7 @@ pipeline {
                     environment {
                         CANDLEPIN_DATABASE = 'postgresql'
                         CP_TEST_ARGS = '-H -k'
+                        OS_IMAGE = 'cs8'
                     }
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'

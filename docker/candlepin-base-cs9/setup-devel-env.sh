@@ -21,7 +21,7 @@ PACKAGES=(
     hostname
     java-11-openjdk-devel
     java-$JAVA_VERSION-openjdk-devel
-    jss
+    jss-5.0.3-1.el9 # last jss package that support Java version 11
     mariadb
     openssl
     pki-servlet-engine
@@ -30,6 +30,8 @@ PACKAGES=(
     python3-pip
     python3-pyyaml
     python3-requests
+    python3-libxml2
+    python-unversioned-command
     rpm-build
     rpm-sign
     rsyslog
@@ -39,11 +41,7 @@ PACKAGES=(
     zlib-devel
 )
 
-dnf module enable -y pki-core pki-deps
-
 dnf install -y ${PACKAGES[@]}
-
-sh -c 'alternatives --set python $(which python3)'
 
 # Setup for autoconf:
 mkdir /etc/candlepin
@@ -70,7 +68,8 @@ curl -O https://raw.githubusercontent.com/rvm/rvm/master/binscripts/rvm-installe
 gpg2 --verify rvm-installer.asc && bash rvm-installer stable
 source /etc/profile.d/rvm.sh || true
 
-rvm install 2.5.3
+rvm pkg install openssl
+rvm install ruby-2.5.3 --with-openssl-dir=/usr/local/rvm/usr
 rvm use --default 2.5.3
 set -v
 

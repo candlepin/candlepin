@@ -28,14 +28,14 @@ OPTIONS:
 USAGE
 }
 
-while getopts ":c:mn:pxqlde" opt; do
+while getopts ":c:mn:p:xqlde" opt; do
   case $opt in
     c) TEST_CMD="$OPTARG";;
     m) COMPOSE_ARGS="-f $DIR/docker-compose-mysql.yml";
        chcon -Rt svirt_sandbox_file_t $DIR/mysql.cnf;
        sudo chown 999:999 $DIR/mysql.cnf;;
     n) PROJ_NAME="-p $OPTARG";;
-    p) COMPOSE_ARGS="-f $DIR/docker-compose-postgres.yml";;
+    p) COMPOSE_ARGS="-f $DIR/docker-compose-postgres-$OPTARG.yml";;
     x) COMPOSE_ARGS="-f $DIR/docker-compose-no-db.yml";;
     q) COMPOSE_ARGS="-f $DIR/docker-compose-sonarqube.yml";;
     l) USE_CACHE="1";;
