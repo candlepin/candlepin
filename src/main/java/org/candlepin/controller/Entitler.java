@@ -253,8 +253,8 @@ public class Entitler {
         // If the consumer is a guest, and has a host, try to heal the host first
         // Dev consumers should not need to worry about the host or unmapped guest
         // entitlements based on the planned design of the subscriptions
-        if (consumer.hasFact("virt.uuid") && !consumer.isDev()) {
-            String guestUuid = consumer.getFact("virt.uuid");
+        if (consumer.hasFact(Consumer.Facts.VIRT_UUID) && !consumer.isDev()) {
+            String guestUuid = consumer.getFact(Consumer.Facts.VIRT_UUID);
             // Remove any expired unmapped guest entitlements
             revokeUnmappedGuestEntitlements(consumer);
 
@@ -311,7 +311,7 @@ public class Entitler {
             // Look up the dev pool for this consumer, and if not found
             // create one. If a dev pool already exists, remove it and
             // create a new one.
-            String sku = consumer.getFact("dev_sku");
+            String sku = consumer.getFact(Consumer.Facts.DEV_SKU);
             Pool devPool = poolCurator.findDevPool(consumer);
             if (devPool != null) {
                 poolManager.deletePool(devPool);
@@ -512,7 +512,7 @@ public class Entitler {
                 // Look up the dev pool for this consumer, and if not found
                 // create one. If a dev pool already exists, remove it and
                 // create a new one.
-                String sku = consumer.getFact("dev_sku");
+                String sku = consumer.getFact(Consumer.Facts.DEV_SKU);
                 Pool devPool = poolCurator.findDevPool(consumer);
                 if (devPool != null) {
                     poolManager.deletePool(devPool);

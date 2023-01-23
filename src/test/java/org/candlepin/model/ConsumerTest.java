@@ -522,11 +522,11 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testCloudProfileFactDidNotChange() {
         Consumer consumer = new Consumer();
-        consumer.setFact("dmi.bios.vendor", "vendorA");
+        consumer.setFact(Consumer.Facts.DMI_BIOS_VENDOR, "vendorA");
         consumer.setFact("lscpu.model", "78");
 
         Map<String, String> newFacts = new HashMap<>();
-        newFacts.put("dmi.bios.vendor", "vendorA");
+        newFacts.put(Consumer.Facts.DMI_BIOS_VENDOR, "vendorA");
         newFacts.put("lscpu.model", "100");
 
         // this should return false because the only cloud fact  the consumer has did not change
@@ -536,11 +536,11 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testCloudProfileFactDidNotChangeWhenPassingSingleFact() {
         Consumer consumer = new Consumer();
-        consumer.setFact("dmi.bios.vendor", "vendorA");
+        consumer.setFact(Consumer.Facts.DMI_BIOS_VENDOR, "vendorA");
         consumer.setFact("lscpu.model", "78");
 
         Map<String, String> newFacts = new HashMap<>();
-        newFacts.put("dmi.bios.vendor", "vendorA");
+        newFacts.put(Consumer.Facts.DMI_BIOS_VENDOR, "vendorA");
 
         assertFalse(consumer.checkForCloudProfileFacts(newFacts));
     }
@@ -550,7 +550,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         Consumer consumer = new Consumer();
 
         Map<String, String> newFacts = new HashMap<>();
-        newFacts.put("dmi.bios.vendor", "vendorA");
+        newFacts.put(Consumer.Facts.DMI_BIOS_VENDOR, "vendorA");
 
         assertTrue(consumer.checkForCloudProfileFacts(newFacts));
     }
@@ -558,7 +558,7 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testCloudProfileFactOnEmptyIncomingFacts() {
         Consumer consumer = new Consumer();
-        consumer.setFact("dmi.bios.vendor", "vendorA");
+        consumer.setFact(Consumer.Facts.DMI_BIOS_VENDOR, "vendorA");
 
         Map<String, String> newFacts = null;
 
@@ -568,10 +568,10 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testCloudProfileFactOnNullValueOfIncomingFacts() {
         Consumer consumer = new Consumer();
-        consumer.setFact("dmi.bios.vendor", "vendorA");
+        consumer.setFact(Consumer.Facts.DMI_BIOS_VENDOR, "vendorA");
 
         Map<String, String> newFacts = new HashMap<>();
-        newFacts.put("dmi.bios.vendor", null);
+        newFacts.put(Consumer.Facts.DMI_BIOS_VENDOR, null);
 
         assertTrue(consumer.checkForCloudProfileFacts(newFacts));
 
@@ -584,14 +584,13 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testCloudProfileFactExistingIncomingFacts() {
         Consumer consumer = new Consumer();
-        consumer.setFact("dmi.bios.vendor", "vendorA");
+        consumer.setFact(Consumer.Facts.DMI_BIOS_VENDOR, "vendorA");
 
         Map<String, String> newFacts = new HashMap<>();
-        newFacts.put("dmi.bios.vendor", "vendorA");
+        newFacts.put(Consumer.Facts.DMI_BIOS_VENDOR, "vendorA");
 
         assertFalse(consumer.checkForCloudProfileFacts(newFacts));
     }
-
 
     @Test
     public void testServiceTypeConvertedToEmpty() {

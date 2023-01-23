@@ -811,14 +811,14 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         if (dto.getHypervisorId() == null &&
-            getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID) != null &&
+            getFactValue(dto.getFacts(), Consumer.Facts.DMI_SYSTEM_UUID) != null &&
             !"true".equals(getFactValue(dto.getFacts(), "virt.is_guest")) &&
             entity.getOwnerId() != null) {
 
             HypervisorId hid = new HypervisorId()
                 .setOwner(this.ownerCurator.findOwnerById(entity.getOwnerId()))
                 .setConsumer(entity)
-                .setHypervisorId(this.getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID));
+                .setHypervisorId(this.getFactValue(dto.getFacts(), Consumer.Facts.DMI_SYSTEM_UUID));
 
             entity.setHypervisorId(hid);
         }
@@ -906,11 +906,11 @@ public class ConsumerResource implements ConsumerApi {
         // fix for duplicate hypervisor/consumer problem
         Consumer consumer = null;
         if (config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING) &&
-            getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID) != null &&
+            getFactValue(dto.getFacts(), Consumer.Facts.DMI_SYSTEM_UUID) != null &&
             !"true".equalsIgnoreCase(getFactValue(dto.getFacts(), "virt.is_guest"))) {
 
             consumer = consumerCurator.getHypervisor(
-                getFactValue(dto.getFacts(), Consumer.Facts.SYSTEM_UUID), owner);
+                getFactValue(dto.getFacts(), Consumer.Facts.DMI_SYSTEM_UUID), owner);
             if (consumer != null) {
                 consumer.setIdCert(generateIdCert(consumer, false));
                 this.updateConsumer(consumer.getUuid(), dto);
@@ -1202,9 +1202,9 @@ public class ConsumerResource implements ConsumerApi {
             // create
             if ((existing.getCapabilities() == null ||
                 existing.getCapabilities().isEmpty()) &&
-                existing.getFact("distributor_version") != null) {
+                existing.getFact(Consumer.Facts.DISTRIBUTOR_VERSION) != null) {
                 Set<DistributorVersionCapability> capabilities = distributorVersionCurator.
-                    findCapabilitiesByDistVersion(existing.getFact("distributor_version"));
+                    findCapabilitiesByDistVersion(existing.getFact(Consumer.Facts.DISTRIBUTOR_VERSION));
                 if (capabilities != null) {
                     Set<ConsumerCapability> ccaps = new HashSet<>();
                     for (DistributorVersionCapability dvc : capabilities) {
@@ -1920,12 +1920,12 @@ public class ConsumerResource implements ConsumerApi {
      * from the old host are still removed, but no auto-bind occurs.
      */
     protected void revokeOnGuestMigration(Consumer guest) {
-        if (guest == null || !guest.isGuest() || !guest.hasFact("virt.uuid")) {
+        if (guest == null || !guest.isGuest() || !guest.hasFact(Consumer.Facts.VIRT_UUID)) {
             // No consumer provided, it's not a guest or it doesn't have a virt UUID
             return;
         }
 
-        String guestVirtUuid = guest.getFact("virt.uuid");
+        String guestVirtUuid = guest.getFact(Consumer.Facts.VIRT_UUID);
 
         Consumer host = consumerCurator.getHost(guestVirtUuid, guest.getOwnerId());
 
@@ -2840,12 +2840,16 @@ public class ConsumerResource implements ConsumerApi {
     public ConsumerDTO getHost(@Verify(Consumer.class) String consumerUuid) {
         Principal principal = this.principalProvider.get();
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
-        if (consumer.getFact("virt.uuid") == null ||
-            consumer.getFact("virt.uuid").trim().equals("")) {
+
+        if (consumer.getFact(Consumer.Facts.VIRT_UUID) == null ||
+            consumer.getFact(Consumer.Facts.VIRT_UUID).trim().equals("")) {
             throw new BadRequestException(i18n.tr("The system with UUID {0} is not a virtual guest.",
                 consumer.getUuid()));
         }
-        Consumer host = consumerCurator.getHost(consumer.getFact("virt.uuid"), consumer.getOwnerId());
+
+        Consumer host = consumerCurator.getHost(consumer.getFact(Consumer.Facts.VIRT_UUID),
+            consumer.getOwnerId());
+
         return translator.translate(host, ConsumerDTO.class);
     }
 

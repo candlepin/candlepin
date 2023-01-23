@@ -251,7 +251,7 @@ public class DefaultEntitlementCertServiceAdapter extends BaseEntitlementCertSer
             }
 
             // Consumer isn't a special type, check their certificate_version fact
-            String entitlementVersion = consumer.getFact("system.certificate_version");
+            String entitlementVersion = consumer.getFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION);
             return entitlementVersion != null && entitlementVersion.startsWith("3.");
         }
 

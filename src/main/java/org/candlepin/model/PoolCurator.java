@@ -413,9 +413,9 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
                     this.addAttributeFilterSubquery(Pool.Attributes.VIRT_ONLY, Arrays.asList("true"))
                 ));
             }
-            else if (consumer.hasFact("virt.uuid")) {
+            else if (consumer.hasFact(Consumer.Facts.VIRT_UUID)) {
+                String uuidFact = consumer.getFact(Consumer.Facts.VIRT_UUID);
                 Consumer host = null;
-                String uuidFact = consumer.getFact("virt.uuid");
 
                 if (uuidFact != null) {
                     host = this.consumerCurator.getHost(uuidFact, ownerId);

@@ -70,8 +70,9 @@ public class CriteriaRules  {
         // avoid passing in a consumerCurator just to get the host
         // consumer UUID
         Consumer hostConsumer = null;
-        if (consumer.getFact("virt.uuid") != null) {
-            hostConsumer = consumerCurator.getHost(consumer.getFact("virt.uuid"), consumer.getOwnerId());
+        if (consumer.getFact(Consumer.Facts.VIRT_UUID) != null) {
+            hostConsumer = this.consumerCurator.getHost(consumer.getFact(Consumer.Facts.VIRT_UUID),
+                consumer.getOwnerId());
         }
 
         List<Criterion> criteriaFilters = new LinkedList<>();
@@ -97,7 +98,7 @@ public class CriteriaRules  {
         else {
             // we are a virt guest
             // add criteria for filtering out pools that are not for this guest
-            if (consumer.hasFact("virt.uuid")) {
+            if (consumer.hasFact(Consumer.Facts.VIRT_UUID)) {
                 String hostUuid = ""; // need a default value in case there is no host
                 if (hostConsumer != null) {
                     hostUuid = hostConsumer.getUuid();

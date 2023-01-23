@@ -98,8 +98,50 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * Commonly used/recognized consumer facts
      */
     public static final class Facts {
-        public static final String SYSTEM_UUID = "dmi.system.uuid";
+        /** Used by the rules.js */
+        public static final String BAND_STORAGE_USAGE = "band.storage.usage";
+
+        /** The number of cores per socket on a given consumer; also part of the cloud profile and rules.js */
+        public static final String CPU_CORES_PER_SOCKET = "cpu.core(s)_per_socket";
+
+        /** The number of sockets on a given consumer; also part of the cloud profile and rules.js */
+        public static final String CPU_SOCKETS = "cpu.cpu_socket(s)";
+
+        /** The developer SKU for a given consumer */
+        public static final String DEV_SKU = "dev_sku";
+
+        /** */
+        public static final String DISTRIBUTOR_VERSION = "distributor_version";
+
+        /** The consumer's system/hardware UUID; also part of the cloud profile */
+        public static final String DMI_SYSTEM_UUID = "dmi.system.uuid";
+
+        /** The amount of memory on a given consumer; also part of the cloud profile and rules.js */
+        public static final String MEMORY_MEMTOTAL = "memory.memtotal";
+
+        /** The version of the Candlepin certificate system to use for this consumer */
+        public static final String SYSTEM_CERTIFICATE_VERSION = "system.certificate_version";
+
+        /** Used by the rules.js */
+        public static final String UNAME_MACHINE = "uname.machine";
+
+        /** Whether or not the consumer is a virtual/guest system; also part of the cloud profile */
+        public static final String VIRT_IS_GUEST = "virt.is_guest";
+
+        /** The consumer's guest UUID; used to match them to a hypervisor on virt-who checkin */
+        public static final String VIRT_UUID = "virt.uuid";
+
+        // Cloud profile facts
+        // These facts aren't used by Candlepin directly (other than to determine whether or not to
+        // update the "last cloud profile update" timestamp), but are critical to the function of
+        // some client applications, and must be maintained and passed through properly.
+        public static final String DMI_BIOS_VENDOR = "dmi.bios.vendor";
+        public static final String DMI_BIOS_VERSION = "dmi.bios.version";
+        public static final String DMI_CHASSIS_ASSET_TAG = "dmi.chassis.asset_tag";
+        public static final String DMI_SYSTEM_MANUFACTURER = "dmi.system.manufacturer";
+        public static final String OCM_UNITS = "ocm.units";
     }
+
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -904,12 +946,12 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     public boolean isDev() {
-        return !StringUtils.isEmpty(getFact("dev_sku"));
+        return !StringUtils.isEmpty(getFact(Facts.DEV_SKU));
     }
 
     @JsonIgnore
     public boolean isGuest() {
-        return "true".equalsIgnoreCase(this.getFact("virt.is_guest"));
+        return "true".equalsIgnoreCase(this.getFact(Facts.VIRT_IS_GUEST));
     }
 
     public String getContentAccessMode() {
