@@ -1200,6 +1200,7 @@ paths:
           description: Date to get compliance information for, default is now.
           schema:
             type: string
+            format: date-time
       responses:
         200:
           description: Returns the Compliance Status of a Consumer.
@@ -1618,6 +1619,7 @@ paths:
           description: Entitlement date
           schema:
             type: string
+            format: date-time
         - name: from_pool
           in: query
           description: From pool
@@ -1967,6 +1969,7 @@ paths:
           description: Date to get compliance information for, default is now.
           schema:
             type: string
+            format: date-time
       responses:
         200:
           description: Returns the System Purpose Compliance Status of a Consumer.
@@ -2861,6 +2864,7 @@ paths:
           name: date
           schema:
             type: string
+            format: date-time
           description: Filter deleted consumers to those on or after this date
       x-java-response:
         type: Iterable
@@ -6780,6 +6784,7 @@ paths:
           required: false
           schema:
             type: string
+            format: date-time
         - $ref: "#/components/parameters/paging_page"
         - $ref: "#/components/parameters/paging_per_page"
         - $ref: "#/components/parameters/paging_order"
@@ -6853,6 +6858,7 @@ paths:
           required: false
           schema:
             type: string
+            format: date-time
       responses:
         200:
           description: Retrieves a single pool by its ID

@@ -214,8 +214,7 @@ public class InfoAdapter {
              */
             @Override
             public Date getCreated() {
-                return source.getCreated() != null ?
-                    new Date(source.getCreated().toInstant().toEpochMilli()) : null;
+                return Util.toDate(source.getCreated());
             }
 
             /**
@@ -223,8 +222,7 @@ public class InfoAdapter {
              */
             @Override
             public Date getUpdated() {
-                return source.getUpdated() != null ?
-                    new Date(source.getUpdated().toInstant().toEpochMilli()) : null;
+                return Util.toDate(source.getUpdated());
             }
         };
     }
@@ -503,14 +501,12 @@ public class InfoAdapter {
 
             @Override
             public Date getCreated() {
-                return source.getCreated() != null ?
-                    new Date(source.getCreated().toInstant().toEpochMilli()) : null;
+                return Util.toDate(source.getCreated());
             }
 
             @Override
             public Date getUpdated() {
-                return source.getUpdated() != null ?
-                    new Date(source.getUpdated().toInstant().toEpochMilli()) : null;
+                return Util.toDate(source.getUpdated());
             }
 
             @Override
@@ -565,8 +561,7 @@ public class InfoAdapter {
              */
             @Override
             public Date getCreated() {
-                return source.getCreated() != null ?
-                    new Date(source.getCreated().toInstant().toEpochMilli()) : null;
+                return Util.toDate(source.getCreated());
             }
 
             /**
@@ -574,8 +569,7 @@ public class InfoAdapter {
              */
             @Override
             public Date getUpdated() {
-                return source.getUpdated() != null ?
-                    new Date(source.getUpdated().toInstant().toEpochMilli()) : null;
+                return Util.toDate(source.getUpdated());
             }
 
             /**

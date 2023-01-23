@@ -142,11 +142,17 @@ public class Util {
         return calendar.getTime();
     }
 
-    public static Date toDate(OffsetDateTime dt) {
-        if (dt == null) {
+    /**
+     * Converts the given {@link OffsetDateTime} to {@link Date}.
+     *
+     * @param dateTime date to convert
+     * @return converted date
+     */
+    public static Date toDate(OffsetDateTime dateTime) {
+        if (dateTime == null) {
             return null;
         }
-        return Date.from(dt.toInstant());
+        return Date.from(dateTime.toInstant());
     }
 
     public static Date roundDownToSeconds(Date date) {
@@ -680,4 +686,5 @@ public class Util {
 
         return reorderedList;
     }
+
 }

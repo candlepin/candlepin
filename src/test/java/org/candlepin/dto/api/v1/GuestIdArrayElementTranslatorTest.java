@@ -21,6 +21,7 @@ import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.GuestIdDTOArrayElement;
 import org.candlepin.model.GuestId;
+import org.candlepin.util.Util;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -75,10 +76,8 @@ public class GuestIdArrayElementTranslatorTest extends AbstractTranslatorTest<Gu
         if (source != null) {
             assertEquals(source.getId(), dto.getId());
             assertEquals(source.getGuestId(), dto.getGuestId());
-            assertEquals(source.getCreated(), dto.getCreated() != null ?
-                Date.from(dto.getCreated().toInstant()) : null);
-            assertEquals(source.getUpdated(), dto.getUpdated() != null ?
-                Date.from(dto.getUpdated().toInstant()) : null);
+            assertEquals(source.getCreated(), Util.toDate(dto.getCreated()));
+            assertEquals(source.getUpdated(), Util.toDate(dto.getUpdated()));
 
             // No need to assert for translation of attributes field, as that is not present on this
             // version of the DTO.

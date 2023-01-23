@@ -27,9 +27,6 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 
 
-/**
- * Test of OffsetDateTimeDeserializer
- */
 public class OffsetDateTimeDeserializerTest {
 
     private OffsetDateTimeDeserializer deserializer;
@@ -75,6 +72,13 @@ public class OffsetDateTimeDeserializerTest {
         when(parser.getText()).thenReturn("2021-01-24T13:30:30");
         OffsetDateTime dateTime = deserializer.deserialize(parser, null);
         assertEquals("2021-01-24T13:30:30Z", dateTime.toString());
+    }
+
+    @Test
+    public void testDateTimeWithoutSeconds() throws IOException {
+        when(parser.getText()).thenReturn("2021-01-24T13:30");
+        OffsetDateTime dateTime = deserializer.deserialize(parser, null);
+        assertEquals("2021-01-24T13:30Z", dateTime.toString());
     }
 
     @Test

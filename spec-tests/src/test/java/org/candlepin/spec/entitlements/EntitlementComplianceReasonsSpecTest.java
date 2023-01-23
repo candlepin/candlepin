@@ -198,7 +198,7 @@ public class EntitlementComplianceReasonsSpecTest {
             .orElseThrow();
 
         ComplianceStatusDTO complianceStatus = consumerClient.consumers()
-            .getComplianceStatus(consumer.getUuid(), afterEndDate.toString());
+            .getComplianceStatus(consumer.getUuid(), afterEndDate);
         assertThatCompliance(complianceStatus)
             .isNotNull()
             .isInvalid()

@@ -27,13 +27,13 @@ import org.candlepin.model.CdnCertificate;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.resource.server.v1.CdnApi;
+import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
 import org.xnap.commons.i18n.I18n;
 
 import java.time.OffsetDateTime;
-import java.util.Date;
 
 /**
  * CdnResource
@@ -136,8 +136,7 @@ public class CdnResource implements CdnApi {
                     CertificateSerial certSerial = new CertificateSerial();
 
                     OffsetDateTime expiration = certSerialDTO.getExpiration();
-                    certSerial.setExpiration(expiration != null ?
-                        (new Date(expiration.toInstant().toEpochMilli())) : null);
+                    certSerial.setExpiration(Util.toDate(expiration));
 
                     if (certSerialDTO.getSerial() != null) {
                         certSerial.setSerial(Long.valueOf(certSerialDTO.getSerial()));

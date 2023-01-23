@@ -30,7 +30,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
-import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.FactValidator;
@@ -281,7 +280,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertTrue(expected.contains(c2));
         assertTrue(expected.contains(c3));
 
-        Collection<Consumer> actual = consumerCurator.getConsumers(new LinkedList());
+        Collection<Consumer> actual = consumerCurator.getConsumers(new LinkedList<>());
         assertEquals(0, actual.size());
     }
 
@@ -814,7 +813,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void updateCheckinTime() {
         Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
         consumer = consumerCurator.create(consumer);
-        Date dt = ResourceDateParser.parseDateString(this.i18n, "2011-09-26T18:10:50.184081+00:00");
+        Date dt = Util.yesterday();
         consumerCurator.updateLastCheckin(consumer, dt);
         consumerCurator.refresh(consumer);
         consumer = consumerCurator.get(consumer.getId());
@@ -823,7 +822,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void updatelastCheckin() throws Exception {
+    public void updateLastCheckIn() throws Exception {
         Date date = new Date();
         Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
         consumer.setLastCheckin(date);
@@ -903,8 +902,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         factConsumer = consumerCurator.create(factConsumer);
         assertEquals(consumerCurator.findByUuid(factConsumer.getUuid()), factConsumer);
-        assertEquals(factConsumer.getFact("system.count"), "3");
-        assertEquals(factConsumer.getFact("system.multiplier"), "-2");
+        assertEquals("3", factConsumer.getFact("system.count"));
+        assertEquals("-2", factConsumer.getFact("system.multiplier"));
     }
 
     @Test
@@ -936,8 +935,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         factConsumer.setFacts(facts);
         factConsumer = consumerCurator.create(factConsumer);
         assertEquals(consumerCurator.findByUuid(factConsumer.getUuid()), factConsumer);
-        assertEquals(factConsumer.getFact("system.count"), "3");
-        assertEquals(factConsumer.getFact("system.multiplier"), "-2");
+        assertEquals("3", factConsumer.getFact("system.count"));
+        assertEquals("-2", factConsumer.getFact("system.multiplier"));
 
         factConsumer.setFact("system.count", "sss");
         assertThrows(PropertyValidationException.class, () -> consumerCurator.update(factConsumer));
@@ -1195,7 +1194,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer = consumerCurator.create(consumer);
         List<String> ids = Arrays.asList("fooBarPlus", "testId1", "testId2");
         Set<String> existingIds = consumerCurator.getExistingConsumerUuids(ids);
-        assertIterableEquals(existingIds, Arrays.asList("fooBarPlus"));
+        assertIterableEquals(Arrays.asList("fooBarPlus"), existingIds);
     }
 
     @Test
@@ -1592,7 +1591,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void testConsumerDeleteCascadesToContentTag() {
         Consumer c = new Consumer("testConsumer", "testUser", owner, ct);
-        c.setContentTags(new HashSet<>(Arrays.asList(new String[]{"t1", "t2"})));
+        c.setContentTags(new HashSet<>(Arrays.asList("t1", "t2")));
 
         String countQuery = "SELECT COUNT(*) FROM cp_consumer_content_tags";
 

@@ -202,9 +202,9 @@ public class AutobindSpecTest {
         consumer = userClient.consumers().createConsumer(consumer);
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        assertThat(consumerClient.consumers().listEntitlements(consumer.getUuid())).hasSize(0);
+        assertThat(consumerClient.consumers().listEntitlements(consumer.getUuid())).isEmpty();
         JsonNode job = getJsonNode(consumerClient.consumers().bind(consumer.getUuid(), null, null, null,
-            "", "", true, "", new ArrayList<>()));
+            "", "", true, null, new ArrayList<>()));
         assertThatJob(client.jobs().waitForJob(job.get("id").asText())).isFinished();
         assertThat(consumerClient.consumers().listEntitlements(consumer.getUuid())).hasSize(2);
     }

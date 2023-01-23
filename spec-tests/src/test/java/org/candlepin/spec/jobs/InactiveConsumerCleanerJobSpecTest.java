@@ -44,7 +44,6 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -115,7 +114,7 @@ public class InactiveConsumerCleanerJobSpecTest {
         assertGone(() -> consumerApi.getConsumer(inactiveConsumer1Uuid));
         // Verify that the inactive consumer has been moved to the deleted_consumers table.
         List<DeletedConsumerDTO> deletedConsumers = deletedConsumerApi
-            .listByDate(DateTimeFormatter.ISO_DATE_TIME.format(inactiveConsumer.getCreated()));
+            .listByDate(inactiveConsumer.getCreated());
         // Assert that other tests might have created an inactive consumer
         assertThat(deletedConsumers).hasSizeGreaterThanOrEqualTo(1);
         Optional<DeletedConsumerDTO> deletedConsumer = deletedConsumers.stream()
@@ -152,7 +151,7 @@ public class InactiveConsumerCleanerJobSpecTest {
         pool = ownerApi.createPool(owner.getKey(), pool);
 
         consumerApi.bind(consumer.getUuid(), pool.getId(), new ArrayList<>(), 1, "",
-            "", false, "", new ArrayList<>());
+            "", false, null, new ArrayList<>());
     }
 
     private void compareConsumers(ConsumerDTO expected, ConsumerDTO actual) {

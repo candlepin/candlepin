@@ -39,25 +39,32 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.test.DatabaseTestFixture;
-import org.candlepin.test.TestUtil;
+import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.List;
 
 import javax.inject.Inject;
 
 
-/**
- * PoolResourceTest
- */
 public class PoolResourceTest extends DatabaseTestFixture {
-    @Inject private CandlepinPoolManager poolManager;
+    //    private static final OffsetDateTime START_DATE = OffsetDateTime.now().minusYears(5);
+    private static final OffsetDateTime START_DATE = OffsetDateTime
+        .of(LocalDate.of(2000, 1, 1), LocalTime.MIDNIGHT, ZoneOffset.UTC);
+    private static final OffsetDateTime END_DATE = START_DATE.plusYears(1000);
+    private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
+
+    @Inject
+    private CandlepinPoolManager poolManager;
 
     private Owner owner1;
     private Owner owner2;
@@ -65,19 +72,17 @@ public class PoolResourceTest extends DatabaseTestFixture {
     private Pool pool2;
     private Pool pool3;
     private Product product1;
-    private Product product1Owner2;
     private Product product2;
     private PoolResource poolResource;
-    private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
     private Consumer failConsumer;
     private Consumer passConsumer;
     private Consumer foreignConsumer;
-    private static final int START_YEAR = 2000;
-    private static final int END_YEAR = 3000;
     private Principal adminPrincipal;
 
-    @Mock private CalculatedAttributesUtil attrUtil;
-    @Mock private PrincipalProvider principalProvider;
+    @Mock
+    private CalculatedAttributesUtil attrUtil;
+    @Mock
+    private PrincipalProvider principalProvider;
 
     @BeforeEach
     public void setUp() {
@@ -91,12 +96,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
         product1 = this.createProduct(PRODUCT_CPULIMITED, PRODUCT_CPULIMITED, owner1, owner2);
         product2 = this.createProduct(owner1);
 
-        pool1 = this.createPool(owner1, product1, 500L,
-             TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
-        pool2 = this.createPool(owner1, product2, 500L,
-             TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
-        pool3 = this.createPool(owner2 , product1, 500L,
-             TestUtil.createDate(START_YEAR, 1, 1), TestUtil.createDate(END_YEAR, 1, 1));
+        pool1 = this.createPool(owner1, product1, 500L, Util.toDate(START_DATE), Util.toDate(END_DATE));
+        pool2 = this.createPool(owner1, product2, 500L, Util.toDate(START_DATE), Util.toDate(END_DATE));
+        pool3 = this.createPool(owner2, product1, 500L, Util.toDate(START_DATE), Util.toDate(END_DATE));
 
         // Run most of these tests as an owner admin:
         adminPrincipal = setupPrincipal(owner1, Access.ALL);
@@ -149,15 +151,16 @@ public class PoolResourceTest extends DatabaseTestFixture {
         assertEquals(1, pools.size());
     }
 
-    @Disabled
     @Test
     public void testListForProduct() {
         when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
 
-        List<PoolDTO> pools = poolResource.listPools(null, null, product1.getId(),
+        List<PoolDTO> pools = poolResource.listPools(owner1.getId(), null, product1.getId(),
             false, null, null, null, null, null);
-        assertEquals(2, pools.size());
-        pools = poolResource.listPools(null, null, product2.getId(), false, null, null, null, null, null);
+        assertEquals(1, pools.size());
+
+        pools = poolResource.listPools(owner1.getId(), null, product2.getId(),
+            false, null, null, null, null, null);
         assertEquals(1, pools.size());
     }
 
@@ -289,26 +292,19 @@ public class PoolResourceTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testBadActiveOnDate() {
-        when(this.principalProvider.get()).thenReturn(this.adminPrincipal);
-        assertThrows(BadRequestException.class, () ->
-            poolResource.listPools(owner1.getId(), null, null, false, "bc", null, null, null, null)
-        );
-    }
-
-    @Test
     public void testActiveOnDate() {
         // Need to be a super admin to do this:
-        String activeOn = Integer.toString(START_YEAR + 1);
+        OffsetDateTime afterStartDate = START_DATE.plusYears(1);
+        OffsetDateTime beforeStartDate = START_DATE.minusYears(1);
 
         when(this.principalProvider.get()).thenReturn(setupAdminPrincipal("superadmin"));
 
         List<PoolDTO> pools = poolResource
-            .listPools(null, null, null, false, activeOn, null, null, null, null);
+            .listPools(null, null, null, false, afterStartDate, null, null, null, null);
         assertEquals(3, pools.size());
 
-        activeOn = Integer.toString(START_YEAR - 1);
-        pools = poolResource.listPools(owner1.getId(), null, null, false, activeOn, null, null, null, null);
+        pools = poolResource.listPools(owner1.getId(), null, null, false,
+            beforeStartDate, null, null, null, null);
         assertEquals(0, pools.size());
     }
 
@@ -354,4 +350,5 @@ public class PoolResourceTest extends DatabaseTestFixture {
             poolResource.getPoolEntitlements("xyzzy")
         );
     }
+
 }
