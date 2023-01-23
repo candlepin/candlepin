@@ -24,6 +24,7 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 import org.candlepin.dto.api.client.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.CertificateDTO;
+import org.candlepin.dto.api.client.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ContentDTO;
 import org.candlepin.dto.api.client.v1.ContentToPromoteDTO;
@@ -42,9 +43,11 @@ import org.candlepin.spec.bootstrap.data.builder.ActivationKeys;
 import org.candlepin.spec.bootstrap.data.builder.Consumers;
 import org.candlepin.spec.bootstrap.data.builder.Contents;
 import org.candlepin.spec.bootstrap.data.builder.Environments;
+import org.candlepin.spec.bootstrap.data.builder.Facts;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.Products;
+import org.candlepin.spec.bootstrap.data.util.CertificateUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -58,6 +61,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -466,7 +470,7 @@ public class EnvironmentSpecTest {
         ConsumerDTO consumer = ownerClient.consumers().createConsumer(Consumers.random(owner)
             .environments(List.of(env1, env2, env3)));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        consumerClient.consumers().bindPoolSync(consumer.getUuid(), pool.getId(), 1);
+        consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
         List<JsonNode> certificates = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
         assertThat(certificates).hasSize(1);
@@ -505,7 +509,7 @@ public class EnvironmentSpecTest {
         ConsumerDTO consumer = ownerClient.consumers().createConsumer(Consumers.random(owner)
             .environments(List.of(env1, env2, env3)));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        consumerClient.consumers().bindPoolSync(consumer.getUuid(), pool.getId(), 1);
+        consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
         List<JsonNode> certificates = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
         assertThat(certificates).hasSize(1);
@@ -540,7 +544,7 @@ public class EnvironmentSpecTest {
         ConsumerDTO consumer = ownerClient.consumers().createConsumer(Consumers.random(owner)
             .environments(List.of(env1, env2, env3)));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        consumerClient.consumers().bindPoolSync(consumer.getUuid(), pool.getId(), 1);
+        consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
         List<JsonNode> certificates = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
         assertThat(certificates).hasSize(1);
@@ -579,7 +583,7 @@ public class EnvironmentSpecTest {
         ConsumerDTO consumer = ownerClient.consumers().createConsumer(Consumers.random(owner)
             .environments(List.of(env1, env2, env3)));
         ApiClient consumerClient = ApiClients.ssl(consumer);
-        consumerClient.consumers().bindPoolSync(consumer.getUuid(), pool.getId(), 1);
+        consumerClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
 
         List<JsonNode> certificates = consumerClient.consumers().exportCertificates(consumer.getUuid(), null);
         assertThat(certificates).hasSize(1);
@@ -616,6 +620,80 @@ public class EnvironmentSpecTest {
 
         ConsumerDTO consumer = ownerClient.consumers().getConsumer(consumer2.getUuid());
         assertThat(consumer.getEnvironments()).hasSize(1);
+    }
+
+    @Test
+    public void shouldRegenerateOnlyEntitlementsAffectedByDeletedEnvironment() {
+        ProductDTO product1 = ownerClient.ownerProducts()
+            .createProductByOwner(owner.getKey(), Products.randomEng());
+        ProductDTO product2 = ownerClient.ownerProducts()
+            .createProductByOwner(owner.getKey(), Products.randomEng());
+        ContentDTO content1 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
+        ContentDTO content2 = ownerClient.ownerContent().createContent(owner.getKey(), Contents.random());
+        ownerClient.ownerProducts().addContent(owner.getKey(), product1.getId(), content1.getId(), true);
+        ownerClient.ownerProducts().addContent(owner.getKey(), product2.getId(), content2.getId(), true);
+        EnvironmentDTO env1 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        EnvironmentDTO env2 = ownerClient.owners().createEnv(owner.getKey(), Environments.random());
+        promoteContent(env1, content1);
+        promoteContent(env2, content2);
+        PoolDTO pool1 = ownerClient.owners().createPool(owner.getKey(), Pools.random(product1));
+        PoolDTO pool2 = ownerClient.owners().createPool(owner.getKey(), Pools.random(product2));
+
+        ConsumerDTO consumer = ownerClient.consumers().createConsumer(Consumers.random(owner)
+            .putFactsItem(Facts.CertificateVersion.key(), "3.3")
+            .environments(List.of(env1, env2)));
+        ApiClient consumerClient = ApiClients.ssl(consumer);
+
+        EntitlementDTO entitlement1 = consumerClient.consumers()
+            .bindPoolSync(consumer.getUuid(), pool1.getId(), 1).get(0);
+        EntitlementDTO entitlement2 = consumerClient.consumers()
+            .bindPoolSync(consumer.getUuid(), pool2.getId(), 1).get(0);
+        Long pool1Serial = serialOf(entitlement1);
+        Long pool2Serial = serialOf(entitlement2);
+
+        List<JsonNode> certificatesBeforeDelete = consumerClient.consumers()
+            .exportCertificates(consumer.getUuid(), null);
+        assertThat(certificatesBeforeDelete).hasSize(2);
+
+        ownerClient.environments().deleteEnvironment(env1.getId());
+
+        List<EntitlementDTO> entitlements = consumerClient.consumers()
+            .listEntitlementsWithRegen(consumer.getUuid());
+        Set<Long> currentSerials = serialsOf(entitlements);
+
+        assertThat(currentSerials)
+            .isNotEmpty()
+            .doesNotContain(pool1Serial)
+            .contains(pool2Serial);
+
+        List<CertificateDTO> certificates = consumerClient.consumers().fetchCertificates(consumer.getUuid());
+
+        for (CertificateDTO certificate : certificates) {
+            JsonNode entCert = CertificateUtil.decodeAndUncompressCertificate(
+                certificate.getCert(), ApiClient.MAPPER);
+            JsonNode products = entCert.get("products");
+            assertThat(products).hasSize(1);
+            JsonNode content = products.get(0).get("content");
+            if (pool2Serial.equals(certificate.getSerial().getId())) {
+                assertThat(content).hasSize(1);
+            }
+            else {
+                assertThat(content).isEmpty();
+            }
+        }
+    }
+
+    private Set<Long> serialsOf(Collection<EntitlementDTO> entitlements) {
+        return entitlements.stream()
+            .map(this::serialOf)
+            .collect(Collectors.toSet());
+    }
+
+    private Long serialOf(EntitlementDTO entitlement) {
+        return entitlement.getCertificates().stream()
+            .map(CertificateDTO::getSerial)
+            .map(CertificateSerialDTO::getId)
+            .findFirst().orElseThrow();
     }
 
     private CertificateDTO findFirstCert(List<EntitlementDTO> entitlements) {
