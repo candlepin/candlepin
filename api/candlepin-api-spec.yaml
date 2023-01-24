@@ -8566,26 +8566,36 @@ components:
         - $ref: '#/components/schemas/TimestampedEntity'
         - type: object
           required:
-            - id
+            - type
+            - label
+            - name
+            - vendor
           properties:
             uuid:
               type: string
               example: "ff808081554a3e4101554a3e9033005d"
             id:
               type: string
-              minLength: 1
               example: "5001"
             type:
               type: string
+              minLength: 1
+              maxLength: 255
               example: "yum"
             label:
               type: string
+              minLength: 1
+              maxLength: 255
               example: "content_label"
             name:
               type: string
+              minLength: 1
+              maxLength: 255
               example: "content_name"
             vendor:
               type: string
+              minLength: 1
+              maxLength: 255
               example: "example-vendor"
             contentUrl:
               type: string
