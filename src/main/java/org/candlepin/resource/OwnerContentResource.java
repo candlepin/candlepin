@@ -20,6 +20,7 @@ import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.ContentDTO;
+import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.CandlepinQuery;
@@ -72,12 +73,41 @@ public class OwnerContentResource implements OwnerContentApi {
         this.idGenerator = idGenerator;
     }
 
+    /**
+     * Validates that fields that are required for content creation are populated and non-empty.
+     *
+     * @param dto
+     *  the content DTO to validate
+     *
+     * @throws BadRequestException
+     *  if the DTO does not pass validation
+     */
+    private void validateContentForCreation(ContentDTO dto) {
+        this.validator.validateCollectionElementsNotNull(dto::getModifiedProductIds);
+
+        if (dto.getLabel() == null || dto.getLabel().isEmpty()) {
+            throw new BadRequestException(this.i18n.tr("content label cannot be null or empty"));
+        }
+
+        if (dto.getName() == null || dto.getName().isEmpty()) {
+            throw new BadRequestException(this.i18n.tr("content name cannot be null or empty"));
+        }
+
+        if (dto.getType() == null || dto.getType().isEmpty()) {
+            throw new BadRequestException(this.i18n.tr("content type cannot be null or empty"));
+        }
+
+        if (dto.getVendor() == null || dto.getVendor().isEmpty()) {
+            throw new BadRequestException(this.i18n.tr("content vendor cannot be null or empty"));
+        }
+    }
+
     @Override
     @Transactional
     public ContentDTO createContent(String ownerKey, ContentDTO content) {
-        this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
-
         Owner owner = this.getOwnerByKey(ownerKey);
+
+        this.validateContentForCreation(content);
         Content entity = this.createContentImpl(owner, content);
 
         this.contentAccessManager.syncOwnerLastContentUpdate(owner);
@@ -103,12 +133,11 @@ public class OwnerContentResource implements OwnerContentApi {
         return this.translator.translateQuery(query, ContentDTO.class);
     }
 
-
     @Override
     @Transactional
     public Collection<ContentDTO> createBatchContent(String ownerKey, List<ContentDTO> contents) {
         for (ContentDTO content : contents) {
-            this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
+            this.validateContentForCreation(content);
         }
 
         Owner owner = this.getOwnerByKey(ownerKey);

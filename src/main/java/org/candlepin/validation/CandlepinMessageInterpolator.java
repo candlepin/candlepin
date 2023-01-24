@@ -20,7 +20,6 @@ import com.google.inject.Provider;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -89,7 +88,6 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
         msgs.put("{org.hibernate.validator.constraints.URL.message}",
             new ValidationMessage(I18n.marktr("must be a valid URL")));
 
-
         MESSAGES = Collections.<String, ValidationMessage>unmodifiableMap(msgs);
     }
 
@@ -99,12 +97,11 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
      */
     public static class ValidationMessage {
         private String message;
-
         private List<String> paramNames;
 
         public ValidationMessage(String message, String... paramNames) {
             this.message = message;
-            this.paramNames = Collections.unmodifiableList(Arrays.asList(paramNames));
+            this.paramNames = List.of(paramNames);
         }
 
         public String getMessage() {
@@ -126,7 +123,7 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
 
     // You must use the Provider here otherwise you will end up with a stale
     // I18n object!
-    private Provider<I18n> i18nProvider;
+    private final Provider<I18n> i18nProvider;
 
     @Inject
     public CandlepinMessageInterpolator(Provider<I18n> i18nProvider) {
@@ -134,14 +131,14 @@ public class CandlepinMessageInterpolator implements MessageInterpolator {
     }
 
     @Override
-    public String interpolate(String message, Context context) {
-        return interpolate(message, context, i18nProvider.get().getLocale());
+    public String interpolate(String msgTemplate, Context context) {
+        return interpolate(msgTemplate, context, i18nProvider.get().getLocale());
     }
 
     @Override
-    public String interpolate(String messageTemplate, Context context, Locale locale) {
+    public String interpolate(String msgTemplate, Context context, Locale locale) {
         Map<String, Object> attrs = context.getConstraintDescriptor().getAttributes();
-        ValidationMessage validationMessage = MESSAGES.get(messageTemplate);
+        ValidationMessage validationMessage = MESSAGES.get(msgTemplate);
         List<Object> paramList = new ArrayList<>();
 
         for (String param : validationMessage.getParamNames()) {

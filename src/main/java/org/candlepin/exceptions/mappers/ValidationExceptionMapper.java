@@ -28,6 +28,8 @@ import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
+
+
 /**
  * ValidationExceptionMapper maps the RESTEasy BadRequestException
  * into JSON and allows the proper header to be set. This allows
@@ -40,23 +42,31 @@ public class ValidationExceptionMapper extends CandlepinExceptionMapper
     @Override
     public Response toResponse(ValidationException exception) {
         Map<String, String> map = VersionUtil.getVersionMap();
-        ResponseBuilder bldr = Response.status(Status.BAD_REQUEST).type(
-            determineBestMediaType()).header(VersionUtil.VERSION_HEADER,
-            map.get("version") + "-" + map.get("release"));
 
-        StringBuffer message = new StringBuffer();
-        if (ConstraintViolationException.class.isAssignableFrom(exception.getClass())) {
-            for (ConstraintViolation cv :
-                ((ConstraintViolationException) exception).getConstraintViolations()) {
-                message.append(cv.getPropertyPath().toString());
-                message.append(": ");
-                message.append(cv.getMessage());
+        ResponseBuilder builder = Response.status(Status.BAD_REQUEST)
+            .type(determineBestMediaType())
+            .header(VersionUtil.VERSION_HEADER, map.get("version") + "-" + map.get("release"));
+
+        if (exception instanceof ConstraintViolationException) {
+            ConstraintViolationException cve = (ConstraintViolationException) exception;
+            StringBuilder errmsg = new StringBuilder();
+
+            for (ConstraintViolation cv : cve.getConstraintViolations()) {
+                if (errmsg.length() > 0) {
+                    errmsg.append("; ");
+                }
+
+                errmsg.append(cv.getPropertyPath())
+                    .append(": ")
+                    .append(cv.getMessage());
             }
-            bldr.entity(new ExceptionMessage(message.toString()));
+
+            builder.entity(new ExceptionMessage(errmsg.toString()));
         }
         else {
             getDefaultBuilder(exception, Response.Status.BAD_REQUEST, determineBestMediaType());
         }
-        return bldr.build();
+
+        return builder.build();
     }
 }
