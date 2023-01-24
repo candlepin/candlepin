@@ -130,13 +130,8 @@ We use JaCoCo for unit test coverage, by means of the gradle jacoco plugin.
   classes/methods/lines will look uncovered in the report.
 
 ### Spec Tests
-Spec tests are written in Ruby using RSpec, but we are in the process of migrating them to Java  
-   which are running with the aid of an auto-generated OpenApi client.
-
-To run Ruby spec tests:
-* `./gradlew rspec` runs all RSpec tests serially
-* `./gradlew rspec --spec my_file_name_spec --test 'my test name'`  
-  runs `my test name` in the `my_file_name_spec.rb` file.
+Spec tests are written in Java which are running with the aid of an auto-generated 
+OpenApi client.
 
 To run Java spec tests:
 * `./gradlew spec` runs all Java tests serially
@@ -147,7 +142,7 @@ To run Java spec tests:
 
 ### Liquibase
 * `buildr "changeset:my changeset name"`  
-  Much like the `rspec` task, the `changeset` task is followed by a  
+  The `changeset` task is followed by a  
   colon and an argument.  In this case the argument is a brief description of  
   the nature of the changeset.  Be sure to quote the task name to prevent the  
   shell from interpreting the spaces.

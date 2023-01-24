@@ -361,8 +361,6 @@ processResources {
     }
 }
 
-task rspec(type: Rspec)
-
 // A task to generate the the candlepin config file for use in etc or other locations.
 task generateConfig() {
     dependsOn ":processResources"
