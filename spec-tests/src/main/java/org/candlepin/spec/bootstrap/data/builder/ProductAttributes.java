@@ -24,6 +24,7 @@ public enum ProductAttributes {
     ContentOverrideEnabled("content_override_enabled"),
     ContentOverrideDisabled("content_override_disabled"),
     Cores("cores"),
+    ExpiresAfter("expires_after"),
     GuestLimit("guest_limit"),
     HostLimited("host_limited"),
     InstanceMultiplier("instance_multiplier"),

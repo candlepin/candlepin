@@ -22,6 +22,7 @@ public enum Facts {
     CertificateVersion("system.certificate_version"),
     CoresPerSocket("cpu.core(s)_per_socket"),
     CpuSockets("cpu.cpu_socket(s)"),
+    DevSku("dev_sku"),
     MemoryTotal("memory.memtotal"),
     MultiEntitlement("multi-entitlement"),
     OperatingSystem("uname.system"),
