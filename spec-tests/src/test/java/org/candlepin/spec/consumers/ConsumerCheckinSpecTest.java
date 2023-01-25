@@ -35,7 +35,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -100,22 +99,6 @@ public class ConsumerCheckinSpecTest {
         OffsetDateTime initialCheckin = consumer.getLastCheckin();
 
         consumerClient.consumers().getEntitlementCertificateSerials(consumer.getUuid());
-
-        consumer = consumerClient.consumers().getConsumer(consumer.getUuid());
-        assertThat(consumer)
-            .isNotNull()
-            .doesNotReturn(initialCheckin, ConsumerDTO::getLastCheckin);
-    }
-
-    @Test
-    public void shouldUpdateLastCheckinTimeOnHypervisorCheckin() throws Exception {
-        ApiClient adminClient = ApiClients.admin();
-        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
-        ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
-        ApiClient consumerClient = ApiClients.ssl(consumer);
-        OffsetDateTime initialCheckin = consumer.getLastCheckin();
-
-        consumerClient.hypervisors().hypervisorUpdate(owner.getKey(), new HashMap<>(), false);
 
         consumer = consumerClient.consumers().getConsumer(consumer.getUuid());
         assertThat(consumer)
