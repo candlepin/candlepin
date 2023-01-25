@@ -42,7 +42,7 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.server.v1.PoolsApi;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
-import org.candlepin.resource.util.ResourceDateParser;
+import org.candlepin.util.Util;
 
 import com.google.inject.Inject;
 
@@ -52,10 +52,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 import javax.ws.rs.core.MediaType;
 
@@ -64,28 +66,28 @@ import javax.ws.rs.core.MediaType;
  */
 
 public class PoolResource implements PoolsApi {
-    private static Logger log = LoggerFactory.getLogger(PoolResource.class);
+    private static final Logger log = LoggerFactory.getLogger(PoolResource.class);
 
-    private ConsumerCurator consumerCurator;
-    private OwnerCurator ownerCurator;
-    private I18n i18n;
-    private PoolManager poolManager;
-    private CalculatedAttributesUtil calculatedAttributesUtil;
-    private ModelTranslator translator;
-    private PrincipalProvider principalProvider;
+    private final ConsumerCurator consumerCurator;
+    private final OwnerCurator ownerCurator;
+    private final I18n i18n;
+    private final PoolManager poolManager;
+    private final CalculatedAttributesUtil calculatedAttributesUtil;
+    private final ModelTranslator translator;
+    private final PrincipalProvider principalProvider;
 
     @Inject
     public PoolResource(ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         I18n i18n, PoolManager poolManager, CalculatedAttributesUtil calculatedAttributesUtil,
         ModelTranslator translator, PrincipalProvider principalProvider) {
 
-        this.consumerCurator = consumerCurator;
-        this.ownerCurator = ownerCurator;
-        this.i18n = i18n;
-        this.poolManager = poolManager;
-        this.calculatedAttributesUtil = calculatedAttributesUtil;
-        this.translator = translator;
-        this.principalProvider = principalProvider;
+        this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.poolManager = Objects.requireNonNull(poolManager);
+        this.calculatedAttributesUtil = Objects.requireNonNull(calculatedAttributesUtil);
+        this.translator = Objects.requireNonNull(translator);
+        this.principalProvider = Objects.requireNonNull(principalProvider);
     }
 
     @Override
@@ -96,7 +98,7 @@ public class PoolResource implements PoolsApi {
         String consumerUuid,
         String productId,
         Boolean listAll,
-        String activeOn,
+        OffsetDateTime activeOn,
         Integer page, Integer perPage, String order, String sortBy) {
         Principal principal = this.principalProvider.get();
         PageRequest pageRequest = ResteasyContext.getContextData(PageRequest.class);
@@ -110,7 +112,7 @@ public class PoolResource implements PoolsApi {
         }
 
         Date activeOnDate = activeOn != null ?
-            ResourceDateParser.parseDateString(this.i18n, activeOn) :
+            Util.toDate(activeOn) :
             (new Date());
 
         Consumer c = null;
@@ -127,7 +129,7 @@ public class PoolResource implements PoolsApi {
                     principal.getPrincipalName(), consumerUuid));
             }
 
-            if (listAll.booleanValue()) {
+            if (listAll) {
                 oId = c.getOwnerId();
             }
         }
@@ -154,7 +156,7 @@ public class PoolResource implements PoolsApi {
         }
 
         Page<List<Pool>> pageResponse = poolManager.listAvailableEntitlementPools(c, null, oId,
-            productId, null, activeOnDate, listAll.booleanValue(), new PoolFilterBuilder(), pageRequest,
+            productId, null, activeOnDate, listAll, new PoolFilterBuilder(), pageRequest,
             false, false, null);
         List<Pool> poolList = pageResponse.getPageData();
 
@@ -172,7 +174,7 @@ public class PoolResource implements PoolsApi {
     }
 
     @Override
-    public PoolDTO getPool(@Verify(Pool.class) String id, String consumerUuid, String activeOn) {
+    public PoolDTO getPool(@Verify(Pool.class) String id, String consumerUuid, OffsetDateTime activeOn) {
 
         Principal principal = this.principalProvider.get();
         Pool toReturn = poolManager.get(id);
@@ -191,9 +193,9 @@ public class PoolResource implements PoolsApi {
         }
 
         if (toReturn != null) {
-            Date activeOnDate = new Date();
-            if (activeOn != null) {
-                activeOnDate = ResourceDateParser.parseDateString(this.i18n, activeOn);
+            Date activeOnDate = Util.toDate(activeOn);
+            if (activeOn == null) {
+                activeOnDate = new Date();
             }
 
             toReturn.setCalculatedAttributes(

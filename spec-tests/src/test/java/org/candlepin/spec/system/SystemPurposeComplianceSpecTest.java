@@ -98,7 +98,7 @@ public class SystemPurposeComplianceSpecTest {
             Consumers.random(owner).type(ConsumerTypes.System.value()).role("myrole"));
 
         SystemPurposeComplianceStatusDTO status = userClient.consumers()
-            .getSystemPurposeComplianceStatus(consumer.getUuid(), YEAR_AND_HALF_IN_FUTURE.toString());
+            .getSystemPurposeComplianceStatus(consumer.getUuid(), YEAR_AND_HALF_IN_FUTURE);
         assertNonComplianceRole(status, "myrole");
 
         userClient.consumers().bindPool(consumer.getUuid(), pool.getId(), 1);
@@ -109,16 +109,16 @@ public class SystemPurposeComplianceSpecTest {
         assertNonComplianceRole(status, "myrole");
 
         status = userClient.consumers()
-            .getSystemPurposeComplianceStatus(consumer.getUuid(), YEAR_AND_HALF_IN_FUTURE.toString());
+            .getSystemPurposeComplianceStatus(consumer.getUuid(), YEAR_AND_HALF_IN_FUTURE);
         assertStatus(status, "matched");
         assertPoolIdComplianceRole(pool, status);
 
         status = userClient.consumers()
-            .getSystemPurposeComplianceStatus(consumer.getUuid(), YEAR_IN_FUTURE.minusDays(1).toString());
+            .getSystemPurposeComplianceStatus(consumer.getUuid(), YEAR_IN_FUTURE.minusDays(1));
         assertNonComplianceRole(status, "myrole");
 
         status = userClient.consumers()
-            .getSystemPurposeComplianceStatus(consumer.getUuid(), TWO_YEAR_IN_FUTURE.plusDays(1).toString());
+            .getSystemPurposeComplianceStatus(consumer.getUuid(), TWO_YEAR_IN_FUTURE.plusDays(1));
         assertNonComplianceRole(status, "myrole");
     }
 
@@ -152,7 +152,7 @@ public class SystemPurposeComplianceSpecTest {
 
         // check that the status has not been recalculated & persisted during a call using on_date
         status = userClient.consumers()
-            .getSystemPurposeComplianceStatus(consumer.getUuid(), YEAR_AND_HALF_IN_FUTURE.toString());
+            .getSystemPurposeComplianceStatus(consumer.getUuid(), YEAR_AND_HALF_IN_FUTURE);
         assertStatus(status, "matched");
         assertPoolIdComplianceRole(pool, status);
         consumer = userClient.consumers().getConsumer(consumer.getUuid());

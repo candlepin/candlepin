@@ -89,12 +89,12 @@ public class ConsumerClient extends ConsumerApi {
 
     public JsonNode bindPool(String consumerUuid, String poolId, Integer quantity) {
         return getJsonNode(super.bind(consumerUuid, poolId, null, quantity, "",
-            "", false, "", new ArrayList<>()));
+            "", false, null, new ArrayList<>()));
     }
 
     public List<EntitlementDTO> bindPoolSync(String consumerUuid, String poolId, Integer quantity) {
         return parseEntitlements(super.bind(consumerUuid, poolId, null, quantity, "",
-            "", false, "", new ArrayList<>()));
+            "", false, null, new ArrayList<>()));
     }
 
     private JsonNode getJsonNode(String consumerUuid) {
@@ -117,7 +117,7 @@ public class ConsumerClient extends ConsumerApi {
 
     public JsonNode bindProduct(String consumerUuid, @NotNull String productId) {
         return getJsonNode(super.bind(consumerUuid, null, List.of(productId), null,
-            "", "", false, "", new ArrayList<>()));
+            "", "", false, null, new ArrayList<>()));
     }
 
     public JsonNode bindProduct(String consumerUuid, @NotNull ProductDTO product) {
@@ -126,17 +126,17 @@ public class ConsumerClient extends ConsumerApi {
 
     public List<EntitlementDTO> bindProductSync(String consumerUuid, @NotNull ProductDTO product) {
         return parseEntitlements(super.bind(consumerUuid, null, List.of(product.getId()), null,
-            "", "", false, "", new ArrayList<>()));
+            "", "", false, null, new ArrayList<>()));
     }
 
     public JsonNode autoBind(String consumerUuid) {
         return getJsonNode(super.bind(consumerUuid, null, null, null,
-            "", "", false, "", new ArrayList<>()));
+            "", "", false, null, new ArrayList<>()));
     }
 
     public List<EntitlementDTO> autoBindSync(String consumerUuid) {
         return parseEntitlements(super.bind(consumerUuid, null, null, null,
-            "", "", false, "", new ArrayList<>()));
+            "", "", false, null, new ArrayList<>()));
     }
 
     public List<JsonNode> exportCertificates(String consumerUuid, String serials) {

@@ -83,7 +83,6 @@ import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -102,7 +101,6 @@ import org.candlepin.resource.util.ConsumerBindUtil;
 import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
-import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
@@ -135,6 +133,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.security.GeneralSecurityException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -196,7 +195,6 @@ public class ConsumerResourceTest {
     @Mock private ConsumerRules consumerRules;
     @Mock private CalculatedAttributesUtil calculatedAttributesUtil;
     @Mock private DistributorVersionCurator distributorVersionCurator;
-    @Mock private GuestIdCurator guestIdCurator;
     @Mock private Provider<GuestMigration> guestMigrationProvider;
     @Mock private PrincipalProvider principalProvider;
     @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
@@ -581,12 +579,11 @@ public class ConsumerResourceTest {
         when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(eq(owner.getKey()))).thenReturn(false);
         when(cc.verifyAndLookupConsumerWithEntitlements(eq(consumer.getUuid()))).thenReturn(consumer);
 
-        String dtStr = "2011-09-26T18:10:50.184081+00:00";
-        Date dt = ResourceDateParser.parseDateString(this.i18n, dtStr);
+        OffsetDateTime entitleDate = OffsetDateTime.now().minusYears(5);
 
-        consumerResource.bind(consumer.getUuid(), null, null, null, null, null, false, dtStr, null);
+        consumerResource.bind(consumer.getUuid(), null, null, null, null, null, false, entitleDate, null);
         AutobindData data = new AutobindData(consumer, owner)
-            .on(dt);
+            .on(Util.toDate(entitleDate));
 
         verify(entitler).bindByProducts(eq(data));
     }

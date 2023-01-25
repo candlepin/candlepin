@@ -44,7 +44,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -177,7 +176,7 @@ public class HealingSpecTest {
 
         JsonNode ents = getJsonNode(consumerClient.consumers().bind(consumer.getUuid(), null,
             null, null, null, null, false,
-            OffsetDateTime.now().plusYears(3L).format(DateTimeFormatter.ISO_DATE_TIME), null));
+            OffsetDateTime.now().plusYears(3L), null));
         assertThat(ents)
             .singleElement()
             .returns(futurePool.getId(), x -> x.get("pool").get("id").asText());

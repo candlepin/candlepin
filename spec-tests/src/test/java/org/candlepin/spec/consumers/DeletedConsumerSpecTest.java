@@ -32,6 +32,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @SpecTest
@@ -55,7 +56,7 @@ public class DeletedConsumerSpecTest {
 
     @Test
     public void shouldFindAllDeletedConsumers() {
-        String fromDate = DateUtil.yesterday().toString();
+        OffsetDateTime fromDate = DateUtil.yesterday();
         ConsumerDTO consumer = this.userClient.consumers().createConsumer(Consumers.random(this.owner));
         admin.consumers().deleteConsumer(consumer.getUuid());
 

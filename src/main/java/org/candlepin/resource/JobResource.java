@@ -52,7 +52,6 @@ import org.xnap.commons.i18n.I18n;
 
 import java.time.OffsetDateTime;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -183,8 +182,8 @@ public class JobResource implements JobsApi {
             .setPrincipalNames(principals)
             .setOrigins(origins)
             .setExecutors(executors)
-            .setStartDate(after != null ? new Date(after.toInstant().toEpochMilli())  : null)
-            .setEndDate(before != null ? new Date(before.toInstant().toEpochMilli())  : null);
+            .setStartDate(Util.toDate(after))
+            .setEndDate(Util.toDate(before));
 
         int count = (int) this.jobCurator.getJobCount(queryArgs);
 
@@ -306,8 +305,8 @@ public class JobResource implements JobsApi {
             .setPrincipalNames(principals)
             .setOrigins(origins)
             .setExecutors(executors)
-            .setStartDate(after != null ? new Date(after.toInstant().toEpochMilli())  : null)
-            .setEndDate(before != null ? new Date(before.toInstant().toEpochMilli())  : null);
+            .setStartDate(Util.toDate(after))
+            .setEndDate(Util.toDate(before));
 
         int count;
 

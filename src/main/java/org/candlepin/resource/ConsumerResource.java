@@ -126,7 +126,6 @@ import org.candlepin.resource.util.EntitlementEnvironmentFilter;
 import org.candlepin.resource.util.EnvironmentUpdates;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.KeyValueStringParser;
-import org.candlepin.resource.util.ResourceDateParser;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
@@ -2283,7 +2282,7 @@ public class ConsumerResource implements ConsumerApi {
         String email,
         String emailLocale,
         Boolean async,
-        String entitleDateStr,
+        OffsetDateTime entitleDateStr,
         List<String> fromPools) {
         /* NOTE: This method should NEVER be provided with a POST body.
            While technically that change would be backwards compatible,
@@ -2292,9 +2291,7 @@ public class ConsumerResource implements ConsumerApi {
            ref: BZ: 1502807
          */
 
-        // TODO: really should do this in a before we get to this call
-        // so the method takes in a real Date object and not just a String.
-        Date entitleDate = ResourceDateParser.parseDateString(this.i18n, entitleDateStr);
+        Date entitleDate = Util.toDate(entitleDateStr);
 
         // Verify consumer exists:
         Consumer consumer = consumerCurator.verifyAndLookupConsumerWithEntitlements(consumerUuid);
@@ -2867,11 +2864,11 @@ public class ConsumerResource implements ConsumerApi {
     @Override
     @Transactional
     public ComplianceStatusDTO getComplianceStatus(@Verify(Consumer.class) String uuid,
-        String onDate) {
+        OffsetDateTime onDate) {
         ComplianceStatus status = null;
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
-        Date date = ResourceDateParser.parseDateString(this.i18n, onDate);
+        Date date = Util.toDate(onDate);
         status = this.complianceRules.getStatus(consumer, date);
 
         return this.translator.translate(status, ComplianceStatusDTO.class);
@@ -2880,10 +2877,10 @@ public class ConsumerResource implements ConsumerApi {
     @Override
     @Transactional
     public SystemPurposeComplianceStatusDTO getSystemPurposeComplianceStatus(
-        @Verify(Consumer.class) String uuid, String onDate) {
+        @Verify(Consumer.class) String uuid, OffsetDateTime onDate) {
         SystemPurposeComplianceStatus status = null;
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(uuid);
-        Date date = ResourceDateParser.parseDateString(this.i18n, onDate);
+        Date date = Util.toDate(onDate);
         status = this.systemPurposeComplianceRules.getStatus(consumer, consumer.getEntitlements(), null,
             date, true);
 
