@@ -81,6 +81,9 @@ bundle install --without=proton --retry=5 --verbose --full-index
 # Installs all Java deps into the image, big time saver
 ./gradlew --no-daemon dependencies
 
+# Fix issue with owner on mount volume
+git config --global --add safe.directory /candlepin-dev
+
 cd /
 rm -rf /candlepin
 cleanup_env

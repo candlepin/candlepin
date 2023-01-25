@@ -17,7 +17,12 @@ case $CANDLEPIN_DATABASE in
   postgresql) TEST_DB="-p";;
 esac
 
-./docker/test $TEST_DB -c "cp-test ${CP_TEST_ARGS} -c ${CHANGE_BRANCH}" -n "${STAGE_NAME}-${BUILD_TAG}"
+IMAGE=""
+case $OS_IMAGE in
+  cs9) IMAGE="-o cs9";;
+  cs8) IMAGE="-o cs8";;
+esac
+./docker/test $TEST_DB $IMAGE -c "cp-test ${CP_TEST_ARGS} -c ${CHANGE_BRANCH}" -n "${STAGE_NAME}-${BUILD_TAG}"
 RETVAL=$?
 sudo chown -R jenkins:jenkins $WORKSPACE/artifacts
 mv $WORKSPACE/artifacts "${WORKSPACE}/${STAGE_NAME}-artifacts"
