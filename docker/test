@@ -33,7 +33,7 @@ OPTIONS:
   -d        run containers detached and do not
               automatically shut down & remove the
               containers on the script's exit
-  -e        expose ports 8443, 8080 and 22 to the host machine
+  -e        expose ports 8443 and 8080 to the host machine
 
 USAGE
 }
@@ -41,8 +41,7 @@ USAGE
 while getopts ":c:mn:o:pxqlde" opt; do
   case $opt in
     c) TEST_CMD="$OPTARG";;
-    m)
-       COMPOSE_ARGS="-f $DIR/docker-compose-mysql";
+    m) COMPOSE_ARGS="-f $DIR/docker-compose-mysql";
        chcon -Rt svirt_sandbox_file_t $DIR/mysql.cnf;
        sudo chown 999:999 $DIR/mysql.cnf;;
     n) PROJ_NAME="-p $OPTARG";;
@@ -75,29 +74,51 @@ then
   exit 1
 fi
 
+if [ "$COMPOSE_ARGS" == "-f $DIR/docker-compose-postgres-cs9.yml" ]; then
+  INIT_CONTAINER="1"
+fi
+
 # PROJ_NAME should be set in a jenkins environment. It allows multiple
 #  instances of the compose to run without clobbering each other.
 cd $DIR
-docker-compose $PROJ_NAME stop
-docker-compose $PROJ_NAME rm -f
 
-if [ "$USE_CACHE" != "1" ]; then
-  docker-compose $COMPOSE_ARGS pull
-fi
 
 SERVICE_PORTS_ARG=""
 if [ "$EXPOSE_PORTS" == "1" ]; then
   SERVICE_PORTS_ARG="--service-ports"
 fi
 
-if [ "$DETACHED" == "1" ]; then
+if [ "$INIT_CONTAINER" == "1" ]; then # For CS9
+  podman-compose $PROJ_NAME stop
+  podman-compose $PROJ_NAME rm -f
+
+  if [ "$USE_CACHE" != "1" ]; then
+    podman-compose $COMPOSE_ARGS pull
+  fi
+  podman-compose $PROJ_NAME $COMPOSE_ARGS up -d
+  sleep # Waiting to start systemd
+  podman-compose $PROJ_NAME $COMPOSE_ARGS exec candlepin $TEST_CMD
+  RETVAL=$?
+  if [ "$DETACHED" != "1" ]; then
+    podman-compose $PROJ_NAME $COMPOSE_ARGS down
+  fi
+else # For CS8, CS7
+  docker-compose $PROJ_NAME stop
+  docker-compose $PROJ_NAME rm -f
+
+  if [ "$USE_CACHE" != "1" ]; then
+    docker-compose $COMPOSE_ARGS pull
+  fi
+
+  if [ "$DETACHED" == "1" ]; then
     # Run detached, and don't remove the containers
     docker-compose $PROJ_NAME $COMPOSE_ARGS run -d $SERVICE_PORTS_ARG candlepin $TEST_CMD
     RETVAL=$?
-else
+  else
     docker-compose $PROJ_NAME $COMPOSE_ARGS run --rm $SERVICE_PORTS_ARG candlepin $TEST_CMD
     RETVAL=$?
     docker-compose $PROJ_NAME down
+  fi
 fi
 
 echo "return value: $RETVAL"

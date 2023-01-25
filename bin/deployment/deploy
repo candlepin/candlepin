@@ -219,7 +219,7 @@ HELP
 notify() {
     if [ -z "$QUIET" ]; then
         if type notify-send &> /dev/null; then
-            notify-send -i info -t 2000 "Deployment complete!"
+            notify-send -i info -t 2000 "Deployment complete!" || true
         fi
         echo
         success_msg "Deployment complete!"
@@ -307,6 +307,10 @@ if [ "$?" -ne 0 ]; then
     START="$TC_HOME/bin/catalina.sh jpda start"
     STOP="$TC_HOME/bin/catalina.sh stop"
     CONTAINER_CONF_DIR="$TC_HOME/conf"
+elif [ -f "/usr/bin/systemctl" ]; then
+    START="$SUDO /usr/bin/systemctl start $TC"
+    STOP="$SUDO /usr/bin/systemctl stop $TC"
+    CONTAINER_CONF_DIR="/etc/$TC"
 else
     START="$SUDO /sbin/service $TC start"
     STOP="$SUDO /sbin/service $TC stop"

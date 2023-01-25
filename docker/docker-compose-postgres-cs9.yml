@@ -17,10 +17,11 @@ services:
     ports:
       - "8443:8443"
       - "8080:8080"
-      - "22:22"
+      # - "22:22"
     privileged: true
     volumes:
       - ../:/candlepin-dev
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
     depends_on:
       - db
 
