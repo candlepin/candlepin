@@ -232,13 +232,13 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-validator</artifactId>
-      <version>5.4.3.Final</version>
+      <version>6.2.5.Final</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-validator-annotation-processor</artifactId>
-      <version>5.4.3.Final</version>
+      <version>6.2.5.Final</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
