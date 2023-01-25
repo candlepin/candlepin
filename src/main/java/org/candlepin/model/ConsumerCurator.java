@@ -337,7 +337,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         // At this point we might have duplicates for re-registered consumers:
         for (Consumer c : this.findByUuidsAndOwner(consumerUuids, ownerId)) {
-            String virtUuid = c.getFact("virt.uuid").toLowerCase();
+            String virtUuid = c.getFact(Consumer.Facts.VIRT_UUID).toLowerCase();
             if (guestConsumersMap.get(virtUuid) == null) {
                 // Store both big and little endian forms in the result:
                 guestConsumersMap.add(virtUuid, c);
@@ -825,12 +825,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      */
     @Transactional
     public List<Consumer> getGuests(Consumer consumer) {
-        if (consumer.getFact("virt.uuid") != null &&
-            !consumer.getFact("virt.uuid").trim().equals("")) {
+        if (consumer.getFact(Consumer.Facts.VIRT_UUID) != null &&
+            !consumer.getFact(Consumer.Facts.VIRT_UUID).trim().equals("")) {
             throw new BadRequestException(i18nProvider.get().tr(
                 "The system with UUID {0} is a virtual guest. It does not have guests.",
                 consumer.getUuid()));
         }
+
         List<Consumer> guests = new ArrayList<>();
         List<GuestId> consumerGuests = consumer.getGuestIds();
         if (consumerGuests != null) {
@@ -919,26 +920,31 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
         Map<String, HypervisorId> systemUuidHypervisorMap = new HashMap<>();
         List<String> remainingHypervisorIds = new LinkedList<>();
+
         for (Consumer consumer : hypervisors) {
-            if (consumer.hasFact(Consumer.Facts.SYSTEM_UUID)) {
-                systemUuidHypervisorMap.put(consumer.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase(),
+            if (consumer.hasFact(Consumer.Facts.DMI_SYSTEM_UUID)) {
+                systemUuidHypervisorMap.put(consumer.getFact(Consumer.Facts.DMI_SYSTEM_UUID).toLowerCase(),
                     consumer.getHypervisorId());
             }
+
             remainingHypervisorIds.add(consumer.getHypervisorId().getHypervisorId());
         }
+
         if (!systemUuidHypervisorMap.isEmpty()) {
             String sql = "select id from cp_consumer " +
                 "inner join cp_consumer_facts " +
                 "on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
-                "where cp_consumer_facts.mapkey = '" + Consumer.Facts.SYSTEM_UUID + "' and " +
+                "where cp_consumer_facts.mapkey = :fact_key and " +
                 "lower(cp_consumer_facts.element) in (:uuids) " +
                 "and cp_consumer.owner_id = :ownerid " +
                 "order by cp_consumer.updated desc";
 
             Iterable<List<String>> blocks = Iterables.partition(systemUuidHypervisorMap.keySet(),
                 getInBlockSize());
+
             Query query = this.currentSession()
                 .createSQLQuery(sql)
+                .setParameter("fact_key", Consumer.Facts.DMI_SYSTEM_UUID)
                 .setParameter("ownerid", owner.getId());
 
             List<String> consumerIds = new LinkedList<>();
@@ -946,13 +952,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
                 query.setParameterList("uuids", block);
                 consumerIds.addAll(query.list());
             }
-            for (Consumer consumer: this.getConsumers(consumerIds)) {
+
+            for (Consumer consumer : this.getConsumers(consumerIds)) {
                 if (consumer.getHypervisorId() != null) {
                     hypervisorMap.add(consumer.getHypervisorId().getHypervisorId(), consumer);
                     remainingHypervisorIds.remove(consumer.getHypervisorId().getHypervisorId());
                 }
                 else {
-                    hypervisorMap.add(consumer.getFact(Consumer.Facts.SYSTEM_UUID).toLowerCase(), consumer);
+                    hypervisorMap.add(consumer.getFact(Consumer.Facts.DMI_SYSTEM_UUID).toLowerCase(),
+                        consumer);
                 }
             }
         }
@@ -989,14 +997,17 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             sql =
                 "select cp_consumer.id from cp_consumer " +
                     "join cp_consumer_facts on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
-                    "where cp_consumer_facts.mapkey = '" + Consumer.Facts.SYSTEM_UUID + "' and " +
+                    "where cp_consumer_facts.mapkey = :fact_key and " +
                     "lower(cp_consumer_facts.element) = :uuid " +
                     "and cp_consumer.owner_id = :ownerId " +
                     "order by cp_consumer.updated desc";
+
             query = this.currentSession()
                 .createSQLQuery(sql)
+                .setParameter("fact_key", Consumer.Facts.DMI_SYSTEM_UUID)
                 .setParameter("ownerId", ownerId)
                 .setParameter("uuid", systemUuid.toLowerCase());
+
             consumerIds = query.list();
             if (consumerIds != null && consumerIds.size() > 0) {
                 List<String> one = Collections.singletonList(consumerIds.get(0));

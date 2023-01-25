@@ -630,7 +630,7 @@ public class EntitlerTest {
 
         this.mockRefresh(owner, Arrays.asList(p1, p2, p3), null);
 
-        Pool created = entitler.assembleDevPool(devSystem, owner, devSystem.getFact("dev_sku"));
+        Pool created = entitler.assembleDevPool(devSystem, owner, devSystem.getFact(Consumer.Facts.DEV_SKU));
         Calendar cal = Calendar.getInstance();
         cal.setTime(created.getStartDate());
         cal.add(Calendar.DAY_OF_YEAR, 47);

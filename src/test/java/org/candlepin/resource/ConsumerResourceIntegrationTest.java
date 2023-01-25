@@ -825,7 +825,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         assertEquals(modifiedDateOnCreate, modifiedTSOnUnnecessaryFactUpdate);
 
         updatedConsumerDTO = new ConsumerDTO();
-        updatedConsumerDTO.putFactsItem(CloudProfileFacts.CPU_CORES_PERSOCKET.getFact(), "1");
+        updatedConsumerDTO.putFactsItem(CloudProfileFacts.CPU_CORES_PER_SOCKET.getFact(), "1");
         consumerResource.updateConsumer(consumer.getUuid(), updatedConsumerDTO);
         Date modifiedTSOnNecessaryFactUpdate = consumerCurator.get(consumer.getId())
             .getRHCloudProfileModified();

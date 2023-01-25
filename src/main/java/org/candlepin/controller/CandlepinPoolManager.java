@@ -2034,11 +2034,15 @@ public class CandlepinPoolManager implements PoolManager {
             Consumer consumer = entitlement.getConsumer();
             Event event = eventFactory.entitlementDeleted(entitlement);
 
-            if (!entitlement.isValid() && entitlement.getPool().isUnmappedGuestPool() &&
-                consumerCurator.getHost(consumer.getFact("virt.uuid"), consumer.getOwnerId()) == null) {
-                event = eventFactory.entitlementExpired(entitlement);
-                event.setMessageText(event.getMessageText() + ": " +
-                    i18n.tr("Unmapped guest entitlement expired without establishing a host/guest mapping."));
+            if (!entitlement.isValid() && entitlement.getPool().isUnmappedGuestPool()) {
+                Consumer host = this.consumerCurator.getHost(consumer.getFact(Consumer.Facts.VIRT_UUID),
+                    consumer.getOwnerId());
+
+                if (host == null) {
+                    event = eventFactory.entitlementExpired(entitlement);
+                    event.setMessageText(event.getMessageText() + ": " + i18n.tr("Unmapped guest " +
+                        "entitlement expired without establishing a host/guest mapping."));
+                }
             }
 
             sink.queueEvent(event);

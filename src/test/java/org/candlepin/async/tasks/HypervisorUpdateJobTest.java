@@ -283,7 +283,7 @@ public class HypervisorUpdateJobTest {
         hypervisor.ensureUUID();
         hypervisor.setName("hyper-name");
         hypervisor.setOwner(owner);
-        hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");
+        hypervisor.setFact(Consumer.Facts.DMI_SYSTEM_UUID, "myUuid");
         hypervisor.setId("the-id");
         String hypervisorId = "existing_hypervisor_id";
         hypervisor.setHypervisorId(new HypervisorId().setHypervisorId(hypervisorId));
@@ -323,7 +323,7 @@ public class HypervisorUpdateJobTest {
         hypervisor.ensureUUID();
         hypervisor.setName("hyper-name");
         hypervisor.setOwner(owner);
-        hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");
+        hypervisor.setFact(Consumer.Facts.DMI_SYSTEM_UUID, "myUuid");
         String hypervisorId = "existing_hypervisor_id";
         hypervisor.setHypervisorId(new HypervisorId().setHypervisorId(hypervisorId));
         when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
@@ -339,7 +339,7 @@ public class HypervisorUpdateJobTest {
                 "\"name\" : \"hypervisor_999\"," +
                 "\"hypervisorId\" : {\"hypervisorId\":\"expected_hypervisor_id\"}," +
                 "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]," +
-                "\"facts\" : {\"" + Consumer.Facts.SYSTEM_UUID + "\" : \"myUuid\"}" +
+                "\"facts\" : {\"" + Consumer.Facts.DMI_SYSTEM_UUID + "\" : \"myUuid\"}" +
                 "}]}";
 
         JobConfig config = createJobConfig(null);
@@ -438,7 +438,7 @@ public class HypervisorUpdateJobTest {
         hypervisor.ensureUUID();
         hypervisor.setName("hyper-name");
         hypervisor.setOwner(owner);
-        hypervisor.setFact(Consumer.Facts.SYSTEM_UUID, "myUuid");
+        hypervisor.setFact(Consumer.Facts.DMI_SYSTEM_UUID, "myUuid");
         hypervisor.setId("the-id");
         String hypervisorId = "existing_hypervisor_id";
         hypervisor.setHypervisorId(new HypervisorId().setHypervisorId(hypervisorId));

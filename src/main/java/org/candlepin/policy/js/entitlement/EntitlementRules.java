@@ -253,8 +253,8 @@ public class EntitlementRules implements Enforcer {
     }
 
     private Consumer getHost(Consumer consumer) {
-        Consumer host = consumer.hasFact("virt.uuid") ? consumerCurator.getHost(
-            consumer.getFact("virt.uuid"), consumer.getOwnerId()) : null;
+        Consumer host = consumer.hasFact(Consumer.Facts.VIRT_UUID) ? consumerCurator.getHost(
+            consumer.getFact(Consumer.Facts.VIRT_UUID), consumer.getOwnerId()) : null;
         return host;
     }
 

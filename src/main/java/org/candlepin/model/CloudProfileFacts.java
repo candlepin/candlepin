@@ -16,23 +16,25 @@
 package org.candlepin.model;
 
 /**
- * The subscription profile time stamp should also get updated
- * on the specific Facts updates.
- * This Enum helps to configure more facts if required in the future.
+ * The CloudProfileFacts enum is a collection of consumer facts which are critical for maintaining
+ * a cloud profile in some client applications such as Subscription Watch.
+ *
+ * The facts in this enum come from the consumer facts, and are primarily used to determine whether
+ * or not to update a given consumer's cloud profile "last update" timestamp.
  */
 public enum CloudProfileFacts {
 
-    CPU_CORES_PERSOCKET("cpu.core(s)_per_socket"),
-    CPU_SOCKETS("cpu.cpu_socket(s)"),
-    DMI_BIOS_VENDOR("dmi.bios.vendor"),
-    DMI_BIOS_VERSION("dmi.bios.version"),
-    DMI_CHASSIS_ASSET_TAG("dmi.chassis.asset_tag"),
-    DMI_SYSTEM_MANUFACTURER("dmi.system.manufacturer"),
-    DMI_SYSTEM_UUID("dmi.system.uuid"),
-    MEMORY_MEMTOTAL("memory.memtotal"),
-    OCM_UNITS("ocm.units"),
-    UNAME_MACHINE("uname.machine"),
-    VIRT_IS_GUEST("virt.is_guest");
+    CPU_CORES_PER_SOCKET(Consumer.Facts.CPU_CORES_PER_SOCKET),
+    CPU_SOCKETS(Consumer.Facts.CPU_SOCKETS),
+    DMI_BIOS_VENDOR(Consumer.Facts.DMI_BIOS_VENDOR),
+    DMI_BIOS_VERSION(Consumer.Facts.DMI_BIOS_VERSION),
+    DMI_CHASSIS_ASSET_TAG(Consumer.Facts.DMI_CHASSIS_ASSET_TAG),
+    DMI_SYSTEM_MANUFACTURER(Consumer.Facts.DMI_SYSTEM_MANUFACTURER),
+    DMI_SYSTEM_UUID(Consumer.Facts.DMI_SYSTEM_UUID),
+    MEMORY_MEMTOTAL(Consumer.Facts.MEMORY_MEMTOTAL),
+    OCM_UNITS(Consumer.Facts.OCM_UNITS),
+    UNAME_MACHINE(Consumer.Facts.UNAME_MACHINE),
+    VIRT_IS_GUEST(Consumer.Facts.VIRT_IS_GUEST);
 
     private final String fact;
 
@@ -46,7 +48,7 @@ public enum CloudProfileFacts {
 
     @Override
     public String toString() {
-        return fact;
+        return this.fact;
     }
 
     public static boolean containsFact(String incomingFact) {
@@ -55,6 +57,7 @@ public enum CloudProfileFacts {
                 return true;
             }
         }
+
         return false;
     }
 }
