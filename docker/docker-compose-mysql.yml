@@ -8,7 +8,7 @@ services:
     volumes:
         - ./mysql.cnf:/etc/mysql/conf.d/mysql.cnf
   candlepin:
-    image: ${REGISTRY}/candlepin-base
+    image: ${REGISTRY}/candlepin-base-cs8
     environment:
       USING_MYSQL: "true"
       DBHOSTNAME: db
