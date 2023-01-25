@@ -15,7 +15,7 @@
 package org.candlepin.spec.content;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
+import static org.assertj.core.api.Assertions.assertThatObject;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -52,15 +52,19 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -68,6 +72,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 
 
@@ -93,11 +98,7 @@ class OwnerContentSpecTest {
         return ApiClients.ssl(consumer.getIdCert());
     }
 
-    @Test
-    public void shouldAllowSuperAdminsToCreateContent() throws Exception {
-        ApiClient adminClient = ApiClients.admin();
-        OwnerDTO owner = this.createOwner(adminClient);
-
+    private ContentDTO getFullyPopulatedContent() {
         // Manually construct this so we know exactly what/how fields are populated
         String cid = StringUtil.random(8, StringUtil.CHARSET_NUMERIC);
 
@@ -106,7 +107,7 @@ class OwnerContentSpecTest {
             "mpi2-" + cid,
             "mpi3-" + cid);
 
-        ContentDTO content = new ContentDTO()
+        return new ContentDTO()
             .id("test_content-" + cid)
             .name("test content " + cid)
             .type("content type " + cid)
@@ -119,7 +120,14 @@ class OwnerContentSpecTest {
             .modifiedProductIds(modifiedProductIds)
             .arches("content arches " + cid)
             .metadataExpire(Long.parseLong(cid));
+    }
 
+    @Test
+    public void shouldAllowSuperAdminsToCreateContent() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = this.createOwner(adminClient);
+
+        ContentDTO content = this.getFullyPopulatedContent();
         ContentDTO created = adminClient.ownerContent().createContent(owner.getKey(), content);
 
         assertNotNull(created);
@@ -141,58 +149,91 @@ class OwnerContentSpecTest {
         assertEquals(content, fetched);
     }
 
-    @Nested
-    @TestInstance(Lifecycle.PER_CLASS)
-    public class JsonManipulationTests {
+    private static Stream<Arguments> criticalContentStringFieldsAndValues() {
+        Set<String> fields = Set.of("label", "name", "type", "vendor");
+        List<String> values = Arrays.asList("", null);
 
-        private ApiClient client;
-        private Gson unmodified;
+        List<Arguments> matrix = new ArrayList<>();
 
-        @BeforeAll
-        public void setup() throws Exception {
-            // We need to enable serialization of nulls to craft the exact output we're expecting
-            // and ensuring we're actually testing fields that are explicitly set to null
-            this.client = ApiClients.admin();
-
-            this.unmodified = this.client.getApiClient().getJSON().getGson();
-            assertNotNull(this.unmodified);
-
-            Gson modified = this.unmodified.newBuilder()
-                .serializeNulls()
-                .create();
-
-            this.client.getApiClient().getJSON().setGson(modified);
+        for (String field : fields) {
+            for (String value : values) {
+                matrix.add(Arguments.of(field, value));
+            }
         }
 
-        @AfterAll
-        public void restore() {
-            // Restore the original Gson object so none of the other tests are affected
-            assertNotNull(this.unmodified);
-            this.client.getApiClient().getJSON().setGson(this.unmodified);
-        }
-
-        @Test
-        public void shouldRequireCriticalFieldsWhenCreatingContent() throws Exception {
-            // At the time of writing, this is only the ID field
-            OwnerDTO owner = OwnerContentSpecTest.this.createOwner(this.client);
-
-            ContentDTO content = Contents.random()
-                .id(null);
-
-            assertBadRequest(() -> this.client.ownerContent().createContent(owner.getKey(), content));
-        }
+        return matrix.stream();
     }
 
-    @Test
-    public void shouldRequireCriticalFieldsWhenCreatingContent() throws Exception {
-        // At the time of writing, this is only the ID field
+    @ParameterizedTest
+    @MethodSource("criticalContentStringFieldsAndValues")
+    public void shouldRequireCriticalStringFieldsAreValidWhenCreatingContent(String fieldName, String value)
+        throws Exception {
+
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = OwnerContentSpecTest.this.createOwner(adminClient);
 
-        ContentDTO content = Contents.random()
-            .id(null);
+        ContentDTO content = this.getFullyPopulatedContent();
 
-        assertBadRequest(() -> adminClient.ownerContent().createContent(owner.getKey(), content));
+        // Convert the content to a JsonNode so we can clear the field
+        ObjectNode jsonNode = ApiClient.MAPPER.readValue(content.toJson(), ObjectNode.class);
+
+        assertThatObject(jsonNode)
+            .isNotNull()
+            .returns(true, node -> node.has(fieldName));
+
+        jsonNode.put(fieldName, value);
+
+        Response response = Request.from(adminClient)
+            .setPath("/owners/{owner_key}/content")
+            .setPathParam("owner_key", owner.getKey())
+            .setMethod("POST")
+            .setBody(jsonNode.toString())
+            .execute();
+
+        assertThat(response)
+            .returns(400, Response::getCode);
+
+        assertThat(response.getBodyAsString())
+            .isNotNull()
+            .contains(fieldName + " cannot be null or empty");
+    }
+
+    private static Stream<String> critialContentFields() {
+        return Stream.of("label", "name", "type", "vendor");
+    }
+
+    @ParameterizedTest
+    @MethodSource("critialContentFields")
+    public void shouldRequireCriticalFieldsArePopulatedWhenCreatingContent(String fieldName)
+        throws Exception {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = OwnerContentSpecTest.this.createOwner(adminClient);
+
+        ContentDTO content = this.getFullyPopulatedContent();
+
+        // Convert the content to a JsonNode so we can clear the field
+        ObjectNode jsonNode = ApiClient.MAPPER.readValue(content.toJson(), ObjectNode.class);
+
+        assertThatObject(jsonNode)
+            .isNotNull()
+            .returns(true, node -> node.has(fieldName));
+
+        jsonNode.remove(fieldName);
+
+        Response response = Request.from(adminClient)
+            .setPath("/owners/{owner_key}/content")
+            .setPathParam("owner_key", owner.getKey())
+            .setMethod("POST")
+            .setBody(jsonNode.toString())
+            .execute();
+
+        assertThat(response)
+            .returns(400, Response::getCode);
+
+        assertThat(response.getBodyAsString())
+            .isNotNull()
+            .contains(fieldName + " cannot be null or empty");
     }
 
     @Test
@@ -495,9 +536,7 @@ class OwnerContentSpecTest {
     }
 
     @Test
-    public void shouldNotAllowUpdatingCriticalFields() throws Exception {
-        // At the time of writing, this is only the UUID and ID fields
-
+    public void shouldNotAllowUpdatingIDFields() throws Exception {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = this.createOwner(adminClient);
 

@@ -130,7 +130,7 @@ public class ConsumerResourceSpecTest {
             .setPath("/consumers/{consumer_uuid}")
             .setMethod("PUT")
             .setPathParam("consumer_uuid", consumer.getUuid())
-            .setBody(objectNode.toString().getBytes())
+            .setBody(objectNode.toString())
             .execute();
 
         assertThat(response)

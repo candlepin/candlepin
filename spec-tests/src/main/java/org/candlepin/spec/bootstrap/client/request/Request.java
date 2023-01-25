@@ -272,8 +272,10 @@ public class Request {
      *  a reference to this Request
      */
     public Request setBody(Object body) {
-        // Impl note: this will be serialized by the backing ApiClient
-        this.body = body;
+        // Impl note: this will be serialized by the backing ApiClient. Unfortunately, that means
+        // if we receive an already-serialized string, it'll be doubly serialized. To avoid the
+        // pain that causes, convert any strings we receive to the raw bytes.
+        this.body = (body instanceof String) ? ((String) body).getBytes() : body;
         return this;
     }
 
