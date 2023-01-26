@@ -251,6 +251,7 @@ public class ConfigProperties {
     public static final String KEYCLOAK_FILEPATH = "candlepin.keycloak.config";
 
     // Async Job Properties and utilities
+    public static final String ASYNC_JOBS_NODE_NAME = "candlepin.async.node_name";
     public static final String ASYNC_JOBS_THREADS = "candlepin.async.threads";
     public static final String ASYNC_JOBS_SCHEDULER_ENABLED = "candlepin.async.scheduler.enabled";
 
