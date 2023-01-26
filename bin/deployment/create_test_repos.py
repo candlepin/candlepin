@@ -117,7 +117,8 @@ def run_command(command, verbose=False):
     """
 
     # Run command in subprocess
-    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    shell = not isinstance(command, list)
+    process = subprocess.Popen(command, shell=shell, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     output = []
     # Print output of command
@@ -368,7 +369,7 @@ def generate_repositories(repo_definitions, package_definitions):
         add_packages_to_repo(repo['packages'], repo_path, package_definitions)
 
         # Create repository with RPM packages
-        run_command('createrepo_c %s' % repo_path)
+        run_command(['createrepo_c', repo_path])
 
         # Try to get product certificate from candlepin server and add it to repository
         cert = get_productid_cert(session, repo)
@@ -378,7 +379,7 @@ def generate_repositories(repo_definitions, package_definitions):
             with open('productid', 'w') as fp:
                 fp.write(cert)
             # This command add productid certificate to repository
-            run_command('modifyrepo_c productid %s/repodata' % repo_path)
+            run_command(['modifyrepo_c', 'productid', '%s/repodata' % repo_path])
             # Remove temporary cert file
             os.remove('productid')
 
@@ -553,7 +554,7 @@ def create_dummy_package(package, expect_script_path, keygrip):
         fp.write(rpm_spec_content)
 
     # Generate RPM package using rpmbuild
-    ret, _ = run_command('rpmbuild -bb %s' % spec_file_path, verbose=False)
+    ret, _ = run_command(['rpmbuild', '-bb', spec_file_path], verbose=False)
 
     if ret != 0:
         log.error('Creating RPM "{name}" FAILED'.format(name=name))
@@ -562,9 +563,9 @@ def create_dummy_package(package, expect_script_path, keygrip):
     log.info("Signing RPM %s" % name)
 
     if keygrip is None:
-        ret, _ = run_command('%s %s' % (expect_script_path, rpm_file_path), verbose=False)
+        ret, _ = run_command([expect_script_path, rpm_file_path], verbose=False)
     else:
-        ret, _ = run_command('%s %s' % ("rpm --addsign", rpm_file_path), verbose=False)
+        ret, _ = run_command(["rpm", "--addsign", rpm_file_path], verbose=False)
 
     # RPM has to be signed. Otherwise it will not be able to install it from testing repository
     if ret != 0:
@@ -646,10 +647,10 @@ def does_gpg_key_exist():
     This function tries to check if GPG for signing RPM packages already exist
     """
 
-    key_id = '"%s <%s>"' % (GPG_NAME_REAL, GPG_NAME_EMAIL)
+    key_id = '%s <%s>' % (GPG_NAME_REAL, GPG_NAME_EMAIL)
 
     # Try to get list of GPG key with given key ID
-    ret, _ = run_command('gpg --list-keys %s' % key_id)
+    ret, _ = run_command(['gpg', '--list-keys', key_id])
 
     return ret
 
@@ -658,9 +659,9 @@ def gpg_key_keygrip():
     """
     This function tries to get keygrip from key used for signing RPMs
     """
-    key_id = '"%s <%s>"' % (GPG_NAME_REAL, GPG_NAME_EMAIL)
+    key_id = '%s <%s>' % (GPG_NAME_REAL, GPG_NAME_EMAIL)
 
-    ret, output = run_command('gpg2 --list-keys --with-keygrip %s' % key_id, verbose=False)
+    ret, output = run_command(['gpg2', '--list-keys', '--with-keygrip', key_id], verbose=False)
 
     return ret, output
 
@@ -683,7 +684,7 @@ def create_gpg_key():
     script_path, temp_dir_path = create_gpg_batch_gen_script()
 
     # Generate GPG key for signing RPM packages
-    ret,_ = run_command('gpg --batch --gen-key %s' % script_path)
+    ret,_ = run_command(['gpg', '--batch', '--gen-key', script_path])
 
     # Remove temporary directory containing script for generating GPG key
     shutil.rmtree(temp_dir_path)
@@ -693,11 +694,11 @@ def create_gpg_key():
     ret += res
 
     # Import GPG key to rpm db (not necessary), but "rpm -K signed_file.rpm" can be used
-    res, _ = run_command('rpm --import %s' % GPG_EXPORTED_CANDLEPIN_KEY)
+    res, _ = run_command(['rpm', '--import', GPG_EXPORTED_CANDLEPIN_KEY])
     ret += res
 
     # Copy exported GPG key to root dir of static content provided by tomcat
-    res, _ = run_command('cp %s %s' % (GPG_EXPORTED_CANDLEPIN_KEY, REPO_ROOT_DIR))
+    res, _ = run_command(['cp', GPG_EXPORTED_CANDLEPIN_KEY, REPO_ROOT_DIR])
     ret += res
 
     return ret
@@ -772,18 +773,15 @@ def main():
             if result is not None:
                 key_grip = result.groups()[0]
                 # Make sure that preset passphrases are allowed
-                ret, _ = run_command("grep 'allow-preset-passphrase' /root/.gnupg/gpg-agent.conf")
+                ret, _ = run_command(["grep", "allow-preset-passphrase", "/root/.gnupg/gpg-agent.conf"])
                 if ret != 0:
                     log.info("Updating gpg-agent.conf")
                     run_command("echo 'allow-preset-passphrase' >> /root/.gnupg/gpg-agent.conf")
                 # Make sure that gpg-agent is running
-                run_command('gpg-connect-agent reloadagent /bye')
+                run_command(['gpg-connect-agent', 'reloadagent', '/bye'])
                 log.info("Using GPG keygrip: %s" % key_grip)
                 run_command(
-                    '/usr/libexec/gpg-preset-passphrase --passphrase {gpg_passphrase} --preset {key_grip}'.format(
-                        gpg_passphrase=GPG_PASSPHRASE,
-                        key_grip=key_grip
-                    )
+                    ['/usr/libexec/gpg-preset-passphrase', '--passphrase', GPG_PASSPHRASE, '--preset', key_grip]
                 )
                 break
 
