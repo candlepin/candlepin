@@ -31,8 +31,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -503,14 +501,10 @@ public class Util {
      */
     public static String getHostname() {
         try {
-            Field implField = InetAddress.class.getDeclaredField("impl");
-            implField.setAccessible(true);
-
-            Object impl = implField.get(null);
-            Method method = impl.getClass().getDeclaredMethod("getLocalHostName");
-            method.setAccessible(true);
-
-            return (String) method.invoke(impl);
+            // Hoping for the best here, as reflection rules in Java17 prevent us from
+            // jumping directly to the getLocalHostName call without even more shenanigans
+            // that are worse than just dealing with the shortcomings this method has.
+            return InetAddress.getLocalHost().getHostName();
         }
         catch (Exception e) {
             throw new RuntimeException(e);
