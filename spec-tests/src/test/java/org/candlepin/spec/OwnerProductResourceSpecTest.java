@@ -63,19 +63,19 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Iterables;
-import com.google.gson.Gson;
 
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -653,82 +653,71 @@ public class OwnerProductResourceSpecTest {
         assertEquals(0, actual.getProducts().size());
     }
 
-    private static Stream<String> invalidStrings() {
-        return Stream.of("", "   ", null);
+    private static Stream<Arguments> criticalProductStringFieldsAndValues() {
+        Set<String> fields = Set.of("id", "name");
+        List<String> values = Arrays.asList("", "  ", null);
+        List<Arguments> matrix = new ArrayList<>();
+
+        for (String field : fields) {
+            for (String value : values) {
+                matrix.add(Arguments.of(field, value));
+            }
+        }
+
+        return matrix.stream();
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1}")
+    @MethodSource("criticalProductStringFieldsAndValues")
+    public void shouldRequireValidCriticalStringFieldsWhenInsertingProduct(String fieldName, String value)
+        throws Exception {
+        OwnerDTO owner = ownerApi.createOwner(Owners.random());
+        ObjectNode productNode = ApiClient.MAPPER.readValue(Products.random().toJson(), ObjectNode.class);
+        ObjectNode nullNode = null;
+        productNode = value == null ? productNode.set(fieldName, nullNode) :
+            productNode.put(fieldName, value);
+
+        Response response = Request.from(client)
+            .setPath("/owners/{owner_key}/products")
+            .setPathParam("owner_key", owner.getKey())
+            .setMethod("POST")
+            .setBody(productNode.toString())
+            .execute();
+
+        assertThat(response)
+            .returns(400, Response::getCode);
+
+        assertThat(response.getBodyAsString())
+            .isNotNull()
+            .containsIgnoringCase("product has a null or invalid " + fieldName);
+    }
+
+    private static Stream<String> critialProductFields() {
+        return Stream.of("id", "name");
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @MethodSource("invalidStrings")
-    public void shouldReturnBadRequestWhenInsertingProductWithInvalidName(String name) {
+    @MethodSource("critialProductFields")
+    public void shouldRequirePopulatedCriticalStringFieldsWhenInsertingProduct(String fieldName)
+        throws Exception {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ProductDTO product = Products.random()
-            .name(name);
+        ObjectNode productNode = ApiClient.MAPPER.readValue(Products.random().toJson(), ObjectNode.class);
 
-        assertBadRequest(() -> ownerProductApi.createProductByOwner(owner.getKey(), product));
-    }
+        productNode.remove(fieldName);
 
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @MethodSource("invalidStrings")
-    public void shouldReturnBadRequestWhenInsertingProductWithInvalidId(String id) {
-        OwnerDTO owner = ownerApi.createOwner(Owners.random());
-        ProductDTO product = Products.random()
-            .id(id);
+        Response response = Request.from(client)
+            .setPath("/owners/{owner_key}/products")
+            .setPathParam("owner_key", owner.getKey())
+            .setMethod("POST")
+            .setBody(productNode.toString())
+            .execute();
 
-        assertBadRequest(() -> ownerProductApi.createProductByOwner(owner.getKey(), product));
-    }
+        assertThat(response)
+            .returns(400, Response::getCode);
 
-    @Nested
-    @TestInstance(Lifecycle.PER_CLASS)
-    public class JsonManipulationTests {
-        private ApiClient client;
-        private Gson unmodified;
-
-        @BeforeAll
-        public void beforeAll() {
-            // We need to enable serialization of nulls to craft the exact output we're expecting
-            // and ensuring we're actually testing fields that are explicitly set to null
-            this.client = ApiClients.admin();
-
-            this.unmodified = this.client.getApiClient().getJSON().getGson();
-            assertNotNull(this.unmodified);
-
-            Gson modified = this.unmodified.newBuilder()
-                .serializeNulls()
-                .create();
-
-            this.client.getApiClient().getJSON().setGson(modified);
-        }
-
-        @AfterAll
-        void restore() {
-            // Restore the original Gson object so none of the other tests are affected
-            assertNotNull(this.unmodified);
-            this.client.getApiClient().getJSON().setGson(this.unmodified);
-        }
-
-        private Stream<String> invalidStrings() {
-            return Stream.of("", " ", null);
-        }
-
-        @ParameterizedTest(name = "{displayName} {index}: {0}")
-        @MethodSource("invalidStrings")
-        public void shouldReturnBadRequestWhenInsertingProductWithInvalidName(String name) {
-            OwnerDTO owner = ownerApi.createOwner(Owners.random());
-            ProductDTO product = Products.random()
-                .name(name);
-
-            assertBadRequest(() -> ownerProductApi.createProductByOwner(owner.getKey(), product));
-        }
-
-        @ParameterizedTest(name = "{displayName} {index}: {0}")
-        @MethodSource("invalidStrings")
-        public void shouldReturnBadRequestWhenInsertingProductWithInvalidId(String id) {
-            OwnerDTO owner = ownerApi.createOwner(Owners.random());
-            ProductDTO product = Products.random()
-                .id(id);
-
-            assertBadRequest(() -> ownerProductApi.createProductByOwner(owner.getKey(), product));
-        }
+        assertThat(response.getBodyAsString())
+            .isNotNull()
+            .containsIgnoringCase("product has a null or invalid " + fieldName);
     }
 
     @Nested

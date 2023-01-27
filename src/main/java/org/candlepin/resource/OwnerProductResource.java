@@ -154,7 +154,7 @@ public class OwnerProductResource implements OwnerProductApi {
         }
 
         if (dto.getName() == null || dto.getName().matches("^\\s*$")) {
-            throw new BadRequestException(i18n.tr("product has null or invalid name"));
+            throw new BadRequestException(i18n.tr("product has a null or invalid name"));
         }
 
         this.validator.validateCollectionElementsNotNull(dto::getBranding,
