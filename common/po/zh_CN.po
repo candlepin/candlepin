@@ -1,13 +1,14 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021, 2022.
 # Sundeep Anand <suanand@redhat.com>, 2021.
+# John Sefler <jsefler@redhat.com>, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-06-09 03:03-0400\n"
-"PO-Revision-Date: 2022-06-15 11:19+0000\n"
-"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
+"PO-Revision-Date: 2023-01-27 18:20+0000\n"
+"Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
 "projects/candlepin/candlepin-4-0-hotfix/zh_CN/>\n"
 "Language: zh_CN\n"
@@ -15,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.12.2\n"
+"X-Generator: Weblate 4.15.2\n"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
@@ -1838,7 +1839,7 @@ msgstr "该归档不包含所需 consumer_types 目录"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:494
 msgid "The archive does not contain the required consumer.json file"
-msgstr "该归档不包含所需 consumer_json 目录"
+msgstr "该归档不包含所需 consumer.json 目录"
 
 #: server/src/main/java/org/candlepin/sync/Importer.java:500
 msgid "The archive does not contain the required entitlements directory"
