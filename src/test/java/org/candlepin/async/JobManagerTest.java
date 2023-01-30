@@ -510,6 +510,37 @@ public class JobManagerTest {
     }
 
     @Test
+    public void testJobManagerUsesHostnameAsDefaultNodeName() throws JobException {
+        this.config.clearProperty(ConfigProperties.ASYNC_JOBS_NODE_NAME);
+
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+        manager.start();
+
+        AsyncJobStatus result = manager.queueJob(JobConfig.forJob(TestJob.JOB_KEY));
+        assertNotNull(result);
+
+        String origin = result.getOrigin();
+        assertEquals(Util.getHostname(), origin);
+    }
+
+    @Test
+    public void testJobManagerUsesConfiguredNameAsNodeNameWhenPresent() throws JobException {
+        String nodeName = "custom node name";
+        this.config.setProperty(ConfigProperties.ASYNC_JOBS_NODE_NAME, nodeName);
+
+        JobManager manager = this.createJobManager();
+        manager.initialize();
+        manager.start();
+
+        AsyncJobStatus result = manager.queueJob(JobConfig.forJob(TestJob.JOB_KEY));
+        assertNotNull(result);
+
+        String origin = result.getOrigin();
+        assertEquals(nodeName, origin);
+    }
+
+    @Test
     public void shouldSendEvents() throws JobException {
         AsyncJobStatus status = this.createJobStatus(JOB_ID)
             .setJobKey(TestJob.JOB_KEY)
@@ -1795,6 +1826,7 @@ public class JobManagerTest {
         verify(this.scheduler, times(1))
             .unscheduleJobs(Arrays.asList(dummyTrigger.getKey()));
         verify(this.scheduler, times(1)).deleteJob(eq(jobkey4));
-
     }
+
+
 }

@@ -420,6 +420,19 @@ public class JobManager implements ModeChangeListener {
     }
 
     /**
+     * Attempts to fetch the name of this node. The node name is determined by first checking if the
+     * node has been explicitly named in candlepin.conf via the node_name configuration. If that has
+     * not been set, this will attempt to use the local hostname.
+     *
+     * @return
+     *  the name of this Candlepin node
+     */
+    private String getNodeName() {
+        String name = this.configuration.getString(ConfigProperties.ASYNC_JOBS_NODE_NAME, null);
+        return name != null ? name : Util.getHostname();
+    }
+
+    /**
      * Perform final initialization once that could not be performed during construction. Once this
      * method has been called, it should not be called again.
      *
@@ -508,7 +521,7 @@ public class JobManager implements ModeChangeListener {
     private void recoverAbandonedJobs() {
         AsyncJobStatusQueryArguments queryArgs = new AsyncJobStatusQueryArguments()
             .setJobStates(Collections.singleton(JobState.RUNNING))
-            .setExecutors(Collections.singleton(Util.getHostname()));
+            .setExecutors(Collections.singleton(this.getNodeName()));
 
         // Impl note: this violates normal state transitions, but we're trying to recover from an
         // ungraceful shutdown in which our process was terminated while a job was running. We'll
@@ -930,7 +943,7 @@ public class JobManager implements ModeChangeListener {
         job.setContextOwner(builder.getContextOwner());
 
         // Add environment-specific metadata...
-        job.setOrigin(Util.getHostname());
+        job.setOrigin(this.getNodeName());
         Principal principal = this.principalProvider.get();
         job.setPrincipalName(principal != null ? principal.getName() : null);
 
@@ -1253,7 +1266,7 @@ public class JobManager implements ModeChangeListener {
                 throw new JobInitializationException(errmsg);
             }
 
-            status.setExecutor(Util.getHostname());
+            status.setExecutor(this.getNodeName());
             status.incrementAttempts();
             status.setStartTime(new Date());
             status.setEndTime(null);
@@ -1486,7 +1499,7 @@ public class JobManager implements ModeChangeListener {
             throw new JobInitializationException(errmsg, true);
         }
         else if (jobState == JobState.RUNNING) {
-            if (Util.getHostname().equals(status.getExecutor())) {
+            if (this.getNodeName().equals(status.getExecutor())) {
                 // This goes against valid state transitions, but this node was the previous executor,
                 // so we should be fine to go on executing it again here.
                 status.setState(JobState.QUEUED);
