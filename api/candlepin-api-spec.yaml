@@ -3595,65 +3595,6 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
-  /hypervisors:
-    post:
-      tags:
-        - hypervisors
-      description: Updates the list of Hypervisor Guests Allows agents such as virt-who to update its host list and associate the guests for each host. This is typically used when a host is unable to register to candlepin via subscription manager.  In situations where consumers already exist it is probably best not to allow creation of new hypervisor consumers.  Most consumers do not have a hypervisorId attribute, so that should be added manually when necessary by the management environment. @deprecated Use the asynchronous method.
-      operationId: hypervisorUpdate
-      security: []
-      requestBody:
-        description: Host and Guest mapping details
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties:
-                type: array
-                items:
-                  type: string
-      parameters:
-        - name: owner
-          in: query
-          description: Owner key
-          required: true
-          schema:
-            type: string
-        - name: create_missing
-          in: query
-          description: Specify whether or not to create missing hypervisors. Default is true.  If false is specified, hypervisorIds that are not found will result in failed entries in the resulting HypervisorCheckInResult.
-          schema:
-            type: boolean
-            default: true
-      responses:
-        200:
-          description: A successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HypervisorUpdateResultDTO'
-        400:
-          description: Could not update host/guest mapping. Host to guest mapping was not provided for hypervisor check-in or Auto-attach is disabled for owner
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Could not update host/guest mapping. Host to guest mapping was not provided for hypervisor check-in or Auto-attach is disabled for owner
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        404:
-          description: Owner with provided key was not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Owner with provided key was not found.
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
   /hypervisors/{owner}:
     post:
       tags:

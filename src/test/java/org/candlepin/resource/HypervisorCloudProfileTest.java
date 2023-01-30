@@ -24,15 +24,12 @@ import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.server.v1.GuestIdDTO;
-import org.candlepin.dto.api.server.v1.HypervisorConsumerDTO;
-import org.candlepin.dto.api.server.v1.HypervisorUpdateResultDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
-import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Role;
@@ -43,14 +40,10 @@ import org.candlepin.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.inject.Inject;
 
@@ -102,59 +95,6 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
 
         consumer = TestUtil.createConsumer(hypervisorType, owner);
         consumer = consumerCurator.create(consumer);
-    }
-
-    @Test
-    public void testCloudProfileUpdatedOnGuestIdsForHostConsumerUpdates() {
-        Map<String, List<String>> hostGuestMap = new HashMap<>();
-        String hypervisorId = "test-host";
-        hostGuestMap.put(hypervisorId, new ArrayList<>(Collections
-            .singletonList("GUEST_B")));
-
-        HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
-            owner.getKey(), hostGuestMap, true);
-
-        List<HypervisorConsumerDTO> created = new ArrayList<>(result.getCreated());
-
-        assertEquals(1, created.size());
-        assertNotNull(consumerCurator.findByUuid(created.get(0).getUuid()).getRHCloudProfileModified());
-
-        hostGuestMap.put(hypervisorId, new ArrayList<>(Collections
-            .singletonList("GUEST_C")));
-
-        result = hypervisorResource.hypervisorUpdate(
-            owner.getKey(), hostGuestMap, true);
-
-        List<HypervisorConsumerDTO> updated = new ArrayList<>(result.getUpdated());
-
-        assertEquals(1, updated.size());
-        assertNotNull(consumerCurator.findByUuid(updated.get(0).getUuid()).getRHCloudProfileModified());
-    }
-
-    @Test
-    public void testCloudProfileUpdatedOnConsumerTypeUpdates() {
-        ConsumerType system = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
-        consumerTypeCurator.create(system);
-
-        String hypervisorid = "test-host";
-        HypervisorId hid = new HypervisorId()
-            .setOwner(owner)
-            .setHypervisorId(hypervisorid);
-
-        Consumer testConsumer = new Consumer(hypervisorid, someuser.getUsername(), owner, system);
-        testConsumer.setHypervisorId(hid);
-        testConsumer = consumerCurator.create(testConsumer);
-
-        Map<String, List<String>> hostGuestMap = new HashMap<>();
-        hostGuestMap.put(testConsumer.getName(), new ArrayList<>());
-
-        HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
-            owner.getKey(), hostGuestMap, true);
-
-        List<HypervisorConsumerDTO> updated = new ArrayList<>(result.getUpdated());
-
-        assertEquals(1, updated.size());
-        assertNotNull(consumerCurator.findByUuid(updated.get(0).getUuid()).getRHCloudProfileModified());
     }
 
     @Test
@@ -217,33 +157,4 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
 
         assertEquals(beforeUpdateTimestamp, afterUpdateTimestamp);
     }
-
-    @Test
-    public void testCloudProfileNotUpdatedWithNoUpdatesForHypervisor() {
-        Map<String, List<String>> hostGuestMap = new HashMap<>();
-        String hypervisorId = "test-host";
-        hostGuestMap.put(hypervisorId, new ArrayList<>(Collections
-            .singletonList("GUEST_B")));
-
-        HypervisorUpdateResultDTO result = hypervisorResource.hypervisorUpdate(
-            owner.getKey(), hostGuestMap, true);
-
-        List<HypervisorConsumerDTO> created = new ArrayList<>(result.getCreated());
-        Date profileCreated = consumerCurator.findByUuid(created.get(0).getUuid())
-            .getRHCloudProfileModified();
-
-        assertEquals(1, created.size());
-        assertNotNull(profileCreated);
-
-        result = hypervisorResource.hypervisorUpdate(
-            owner.getKey(), hostGuestMap, true);
-
-        List<HypervisorConsumerDTO> unChanged = new ArrayList<>(result.getUnchanged());
-        Date profileModified = consumerCurator.findByUuid(unChanged.get(0).getUuid())
-            .getRHCloudProfileModified();
-        assertEquals(1, unChanged.size());
-
-        assertEquals(profileCreated, profileModified);
-    }
-
 }

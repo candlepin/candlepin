@@ -28,8 +28,6 @@ import org.candlepin.auth.Verify;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
-import org.candlepin.dto.api.server.v1.HypervisorConsumerDTO;
-import org.candlepin.dto.api.server.v1.HypervisorUpdateResultDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
@@ -41,10 +39,8 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.GuestId;
-import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.resource.server.v1.HypervisorsApi;
 import org.candlepin.resource.util.GuestMigration;
 
@@ -54,19 +50,12 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.google.inject.persist.Transactional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
@@ -105,132 +94,6 @@ public class HypervisorResource implements HypervisorsApi {
         this.principalProvider = Objects.requireNonNull(principalProvider);
 
         this.hypervisorType = consumerTypeCurator.getByLabel(ConsumerTypeEnum.HYPERVISOR.getLabel(), true);
-    }
-
-    /**
-     * @deprecated Use the asynchronous method
-     * @return HypervisorCheckInResult
-     */
-    @Override
-    @Deprecated
-    @Transactional
-    @UpdateConsumerCheckIn
-    @SuppressWarnings({"checkstyle:indentation", "checkstyle:methodlength"})
-    public HypervisorUpdateResultDTO hypervisorUpdate(
-        @Verify(value = Owner.class, require = Access.READ_ONLY,
-        subResource = SubResource.HYPERVISOR) String ownerKey,
-        Map<String, List<String>> hostGuestMap,
-        Boolean createMissing) {
-
-        Principal principal = this.principalProvider.get();
-
-        log.debug("Hypervisor check-in by principal: {}", principal);
-
-        if (hostGuestMap == null) {
-            log.debug("Host/Guest mapping provided during hypervisor checkin was null.");
-            throw new BadRequestException(
-                i18n.tr("Host to guest mapping was not provided for hypervisor check-in."));
-        }
-
-        Owner owner = this.getOwner(ownerKey);
-        if (hostGuestMap.remove("") != null) {
-            log.warn("Ignoring empty hypervisor id");
-        }
-
-        // Maps virt hypervisor ID to registered consumer for that hypervisor, should one exist:
-        VirtConsumerMap hypervisorConsumersMap =
-            consumerCurator.getHostConsumersMap(owner, hostGuestMap.keySet());
-
-        int emptyGuestIdCount = 0;
-        Set<String> allGuestIds = new HashSet<>();
-
-        Collection<List<String>> idsLists = hostGuestMap.values();
-        for (List<String> guestIds : idsLists) {
-            // ignore null guest lists
-            // See bzs 1332637, 1332635
-            if (guestIds == null) {
-                continue;
-            }
-            for (Iterator<String> guestIdsItr = guestIds.iterator(); guestIdsItr.hasNext();) {
-                String id = guestIdsItr.next();
-
-                if (StringUtils.isEmpty(id)) {
-                    emptyGuestIdCount++;
-                    guestIdsItr.remove();
-                }
-                else {
-                    allGuestIds.add(id);
-                }
-            }
-        }
-
-        if (emptyGuestIdCount > 0) {
-            log.warn("Ignoring {} empty/null guest id(s).", emptyGuestIdCount);
-        }
-
-        HypervisorUpdateResultDTO result = new HypervisorUpdateResultDTO();
-        for (Entry<String, List<String>> hostEntry : hostGuestMap.entrySet()) {
-            String hypervisorId = hostEntry.getKey();
-            // Treat null guest list as an empty list.
-            // We can get an empty list here from katello due to an update
-            // to ruby on rails.
-            // (https://github.com/rails/rails/issues/13766#issuecomment-32730270)
-            // See bzs 1332637, 1332635
-            if (hostEntry.getValue() == null) {
-                hostEntry.setValue(new ArrayList<>());
-            }
-            try {
-                log.debug("Syncing virt host: {} ({} guest IDs)", hypervisorId, hostEntry.getValue().size());
-
-                boolean hostConsumerCreated = false;
-                boolean updatedType = false;
-                // Attempt to find a consumer for the given hypervisorId
-                Consumer consumer = null;
-                if (hypervisorConsumersMap.get(hypervisorId) == null) {
-                    if (!createMissing.booleanValue()) {
-                        log.info("Unable to find hypervisor with id {} in org {}", hypervisorId, ownerKey);
-                        result.setFailedUpdate(addFailed(result.getFailedUpdate(),
-                            hypervisorId + ": " +
-                            i18n.tr("Unable to find hypervisor in org \"{0}\"", ownerKey)));
-                        continue;
-                    }
-                    log.debug("Registering new host consumer for hypervisor ID: {}", hypervisorId);
-                    consumer = createConsumerForHypervisorId(hypervisorId, owner, principal);
-                    hostConsumerCreated = true;
-                }
-                else {
-                    consumer = hypervisorConsumersMap.get(hypervisorId);
-                    if (!hypervisorType.getId().equals(consumer.getTypeId())) {
-                        consumer.setType(hypervisorType);
-                        updatedType = true;
-                    }
-                }
-                List<GuestId> guestIds = new ArrayList<>();
-                consumerResource.populateEntities(guestIds, hostEntry.getValue());
-                boolean guestIdsUpdated = addGuestIds(consumer, guestIds);
-
-                Date now = new Date();
-                consumerCurator.updateLastCheckin(consumer, now);
-                consumer.setLastCheckin(now);
-                // Populate the result with the processed consumer.
-                if (hostConsumerCreated) {
-                    result.setCreated(addHypervisorConsumerDTO(result.getCreated(), consumer));
-                }
-                else if (guestIdsUpdated || updatedType) {
-                    result.setUpdated(addHypervisorConsumerDTO(result.getUpdated(), consumer));
-                }
-                else {
-                    result.setUnchanged(addHypervisorConsumerDTO(result.getUnchanged(), consumer));
-                }
-            }
-            catch (Exception e) {
-                log.error("Hypervisor checkin failed", e);
-                result.setFailedUpdate(addFailed(result.getFailedUpdate(),
-                    hypervisorId + ": " + e.getMessage()));
-            }
-        }
-        log.info("Summary of hypervisor checkin by principal \"{}\": {}", principal, result);
-        return result;
     }
 
     @Override
@@ -331,37 +194,6 @@ public class HypervisorResource implements HypervisorsApi {
         return guestIdsUpdated;
     }
 
-    /*
-     * Create a new hypervisor type consumer to represent the incoming hypervisorId
-     */
-    private Consumer createConsumerForHypervisorId(String incHypervisorId, Owner owner, Principal principal) {
-        Consumer consumer = new Consumer();
-        consumer.ensureUUID();
-        consumer.setName(incHypervisorId);
-        consumer.setType(this.hypervisorType);
-        consumer.setFact("uname.machine", "x86_64");
-        consumer.setGuestIds(new ArrayList<>());
-        consumer.setOwner(owner);
-
-        // Create HypervisorId
-        HypervisorId hid = new HypervisorId()
-            .setOwner(owner)
-            .setConsumer(consumer)
-            .setHypervisorId(incHypervisorId);
-
-        consumer.setHypervisorId(hid);
-
-        // Create Consumer
-        return consumerResource.createConsumerFromDTO(
-            this.translator.translate(consumer, ConsumerDTO.class),
-            this.hypervisorType,
-            principal,
-            null,
-            owner,
-            null,
-            false);
-    }
-
     private void validateHypervisorJson(String hypervisorJson) {
         if (hypervisorJson == null || hypervisorJson.isEmpty()) {
             log.debug("Host/Guest mapping provided during hypervisor update was null.");
@@ -382,20 +214,6 @@ public class HypervisorResource implements HypervisorsApi {
             throw new BadRequestException(
                 i18n.tr("Invalid host to guest mapping was provided for hypervisor update."));
         }
-
-    }
-
-    public Set<HypervisorConsumerDTO> addHypervisorConsumerDTO(Set<HypervisorConsumerDTO> consumerDTOSet,
-        Consumer consumer) {
-
-        HypervisorConsumerDTO consumerDTO = this.translator.translate(consumer, HypervisorConsumerDTO.class);
-
-        if (consumerDTOSet == null) {
-            consumerDTOSet = new HashSet<>();
-        }
-        consumerDTOSet.add(consumerDTO);
-
-        return consumerDTOSet;
     }
 
     public Set<String> addFailed(Set<String> failedSet, String failed) {
