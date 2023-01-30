@@ -77,6 +77,7 @@ public class ApiClientFactory {
         apiClient.setBasePath(getUrl());
         apiClient.setDebugging(properties.getBool(ConfigKey.DEBUG.key()));
         apiClient.setVerifyingSsl(false);
+        apiClient.setServerIndex(null);
 
         return apiClient;
     }
