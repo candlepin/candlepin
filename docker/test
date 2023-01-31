@@ -2,6 +2,7 @@
 
 TEST_CMD="/usr/bin/cp-test -t -u -r"
 DIR="$(git rev-parse --show-toplevel)/docker/"
+OPERATING_SYSTEM="cs8" # Changing this variable, change default OS
 
 usage() {
   cat << USAGE
@@ -11,6 +12,15 @@ USAGE: test [OPTIONS]
 OPTIONS:
   -c CMD    sets the command to be run by the container
               default: $TEST_CMD
+  -o OS     Specify operating system where candlepin will be running
+              For postgres are supported:
+                cs8 - Centos Stream 8 (default)
+              For mysql are supported:
+                cs8 - Centos Stream 8 (default)
+              Without database are supported:
+                cs8 - Centos Stream 8 (default)
+              For sonarqube are supported:
+                cs8 - Centos Stream 8 (default)
   -m        use mysql
   -n NAME   Sets the project name for the docker-compose run
   -p        use postgres
@@ -28,16 +38,18 @@ OPTIONS:
 USAGE
 }
 
-while getopts ":c:mn:pxqlde" opt; do
+while getopts ":c:mn:o:pxqlde" opt; do
   case $opt in
     c) TEST_CMD="$OPTARG";;
-    m) COMPOSE_ARGS="-f $DIR/docker-compose-mysql.yml";
+    m)
+       COMPOSE_ARGS="-f $DIR/docker-compose-mysql";
        chcon -Rt svirt_sandbox_file_t $DIR/mysql.cnf;
        sudo chown 999:999 $DIR/mysql.cnf;;
     n) PROJ_NAME="-p $OPTARG";;
-    p) COMPOSE_ARGS="-f $DIR/docker-compose-postgres.yml";;
-    x) COMPOSE_ARGS="-f $DIR/docker-compose-no-db.yml";;
-    q) COMPOSE_ARGS="-f $DIR/docker-compose-sonarqube.yml";;
+    o) OPERATING_SYSTEM=$OPTARG;;
+    p) COMPOSE_ARGS="-f $DIR/docker-compose-postgres";;
+    x) COMPOSE_ARGS="-f $DIR/docker-compose-no-db";;
+    q) COMPOSE_ARGS="-f $DIR/docker-compose-sonarqube";;
     l) USE_CACHE="1";;
     d) DETACHED="1";;
     e) EXPOSE_PORTS="1";;
@@ -53,6 +65,15 @@ while getopts ":c:mn:pxqlde" opt; do
       ;;
   esac
 done
+
+COMPOSE_ARGS="$COMPOSE_ARGS-$OPERATING_SYSTEM.yml"
+
+if ! [ $COMPOSE_ARGS ];
+then
+  echo "Operating system: $OPERATING_SYSTEM not supported!"
+  usage
+  exit 1
+fi
 
 # PROJ_NAME should be set in a jenkins environment. It allows multiple
 #  instances of the compose to run without clobbering each other.

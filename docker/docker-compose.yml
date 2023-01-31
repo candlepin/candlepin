@@ -1,1 +1,1 @@
-docker-compose-postgres.yml
+./docker-compose-postgres-cs8.yml
