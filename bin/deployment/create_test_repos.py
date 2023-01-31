@@ -372,16 +372,15 @@ def generate_repositories(repo_definitions, package_definitions):
         run_command(['createrepo_c', repo_path])
 
         # Try to get product certificate from candlepin server and add it to repository
-        cert = get_productid_cert(session, repo)
-        if cert is not None:
+        cert_path = get_productid_cert(session, repo)
+        if cert_path is not None:
             # Note: the cert has to have name 'productid', because modifyrepo
             # command creates new record in repomd.xml according name of file
-            with open('productid', 'w') as fp:
-                fp.write(cert)
+            os.link(cert_path, 'productid')
             # This command add productid certificate to repository
             run_command(['modifyrepo_c', 'productid', '%s/repodata' % repo_path])
-            # Remove temporary cert file
-            os.remove('productid')
+            # Remove temporary link
+            os.unlink('productid')
 
     # Copy exported file to root of repositories
     gpg_key_path = os.path.join(REPO_ROOT_DIR, "RPM-GPG-KEY-candlepin")
@@ -409,13 +408,8 @@ def get_productid_cert(session, repo_definition, owner='admin'):
 
     # Try to read certificate from cached file
     cert_path = os.path.join(CERT_DIR, str(product_id) + '.pem')
-    try:
-        with open(cert_path, 'r') as fp:
-            cert = fp.read()
-    except IOError as err:
-        pass
-    else:
-        return cert
+    if os.path.exists(cert_path):
+        return cert_path
 
     # When the certificate cannot be found on the disk, then try to get certificate
     # from the candlepin server
@@ -443,9 +437,9 @@ def get_productid_cert(session, repo_definition, owner='admin'):
         with open(cert_path, 'w') as fp:
             fp.write(cert)
     except IOError as err:
-        pass
+        return None
 
-    return cert
+    return cert_path
 
 
 def get_package_definitions(test_data):
