@@ -13,7 +13,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.12
+Version: 4.2.13
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -251,6 +251,90 @@ fi
 
 #raw
 %changelog
+* Tue Jan 31 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.13-1
+- Add new translations using Weblate (noreply@weblate.org)
+- Updated Util.getHostname to no longer use reflection (crog@redhat.com)
+- CANDLEPIN-375: Remove synchronous hypervisor checkin and tests
+  (wpoteat@redhat.com)
+- test data importers: use less shell (ptoscano@redhat.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- CANDLEPIN-65: Migrate consumer_resource_dev_spec to Java (wpoteat@redhat.com)
+- CANDLEPIN-456: Fixed input validation on content creation endpoint
+  (crog@redhat.com)
+- Fix date-time parsing of query params (ojanus@redhat.com)
+- Bump mariadb-java-client from 3.1.1 to 3.1.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Normalized consumer fact constants and usage (crog@redhat.com)
+- CANDLEPIN-118: Migrate environment_cert_v3 to Java (joshmalbrecht@gmail.com)
+- CANDLEPIN-280: Migrate autobind_disabled_for_owner_spec to Java
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-180: Migrate consumer_resource_host_guest_spec to Java
+  (wpoteat@redhat.com)
+- CANDLEPIN-70: Migrate consumer_resource_spec to Java (wpoteat@redhat.com)
+- CANDLEPIN-454: Upgrade to mockito-junit-jupiter 5.0.0 (ojanus@redhat.com)
+- test data importers: use a requests.Session (ptoscano@redhat.com)
+- Bump dependency-check-gradle from 7.4.4 to 8.0.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump assertj-core from 3.24.1 to 3.24.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump junit-jupiter-api from 5.9.1 to 5.9.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-183: Migrate distributor_capability_spec to Java
+  (wpoteat@redhat.com)
+- CANDLEPIN-247: Migrate healing_spec to Java (wpoteat@redhat.com)
+- Bump junit-jupiter from 5.9.1 to 5.9.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump mariadb-java-client from 3.1.0 to 3.1.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Bump junit-jupiter-engine from 5.9.1 to 5.9.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump keycloak-servlet-filter-adapter from 20.0.2 to 20.0.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-176: Migrate autobind_spec to Java, parts 1 and 2
+  (wpoteat@redhat.com)
+- CANDLEPIN-154: Migrate entitlement_migrate and client_v1_size_spec to Java
+  (wpoteat@redhat.com)
+- Limit bundler version to 2.3.26 (ojanus@redhat.com)
+- CANDLEPIN-270: Migrate person_consumer_spec, domain_consumer_spec and
+  deleted_consumer_spec to Java (ojanus@redhat.com)
+- CANDLEPIN-275: Migrate entitlement_spec to Java (joshmalbrecht@gmail.com)
+- CANDLEPIN-172: Migrate role_resource_spec and rules_import_spec
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-179: Migrate sku_level_enable_override_spec to Java
+  (wpoteat@redhat.com)
+- CANDLEPIN-254: Migrate consumer_resource_content_spec to Java
+  (ojanus@redhat.com)
+- Bump assertj-core from 3.23.1 to 3.24.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump gson from 2.10 to 2.10.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump dependency-check-gradle from 7.4.3 to 7.4.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-117: Migrate derived_product_spec to Java (wpoteat@redhat.com)
+- CANDLEPIN-205: Migrate consumer_resource_activation_key_spec to Java
+  (wpoteat@redhat.com)
+- Bump gradle-lint-plugin from 17.7.1 to 17.8.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-152: Migrate compliance_reasons_spec to Java (ojanus@redhat.com)
+- CANDLEPIN-230: Migrate environment_spec to Java (ojanus@redhat.com)
+- CANDLEPIN-63: Migrate core_spec to Java (ojanus@redhat.com)
+- CANDLEPIN-126: Migrate consumer_bonus_pool_provided_spec and
+  consumer_facts_spec to Java (ojanus@redhat.com)
+- Added org-entity remapping to the refresh worker (crog@redhat.com)
+- Migrated content_access_spec to Java (Part2) - migrated remaing tests to
+  ContentAccessSpecTest.java - removed content_access_spec.rb
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-249: Migrate core_and_ram_spec to Java (ojanus@redhat.com)
+- Bump mockito-junit-jupiter from 4.10.0 to 4.11.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump dependency-check-gradle from 7.4.1 to 7.4.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Removed DELETE-CASCADE from content side of product-content link
+  (crog@redhat.com)
+
 * Mon Jan 02 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.12-1
 - Updated deploy script to silence irritating Liquibase spam (crog@redhat.com)
 - Added remote debug configurations for Gradle - Updated cp_debugging task to
