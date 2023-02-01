@@ -2,7 +2,8 @@
 
 TEST_CMD="/usr/bin/cp-test -t -u -r"
 DIR="$(git rev-parse --show-toplevel)/docker/"
-OPERATING_SYSTEM="cs8" # Changing this variable, change default OS
+OPERATING_SYSTEM="cs8" # Default OS/image
+COMPOSE_ARGS="-f $DIR/docker-compose-postgres"; # Default compose file
 
 usage() {
   cat << USAGE
