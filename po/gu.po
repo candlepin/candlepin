@@ -4,22 +4,23 @@
 # Ankit Patel <ankit@redhat.com>, 2014. #zanata
 # keral patel <keralpatel29@yahoo.com>, 2014. #zanata
 # swkothar <swkothar@redhat.com>, 2014. #zanata
-# John Sefler <jsefler@redhat.com>, 2016. #zanata
-# John Sefler <jsefler@redhat.com>, 2017. #zanata
+# John Sefler <jsefler@redhat.com>, 2016. #zanata, 2023.
+# John Sefler <jsefler@redhat.com>, 2017. #zanata, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-06-09 03:02-0400\n"
-"PO-Revision-Date: 2017-10-18 11:23-0400\n"
+"PO-Revision-Date: 2023-01-25 23:20+0000\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
-"Language-Team: Gujarati\n"
+"Language-Team: Gujarati <https://translate.fedoraproject.org/projects/"
+"candlepin/candlepin-4-1-hotfix/gu/>\n"
 "Language: gu\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1)\n"
-"X-Generator: Zanata 3.9.6\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Weblate 4.15.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -1802,7 +1803,7 @@ msgstr "પેટીમાં જરૂરી meta.json ફાઇલ સમા�
 
 #: src/main/java/org/candlepin/sync/Importer.java:489
 msgid "The archive does not contain the required consumer_types directory"
-msgstr "પેટીમાં જરૂરી onsumer_types ડિરેક્ટરી સમાયેલ નથી"
+msgstr "પેટીમાં જરૂરી consumer_types ડિરેક્ટરી સમાયેલ નથી"
 
 #: src/main/java/org/candlepin/sync/Importer.java:494
 msgid "The archive does not contain the required consumer.json file"
