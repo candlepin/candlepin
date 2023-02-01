@@ -148,7 +148,7 @@
     <dependency>
       <groupId>info.picocli</groupId>
       <artifactId>picocli</artifactId>
-      <version>4.7.0</version>
+      <version>4.7.1</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -244,13 +244,13 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-c3p0</artifactId>
-      <version>5.6.7.Final</version>
+      <version>5.6.14.Final</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-jcache</artifactId>
-      <version>5.6.7.Final</version>
+      <version>5.6.14.Final</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -298,7 +298,7 @@
     <dependency>
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-jpamodelgen</artifactId>
-      <version>5.6.12.Final</version>
+      <version>5.6.14.Final</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -527,7 +527,7 @@
             <annotationProcessorPath>
               <groupId>org.hibernate</groupId>
               <artifactId>hibernate-jpamodelgen</artifactId>
-              <version>5.6.12.Final</version>
+              <version>5.6.14.Final</version>
             </annotationProcessorPath>
           </annotationProcessorPaths>
         </configuration>
