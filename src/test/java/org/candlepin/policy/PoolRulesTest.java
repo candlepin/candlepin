@@ -675,7 +675,7 @@ public class PoolRulesTest {
     }
 
     private Subscription createVirtLimitSubWithDerivedProducts(String productId,
-        String derivedProductId, int quantity, int virtLimit) {
+        String derivedProductId, long quantity, int virtLimit) {
 
         // Create some provided products:
         Product provided1 = TestUtil.createProduct();
@@ -708,7 +708,7 @@ public class PoolRulesTest {
             .thenReturn(product);
 
         Subscription s = TestUtil.createSubscription(owner, product);
-        s.setQuantity(new Long(quantity));
+        s.setQuantity(quantity);
 
         return s;
     }

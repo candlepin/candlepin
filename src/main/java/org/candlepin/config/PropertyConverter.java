@@ -80,7 +80,7 @@ public class PropertyConverter {
             return (Integer) n;
         }
         else {
-            return new Integer(n.intValue());
+            return n.intValue();
         }
     }
 
@@ -90,7 +90,7 @@ public class PropertyConverter {
             return (Long) n;
         }
         else {
-            return new Long(n.longValue());
+            return n.longValue();
         }
     }
 

@@ -322,7 +322,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product original = createTestProduct();
         original.setAttribute("product.count", "1");
         original.setAttribute("product.pos_count", "5");
-        original.setAttribute("product.long_multiplier", (new Long(Integer.MAX_VALUE * 1000)).toString());
+        original.setAttribute("product.long_multiplier", String.valueOf(Integer.MAX_VALUE * 1000L));
         original.setAttribute("product.long_pos_count", "23");
         original.setAttribute("product.bool_val_str", "true");
         original.setAttribute("product.bool_val_num", "0");
@@ -337,7 +337,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertNotNull(original.getUuid());
         original.setAttribute("product.count", "134");
         original.setAttribute("product.pos_count", "333");
-        original.setAttribute("product.long_multiplier", (new Long(Integer.MAX_VALUE * 100)).toString());
+        original.setAttribute("product.long_multiplier", String.valueOf(Integer.MAX_VALUE * 100L));
         original.setAttribute("product.long_pos_count", "10");
         original.setAttribute("product.bool_val_str", "false");
         original.setAttribute("product.bool_val_num", "1");

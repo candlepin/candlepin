@@ -47,6 +47,8 @@ import org.bouncycastle.asn1.DERBitString;
 import org.bouncycastle.asn1.DERUTF8String;
 import org.bouncycastle.asn1.misc.MiscObjectIdentifiers;
 import org.bouncycastle.asn1.misc.NetscapeCertType;
+import org.bouncycastle.asn1.pkcs.PKCSObjectIdentifiers;
+import org.bouncycastle.asn1.x509.AlgorithmIdentifier;
 import org.bouncycastle.asn1.x509.AuthorityKeyIdentifier;
 import org.bouncycastle.asn1.x509.BasicConstraints;
 import org.bouncycastle.asn1.x509.ExtendedKeyUsage;
@@ -56,6 +58,7 @@ import org.bouncycastle.asn1.x509.KeyUsage;
 import org.bouncycastle.asn1.x509.SubjectKeyIdentifier;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509ExtensionUtils;
+import org.bouncycastle.operator.DigestCalculator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mozilla.jss.netscape.security.x509.AuthorityKeyIdentifierExtension;
@@ -63,10 +66,12 @@ import org.mozilla.jss.netscape.security.x509.KeyIdentifier;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
@@ -80,7 +85,6 @@ import java.util.Date;
 import java.util.Set;
 
 import javax.inject.Inject;
-
 
 
 public class JSSPKIUtilityTest {
@@ -213,7 +217,9 @@ public class JSSPKIUtilityTest {
         KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
         RSAPublicKey key = (RSAPublicKey) gen.generateKeyPair().getPublic();
 
-        AuthorityKeyIdentifier expectedAki = new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(key);
+        AuthorityKeyIdentifier expectedAki = new JcaX509ExtensionUtils(
+            new SHA256DigestCalculator(MessageDigest.getInstance("SHA-256")))
+            .createAuthorityKeyIdentifier(key);
         AuthorityKeyIdentifierExtension actualAki = JSSPKIUtility.buildAuthorityKeyIdentifier(key);
 
         byte[] expectedKeyIdentifier = expectedAki.getKeyIdentifier();
@@ -374,4 +380,27 @@ public class JSSPKIUtilityTest {
         assertTrue(Arrays.equals(keypair.getPrivate().getEncoded(), kpdata.getPrivateKeyData()));
     }
 
+    private static class SHA256DigestCalculator
+        implements DigestCalculator {
+        private ByteArrayOutputStream bOut = new ByteArrayOutputStream();
+        private MessageDigest digest;
+
+        public SHA256DigestCalculator(MessageDigest digest) {
+            this.digest = digest;
+        }
+
+        public AlgorithmIdentifier getAlgorithmIdentifier() {
+            return new AlgorithmIdentifier(PKCSObjectIdentifiers.sha256WithRSAEncryption);
+        }
+
+        public OutputStream getOutputStream() {
+            return bOut;
+        }
+
+        public byte[] getDigest() {
+            byte[] bytes = digest.digest(bOut.toByteArray());
+            bOut.reset();
+            return bytes;
+        }
+    }
 }

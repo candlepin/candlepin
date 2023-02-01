@@ -315,7 +315,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testSimpleDeleteOwner() {
         String id = owner.getId();
-        ownerResource.deleteOwner(owner.getKey(), new Boolean(true), new Boolean(true));
+        ownerResource.deleteOwner(owner.getKey(), true, true);
         owner = ownerCurator.get(id);
         assertNull(owner);
     }
@@ -343,7 +343,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         UeberCertificate uCert = ueberCertGenerator.generate(owner.getKey(), setupAdminPrincipal("test"));
         assertNotNull(uCert);
 
-        ownerResource.deleteOwner(owner.getKey(), new Boolean(true),  new Boolean(true));
+        ownerResource.deleteOwner(owner.getKey(), true,  true);
 
         assertEquals(0, consumerCurator.listByOwner(owner).list().size());
         assertNull(consumerCurator.findByUuid(c1.getUuid()));
@@ -1437,7 +1437,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         Role r = new Role("rolename");
         r.addPermission(p);
         roleCurator.create(r);
-        ownerResource.deleteOwner(owner.getKey(), new Boolean(false),  new Boolean(false));
+        ownerResource.deleteOwner(owner.getKey(), false,  false);
     }
 
     @Test
@@ -1465,7 +1465,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource resource = this.buildOwnerResource();
 
         assertThrows(ConflictException.class, () -> resource.deleteOwner("testOwner",
-            new Boolean(true), new Boolean(true)));
+            true, true));
     }
 
     @Test
