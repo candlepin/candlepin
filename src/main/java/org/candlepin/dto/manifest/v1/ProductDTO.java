@@ -38,6 +38,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlRootElement;
@@ -387,19 +389,9 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
      *  a reference to this DTO
      */
     public ProductDTO setAttributes(Map<String, String> attributes) {
-        if (attributes != null) {
-            if (this.attributes == null) {
-                this.attributes = new HashMap<String, String>();
-            }
-            else {
-                this.attributes.clear();
-            }
-
-            this.attributes.putAll(attributes);
-        }
-        else {
-            this.attributes = null;
-        }
+        this.attributes = attributes != null ?
+            new HashMap<>(attributes) :
+            null;
 
         return this;
     }
@@ -439,7 +431,8 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
      * Changes made to the collection will be reflected by this product DTO instance.
      *
      * @return
-     *  The provided products associated with this key, or null if they have not yet been defined
+     *  The provided products associated with this product, or null if they have not yet been
+     *  defined
      */
     public Set<ProductDTO> getProvidedProducts() {
         return this.providedProducts != null ? new SetView<>(this.providedProducts) : null;
@@ -466,23 +459,18 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
      * @return
      *  A reference to this DTO
      */
-    public ProductDTO setProvidedProducts(Set<ProductDTO> providedProducts) {
+    public ProductDTO setProvidedProducts(Collection<ProductDTO> providedProducts) {
         if (providedProducts != null) {
-            if (this.providedProducts == null) {
-                this.providedProducts = new HashSet<>();
-            }
-            else {
-                this.providedProducts.clear();
-            }
-
-            for (ProductDTO dto : providedProducts) {
-                if (isNullOrIncomplete(dto)) {
+            Consumer<ProductDTO> validator = elem -> {
+                if (this.isNullOrIncomplete(elem)) {
                     throw new IllegalArgumentException(
                         "collection contains null or incomplete product objects");
                 }
-            }
+            };
 
-            this.providedProducts.addAll(providedProducts);
+            this.providedProducts = providedProducts.stream()
+                .peek(validator)
+                .collect(Collectors.toSet());
         }
         else {
             this.providedProducts = null;
@@ -759,20 +747,15 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
      */
     public ProductDTO setProductContent(Collection<ProductContentDTO> productContent) {
         if (productContent != null) {
-            if (this.productContent == null) {
-                this.productContent = new HashMap<String, ProductContentDTO>();
-            }
-            else {
-                this.productContent.clear();
-            }
-
-            for (ProductContentDTO dto : productContent) {
-                if (dto == null || dto.getContent() == null || dto.getContent().getId() == null) {
+            Consumer<ProductContentDTO> validator = elem -> {
+                if (elem == null || elem.getContent() == null || elem.getContent().getId() == null) {
                     throw new IllegalArgumentException("collection contains null or incomplete dtos");
                 }
+            };
 
-                this.productContent.put(dto.getContent().getId(), dto);
-            }
+            this.productContent = productContent.stream()
+                .peek(validator)
+                .collect(Collectors.toMap(pcdto -> pcdto.getContent().getId(), Function.identity()));
         }
         else {
             this.productContent = null;
@@ -852,21 +835,9 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
      *  a reference to this DTO
      */
     public ProductDTO setDependentProductIds(Collection<String> dependentProductIds) {
-        if (dependentProductIds != null) {
-            if (this.dependentProductIds == null) {
-                this.dependentProductIds = new HashSet<String>();
-            }
-            else {
-                this.dependentProductIds.clear();
-            }
-
-            for (String pid : dependentProductIds) {
-                this.addDependentProductId(pid);
-            }
-        }
-        else {
-            this.dependentProductIds = null;
-        }
+        this.dependentProductIds = dependentProductIds != null ?
+            new HashSet(dependentProductIds) :
+            null;
 
         return this;
     }
@@ -904,23 +875,18 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
      *  A reference to this DTO
      */
     @JsonIgnore
-    public ProductDTO setBranding(Set<BrandingDTO> branding) {
+    public ProductDTO setBranding(Collection<BrandingDTO> branding) {
         if (branding != null) {
-            if (this.branding == null) {
-                this.branding = new HashSet<>();
-            }
-            else {
-                this.branding.clear();
-            }
-
-            for (BrandingDTO dto : branding) {
-                if (isNullOrIncomplete(dto)) {
+            Consumer<BrandingDTO> validator = elem -> {
+                if (this.isNullOrIncomplete(elem)) {
                     throw new IllegalArgumentException(
                         "collection contains null or incomplete branding objects");
                 }
-            }
+            };
 
-            this.branding.addAll(branding);
+            this.branding = branding.stream()
+                .peek(validator)
+                .collect(Collectors.toSet());
         }
         else {
             this.branding = null;
@@ -939,7 +905,7 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
      */
     @JsonIgnore
     public boolean addBranding(BrandingDTO branding) {
-        if (isNullOrIncomplete(branding)) {
+        if (this.isNullOrIncomplete(branding)) {
             throw new IllegalArgumentException("branding is null or incomplete");
         }
 
@@ -975,7 +941,7 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
         if (obj instanceof ProductDTO && super.equals(obj)) {
             ProductDTO that = (ProductDTO) obj;
 
-            EqualsBuilder builder = new EqualsBuilder()
+            boolean equals = new EqualsBuilder()
                 .append(this.getUuid(), that.getUuid())
                 .append(this.getMultiplier(), that.getMultiplier())
                 .append(this.getId(), that.getId())
@@ -983,15 +949,13 @@ public class ProductDTO extends TimestampedCandlepinDTO<ProductDTO> implements P
                 .append(this.getAttributes(), that.getAttributes())
                 .append(this.getDerivedProduct(), that.getDerivedProduct())
                 .append(this.getDependentProductIds(), that.getDependentProductIds())
-                .append(this.getBranding(), that.getBranding());
+                .isEquals();
 
             // As with many collections here, we need to explicitly check the elements ourselves,
             // since it seems very common for collection implementations to not properly implement
             // .equals
             // Note that we're using the boolean operator here as a shorthand way to skip checks
             // when the equality check has already failed.
-            boolean equals = builder.isEquals();
-
             equals = equals && Util.collectionsAreEqual(this.getProvidedProducts(),
                 that.getProvidedProducts());
 

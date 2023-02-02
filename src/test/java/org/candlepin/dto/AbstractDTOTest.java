@@ -48,7 +48,7 @@ import java.util.stream.Stream;
 // special annotation
 @TestInstance(Lifecycle.PER_CLASS)
 public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
-    protected static Logger log = LoggerFactory.getLogger(AbstractDTOTest.class);
+    protected static final Logger log = LoggerFactory.getLogger(AbstractDTOTest.class);
 
     public static final Pattern ACCESSOR_NAME_REGEX = Pattern.compile("(?:get|is)([a-zA-Z0-9]+)");
 
@@ -381,7 +381,21 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
 
         Object expected = methods[0].invoke(dto);
         Object actual = methods[0].invoke(copy);
-        assertEquals(expected, actual);
+
+        if (expected instanceof Collection) {
+            // The collectionsAreEquals method does a more accurate comparison than assertEquals,
+            // but it's still only a binary check. We'll fall back to assertEquals if it fails to
+            // try to get some info as to what doesn't match.
+            if (!Util.collectionsAreEqual((Collection) expected, (Collection) actual)) {
+                // This should fail, but will hopefully give us some indication as to why it failed
+                assertEquals(expected, actual, "field equality check failed for method " +
+                    methods[0].getName());
+            }
+        }
+        else {
+            assertEquals(expected, actual, "field equality check failed for method " +
+                methods[0].getName());
+        }
     }
 
     @Test
@@ -402,7 +416,21 @@ public abstract class AbstractDTOTest<T extends CandlepinDTO<T>> {
         for (Method[] methods : this.fields.values()) {
             Object expected = methods[0].invoke(dto);
             Object actual = methods[0].invoke(copy);
-            assertEquals(expected, actual);
+
+            if (expected instanceof Collection) {
+                // The collectionsAreEquals method does a more accurate comparison than assertEquals,
+                // but it's still only a binary check. We'll fall back to assertEquals if it fails to
+                // try to get some info as to what doesn't match.
+                if (!Util.collectionsAreEqual((Collection) expected, (Collection) actual)) {
+                    // This should fail, but will hopefully give us some indication as to why it failed
+                    assertEquals(expected, actual, "field equality check failed for method " +
+                        methods[0].getName());
+                }
+            }
+            else {
+                assertEquals(expected, actual, "field equality check failed for method " +
+                    methods[0].getName());
+            }
         }
     }
 

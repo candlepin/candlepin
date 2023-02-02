@@ -19,11 +19,9 @@ import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.ProductInfo;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
@@ -35,50 +33,28 @@ import java.util.stream.Collectors;
 public class ImportProductServiceAdapter implements ProductServiceAdapter {
 
     private final String ownerKey;
-    private final Collection<? extends ProductInfo> products;
-
-    private Map<String, ? extends ProductInfo> productMap;
+    private final Map<String, ? extends ProductInfo> productMap;
 
     /**
-     * Creates a new ImportProductServiceAdapter mapped to the specified products for the given
-     * organization (owner) key.
+     * Creates a new ImportProductServiceAdapter that will use the specified product importer to
+     * pull product information for the given organization.
      *
      * @param ownerKey
-     *  the organization (owner) key under which the provided products will be mapped
+     *  the key of the organization (owner) the imported products belong to
      *
-     * @param products
-     *  the products this adapter will map and provide to callers
+     * @param productMap
+     *  a mapping of imported products, mapped by product ID
      *
      * @throws IllegalArgumentException
      *  if ownerKey is null or empty
      */
-    public ImportProductServiceAdapter(String ownerKey, Collection<? extends ProductInfo> products) {
+    public ImportProductServiceAdapter(String ownerKey, Map<String, ? extends ProductInfo> productMap) {
         if (ownerKey == null || ownerKey.isEmpty()) {
             throw new IllegalArgumentException("ownerKey is null or empty");
         }
 
         this.ownerKey = ownerKey;
-        this.products = products;
-    }
-
-    /**
-     * Fetches the product map, creating it if necessary
-     *
-     * @return
-     *  the mapping of products
-     */
-    private Map<String, ? extends ProductInfo> getProductMap() {
-        if (this.productMap == null) {
-            if (this.products != null) {
-                this.productMap = this.products.stream()
-                    .collect(Collectors.toMap(ProductInfo::getId, Function.identity()));
-            }
-            else {
-                this.productMap = Collections.emptyMap();
-            }
-        }
-
-        return this.productMap;
+        this.productMap = productMap != null ? productMap : Map.of();
     }
 
     /**
@@ -97,10 +73,8 @@ public class ImportProductServiceAdapter implements ProductServiceAdapter {
         Collection<String> productIds) {
 
         if (productIds != null && this.ownerKey.equalsIgnoreCase(ownerKey)) {
-            Map<String, ? extends ProductInfo> productMap = this.getProductMap();
-
             return productIds.stream()
-                .map(pid -> productMap.get(pid))
+                .map(pid -> this.productMap.get(pid))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         }

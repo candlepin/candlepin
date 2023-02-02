@@ -486,29 +486,16 @@ public class Exporter {
         File productDir = new File(baseDir.getCanonicalPath(), "products");
         productDir.mkdir();
 
-        Map<String, Product> products = new HashMap<>();
+        // TODO: This could be bulked into a single query rather than iterating and likely hitting
+        // a bunch of lazy lookups.
+        Map<String, Product> productMap = new HashMap<>();
         for (Entitlement entitlement : consumer.getEntitlements()) {
             Pool pool = entitlement.getPool();
 
-            // Don't forget the 'main' product!
-            Product product = pool.getProduct();
-            products.put(product.getId(), product);
-
-            addProvidedProducts(product.getProvidedProducts(), products);
-
-            // Also need to check for sub products
-            Product derivedProduct = product.getDerivedProduct();
-            if (derivedProduct != null) {
-                products.put(derivedProduct.getId(), derivedProduct);
-                addProvidedProducts(derivedProduct.getProvidedProducts(), products);
-            }
+            this.collectProducts(pool.getProduct(), productMap);
         }
 
-        for (Product product : products.values()) {
-            // Clear the owner and UUID so they can be re-generated/assigned on import
-            // product.setUuid(null);
-            // product.setOwner(null);
-
+        for (Product product : productMap.values()) {
             String path = productDir.getCanonicalPath();
             String productId = product.getId();
 
@@ -536,17 +523,34 @@ public class Exporter {
         }
     }
 
-    private void addProvidedProducts(Collection<Product> providedProducts, Map<String, Product> products) {
-        if (providedProducts == null || providedProducts.isEmpty()) {
+    /**
+     * Adds the specified product and all of its children products to the given product map, using
+     * products' ID (*not* UUID) as the key in the map. If the specified product is null or does not
+     * have a product ID, it will be silently ignored.
+     *
+     * @param product
+     *  the product to add to the map
+     *
+     * @param productMap
+     *  the map in which to collect products
+     */
+    private void collectProducts(Product product, Map<String, Product> productMap) {
+        if (product == null || product.getId() == null) {
             return;
         }
 
-        for (Product product : providedProducts) {
-            if (product != null) {
-                products.put(product.getId(), product);
-                addProvidedProducts(product.getProvidedProducts(), products);
+        productMap.put(product.getId(), product);
+
+        // Add provided products (if applicable)
+        Collection<Product> providedProducts = product.getProvidedProducts();
+        if (providedProducts != null) {
+            for (Product provided : providedProducts) {
+                this.collectProducts(provided, productMap);
             }
         }
+
+        // Recursively add derived product (if applicable)
+        this.collectProducts(product.getDerivedProduct(), productMap);
     }
 
     private void exportConsumerTypes(File baseDir) throws IOException {

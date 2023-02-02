@@ -568,35 +568,38 @@ public class Importer {
         // If the consumer has no entitlements, this products directory will end up empty.
         // This also implies there will be no entitlements to import.
         Meta meta = mapper.readValue(metadata, Meta.class);
-        List<SubscriptionDTO> importSubs;
-        Set<ProductDTO> productsToImport;
+        Map<String, ProductDTO> importedProductsMap;
+        List<SubscriptionDTO> importedSubs;
 
-        if (importFiles.get(ImportFile.PRODUCTS.fileName()) != null) {
-            ProductImporter importer = new ProductImporter();
+        // TODO: If EntitlementImporter is ever updated to be more on-demand like the ProductImporter
+        // refactor, update this block/class to not be doing half of the entitlement importing bits.
+        File productsDir = importFiles.get(ImportFile.PRODUCTS.fileName());
+        if (productsDir != null) {
+            ProductImporter productImporter = new ProductImporter(productsDir, this.mapper, this.i18n);
 
-            productsToImport = this.importProducts(
-                importFiles.get(ImportFile.PRODUCTS.fileName()).listFiles(), importer, owner);
-
-            importSubs = this.importEntitlements(
-                owner, productsToImport, entitlements.listFiles(), consumer.getUuid(), meta);
+            importedProductsMap = productImporter.importProductMap();
+            importedSubs = this.importEntitlements(owner, importedProductsMap, entitlements.listFiles(),
+                consumer.getUuid(), meta);
         }
         else {
             log.warn("No products found to import, skipping product import.");
             log.warn("No entitlements in manifest, removing all subscriptions for owner.");
 
-            productsToImport = null;
-            importSubs = importEntitlements(owner, new HashSet<>(), new File[]{}, consumer.getUuid(), meta);
+            importedProductsMap = null;
+            importedSubs = this.importEntitlements(owner, importedProductsMap, null, consumer.getUuid(),
+                meta);
         }
 
         // Setup our import subscription adapter with the subscriptions imported:
-        SubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(importSubs);
-        ProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(), productsToImport);
+        SubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(importedSubs);
+        ProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
+            importedProductsMap);
 
         Refresher refresher = poolManager.getRefresher(subAdapter, prodAdapter);
         refresher.add(owner);
         refresher.run();
 
-        return importSubs;
+        return importedSubs;
     }
 
     protected void importRules(File rulesFile, File metadata) throws IOException {
@@ -667,52 +670,24 @@ public class Importer {
         return consumer;
     }
 
-    protected Set<ProductDTO> importProducts(File[] products, ProductImporter importer, Owner owner)
-        throws IOException {
-
-        Set<ProductDTO> productsToImport = new HashSet<>();
-        for (File product : products) {
-            // Skip product.pem's, we just need the json to import:
-            if (product.getName().endsWith(".json")) {
-                log.debug("Importing product {} for owner {}", product.getName(), owner.getKey());
-
-                try (Reader reader = new FileReader(product)) {
-                    productsToImport.add(importer.createObject(mapper, reader, owner));
-                }
-            }
-        }
-
-        // TODO: Do we need to cleanup unused products? Looked at this earlier and it
-        // looks somewhat complex and a little bit dangerous, so we're leaving them
-        // around for now.
-
-        return productsToImport;
-    }
-
-    protected List<SubscriptionDTO> importEntitlements(Owner owner, Set<ProductDTO> products,
-        File[] entitlements, String consumerUuid, Meta meta)
+    protected List<SubscriptionDTO> importEntitlements(Owner owner,
+        Map<String, ProductDTO> importedProductsMap, File[] entitlementFiles, String consumerUuid, Meta meta)
         throws IOException, SyncDataFormatException {
 
         log.debug("Importing entitlements for owner: {}", owner);
 
-        EntitlementImporter importer = new EntitlementImporter(csCurator, cdnCurator, i18n, productCurator,
-            entitlementCurator, translator);
-        Map<String, ProductDTO> productsById = new HashMap<>();
-
-        for (ProductDTO product : products) {
-            log.debug("Adding product owned by {} to ID map", owner.getKey());
-
-            // Note: This may actually be causing problems with subscriptions receiving the wrong
-            // version of a product
-            productsById.put(product.getId(), product);
-        }
-
         List<SubscriptionDTO> subscriptionsToImport = new ArrayList<>();
-        for (File entitlement : entitlements) {
-            try (Reader reader = new FileReader(entitlement)) {
-                log.debug("Import entitlement: {}", entitlement.getName());
-                subscriptionsToImport.add(
-                    importer.importObject(mapper, reader, owner, productsById, consumerUuid, meta));
+
+        if (importedProductsMap != null && entitlementFiles != null) {
+            EntitlementImporter importer = new EntitlementImporter(cdnCurator, i18n, translator,
+                importedProductsMap);
+
+            for (File entitlement : entitlementFiles) {
+                try (Reader reader = new FileReader(entitlement)) {
+                    log.debug("Importing entitlement from file: {}", entitlement.getName());
+                    subscriptionsToImport.add(
+                        importer.importObject(mapper, reader, owner, consumerUuid, meta));
+                }
             }
         }
 

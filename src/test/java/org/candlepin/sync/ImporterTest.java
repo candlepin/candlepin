@@ -89,6 +89,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.Reader;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -189,10 +190,19 @@ public class ImporterTest {
             this.modelTranslator);
     }
 
+    private File createTempDirectory(String prefix) throws IOException {
+        File tmpdir = Files.createTempDirectory(this.tmpFolder.toPath(), prefix).toFile();
+        tmpdir.deleteOnExit();
+
+        return tmpdir;
+    }
+
     private File createFile(String filename, String version, Date date, String username, String prefix)
         throws JsonGenerationException, JsonMappingException, IOException {
 
         File file = new File(this.tmpFolder, filename);
+        file.deleteOnExit();
+
         Meta meta = new Meta(version, date, username, prefix, null);
 
         this.mapper.writeValue(file, meta);
@@ -665,7 +675,8 @@ public class ImporterTest {
         Map<String, File> importFiles = new HashMap<>();
         File ruleDir = mock(File.class);
         File[] rulesFiles = createMockJsFile(mockJsPath);
-        when(ruleDir.listFiles()).thenReturn(rulesFiles);
+        when(ruleDir.listFiles()).thenReturn(rulesFiles); // bad bad bad bad bad bad bad bad bad bad bad bad
+        importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFiles[0]);
 
         File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
         importFiles.put(ImportFile.META.fileName(), actualmeta);
@@ -693,30 +704,35 @@ public class ImporterTest {
         this.mapper.writeValue(consumerFile, consumerDTO);
         importFiles.put(ImportFile.CONSUMER.fileName(), consumerFile);
 
-        File cTypes = mock(File.class);
-        when(cTypes.listFiles()).thenReturn(new File[]{});
-        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), cTypes);
+        // setup source data for consumer types
+        File consumerTypesDir = this.createTempDirectory("consumer_types");
+        importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), consumerTypesDir);
 
-        Product prod = new Product("prodId", "prodTest", null);
-        prod.setDependentProductIds(null);
-        File prodFile = new File(this.tmpFolder, "product.json");
+        // setup source data for products
+        File productsDir = this.createTempDirectory("products");
+
+        Product prod = new Product("prodId", "prodTest", null)
+            .setDependentProductIds(null);
+
+        File prodFile = new File(productsDir, "product.json");
         this.mapper.writeValue(prodFile, prod);
-        File products = mock(File.class);
-        when(products.listFiles()).thenReturn(new File[]{prodFile});
-        importFiles.put(ImportFile.PRODUCTS.fileName(), products);
 
-        Entitlement ent = new Entitlement();
-        Pool pool = new Pool();
-        pool.setProduct(prod);
-        ent.setPool(pool);
-        ent.setQuantity(2);
-        File entFile = new File(this.tmpFolder, "entitlement.json");
+        importFiles.put(ImportFile.PRODUCTS.fileName(), productsDir);
+
+        // Setup source data for entitlements
+        File entitlementsDir = this.createTempDirectory("entitlements");
+
+        Pool pool = new Pool()
+            .setProduct(prod);
+
+        Entitlement ent = new Entitlement()
+            .setPool(pool)
+            .setQuantity(2);
+
+        File entFile = new File(entitlementsDir, "entitlement.json");
         this.mapper.writeValue(entFile, this.modelTranslator.translate(ent, EntitlementDTO.class));
-        File entitlements = mock(File.class);
-        when(entitlements.listFiles()).thenReturn(new File[]{entFile});
 
-        importFiles.put(ImportFile.ENTITLEMENTS.fileName(), entitlements);
-        importFiles.put(ImportFile.RULES_FILE.fileName(), rulesFiles[0]);
+        importFiles.put(ImportFile.ENTITLEMENTS.fileName(), entitlementsDir);
 
         ConflictOverrides co = mock(ConflictOverrides.class);
 

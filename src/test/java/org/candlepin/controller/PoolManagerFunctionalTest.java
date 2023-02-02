@@ -51,8 +51,12 @@ import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.resource.dto.AutobindData;
-import org.candlepin.service.impl.ImportProductServiceAdapter;
-import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
+import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.model.CertificateInfo;
+import org.candlepin.service.model.ConsumerInfo;
+import org.candlepin.service.model.ProductInfo;
+import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -69,6 +73,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -76,9 +81,11 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.persistence.EntityNotFoundException;
@@ -90,6 +97,127 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private static final String PRODUCT_VIRT_HOST = "virtualization_host";
     private static final String PRODUCT_VIRT_HOST_PLATFORM = "virtualization_host_platform";
     private static final String PRODUCT_VIRT_GUEST = "virt_guest";
+
+
+    private static class MockSubscriptionServiceAdapter implements SubscriptionServiceAdapter {
+        private Map<String, SubscriptionInfo> submap;
+
+        public MockSubscriptionServiceAdapter(Collection<? extends SubscriptionInfo> sinfo) {
+            this.submap = (sinfo != null ? sinfo.stream() : Stream.<SubscriptionInfo>empty())
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(SubscriptionInfo::getId, Function.identity()));
+        }
+
+        public MockSubscriptionServiceAdapter(SubscriptionInfo... sinfo) {
+            this(sinfo != null ? List.of(sinfo) : (Collection<SubscriptionInfo>) null);
+        }
+
+        @Override
+        public Collection<? extends SubscriptionInfo> getSubscriptions() {
+            return this.submap.values();
+        }
+
+        @Override
+        public SubscriptionInfo getSubscription(String subscriptionId) {
+            return this.submap.get(subscriptionId);
+        }
+
+        @Override
+        public Collection<? extends SubscriptionInfo> getSubscriptions(String ownerKey) {
+            return this.submap.values();
+        }
+
+        @Override
+        public Collection<String> getSubscriptionIds(String ownerKey) {
+            return this.submap.values().stream()
+                .map(sub -> sub.getId())
+                .collect(Collectors.toList());
+        }
+
+        private boolean productUsesProductId(ProductInfo pinfo, String productId) {
+            if (pinfo == null || productId == null) {
+                return false;
+            }
+
+            if (productId.equals(pinfo.getId())) {
+                return true;
+            }
+
+            Collection<? extends ProductInfo> providedProducts = pinfo.getProvidedProducts();
+            if (providedProducts != null) {
+                for (ProductInfo ppinfo : providedProducts) {
+                    if (ppinfo != null && productId.equals(ppinfo.getId())) {
+                        return true;
+                    }
+                }
+            }
+
+            // TODO: if we need to factor in derived products, recursively call this function
+            // with the derived product ref.
+
+            return false;
+        }
+
+        @Override
+        public Collection<? extends SubscriptionInfo> getSubscriptionsByProductId(String productId) {
+            return this.submap.values().stream()
+                .filter(sub -> this.productUsesProductId(sub.getProduct(), productId))
+                .collect(Collectors.toList());
+        }
+
+        @Override
+        public boolean hasUnacceptedSubscriptionTerms(String ownerKey) {
+            return false;
+        }
+
+        @Override
+        public void sendActivationEmail(String subscriptionId) {
+            // intentionally left empty
+        }
+
+        @Override
+        public boolean canActivateSubscription(ConsumerInfo consumer) {
+            return true;
+        }
+
+        @Override
+        public void activateSubscription(ConsumerInfo consumer, String email, String emailLocale) {
+            // intentionally left empty
+        }
+
+        @Override
+        public boolean isReadOnly() {
+            return false;
+        }
+    }
+
+    private static class MockProductServiceAdapter implements ProductServiceAdapter {
+        private Map<String, ProductInfo> pmap;
+
+        public MockProductServiceAdapter(Collection<? extends ProductInfo> pinfo) {
+            this.pmap = (pinfo != null ? pinfo.stream() : Stream.<ProductInfo>empty())
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(ProductInfo::getId, Function.identity()));
+        }
+
+        public MockProductServiceAdapter(ProductInfo... pinfo) {
+            this(pinfo != null ? List.of(pinfo) : (Collection<ProductInfo>) null);
+        }
+
+        @Override
+        public Collection<? extends ProductInfo> getProductsByIds(String ownerKey, Collection<String> ids) {
+            return (ids != null ? ids.stream() : Stream.empty())
+                .map(pid -> this.pmap.get(pid))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        }
+
+        @Override
+        public CertificateInfo getProductCertificate(String ownerKey, String productId) {
+            return null;
+        }
+    }
+
 
     @Inject
     private CandlepinPoolManager poolManager;
@@ -146,9 +274,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         productCurator.create(provisioning);
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(o.getKey(),
-            Arrays.asList(virtHost, virtHostPlatform, virtGuest, monitoring, provisioning));
 
         SubscriptionDTO sub1 = new SubscriptionDTO();
         sub1.setId(Util.generateDbUUID());
@@ -203,6 +328,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(sub2);
         subscriptions.add(sub3);
         subscriptions.add(sub4);
+
+        SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
+        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(virtHost, virtHostPlatform,
+            virtGuest, monitoring, provisioning);
 
         poolManager.getRefresher(subAdapter, prodAdapter).add(o).run();
 
@@ -374,9 +503,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         this.ownerContentCurator.mapContentToOwner(content, this.o);
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(o.getKey(),
-            Arrays.asList(modifier));
 
         SubscriptionDTO sub = new SubscriptionDTO();
         sub.setQuantity(5L);
@@ -389,6 +515,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         sub.setId(Util.generateDbUUID());
 
         subscriptions.add(sub);
+
+        SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
+        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(modifier);
 
         poolManager.getRefresher(subAdapter, prodAdapter).add(o).run();
 
@@ -428,9 +557,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         productCurator.create(product2);
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(o.getKey(),
-            Arrays.asList(product1, product2));
 
         SubscriptionDTO subscription = new SubscriptionDTO();
         subscription.setId(Util.generateDbUUID());
@@ -444,6 +570,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(subscription);
 
         // set up initial pool
+        SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
+        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(product1, product2);
+
         poolManager.getRefresher(subAdapter, prodAdapter).add(o).run();
 
         List<Pool> pools = poolCurator.listByOwnerAndProduct(o, product1.getId());
@@ -973,9 +1102,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Product prod = this.createProduct(owner);
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod));
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
@@ -990,6 +1116,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(sub);
 
         // Trigger the refresh:
+        SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
+        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
+
         poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
         List<Pool> pools = poolCurator.listByOwnerAndProduct(owner, prod.getId());
         assertEquals(1, pools.size());
@@ -1010,9 +1139,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             TestUtil.createDate(2015, 11, 30));
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod));
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
@@ -1033,6 +1159,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         pool.getSourceSubscription().setSubscriptionId(sub.getId());
         poolCurator.merge(pool);
 
+        SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
+        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
         poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         pool = poolCurator.get(pool.getId());
@@ -1048,9 +1176,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Product prod = this.createProduct(owner);
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod));
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
@@ -1070,6 +1195,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(sub);
 
         // Trigger the refresh:
+        SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
+        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
         poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.listByOwnerAndProduct(owner, prod.getId());
@@ -1081,6 +1208,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.remove(sub);
 
         // Trigger the refresh:
+        subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
+        prodAdapter = new MockProductServiceAdapter(prod);
         poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
         assertNull(poolCurator.get(poolId));
     }
@@ -1092,9 +1221,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Product prod2 = this.createProduct(owner);
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod, prod2));
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
@@ -1119,6 +1245,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(sub2);
 
         // Trigger the refresh:
+        SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
+        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod, prod2);
         poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.listByOwner(owner).list();
@@ -1136,9 +1264,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod));
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
@@ -1153,6 +1278,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(sub);
 
         // Trigger the refresh:
+        SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
+        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
+
         poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
@@ -1171,6 +1299,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         }
 
         // Trigger the refresh:
+        subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
+        prodAdapter = new MockProductServiceAdapter(prod);
         poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         assertNull(poolCurator.get(masterId), "Original Master Pool should be gone");
@@ -1198,9 +1328,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod));
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
@@ -1215,6 +1342,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(sub);
 
         // Trigger the refresh:
+        SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
+        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
+
         poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
@@ -1278,9 +1408,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Product prod = this.createProduct(owner);
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        ImportSubscriptionServiceAdapter subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
-        ImportProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
-            Arrays.asList(prod));
 
         org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
             this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
@@ -1310,6 +1437,9 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         createEntitlementWithQ(pool, retrieved, consumer1, e2, "01/01/2010");
         assertEquals(pool.getConsumed(), Long.valueOf(e1 + e2));
 
+        SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
+        ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
+
         poolManager.getRefresher(subAdapter, prodAdapter).add(retrieved).run();
         pool = poolCurator.get(pool.getId());
         return pool;
@@ -1318,13 +1448,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testEntitlementsRevocationWithLifoOrder() throws Exception {
         Pool pool = doTestEntitlementsRevocationCommon(7, 4, 5);
-        assertEquals(5L, this.poolCurator.get(pool.getId()).getConsumed().longValue());
+        assertEquals(5L, this.poolCurator.get(pool.getId()).getConsumed());
     }
 
     @Test
     public void testEntitlementsRevocationWithNoOverflow() throws Exception {
         Pool pool = doTestEntitlementsRevocationCommon(10, 4, 5);
-        assertEquals(9L, this.poolCurator.get(pool.getId()).getConsumed().longValue());
+        assertEquals(9L, this.poolCurator.get(pool.getId()).getConsumed());
     }
 
     @Test
