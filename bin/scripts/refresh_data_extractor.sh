@@ -37,10 +37,15 @@ INPUT_FILE=$1
 
 
 if [ -f "$INPUT_FILE" ]; then
-    grep -Eq '^.*\] TRACE org\.candlepin\.controller\.CandlepinPoolManager - \[\{' $INPUT_FILE
+    # Check if this is a gz compressed file that we can should unpack first
+    if command -v gunzip > /dev/null && gunzip -t $INPUT_FILE > /dev/null 2>&1; then
+        UNPACK="gunzip --stdout $INPUT_FILE"
+    else
+        UNPACK="cat $INPUT_FILE"
+    fi
 
-    if [ $? -eq 0 ] ; then
-        sed -nE 's/^.*\] TRACE org\.candlepin\.controller\.CandlepinPoolManager - (\[\{.*)$/\1/p' $INPUT_FILE
+    if $UNPACK | grep -Eq '^.*\] TRACE org\.candlepin\.controller\.CandlepinPoolManager - \[\{'; then
+        $UNPACK | sed -nE 's/^.*\] TRACE org\.candlepin\.controller\.CandlepinPoolManager - (\[\{.*)$/\1/p'
     else
         echo "File does not appear to contain upstream refresh data: $INPUT_FILE"
     fi
