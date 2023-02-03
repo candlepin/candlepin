@@ -140,12 +140,6 @@ touch %{buildroot}/%{_sysconfdir}/%{name}/%{name}.conf
 %{__install} -d -m 755 %{buildroot}/%{_sysconfdir}/tomcat/
 %{__unzip} %{SOURCE1} -d %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}
 
-## if we're running with tomcat 8+, use the appropriate context.xml file.
-%if 0%{?rhel} > 7 || 0%{?fedora} > 27
-mv %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}/META-INF/context_tomcat8.xml \
-%{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}/META-INF/context.xml
-%endif
-
 ## If we're running with jss 5+ (RHEL9+/Fedora35+) use the appropriate jar file name
 %if (0%{?rhel} && 0%{?rhel} >= 9) || (0%{?fedora} && 0%{?fedora} >= 35)
 sed -i 's/jss4.jar/jss.jar/g' %{buildroot}/%{_sharedstatedir}/tomcat/webapps/%{name}/META-INF/context.xml
