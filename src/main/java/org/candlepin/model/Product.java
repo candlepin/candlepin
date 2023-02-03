@@ -103,6 +103,9 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
          *  to the value "ALL" to specify all architectures */
         public static final String ARCHITECTURE = "arch";
 
+        /** Attribute to specify the provided tags of a product */
+        public static final String PROVIDED_TAGS = "provided_tags";
+
         /** Attribute for specifying the type of branding to apply to a marketing product (SKU) */
         public static final String BRANDING_TYPE = "brand_type";
 

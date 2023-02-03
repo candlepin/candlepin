@@ -182,6 +182,10 @@ public class X509ExtensionUtil  extends X509Util{
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
             OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_ARCH_KEY), false, arch != null ? arch : ""));
 
+        String provides = product.getAttributeValue(Product.Attributes.PROVIDED_TAGS);
+        toReturn.add(new X509ExtensionWrapper(productOid + "." +
+            OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_PROVIDES_KEY), false, provides != null ? provides : ""));
+
         String version = product.getAttributeValue(Product.Attributes.VERSION);
         toReturn.add(new X509ExtensionWrapper(productOid + "." +
             OIDUtil.ORDER_PRODUCT_OIDS.get(OIDUtil.OP_VERSION_KEY), false, version != null ? version : ""));

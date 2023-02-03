@@ -946,6 +946,20 @@ public class DefaultEntitlementCertServiceAdapterTest {
             cont.getId() + "." + contentType + ".1");
     }
 
+    private Boolean extMapHasProductProvidedTags(Product product, Map<String, String> extMap) {
+        return extMap.containsKey("1.3.6.1.4.1.2312.9.1." +
+            product.getId() + "." + "4");
+    }
+
+    private Boolean extMapProductProvidedTagsMatches(Product product, Map<String, String> extMap,
+        String providedTags) {
+        String providedTagsOid = "1.3.6.1.4.1.2312.9.1." +
+            product.getId() + "." + "4";
+        String extBrandType = extMap.get(providedTagsOid);
+
+        return extBrandType.equals(providedTags);
+    }
+
     private Boolean extMapHasProductBrandType(Product product, Map<String, String> extMap) {
         return extMap.containsKey("1.3.6.1.4.1.2312.9.1." +
             product.getId() + "." + "5");
@@ -979,6 +993,25 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // do we have a yum content type oid
         assertTrue(extMapHasContentType(content, extMap, "1"));
         assertFalse(extMapHasContentType(content, extMap, "2"));
+    }
+
+    @Test
+    public void testPrepareV1ExtensionsProvidedTags() {
+        Set<Product> products = new HashSet<>();
+
+        product.setAttribute(Product.Attributes.PROVIDED_TAGS, "centos_8.9");
+        products.add(product);
+        setupEntitlements(ARCH_LABEL, "1.0");
+
+        Set<X509ExtensionWrapper> extensions =
+            certServiceAdapter.prepareV1Extensions(products, pool, consumer,
+            entitlement.getQuantity(), new PromotedContent(prefix("")), new HashSet<>());
+        Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
+        Map<String, String> extMap = getEncodedContentMap(extensions);
+
+        assertTrue(isEncodedContentValid(map));
+        assertTrue(extMapHasProductProvidedTags(product, extMap));
+        assertTrue(extMapProductProvidedTagsMatches(product, extMap, "centos_8.9"));
     }
 
     @Test
