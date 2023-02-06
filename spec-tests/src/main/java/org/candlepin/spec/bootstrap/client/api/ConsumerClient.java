@@ -38,8 +38,6 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Extension of generated {@link ConsumerApi} to provide more convenient overrides of generated methods.
@@ -72,11 +70,8 @@ public class ConsumerClient extends ConsumerApi {
 
         Response response = request.execute();
         assertThat(response).returns(200, Response::getCode);
-        List<Map<String, String>> certs = response.deserialize(List.class);
 
-        return certs.stream()
-            .map(stringStringMap -> mapper.convertValue(stringStringMap, CertificateDTO.class))
-            .collect(Collectors.toList());
+        return response.deserialize(new TypeReference<>() {});
     }
 
     public ConsumerDTO createConsumer(ConsumerDTO consumer) {
@@ -108,7 +103,7 @@ public class ConsumerClient extends ConsumerApi {
 
     private List<EntitlementDTO> parseEntitlements(String json) {
         try {
-            return this.mapper.readValue(json, new TypeReference<>(){});
+            return this.mapper.readValue(json, new TypeReference<>() {});
         }
         catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -139,6 +134,7 @@ public class ConsumerClient extends ConsumerApi {
             "", "", false, null, new ArrayList<>()));
     }
 
+    @Override
     public List<JsonNode> exportCertificates(String consumerUuid, String serials) {
         Object jsonPayload = super.exportCertificates(consumerUuid, serials);
         try {
