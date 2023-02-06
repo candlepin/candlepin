@@ -111,6 +111,7 @@ public class KeycloakAuth extends UserAuth implements AuthProvider {
 
             if (keycloakSecurityContext != null && keycloakSecurityContext.getToken() != null) {
                 String userName = keycloakSecurityContext.getToken().getPreferredUsername();
+                log.info("Token type used for authentication: Bearer");
                 return createPrincipal(userName);
             }
         }

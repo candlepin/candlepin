@@ -173,6 +173,7 @@ public class CloudRegistrationAuth implements AuthProvider {
                     throw new VerificationException("Token contains an invalid audience: " + ownerKey);
                 }
 
+                log.info("Token type used for authentication: {}", TOKEN_TYPE);
                 return this.createCloudUserPrincipal(subject, ownerKey);
             }
         }
