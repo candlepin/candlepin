@@ -14,139 +14,396 @@
  */
 package org.candlepin.sync;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.MapConfiguration;
+import org.candlepin.config.Configuration;
+import org.candlepin.dto.manifest.v1.BrandingDTO;
 import org.candlepin.dto.manifest.v1.ContentDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
-import org.candlepin.model.Content;
-import org.candlepin.model.Owner;
-import org.candlepin.model.Product;
+import org.candlepin.dto.manifest.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.Writer;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.nio.file.Files;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 public class ProductImporterTest {
 
+    private I18n i18n;
+    private Configuration config;
+    private File tmpdir;
     private ObjectMapper mapper;
-    private ProductImporter importer;
-    private Owner owner = new Owner("Test Corporation");
 
     @BeforeEach
-    public void setUp() throws IOException {
-        Map<String, String> configProps = new HashMap<>();
-        configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+    public void setup() throws Exception {
+        this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        this.mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
+        this.config = new CandlepinCommonTestConfig();
+        this.config.setProperty(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
 
-        importer = new ProductImporter();
+        this.tmpdir = Files.createTempDirectory("product_importer_test").toFile();
+        this.tmpdir.deleteOnExit();
+
+        this.mapper = new SyncUtils(this.config).getObjectMapper();
+    }
+
+    private ProductImporter buildProductImporter() throws IOException {
+        return new ProductImporter(this.tmpdir, this.mapper, this.i18n);
+    }
+
+    private void writeMockProductData(ProductDTO... products) throws IOException {
+        if (products == null) {
+            return;
+        }
+
+        // Impl note: we're intentionally *not* collecting children products here so we can
+        // easily test the case where a child product does not exist in the manifest
+
+        for (ProductDTO pdto : products) {
+            File pfile = new File(this.tmpdir, pdto.getId() + ProductImporter.PRODUCT_FILE_SUFFIX);
+            pfile.deleteOnExit();
+
+            try (FileWriter writer = new FileWriter(pfile)) {
+                this.mapper.writeValue(writer, pdto);
+            }
+        }
+    }
+
+    private ProductDTO generateProductDTO(int content, int branding) {
+        String suffix = TestUtil.randomString(8, TestUtil.CHARSET_NUMERIC);
+
+        ProductDTO pdto = new ProductDTO()
+            .setUuid(TestUtil.randomString(32, TestUtil.CHARSET_NUMERIC_HEX))
+            .setId("test_prod-" + suffix)
+            .setName("Test Prod " + suffix)
+            .setMultiplier(5L)
+            .setAttribute("attr1", "attr1val_" + suffix)
+            .setAttribute("attr2", "attr2val_" + suffix)
+            .setAttribute("attr3", "attr3val_" + suffix);
+
+        for (int i = 0; i < content; ++i) {
+            Set<String> requiredProductIds = Set.of("rpi1-" + suffix, "rpi2-" + suffix, "rpi3-" + suffix);
+            String csuffix = TestUtil.randomString(8, TestUtil.CHARSET_NUMERIC);
+
+            ContentDTO cdto = new ContentDTO()
+                .setUuid(TestUtil.randomString(32, TestUtil.CHARSET_NUMERIC_HEX))
+                .setId("test_cont-" + csuffix)
+                .setType("test_type-" + csuffix)
+                .setLabel("test_label-" + csuffix)
+                .setName("Test Content " + csuffix)
+                .setVendor("test_vendor-" + csuffix)
+                .setContentUrl("test_content_url-" + csuffix)
+                .setRequiredTags("test_tags-" + csuffix)
+                .setReleaseVersion("release_ver-" + csuffix)
+                .setArches("test_arches-" + csuffix)
+                .setMetadataExpiration(50L)
+                .setRequiredProductIds(requiredProductIds);
+
+            pdto.addContent(cdto, true);
+        }
+
+        for (int i = 0; i < branding; ++i) {
+            String bsuffix = TestUtil.randomString(8, TestUtil.CHARSET_NUMERIC);
+            BrandingDTO bdto = new BrandingDTO()
+                .setId("test_branding-" + bsuffix)
+                .setProductId(pdto.getId())
+                .setName("Test Branding " + bsuffix)
+                .setType("test_brand_type-" + bsuffix);
+
+            pdto.addBranding(bdto);
+        }
+
+        return pdto;
+    }
+
+    /**
+     * Normalizes content data according to the logic expected from the importer's output. This
+     * allows us to write simpler test cases using assert[Not]Equals rather than having to manually
+     * test field-by-field.
+     *
+     * @param input
+     *  the input content DTO to normalize
+     *
+     * @return
+     *  a normalized copy of the input DTO
+     */
+    private ContentDTO normalizeContentDTO(ContentDTO input) {
+        if (input == null) {
+            return null;
+        }
+
+        ContentDTO normalized = new ContentDTO(input)
+            .setUuid(null)
+            .setMetadataExpiration(1L);
+
+        if (normalized.getVendor() == null || normalized.getVendor().isEmpty()) {
+            normalized.setVendor("unknown");
+        }
+
+        return normalized;
+    }
+
+    /**
+     * Normalizes product and content data according to the logic expected from the importer's
+     * output. This allows us to write simpler test cases using assert[Not]Equals rather than
+     * having to manually test field-by-field.
+     *
+     * @param input
+     *  the input product DTO to normalize
+     *
+     * @return
+     *  a normalized copy of the input DTO
+     */
+    private ProductDTO normalizeProductDTO(ProductDTO input) {
+        if (input == null) {
+            return null;
+        }
+
+        // Impl note: We're doing our own deep copy here, so we don't need a deep copy to start with
+        ProductDTO normalized = new ProductDTO(input)
+            .setUuid(null)
+            .setMultiplier(1L)
+            .setProductContent(null)
+            .setProvidedProducts(null)
+            .setBranding(null); // apparently we @JsonIgnore branding on product...???
+
+        normalized.setDerivedProduct(this.normalizeProductDTO(normalized.getDerivedProduct()));
+
+        Collection<ProductDTO> providedProducts = input.getProvidedProducts();
+        if (providedProducts != null) {
+            providedProducts.forEach(ppdto -> normalized.addProvidedProduct(this.normalizeProductDTO(ppdto)));
+        }
+
+        Collection<ProductContentDTO> productContent = input.getProductContent();
+        if (productContent != null) {
+            for (ProductContentDTO pcdto : productContent) {
+                ContentDTO cdto = this.normalizeContentDTO(pcdto.getContent());
+                normalized.addContent(cdto, pcdto.isEnabled());
+            }
+        }
+
+        return normalized;
     }
 
     @Test
-    public void testCreateObject() throws Exception {
-        Product product = TestUtil.createProduct();
-        product.setAttribute("a1", "a1");
-        product.setAttribute("a2", "a2");
+    public void testImportProduct() throws Exception {
+        ProductDTO pdto1 = this.generateProductDTO(3, 3);
+        ProductDTO pdto2 = this.generateProductDTO(3, 3);
+        ProductDTO pdto3 = this.generateProductDTO(3, 3);
 
-        String json = getJsonForProduct(product);
-        Reader reader = new StringReader(json);
-        ProductDTO created = importer.createObject(mapper, reader, owner);
-        assertEquals(product.getUuid(), created.getUuid());
-        assertEquals(product.getName(), created.getName());
-        assertEquals(product.getAttributes(), created.getAttributes());
+        this.writeMockProductData(pdto1, pdto2, pdto3);
+
+        ProductImporter importer = this.buildProductImporter();
+
+        ProductDTO output = importer.importProduct(pdto2.getId());
+
+        assertNotNull(output);
+        assertEquals(this.normalizeProductDTO(pdto2), output);
     }
 
     @Test
-    public void testNewProductCreated() throws Exception {
-        ProductDTO product = new ProductDTO();
-        product.setId("test-id");
-        product.setName("test-name");
-        product.setAttribute("attr1", "val1");
-        product.setAttribute("attr2", "val2");
-        product.setMultiplier(1L);
-        Set<String> dependentProdIDs = new HashSet<>();
-        dependentProdIDs.add("g23gh23h2");
-        dependentProdIDs.add("353g823h");
-        product.setDependentProductIds(dependentProdIDs);
-        String json = getJsonForProduct(product);
-        Reader reader = new StringReader(json);
+    public void testImportProductResolvesProvidedProductsFavoringManifest() throws Exception {
+        ProductDTO child1a = this.generateProductDTO(3, 0)
+            .setId("child_prod");
+        ProductDTO child1b = this.generateProductDTO(3, 0)
+            .setId("child_prod");
+        ProductDTO child2 = this.generateProductDTO(3, 0);
+        ProductDTO child3 = this.generateProductDTO(3, 0);
 
-        ProductDTO created = importer.createObject(mapper, reader, owner);
+        ProductDTO product = this.generateProductDTO(0, 3)
+            .setProvidedProducts(Set.of(child1a, child2, child3));
 
-        assertEquals(product, created);
+        // We've attached child1a to the product, but we'll write child1b to the manifest data.
+        // Our expectation is that child1b is what we pull from the importer
+        this.writeMockProductData(child1b, child2, child3, product);
+        Map<String, ProductDTO> expectedChildren = Stream.of(child1b, child2, child3)
+            .collect(Collectors.toMap(ProductDTO::getId, Function.identity()));
+
+        ProductImporter importer = this.buildProductImporter();
+        ProductDTO output = importer.importProduct(product.getId());
+        assertNotNull(output);
+        assertNotNull(output.getProvidedProducts());
+
+        for (ProductDTO child : output.getProvidedProducts()) {
+            ProductDTO expected = expectedChildren.get(child.getId());
+
+            assertNotNull(expected);
+            assertEquals(this.normalizeProductDTO(expected), child);
+        }
     }
 
     @Test
-    public void testContentCreated() throws Exception {
-        Product product = TestUtil.createProduct();
-        addContentTo(product);
+    public void testImportProductResolvesDerivedProductFavoringManifest() throws Exception {
+        ProductDTO child1a = this.generateProductDTO(3, 0)
+            .setId("child_prod");
+        ProductDTO child1b = this.generateProductDTO(3, 0)
+            .setId("child_prod");
 
-        String json = getJsonForProduct(product);
-        Reader reader = new StringReader(json);
-        ProductDTO created = importer.createObject(mapper, reader, owner);
-        ContentDTO c = created.getProductContent().iterator().next().getContent();
+        ProductDTO product = this.generateProductDTO(0, 3)
+            .setDerivedProduct(child1a);
 
-        // Metadata expiry should be overridden to 0 on import:
-        assertEquals(1L, c.getMetadataExpiration());
+        // We've attached child1a to the product, but we'll write child1b to the manifest data.
+        // Our expectation is that child1b is what we pull from the importer
+        this.writeMockProductData(child1b, product);
+
+        ProductImporter importer = this.buildProductImporter();
+        ProductDTO output = importer.importProduct(product.getId());
+        assertNotNull(output);
+
+        ProductDTO outputDerived = output.getDerivedProduct();
+        assertNotNull(outputDerived);
+        assertNotEquals(this.normalizeProductDTO(child1a), outputDerived);
+        assertEquals(this.normalizeProductDTO(child1b), outputDerived);
     }
 
     @Test
-    public void testVendorSetToUnknown() throws Exception {
-        Product product = TestUtil.createProduct();
-        addNoVendorContentTo(product);
+    public void testImportProductResolvesDerivedProvidedProductsFavoringManifest() throws Exception {
+        ProductDTO child1a = this.generateProductDTO(3, 0)
+            .setId("child_prod");
+        ProductDTO child1b = this.generateProductDTO(3, 0)
+            .setId("child_prod");
+        ProductDTO child2 = this.generateProductDTO(3, 0);
+        ProductDTO child3 = this.generateProductDTO(3, 0);
 
-        String json = getJsonForProduct(product);
-        Reader reader = new StringReader(json);
-        ProductDTO created = importer.createObject(mapper, reader, owner);
-        ContentDTO c = created.getProductContent().iterator().next().getContent();
-        assertEquals("unknown", c.getVendor());
+        ProductDTO derived = this.generateProductDTO(0, 0)
+            .setProvidedProducts(Set.of(child1a, child2, child3));
+
+        ProductDTO product = this.generateProductDTO(0, 0)
+            .setDerivedProduct(derived);
+
+        // We've attached child1a to the product, but we'll write child1b to the manifest data.
+        // Our expectation is that child1b is what we pull from the importer
+        this.writeMockProductData(child1b, child2, child3, derived, product);
+        Map<String, ProductDTO> expectedChildren = Stream.of(child1b, child2, child3)
+            .collect(Collectors.toMap(ProductDTO::getId, Function.identity()));
+
+        ProductImporter importer = this.buildProductImporter();
+        ProductDTO output = importer.importProduct(product.getId());
+        assertNotNull(output);
+
+        ProductDTO outputDerived = output.getDerivedProduct();
+        assertNotNull(outputDerived);
+        assertNotNull(outputDerived.getProvidedProducts());
+
+        for (ProductDTO child : outputDerived.getProvidedProducts()) {
+            ProductDTO expected = expectedChildren.get(child.getId());
+
+            assertNotNull(expected);
+            assertEquals(this.normalizeProductDTO(expected), child);
+        }
     }
 
-    // Returns the Content object added
-    private Content addContentTo(Product product) {
-        Content content = TestUtil.createContent("100130", "content_name");
-        content.setMetadataExpiration(1000L);
+    @Test
+    public void testImportProductThrowsExceptionOnInvalidProductId() throws Exception {
+        ProductDTO pdto1 = this.generateProductDTO(3, 3);
+        ProductDTO pdto2 = this.generateProductDTO(3, 3);
+        ProductDTO pdto3 = this.generateProductDTO(3, 3);
 
-        product.addContent(content, true);
+        this.writeMockProductData(pdto1, pdto2, pdto3);
+        ProductImporter importer = this.buildProductImporter();
 
-        return content;
+        assertThrows(SyncDataFormatException.class, () -> importer.importProduct("invalid pid"));
     }
 
-    // Returns the Content object added without vendor
-    private Content addNoVendorContentTo(Product product) {
-        Content content = TestUtil.createContent("100130", "name");
-        content.setVendor("");
-        content.setMetadataExpiration(1000L);
+    /**
+     * This test only exists to deal with the use case where a product in the manifest can reference
+     * other products that themselves may not be defined in the manifest. If this case is no longer
+     * valid, this test and all the code that supports it can be removed.
+     */
+    @Test
+    public void testImportProductLeavesDanglingChildReferences() throws Exception {
+        ProductDTO provided1 = this.generateProductDTO(3, 0);
+        ProductDTO provided2 = this.generateProductDTO(3, 0);
+        ProductDTO provided3 = this.generateProductDTO(3, 0);
+        ProductDTO derivedProvided1 = this.generateProductDTO(3, 0);
+        ProductDTO derivedProvided2 = this.generateProductDTO(3, 0);
+        ProductDTO derivedProvided3 = this.generateProductDTO(3, 0);
 
-        product.addContent(content, true);
+        ProductDTO derived = this.generateProductDTO(0, 0)
+            .setProvidedProducts(List.of(derivedProvided1, derivedProvided2, derivedProvided3));
 
-        return content;
+        ProductDTO product = this.generateProductDTO(0, 0)
+            .setProvidedProducts(List.of(provided1, provided2, provided3))
+            .setDerivedProduct(derived);
+
+        // We've written only the base product to the manifest data, but none of the children.
+        // In this case, we should still have the full tree available from the base product,
+        // but none of the children should be directly importable.
+        this.writeMockProductData(product);
+        ProductImporter importer = this.buildProductImporter();
+
+        ProductDTO output = importer.importProduct(product.getId());
+        assertNotNull(output);
+        assertEquals(this.normalizeProductDTO(product), output);
+
+        // The equals assertion above should cover these, but for clarity, we'll include basic
+        // checks on the children
+        assertNotNull(output.getProvidedProducts());
+        assertEquals(3, output.getProvidedProducts().size());
+
+        assertNotNull(output.getDerivedProduct());
+        assertEquals(this.normalizeProductDTO(derived), output.getDerivedProduct());
+
+        assertNotNull(output.getDerivedProduct().getProvidedProducts());
+        assertEquals(3, output.getDerivedProduct().getProvidedProducts().size());
+
+        // These should all fail as they are dangling references off the single exported product
+        assertThrows(SyncDataFormatException.class, () -> importer.importProduct(provided1.getId()));
+        assertThrows(SyncDataFormatException.class, () -> importer.importProduct(provided2.getId()));
+        assertThrows(SyncDataFormatException.class, () -> importer.importProduct(provided3.getId()));
+        assertThrows(SyncDataFormatException.class, () -> importer.importProduct(derived.getId()));
+        assertThrows(SyncDataFormatException.class, () -> importer.importProduct(derivedProvided1.getId()));
+        assertThrows(SyncDataFormatException.class, () -> importer.importProduct(derivedProvided2.getId()));
+        assertThrows(SyncDataFormatException.class, () -> importer.importProduct(derivedProvided3.getId()));
     }
 
-    private String getJsonForProduct(Product product) throws Exception {
-        Writer writer = new StringWriter();
-        mapper.writeValue(writer, product);
-        return writer.toString();
+    @Test
+    public void testImportProductMap() throws Exception {
+        ProductDTO pdto1 = this.generateProductDTO(3, 3);
+        ProductDTO pdto2 = this.generateProductDTO(3, 3);
+        ProductDTO pdto3 = this.generateProductDTO(3, 3);
+
+        Map<String, ProductDTO> expected = List.of(pdto1, pdto2, pdto3)
+            .stream()
+            .map(this::normalizeProductDTO)
+            .collect(Collectors.toMap(ProductDTO::getId, Function.identity()));
+
+        this.writeMockProductData(pdto1, pdto2, pdto3);
+        ProductImporter importer = this.buildProductImporter();
+
+        Map<String, ProductDTO> output = importer.importProductMap();
+
+        assertNotNull(output);
+        assertEquals(expected, output);
     }
 
-    private String getJsonForProduct(ProductDTO product) throws Exception {
-        Writer writer = new StringWriter();
-        mapper.writeValue(writer, product);
-        return writer.toString();
+    @Test
+    public void testImportProductMapReturnsEmptyMapWithNoData() throws IOException {
+        ProductImporter importer = this.buildProductImporter();
+
+        Map<String, ProductDTO> output = importer.importProductMap();
+
+        assertNotNull(output);
+        assertTrue(output.isEmpty());
     }
+
 }

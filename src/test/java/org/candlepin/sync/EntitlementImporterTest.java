@@ -21,10 +21,10 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.BrandingDTO;
 import org.candlepin.dto.manifest.v1.CertificateSerialDTO;
-import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.EntitlementDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
+import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
@@ -34,13 +34,13 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
-import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.service.model.ProductInfo;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,35 +50,45 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.Reader;
+import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class EntitlementImporterTest {
+
+    // TODO: FIXME:
+    // Brittle mocks are brittle. If/when the importer factor happens, rip out all these mocks
+    // and mock either the entire underlying system, or nothing at all.
+    // Mocking implementation-specific details that aren't critical parts of the design or
+    // underlying functionality just leads to testing/maintenance pain and general badness.
 
     @Mock private CertificateSerialCurator certSerialCurator;
     @Mock private OwnerCurator ownerCurator;
     @Mock private CdnCurator cdnCurator;
     @Mock private ObjectMapper om;
     @Mock private ProductCurator mockProductCurator;
-    @Mock private EntitlementCurator ec;
     @Mock private EnvironmentCurator mockEnvironmentCurator;
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
 
+    private I18n i18n;
     private Owner owner;
-    private EntitlementImporter importer;
     private Consumer consumer;
-    private ConsumerDTO consumerDTO;
     private EntitlementCertificate cert;
     private Reader reader;
     private Meta meta;
@@ -94,18 +104,12 @@ public class EntitlementImporterTest {
             mockEnvironmentCurator,
             ownerCurator);
 
-        I18n i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
-        this.importer = new EntitlementImporter(certSerialCurator, cdnCurator, i18n, mockProductCurator, ec,
-            translator);
+        this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
 
         ConsumerType ctype = TestUtil.createConsumerType();
         ctype.setId("test-ctype");
 
         consumer = TestUtil.createConsumer(ctype, owner);
-
-        consumerDTO = this.translator.translate(consumer, ConsumerDTO.class);
-        consumerDTO.setUrlWeb("");
-        consumerDTO.setUrlApi("");
 
         cert = createEntitlementCertificate("my-test-key", "my-cert");
         cert.setId("test-id");
@@ -114,28 +118,64 @@ public class EntitlementImporterTest {
 
         meta = new Meta();
         meta.setCdnLabel("test-cdn");
+
         Cdn testCdn = new Cdn("test-cdn", "Test CDN", "https://test.url.com");
-        when(cdnCurator.getByLabel("test-cdn")).thenReturn(testCdn);
+        when(this.cdnCurator.getByLabel("test-cdn")).thenReturn(testCdn);
+    }
+
+    private EntitlementImporter buildEntitlementImporter(Product... products) {
+        Stream<Product> pstream = products != null ? Stream.of(products) : Stream.<Product>empty();
+        Map<String, ProductDTO> productMap = pstream
+            .map(this.translator.getStreamMapper(Product.class, ProductDTO.class))
+            .collect(Collectors.toMap(ProductDTO::getId, Function.identity()));
+
+        return new EntitlementImporter(this.cdnCurator, this.i18n, this.translator, productMap);
+    }
+
+    private EntitlementCertificate createEntitlementCertificate(String key, String cert) {
+        EntitlementCertificate toReturn = new EntitlementCertificate();
+        CertificateSerial certSerial = new CertificateSerial(new Date());
+        certSerial.setUpdated(new Date());
+        certSerial.setCreated(new Date());
+        toReturn.setKeyAsBytes(key.getBytes());
+        toReturn.setCertAsBytes(cert.getBytes());
+        toReturn.setSerial(certSerial);
+
+        return toReturn;
+    }
+
+    /**
+     * Converts the input collection of products into a set of the product IDs. Note that this method
+     * *does not* collect product IDs from the product's children.
+     *
+     * @param products
+     *  a collection of products from which to pull product IDs
+     *
+     * @return
+     *  a set containing the IDs of the given products
+     */
+    private Set<String> collectProductIds(Collection<? extends ProductInfo> products) {
+        if (products == null) {
+            return null;
+        }
+
+        return products.stream()
+            .map(ProductInfo::getId)
+            .collect(Collectors.toSet());
     }
 
     @Test
     public void fullImport() throws Exception {
-        Product parentProduct = TestUtil.createProduct();
-        Product derivedProduct = TestUtil.createProduct();
+        Product derivedProvided1 = TestUtil.createProduct();
+        Product derived = TestUtil.createProduct()
+            .setProvidedProducts(List.of(derivedProvided1));
 
         Product provided1 = TestUtil.createProduct();
-        Set<Product> providedProducts = new HashSet<>();
-        providedProducts.add(new Product(provided1));
-        parentProduct.setProvidedProducts(providedProducts);
+        Product product = TestUtil.createProduct()
+            .setProvidedProducts(List.of(provided1))
+            .setDerivedProduct(derived);
 
-        Product derivedProvided1 = TestUtil.createProduct();
-        Set<Product> derivedProvidedProducts = new HashSet<>();
-        derivedProvidedProducts.add(new Product(derivedProvided1));
-        derivedProduct.setProvidedProducts(derivedProvidedProducts);
-
-        parentProduct.setDerivedProduct(derivedProduct);
-
-        Pool pool = TestUtil.createPool(owner, parentProduct)
+        Pool pool = TestUtil.createPool(owner, product)
             .setQuantity(3L);
 
         Entitlement ent = TestUtil.createEntitlement(owner, consumer, pool, cert);
@@ -151,12 +191,10 @@ public class EntitlementImporterTest {
 
         when(om.readValue(reader, EntitlementDTO.class)).thenReturn(dtoEnt);
 
-        // Create our expected products
-        Map<String, ProductDTO> productsById = buildProductCache(
-            parentProduct, provided1, derivedProduct, derivedProvided1);
+        EntitlementImporter importer = this.buildEntitlementImporter(product, provided1, derived,
+            derivedProvided1);
 
-        SubscriptionDTO sub = importer.importObject(
-            om, reader, owner, productsById, consumerDTO.getUuid(), meta);
+        SubscriptionDTO sub = importer.importObject(om, reader, owner, consumer.getUuid(), meta);
 
         assertEquals(pool.getId(), sub.getUpstreamPoolId());
         assertEquals(consumer.getUuid(), sub.getUpstreamConsumerId());
@@ -172,14 +210,19 @@ public class EntitlementImporterTest {
 
         assertEquals(ent.getQuantity().intValue(), sub.getQuantity().intValue());
 
-        assertEquals(parentProduct.getId(), sub.getProduct().getId());
-        assertEquals(providedProducts.size(), parentProduct.getProvidedProducts().size());
-        assertEquals(provided1.getId(), parentProduct.getProvidedProducts().iterator().next().getId());
+        ProductDTO subProd = sub.getProduct();
+        assertNotNull(subProd);
+        assertEquals(product.getId(), subProd.getId());
+        assertEquals(product.getProvidedProducts().size(), subProd.getProvidedProducts().size());
+        assertEquals(this.collectProductIds(product.getProvidedProducts()),
+            this.collectProductIds(subProd.getProvidedProducts()));
 
-        assertEquals(derivedProduct.getId(), sub.getProduct().getDerivedProduct().getId());
-        assertEquals(1, derivedProduct.getProvidedProducts().size());
-        assertEquals(derivedProvided1.getId(),
-            derivedProduct.getProvidedProducts().iterator().next().getId());
+        ProductDTO subDerivedProd = subProd.getDerivedProduct();
+        assertNotNull(subDerivedProd);
+        assertEquals(derived.getId(), subDerivedProd.getId());
+        assertEquals(derived.getProvidedProducts().size(), subDerivedProd.getProvidedProducts().size());
+        assertEquals(this.collectProductIds(derived.getProvidedProducts()),
+            this.collectProductIds(subDerivedProd.getProvidedProducts()));
 
         assertNotNull(sub.getCertificate());
         CertificateSerialDTO serial = sub.getCertificate().getSerial();
@@ -192,24 +235,216 @@ public class EntitlementImporterTest {
         assertEquals(brandingDTO, sub.getProduct().getBranding().toArray()[0]);
     }
 
-    private Map<String, ProductDTO> buildProductCache(Product... products) {
-        Map<String, ProductDTO> productsById = new HashMap<>();
-        for (Product p : products) {
-            productsById.put(p.getId(), this.translator.translate(p, ProductDTO.class));
-        }
+    /**
+     * This test verifies branding's weird existence in the manifest. Namely, that it lives on pool
+     * (still), but doesn't have a good way of merging due to the nature of the branding object
+     * lacking a business key. Additionally, at some point we did not have support for exporting
+     * branding on the product directly, so it was flagged with @JsonIgnore to prevent it.
+     *
+     * Still, due to the pseudo-stateless nature of our import step, we have to treat the operation
+     * like a merge, despite it not really working as such. The end result should be that branding
+     * for a given pool is migrated to its product, but only deduplicated in the case of an exact
+     * match on all branding properties.
+     */
+    @Test
+    public void testImportEntitlementMergesPoolBrandingData() throws Exception {
+        Branding branding1 = TestUtil.createBranding("pid1", "test_branding-1");
+        Branding branding2 = TestUtil.createBranding("pid2", "test_branding-2");
+        Branding branding3 = TestUtil.createBranding("pid3", "test_branding-3");
 
-        return productsById;
+        Product product1a = TestUtil.createProduct()
+            .setId("shared_pid")
+            .setBranding(List.of(branding1, branding2));
+        Product product1b = TestUtil.createProduct()
+            .setId("shared_pid")
+            .setBranding(List.of(branding2, branding3));
+
+        Pool pool1 = TestUtil.createPool(this.owner, product1a);
+        Pool pool2 = TestUtil.createPool(this.owner, product1b);
+        Entitlement entitlement1 = TestUtil.createEntitlement(this.owner, this.consumer, pool1, this.cert)
+            .setQuantity(3);
+        Entitlement entitlement2 = TestUtil.createEntitlement(this.owner, this.consumer, pool2, this.cert)
+            .setQuantity(3);
+
+        EntitlementDTO entDto1 = this.translator.translate(entitlement1, EntitlementDTO.class);
+        EntitlementDTO entDto2 = this.translator.translate(entitlement2, EntitlementDTO.class);
+
+        // See note at the top of this class for why this mock is bad
+        when(this.om.readValue(this.reader, EntitlementDTO.class)).thenReturn(entDto1).thenReturn(entDto2);
+
+        EntitlementImporter importer = this.buildEntitlementImporter(product1a);
+
+        SubscriptionDTO sub1 = importer.importObject(this.om, this.reader, this.owner,
+            this.consumer.getUuid(), this.meta);
+        SubscriptionDTO sub2 = importer.importObject(this.om, this.reader, this.owner,
+            this.consumer.getUuid(), this.meta);
+
+        assertNotNull(sub1);
+        assertNotNull(sub2);
+
+        BrandingDTO bdto1 = this.translator.translate(branding1, BrandingDTO.class);
+        BrandingDTO bdto2 = this.translator.translate(branding2, BrandingDTO.class);
+        BrandingDTO bdto3 = this.translator.translate(branding3, BrandingDTO.class);
+        Set<BrandingDTO> expectedBrandingDTOs = Set.of(bdto1, bdto2, bdto3);
+
+        // Because our product IDs are the same, even though the products used by each pool differ,
+        // our resultant pools should share the same product, and that product should have a union
+        // of all branding seen on both instances
+        ProductDTO pdto1 = sub1.getProduct();
+        ProductDTO pdto2 = sub2.getProduct();
+
+        assertEquals(pdto1, pdto2);
+        assertEquals(expectedBrandingDTOs, pdto1.getBranding());
+        assertEquals(expectedBrandingDTOs, pdto2.getBranding());
     }
 
-    protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
-        EntitlementCertificate toReturn = new EntitlementCertificate();
-        CertificateSerial certSerial = new CertificateSerial(new Date());
-        certSerial.setUpdated(new Date());
-        certSerial.setCreated(new Date());
-        toReturn.setKeyAsBytes(key.getBytes());
-        toReturn.setCertAsBytes(cert.getBytes());
-        toReturn.setSerial(certSerial);
+    /**
+     * This test verifies that child product information on entitlement pool is merged with that on
+     * the pool's product, following the rule of "product definition wins"
+     */
+    @Test
+    public void testImportEntitlementMergesPoolProductData() throws Exception {
+        Product derivedProvided1 = TestUtil.createProduct();
+        Product derivedProvided2 = TestUtil.createProduct();
+        Product derivedProvided3 = TestUtil.createProduct();
+        Product derived = TestUtil.createProduct()
+            .setProvidedProducts(List.of(derivedProvided1, derivedProvided2, derivedProvided3));
 
-        return toReturn;
+        Product provided1 = TestUtil.createProduct();
+        Product provided2 = TestUtil.createProduct();
+        Product provided3 = TestUtil.createProduct();
+
+        // The diffentiation in name will help us determine that 1b is the version pulled from
+        // the mocked product import step, and allow us to confirm that the product data was
+        // indeed pulled from the importer and wasn't already present as it is on 1a
+        Product product1a = TestUtil.createProduct()
+            .setId("shared_pid")
+            .setName("product1a")
+            .setProvidedProducts(List.of(provided1, provided2, provided3))
+            .setDerivedProduct(derived);
+
+        Product product1b = TestUtil.createProduct()
+            .setId("shared_pid")
+            .setName("product1b");
+
+        Pool pool1 = TestUtil.createPool(this.owner, product1a);
+        Entitlement entitlement1 = TestUtil.createEntitlement(this.owner, this.consumer, pool1, this.cert)
+            .setQuantity(3);
+
+        EntitlementDTO entDto1 = this.translator.translate(entitlement1, EntitlementDTO.class);
+
+        // See note at the top of this class for why this mock is bad
+        when(this.om.readValue(this.reader, EntitlementDTO.class)).thenReturn(entDto1);
+
+        // Impl note: this *must* provided product1b, *not* 1a.
+        EntitlementImporter importer = this.buildEntitlementImporter(derivedProvided1, derivedProvided2,
+            derivedProvided3, derived, provided1, provided2, provided3, product1b);
+        SubscriptionDTO sub1 = importer.importObject(this.om, this.reader, this.owner,
+            this.consumer.getUuid(), this.meta);
+
+        ProductDTO subProd = sub1.getProduct();
+        assertNotNull(subProd);
+        assertEquals(product1b.getId(), subProd.getId());
+        assertEquals(product1b.getName(), subProd.getName()); // *must* be product1b
+
+        // We're using product1a as our source of truth from here down, as that is our origin of
+        // children products, and we're expecting the serialized product1b was updated with the
+        // children product information from the pool (which used 1a for serialization)
+        assertNotNull(subProd.getProvidedProducts());
+        assertEquals(product1a.getProvidedProducts().size(), subProd.getProvidedProducts().size());
+        assertEquals(this.collectProductIds(product1a.getProvidedProducts()),
+            this.collectProductIds(subProd.getProvidedProducts()));
+
+        ProductDTO subDerivedProd = subProd.getDerivedProduct();
+        assertNotNull(subDerivedProd);
+        assertEquals(derived.getId(), subDerivedProd.getId());
+
+        assertNotNull(subDerivedProd.getProvidedProducts());
+        assertEquals(product1a.getProvidedProducts().size(), subDerivedProd.getProvidedProducts().size());
+        assertEquals(this.collectProductIds(derived.getProvidedProducts()),
+            this.collectProductIds(subDerivedProd.getProvidedProducts()));
     }
+
+    /**
+     * This test verifies that in the case where we have two or more entitlements with pools that
+     * reference the same product but have divergent [derived] provided product data, that the
+     * product ends up with the union of child product data from all pools
+     */
+    @Test
+    public void testImportEntitlementsWithDivergentPoolProductDataCreatesProductWithDataUnion()
+        throws Exception {
+
+        Product derivedProvided1 = TestUtil.createProduct();
+        Product derivedProvided2 = TestUtil.createProduct();
+        Product derivedProvided3 = TestUtil.createProduct();
+
+        Product derived1a = TestUtil.createProduct()
+            .setId("derived_pid")
+            .setProvidedProducts(List.of(derivedProvided1, derivedProvided2));
+
+        Product derived1b = TestUtil.createProduct()
+            .setId("derived_pid")
+            .setProvidedProducts(List.of(derivedProvided2, derivedProvided3));
+
+        Product provided1 = TestUtil.createProduct();
+        Product provided2 = TestUtil.createProduct();
+        Product provided3 = TestUtil.createProduct();
+
+        Product product1a = TestUtil.createProduct()
+            .setId("shared_pid")
+            .setProvidedProducts(List.of(provided1, provided2))
+            .setDerivedProduct(derived1a);
+
+        Product product1b = TestUtil.createProduct()
+            .setId("shared_pid")
+            .setProvidedProducts(List.of(provided2, provided3))
+            .setDerivedProduct(derived1b);
+
+        Pool pool1 = TestUtil.createPool(this.owner, product1a);
+        Pool pool2 = TestUtil.createPool(this.owner, product1b);
+        Entitlement entitlement1 = TestUtil.createEntitlement(this.owner, this.consumer, pool1, this.cert)
+            .setQuantity(3);
+        Entitlement entitlement2 = TestUtil.createEntitlement(this.owner, this.consumer, pool2, this.cert)
+            .setQuantity(3);
+
+        EntitlementDTO entDto1 = this.translator.translate(entitlement1, EntitlementDTO.class);
+        EntitlementDTO entDto2 = this.translator.translate(entitlement2, EntitlementDTO.class);
+
+        // See note at the top of this class for why this mock is bad
+        when(this.om.readValue(this.reader, EntitlementDTO.class)).thenReturn(entDto1).thenReturn(entDto2);
+
+        EntitlementImporter importer = this.buildEntitlementImporter(derivedProvided1, derivedProvided2,
+            derivedProvided3, derived1a, provided1, provided2, provided3, product1a);
+
+        // Impl note: even though we don't use sub2, it's critical we import it so its pool data
+        // gets processed
+        SubscriptionDTO sub1 = importer.importObject(this.om, this.reader, this.owner,
+            this.consumer.getUuid(), this.meta);
+        SubscriptionDTO sub2 = importer.importObject(this.om, this.reader, this.owner,
+            this.consumer.getUuid(), this.meta);
+
+        ProductDTO subProd = sub1.getProduct();
+        assertNotNull(subProd);
+        assertEquals(product1a.getId(), subProd.getId());
+
+        // We expect the product to contain the union of all provided and derived provided products
+        // found across all the pools defining whatever weird set of provided product info they may
+        // have
+        Set<String> expectedProvidedPIDs = this.collectProductIds(List.of(provided1, provided2, provided3));
+        Set<String> expectedDerivedPPIDs = this.collectProductIds(List.of(derivedProvided1, derivedProvided2,
+            derivedProvided3));
+
+        assertNotNull(subProd.getProvidedProducts());
+        assertEquals(expectedProvidedPIDs.size(), subProd.getProvidedProducts().size());
+        assertEquals(expectedProvidedPIDs, this.collectProductIds(subProd.getProvidedProducts()));
+
+        ProductDTO subDerivedProd = subProd.getDerivedProduct();
+        assertNotNull(subDerivedProd);
+        assertEquals(derived1a.getId(), subDerivedProd.getId());
+
+        assertNotNull(subDerivedProd.getProvidedProducts());
+        assertEquals(expectedDerivedPPIDs.size(), subDerivedProd.getProvidedProducts().size());
+        assertEquals(expectedDerivedPPIDs, this.collectProductIds(subDerivedProd.getProvidedProducts()));
+    }
+
 }

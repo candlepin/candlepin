@@ -15,6 +15,7 @@
 package org.candlepin.sync;
 
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.manifest.v1.BrandingDTO;
 import org.candlepin.dto.manifest.v1.CdnDTO;
 import org.candlepin.dto.manifest.v1.CertificateDTO;
 import org.candlepin.dto.manifest.v1.EntitlementDTO;
@@ -25,10 +26,7 @@ import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCurator;
-import org.candlepin.model.CertificateSerialCurator;
-import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,35 +40,209 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-
+// TODO: Refactor this class (and the entire importer) to better isolate the various responsibilities
+// these objects could and *should* have.
 
 /**
  * EntitlementImporter - turn an upstream Entitlement into a local subscription
  */
 public class EntitlementImporter {
-    private static Logger log = LoggerFactory.getLogger(EntitlementImporter.class);
+    private static final Logger log = LoggerFactory.getLogger(EntitlementImporter.class);
 
-    private CertificateSerialCurator csCurator;
-    private CdnCurator cdnCurator;
-    private I18n i18n;
-    private ProductCurator productCurator;
-    private EntitlementCurator entitlementCurator;
-    private ModelTranslator translator;
+    private final CdnCurator cdnCurator;
+    private final I18n i18n;
+    private final ModelTranslator translator;
+    private final Map<String, ProductDTO> productMap;
 
-    public EntitlementImporter(CertificateSerialCurator csCurator, CdnCurator cdnCurator, I18n i18n,
-        ProductCurator productCurator, EntitlementCurator entitlementCurator, ModelTranslator translator) {
 
-        this.csCurator = csCurator;
-        this.cdnCurator = cdnCurator;
-        this.i18n = i18n;
-        this.productCurator = productCurator;
-        this.entitlementCurator = entitlementCurator;
-        this.translator = translator;
+    public EntitlementImporter(CdnCurator cdnCurator, I18n i18n, ModelTranslator translator,
+        Map<String, ProductDTO> productMap) {
+
+        this.cdnCurator = Objects.requireNonNull(cdnCurator);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.translator = Objects.requireNonNull(translator);
+        this.productMap = Objects.requireNonNull(productMap);
     }
 
-    public SubscriptionDTO importObject(ObjectMapper mapper, Reader reader, Owner owner,
-        Map<String, ProductDTO> productsById, String consumerUuid, Meta meta)
+    /**
+     * Fetches the given product ID from the mapping of imported products backing this entitlement
+     * importer. If a product for the given ID cannot be found, this method throws an exception.
+     *
+     * @param productId
+     *  the ID of the product to fetch
+     *
+     * @throws SyncDataFormatException
+     *  if a product for the given ID cannot be found
+     *
+     * @return
+     *  the imported product for the given product ID
+     */
+    private ProductDTO getImportedProduct(String productId) throws SyncDataFormatException {
+        ProductDTO product = this.productMap.get(productId);
+        if (product == null) {
+            throw new SyncDataFormatException(i18n.tr("Unable to find product with ID: {0}", productId));
+        }
+
+        return product;
+    }
+
+    /**
+     * Merges any branding data on the upstream pool with any branding information on the product.
+     * If the collection of branding data is null or empty, this method silently returns.
+     *
+     * @param product
+     *  the product with which to merge any provided branding data
+     *
+     * @param branding
+     *  a collection of branding DTOs to merge onto the product; may be null
+     */
+    private void mergeBranding(ProductDTO product, Collection<BrandingDTO> branding) {
+        if (branding == null || branding.isEmpty()) {
+            return;
+        }
+
+        for (BrandingDTO bdto : branding) {
+            product.addBranding(bdto);
+        }
+    }
+
+    /**
+     * Resolves and merges the given provided product DTOs onto the specified product. The merged
+     * provided products will be a union of all existing provided products on the product itself,
+     * and those resolved from the given collection of provided product DTOs. In the event of a
+     * collision, the provided product already on the product will be retained. If the given
+     * collection of provided product DTOs is null or empty, this method silently returns.
+     *
+     * @param product
+     *  the product to receive the additional provided products
+     *
+     * @param providedProductDTOs
+     *  a collection of provided product DTOs to merge onto the product; may be null
+     */
+    private void mergeProvidedProducts(ProductDTO product,
+        Collection<ProvidedProductDTO> providedProductDTOs) throws SyncDataFormatException {
+
+        if (providedProductDTOs == null || providedProductDTOs.isEmpty()) {
+            return;
+        }
+
+        Collection<ProductDTO> currentProvidedProducts = product.getProvidedProducts();
+        Stream<ProductDTO> cppstream = currentProvidedProducts != null ?
+            currentProvidedProducts.stream() :
+            Stream.<ProductDTO>empty();
+
+        Map<String, ProductDTO> cppmap = cppstream
+            .collect(Collectors.toMap(ProductDTO::getId, Function.identity()));
+
+        boolean updated = false;
+
+        for (ProvidedProductDTO ppdto : providedProductDTOs) {
+            // Impl note: It'd be nice to throw a lambda at this via computeIfAbsent, but our checked
+            // exceptions get in the way.
+            if (!cppmap.containsKey(ppdto.getProductId())) {
+                log.warn("Product {} does not contain provided product {} from pool data; merging data...",
+                    product.getId(), ppdto.getProductId());
+
+                ProductDTO resolved = this.getImportedProduct(ppdto.getProductId());
+                cppmap.put(resolved.getId(), resolved);
+                updated = true;
+            }
+        }
+
+        // Update product if the mappings changed
+        if (updated) {
+            product.setProvidedProducts(cppmap.values());
+        }
+    }
+
+    private void mergeDerivedProductData(ProductDTO product, PoolDTO pool) throws SyncDataFormatException {
+        String derivedProductId = pool.getDerivedProductId();
+        if (derivedProductId == null) {
+            return;
+        }
+
+        ProductDTO derived = product.getDerivedProduct();
+        if (derived == null) {
+            log.warn("Upstream pool {} defines derived product information not present on product: {}",
+                pool.getId(), product);
+
+            log.warn("Adding pool derived product to subscription product: {}", product);
+
+            derived = this.getImportedProduct(derivedProductId);
+            product.setDerivedProduct(derived);
+        }
+        else if (!derivedProductId.equals(derived.getId())) {
+            log.warn("Upstream pool {} defines derived product information that differs from its product: " +
+                "{} => {} != {}", pool.getId(), product, derived.getId(), derivedProductId);
+            log.warn("Ignoring pool derived product");
+        }
+
+        this.mergeProvidedProducts(derived, pool.getDerivedProvidedProducts());
+    }
+
+    /**
+     * Merges product data that may exist in on the product and on the pool.
+     * <p></p>
+     * Due to changes in Candlepin's core structure over the years, some of the data in the manifest
+     * may not be exactly where it should be, or may still be in the old location depending on the
+     * age of the manifest itself. For example, prior to Candlepin 4.0, branding and derived or
+     * provided product data was stored on the pool, but after 4.0, this all exists on the product.
+     * <p></p>
+     * Additionally, prior to Candlepin 2.0, the product reference was not a complete object, but
+     * was only the product ID. With such manifests, we need to resolve the product ID, and then
+     * replace it with the full object.
+     * <p></p>
+     * To facilitate all these structures, branding and provided products that exist on the upstream
+     * pool will be added to the product, without removing those that may already exist on it. This
+     * may cause some collisions in terms of branding, and some pools to provide more content than
+     * intended, but it minimizes the probability that two pools with different provided products
+     * will end up a state where they *don't* provide content they're intended to.
+     * <p></p>
+     * However, a product can only have a single derived product, so in the event multiple pools
+     * using a given product have different derived product definitions, the pool's definition will
+     * only be used if the product does not already have a derived product defined. The derived
+     * provided products, though, will be added to whatever derived product happens to be there.
+     * <p></p>
+     * Notes from previous implementations:
+     *
+     * WARNING: This is a bit tricky due to backward compatibility issues. Prior to
+     * candlepin 2.0, pools serialized a collection of disjoint provided product info,
+     * an object with just a product ID and name, not directly linked to anything in the db.
+     *
+     * In candlepin 2.0 we have referential integrity and links to full product objects,
+     * but we need to maintain both API and import compatibility with old manifests and
+     * servers that may import new manifests.
+     *
+     * To do this, we serialize the providedProductDtos and derivedProvidedProductDtos
+     * collections on pool which keeps the API/manifest JSON identical to what it was
+     * before. On import we load into these transient collections, and here we transfer
+     * to the actual persisted location.
+     *
+     * @param subscription
+     *  the subscription object to receive the merged product data
+     *
+     * @param upstreamPool
+     *  the upstream entitlement pool which may contain product information
+     */
+    private void associateProducts(SubscriptionDTO subscription, PoolDTO upstreamPool)
+        throws SyncDataFormatException {
+
+        ProductDTO product = this.getImportedProduct(upstreamPool.getProductId());
+
+        this.mergeBranding(product, upstreamPool.getBranding());
+        this.mergeProvidedProducts(product, upstreamPool.getProvidedProducts());
+        this.mergeDerivedProductData(product, upstreamPool);
+
+        subscription.setProduct(product);
+    }
+
+    public SubscriptionDTO importObject(ObjectMapper mapper, Reader reader, Owner owner, String consumerUuid,
+        Meta meta)
         throws IOException, SyncDataFormatException {
 
         EntitlementDTO entitlement = mapper.readValue(reader, EntitlementDTO.class);
@@ -111,7 +283,7 @@ public class EntitlementImporter {
             }
         }
 
-        this.associateProducts(productsById, entitlement.getPool(), subscription);
+        this.associateProducts(subscription, entitlement.getPool());
 
         Collection<CertificateDTO> certs = entitlement.getCertificates();
         if (certs != null && !certs.isEmpty()) {
@@ -129,74 +301,4 @@ public class EntitlementImporter {
         return subscription;
     }
 
-    /*
-     * Transfer associations to provided and derived provided products over to the
-     * subscription.
-     *
-     * WARNING: This is a bit tricky due to backward compatibility issues. Prior to
-     * candlepin 2.0, pools serialized a collection of disjoint provided product info,
-     * an object with just a product ID and name, not directly linked to anything in the db.
-     *
-     * In candlepin 2.0 we have referential integrity and links to full product objects,
-     * but we need to maintain both API and import compatibility with old manifests and
-     * servers that may import new manifests.
-     *
-     * To do this, we serialize the providedProductDtos and derivedProvidedProductDtos
-     * collections on pool which keeps the API/manifest JSON identical to what it was
-     * before. On import we load into these transient collections, and here we transfer
-     * to the actual persisted location.
-     *
-     * @param productsById
-     *  A mapping of product IDs to product DTOs being present in the imported manifest
-     *
-     * @param upstreamPoolDTO
-     *  A PoolDTO instance representing the upstream pool containing the collections of provided
-     *  products and derived provided product references to set on the subscription
-     *
-     * @param subscription
-     *  The SubscriptionDTO instance to update
-     */
-    public void associateProducts(Map<String, ProductDTO> productsById, PoolDTO upstreamPoolDTO,
-        SubscriptionDTO subscription) throws SyncDataFormatException {
-
-        // Product
-        ProductDTO productDTO = this.findProduct(productsById, upstreamPoolDTO.getProductId());
-        subscription.setProduct(productDTO);
-
-        if (upstreamPoolDTO.getBranding() != null) {
-            productDTO.setBranding(upstreamPoolDTO.getBranding());
-        }
-
-        for (ProvidedProductDTO pp : upstreamPoolDTO.getProvidedProducts()) {
-            ProductDTO providedDTO = this.findProduct(productsById, pp.getProductId());
-
-            if (providedDTO != null) {
-                productDTO.addProvidedProduct(providedDTO);
-            }
-        }
-
-        if (upstreamPoolDTO.getDerivedProductId() != null) {
-            ProductDTO derivedDTO = this.findProduct(productsById, upstreamPoolDTO.getDerivedProductId());
-            productDTO.setDerivedProduct(derivedDTO);
-
-            for (ProvidedProductDTO pp : upstreamPoolDTO.getDerivedProvidedProducts()) {
-                ProductDTO providedDTO = this.findProduct(productsById, pp.getProductId());
-
-                if (providedDTO != null) {
-                    derivedDTO.addProvidedProduct(providedDTO);
-                }
-            }
-        }
-    }
-
-    private ProductDTO findProduct(Map<String, ProductDTO> productsById, String productId)
-        throws SyncDataFormatException {
-
-        ProductDTO product = productsById.get(productId);
-        if (product == null) {
-            throw new SyncDataFormatException(i18n.tr("Unable to find product with ID: {0}", productId));
-        }
-
-        return product;
-    }
 }

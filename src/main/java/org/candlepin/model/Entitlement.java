@@ -119,19 +119,15 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
     }
 
     /**
-     * @return the id
+     * @param consumerIn consumer associated with the entitlement
+     * @param ownerIn owner associated with the entitlement
+     * @param quantityIn entitlement quantity
      */
-    @Override
-    @HateoasInclude
-    public String getId() {
-        return id;
-    }
-
-    /**
-     * @param id the id to set
-     */
-    public void setId(String id) {
-        this.id = id;
+    public Entitlement(Consumer consumerIn, Owner ownerIn, Integer quantityIn) {
+        owner = ownerIn;
+        consumer = consumerIn;
+        quantity = (quantityIn == null || quantityIn < 1) ? 1 : quantityIn;
+        deletedFromPool = false;
     }
 
     /**
@@ -142,21 +138,29 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
      */
     public Entitlement(Pool poolIn, Consumer consumerIn, Owner owner, Integer quantityIn) {
         this(consumerIn, owner, quantityIn);
+
         pool = poolIn;
         updatedOnStart = poolIn.getStartDate().after(new Date());
     }
 
     /**
-     * @param consumerIn consumer associated with the entitlement
-     * @param ownerIn owner associated with the entitlement
-     * @param quantityIn entitlement quantity
+     * @return the id
      */
-    public Entitlement(Consumer consumerIn, Owner ownerIn, Integer quantityIn) {
-        owner = ownerIn;
-        consumer = consumerIn;
-        quantity = quantityIn == null || quantityIn.intValue() < 1 ?
-            1 : quantityIn;
-        deletedFromPool = false;
+    @Override
+    @HateoasInclude
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * @param id the id to set
+     *
+     * @return
+     *  a reference to this Entitlement instance
+     */
+    public Entitlement setId(String id) {
+        this.id = id;
+        return this;
     }
 
     /**
@@ -192,9 +196,13 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
 
     /**
      * @param poolIn The pool to set.
+     *
+     * @return
+     *  a reference to this Entitlement instance
      */
-    public void setPool(Pool poolIn) {
+    public Entitlement setPool(Pool poolIn) {
         pool = poolIn;
+        return this;
     }
 
     /**
@@ -269,8 +277,9 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public Entitlement setQuantity(Integer quantity) {
         this.quantity = quantity;
+        return this;
     }
 
     public Set<EntitlementCertificate> getCertificates() {
