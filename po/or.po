@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-26 02:01-0500\n"
+"POT-Creation-Date: 2023-02-02 02:00-0500\n"
 "PO-Revision-Date: 2017-10-18 11:52-0400\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Oriya\n"
@@ -876,7 +876,7 @@ msgstr ""
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1383
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:307
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:170
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1282
 #, java-format
 msgid "owner with key: {0} was not found."
@@ -959,8 +959,8 @@ msgstr "ସ୍ୱୟଂ-ବନ୍ଧନ ସମୟରେ ପରିମାଣ ଉ�
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2360
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2687
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:431
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:263
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:293
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:126
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:156
 #: src/main/java/org/candlepin/resource/JobResource.java:360
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:247
 #: src/main/java/org/candlepin/resource/OwnerResource.java:965
@@ -1170,21 +1170,12 @@ msgstr "json \"{0}\" ରେ ଅତିଥି ID ପଥ ଅତିଥି ID \"{1}\"
 msgid "Guest with UUID {0} could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:132
-msgid "Host to guest mapping was not provided for hypervisor check-in."
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:194
-#, java-format
-msgid "Unable to find hypervisor in org \"{0}\""
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:369
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:201
 msgid "Host to guest mapping was not provided for hypervisor update."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:377
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:383
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:209
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:215
 msgid "Invalid host to guest mapping was provided for hypervisor update."
 msgstr ""
 
@@ -1280,7 +1271,7 @@ msgid "product has a null or invalid ID"
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:157
-msgid "product has null or invalid name"
+msgid "product has a null or invalid name"
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:181

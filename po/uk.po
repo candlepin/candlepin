@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-26 02:01-0500\n"
-"PO-Revision-Date: 2023-01-26 09:20+0000\n"
+"POT-Creation-Date: 2023-02-02 02:00-0500\n"
+"PO-Revision-Date: 2023-02-02 10:20+0000\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/uk/>\n"
@@ -861,7 +861,7 @@ msgid "{0} is not authorized to register with organization {1}"
 msgstr "{0} не уповноважено на реєстрацію із записом організації {1}"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1383
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:307
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:170
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1282
 #, java-format
 msgid "owner with key: {0} was not found."
@@ -943,8 +943,8 @@ msgstr "Не можна вказувати кількість при автоп�
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2360
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2687
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:431
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:263
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:293
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:126
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:156
 #: src/main/java/org/candlepin/resource/JobResource.java:360
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:247
 #: src/main/java/org/candlepin/resource/OwnerResource.java:965
@@ -1157,25 +1157,14 @@ msgstr ""
 msgid "Guest with UUID {0} could not be found."
 msgstr "Не вдалося знайти гостьову систему з UUID {0}."
 
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:132
-msgid "Host to guest mapping was not provided for hypervisor check-in."
-msgstr ""
-"Для реєстрації гіпервізора не надано привʼязки основних систем до гостьових "
-"систем."
-
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:194
-#, java-format
-msgid "Unable to find hypervisor in org \"{0}\""
-msgstr "Не вдалося знайти гіпервізор в організації «{0}»"
-
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:369
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:201
 msgid "Host to guest mapping was not provided for hypervisor update."
 msgstr ""
 "Для оновлення гіпервізора не надано привʼязки основних систем до гостьових "
 "систем."
 
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:377
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:383
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:209
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:215
 msgid "Invalid host to guest mapping was provided for hypervisor update."
 msgstr ""
 "Для оновлення гіпервізора надано некоректну привʼязку основних систем до "
@@ -1277,7 +1266,7 @@ msgid "product has a null or invalid ID"
 msgstr "продукт має порожній або некоректний ідентифікатор"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:157
-msgid "product has null or invalid name"
+msgid "product has a null or invalid name"
 msgstr "продукт має порожню або некоректну назву"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:181
@@ -1978,6 +1967,14 @@ msgstr "вираз скрипту «{0}» не дає у результаті в
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
 msgid "must be a valid URL"
 msgstr "має бути коректною адресою"
+
+#~ msgid "Host to guest mapping was not provided for hypervisor check-in."
+#~ msgstr ""
+#~ "Для реєстрації гіпервізора не надано привʼязки основних систем до "
+#~ "гостьових систем."
+
+#~ msgid "Unable to find hypervisor in org \"{0}\""
+#~ msgstr "Не вдалося знайти гіпервізор в організації «{0}»"
 
 #~ msgid "Invalid date, {0} must use ISO 8601 format"
 #~ msgstr "Некоректна дата, у {0} має бути використано формат ISO 8601"

@@ -11,8 +11,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-26 02:01-0500\n"
-"PO-Revision-Date: 2023-01-28 17:20+0000\n"
+"POT-Creation-Date: 2023-02-02 02:00-0500\n"
+"PO-Revision-Date: 2023-02-06 03:20+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
@@ -900,7 +900,7 @@ msgstr "{0}는 조직 {1}에 등록을 승인하지 않습니다"
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1383
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:307
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:170
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1282
 #, java-format
 msgid "owner with key: {0} was not found."
@@ -985,8 +985,8 @@ msgstr "자동 바인딩 시 수량을 지정할 수 없습니다."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2360
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2687
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:431
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:263
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:293
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:126
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:156
 #: src/main/java/org/candlepin/resource/JobResource.java:360
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:247
 #: src/main/java/org/candlepin/resource/OwnerResource.java:965
@@ -1194,22 +1194,13 @@ msgstr ""
 msgid "Guest with UUID {0} could not be found."
 msgstr "UUID {0}인 게스트를 찾을 수 없습니다."
 
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:132
-msgid "Host to guest mapping was not provided for hypervisor check-in."
-msgstr "호스트에서 게스트로의 매핑은 하이퍼바이저 체크인에 제공되지 않습니다."
-
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:194
-#, java-format
-msgid "Unable to find hypervisor in org \"{0}\""
-msgstr "조직 ''{0}''에서 하이퍼바이저를 찾을 수 없습니다"
-
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:369
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:201
 msgid "Host to guest mapping was not provided for hypervisor update."
 msgstr ""
 "호스트에서 게스트로의 매핑은 하이퍼바이저 업데이트에 제공되지 않습니다."
 
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:377
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:383
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:209
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:215
 msgid "Invalid host to guest mapping was provided for hypervisor update."
 msgstr ""
 "잘못된 호스트에서 게스트로의 매핑은 하이퍼바이저 업데이트에 제공됩니다."
@@ -1310,7 +1301,7 @@ msgid "product has a null or invalid ID"
 msgstr "제품은 null 또는 잘못된 ID를 가지고 있습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:157
-msgid "product has null or invalid name"
+msgid "product has a null or invalid name"
 msgstr "제품은 null 또는 잘못된 이름을 가지고 있습니다"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:181
@@ -2032,6 +2023,13 @@ msgstr "스크립트식 ''{0}''은 true로 평가되지 않았습니다"
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
 msgid "must be a valid URL"
 msgstr "올바른 URL이어야 합니다"
+
+#~ msgid "Host to guest mapping was not provided for hypervisor check-in."
+#~ msgstr ""
+#~ "호스트에서 게스트로의 매핑은 하이퍼바이저 체크인에 제공되지 않습니다."
+
+#~ msgid "Unable to find hypervisor in org \"{0}\""
+#~ msgstr "조직 ''{0}''에서 하이퍼바이저를 찾을 수 없습니다"
 
 #~ msgid "Invalid date, {0} must use ISO 8601 format"
 #~ msgstr "잘못된 날짜, {0}은 ISO 8601 형식을 사용해야 합니다"
