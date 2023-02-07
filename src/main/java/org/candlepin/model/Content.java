@@ -17,10 +17,7 @@ package org.candlepin.model;
 import org.candlepin.model.dto.ContentData;
 import org.candlepin.service.model.ContentInfo;
 import org.candlepin.util.LongHashCodeBuilder;
-import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -32,10 +29,12 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Type;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -49,18 +48,12 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 
 
 /**
  * ProductContent
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Immutable
 @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
@@ -141,11 +134,9 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @Size(max = 255)
     private String arches;
 
-    @XmlTransient
     @Column(name = "entity_version")
     private Long entityVersion;
 
-    @XmlTransient
     @Column
     @Type(type = "org.hibernate.type.NumericBooleanType")
     private boolean locked;
@@ -370,7 +361,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     @Override
     public String getContentUrl() {
-        return this.contentUrl == null || this.contentUrl.isEmpty() ? null : this.contentUrl;
+        return this.contentUrl != null && !this.contentUrl.isEmpty() ? this.contentUrl : null;
     }
 
     public Content setContentUrl(String contentUrl) {
@@ -386,7 +377,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      */
     @Override
     public String getRequiredTags() {
-        return this.requiredTags == null || this.requiredTags.isEmpty() ? null : this.requiredTags;
+        return this.requiredTags != null && !this.requiredTags.isEmpty() ? this.requiredTags : null;
     }
 
     /**
@@ -408,7 +399,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      */
     @Override
     public String getReleaseVersion() {
-        return this.releaseVer == null || this.releaseVer.isEmpty() ? null : this.releaseVer;
+        return this.releaseVer != null && !this.releaseVer.isEmpty() ? this.releaseVer : null;
     }
 
     /**
@@ -426,7 +417,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     @Override
     public String getGpgUrl() {
-        return this.gpgUrl == null || this.gpgUrl.isEmpty() ? null : this.gpgUrl;
+        return this.gpgUrl != null && !this.gpgUrl.isEmpty() ? this.gpgUrl : null;
     }
 
     public Content setGpgUrl(String gpgUrl) {
@@ -449,21 +440,23 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     }
 
     /**
-     * Retrieves the collection of IDs representing products that are modified by this content. If
-     * the modified product IDs have not yet been defined, this method returns an empty collection.
+     * Retrieves the collection of IDs representing products that are required by this content. If
+     * the required product IDs have not yet been defined, this method returns an empty collection.
      *
      * @return
-     *  the modified product IDs of the content
+     *  the required product IDs of this content
      */
-    public Collection<String> getModifiedProductIds() {
-        return new SetView(this.modifiedProductIds);
+    public Set<String> getModifiedProductIds() {
+        return this.modifiedProductIds != null ?
+            Collections.unmodifiableSet(this.modifiedProductIds) :
+            Set.of();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Collection<String> getRequiredProductIds() {
+    public Set<String> getRequiredProductIds() {
         return this.getModifiedProductIds();
     }
 
@@ -524,9 +517,12 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      *  a reference to this entity
      */
     public Content setModifiedProductIds(Collection<String> requiredProductIds) {
+        if (this.modifiedProductIds == null) {
+            this.modifiedProductIds = new HashSet<>();
+        }
         this.modifiedProductIds.clear();
-        this.entityVersion = null;
 
+        this.entityVersion = null;
         if (requiredProductIds != null) {
             this.modifiedProductIds.addAll(requiredProductIds);
         }
@@ -543,75 +539,71 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     @Override
     public String getArches() {
-        return this.arches == null || this.arches.isEmpty() ? null : this.arches;
+        return this.arches != null && !this.arches.isEmpty() ? this.arches : null;
     }
 
-    @XmlTransient
-    @JsonIgnore
     public Content setLocked(boolean locked) {
         this.locked = locked;
         return this;
     }
 
-    @XmlTransient
     public boolean isLocked() {
         return this.locked;
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (this == other) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
 
-        boolean equals = false;
-
-        if (other instanceof Content) {
-            Content that = (Content) other;
-
-            // - If the objects have the same non-null UUID, they are equal
-            // - If the objects have different entity versions, they cannot be equal
-            // - If the objects have the same entity versions, run through the checks below to
-            //   avoid collisions
-            if (this.getUuid() != null && this.getUuid().equals(that.getUuid())) {
-                return true;
-            }
-
-            if (this.getEntityVersion() != that.getEntityVersion()) {
-                return false;
-            }
-
-            equals = new EqualsBuilder()
-                .append(this.getId(), that.getId())
-                .append(this.getType(), that.getType())
-                .append(this.getLabel(), that.getLabel())
-                .append(this.getName(), that.getName())
-                .append(this.getVendor(), that.getVendor())
-                .append(this.getMetadataExpiration(), that.getMetadataExpiration())
-
-                // These fields require special consideration, as nulls and empty strings are
-                // considered identical for CP's purposes. The accessors should fix this for us,
-                // but if equality checks start failing in the future, this is something to check.
-                .append(this.getContentUrl(), that.getContentUrl())
-                .append(this.getRequiredTags(), that.getRequiredTags())
-                .append(this.getReleaseVersion(), that.getReleaseVersion())
-                .append(this.getGpgUrl(), that.getGpgUrl())
-                .append(this.getArches(), that.getArches())
-                .isEquals();
-
-            equals = equals && Util.collectionsAreEqual(this.getModifiedProductIds(),
-                that.getModifiedProductIds());
+        if (!(obj instanceof Content)) {
+            return false;
         }
+
+        Content that = (Content) obj;
+
+        // - If the objects have the same non-null UUID, they are equal
+        // - If the objects have different entity versions, they cannot be equal
+        // - If the objects have the same entity versions, run through the checks below to
+        //   avoid collisions
+        if (this.getUuid() != null && this.getUuid().equals(that.getUuid())) {
+            return true;
+        }
+
+        if (this.getEntityVersion() != that.getEntityVersion()) {
+            return false;
+        }
+
+        boolean equals = new EqualsBuilder()
+            .append(this.getId(), that.getId())
+            .append(this.getType(), that.getType())
+            .append(this.getLabel(), that.getLabel())
+            .append(this.getName(), that.getName())
+            .append(this.getVendor(), that.getVendor())
+            .append(this.getMetadataExpiration(), that.getMetadataExpiration())
+
+            // These fields require special consideration, as nulls and empty strings are
+            // considered identical for CP's purposes. The accessors should fix this for us,
+            // but if equality checks start failing in the future, this is something to check.
+            .append(this.getContentUrl(), that.getContentUrl())
+            .append(this.getRequiredTags(), that.getRequiredTags())
+            .append(this.getReleaseVersion(), that.getReleaseVersion())
+            .append(this.getGpgUrl(), that.getGpgUrl())
+            .append(this.getArches(), that.getArches())
+            .isEquals();
+
+        equals = equals && Util.collectionsAreEqual(this.getModifiedProductIds(),
+            that.getModifiedProductIds());
 
         return equals;
     }
 
     @Override
     public int hashCode() {
-        HashCodeBuilder builder = new HashCodeBuilder(7, 17)
-            .append(this.id);
-
-        return builder.toHashCode();
+        return new HashCodeBuilder(7, 17)
+            .append(this.getId())
+            .toHashCode();
     }
 
     /**
@@ -642,18 +634,16 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             // We need to be certain that the hash code is calculated in a way that's order
             // independent and not subject to Hibernate's poor hashCode implementation on proxy
             // collections.
+            builder.append("modified_product_ids");
             Collection<String> modifiedProductIds = this.getModifiedProductIds();
-            if (modifiedProductIds != null && !modifiedProductIds.isEmpty()) {
-                builder.append("modified_product_ids");
+            Stream<String> mpistream = modifiedProductIds != null && !modifiedProductIds.isEmpty() ?
+                modifiedProductIds.stream() :
+                Stream.empty();
 
-                modifiedProductIds.stream()
-                    .filter(Objects::nonNull)
-                    .sorted()
-                    .forEach(builder::append);
-            }
-            else {
-                builder.append((Object) null);
-            }
+            modifiedProductIds.stream()
+                .filter(Objects::nonNull)
+                .sorted()
+                .forEach(builder::append);
 
             this.entityVersion = builder.toHashCode();
         }
@@ -663,8 +653,8 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     @Override
     public String toString() {
-        return String.format("Content [uuid: %s, id: %s, name: %s, label: %s]",
-            this.getUuid(), this.getId(), this.getName(), this.getLabel());
+        return String.format("Content [uuid: %s, id: %s, name: %s, label: %s, entity_version: %s]",
+            this.getUuid(), this.getId(), this.getName(), this.getLabel(), this.getEntityVersion());
     }
 
     @PrePersist

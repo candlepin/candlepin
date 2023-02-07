@@ -354,10 +354,11 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
                 // Impl note:
                 // We've already implicitly checked the ID above by how we're pulling candidate
                 // entities from the map
-                log.error("Entity version collision detected; attempting resolution... {} != {}",
-                    entity, candidate);
+                log.error("Entity version collision detected; attempting resolution..." +
+                    "\nConflicting entities:\n{}\n{}", entity, candidate);
 
                 this.ownerProductCurator.clearProductEntityVersion(candidate);
+                break;
             }
         }
 
