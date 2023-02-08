@@ -44,7 +44,7 @@ collect_artifacts() {
             'lint.log'
             'buildr.log'
             'unit_tests.log'
-            'rspec.log'
+            'spec.log'
         )
 
         # It's entirely possible for these to not exist, so we'll copy them if we can, but if we

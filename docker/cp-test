@@ -235,7 +235,7 @@ OPTIONS:
   -R                populate Candlepin environment with test repositories (implies -t)
   -r [filter]       run spec test suite (implies -d); may be filtered by test
                     suite and name
-  -H                run rspec tests in "hosted" mode (implies -r and -d)
+  -H                run spec tests in "hosted" mode (implies -r and -d)
   -u                run unit test suite N number of times, where N is number
                     of times u was specifed in the arguments
   -l                run the linters against the code
@@ -245,7 +245,7 @@ OPTIONS:
   -j <version>      use a specific Java version instead of the auto-detected default
   -v                enable verbose/debug output
   -i                internationalization - validate translation files
-  -k                run cloud registration rspec test suite (only for "hosted" mode)
+  -k                run cloud registration spec test suite (only for "hosted" mode)
   -n                uploading PR/Branch on SonarQube server
                     Below arguments are passed:
                     1) SONAR_HOST_URL
@@ -512,12 +512,15 @@ fi
 if [ "$SPEC_TESTS" == "1" ]; then
     echo "Running spec tests..."
     CLEAN_CP=1
+    RSPEC_DIR="$PROJECT_DIR/spec"
 
     tee /var/log/candlepin/spec.log < /tmp/teepipe &
     build_spec $SPEC_FILTER > /tmp/teepipe 2>&1
 
-    tee /var/log/candlepin/rspec.log < /tmp/teepipe &
-    build_rspec $SPEC_FILTER > /tmp/teepipe 2>&1
+    if [ -d "$RSPEC_DIR" ]; then
+        tee /var/log/candlepin/rspec.log < /tmp/teepipe &
+        build_rspec $SPEC_FILTER > /tmp/teepipe 2>&1
+    fi
 fi
 
 if [ ! -z "$BUILDR_TASK" ]; then

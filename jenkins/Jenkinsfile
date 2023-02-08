@@ -83,7 +83,7 @@ pipeline {
                         }
                     }
                 }
-                stage('rspec-postgresql') {
+                stage('spec-postgresql') {
                     agent { label 'candlepin' }
                     environment {
                         CANDLEPIN_DATABASE = 'postgresql'
@@ -92,18 +92,18 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'sh jenkins/rspec-tests.sh'
+                        sh 'sh jenkins/spec-tests.sh'
                     }
                     post {
                         always {
                             sh 'sh jenkins/cleanup.sh'
-                            archiveArtifacts artifacts: 'rspec-postgresql-artifacts/**',
+                            archiveArtifacts artifacts: 'spec-postgresql-artifacts/**',
                                              fingerprint: true,
                                              onlyIfSuccessful: false
                         }
                     }
                 }
-                stage('rspec-mysql') {
+                stage('spec-mysql') {
                     agent { label 'candlepin' }
                     environment {
                         CANDLEPIN_DATABASE = 'mysql'
@@ -112,18 +112,18 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'sh jenkins/rspec-tests.sh'
+                        sh 'sh jenkins/spec-tests.sh'
                     }
                     post {
                         always {
                             sh 'sh jenkins/cleanup.sh'
-                            archiveArtifacts artifacts: 'rspec-mysql-artifacts/**',
+                            archiveArtifacts artifacts: 'spec-mysql-artifacts/**',
                                              fingerprint: true,
                                              onlyIfSuccessful: false
                         }
                     }
                 }
-                stage('rspec-postgres-hosted') {
+                stage('spec-postgres-hosted') {
                     agent { label 'candlepin' }
                     environment {
                         CANDLEPIN_DATABASE = 'postgresql'
@@ -132,18 +132,18 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'sh jenkins/rspec-tests.sh'
+                        sh 'sh jenkins/spec-tests.sh'
                     }
                     post {
                         always {
                             sh 'sh jenkins/cleanup.sh'
-                            archiveArtifacts artifacts: 'rspec-postgres-hosted-artifacts/**',
+                            archiveArtifacts artifacts: 'spec-postgres-hosted-artifacts/**',
                                              fingerprint: true,
                                              onlyIfSuccessful: false
                         }
                     }
                 }
-                stage('rspec-mysql-hosted') {
+                stage('spec-mysql-hosted') {
                     agent { label 'candlepin' }
                     environment {
                         CANDLEPIN_DATABASE = 'mysql'
@@ -152,12 +152,12 @@ pipeline {
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'sh jenkins/rspec-tests.sh'
+                        sh 'sh jenkins/spec-tests.sh'
                     }
                     post {
                         always {
                             sh 'sh jenkins/cleanup.sh'
-                            archiveArtifacts artifacts: 'rspec-mysql-hosted-artifacts/**',
+                            archiveArtifacts artifacts: 'spec-mysql-hosted-artifacts/**',
                                              fingerprint: true,
                                              onlyIfSuccessful: false
                         }
