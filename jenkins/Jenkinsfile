@@ -4,7 +4,7 @@ library identifier: 'fh-pipeline-library@master', retriever: modernSCM(
    credentialsId: 'github-api-token-as-username-password',
    ])
 
-// testing ....
+// testing .....
 pipeline {
     agent none
     options {
