@@ -13,7 +13,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.13
+Version: 4.2.14
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -243,6 +243,55 @@ fi
 
 #raw
 %changelog
+* Thu Feb 09 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.14-1
+- Add new translations using Weblate (noreply@weblate.org)
+- CANDLEPIN-467: Updates to allow Candlepin to run on Java 17
+  (wpoteat@redhat.com)
+- CANDLEPIN-480: Fixed product and content attribute referencing
+  (crog@redhat.com)
+- CANDLEPIN-312: Remove rspec from infrastructure (wpoteat@redhat.com)
+- CANDLEPIN-207: Remove support of RHEL7 JSS version (ojanus@redhat.com)
+- Bump com.sun.xml.bind:jaxb-core from 4.0.1 to 4.0.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.sun.xml.bind:jaxb-impl from 4.0.1 to 4.0.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.activemq:artemis-stomp-protocol from 2.27.1 to 2.28.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-468: Replaced R2 CA cert with new Hosted CA cert
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-475: Updated the product importer and resolution logic
+  (crog@redhat.com)
+- Bump org.postgresql:postgresql from 42.5.2 to 42.5.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.activemq:artemis-server from 2.27.1 to 2.28.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Log different types of token auth usage (nmoumoul@redhat.com)
+- Upgrade gradle-lint-plugin to 18.0.1 (nmoumoul@redhat.com)
+- CANDLEPIN-261: Migrate environment_spec to Java (part 2) (ojanus@redhat.com)
+- Updated the refresh_data_extractor tool to support .gz files
+  (crog@redhat.com)
+- CANDLEPIN-139: Stop conditional switch for META-INF/context.xml - replaced
+  context.xml with context_tomcat8.xml - removed context_tomcat8.xml - removed
+  conditional switch for context.xml in deploy script - removed conditional
+  switch for context.xml in spec.tmpl (joshmalbrecht@gmail.com)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Bump com.github.ben-manes:gradle-versions-plugin from 0.44.0 to 0.45.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.postgresql:postgresql from 42.5.1 to 42.5.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Upgrade to Hibernate 5.6.14 (nmoumoul@redhat.com)
+- CANDLEPIN-239: Upgraded hibernate-validator to 6.x - Also updated hibernate-
+  validator-annotation-processor to 6.x (joshmalbrecht@gmail.com)
+- CANDLEPIN-122: Move Jenkins PR mariadb pipeline stages to use Centos Stream 8
+  (sbakaj@redhat.com)
+- CANDLEPIN-462: Update spec tests that modify Gson object
+  (joshmalbrecht@gmail.com)
+- Bump picocli from 4.7.0 to 4.7.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump dependency-check-gradle from 8.0.1 to 8.0.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Tue Jan 31 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.13-1
 - Add new translations using Weblate (noreply@weblate.org)
 - Updated Util.getHostname to no longer use reflection (crog@redhat.com)
