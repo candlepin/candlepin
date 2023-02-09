@@ -408,7 +408,7 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
         throws IOException {
         try {
             Provider provider = JSSProviderLoader.getProvider(true);
-            MessageDigest d = MessageDigest.getInstance("SHA-1", provider);
+            MessageDigest d = MessageDigest.getInstance("SHA-256", provider);
 
             byte[] encodedKey = key.getEncoded();
 
@@ -424,7 +424,7 @@ public class JSSPKIUtility extends ProviderBasedPKIUtility {
             return new AuthorityKeyIdentifierExtension(ki, null, null);
         }
         catch (NoSuchAlgorithmException e) {
-            throw new IOException("Could not find SHA1 implementation", e);
+            throw new IOException("Could not find SHA256 implementation", e);
         }
     }
 

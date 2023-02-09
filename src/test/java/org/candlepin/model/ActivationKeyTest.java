@@ -81,7 +81,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
         assertNotNull(poolCurator.getActivationKeysForPool(pool));
         assertNotNull(key.getPools());
         assertEquals(1, key.getPools().size());
-        assertEquals(new Long(5), key.getPools().iterator().next().getQuantity());
+        assertEquals(5L, key.getPools().iterator().next().getQuantity());
     }
 
     @Test

@@ -91,7 +91,7 @@ public class PoolRulesInstanceTest {
         Pool pool = pools.get(0);
 
         // Quantity should be doubled:
-        assertEquals(new Long(200), pool.getQuantity());
+        assertEquals(200L, pool.getQuantity());
     }
 
     @Test
@@ -106,7 +106,7 @@ public class PoolRulesInstanceTest {
         // In this case the exported entitlement becomes a subscription, the quantity
         // was already doubled in hosted, so from then on whenever it is exported we
         // respect it's quantity.
-        assertEquals(new Long(100), pool.getQuantity());
+        assertEquals(100L, pool.getQuantity());
     }
 
     @Test
@@ -121,7 +121,7 @@ public class PoolRulesInstanceTest {
         // Change the value of instance multiplier:
         p.getProduct().setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "4");
         // Change the quantity:
-        p.setQuantity(new Long(200));
+        p.setQuantity(200L);
 
         List<Pool> existingPools = new LinkedList<>();
         existingPools.add(pool);
@@ -131,7 +131,7 @@ public class PoolRulesInstanceTest {
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         assertTrue(update.getQuantityChanged());
-        assertEquals(new Long(800), update.getPool().getQuantity());
+        assertEquals(800L, update.getPool().getQuantity());
     }
 
     @Test
@@ -156,7 +156,7 @@ public class PoolRulesInstanceTest {
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
         assertTrue(update.getQuantityChanged());
-        assertEquals(new Long(100), update.getPool().getQuantity());
+        assertEquals(100L, update.getPool().getQuantity());
         assertFalse(update.getPool().getProduct().hasAttribute(Product.Attributes.INSTANCE_MULTIPLIER));
     }
 
@@ -172,7 +172,7 @@ public class PoolRulesInstanceTest {
         // Change the value of instance multiplier:
         masterPool.getProduct().setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "4");
         // Change the quantity as well:
-        masterPool.setQuantity(new Long(200));
+        masterPool.setQuantity(200L);
 
         List<Pool> existingPools = new LinkedList<>();
         existingPools.add(pool);
@@ -185,10 +185,10 @@ public class PoolRulesInstanceTest {
 
         // Change in instance multiplier would have no impact on a standalone update, we
         // only need to worry about an actual change on the subscription quantity.
-        assertEquals(new Long(200), update.getPool().getQuantity());
+        assertEquals(200L, update.getPool().getQuantity());
     }
 
-    private Subscription createInstanceBasedSub(String productId, int quantity, int instanceMultiplier,
+    private Subscription createInstanceBasedSub(String productId, long quantity, int instanceMultiplier,
         boolean exported) {
         Owner owner = new Owner("Test Corporation");
         Product product = TestUtil.createProduct(productId, productId);
@@ -197,7 +197,7 @@ public class PoolRulesInstanceTest {
         if (exported) {
             s.setUpstreamPoolId("SOMETHING");
         }
-        s.setQuantity(new Long(quantity));
+        s.setQuantity(quantity);
         return s;
     }
 

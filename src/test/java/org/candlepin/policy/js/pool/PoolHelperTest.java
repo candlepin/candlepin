@@ -259,7 +259,7 @@ public class PoolHelperTest {
         Pool clone = PoolHelper.clonePool(pool, product2, quant, attributes, "TaylorSwift", null,
             ent, TestUtil.createConsumer(), productCurator);
         assertEquals(owner, clone.getOwner());
-        assertEquals(new Long(-1L), clone.getQuantity());
+        assertEquals(-1L, clone.getQuantity());
         assertEquals(product2, clone.getProduct());
         assertEquals(attributes.size() + 1, clone.getAttributes().size());
         for (int i = 0; i < 3; i++) {

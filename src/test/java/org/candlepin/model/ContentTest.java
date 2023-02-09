@@ -53,7 +53,7 @@ public class ContentTest extends DatabaseTestFixture {
         modifiedProductIds.add("ProductB");
 
         content.setModifiedProductIds(modifiedProductIds);
-        Long metadataExpire = new Long(60 * 60 * 24);
+        long metadataExpire = 60 * 60 * 24;
         content.setMetadataExpiration(metadataExpire);
 
         contentCurator.create(content);

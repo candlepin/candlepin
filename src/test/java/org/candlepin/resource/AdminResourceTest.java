@@ -53,7 +53,7 @@ public class AdminResourceTest {
 
     @Test
     public void initialize() {
-        when(uc.getUserCount()).thenReturn(new Long(0));
+        when(uc.getUserCount()).thenReturn(0L);
         assertEquals("Initialized!", ar.initialize());
         verify(usa).createUser(any(User.class));
     }
@@ -66,7 +66,7 @@ public class AdminResourceTest {
 
     @Test
     public void alreadyInitialized() {
-        when(uc.getUserCount()).thenReturn(new Long(1000));
+        when(uc.getUserCount()).thenReturn(1000L);
         assertEquals("Already initialized.", ar.initialize());
     }
 

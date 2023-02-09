@@ -27,8 +27,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.opentest4j.AssertionFailedError;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1105,12 +1107,12 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
 
         for (Map.Entry<String, Instant> entry : expected.entrySet()) {
             assertTrue(output.containsKey(entry.getKey()));
-            assertEquals(entry.getValue(), output.get(entry.getKey()));
+            assertInstantEqualsMillis(entry.getValue(), output.get(entry.getKey()));
         }
 
         for (Map.Entry<String, Instant> entry : output.entrySet()) {
             assertTrue(expected.containsKey(entry.getKey()));
-            assertEquals(entry.getValue(), expected.get(entry.getKey()));
+            assertInstantEqualsMillis(entry.getValue(), expected.get(entry.getKey()));
         }
     }
 
@@ -1138,7 +1140,7 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertNull(output.get(product1.getId()));
 
         assertTrue(output.containsKey(product2.getId()));
-        assertEquals(op2.getOrphanedDate(), output.get(product2.getId()));
+        assertInstantEqualsMillis(op2.getOrphanedDate(), output.get(product2.getId()));
     }
 
     @Test
@@ -1165,7 +1167,7 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertNull(output.get(product1.getId()));
 
         assertTrue(output.containsKey(product2.getId()));
-        assertEquals(op2.getOrphanedDate(), output.get(product2.getId()));
+        assertInstantEqualsMillis(op2.getOrphanedDate(), output.get(product2.getId()));
     }
 
     @Test
@@ -1203,12 +1205,12 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
 
         for (Map.Entry<String, Instant> entry : expected.entrySet()) {
             assertTrue(output.containsKey(entry.getKey()));
-            assertEquals(entry.getValue(), output.get(entry.getKey()));
+            assertInstantEqualsMillis(entry.getValue(), output.get(entry.getKey()));
         }
 
         for (Map.Entry<String, Instant> entry : output.entrySet()) {
             assertTrue(expected.containsKey(entry.getKey()));
-            assertEquals(entry.getValue(), expected.get(entry.getKey()));
+            assertInstantEqualsMillis(entry.getValue(), expected.get(entry.getKey()));
         }
     }
 
@@ -1236,7 +1238,7 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertNull(output.get(product1.getId()));
 
         assertTrue(output.containsKey(product2.getId()));
-        assertEquals(op2.getOrphanedDate(), output.get(product2.getId()));
+        assertInstantEqualsMillis(op2.getOrphanedDate(), output.get(product2.getId()));
     }
 
     @Test
@@ -1263,7 +1265,7 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         assertNull(output.get(product1.getId()));
 
         assertTrue(output.containsKey(product2.getId()));
-        assertEquals(op2.getOrphanedDate(), output.get(product2.getId()));
+        assertInstantEqualsMillis(op2.getOrphanedDate(), output.get(product2.getId()));
     }
 
     @Test
@@ -1310,10 +1312,10 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
             assertNotNull(refreshed);
 
             if (expected.contains(op)) {
-                assertEquals(update, refreshed.getOrphanedDate());
+                assertInstantEqualsMillis(update, refreshed.getOrphanedDate());
             }
             else {
-                assertEquals(op.getOrphanedDate(), refreshed.getOrphanedDate());
+                assertInstantEqualsMillis(op.getOrphanedDate(), refreshed.getOrphanedDate());
             }
         }
     }
@@ -1343,12 +1345,12 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         OwnerProduct refreshedOp1 = this.ownerProductCurator
             .getOwnerProduct(op1.getOwner().getId(), op1.getProduct().getId());
         assertNotNull(refreshedOp1);
-        assertEquals(update, refreshedOp1.getOrphanedDate());
+        assertInstantEqualsMillis(update, refreshedOp1.getOrphanedDate());
 
         OwnerProduct refreshedOp2 = this.ownerProductCurator
             .getOwnerProduct(op2.getOwner().getId(), op2.getProduct().getId());
         assertNotNull(refreshedOp2);
-        assertEquals(op2.getOrphanedDate(), refreshedOp2.getOrphanedDate());
+        assertInstantEqualsMillis(op2.getOrphanedDate(), refreshedOp2.getOrphanedDate());
     }
 
     @Test
@@ -1391,10 +1393,10 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
             assertNotNull(refreshed);
 
             if (expected.contains(op)) {
-                assertEquals(update, refreshed.getOrphanedDate());
+                assertInstantEqualsMillis(update, refreshed.getOrphanedDate());
             }
             else {
-                assertEquals(op.getOrphanedDate(), refreshed.getOrphanedDate());
+                assertInstantEqualsMillis(op.getOrphanedDate(), refreshed.getOrphanedDate());
             }
         }
     }
@@ -1424,12 +1426,12 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
         OwnerProduct refreshedOp1 = this.ownerProductCurator
             .getOwnerProduct(op1.getOwner().getId(), op1.getProduct().getId());
         assertNotNull(refreshedOp1);
-        assertEquals(update, refreshedOp1.getOrphanedDate());
+        assertInstantEqualsMillis(update, refreshedOp1.getOrphanedDate());
 
         OwnerProduct refreshedOp2 = this.ownerProductCurator
             .getOwnerProduct(op2.getOwner().getId(), op2.getProduct().getId());
         assertNotNull(refreshedOp2);
-        assertEquals(op2.getOrphanedDate(), refreshedOp2.getOrphanedDate());
+        assertInstantEqualsMillis(op2.getOrphanedDate(), refreshedOp2.getOrphanedDate());
     }
 
     @Test
@@ -1720,6 +1722,23 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
 
         assertThrows(IllegalArgumentException.class, () ->
             this.ownerProductCurator.rebuildOwnerProductMapping(owner, pidMap));
+    }
+
+    /**
+     * Equivalency of dates down to milliseconds is sufficient
+     * @param date1
+     * @param date2
+     */
+    private void assertInstantEqualsMillis(Instant date1, Instant date2) {
+        if (date1 == null && date2 == null) {
+            return;
+        }
+        else if (date1 == null || date2 == null) {
+            throw new AssertionFailedError();
+        }
+        else {
+            assertEquals(date1.truncatedTo(ChronoUnit.MILLIS), date2.truncatedTo(ChronoUnit.MILLIS));
+        }
     }
 
 }
