@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-01-26 02:01-0500\n"
+"POT-Creation-Date: 2023-02-02 02:00-0500\n"
 "PO-Revision-Date: 2023-01-27 18:20+0000\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
@@ -876,7 +876,7 @@ msgstr "{0} 没有授权可以使用机构 {1} 注册"
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1383
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:307
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:170
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1282
 #, java-format
 msgid "owner with key: {0} was not found."
@@ -959,8 +959,8 @@ msgstr "在自动绑定时无法指定数量。"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2360
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2687
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:431
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:263
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:293
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:126
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:156
 #: src/main/java/org/candlepin/resource/JobResource.java:360
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:247
 #: src/main/java/org/candlepin/resource/OwnerResource.java:965
@@ -1167,21 +1167,12 @@ msgstr "json \"{0}\" 中的虚拟机 ID 与路径虚拟机 ID \"{1}\" 匹配"
 msgid "Guest with UUID {0} could not be found."
 msgstr "无法找到 UUID {0} 的虚拟机。"
 
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:132
-msgid "Host to guest mapping was not provided for hypervisor check-in."
-msgstr "不支持用于 hypervisor 登录的主机与虚拟机映射。"
-
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:194
-#, java-format
-msgid "Unable to find hypervisor in org \"{0}\""
-msgstr "无法在 org ''{0}'' 中找到 hypervisor"
-
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:369
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:201
 msgid "Host to guest mapping was not provided for hypervisor update."
 msgstr "不支持用于 hypervisor 更新的主机与虚拟机映射。"
 
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:377
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:383
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:209
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:215
 msgid "Invalid host to guest mapping was provided for hypervisor update."
 msgstr "提供的用于 hypervisor 更新的主机到虚拟机的映射无效。"
 
@@ -1285,7 +1276,9 @@ msgid "product has a null or invalid ID"
 msgstr "产品有一个 null 或无效的 ID"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:157
-msgid "product has null or invalid name"
+#, fuzzy
+#| msgid "product has null or invalid name"
+msgid "product has a null or invalid name"
 msgstr "产品有 null 或无效的名称"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:181
@@ -1991,6 +1984,12 @@ msgstr "脚本表达式 \"{0}\" 未评估为 true"
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
 msgid "must be a valid URL"
 msgstr "必须是有效 URL"
+
+#~ msgid "Host to guest mapping was not provided for hypervisor check-in."
+#~ msgstr "不支持用于 hypervisor 登录的主机与虚拟机映射。"
+
+#~ msgid "Unable to find hypervisor in org \"{0}\""
+#~ msgstr "无法在 org ''{0}'' 中找到 hypervisor"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
