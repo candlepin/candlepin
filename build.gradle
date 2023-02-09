@@ -87,7 +87,7 @@ ext.libraries = [
         "javax.transaction:jta",
         "javax.persistence:javax.persistence-api",
         "javax.xml.bind:jaxb-api",
-        "javax.annotation:javax.annotation-api", 
+        "javax.annotation:javax.annotation-api",
     ],
     commons: [
         "commons-codec:commons-codec",
@@ -493,6 +493,31 @@ configure(subprojects.findAll { it.name == "candlepin-common" || it.name == "can
                 }
             }
         }
+    }
+}
+
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        xml.enabled true
+    }
+
+    doLast {
+        println "Generated unit test coverage report at $buildDir/reports/jacoco/test/html/index.html"
+    }
+}
+
+// User-friendly alias for jacocoTestReport task
+tasks.register("coverage") {
+    dependsOn jacocoTestReport
+}
+
+project.tasks["sonar"].dependsOn "coverage"
+sonarqube{
+    properties{
+        property "sonar.sourceEncoding","Utf-8"
+        property "sonar.exclusions","**/*generated*"
     }
 }
 

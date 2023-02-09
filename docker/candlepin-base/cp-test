@@ -27,54 +27,17 @@ export AUTOCONF=1
 export FORCECERT=1
 export UNITTEST=0
 
-# functions to abstract away buildr vs. gradle differences
-build_clean() {
-    if [ -f ./gradlew ]; then
-        ./gradlew clean
-    else
-        buildr clean
-    fi
-}
-build_lint() {
-    if [ -f ./gradlew ]; then
-        ./gradlew checkstyleMain checkstyleTest
-    else
-        buildr lint
-    fi
-}
-
-validate_translation() {
-    if [ -f ./gradlew ]; then
-        ./gradlew validate_translation
-    fi
-}
-
-build_unittest() {
-    UTCMD=$1
-    if [ -f ../gradlew ]; then
-        cd $CP_HOME; ./gradlew test; cd $PROJECT_DIR
-    else
-        buildr $UTCMD
-    fi
-}
-
 build_rspec() {
     RSPEC_FILTER=$1
 
-    BUILDR_ARGS="rspec"
     GRADLE_ARGS=""
     if [ ! -z "$RSPEC_FILTER" ]; then
-        BUILDR_ARGS="rspec:${RSPEC_FILTER}"
         GRADLE_ARGS="--spec ${RSPEC_FILTER}"
     fi
 
     GRADLE_ARGS="${GRADLE_ARGS} --no-file"
 
-    if [ -f ../gradlew ]; then
-        ../gradlew rspec ${GRADLE_ARGS}
-    else
-        buildr "${BUILDR_ARGS}"
-    fi
+    ./gradlew rspec ${GRADLE_ARGS}
 }
 
 trapex() {
@@ -103,11 +66,8 @@ collect_artifacts() {
         audit.log
         candlepin.log
         error.log
-        lint.log
-        buildr.log
-        unit_tests.log
         rspec.log
-        translation.log
+        spec.log
     )
     # prepend full file path for maximum lazy typers
     for ((i=0; i<${#CANDLEPIN_LOGS[*]}; i++)); do
@@ -141,10 +101,10 @@ cleanup() {
         trap - $signals
         trap "" ERR EXIT
 
-        # Run buildr or gradle clean in our target CP directory
+        # Run gradle clean in our target CP directory
         if [ "$CLEAN_CP" == "1" ]; then
             cd $CP_HOME
-            build_clean
+            ./gradlew clean
         fi
 
         # Collect artifacts up to this point. If we're about to drop into a shell, we'll leave any
@@ -188,23 +148,18 @@ OPTIONS:
   -R                populate Candlepin environment with test repositories (implies -t)
   -r [filter]       run rspec test suite (implies -d); may be filtered by test
                     suite and name
-  -H                run rspec tests in "hosted" mode (implies -r and -d)
-  -u                run unit test suite N number of times, where N is number
-                    of times u was specifed in the arguments
-  -l                run the linters against the code
+  -H                run spec tests in "hosted" mode (implies -r and -d)
   -s                run a bash shell when done
-  -b <task>         execute the specified buildr task (deprecated)
   -c <ref>          git reference to checkout
   -j <version>      use a specific Java version instead of the auto-detected default
   -v                enable verbose/debug output
-  -i                internationalization - validate translation files
-  -k                run cloud registration rspec test suite (only for "hosted" mode)
+  -k                run cloud registration spec test suite (only for "hosted" mode)
   -a <arguments>    extra arguments to pass to the Candlepin deploy script (implies -d)
 HELP
 }
 
 ARGV=("$@")
-while getopts ":dtRqrHulsb:c:a:vj:i:k" opt; do
+while getopts ":dtRqrHsk:c:a:vj" opt; do
     case $opt in
         d  ) DEPLOY="1";;
         t  )
@@ -231,26 +186,15 @@ while getopts ":dtRqrHulsb:c:a:vj:i:k" opt; do
             RSPEC="1"
             DEPLOY="1"
             ;;
-        u  ) UNITTEST=$((UNITTEST + 1))
-
-            ARG="${ARGV[$OPTIND - 1]}"
-            if [ "${ARG:0:1}" != "-" ] && [ "${ARG:0:1}" != "" ]; then
-                UNITTEST_FILTER="$ARG"
-                OPTIND=$((OPTIND + 1))
-            fi
-            ;;
         a  ) EX_ARGS="${EX_ARGS} ${OPTARG}"
             DEPLOY="1"
             ;;
-        l  ) LINTER="1";;
         s  ) LAUNCHSHELL="1";;
-        b  ) BUILDR_TASK="${OPTARG}";;
         c  ) CHECKOUT="${OPTARG}";;
         q  ) QPID="1";;
         v  ) VERBOSE="1";;
         j  ) JAVA_VERSION="${OPTARG}";;
-        i  ) TRANSLATE="1";;
-        k  ) CLOUD_AUTH_RSPEC="1";;
+        k  ) CLOUD_AUTH_SPEC="1";;
         ?  ) usage; exit;;
     esac
 done
@@ -333,49 +277,6 @@ mkdir -p /var/log/candlepin
 # Setup our tee pipe
 mkfifo /tmp/teepipe
 
-if [ "$LINTER" == "1" ]; then
-    echo "Running linter..."
-    CLEAN_CP=1
-
-    cd $CP_HOME
-    tee /var/log/candlepin/lint.log < /tmp/teepipe &
-    build_lint > /tmp/teepipe 2>&1
-fi
-
-if [ "$TRANSLATE" == "1" ]; then
-    echo "Running validator for translated files..."
-    CLEAN_CP=1
-
-    cd $CP_HOME
-    tee /var/log/candlepin/translation.log < /tmp/teepipe &
-    validate_translation > /tmp/teepipe 2>&1
-fi
-
-# TODO: keep track of return code?
-PROJECT_DIR="$CP_HOME/$PROJECT"
-cd $PROJECT_DIR
-
-if [ "$UNITTEST" -gt 0 ]; then
-    echo "Running unit tests $UNITTEST time(s)"
-    CLEAN_CP=1
-
-    UTCMD="test"
-
-    if [ ! -z "${UNITTEST_FILTER}" ]; then
-        UTCMD="${UTCMD}:${UNITTEST_FILTER}"
-    fi
-
-    # run $UNITTEST time(s) to increase chance of capturing
-    # non-deterministic unit test failures.
-    for (( i=1; i<=$UNITTEST; i++ ))
-    do
-        tee /var/log/candlepin/unit_tests.log < /tmp/teepipe &
-        build_unittest $UTCMD > /tmp/teepipe 2>&1
-        rm -f /tmp/teepipe
-        mkfifo /tmp/teepipe
-    done
-fi
-
 if [ "$QPID" == "1" ]; then
     if [ -d "$PROJECT_DIR/bin/qpid" ]; then
         echo "Setting up Qpid"
@@ -444,19 +345,6 @@ if [ "$RSPEC" == "1" ]; then
 
     tee /var/log/candlepin/rspec.log < /tmp/teepipe &
     build_rspec $RSPEC_FILTER > /tmp/teepipe 2>&1
-fi
-
-if [ ! -z "$BUILDR_TASK" ]; then
-    if [ -f ../gradlew ]; then
-        echo 'Warning: buildr is deprecated in this branch. Cannot run a buildr task.'
-    else
-        echo "Running buildr $BUILDR_TASK..."
-        CLEAN_CP=1
-
-        cd $CP_HOME
-        tee /var/log/candlepin/buildr.log < /tmp/teepipe &
-        buildr $BUILDR_TASK > /tmp/teepipe 2>&1
-    fi
 fi
 
 cleanup
