@@ -311,7 +311,7 @@ test {
         host = '*'
     }
 
-    useJUnitPlatform ()
+    useJUnitPlatform()
 
     // Sometimes causes out of memory on vagrant
     maxHeapSize = "2g"
@@ -324,6 +324,8 @@ test {
 }
 
 jacocoTestReport {
+    dependsOn test
+
     reports {
         xml.enabled true
     }
@@ -334,12 +336,17 @@ jacocoTestReport {
 }
 
 // User-friendly alias for jacocoTestReport task
-task coverage {
+tasks.register("coverage") {
     dependsOn jacocoTestReport
 }
 
-project.tasks["sonarqube"].dependsOn "test"
-project.tasks["sonarqube"].dependsOn "coverage"
+project.tasks["sonar"].dependsOn "coverage"
+sonarqube{
+    properties{
+        property "sonar.sourceEncoding","Utf-8"
+        property "sonar.exclusions","**/*generated*"
+    }
+}
 
 wrapper {
     distributionType = Wrapper.DistributionType.ALL
