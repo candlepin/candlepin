@@ -1216,7 +1216,8 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     @Override
     public String toString() {
-        return String.format("Product [uuid: %s, id: %s, name: %s]", this.uuid, this.id, this.name);
+        return String.format("Product [uuid: %s, id: %s, name: %s, entity_version: %s]",
+            this.getUuid(), this.getId(), this.getName(), this.getEntityVersion());
     }
 
     public Product setLocked(boolean locked) {
@@ -1254,10 +1255,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             }
 
             equals = new EqualsBuilder()
-                .append(this.id, that.id)
-                .append(this.name, that.name)
-                .append(this.multiplier, that.multiplier)
-                .append(this.attributes, that.attributes)
+                .append(this.getId(), that.getId())
+                .append(this.getName(), that.getName())
+                .append(this.getMultiplier(), that.getMultiplier())
+                .append(this.getAttributes(), that.getAttributes())
                 .isEquals();
 
             // Check derived product
@@ -1267,13 +1268,14 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
             // Impl note: We can't use .equals here on the collections, as Hibernate's special
             // collections explicitly state that they break the contract on .equals. As such, we
             // have to step through each collection and do a manual comparison. Ugh.
-            equals = equals && Util.collectionsAreEqual(this.dependentProductIds, that.dependentProductIds);
+            equals = equals && Util.collectionsAreEqual(this.getDependentProductIds(),
+                that.getDependentProductIds());
 
             // Compare our content
-            equals = equals && Util.collectionsAreEqual(this.productContent, that.productContent);
+            equals = equals && Util.collectionsAreEqual(this.getProductContent(), that.getProductContent());
 
             // Compare branding collections
-            equals = equals && Util.collectionsAreEqual(this.branding, that.branding);
+            equals = equals && Util.collectionsAreEqual(this.getBranding(), that.getBranding());
 
             // Compare provided products
             equals = equals && Util.collectionsAreEqual(this.getProvidedProducts(),
