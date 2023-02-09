@@ -84,6 +84,8 @@ class Candlepin:
         self.session = requests.Session()
         self.session.auth = (self.username, self.password)
 
+        self.date_now = datetime.datetime.now()
+
         self.determine_mode()
 
     def build_url(self, endpoint):
@@ -277,7 +279,7 @@ class Candlepin:
         return self.post(endpoint, {}, content_map).json()
 
     def create_pool(self, owner_key, pool_data):
-        start_date = pool_data['start_date'] if 'start_date' in pool_data else datetime.datetime.now()
+        start_date = pool_data['start_date'] if 'start_date' in pool_data else self.date_now
         end_date = pool_data['end_date'] if 'end_date' in pool_data else start_date + datetime.timedelta(days=365)
 
         pool = {
@@ -627,7 +629,10 @@ def create_subscriptions(cp, options, owners, data):
     log.info('')
     log.info("Creating subscriptions...")
 
-    now = datetime.datetime.now()
+    date_now = datetime.datetime.now()
+    date_5_days_ago = (date_now + datetime.timedelta(days=-5)).isoformat()
+    date_in_360_days = (date_now + datetime.timedelta(days=360)).isoformat()
+    date_in_30_days = (date_now + datetime.timedelta(days=30)).isoformat()
     engineering_products = {}
 
     for owner_key, owner_data in owners.items():
@@ -655,8 +660,8 @@ def create_subscriptions(cp, options, owners, data):
                     small_quantity = 5
                     large_quantity = 50
 
-                start_date = (now + datetime.timedelta(days=-5)).isoformat()
-                end_date = (now + datetime.timedelta(days=360)).isoformat()
+                start_date = date_5_days_ago
+                end_date = date_in_360_days
 
                 # Small quantity pool
                 pools.append({
@@ -687,7 +692,7 @@ def create_subscriptions(cp, options, owners, data):
                     'contract_number': 0,
                     'account_number': account_number,
                     'order_number': order_number,
-                    'start_date': (now + datetime.timedelta(days=30)).isoformat(),
+                    'start_date': date_in_30_days,
                     'end_date': end_date
                 })
 
