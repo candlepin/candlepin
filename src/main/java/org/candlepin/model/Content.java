@@ -640,8 +640,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
                 modifiedProductIds.stream() :
                 Stream.empty();
 
-            modifiedProductIds.stream()
-                .filter(Objects::nonNull)
+            mpistream.filter(Objects::nonNull)
                 .sorted()
                 .forEach(builder::append);
 
