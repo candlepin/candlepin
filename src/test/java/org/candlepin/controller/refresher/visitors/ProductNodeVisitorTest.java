@@ -893,7 +893,8 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
 
         OwnerProduct updated = this.ownerProductCurator.getOwnerProduct(owner.getId(), existing.getId());
         assertNotNull(updated);
-        assertEquals(orphanedDate, updated.getOrphanedDate());
+        assertEquals(orphanedDate.truncatedTo(ChronoUnit.MILLIS),
+            updated.getOrphanedDate().truncatedTo(ChronoUnit.MILLIS));
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
