@@ -30,8 +30,9 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCertificate;
 import org.candlepin.util.Util;
 
-import java.util.Date;
 import java.util.HashSet;
+
+
 
 /**
  * Test suite for the EntitlementTranslator class.
@@ -83,12 +84,10 @@ public class EntitlementTranslatorTest extends
         certs.add(entCert);
         source.setCertificates(certs);
 
-        Consumer consumer = new Consumer();
-        consumer.setUuid("consumer-uuid");
-        source.setConsumer(consumer);
+        Consumer consumer = new Consumer()
+            .setUuid("consumer-uuid");
 
-        source.setEndDate(new Date());
-        source.setStartDate(new Date());
+        source.setConsumer(consumer);
 
         return source;
     }

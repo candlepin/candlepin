@@ -235,14 +235,16 @@ public class ComplianceStatusHasherTest {
             consumer.setFact(RELATED_FACT_NEW, "fact");
             assertNotEquals(initialHash, generateHash(testStatus, consumer));
         }
+
         @Test
         void shouldChangeWithRemovalOfRelatedFact() {
             Consumer consumer = createConsumer(owner);
             ComplianceStatus testStatus = createStatusOf(consumer);
 
-            consumer.getFacts().remove(RELATED_FACT_INITIAL);
+            consumer.removeFact(RELATED_FACT_INITIAL);
             assertNotEquals(initialHash, generateHash(testStatus, consumer));
         }
+
         @Test
         void shouldChangeWithUpdateOfRelatedFact() {
             Consumer consumer = createConsumer(owner);
@@ -266,7 +268,7 @@ public class ComplianceStatusHasherTest {
             Consumer consumer = createConsumer(owner);
             ComplianceStatus testStatus = createStatusOf(consumer);
 
-            consumer.getFacts().remove(UNRELATED_FACT_INITIAL);
+            consumer.removeFact(UNRELATED_FACT_INITIAL);
             assertEquals(initialHash, generateHash(testStatus, consumer));
         }
 
@@ -291,8 +293,11 @@ public class ComplianceStatusHasherTest {
 
             consumer.setInstalledProducts(new HashSet<>(initialInstalled));
             assertEquals(initialHash, generateHash(testStatus, consumer));
-            ConsumerInstalledProduct installed = new ConsumerInstalledProduct(product.getUuid(),
-                product.getName());
+
+            ConsumerInstalledProduct installed = new ConsumerInstalledProduct()
+                .setProductId(product.getId())
+                .setProductName(product.getName());
+
             consumer.addInstalledProduct(installed);
 
             String updatedHash = generateHash(testStatus, consumer);
@@ -310,10 +315,10 @@ public class ComplianceStatusHasherTest {
             installed.setVersion(null);
             assertEquals(updatedHash, generateHash(testStatus, consumer));
 
-            consumer.getInstalledProducts().remove(installed);
+            consumer.removeInstalledProduct(installed);
             assertEquals(initialHash, generateHash(testStatus, consumer));
 
-            consumer.getInstalledProducts().clear();
+            consumer.setInstalledProducts(null);
             assertNotEquals(initialHash, generateHash(testStatus, consumer));
         }
 
@@ -333,7 +338,7 @@ public class ComplianceStatusHasherTest {
             consumer.removeEntitlement(ent);
             assertEquals(initialHash, generateHash(testStatus, consumer));
 
-            consumer.getEntitlements().clear();
+            consumer.setEntitlements(null);
             assertNotEquals(initialHash, generateHash(testStatus, consumer));
         }
 
@@ -390,20 +395,29 @@ public class ComplianceStatusHasherTest {
         ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         ctype.setId("test-ctype");
 
-        Consumer consumer = new Consumer("test-consumer", "test-consumer", owner, ctype);
-        consumer.setId("1");
-        consumer.setUuid("12345");
-        consumer.setFact(RELATED_FACT_INITIAL, "4");
-        consumer.setFact("cpu.cpu_socket(s)", "2");
-        consumer.setFact(UNRELATED_FACT_INITIAL, "true");
+        Consumer consumer = new Consumer()
+            .setId("1")
+            .setUuid("12345")
+            .setType(ctype)
+            .setOwner(owner)
+            .setName("test-consumer")
+            .setUsername("test-consumer")
+            .setFact(RELATED_FACT_INITIAL, "4")
+            .setFact("cpu.cpu_socket(s)", "2")
+            .setFact(UNRELATED_FACT_INITIAL, "true");
 
         Product product1 = TestUtil.createProduct("installed-1");
         Product product2 = TestUtil.createProduct("installed-2");
 
-        Set<ConsumerInstalledProduct> installedProducts = new HashSet<>();
-        installedProducts.add(new ConsumerInstalledProduct(product1));
-        installedProducts.add(new ConsumerInstalledProduct(product2));
-        consumer.setInstalledProducts(installedProducts);
+        ConsumerInstalledProduct cip1 = new ConsumerInstalledProduct()
+            .setProductId(product1.getId())
+            .setProductName(product1.getName());
+
+        ConsumerInstalledProduct cip2 = new ConsumerInstalledProduct()
+            .setProductId(product2.getId())
+            .setProductName(product2.getName());
+
+        consumer.setInstalledProducts(Set.of(cip1, cip2));
 
         return consumer;
     }

@@ -117,7 +117,13 @@ public class GuestIdResourceTest {
         this.ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         this.ct.setId("test-system-ctype");
 
-        this.consumer = new Consumer("consumer", "test", owner, ct).setUuid(Util.generateUUID());
+        this.consumer = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("consumer")
+            .setUsername("test")
+            .setOwner(owner)
+            .setType(ct);
+
         this.resource = new GuestIdResource(
             this.consumerCurator,
             this.consumerTypeCurator,
@@ -247,8 +253,12 @@ public class GuestIdResourceTest {
 
     @Test
     public void updateGuestRevokeHostSpecific() {
-        Consumer guestConsumer =
-            new Consumer("guest_consumer", "guest_consumer", owner, ct);
+        Consumer guestConsumer = new Consumer()
+            .setName("guest_consumer")
+            .setUsername("guest_consumer")
+            .setOwner(owner)
+            .setType(ct);
+
         GuestId originalGuest = new GuestId("guest-id", guestConsumer);
         GuestIdDTO guest = TestUtil.createGuestIdDTO("guest-id");
 
@@ -272,8 +282,13 @@ public class GuestIdResourceTest {
 
     @Test
     public void deleteGuestAndUnregister() {
-        Consumer guestConsumer =
-            new Consumer("guest_consumer", "guest_consumer", owner, ct).setUuid(Util.generateUUID());
+        Consumer guestConsumer = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("guest_consumer")
+            .setUsername("guest_consumer")
+            .setOwner(owner)
+            .setType(ct);
+
         GuestId guest = new GuestId("guest-id", consumer);
         when(guestIdCurator.findByConsumerAndId(eq(consumer),
             eq(guest.getGuestId()))).thenReturn(guest);

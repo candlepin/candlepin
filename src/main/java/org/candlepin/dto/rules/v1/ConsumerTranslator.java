@@ -111,6 +111,9 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
                 }
                 dest.setInstalledProducts(ips);
             }
+            else {
+                dest.setInstalledProducts(null);
+            }
 
             Set<ConsumerCapability> capabilities = source.getCapabilities();
             if (capabilities != null) {
@@ -121,6 +124,9 @@ public class ConsumerTranslator extends TimestampedEntityTranslator<Consumer, Co
                     }
                 }
                 dest.setCapabilities(capabilitiesDTO);
+            }
+            else {
+                dest.setCapabilities(null);
             }
 
             // Temporary measure to maintain API compatibility

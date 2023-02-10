@@ -65,8 +65,11 @@ public class ConsumerResourceDisableStatusTest extends DatabaseTestFixture {
         poolCurator.create(pool);
 
         consumer = TestUtil.createConsumer(standardSystemType, owner);
-        consumer.addInstalledProduct(new ConsumerInstalledProduct(product));
         consumer.setRole("myrole");
+        consumer.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(product.getId())
+            .setProductName(product.getName()));
+
         consumerCurator.create(consumer);
     }
 

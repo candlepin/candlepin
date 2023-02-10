@@ -102,7 +102,9 @@ public class ExportGenerator {
             user.getUsername(), owner.getKey(), null, true);
 
         consumer.putFactsItem("distributor_version", "sam-1.3")
-            .releaseVer(new ReleaseVerDTO().releaseVer(""));
+            .releaseVer(new ReleaseVerDTO().releaseVer(""))
+            .capabilities(null);
+
         consumerApi.updateConsumer(consumer.getUuid(), consumer);
         consumer = consumerApi.getConsumer(consumer.getUuid());
 

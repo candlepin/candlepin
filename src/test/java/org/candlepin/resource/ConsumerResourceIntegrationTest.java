@@ -88,8 +88,10 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -370,8 +372,11 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @Test
     @Disabled
     public void testDeleteResource() {
-        Consumer created = consumerCurator.create(new Consumer(CONSUMER_NAME,
-            USER_NAME, owner, standardSystemType));
+        Consumer created = consumerCurator.create(new Consumer()
+            .setName(CONSUMER_NAME)
+            .setUsername(USER_NAME)
+            .setOwner(owner)
+            .setType(standardSystemType));
         consumerResource.deleteConsumer(consumer.getUuid());
 
         assertNull(consumerCurator.get(created.getId()));
@@ -434,8 +439,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         toSubmit.setUuid("1023131");
         toSubmit.putFactsItem(METADATA_NAME, METADATA_VALUE);
 
-        ConsumerDTO submitted = consumerResource.createConsumer(
-            toSubmit, null, null, null, true);
+        ConsumerDTO submitted = consumerResource.createConsumer(toSubmit, null, null, null, true);
 
         assertNotNull(submitted);
         assertEquals(toSubmit.getUuid(), submitted.getUuid());
@@ -518,9 +522,13 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @Test
     public void consumerCanDeleteSelf() throws GeneralSecurityException, IOException {
-        Consumer toSubmit = new Consumer(CONSUMER_NAME, USER_NAME, owner, standardSystemType);
+        Consumer toSubmit = new Consumer()
+            .setName(CONSUMER_NAME)
+            .setUsername(USER_NAME)
+            .setOwner(owner)
+            .setType(standardSystemType)
+            .setFact(METADATA_NAME, METADATA_VALUE);
 
-        toSubmit.getFacts().put(METADATA_NAME, METADATA_VALUE);
         Consumer c = consumerCurator.create(toSubmit);
 
         IdentityCertificate idCert = icsa.generateIdentityCert(c);
@@ -779,9 +787,13 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             .getRHCloudProfileModified();
 
         Product prod = TestUtil.createProduct("Product One");
+
         ConsumerInstalledProductDTO updatedInstalledProduct = new ConsumerInstalledProductDTO()
-            .productId(prod.getId()).productName(prod.getName());
-        consumer.addInstalledProductsItem(updatedInstalledProduct);
+            .productId(prod.getId())
+            .productName(prod.getName());
+
+        consumer.setInstalledProducts(Set.of(updatedInstalledProduct));
+
         consumerResource.updateConsumer(consumer.getUuid(), consumer);
 
         Date afterUpdateTimestamp = consumerCurator.findByUuid(consumer.getUuid())
@@ -840,10 +852,17 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer = consumerResource.createConsumer(consumer, null, null, null, true);
         Date profileCreated = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
+        // Impl note:
+        // The generated DTOs blindly pass through any collections, which means we could end up with
+        // an immutable collection here if we don't explicitly rebox them.
+        Map<String, String> updatedFacts = new HashMap<>(consumer.getFacts());
+        updatedFacts.put("lscpu.model", "78");
+
         consumer.setAutoheal(true);
         consumer.setSystemPurposeStatus("test-status");
         consumer.setReleaseVer(new ReleaseVerDTO().releaseVer("test-release-version"));
-        consumer.putFactsItem("lscpu.model", "78");
+        consumer.setFacts(updatedFacts);
+
         consumerResource.updateConsumer(consumer.getUuid(), consumer);
         Date profileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
@@ -856,8 +875,15 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer = consumerResource.createConsumer(consumer, null, null, null, true);
         Date profileCreated = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 
-        consumer.putFactsItem("lscpu.model", "78");
-        consumer.putFactsItem("test-dmi.bios.vendor", "vendorA");
+        // Impl note:
+        // The generated DTOs blindly pass through any collections, which means we could end up with
+        // an immutable collection here if we don't explicitly rebox them.
+        Map<String, String> updatedFacts = new HashMap<>(consumer.getFacts());
+        updatedFacts.put("lscpu.model", "78");
+        updatedFacts.put("test-dmi.bios.vendor", "vendorA");
+
+        consumer.setFacts(updatedFacts);
+
         consumerResource.updateConsumer(consumer.getUuid(), consumer);
         Date profileModified = consumerCurator.get(consumer.getId()).getRHCloudProfileModified();
 

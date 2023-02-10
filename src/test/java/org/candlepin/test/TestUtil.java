@@ -89,6 +89,7 @@ import javax.persistence.EntityTransaction;
  * and any dependent objects.
  */
 public class TestUtil {
+    private static final Random RANDOM = new Random(System.currentTimeMillis());
 
     /** Character set consisting of upper- and lower-case alphabetical ASCII characters */
     public static final String CHARSET_ALPHABETICAL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -108,112 +109,9 @@ public class TestUtil {
     /** Default to the alphanumeric character set */
     public static final String DEFAULT_RANDOM_STRING_CHARSET = CHARSET_ALPHANUMERIC;
 
-
     private TestUtil() {
         throw new UnsupportedOperationException();
     }
-
-    public static Owner createOwner(String key, String name) {
-        Owner owner = new Owner(key, name);
-        owner.setId(key + "-id");
-        return owner;
-    }
-
-    public static Owner createOwner(String key) {
-        return createOwner(key, key);
-    }
-
-    public static Owner createOwner() {
-        return createOwner("Test Owner " + randomInt());
-    }
-
-    public static Consumer createConsumer(ConsumerType type, Owner owner) {
-        return new Consumer("TestConsumer" + randomInt(), "User", owner, type).setUuid(Util.generateUUID());
-    }
-
-    public static ConsumerDTO createConsumerDTO(ConsumerTypeDTO type, OwnerDTO owner) {
-        return createConsumerDTO("TestConsumer" + randomInt(), "User", owner, type);
-    }
-
-    public static ConsumerDTO createConsumerDTO(String name, String userName, OwnerDTO owner,
-        ConsumerTypeDTO type) {
-        ConsumerDTO consumer = new ConsumerDTO().name(name)
-            .username(userName)
-            .type(type)
-            .autoheal(true)
-            .serviceLevel("")
-            .entitlementCount(0L)
-            .facts(new HashMap<>())
-            .installedProducts(new HashSet<>())
-            .guestIds(new ArrayList<>())
-            .environments(new ArrayList<>());
-
-
-        if (owner != null) {
-            consumer.setOwner(new NestedOwnerDTO()
-                .key(owner.getKey())
-                .id(owner.getId())
-                .displayName(owner.getDisplayName()));
-
-        }
-        else {
-            consumer.setOwner(null);
-        }
-
-        return consumer;
-    }
-
-    public static Consumer createConsumer(ConsumerType type, Owner owner, String username) {
-        return new Consumer("TestConsumer" + randomInt(), username, owner, type);
-    }
-
-    /**
-     * Create a consumer with a new owner
-     *
-     * @return Consumer
-     */
-    public static Consumer createConsumer() {
-        return createConsumer(createConsumerType(), createOwner("Test Owner " + randomInt()));
-    }
-
-    public static Consumer createDistributor() {
-        return createDistributor(createOwner());
-    }
-
-    public static Consumer createDistributor(Owner owner) {
-        ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
-        ctype.setId("test-ctype-" + randomInt());
-
-        return createConsumer(ctype, owner);
-    }
-
-    /**
-     * Create a consumer with a new owner
-     *
-     * @return Consumer
-     */
-    public static Consumer createConsumer(Owner owner) {
-        Consumer consumer = new Consumer(
-            "testconsumer" + randomInt(),
-            "User",
-            owner,
-            createConsumerType()
-        ).setUuid(Util.generateUUID());
-        consumer.setCreated(new Date());
-        consumer.setFact("foo", "bar");
-        consumer.setFact("foo1", "bar1");
-
-        return consumer;
-    }
-
-    public static ConsumerType createConsumerType() {
-        ConsumerType ctype = new ConsumerType("test-consumer-type-" + randomInt());
-        ctype.setId("test-ctype-" + randomInt());
-
-        return ctype;
-    }
-
-    private static final Random RANDOM = new Random(System.currentTimeMillis());
 
     public static int randomInt() {
         return Math.abs(RANDOM.nextInt());
@@ -324,13 +222,121 @@ public class TestUtil {
         return randomString(null);
     }
 
-    public static Content createContent(String id, String name) {
-        Content content = new Content(id, name, "test-type", "test-label", "test-vendor");
-        content.setContentUrl("https://test.url.com");
-        content.setGpgUrl("https://gpg.test.url.com");
-        content.setArches("x86");
+    public static Owner createOwner(String key, String displayName) {
+        return new Owner()
+            .setId(key + "-id")
+            .setKey(key)
+            .setDisplayName(displayName);
+    }
 
-        return content;
+    public static Owner createOwner(String key) {
+        return createOwner(key, key);
+    }
+
+    public static Owner createOwner() {
+        return createOwner("Test Owner " + randomInt());
+    }
+
+    public static Consumer createConsumer(ConsumerType type, Owner owner, String username) {
+        return new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("TestConsumer" + randomInt())
+            .setUsername(username)
+            .setOwner(owner)
+            .setType(type);
+    }
+
+    public static Consumer createConsumer(ConsumerType type, Owner owner) {
+        return createConsumer(type, owner, "User");
+    }
+
+    /**
+     * Create a consumer with a new owner
+     *
+     * @return Consumer
+     */
+    public static Consumer createConsumer(Owner owner) {
+        Consumer consumer = createConsumer(createConsumerType(), owner);
+
+        // TODO: FIXME: These *should* live on the main createConsumer for consistency and sanity,
+        // but for whatever reason we decided rewriting the same thing 9001 times with slight
+        // variations would be more spicy. Move these if they don't break too many tests.
+        consumer.setCreated(new Date());
+        consumer.setFact("foo", "bar");
+        consumer.setFact("foo1", "bar1");
+
+        return consumer;
+    }
+
+    /**
+     * Create a consumer with a new owner
+     *
+     * @return Consumer
+     */
+    public static Consumer createConsumer() {
+        return createConsumer(createConsumerType(), createOwner("Test Owner " + randomInt()));
+    }
+
+    public static ConsumerDTO createConsumerDTO(ConsumerTypeDTO type, OwnerDTO owner) {
+        return createConsumerDTO("TestConsumer" + randomInt(), "User", owner, type);
+    }
+
+    public static ConsumerDTO createConsumerDTO(String name, String userName, OwnerDTO owner,
+        ConsumerTypeDTO type) {
+
+        ConsumerDTO consumer = new ConsumerDTO()
+            .name(name)
+            .username(userName)
+            .type(type)
+            .autoheal(true)
+            .serviceLevel("")
+            .entitlementCount(0L)
+            .facts(new HashMap<>())
+            .installedProducts(new HashSet<>())
+            .guestIds(new ArrayList<>())
+            .environments(new ArrayList<>());
+
+        if (owner != null) {
+            consumer.setOwner(new NestedOwnerDTO()
+                .key(owner.getKey())
+                .id(owner.getId())
+                .displayName(owner.getDisplayName()));
+        }
+        else {
+            consumer.setOwner(null);
+        }
+
+        return consumer;
+    }
+
+    public static Consumer createDistributor() {
+        return createDistributor(createOwner());
+    }
+
+    public static Consumer createDistributor(Owner owner) {
+        ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
+        ctype.setId("test-ctype-" + randomInt());
+
+        return createConsumer(ctype, owner);
+    }
+
+    public static ConsumerType createConsumerType() {
+        ConsumerType ctype = new ConsumerType("test-consumer-type-" + randomInt());
+        ctype.setId("test-ctype-" + randomInt());
+
+        return ctype;
+    }
+
+    public static Content createContent(String id, String name) {
+        return new Content()
+            .setId(id)
+            .setName(name)
+            .setType("test-type")
+            .setLabel("test-label")
+            .setVendor("test-vendor")
+            .setContentUrl("https://test.url.com")
+            .setGpgUrl("https://gpg.test.url.com")
+            .setArches("x86");
     }
 
     public static Content createContent(String id) {

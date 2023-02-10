@@ -15,16 +15,8 @@
 package org.candlepin.model;
 
 import org.candlepin.exceptions.DuplicateEntryException;
-import org.candlepin.jackson.HateoasArrayExclude;
-import org.candlepin.jackson.HateoasInclude;
-import org.candlepin.jackson.StringTrimmingConverter;
 import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.util.Util;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.annotations.BatchSize;
@@ -35,6 +27,8 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,6 +37,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -66,10 +61,6 @@ import javax.persistence.Transient;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 
 
@@ -81,13 +72,10 @@ import javax.xml.bind.annotation.XmlTransient;
  * Consumer's attributes or metadata is stored in a ConsumerInfo object which
  * boils down to a series of name/value pairs.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = Consumer.DB_TABLE)
-@JsonFilter("ConsumerFilter")
-public class Consumer extends AbstractHibernateObject implements Linkable, Owned, Named, ConsumerProperty,
-    Eventful, ConsumerInfo {
+public class Consumer extends AbstractHibernateObject<Consumer> implements Linkable, Owned, Named,
+    ConsumerProperty, Eventful, ConsumerInfo {
 
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_consumer";
@@ -258,7 +246,6 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     //FIXME A cascade shouldn't be necessary here as ElementCollections cascade by default
     //See http://stackoverflow.com/a/7696147
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
-    @JsonDeserialize(contentConverter = StringTrimmingConverter.class)
     private Map<String, String> facts;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -274,12 +261,10 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     private boolean canActivate;
 
     @BatchSize(size = 32)
-    @OneToMany(mappedBy = "consumer",
-        orphanRemoval = true, cascade = { CascadeType.ALL })
+    @OneToMany(mappedBy = "consumer", orphanRemoval = true, cascade = { CascadeType.ALL })
     private List<GuestId> guestIds;
 
-    @OneToMany(mappedBy = "consumer",
-        orphanRemoval = true, cascade = { CascadeType.ALL })
+    @OneToMany(mappedBy = "consumer", orphanRemoval = true, cascade = { CascadeType.ALL })
     private Set<ConsumerCapability> capabilities;
 
     @OneToOne(mappedBy = "consumer",
@@ -332,39 +317,33 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     @Fetch(FetchMode.SELECT)
     private Map<String, String> environmentIds;
 
-    public Consumer(String name, String userName, Owner owner, ConsumerType type) {
-        this();
-
-        this.name = name;
-        this.username = userName;
+    public Consumer() {
+        this.addOns = new HashSet<>();
+        this.entitlements = new HashSet<>();
         this.facts = new HashMap<>();
         this.installedProducts = new HashSet<>();
         this.guestIds = new ArrayList<>();
+        this.capabilities = new HashSet<>();
+        this.contentTags = new HashSet<>();
+        this.activationKeys = new HashSet<>();
+        this.environmentIds = new LinkedHashMap<>();
+
         this.autoheal = true;
         this.serviceLevel = "";
         this.entitlementCount = 0L;
-
-        if (type != null) {
-            this.setType(type);
-        }
-
-        if (owner != null) {
-            this.setOwner(owner);
-        }
-
-        this.environmentIds = new LinkedHashMap<>();
     }
 
-    public Consumer() {
-        this.entitlements = new HashSet<>();
-        this.setEntitlementCount(0L);
-        this.environmentIds = new LinkedHashMap<>();
+    /**
+     * Required by ConsumerProperty
+     */
+    @Override
+    public Consumer getConsumer() {
+        return this;
     }
 
     /**
      * @return the Consumer's UUID
      */
-    @HateoasInclude
     public String getUuid() {
         return uuid;
     }
@@ -389,41 +368,42 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * {@inheritDoc}
      */
     @Override
-    @HateoasInclude
     public String getId() {
         return id;
     }
 
     /**
      * @param id the db id.
+     *
+     * @return
+     *  a reference to this Consumer instance
      */
-    public void setId(String id) {
+    public Consumer setId(String id) {
         this.id = id;
+        return this;
     }
 
-    @HateoasArrayExclude
     public IdentityCertificate getIdCert() {
         return idCert;
     }
 
-    public void setIdCert(IdentityCertificate idCert) {
+    public Consumer setIdCert(IdentityCertificate idCert) {
         this.idCert = idCert;
+        return this;
     }
 
-    @HateoasArrayExclude
-    @XmlTransient
     public ContentAccessCertificate getContentAccessCert() {
         return contentAccessCert;
     }
 
-    public void setContentAccessCert(ContentAccessCertificate contentAccessCert) {
+    public Consumer setContentAccessCert(ContentAccessCertificate contentAccessCert) {
         this.contentAccessCert = contentAccessCert;
+        return this;
     }
 
     /**
      * @return the name of this consumer.
      */
-    @HateoasInclude
     public String getName() {
         return name;
     }
@@ -528,22 +508,50 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return this;
     }
 
-    @Override
-    public String toString() {
-        return String.format("Consumer [id: %s, uuid: %s, name: %s]",
-            this.getId(), this.getUuid(), this.getName());
+    /**
+     * Checks if the incoming facts contain changes or new entries to one or more "cloud profile"
+     * facts. Note that the removal of a fact will not be detected by this method.
+     *
+     * @param incomingFacts
+     *  a map containing the "incoming" facts to add or update for this consumer
+     *
+     * @return
+     *  true if the incoming facts contain one or more new or updated cloud profile facts; false
+     *  otherwise
+     */
+    public boolean checkForCloudProfileFacts(Map<String, String> incomingFacts) {
+        // TODO: FIXME: This does not catch the case where cloud attributes are cleared after being
+        // set on the consumer.
+
+        if (incomingFacts == null) {
+            return false;
+        }
+
+        Map<String, String> existingFacts = this.getFacts();
+        if (existingFacts != null && existingFacts.equals(incomingFacts)) {
+            return false;
+        }
+
+        for (CloudProfileFacts profileFact : CloudProfileFacts.values()) {
+            if (incomingFacts.containsKey(profileFact.getFact())) {
+
+                if (existingFacts == null || !existingFacts.containsKey(profileFact.getFact()) ||
+                    !existingFacts.get(profileFact.getFact())
+                    .equals(incomingFacts.get(profileFact.getFact()))) {
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
      * @return all facts about this consumer.
      */
-    @HateoasArrayExclude
     public Map<String, String> getFacts() {
-        return facts;
-    }
-
-    public boolean hasFact(String fact) {
-        return facts != null && facts.containsKey(fact);
+        return this.facts != null ? Collections.unmodifiableMap(this.facts) : Map.of();
     }
 
     /**
@@ -552,23 +560,35 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * @return the value of the fact with the given key.
      */
     public String getFact(String factKey) {
-        if (facts != null) {
-            return facts.get(factKey);
-        }
-        return null;
+        Map<String, String> facts = this.getFacts();
+        return facts != null ? facts.get(factKey) : null;
+    }
+
+    public boolean hasFact(String fact) {
+        Map<String, String> facts = this.getFacts();
+        return facts != null && facts.containsKey(fact);
     }
 
     /**
-     * @param factsIn facts about this consumer.
+     * @param facts facts about this consumer.
      *
      * @return
      *  a reference to this consumer instance
      */
-    public Consumer setFacts(Map<String, String> factsIn) {
-        if (this.checkForCloudProfileFacts(factsIn)) {
+    public Consumer setFacts(Map<String, String> facts) {
+        if (this.checkForCloudProfileFacts(facts)) {
             this.updateRHCloudProfileModified();
         }
-        facts = factsIn;
+
+        if (this.facts == null) {
+            this.facts = new HashMap<>();
+        }
+        this.facts.clear();
+
+        if (facts != null) {
+            this.facts.putAll(facts);
+        }
+
         return this;
     }
 
@@ -610,29 +630,73 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     /**
-     * Set a fact
-     * @param name to set
-     * @param value to set
+     * Sets the specified fact for this consumer. If the fact is a cloud profile fact, the cloud
+     * profile last-modified time for this consumer will be updated.
+     * <p></p>
+     * <strong>Warning:</strong> setting a fact's value to null or empty is permitted, and
+     * <strong>will not</strong> result in the removal of the fact. The null/empty value will be
+     * stored as-is, with any empty-value normalization the database layer may perform on it.
+     *
+     * @param name
+     *  the name of the fact to set; cannot be null or empty
+     *
+     * @param value
+     *  the value for the fact; may be null or empty
+     *
+     * @throws IllegalArgumentException
+     *  if the fact name is null or empty
+     *
+     * @return
+     *  a reference to this Consumer instance
      */
-    public void setFact(String name, String value) {
+    public Consumer setFact(String name, String value) {
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("name is null or empty");
+        }
+
         if (this.facts == null) {
             this.facts = new HashMap<>();
         }
 
-        HashMap<String, String> fact = new HashMap<>();
-        fact.put(name, value);
-        if (this.checkForCloudProfileFacts(fact)) {
+        if (this.checkForCloudProfileFacts(Collections.singletonMap(name, value))) {
             this.updateRHCloudProfileModified();
         }
 
         this.facts.put(name, value);
+        return this;
+    }
+
+    /**
+     * Removes a fact from this consumer, if it exists. If the fact exists and is a cloud profile
+     * fact, the cloud profile last-modified time for this consumer will be updated.
+     *
+     * @param name
+     *  the name of the fact to remove; cannot be null or empty
+     *
+     * @throws IllegalArgumentException
+     *  if the fact name is null or empty
+     *
+     * @return
+     *  a reference to this Consumer instance
+     */
+    public Consumer removeFact(String name) {
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("name is null or empty");
+        }
+
+        if (this.facts != null && this.facts.containsKey(name)) {
+            this.facts.remove(name);
+
+            if (this.checkForCloudProfileFacts(Collections.singletonMap(name, null))) {
+                this.updateRHCloudProfileModified();
+            }
+        }
+
+        return this;
     }
 
     public long getEntitlementCount() {
-        if (entitlementCount == null) {
-            return 0;
-        }
-        return entitlementCount.longValue();
+        return this.entitlementCount != null ? entitlementCount.longValue() : 0;
     }
 
     public void setEntitlementCount(long count) {
@@ -642,41 +706,70 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     /**
      * @return Returns the entitlements.
      */
-    @XmlTransient
     public Set<Entitlement> getEntitlements() {
-        return entitlements;
+        return this.entitlements != null ? Collections.unmodifiableSet(this.entitlements) : Set.of();
     }
 
     /**
-     * @param entitlementsIn The entitlements to set.
+     * @param entitlements The entitlements to set.
+     *
+     * @return
+     *  a reference to this Consumer instance
      */
-    public void setEntitlements(Set<Entitlement> entitlementsIn) {
-        entitlements = entitlementsIn;
+    public Consumer setEntitlements(Collection<Entitlement> entitlements) {
+        if (this.entitlements == null) {
+            this.entitlements = new HashSet<>();
+        }
+        this.entitlements.clear();
+
+        if (entitlements != null) {
+            entitlements.stream()
+                .filter(Objects::nonNull)
+                .peek(entitlement -> entitlement.setConsumer(this))
+                .forEach(this.entitlements::add);
+        }
+
+        return this;
     }
 
     /**
      * Add an Entitlement to this Consumer
-     * @param entitlementIn to add to this consumer
+     * @param entitlement to add to this consumer
      *
+     * @return
+     *  true if the entitlement was added successfully; false otherwise
      */
-    public void addEntitlement(Entitlement entitlementIn) {
-        entitlementIn.setConsumer(this);
-        this.entitlements.add(entitlementIn);
+    public boolean addEntitlement(Entitlement entitlement) {
+        if (this.entitlements == null) {
+            this.entitlements = new HashSet<>();
+        }
+
+        if (entitlement != null) {
+            entitlement.setConsumer(this);
+            return this.entitlements.add(entitlement);
+        }
+
+        return false;
     }
 
-    public void removeEntitlement(Entitlement entitlement) {
-        this.entitlements.remove(entitlement);
+    public boolean removeEntitlement(Entitlement entitlement) {
+        return this.entitlements != null && this.entitlements.remove(entitlement);
     }
 
     /*
      * Only for internal use as a pojo for resource update.
      */
-    public void setLastCheckin(Date lastCheckin) {
+    public Consumer setLastCheckin(Date lastCheckin) {
         this.lastCheckin = lastCheckin;
+        return this;
     }
 
     public KeyPairData getKeyPairData() {
         return keyPairData;
+    }
+
+    public Date getLastCheckin() {
+        return this.lastCheckin;
     }
 
     public Consumer setKeyPairData(KeyPairData keyPairData) {
@@ -685,175 +778,229 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     @Override
-    public boolean equals(Object anObject) {
-        if (this == anObject) {
-            return true;
-        }
-        if (!(anObject instanceof Consumer)) {
-            return false;
-        }
-
-        Consumer another = (Consumer) anObject;
-
-        return uuid.equals(another.getUuid());
-    }
-
-    @Override
-    public int hashCode() {
-        return uuid.hashCode();
-    }
-
-    @Override
-    @HateoasInclude
     public String getHref() {
-        return "/consumers/" + getUuid();
-    }
-
-    public void setHref(String href) {
-        /*
-         * No-op, here to aid with updating objects which have nested objects that were
-         * originally sent down to the client in HATEOAS form.
-         */
-    }
-
-    public Date getLastCheckin() {
-        return lastCheckin;
+        return "/consumers/" + this.getUuid();
     }
 
     public boolean isCanActivate() {
-        return canActivate;
+        return this.canActivate;
     }
 
-    public void setCanActivate(boolean canActivate) {
+    public Consumer setCanActivate(boolean canActivate) {
         this.canActivate = canActivate;
+        return this;
     }
 
     public Set<ConsumerInstalledProduct> getInstalledProducts() {
-        return installedProducts;
+        return this.installedProducts != null ?
+            Collections.unmodifiableSet(this.installedProducts) :
+            Set.of();
     }
 
-    public void setInstalledProducts(Set<ConsumerInstalledProduct> installedProducts) {
-        this.installedProducts = installedProducts;
-        this.updateRHCloudProfileModified();
-    }
+    public Consumer setInstalledProducts(Collection<ConsumerInstalledProduct> installedProducts) {
+        if (this.installedProducts == null) {
+            this.installedProducts = new HashSet<>();
+        }
+        this.installedProducts.clear();
 
-    public void addInstalledProduct(ConsumerInstalledProduct installed) {
-        if (installedProducts == null) {
-            installedProducts = new HashSet<>();
+        if (installedProducts != null) {
+            installedProducts.stream()
+                .filter(Objects::nonNull)
+                .peek(cip -> cip.setConsumer(this))
+                .forEach(this.installedProducts::add);
         }
 
-        installed.setConsumer(this);
-        installedProducts.add(installed);
         this.updateRHCloudProfileModified();
+        return this;
+    }
+
+    public boolean addInstalledProduct(ConsumerInstalledProduct installed) {
+        if (this.installedProducts == null) {
+            this.installedProducts = new HashSet<>();
+        }
+
+        boolean result = false;
+
+        if (installed != null) {
+            installed.setConsumer(this);
+            result = this.installedProducts.add(installed);
+        }
+
+        if (result) {
+            this.updateRHCloudProfileModified();
+        }
+
+        return result;
+    }
+
+    /**
+     * Removes an installed product from this consumer, if present. If this removal operation
+     * results in a change to the installed products, the cloud profile last-modified time for this
+     * consumer will be updated.
+     *
+     * @param installed
+     *  the installed product to remove from this consumer
+     *
+     * @return
+     *  true if the given installed product was found and removed; false otherwise
+     */
+    public boolean removeInstalledProduct(ConsumerInstalledProduct installed) {
+        boolean result = this.installedProducts != null && this.installedProducts.remove(installed);
+        if (result) {
+            this.updateRHCloudProfileModified();
+        }
+
+        return result;
     }
 
     public Boolean isAutoheal() {
         return autoheal;
     }
 
-    public void setAutoheal(Boolean autoheal) {
+    public Consumer setAutoheal(Boolean autoheal) {
         this.autoheal = autoheal;
-    }
-
-    /**
-     * @param guests the GuestIds to set
-     */
-    @JsonProperty
-    public void setGuestIds(List<GuestId> guests) {
-        this.guestIds = guests;
-        this.updateRHCloudProfileModified();
+        return this;
     }
 
     /**
      * @return the guestIds
      */
-    @JsonIgnore
     public List<GuestId> getGuestIds() {
-        return guestIds;
+        return this.guestIds != null ? Collections.unmodifiableList(this.guestIds) : List.of();
     }
 
-    public void addGuestId(GuestId guestId) {
+    /**
+     * @param guests the GuestIds to set
+     *
+     * @return
+     *  a reference to this Consumer instance
+     */
+    public Consumer setGuestIds(Collection<GuestId> guests) {
         if (guestIds == null) {
             guestIds = new ArrayList<>();
         }
-        guestId.setConsumer(this);
-        guestIds.add(guestId);
+        this.guestIds.clear();
+
+        if (guests != null) {
+            guests.stream()
+                .filter(Objects::nonNull)
+                .peek(gid -> gid.setConsumer(this))
+                .forEach(this.guestIds::add);
+        }
+
         this.updateRHCloudProfileModified();
+        return this;
+    }
+
+    public boolean addGuestId(GuestId guestId) {
+        if (guestIds == null) {
+            guestIds = new ArrayList<>();
+        }
+
+        boolean result = false;
+
+        if (guestId != null) {
+            guestId.setConsumer(this);
+            result = this.guestIds.add(guestId);
+        }
+
+        if (result) {
+            this.updateRHCloudProfileModified();
+        }
+
+        return result;
+    }
+
+    /**
+     * Removes a guest ID from this consumer, if present. If this removal operation results in a
+     * change to the guest IDs, the cloud profile last-modified time for this consumer will be
+     * updated as well.
+     *
+     * @param guestId
+     *  the guest ID to remove from this consumer
+     *
+     * @return
+     *  true if the given guest ID was found and removed; false otherwise
+     */
+    public boolean removeGuestId(GuestId guestId) {
+        boolean result = this.guestIds != null && this.guestIds.remove(guestId);
+        if (result) {
+            this.updateRHCloudProfileModified();
+        }
+
+        return result;
     }
 
     public String getEntitlementStatus() {
         return entitlementStatus;
     }
 
-    public void setEntitlementStatus(String status) {
+    public Consumer setEntitlementStatus(String status) {
         this.entitlementStatus = status;
+        return this;
     }
 
     public String getServiceLevel() {
         return serviceLevel;
     }
 
-    public void setServiceLevel(String level) {
+    public Consumer setServiceLevel(String level) {
         this.serviceLevel = level;
         this.updateRHCloudProfileModified();
+        return this;
     }
 
     public String getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public Consumer setRole(String role) {
         this.role = role;
         this.updateRHCloudProfileModified();
+        return this;
     }
 
     public String getUsage() {
         return usage;
     }
 
-    public void setUsage(String usage) {
+    public Consumer setUsage(String usage) {
         this.usage = usage;
         this.updateRHCloudProfileModified();
+        return this;
     }
 
     public String getSystemPurposeStatus() {
         return this.systemPurposeStatus;
     }
 
-    public void setSystemPurposeStatus(String systemPurposeStatus) {
+    public Consumer setSystemPurposeStatus(String systemPurposeStatus) {
         this.systemPurposeStatus = systemPurposeStatus;
+        return this;
     }
 
-    @XmlTransient
     public String getSystemPurposeStatusHash() {
         return systemPurposeStatusHash;
     }
 
-    public void setSystemPurposeStatusHash(String systemPurposeStatusHash) {
+    public Consumer setSystemPurposeStatusHash(String systemPurposeStatusHash) {
         this.systemPurposeStatusHash = systemPurposeStatusHash;
-    }
-
-    /**
-     * Fetches the ID of the highest prioritized environment with which
-     * this consumer is associated. If the consumer is not
-     * associated with an environment, this method returns null.
-     *
-     * @return the ID of the environment for this consumer
-     * TODO: This method is kept temporarily to support the existing functionality.
-     * This needs to be removed in the later part of this epic.
-     */
-    public String getEnvironmentId() {
-        return this.getEnvironmentIds() == null ? null : this.environmentIds.get("0");
+        return this;
     }
 
     /**
      * @param releaseVer the releaseVer to set
+     *
+     * @return
+     *  a reference to this
      */
-    public void setReleaseVer(Release releaseVer) {
+    public Consumer setReleaseVer(Release releaseVer) {
         if (releaseVer == null) {
             releaseVer = new Release();
         }
+
         this.releaseVer = releaseVer.getReleaseVer();
+        return this;
     }
 
     /**
@@ -867,27 +1014,29 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
      * @return the capabilities
      */
     public Set<ConsumerCapability> getCapabilities() {
-        return capabilities;
+        return this.capabilities != null ? Collections.unmodifiableSet(this.capabilities) : Set.of();
     }
 
     /**
      * @param capabilities the capabilities to set
+     *
+     * @return
+     *  a reference to this Consumer instance
      */
-    public void setCapabilities(Set<ConsumerCapability> capabilities) {
-        if (capabilities == null) {
-            return;
-        }
+    public Consumer setCapabilities(Collection<ConsumerCapability> capabilities) {
         if (this.capabilities == null) {
             this.capabilities = new HashSet<>();
         }
-        if (!this.capabilities.equals(capabilities)) {
-            this.capabilities.clear();
-            this.capabilities.addAll(capabilities);
-            this.setUpdated(new Date());
-            for (ConsumerCapability cc : this.capabilities) {
-                cc.setConsumer(this);
-            }
+        this.capabilities.clear();
+
+        if (capabilities != null) {
+            capabilities.stream()
+                .filter(Objects::nonNull)
+                .peek(cc -> cc.setConsumer(this))
+                .forEach(this.capabilities::add);
         }
+
+        return this;
     }
 
     /**
@@ -914,26 +1063,29 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return this;
     }
 
-    @XmlTransient
     public String getComplianceStatusHash() {
         return complianceStatusHash;
     }
 
-    public void setComplianceStatusHash(String complianceStatusHash) {
+    public Consumer setComplianceStatusHash(String complianceStatusHash) {
         this.complianceStatusHash = complianceStatusHash;
+        return this;
     }
 
     public Set<String> getContentTags() {
-        return contentTags;
+        return this.contentTags != null ? Collections.unmodifiableSet(this.contentTags) : Set.of();
     }
 
-    public void setContentTags(Set<String> contentTags) {
-        this.contentTags = contentTags;
-    }
+    public Consumer setContentTags(Collection<String> contentTags) {
+        if (this.contentTags == null) {
+            this.contentTags = new HashSet<>();
+        }
+        this.contentTags.clear();
 
-    @Override
-    @XmlTransient
-    public Consumer getConsumer() {
+        if (contentTags != null) {
+            this.contentTags.addAll(contentTags);
+        }
+
         return this;
     }
 
@@ -941,15 +1093,15 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return this.annotations;
     }
 
-    public void setAnnotations(String annotations) {
+    public Consumer setAnnotations(String annotations) {
         this.annotations = annotations;
+        return this;
     }
 
     public boolean isDev() {
-        return !StringUtils.isEmpty(getFact(Facts.DEV_SKU));
+        return !StringUtils.isEmpty(this.getFact(Facts.DEV_SKU));
     }
 
-    @JsonIgnore
     public boolean isGuest() {
         return "true".equalsIgnoreCase(this.getFact(Facts.VIRT_IS_GUEST));
     }
@@ -958,76 +1110,82 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
         return this.contentAccessMode;
     }
 
-    public void setContentAccessMode(String contentAccessMode) {
+    public Consumer setContentAccessMode(String contentAccessMode) {
         this.contentAccessMode = contentAccessMode;
+        return this;
     }
 
     public Set<String> getAddOns() {
-        return addOns;
+        return this.addOns != null ? Collections.unmodifiableSet(this.addOns) : Set.of();
     }
 
-    public void setAddOns(Set<String> addOns) {
-        this.addOns = addOns;
+    public Consumer setAddOns(Collection<String> addOns) {
+        if (this.addOns == null) {
+            this.addOns = new HashSet<>();
+        }
+        this.addOns.clear();
+
+        if (addOns != null) {
+            this.addOns.addAll(addOns);
+        }
+
         this.updateRHCloudProfileModified();
+        return this;
     }
 
-    public void addAddOn(String addOn) {
-        this.addOns.add(addOn);
-        this.updateRHCloudProfileModified();
+    public boolean addAddOn(String addon) {
+        if (this.addOns == null) {
+            this.addOns = new HashSet<>();
+        }
+
+        boolean result = addon != null && this.addOns.add(addon);
+        if (result) {
+            this.updateRHCloudProfileModified();
+        }
+
+        return result;
     }
 
-    public void removeAddOn(String addOn) {
-        this.addOns.remove(addOn);
-        this.updateRHCloudProfileModified();
+    public boolean removeAddOn(String addon) {
+        boolean result = this.addOns != null && this.addOns.remove(addon);
+        if (result) {
+            this.updateRHCloudProfileModified();
+        }
+
+        return result;
     }
 
     public Date getRHCloudProfileModified() {
         return this.rhCloudProfileModified;
     }
 
-    public void setRHCloudProfileModified(Date rhCloudProfileModified) {
+    public Consumer setRHCloudProfileModified(Date rhCloudProfileModified) {
         this.rhCloudProfileModified = rhCloudProfileModified;
+        return this;
     }
 
     public void updateRHCloudProfileModified() {
         this.rhCloudProfileModified = new Date();
     }
 
-    /**
-     * Check if the consumers facts have changed and contains the cloud profile facts.
-     * It returns true if incoming facts are cloud profile facts
-     *
-     * @param incomingFacts incoming facts
-     * @return a boolean
-     */
-    public boolean checkForCloudProfileFacts(Map<String, String> incomingFacts) {
-        if (incomingFacts == null) {
-            return false;
-        }
-
-        if (this.facts != null && this.facts.equals(incomingFacts)) {
-            return false;
-        }
-
-        for (CloudProfileFacts profileFact : CloudProfileFacts.values()) {
-            if (incomingFacts.containsKey(profileFact.getFact())) {
-                if (this.facts == null ||
-                    !this.facts.containsKey(profileFact.getFact()) ||
-                    !this.facts.get(profileFact.getFact()).equals(incomingFacts.get(profileFact.getFact()))) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    public void setActivationKeys(Set<ConsumerActivationKey> activationKeys) {
-        this.activationKeys = activationKeys;
-    }
-
     public Set<ConsumerActivationKey> getActivationKeys() {
-        return this.activationKeys;
+        return this.activationKeys != null ? Collections.unmodifiableSet(this.activationKeys) : Set.of();
+    }
+
+    public Consumer setActivationKeys(Collection<ConsumerActivationKey> activationKeys) {
+        if (this.activationKeys == null) {
+            this.activationKeys = new HashSet<>();
+        }
+        this.activationKeys.clear();
+
+        if (activationKeys != null) {
+            activationKeys.stream()
+                .filter(Objects::nonNull)
+                .peek(cak -> cak.setConsumer(this))
+                .forEach(this.activationKeys::add);
+        }
+
+        return this;
     }
 
     public String getServiceType() {
@@ -1040,16 +1198,29 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
     }
 
     public List<String> getEnvironmentIds() {
+        if (this.environmentIds == null) {
+            return List.of();
+        }
+
         return this.environmentIds.entrySet().stream()
             .sorted(Comparator.comparingInt(entry -> Integer.parseInt(entry.getKey())))
             .map(Map.Entry::getValue)
-            .collect(Collectors.toList());
+            .collect(Collectors.toUnmodifiableList());
     }
 
     public Consumer setEnvironmentIds(List<String> environmentIds) {
-        if (this.environmentIds != null) {
-            this.environmentIds.clear();
-        }
+        // Impl note:
+        // We always create a new map instance instead of clearing the existing one in this case, as
+        // it changes the order in which Hibernate will delete the existing entries in the DB. For
+        // some reason, using Map.clear in this case doesn't trigger a full removal of the existing
+        // rows before adding the new entries on persist, leading to a constraint violation (on
+        // cp_consumer_environments_pkey) whenever environments are partially updated or only
+        // priorities are changed.
+        // Updating existing entries is also not an option here, since Hibernate will only update
+        // the value for a given key, rather than updating both the key and value as a logical pair.
+        // This may break if Hibernate's implementation changes in the future, or our schema
+        // changes. Revisit as necessary.
+        this.environmentIds = new LinkedHashMap<>();
 
         if (environmentIds != null) {
             HashSet<String> deDuplicatedIds = new HashSet<>(environmentIds);
@@ -1057,18 +1228,9 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
                 throw new DuplicateEntryException("One or more environments were specified more than once.");
             }
 
-            // Creating a new map instance and assigning it to the environmentIds.
-            // This ensures that, we are deleting the existing entries and inserting the new entries.
-            // This is done to avoid constraint (cp_consumer_environments_pkey) violation exception.
-            // Whenever we try to update the existing data (changing priority), it actually updates
-            // the environment Id and not the priority.
-            LinkedHashMap<String, String> envMap = new LinkedHashMap<>();
-
-            for (int i = 0; i < environmentIds.size(); i++) {
-                envMap.put(String.valueOf(i), environmentIds.get(i));
+            for (String envId : environmentIds) {
+                this.environmentIds.put(String.valueOf(this.environmentIds.size()), envId);
             }
-
-            this.environmentIds = envMap;
         }
 
         return this;
@@ -1095,7 +1257,33 @@ public class Consumer extends AbstractHibernateObject implements Linkable, Owned
 
             this.environmentIds.put(String.valueOf(this.environmentIds.size()), environment.getId());
         }
+
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Consumer [id: %s, uuid: %s, name: %s]",
+            this.getId(), this.getUuid(), this.getName());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (!(obj instanceof Consumer)) {
+            return false;
+        }
+
+        return Objects.equals(this.getUuid(), ((Consumer) obj).getUuid());
+    }
+
+    @Override
+    public int hashCode() {
+        String uuid = this.getUuid();
+        return uuid != null ? uuid.hashCode() : 0;
     }
 
 }

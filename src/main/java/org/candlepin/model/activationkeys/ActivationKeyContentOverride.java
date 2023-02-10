@@ -51,12 +51,22 @@ public class ActivationKeyContentOverride extends
     }
 
     /**
-     * @param consumer for whom to create a ConsumerContentOverride
-     * @return ConsumerContentOverride for the given consumer
+     * Builds a ConsumerContentOverride instance from this activation key content override. The
+     * returned content override will be populated with data present in this override at call time,
+     * and will not reflect later changes made to this override.
+     *
+     * @param consumer
+     *  the consumer for which the content override should be built
+     *
+     * @return
+     *  a ConsumerContentOverride instance built from data contained in this content override
      */
     public ConsumerContentOverride buildConsumerContentOverride(Consumer consumer) {
-        return new ConsumerContentOverride(consumer,
-            this.getContentLabel(), this.getName(), this.getValue());
+        return new ConsumerContentOverride()
+            .setConsumer(consumer)
+            .setContentLabel(this.getContentLabel())
+            .setName(this.getName())
+            .setValue(this.getValue());
     }
 
     /**

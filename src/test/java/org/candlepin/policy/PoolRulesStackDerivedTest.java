@@ -138,7 +138,11 @@ public class PoolRulesStackDerivedTest {
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ctype.setId("test-ctype");
 
-        consumer = new Consumer("consumer", "registeredbybob", owner, ctype);
+        consumer = new Consumer()
+            .setName("consumer")
+            .setUsername("registeredbybob")
+            .setOwner(owner)
+            .setType(ctype);
 
         // Two subtly different products stacked together:
         prod1 = TestUtil.createProduct("prod1", "prod1");

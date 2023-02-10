@@ -75,8 +75,13 @@ public class EntitlerJobTest {
         ctype.setId("test-ctype");
         owner = new Owner("test-owner");
         owner.setId("test-owner-id");
-        consumer = new Consumer("Test Consumer", "test-consumer", owner, ctype);
-        consumer.setUuid(CONSUMER_UUID);
+        consumer = new Consumer()
+            .setUuid(CONSUMER_UUID)
+            .setName("Test Consumer")
+            .setUsername("test-consumer")
+            .setOwner(owner)
+            .setType(ctype);
+
         entitler = mock(Entitler.class);
         poolCurator = mock(PoolCurator.class);
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);

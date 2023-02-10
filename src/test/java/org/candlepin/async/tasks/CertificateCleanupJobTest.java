@@ -91,9 +91,14 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
     }
 
     private Consumer createConsumer(Date idExpiration, Date caExpiration) {
-        Consumer consumer = new Consumer("c1", "u1", owner, ct);
-        consumer.setIdCert(createIdCert(idExpiration));
-        consumer.setContentAccessCert(createContentAccessCert(caExpiration));
+        Consumer consumer = new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setIdCert(createIdCert(idExpiration))
+            .setContentAccessCert(createContentAccessCert(caExpiration));
+
         return consumerCurator.create(consumer);
     }
 

@@ -53,6 +53,7 @@ import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.api.server.v1.CapabilityDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ConsumerInstalledProductDTO;
 import org.candlepin.dto.api.server.v1.EnvironmentDTO;
@@ -399,14 +400,20 @@ public class ConsumerResourceUpdateTest {
         Product productC = TestUtil.createProduct("Product C");
 
         Consumer consumer = getFakeConsumer();
-        consumer.addInstalledProduct(new ConsumerInstalledProduct(productA));
-        consumer.addInstalledProduct(new ConsumerInstalledProduct(productB));
+        consumer.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productA.getId())
+            .setProductName(productA.getName()));
+        consumer.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productB.getId())
+            .setProductName(productB.getName()));
 
         ConsumerDTO incoming = new ConsumerDTO();
         incoming.addInstalledProductsItem(new ConsumerInstalledProductDTO()
-            .id(productB.getId()).productName(productB.getName()));
+            .id(productB.getId())
+            .productName(productB.getName()));
         incoming.addInstalledProductsItem(new ConsumerInstalledProductDTO()
-            .id(productC.getId()).productName(productC.getName()));
+            .id(productC.getId())
+            .productName(productC.getName()));
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
         verify(sink).queueEvent(any());
@@ -419,14 +426,20 @@ public class ConsumerResourceUpdateTest {
         Product productC = TestUtil.createProduct("Product C");
 
         Consumer consumer = getFakeConsumer();
-        consumer.addInstalledProduct(new ConsumerInstalledProduct(consumer, productA));
-        consumer.addInstalledProduct(new ConsumerInstalledProduct(consumer, productB));
+        consumer.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productA.getId())
+            .setProductName(productA.getName()));
+        consumer.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productB.getId())
+            .setProductName(productB.getName()));
 
         ConsumerDTO incoming = new ConsumerDTO();
         incoming.addInstalledProductsItem(new ConsumerInstalledProductDTO()
-            .id(productB.getId()).productName(productB.getName()));
+            .id(productB.getId())
+            .productName(productB.getName()));
         incoming.addInstalledProductsItem(new ConsumerInstalledProductDTO()
-            .id(productC.getId()).productName(productC.getName()));
+            .id(productC.getId())
+            .productName(productC.getName()));
 
         this.resource.updateConsumer(consumer.getUuid(), incoming);
         verify(sink).queueEvent(any());
@@ -446,20 +459,42 @@ public class ConsumerResourceUpdateTest {
         Product productC = TestUtil.createProduct("Product C");
         Product productD = TestUtil.createProduct("Product D");
 
-        consumerA.addInstalledProduct(new ConsumerInstalledProduct(consumerA, productA));
-        consumerA.addInstalledProduct(new ConsumerInstalledProduct(consumerB, productB));
-        consumerA.addInstalledProduct(new ConsumerInstalledProduct(consumerC, productC));
+        consumerA.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productA.getId())
+            .setProductName(productA.getName()));
+        consumerA.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productB.getId())
+            .setProductName(productB.getName()));
+        consumerA.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productC.getId())
+            .setProductName(productC.getName()));
 
-        consumerB.addInstalledProduct(new ConsumerInstalledProduct(consumerA, productA));
-        consumerB.addInstalledProduct(new ConsumerInstalledProduct(consumerB, productB));
-        consumerB.addInstalledProduct(new ConsumerInstalledProduct(consumerC, productC));
+        consumerB.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productA.getId())
+            .setProductName(productA.getName()));
+        consumerB.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productB.getId())
+            .setProductName(productB.getName()));
+        consumerB.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productC.getId())
+            .setProductName(productC.getName()));
 
-        consumerC.addInstalledProduct(new ConsumerInstalledProduct(consumerA, productA));
-        consumerC.addInstalledProduct(new ConsumerInstalledProduct(consumerC, productC));
+        consumerC.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productA.getId())
+            .setProductName(productA.getName()));
+        consumerC.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productC.getId())
+            .setProductName(productC.getName()));
 
-        consumerD.addInstalledProduct(new ConsumerInstalledProduct(consumerA, productA));
-        consumerD.addInstalledProduct(new ConsumerInstalledProduct(consumerB, productB));
-        consumerD.addInstalledProduct(new ConsumerInstalledProduct(consumerD, productD));
+        consumerD.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productA.getId())
+            .setProductName(productA.getName()));
+        consumerD.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productB.getId())
+            .setProductName(productB.getName()));
+        consumerD.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(productD.getId())
+            .setProductName(productD.getName()));
 
         assertEquals(consumerA.getInstalledProducts(), consumerB.getInstalledProducts());
         assertNotEquals(consumerC.getInstalledProducts(), consumerA.getInstalledProducts());
@@ -958,9 +993,9 @@ public class ConsumerResourceUpdateTest {
 
         Consumer c = getFakeConsumer();
         Set<ConsumerCapability> caps = new HashSet<>();
-        ConsumerCapability cca = new ConsumerCapability(c, "capability_a");
-        ConsumerCapability ccb = new ConsumerCapability(c, "capability_b");
-        ConsumerCapability ccc = new ConsumerCapability(c, "capability_c");
+        ConsumerCapability cca = new ConsumerCapability("capability_a");
+        ConsumerCapability ccb = new ConsumerCapability("capability_b");
+        ConsumerCapability ccc = new ConsumerCapability("capability_c");
         caps.add(cca);
         caps.add(ccb);
         caps.add(ccc);
@@ -984,32 +1019,28 @@ public class ConsumerResourceUpdateTest {
 
     @Test
     public void consumerChangeDetection() {
-        Consumer existing = getFakeConsumer();
-        Set<ConsumerCapability> caps1 = new HashSet<>();
-        Set<ConsumerCapability> caps2 = new HashSet<>();
-        ConsumerCapability cca = new ConsumerCapability(existing, "capability_a");
-        ConsumerCapability ccb = new ConsumerCapability(existing, "capability_b");
-        ConsumerCapability ccc = new ConsumerCapability(existing, "capability_c");
-        caps1.add(cca);
-        caps1.add(ccb);
-        caps1.add(ccc);
-        caps2.add(ccb);
+        ConsumerCapability cca = new ConsumerCapability("capability_a");
+        ConsumerCapability ccb = new ConsumerCapability("capability_b");
+        ConsumerCapability ccc = new ConsumerCapability("capability_c");
+        CapabilityDTO ccaDto = new CapabilityDTO().name(cca.getName());
+        CapabilityDTO ccbDto = new CapabilityDTO().name(ccb.getName());
+        CapabilityDTO cccDto = new CapabilityDTO().name(ccc.getName());
 
-        existing.setCapabilities(caps1);
+        Consumer existing = this.getFakeConsumer()
+            .setCapabilities(Set.of(cca, ccb, ccc));
 
-        Consumer update = getFakeConsumer();
-        update.setCapabilities(caps1);
-        assertFalse(resource.performConsumerUpdates(
-            this.translator.translate(update, ConsumerDTO.class), existing, testMigration));
+        ConsumerDTO update = new ConsumerDTO()
+            .id(existing.getId())
+            .uuid(existing.getUuid());
 
-        update.setCapabilities(caps2);
-        assertTrue(resource.performConsumerUpdates(
-            this.translator.translate(update, ConsumerDTO.class), existing, testMigration));
+        update.setCapabilities(Set.of(ccaDto, ccbDto, cccDto));
+        assertFalse(resource.performConsumerUpdates(update, existing, testMigration));
 
-        // need a new consumer here, can't null out capabilities
-        update = getFakeConsumer();
-        assertFalse(resource.performConsumerUpdates(
-            this.translator.translate(update, ConsumerDTO.class), existing, testMigration));
+        update.setCapabilities(Set.of(ccbDto));
+        assertTrue(resource.performConsumerUpdates(update, existing, testMigration));
+
+        update.setCapabilities(null);
+        assertFalse(resource.performConsumerUpdates(update, existing, testMigration));
 
         verifyNoInteractions(this.complianceRules);
         verifyNoInteractions(this.systemPurposeComplianceRules);

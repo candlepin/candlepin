@@ -45,7 +45,6 @@ import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
-import org.candlepin.dto.api.server.v1.CapabilityDTO;
 import org.candlepin.dto.api.server.v1.CertificateDTO;
 import org.candlepin.dto.api.server.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.server.v1.ComplianceStatusDTO;
@@ -811,7 +810,7 @@ public class ConsumerResource implements ConsumerApi {
 
         if (dto.getHypervisorId() == null &&
             getFactValue(dto.getFacts(), Consumer.Facts.DMI_SYSTEM_UUID) != null &&
-            !"true".equals(getFactValue(dto.getFacts(), "virt.is_guest")) &&
+            !"true".equals(getFactValue(dto.getFacts(), Consumer.Facts.VIRT_IS_GUEST)) &&
             entity.getOwnerId() != null) {
 
             HypervisorId hid = new HypervisorId()
@@ -850,13 +849,10 @@ public class ConsumerResource implements ConsumerApi {
      * @return the model entity ConsumerCapabilities set that was created
      */
     private Set<ConsumerCapability> populateCapabilities(Consumer entity, ConsumerDTO dto) {
-        Set<ConsumerCapability> capabilities = new HashSet<>();
-        for (CapabilityDTO capabilityDTO : dto.getCapabilities()) {
-            if (capabilityDTO != null) {
-                capabilities.add(new ConsumerCapability(entity, capabilityDTO.getName()));
-            }
-        }
-        return capabilities;
+        return dto.getCapabilities().stream()
+            .filter(Objects::nonNull)
+            .map(cdto -> new ConsumerCapability(cdto.getName()))
+            .collect(Collectors.toSet());
     }
 
     /**
@@ -871,21 +867,22 @@ public class ConsumerResource implements ConsumerApi {
      */
     private Set<ConsumerInstalledProduct> populateInstalledProducts(Consumer entity, ConsumerDTO dto) {
         Set<ConsumerInstalledProduct> installedProducts = new HashSet<>();
+
         for (ConsumerInstalledProductDTO installedProductDTO : dto.getInstalledProducts()) {
             if (installedProductDTO != null) {
-                ConsumerInstalledProduct installedProduct = new ConsumerInstalledProduct(
-                    installedProductDTO.getProductId(),
-                    installedProductDTO.getProductName(),
-                    entity,
-                    installedProductDTO.getVersion(),
-                    installedProductDTO.getArch(),
-                    installedProductDTO.getStatus(),
-                    Util.toDate(installedProductDTO.getStartDate()),
-                    Util.toDate(installedProductDTO.getEndDate()));
+                ConsumerInstalledProduct installedProduct = new ConsumerInstalledProduct()
+                    .setProductId(installedProductDTO.getProductId())
+                    .setProductName(installedProductDTO.getProductName())
+                    .setVersion(installedProductDTO.getVersion())
+                    .setArch(installedProductDTO.getArch())
+                    .setStatus(installedProductDTO.getStatus())
+                    .setStartDate(Util.toDate(installedProductDTO.getStartDate()))
+                    .setEndDate(Util.toDate(installedProductDTO.getEndDate()));
 
                 installedProducts.add(installedProduct);
             }
         }
+
         return installedProducts;
     }
 
@@ -906,7 +903,7 @@ public class ConsumerResource implements ConsumerApi {
         Consumer consumer = null;
         if (config.getBoolean(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING) &&
             getFactValue(dto.getFacts(), Consumer.Facts.DMI_SYSTEM_UUID) != null &&
-            !"true".equalsIgnoreCase(getFactValue(dto.getFacts(), "virt.is_guest"))) {
+            !"true".equalsIgnoreCase(getFactValue(dto.getFacts(), Consumer.Facts.VIRT_IS_GUEST))) {
 
             consumer = consumerCurator.getHypervisor(
                 getFactValue(dto.getFacts(), Consumer.Facts.DMI_SYSTEM_UUID), owner);
@@ -922,19 +919,14 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         ConsumerType ctype = this.consumerTypeCurator.getByLabel(dto.getType().getLabel());
-
         if (ctype == null) {
             throw new BadRequestException(i18n.tr("Invalid unit type: {0}", dto.getType().getLabel()));
         }
 
-        return translator.translate(createConsumerFromDTO(dto,
-            ctype,
-            principal,
-            userName,
-            owner,
-            activationKeys,
-            identityCertCreation),
-            ConsumerDTO.class);
+        Consumer created = createConsumerFromDTO(dto, ctype, principal, userName, owner, activationKeys,
+            identityCertCreation);
+
+        return this.translator.translate(created, ConsumerDTO.class);
     }
 
     public Consumer createConsumerFromDTO(ConsumerDTO consumer, ConsumerType type, Principal principal,
@@ -980,13 +972,11 @@ public class ConsumerResource implements ConsumerApi {
 
         this.setContentAccessMode(consumer, type, owner, consumerToCreate);
 
-        Set<ConsumerActivationKey> aks = new HashSet<>();
+        Set<ConsumerActivationKey> consumerAks = keys.stream()
+            .map(key -> new ConsumerActivationKey(key.getId(), key.getName()))
+            .collect(Collectors.toSet());
 
-        for (ActivationKey key : keys) {
-            aks.add(new ConsumerActivationKey(consumerToCreate, key.getId(), key.getName()));
-        }
-
-        consumerToCreate.setActivationKeys(aks);
+        consumerToCreate.setActivationKeys(consumerAks);
 
         try {
             Date createdDate = consumerToCreate.getCreated();
@@ -1035,7 +1025,7 @@ public class ConsumerResource implements ConsumerApi {
             complianceRules.getStatus(consumerToCreate, null, false, false);
             systemPurposeComplianceRules.getStatus(consumerToCreate, consumerToCreate.getEntitlements(),
                 null, false);
-            consumerCurator.update(consumerToCreate);
+            consumerToCreate = consumerCurator.update(consumerToCreate);
 
             log.info("Consumer {} created in org {}",
                 consumerToCreate.getUuid(), consumerToCreate.getOwnerId());
@@ -1192,31 +1182,51 @@ public class ConsumerResource implements ConsumerApi {
         if (userName != null) {
             consumer.setUsername(userName);
         }
+
         return userName;
+    }
+
+    private void populateCapabilities(Consumer consumer, Collection<DistributorVersionCapability> dvcs) {
+        Stream<DistributorVersionCapability> cstream = dvcs != null ? dvcs.stream() : Stream.of();
+        Set<ConsumerCapability> ccaps = cstream.filter(Objects::nonNull)
+            .map(dvc -> new ConsumerCapability(dvc.getName()))
+            .collect(Collectors.toSet());
+
+        consumer.setCapabilities(ccaps);
     }
 
     private boolean updateCapabilities(Consumer existing, ConsumerDTO update) {
         boolean change = false;
         if (update == null) {
             // create
-            if ((existing.getCapabilities() == null ||
-                existing.getCapabilities().isEmpty()) &&
+            if ((existing.getCapabilities() == null || existing.getCapabilities().isEmpty()) &&
                 existing.getFact(Consumer.Facts.DISTRIBUTOR_VERSION) != null) {
-                Set<DistributorVersionCapability> capabilities = distributorVersionCurator.
-                    findCapabilitiesByDistVersion(existing.getFact(Consumer.Facts.DISTRIBUTOR_VERSION));
-                if (capabilities != null) {
-                    Set<ConsumerCapability> ccaps = new HashSet<>();
-                    for (DistributorVersionCapability dvc : capabilities) {
-                        ConsumerCapability cc = new ConsumerCapability(existing, dvc.getName());
-                        ccaps.add(cc);
-                    }
-                    existing.setCapabilities(ccaps);
-                }
+
+                Set<DistributorVersionCapability> capabilities = distributorVersionCurator
+                    .findCapabilitiesByDistVersion(existing.getFact(Consumer.Facts.DISTRIBUTOR_VERSION));
+
+                this.populateCapabilities(existing, capabilities);
                 change = true;
             }
         }
         else {
             // update
+
+            // TODO: FIXME:
+            // This update process seems weird, and potentially broken. We only populate distributor-
+            // version-based capabilities when the capabilities are null (i.e. not sent up in the
+            // update) AND the update includes facts AND those facts include the distributor version
+            // -- even in cases where the DV fact is not net-new (i.e. adding, removing, or changing
+            // a different fact). Additionally, we don't just populate DV facts in this case, we
+            // entirely overwrite any existing capabilities that may have been set in the past.
+            //
+            // It seems like a better option here would be to always check the DV fact, and ensure
+            // the DV-based capabilities are present in the capabilities list, adding them if they
+            // don't exist, but not removing any existing capabilities.
+            // This does get a bit fuzzy in cases where the DV capabilities define capabilities that
+            // might be explicitly set already, but in those cases, the existing one should probably
+            // win.
+
             if (update.getCapabilities() != null) {
                 Set<ConsumerCapability> entityCapabilities = populateCapabilities(existing, update);
 
@@ -1225,29 +1235,28 @@ public class ConsumerResource implements ConsumerApi {
                     change = true;
                 }
             }
-            else if (getFactValue(update.getFacts(), "distributor_version") != null) {
+            else if (getFactValue(update.getFacts(), Consumer.Facts.DISTRIBUTOR_VERSION) != null) {
                 DistributorVersion dv = distributorVersionCurator.findByName(
-                    getFactValue(update.getFacts(), "distributor_version"));
+                    getFactValue(update.getFacts(), Consumer.Facts.DISTRIBUTOR_VERSION));
 
                 if (dv != null) {
-                    Set<ConsumerCapability> ccaps = new HashSet<>();
-                    for (DistributorVersionCapability dvc : dv.getCapabilities()) {
-                        ConsumerCapability cc = new ConsumerCapability(existing, dvc.getName());
-                        ccaps.add(cc);
-                    }
-
-                    existing.setCapabilities(ccaps);
+                    this.populateCapabilities(existing, dv.getCapabilities());
                 }
 
+                // TODO: FIXME: Shouldn't the change flag only be set if we actually change the consumer?
+                // Probably move this up to the populate capabilities call above, or make the above call
+                // clear capabilities when the distributor version is null.
                 change = true;
             }
         }
+
         if (change) {
             log.debug("Capabilities changed.");
         }
         else {
             log.debug("Capability list either null or does not contain changes.");
         }
+
         return change;
     }
 
@@ -1618,6 +1627,7 @@ public class ConsumerResource implements ConsumerApi {
         if (updated == null || updated.getFacts() == null) {
             return false;
         }
+
         return !Objects.equals(ComplianceFacts.of(updated), ComplianceFacts.of(toUpdate));
     }
 
@@ -1706,6 +1716,7 @@ public class ConsumerResource implements ConsumerApi {
                     environmentUpdates.put(toUpdate.getId(), preExistingEnvIds, validatedEnvIds);
                     Set<String> entitlementsToBeRegenerated = entitlementEnvironmentFilter
                         .filterEntitlements(environmentUpdates);
+
                     this.entCertGenerator
                         .regenerateCertificatesByEntitlementIds(entitlementsToBeRegenerated, true);
                 }
@@ -1884,25 +1895,12 @@ public class ConsumerResource implements ConsumerApi {
             return false;
         }
 
-        Set<ConsumerInstalledProduct> incomingInstalledProducts =
-            populateInstalledProducts(existing, incoming);
+        Set<ConsumerInstalledProduct> incomingInstalled = populateInstalledProducts(existing, incoming);
+        Set<ConsumerInstalledProduct> existingInstalled = existing.getInstalledProducts();
 
-
-        if (existing.getInstalledProducts() == null ||
-            !existing.getInstalledProducts().equals(incomingInstalledProducts)) {
-
-            log.info("Updating installed products.");
-
-            // Due to how our encapsulation works here combined with how Hibernate handles collections,
-            // we need to be careful how we manipulate this collection. We cannot just safely assign a
-            // new collection here without breaking things.
-            if (existing.getInstalledProducts() != null) {
-                existing.getInstalledProducts().clear();
-            }
-
-            for (ConsumerInstalledProduct cip : incomingInstalledProducts) {
-                existing.addInstalledProduct(cip);
-            }
+        if (existingInstalled == null || !existingInstalled.equals(incomingInstalled)) {
+            log.info("Updating installed products...");
+            existing.setInstalledProducts(incomingInstalled);
 
             return true;
         }

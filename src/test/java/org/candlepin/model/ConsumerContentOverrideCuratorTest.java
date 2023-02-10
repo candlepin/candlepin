@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,125 +49,185 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
         owner = ownerCurator.create(owner);
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);
-        consumer = new Consumer("a consumer", "username", owner, ct);
+        consumer = new Consumer()
+            .setName("a consumer")
+            .setUsername("username")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(consumer);
+    }
+
+    private ConsumerContentOverride buildConsumerContentOverride(Consumer consumer) {
+        String suffix = TestUtil.randomString(8, TestUtil.CHARSET_NUMERIC_HEX);
+
+        return new ConsumerContentOverride()
+            .setConsumer(consumer)
+            .setContentLabel("cco-" + suffix)
+            .setName("test_override-" + suffix)
+            .setValue("value-" + suffix);
     }
 
     @Test
     public void normalCreateAndRetrieve() {
-        ConsumerContentOverride cco = new ConsumerContentOverride(
-            consumer, "test-content", "name", "value");
-        consumerContentOverrideCurator.create(cco);
+        ConsumerContentOverride cco = this.buildConsumerContentOverride(this.consumer);
+        this.consumerContentOverrideCurator.create(cco);
+        this.consumerContentOverrideCurator.flush();
+        this.consumerContentOverrideCurator.clear();
 
-        ConsumerContentOverride cco2 = consumerContentOverrideCurator.retrieve(
-            consumer, "test-content", "name");
-        assert (cco2 != null);
-        assertEquals("value", cco2.getValue());
+        ConsumerContentOverride fetched = consumerContentOverrideCurator.retrieve(this.consumer,
+            cco.getContentLabel(), cco.getName());
+
+        assertNotNull(fetched);
+        assertEquals(cco.getValue(), fetched.getValue());
     }
 
     @Test
     public void normalCreateAndUpdate() {
-        ConsumerContentOverride cco = new ConsumerContentOverride(
-            consumer, "test-content", "name", "value");
+        ConsumerContentOverride cco = this.buildConsumerContentOverride(this.consumer);
         consumerContentOverrideCurator.create(cco);
+        this.consumerContentOverrideCurator.flush();
 
         cco.setValue("value-update");
         consumerContentOverrideCurator.merge(cco);
+        this.consumerContentOverrideCurator.flush();
+        this.consumerContentOverrideCurator.clear();
 
-        ConsumerContentOverride cco2 = consumerContentOverrideCurator.retrieve(
-            consumer, "test-content", "name");
-        assert (cco2 != null);
+        ConsumerContentOverride cco2 = consumerContentOverrideCurator.retrieve(this.consumer,
+            cco.getContentLabel(), cco.getName());
+
+        assertNotNull(cco2);
         assertEquals("value-update", cco2.getValue());
     }
 
     @Test
     public void deleteByName() {
-        ConsumerContentOverride cco = new ConsumerContentOverride(
-            consumer, "test-content", "name", "value");
+        ConsumerContentOverride cco = this.buildConsumerContentOverride(this.consumer);
         consumerContentOverrideCurator.create(cco);
 
-        consumerContentOverrideCurator.removeByName(consumer, "test-content", "name");
-        ConsumerContentOverride cco2 = consumerContentOverrideCurator.retrieve(
-            consumer, "test-content", "name");
-        assert (cco2 == null);
+        consumerContentOverrideCurator.removeByName(this.consumer, cco.getContentLabel(), cco.getName());
+        this.consumerContentOverrideCurator.flush();
+
+        ConsumerContentOverride cco2 = consumerContentOverrideCurator.retrieve(this.consumer,
+            cco.getContentLabel(), cco.getName());
+
+        assertNull(cco2);
     }
 
     @Test
     public void deleteByNameCaseInsensitive() {
-        ConsumerContentOverride cco = new ConsumerContentOverride(
-            consumer, "test-content", "naME", "value");
+        ConsumerContentOverride cco = this.buildConsumerContentOverride(this.consumer)
+            .setName("naME");
         consumerContentOverrideCurator.create(cco);
 
-        consumerContentOverrideCurator.removeByName(consumer, "test-content", "nAMe");
-        ConsumerContentOverride cco2 = consumerContentOverrideCurator.retrieve(
-            consumer, "test-content", "naME");
+        consumerContentOverrideCurator.removeByName(this.consumer, cco.getContentLabel(), "nAMe");
+        this.consumerContentOverrideCurator.flush();
+
+        ConsumerContentOverride cco2 = consumerContentOverrideCurator.retrieve(this.consumer,
+            cco.getContentLabel(), cco.getName());
+
         assertNull(cco2);
     }
 
     @Test
     public void retrieveByNameCaseInsensitive() {
-        ConsumerContentOverride cco = new ConsumerContentOverride(
-            consumer, "test-content", "naME", "value");
-        consumerContentOverrideCurator.create(cco);
+        ConsumerContentOverride cco = this.buildConsumerContentOverride(this.consumer)
+            .setName("naME");
+        this.consumerContentOverrideCurator.create(cco);
+        this.consumerContentOverrideCurator.flush();
+        this.consumerContentOverrideCurator.clear();
 
-        ConsumerContentOverride ccof1 = consumerContentOverrideCurator.retrieve(
-            consumer, "test-content", "naME");
-        ConsumerContentOverride ccof2 = consumerContentOverrideCurator.retrieve(
-            consumer, "test-content", "Name");
+        ConsumerContentOverride ccof1 = consumerContentOverrideCurator.retrieve(this.consumer,
+            cco.getContentLabel(), "naME");
+
+        ConsumerContentOverride ccof2 = consumerContentOverrideCurator.retrieve(this.consumer,
+            cco.getContentLabel(), "Name");
+
         assertNotNull(ccof1);
         assertNotNull(ccof2);
+        assertEquals(ccof1, ccof2);
     }
 
     @Test
     public void deleteByLabel() {
-        ConsumerContentOverride cco1 = new ConsumerContentOverride(
-            consumer, "test-content", "name1", "value");
+        ConsumerContentOverride cco1 = this.buildConsumerContentOverride(this.consumer)
+            .setContentLabel("test-content");
         consumerContentOverrideCurator.create(cco1);
-        ConsumerContentOverride cco2 = new ConsumerContentOverride(
-            consumer, "test-content", "name2", "value");
+
+        ConsumerContentOverride cco2 = this.buildConsumerContentOverride(this.consumer)
+            .setContentLabel("test-content");
         consumerContentOverrideCurator.create(cco2);
 
-        consumerContentOverrideCurator.removeByContentLabel(consumer, "test-content");
+        this.consumerContentOverrideCurator.flush();
+
         List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
-        assertEquals(ccoList.size(), 0);
+        assertEquals(2, ccoList.size());
+
+        consumerContentOverrideCurator.removeByContentLabel(consumer, "test-content");
+        List<ConsumerContentOverride> ccoList2 = consumerContentOverrideCurator.listAll().list();
+        assertEquals(0, ccoList2.size());
     }
 
     @Test
     public void deleteByConsumer() {
-        ConsumerContentOverride cco1 = new ConsumerContentOverride(
-            consumer, "test-content1", "name1", "value");
+        ConsumerContentOverride cco1 = this.buildConsumerContentOverride(this.consumer);
         consumerContentOverrideCurator.create(cco1);
-        ConsumerContentOverride cco2 = new ConsumerContentOverride(
-            consumer, "test-content2", "name2", "value");
+        ConsumerContentOverride cco2 = this.buildConsumerContentOverride(this.consumer);
         consumerContentOverrideCurator.create(cco2);
 
-        consumerContentOverrideCurator.removeByParent(consumer);
+        this.consumerContentOverrideCurator.flush();
         List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
-        assertEquals(ccoList.size(), 0);
+        assertEquals(2, ccoList.size());
+
+        consumerContentOverrideCurator.removeByParent(consumer);
+        List<ConsumerContentOverride> ccoList2 = consumerContentOverrideCurator.listAll().list();
+        assertEquals(0, ccoList2.size());
     }
 
     @Test
     public void testAddOrUpdateUpdatesValue() {
-        ConsumerContentOverride cco1 = new ConsumerContentOverride(
-            consumer, "test-content1", "name1", "value");
-        consumerContentOverrideCurator.create(cco1);
-        ConsumerContentOverride cco2 = new ConsumerContentOverride(
-            consumer, "test-content1", "name1", "value2");
-        consumerContentOverrideCurator.addOrUpdate(consumer, cco2);
+        ConsumerContentOverride cco1 = new ConsumerContentOverride()
+            .setConsumer(this.consumer)
+            .setContentLabel("test_content-1")
+            .setName("cco-1")
+            .setValue("value-1");
+
+        this.consumerContentOverrideCurator.create(cco1);
+        this.consumerContentOverrideCurator.flush();
+
+        ConsumerContentOverride cco2 = new ConsumerContentOverride()
+            .setConsumer(this.consumer)
+            .setContentLabel("test_content-1")
+            .setName("cco-1")
+            .setValue("value-2");
+
+        this.consumerContentOverrideCurator.addOrUpdate(consumer, cco2);
+        this.consumerContentOverrideCurator.flush();
+        this.consumerContentOverrideCurator.clear();
 
         List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
         assertEquals(1, ccoList.size());
-        assertEquals("value2", ccoList.get(0).getValue());
+        assertEquals(cco2.getValue(), ccoList.get(0).getValue());
     }
 
     @Test
     public void testAddOrUpdateCreatesNew() {
-        ConsumerContentOverride cco1 = new ConsumerContentOverride(
-            consumer, "test-content1", "name1", "value");
+        ConsumerContentOverride cco1 = new ConsumerContentOverride()
+            .setConsumer(this.consumer)
+            .setContentLabel("test-content1")
+            .setName("name1")
+            .setValue("value");
+
         consumerContentOverrideCurator.create(cco1);
-        ConsumerContentOverride cco2 = new ConsumerContentOverride(
-            consumer, "test-content2", "name2", "value2");
+
+        ConsumerContentOverride cco2 = new ConsumerContentOverride()
+            .setConsumer(this.consumer)
+            .setContentLabel("test-content2")
+            .setName("name2")
+            .setValue("value2");
+
         consumerContentOverrideCurator.addOrUpdate(consumer, cco2);
+        this.consumerContentOverrideCurator.flush();
+        this.consumerContentOverrideCurator.clear();
 
         List<ConsumerContentOverride> ccoList = consumerContentOverrideCurator.listAll().list();
         assertEquals(2, ccoList.size());
@@ -174,128 +235,216 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testCreateOverride() {
-        ConsumerContentOverride override = new ConsumerContentOverride(consumer,
-            "test-repo", "gpgcheck", "1");
+        ConsumerContentOverride override = this.buildConsumerContentOverride(this.consumer);
         assertEquals(override, this.consumerContentOverrideCurator.create(override));
     }
 
     @Test
     public void testCreateOverrideForcesLowercaseName() {
-        ConsumerContentOverride override = new ConsumerContentOverride(consumer,
-            "test-repo", "GpGCheck", "1");
-        ConsumerContentOverride created =
-            this.consumerContentOverrideCurator.create(override);
+        ConsumerContentOverride override = this.buildConsumerContentOverride(this.consumer)
+            .setName("GpGCheck");
+
+        ConsumerContentOverride created = this.consumerContentOverrideCurator.create(override);
         assertEquals("gpgcheck", created.getName());
     }
 
     @Test
     public void testModifyOverride() {
-        ConsumerContentOverride override = new ConsumerContentOverride(consumer,
-            "test-repo", "GpGCheck", "1");
-        ConsumerContentOverride created =
-            this.consumerContentOverrideCurator.create(override);
+        ConsumerContentOverride override = this.buildConsumerContentOverride(this.consumer)
+            .setValue("1");
+
+        ConsumerContentOverride created = this.consumerContentOverrideCurator.create(override);
         created.setValue("0");
+
         ConsumerContentOverride merged = this.consumerContentOverrideCurator.merge(created);
         assertEquals("0", merged.getValue());
     }
 
     @Test
     public void testModifyOverrideForcesNameToLowercase() {
-        ConsumerContentOverride override = new ConsumerContentOverride(consumer,
-            "test-repo", "gpgcheck", "0");
-        ConsumerContentOverride created =
-            this.consumerContentOverrideCurator.create(override);
+        ConsumerContentOverride override = this.buildConsumerContentOverride(this.consumer)
+            .setName("gpgcheck");
+
+        ConsumerContentOverride created = this.consumerContentOverrideCurator.create(override);
         created.setName("GPGCHECK");
+
         ConsumerContentOverride merged = this.consumerContentOverrideCurator.merge(created);
         assertEquals("gpgcheck", merged.getName());
     }
 
     @Test
     public void testRetrieveByName() {
-        consumerContentOverrideCurator.create(new ConsumerContentOverride(consumer,
-            "test-repo", "gpgcheck", "1"));
-        ConsumerContentOverride found =
-            consumerContentOverrideCurator.retrieve(consumer, "test-repo", "gpgcheck");
+        ConsumerContentOverride override = new ConsumerContentOverride()
+            .setConsumer(this.consumer)
+            .setContentLabel("test_content_label")
+            .setName("test_override")
+            .setValue("1");
+
+        this.consumerContentOverrideCurator.create(override);
+        this.consumerContentOverrideCurator.flush();
+        this.consumerContentOverrideCurator.clear();
+
+        ConsumerContentOverride found = consumerContentOverrideCurator
+            .retrieve(this.consumer, override.getContentLabel(), override.getName());
+
         assertNotNull(found);
-        assertEquals(consumer, found.getConsumer());
-        assertEquals("test-repo", found.getContentLabel());
-        assertEquals("gpgcheck", found.getName());
-        assertEquals("1", found.getValue());
+        assertEquals(override.getConsumer(), found.getConsumer());
+        assertEquals(override.getContentLabel(), found.getContentLabel());
+        assertEquals(override.getName(), found.getName());
+        assertEquals(override.getValue(), found.getValue());
     }
 
     @Test
     public void testRetrieveByNameIsCaseInsensitive() {
-        consumerContentOverrideCurator.create(new ConsumerContentOverride(consumer,
-            "test-repo", "gpgcheck", "1"));
-        ConsumerContentOverride found =
-            consumerContentOverrideCurator.retrieve(consumer, "test-repo", "GPGCheck");
+        ConsumerContentOverride override = this.buildConsumerContentOverride(this.consumer)
+            .setName("gpgcheck");
+
+        this.consumerContentOverrideCurator.create(override);
+        this.consumerContentOverrideCurator.flush();
+        this.consumerContentOverrideCurator.clear();
+
+        ConsumerContentOverride found = this.consumerContentOverrideCurator
+            .retrieve(this.consumer, override.getContentLabel(), "GPGCheck");
+
         assertNotNull(found);
-        assertEquals(consumer, found.getConsumer());
-        assertEquals("test-repo", found.getContentLabel());
-        assertEquals("gpgcheck", found.getName());
-        assertEquals("1", found.getValue());
+        assertEquals(override.getConsumer(), found.getConsumer());
+        assertEquals(override.getContentLabel(), found.getContentLabel());
+        assertEquals(override.getName(), found.getName());
+        assertEquals(override.getValue(), found.getValue());
     }
 
     @Test
     public void testRetrieveByNameDoesntExist() {
-        ConsumerContentOverride found =
-            consumerContentOverrideCurator.retrieve(consumer, "not-a-repo", "gpgcheck");
+        ConsumerContentOverride override = this.buildConsumerContentOverride(this.consumer);
+        this.consumerContentOverrideCurator.create(override);
+        this.consumerContentOverrideCurator.flush();
+
+        ConsumerContentOverride found = this.consumerContentOverrideCurator
+            .retrieve(this.consumer, "not-a-repo", "gpgcheck");
+
         assertNull(found);
     }
 
     @Test
     public void testRemoveByName() {
-        consumerContentOverrideCurator.create(new ConsumerContentOverride(consumer,
-            "test-repo", "gpgcheck", "1"));
-        consumerContentOverrideCurator.create(new ConsumerContentOverride(consumer,
-            "test-repo", "remaining-override", "remaining"));
-        consumerContentOverrideCurator.removeByName(consumer, "test-repo", "gpgcheck");
-        List<ConsumerContentOverride> remaining =
-            consumerContentOverrideCurator.getList(consumer).list();
+        ConsumerContentOverride override1 = new ConsumerContentOverride()
+            .setConsumer(this.consumer)
+            .setContentLabel("test-repo")
+            .setName("gpgcheck")
+            .setValue("1");
+
+        ConsumerContentOverride override2 = new ConsumerContentOverride()
+            .setConsumer(this.consumer)
+            .setContentLabel("test-repo")
+            .setName("remaining-override")
+            .setValue("remaining");
+
+        this.consumerContentOverrideCurator.create(override1);
+        this.consumerContentOverrideCurator.create(override2);
+        this.consumerContentOverrideCurator.flush();
+        this.consumerContentOverrideCurator.clear();
+
+        this.consumerContentOverrideCurator
+            .removeByName(this.consumer, override1.getContentLabel(), override1.getName());
+
+        this.consumerContentOverrideCurator.flush();
+
+        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer).list();
         assertEquals(1, remaining.size());
-        assertEquals("remaining-override", remaining.get(0).getName());
+        assertEquals(override2.getName(), remaining.get(0).getName());
     }
 
     @Test
     public void testRemoveByNameCaseInsensitive() {
-        consumerContentOverrideCurator.create(new ConsumerContentOverride(consumer,
-            "test-repo", "gpgcheck", "1"));
-        consumerContentOverrideCurator.create(new ConsumerContentOverride(consumer,
-            "test-repo", "remaining-override", "remaining"));
-        consumerContentOverrideCurator.removeByName(consumer, "test-repo", "GpGChecK");
-        List<ConsumerContentOverride> remaining =
-            consumerContentOverrideCurator.getList(consumer).list();
+        ConsumerContentOverride override1 = new ConsumerContentOverride()
+            .setConsumer(this.consumer)
+            .setContentLabel("test-repo")
+            .setName("gpgcheck")
+            .setValue("1");
+
+        ConsumerContentOverride override2 = new ConsumerContentOverride()
+            .setConsumer(this.consumer)
+            .setContentLabel("test-repo")
+            .setName("remaining-override")
+            .setValue("remaining");
+
+        this.consumerContentOverrideCurator.create(override1);
+        this.consumerContentOverrideCurator.create(override2);
+        this.consumerContentOverrideCurator.flush();
+
+        this.consumerContentOverrideCurator.removeByName(consumer, override1.getContentLabel(), "GpGChecK");
+
+        this.consumerContentOverrideCurator.flush();
+
+        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer).list();
         assertEquals(1, remaining.size());
-        assertEquals("remaining-override", remaining.get(0).getName());
+        assertEquals(override2.getName(), remaining.get(0).getName());
     }
 
     @Test
     public void testRemoveByContentLabel() {
-        consumerContentOverrideCurator.create(new ConsumerContentOverride(consumer,
-            "test-repo", "gpgcheck", "1"));
-        consumerContentOverrideCurator.create(new ConsumerContentOverride(consumer,
-            "test-repo", "foo", "foo-v"));
-        consumerContentOverrideCurator.create(new ConsumerContentOverride(consumer,
-            "should-remain", "remaining", "true"));
-        consumerContentOverrideCurator.removeByContentLabel(consumer, "test-repo");
-        List<ConsumerContentOverride> remaining =
-            consumerContentOverrideCurator.getList(consumer).list();
+        ConsumerContentOverride override1 = new ConsumerContentOverride()
+            .setConsumer(this.consumer)
+            .setContentLabel("test-repo")
+            .setName("gpgcheck")
+            .setValue("1");
+
+        ConsumerContentOverride override2 = new ConsumerContentOverride()
+            .setConsumer(this.consumer)
+            .setContentLabel("test-repo")
+            .setName("foo")
+            .setValue("foo-v");
+
+        ConsumerContentOverride override3 = new ConsumerContentOverride()
+            .setConsumer(this.consumer)
+            .setContentLabel("should-remain")
+            .setName("remaining")
+            .setValue("true");
+
+        this.consumerContentOverrideCurator.create(override1);
+        this.consumerContentOverrideCurator.create(override2);
+        this.consumerContentOverrideCurator.create(override3);
+        this.consumerContentOverrideCurator.flush();
+
+        this.consumerContentOverrideCurator.removeByContentLabel(consumer, "test-repo");
+
+        this.consumerContentOverrideCurator.flush();
+
+        List<ConsumerContentOverride> remaining = consumerContentOverrideCurator.getList(consumer).list();
         assertEquals(1, remaining.size());
-        assertEquals("should-remain", remaining.get(0).getContentLabel());
-        assertEquals("remaining", remaining.get(0).getName());
+        assertEquals(override3.getContentLabel(), remaining.get(0).getContentLabel());
+        assertEquals(override3.getName(), remaining.get(0).getName());
     }
 
     @Test
     public void testRemoveByConsumer() {
-        Consumer consumer2 = createConsumer(owner);
-        consumerContentOverrideCurator.create(new ConsumerContentOverride(consumer2,
-            "test-repo", "gpgcheck", "1"));
+        Consumer consumer2 = this.createConsumer(owner);
 
-        consumerContentOverrideCurator.create(new ConsumerContentOverride(consumer,
-            "test-repo", "gpgcheck", "1"));
-        consumerContentOverrideCurator.create(new ConsumerContentOverride(consumer,
-            "another-test-repo", "gpgcheck", "0"));
-        consumerContentOverrideCurator.removeByParent(consumer);
+        ConsumerContentOverride override1 = new ConsumerContentOverride()
+            .setConsumer(consumer2)
+            .setContentLabel("test-repo")
+            .setName("gpgcheck")
+            .setValue("1");
+
+        ConsumerContentOverride override2 = new ConsumerContentOverride()
+            .setConsumer(this.consumer)
+            .setContentLabel("test-repo")
+            .setName("gpgcheck")
+            .setValue("1");
+
+        ConsumerContentOverride override3 = new ConsumerContentOverride()
+            .setConsumer(this.consumer)
+            .setContentLabel("another-test-repo")
+            .setName("override-name")
+            .setValue("0");
+
+        this.consumerContentOverrideCurator.create(override1);
+        this.consumerContentOverrideCurator.create(override2);
+        this.consumerContentOverrideCurator.create(override3);
+        this.consumerContentOverrideCurator.flush();
+
+        this.consumerContentOverrideCurator.removeByParent(this.consumer);
+        this.consumerContentOverrideCurator.flush();
 
         assertTrue(consumerContentOverrideCurator.getList(consumer).list().isEmpty());
         assertEquals(1, consumerContentOverrideCurator.getList(consumer2).list().size());

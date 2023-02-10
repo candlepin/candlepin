@@ -243,20 +243,28 @@ public class X509V3ExtensionUtilTest {
 
     @Test
     public void shouldOnlyIncludeContentWithCompatibleArchitecture() {
-        Owner owner = new Owner("Test Corporation");
-        owner.setId("test-id");
-        Content content1 = new Content("cont_id1");
-        content1.setArches("x86_64");
-        Content content2 = new Content("cont_id2");
-        content2.setArches("ppc64");
-        Product engProd = new Product("content_access", "Content Access");
+        Owner owner = new Owner()
+            .setId("test-id")
+            .setKey("Test Corporation")
+            .setDisplayName("Test Corporation");
+        Content content1 = new Content()
+            .setId("cont_id1")
+            .setArches("x86_64");
+        Content content2 = new Content()
+            .setId("cont_id2")
+            .setArches("ppc64");
+        Product engProd = new Product()
+            .setId("content_access")
+            .setName("Content Access");
         engProd.addContent(content1, true);
         engProd.addContent(content2, true);
-        Product sku = new Product("content_access", "Content Access");
+        Product sku = new Product()
+            .setId("content_access")
+            .setName("Content Access");
         Pool pool = TestUtil.createPool(sku);
-        Consumer consumer = new Consumer();
-        consumer.setOwner(owner);
-        consumer.setFact("uname.machine", "x86_64");
+        Consumer consumer = new Consumer()
+            .setOwner(owner)
+            .setFact("uname.machine", "x86_64");
 
         org.candlepin.model.dto.Product certProds = util.mapProduct(engProd, sku,
             new PromotedContent(emptyPrefix()), consumer, pool,

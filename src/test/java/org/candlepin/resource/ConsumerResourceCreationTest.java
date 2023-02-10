@@ -279,10 +279,14 @@ public class ConsumerResourceCreationTest {
         role.addUser(user);
 
         when(consumerCurator.create(any(Consumer.class)))
-            .thenAnswer(invocation -> invocation.getArguments()[0]);
+            .thenAnswer(invocation -> invocation.getArgument(0));
 
         when(consumerCurator.create(any(Consumer.class), any(Boolean.class)))
-            .thenAnswer(invocation -> invocation.getArguments()[0]);
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+        when(consumerCurator.update(any(Consumer.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
 
         when(userService.findByLogin(USER)).thenReturn(user);
         IdentityCertificate cert = new IdentityCertificate();

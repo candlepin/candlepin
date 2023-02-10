@@ -223,7 +223,7 @@ public class QuantityRulesTest {
     @Test
     public void testVirtIgnoresSockets() {
         // Ensure that we start this test with no entitlements.
-        consumer.getEntitlements().clear();
+        consumer.setEntitlements(null);
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
@@ -235,7 +235,7 @@ public class QuantityRulesTest {
     @Test
     public void testVirtUses1IfNoVcpu() {
         // Ensure that we start this test with no entitlements.
-        consumer.getEntitlements().clear();
+        consumer.setEntitlements(null);
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
         consumer.setFact(CORES_FACT, "8");
@@ -365,7 +365,7 @@ public class QuantityRulesTest {
     @Test
     public void testInstanceBasedOnGuest() {
         // Ensure that we start this test with no entitlements.
-        consumer.getEntitlements().clear();
+        consumer.setEntitlements(null);
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");

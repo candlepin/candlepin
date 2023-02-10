@@ -1565,15 +1565,18 @@ public class HypervisorCheckInSpecTest {
     private HypervisorUpdateResultDTO hypervisorCheckin(OwnerDTO owner, ApiClient consumerClient,
         String hypervisorName, String hypervisorId, List<String> guestIds, Map<String, String> facts,
         String reporterId, boolean createMissing) throws ApiException, IOException {
+
         JsonNode hostGuestMapping = getAsyncHostGuestMapping(hypervisorName, hypervisorId, guestIds, facts);
-        AsyncJobStatusDTO job = consumerClient.hypervisors().hypervisorUpdateAsync(
-            owner.getKey(), createMissing, reporterId, hostGuestMapping.toString());
+        AsyncJobStatusDTO job = consumerClient.hypervisors()
+            .hypervisorUpdateAsync(owner.getKey(), createMissing, reporterId, hostGuestMapping.toString());
+
         HypervisorUpdateResultDTO resultData = null;
         if (job != null) {
             AsyncJobStatusDTO status = client.jobs().waitForJob(job.getId());
             assertEquals("FINISHED", status.getState());
             resultData = getResultData(status);
         }
+
         return resultData;
     }
 

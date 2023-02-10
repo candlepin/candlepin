@@ -1681,7 +1681,9 @@ public class PoolManagerTest {
 
         Consumer guest = TestUtil.createConsumer(owner);
         guest.setFact("virt.is_guest", "true");
-        guest.addInstalledProduct(new ConsumerInstalledProduct(p));
+        guest.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(p.getId())
+            .setProductName(p.getName()));
 
         Pool pool = TestUtil.createPool(owner, p);
         pool.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");

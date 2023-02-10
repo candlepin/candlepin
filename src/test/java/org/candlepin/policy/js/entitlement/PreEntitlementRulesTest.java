@@ -64,8 +64,8 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = createPool(owner, product);
 
         consumer.setFacts(new HashMap<>());
-        consumer.setFact("cpu.cpu_socket(s)", "1");
-        consumer.setFact("cpu.core(s)_per_socket", "10");
+        consumer.setFact(Consumer.Facts.CPU_SOCKETS, "1");
+        consumer.setFact(Consumer.Facts.CPU_CORES_PER_SOCKET, "10");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
 
@@ -81,8 +81,8 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = createPool(owner, product);
 
         consumer.setFacts(new HashMap<>());
-        consumer.setFact("cpu.cpu_socket(s)", "2");
-        consumer.setFact("cpu.core(s)_per_socket", "10");
+        consumer.setFact(Consumer.Facts.CPU_SOCKETS, "2");
+        consumer.setFact(Consumer.Facts.CPU_CORES_PER_SOCKET, "10");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
 
@@ -134,7 +134,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = createPool(owner, product);
 
         consumer.setFacts(new HashMap<>());
-        consumer.setFact("cpu.cpu_socket(s)", "1");
+        consumer.setFact(Consumer.Facts.CPU_SOCKETS, "1");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
 
@@ -150,7 +150,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = createPool(owner, product);
 
         consumer.setFacts(new HashMap<>());
-        consumer.setFact("cpu.cpu_socket(s)", "4");
+        consumer.setFact(Consumer.Facts.CPU_SOCKETS, "4");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
 
@@ -384,7 +384,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void fewerThanMaximumNumberOfSocketsShouldNotGenerateWarning() {
-        Pool pool = setupArchTest("sockets", "128", "cpu.cpu_socket(s)", "2");
+        Pool pool = setupArchTest("sockets", "128", Consumer.Facts.CPU_SOCKETS, "2");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
@@ -393,7 +393,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void matchingNumberOfSocketsShouldNotGenerateWarning() {
-        Pool pool = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "2");
+        Pool pool = setupArchTest("sockets", "2", Consumer.Facts.CPU_SOCKETS, "2");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
@@ -402,8 +402,8 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void matchingNumberOfSocketsShouldNotGenerateWarningBatch() {
-        Pool pool = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "2");
-        Pool pool2 = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "2");
+        Pool pool = setupArchTest("sockets", "2", Consumer.Facts.CPU_SOCKETS, "2");
+        Pool pool2 = setupArchTest("sockets", "2", Consumer.Facts.CPU_SOCKETS, "2");
 
         Map<String, ValidationResult> results = enforcer.preEntitlement(consumer,
             createPoolQuantities(1, pool, pool2), CallerType.UNKNOWN);
@@ -425,7 +425,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void missingConsumerSocketsShouldNotGenerateWarning() {
         // non-system consumers do not have socket counts, no warning
         // should be generated (per IT)
-        Pool pool = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "2");
+        Pool pool = setupArchTest("sockets", "2", Consumer.Facts.CPU_SOCKETS, "2");
 
         // Get rid of the facts that setupTest set.
         consumer.setFacts(new HashMap<>());
@@ -440,7 +440,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         // there was a bug in an IT adapter where a null socket count was being
         // set to zero. As a hotfix, we do not generate a warning when socket
         // count is zero.
-        Pool pool = setupArchTest("sockets", "0", "cpu.cpu_socket(s)", "2");
+        Pool pool = setupArchTest("sockets", "0", Consumer.Facts.CPU_SOCKETS, "2");
 
         // Get rid of the facts that setupTest set.
         consumer.setFacts(new HashMap<>());
@@ -466,7 +466,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
     @Test
     public void exceedingNumberOfSocketsShouldGenerateWarning() {
-        Pool pool = setupArchTest("sockets", "2", "cpu.cpu_socket(s)", "4");
+        Pool pool = setupArchTest("sockets", "2", Consumer.Facts.CPU_SOCKETS, "4");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
@@ -559,13 +559,18 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void virtOnlyPoolGuestHostMatches() {
         ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
-        Consumer parent = new Consumer("test parent consumer", "test user", owner, ctype)
-            .setUuid(Util.generateUUID());
+        Consumer parent = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("test parent consumer")
+            .setUsername("test user")
+            .setOwner(owner)
+            .setType(ctype);
+
         Pool pool = setupHostRestrictedPool(parent);
 
         String guestId = "virtguestuuid";
-        consumer.setFact("virt.is_guest", "true");
-        consumer.setFact("virt.uuid", guestId);
+        consumer.setFact(Consumer.Facts.VIRT_IS_GUEST, "true");
+        consumer.setFact(Consumer.Facts.VIRT_UUID, guestId);
 
         when(consumerCurator.getHost(guestId, owner.getId())).thenReturn(parent);
 
@@ -580,17 +585,26 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
 
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
         // Parent consumer of our guest:
-        Consumer parent = new Consumer("test parent consumer", "test user", owner, ctype)
-            .setUuid(Util.generateUUID());
+        Consumer parent = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("test parent consumer")
+            .setUsername("test user")
+            .setOwner(owner)
+            .setType(ctype);
 
         // Another parent we'll make a virt only pool for:
-        Consumer otherParent = new Consumer("test parent consumer", "test user", owner, ctype)
-            .setUuid(Util.generateUUID());
+        Consumer otherParent = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("test parent consumer")
+            .setUsername("test user")
+            .setOwner(owner)
+            .setType(ctype);
+
         Pool pool = setupHostRestrictedPool(otherParent);
 
         String guestId = "virtguestuuid";
-        consumer.setFact("virt.is_guest", "true");
-        consumer.setFact("virt.uuid", guestId);
+        consumer.setFact(Consumer.Facts.VIRT_IS_GUEST, "true");
+        consumer.setFact(Consumer.Facts.VIRT_UUID, guestId);
 
         when(consumerCurator.getHost(guestId, owner.getId())).thenReturn(parent);
 
@@ -608,13 +622,18 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
 
         // Another parent we'll make a virt only pool for:
-        Consumer otherParent = new Consumer("test parent consumer", "test user", owner, ctype)
-            .setUuid(Util.generateUUID());
+        Consumer otherParent = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("test parent consumer")
+            .setUsername("test user")
+            .setOwner(owner)
+            .setType(ctype);
+
         Pool pool = setupHostRestrictedPool(otherParent);
 
         String guestId = "virtguestuuid";
-        consumer.setFact("virt.is_guest", "true");
-        consumer.setFact("virt.uuid", guestId);
+        consumer.setFact(Consumer.Facts.VIRT_IS_GUEST, "true");
+        consumer.setFact(Consumer.Facts.VIRT_UUID, guestId);
 
         when(consumerCurator.getHost(guestId, owner.getId())).thenReturn(null);
 
@@ -639,7 +658,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void virtOnlyNonHostReqPool() {
         Pool pool = setupVirtOnlyPool();
-        consumer.setFact("virt.is_guest", "true");
+        consumer.setFact(Consumer.Facts.VIRT_IS_GUEST, "true");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertFalse(result.hasErrors());
@@ -658,7 +677,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void physOnlyVirtualConsumer() {
         Pool pool = setupPhysOnlyPool();
-        consumer.setFact("virt.is_guest", "true");
+        consumer.setFact(Consumer.Facts.VIRT_IS_GUEST, "true");
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
         assertTrue(result.hasWarnings());
@@ -672,10 +691,15 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
         Pool pool = setupUnmappedGuestPool();
-        Consumer newborn = new Consumer("test newborn consumer", "test user", owner, ctype)
-            .setUuid(Util.generateUUID());
-        newborn.setFact("virt.is_guest", "true");
-        newborn.setCreated(new Date());
+        Consumer newborn = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("test newborn consumer")
+            .setUsername("test user")
+            .setOwner(owner)
+            .setType(ctype)
+            .setFact(Consumer.Facts.VIRT_IS_GUEST, "true")
+            .setCreated(new Date());
+
         ValidationResult result = enforcer.preEntitlement(newborn, pool, 1);
         assertFalse(result.hasErrors());
         assertFalse(result.hasWarnings());
@@ -686,9 +710,14 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
         Pool pool = setupUnmappedGuestPool();
-        Consumer tooOld = new Consumer("test newborn consumer", "test user", owner, ctype)
-            .setUuid(Util.generateUUID());
-        tooOld.setFact("virt.is_guest", "true");
+        Consumer tooOld = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("test newborn consumer")
+            .setUsername("test user")
+            .setOwner(owner)
+            .setType(ctype)
+            .setFact(Consumer.Facts.VIRT_IS_GUEST, "true");
+
         Date twentyFiveHoursAgo = new Date(new Date().getTime() - 25L * 60L * 60L * 1000L);
         tooOld.setCreated(twentyFiveHoursAgo);
         ValidationResult result = enforcer.preEntitlement(tooOld, pool, 1);
@@ -706,10 +735,15 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = setupUnmappedGuestPool();
         pool.setStartDate(fourHoursFromNow);
 
-        Consumer consumer = new Consumer("test newborn consumer", "test user", owner, ctype)
-            .setUuid(Util.generateUUID());
-        consumer.setFact("virt.is_guest", "true");
-        consumer.setCreated(new Date());
+        Consumer consumer = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("test newborn consumer")
+            .setUsername("test user")
+            .setOwner(owner)
+            .setType(ctype)
+            .setFact(Consumer.Facts.VIRT_IS_GUEST, "true")
+            .setCreated(new Date());
+
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1, CallerType.BIND);
         assertTrue(result.hasErrors());
         assertEquals(1, result.getErrors().size());
@@ -721,16 +755,26 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void mappedGuest() {
         ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
-        Consumer parent = new Consumer("test parent consumer", "test user", owner, ctype)
-            .setUuid(Util.generateUUID());
-        Consumer newborn = new Consumer("test newborn consumer", "test user", owner, ctype)
-            .setUuid(Util.generateUUID());
-        newborn.setCreated(new java.util.Date());
+        Consumer parent = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("test parent consumer")
+            .setUsername("test user")
+            .setOwner(owner)
+            .setType(ctype);
+
+        Consumer newborn = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("test newborn consumer")
+            .setUsername("test user")
+            .setOwner(owner)
+            .setType(ctype)
+            .setCreated(new java.util.Date());
+
         Pool pool = setupUnmappedGuestPool();
 
         String guestId = "virtguestuuid";
-        newborn.setFact("virt.is_guest", "true");
-        newborn.setFact("virt.uuid", guestId);
+        newborn.setFact(Consumer.Facts.VIRT_IS_GUEST, "true");
+        newborn.setFact(Consumer.Facts.VIRT_UUID, guestId);
         when(consumerCurator.getHost(guestId, owner.getId())).thenReturn(parent);
 
         ValidationResult result = enforcer.preEntitlement(newborn, pool, 1);
@@ -838,8 +882,8 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         Pool pool = createPool(owner, product);
 
         consumer.setFacts(new HashMap<>());
-        consumer.setFact("cpu.cpu_socket(s)", "1");
-        consumer.setFact("cpu.core(s)_per_socket", "10");
+        consumer.setFact(Consumer.Facts.CPU_SOCKETS, "1");
+        consumer.setFact(Consumer.Facts.CPU_CORES_PER_SOCKET, "10");
 
         List<Pool> pools = new LinkedList<>();
         pools.add(pool);
@@ -862,8 +906,13 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         // Another consumer we'll make a dev pool for:
         ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
-        Consumer otherConsumer = new Consumer("test consumer", "test user", owner, ctype)
-            .setUuid(Util.generateUUID());
+        Consumer otherConsumer = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("test consumer")
+            .setUsername("test user")
+            .setOwner(owner)
+            .setType(ctype);
+
         Pool pool = setupDevConsumerRestrictedPool(otherConsumer);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);

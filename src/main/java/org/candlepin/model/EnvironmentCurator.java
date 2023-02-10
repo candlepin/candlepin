@@ -39,43 +39,6 @@ public class EnvironmentCurator extends AbstractHibernateCurator<Environment> {
     }
 
     /**
-     * Fetches the environment for the specified consumer. If the consumer does not have a defined
-     * environment ID, this method returns null. If the consumer has an invalid environment ID,
-     * this method throws an exception.
-     *
-     * @param consumer
-     *  The consumer for which to fetch an Environment object
-     *
-     * @throws IllegalArgumentException
-     *  if consumer is null
-     *
-     * @throws IllegalStateException
-     *  if the consumer's defined environment ID is invalid
-     *
-     * @return
-     *  An Environment instance for the specified consumer, or null if the consumer does not have a
-     *  defined environment ID
-     */
-    public Environment getConsumerEnvironment(Consumer consumer) {
-        if (consumer == null) {
-            throw new IllegalArgumentException("consumer is null");
-        }
-
-        Environment environment = null;
-
-        if (consumer.getEnvironmentId() != null) {
-            environment = this.get(consumer.getEnvironmentId());
-
-            if (environment == null) {
-                throw new IllegalStateException(
-                    "consumer is not associated with a valid environment: " + consumer);
-            }
-        }
-
-        return environment;
-    }
-
-    /**
      * Fetches the consumers associated with the specified environment.
      *
      * @param environment

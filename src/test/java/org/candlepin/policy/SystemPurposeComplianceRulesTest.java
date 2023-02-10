@@ -132,7 +132,9 @@ public class SystemPurposeComplianceRulesTest {
         when(this.consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
         for (Product product : installedProducts) {
-            consumer.addInstalledProduct(new ConsumerInstalledProduct(product.getId(), product.getName()));
+            consumer.addInstalledProduct(new ConsumerInstalledProduct()
+                .setProductId(product.getId())
+                .setProductName(product.getName()));
         }
 
         consumer.setFact("cpu.cpu_socket(s)", "8"); // 8 socket machine

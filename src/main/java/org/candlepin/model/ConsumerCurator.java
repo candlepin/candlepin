@@ -569,6 +569,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // TODO: FIXME:
         // We really need to use a DTO here. Hibernate has so many pitfalls with this approach that
         // can and will lead to odd, broken or out-of-order behavior.
+        // What is even happening here and why?
 
         // Validate inbound facts before even attempting to apply the update
         this.validateFacts(updatedConsumer);
@@ -579,23 +580,27 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return this.create(updatedConsumer, flush);
         }
 
-        // TODO: Are any of these read-only?
-        existingConsumer.setEntitlements(entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements()));
+        // If we try to update a consumer to itself, bad things start happening
+        if (existingConsumer != updatedConsumer) {
+            // TODO: Are any of these read-only?
+            existingConsumer.setEntitlements(
+                entitlementCurator.bulkUpdate(updatedConsumer.getEntitlements()));
 
-        // This set of updates is strange. We're ignoring the "null-as-no-change" semantics we use
-        // everywhere else, and just blindly copying everything over.
-        existingConsumer.setFacts(updatedConsumer.getFacts());
-        existingConsumer.setName(updatedConsumer.getName());
-        existingConsumer.setOwner(updatedConsumer.getOwner());
+            // This set of updates is strange. We're ignoring the "null-as-no-change" semantics we use
+            // everywhere else, and just blindly copying everything over.
+            existingConsumer.setFacts(updatedConsumer.getFacts());
+            existingConsumer.setName(updatedConsumer.getName());
+            existingConsumer.setOwner(updatedConsumer.getOwner());
 
-        // Set TypeId only if the existing consumer and update consumer typeId is not equal.
-        // This check has been added for updating Swatch timestamp
-        if (updatedConsumer.getTypeId() != null &&
-            !Util.equals(existingConsumer.getTypeId(), updatedConsumer.getTypeId())) {
-            existingConsumer.setTypeId(updatedConsumer.getTypeId());
+            // Set TypeId only if the existing consumer and update consumer typeId is not equal.
+            // This check has been added for updating Swatch timestamp
+            if (updatedConsumer.getTypeId() != null &&
+                !Util.equals(existingConsumer.getTypeId(), updatedConsumer.getTypeId())) {
+                existingConsumer.setTypeId(updatedConsumer.getTypeId());
+            }
+
+            existingConsumer.setUuid(updatedConsumer.getUuid());
         }
-
-        existingConsumer.setUuid(updatedConsumer.getUuid());
 
         if (flush) {
             save(existingConsumer);

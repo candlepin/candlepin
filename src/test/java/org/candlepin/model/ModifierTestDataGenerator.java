@@ -230,10 +230,13 @@ public class ModifierTestDataGenerator {
     }
 
     private Consumer createConsumer(Owner owner, String name) {
-        ConsumerType type = new ConsumerType("test-consumer-type-" +
-            TestUtil.randomInt());
+        ConsumerType type = new ConsumerType("test-consumer-type-" + TestUtil.randomInt());
         consumerTypeCurator.create(type);
-        Consumer c = new Consumer(name, "test-user", owner, type);
+        Consumer c = new Consumer()
+            .setName(name)
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(c);
         return c;
     }

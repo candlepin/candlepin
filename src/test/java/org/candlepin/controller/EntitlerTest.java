@@ -506,7 +506,9 @@ public class EntitlerTest {
 
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(p.getId())
+            .setProductName(p.getName()));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(true);
 
@@ -522,7 +524,9 @@ public class EntitlerTest {
 
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(p.getId())
+            .setProductName(p.getName()));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
 
@@ -541,7 +545,9 @@ public class EntitlerTest {
 
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(ip));
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(ip.getId())
+            .setProductName(ip.getName()));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
@@ -571,8 +577,12 @@ public class EntitlerTest {
 
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(ip1));
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(ip2));
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(ip1.getId())
+            .setProductName(ip1.getName()));
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(ip2.getId())
+            .setProductName(ip2.getName()));
 
         when(config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
         when(poolCurator.hasActiveEntitlementPools(eq(owner.getId()), nullable(Date.class))).thenReturn(true);
@@ -601,8 +611,12 @@ public class EntitlerTest {
 
         Consumer devSystem = TestUtil.createConsumer(owner);
         devSystem.setFact("dev_sku", p1.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p2));
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p3));
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(p2.getId())
+            .setProductName(p2.getName()));
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(p3.getId())
+            .setProductName(p3.getName()));
 
         doAnswer(iom -> {
             List<ProductData> output = new ArrayList<>();

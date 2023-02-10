@@ -208,9 +208,24 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         ownerCurator.create(owner);
         ownerCurator.create(otherOwner);
 
-        Consumer c1 = new Consumer("name1", "uname1", owner, type);
-        Consumer c2 = new Consumer("name2", "uname2", owner, type);
-        Consumer c3 = new Consumer("name3", "uname3", otherOwner, type);
+        Consumer c1 = new Consumer()
+            .setName("name1")
+            .setUsername("uname1")
+            .setOwner(owner)
+            .setType(type);
+
+        Consumer c2 = new Consumer()
+            .setName("name2")
+            .setUsername("uname2")
+            .setOwner(owner)
+            .setType(type);
+
+        Consumer c3 = new Consumer()
+            .setName("name3")
+            .setUsername("uname3")
+            .setOwner(otherOwner)
+            .setType(type);
+
         consumerCurator.create(c1);
         consumerCurator.create(c2);
         consumerCurator.create(c3);

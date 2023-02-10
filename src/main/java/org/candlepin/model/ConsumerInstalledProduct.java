@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.GenericGenerator;
 
@@ -30,18 +31,12 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * Represents a product installed (not necessarily entitled) on a consumer.
  *
  * Used for compliance checking and healing to find appropriate subscriptions.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = ConsumerInstalledProduct.DB_TABLE)
 public class ConsumerInstalledProduct extends AbstractHibernateObject {
@@ -84,139 +79,118 @@ public class ConsumerInstalledProduct extends AbstractHibernateObject {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
-    @XmlTransient
     private Consumer consumer;
 
     public ConsumerInstalledProduct() {
-    }
-
-    public ConsumerInstalledProduct(String productId, String productName) {
-        this.productId = productId;
-        this.productName = productName;
-    }
-
-    public ConsumerInstalledProduct(String productId, String productName,
-        Consumer consumer) {
-        this.productId = productId;
-        this.productName = productName;
-        this.consumer = consumer;
-    }
-
-    public ConsumerInstalledProduct(String productId, String productName, Consumer consumer,
-        String version, String arch, String status, Date startDate, Date endDate) {
-        this(productId, productName, consumer);
-        this.version = version;
-        this.arch = arch;
-        this.status = status;
-        this.startDate = startDate;
-        this.endDate = endDate;
-    }
-
-    // Helper constructor for tests:
-    public ConsumerInstalledProduct(Product p) {
-        this.productId = p.getId();
-        this.productName = p.getName();
-    }
-
-    public ConsumerInstalledProduct(Consumer c, Product p) {
-        this.productId = p.getId();
-        this.productName = p.getName();
-        this.consumer = c;
+        // intentionally left empty
     }
 
     public String getProductId() {
         return productId;
     }
 
-    public void setProductId(String productId) {
+    public ConsumerInstalledProduct setProductId(String productId) {
         this.productId = productId;
+        return this;
     }
 
     public String getProductName() {
         return productName;
     }
 
-    public void setProductName(String productName) {
+    public ConsumerInstalledProduct setProductName(String productName) {
         this.productName = productName;
+        return this;
     }
 
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public ConsumerInstalledProduct setId(String id) {
         this.id = id;
+        return this;
     }
 
     public String getVersion() {
         return version;
     }
 
-    public void setVersion(String version) {
+    public ConsumerInstalledProduct setVersion(String version) {
         this.version = version;
+        return this;
     }
 
     public String getArch() {
         return arch;
     }
 
-    public void setArch(String arch) {
+    public ConsumerInstalledProduct setArch(String arch) {
         this.arch = arch;
+        return this;
     }
 
     public String getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public ConsumerInstalledProduct setStatus(String status) {
         this.status = status;
+        return this;
     }
 
     public Date getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(Date startDate) {
+    public ConsumerInstalledProduct setStartDate(Date startDate) {
         this.startDate = startDate;
+        return this;
     }
 
     public Date getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(Date endDate) {
+    public ConsumerInstalledProduct setEndDate(Date endDate) {
         this.endDate = endDate;
+        return this;
     }
 
-    @XmlTransient
     public Consumer getConsumer() {
         return consumer;
     }
 
-    public void setConsumer(Consumer consumer) {
+    public ConsumerInstalledProduct setConsumer(Consumer consumer) {
         this.consumer = consumer;
+        return this;
     }
 
     @Override
-    public boolean equals(Object other) {
-        if (!(other instanceof ConsumerInstalledProduct)) {
-            return false;
-        }
-        ConsumerInstalledProduct that = (ConsumerInstalledProduct) other;
-        if (this.getProductId().equals(that.getProductId()) &&
-            this.getProductName().equals(that.getProductName()) &&
-            ((this.getVersion() == null && that.getVersion() == null) ||
-            this.getVersion() != null && this.getVersion().equals(that.getVersion())) &&
-            ((this.getArch() == null && that.getArch() == null) ||
-            this.getArch() != null && this.getArch().equals(that.getArch()))) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
-        return false;
+
+        if (!(obj instanceof ConsumerInstalledProduct)) {
+            return false;
+        }
+
+        ConsumerInstalledProduct that = (ConsumerInstalledProduct) obj;
+
+        return new EqualsBuilder()
+            .append(this.getProductId(), that.getProductId())
+            .append(this.getProductName(), that.getProductName())
+            .append(this.getVersion(), that.getVersion())
+            .append(this.getArch(), that.getArch())
+            .isEquals();
     }
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(7, 23).append(getProductId())
-            .append(getProductName()).toHashCode();
+        return new HashCodeBuilder(7, 23)
+            .append(this.getProductId())
+            .append(this.getProductName())
+            .toHashCode();
     }
 }

@@ -101,7 +101,10 @@ public class SubscriptionResourceTest  {
 
     @Test
     public void activateSubServiceCalled() {
-        Consumer consumer = new Consumer("test_consumer", "alf", null, null);
+        Consumer consumer = new Consumer()
+            .setName("test_consumer")
+            .setUsername("alf");
+
         when(consumerCurator.findByUuid("ae843603bdc73")).thenReturn(consumer);
 
         subResource.activateSubscription("ae843603bdc73", "alf@alfnet.com", "en");
@@ -111,7 +114,10 @@ public class SubscriptionResourceTest  {
 
     @Test
     public void activateCorrectResponseCode() {
-        Consumer consumer = new Consumer("test_consumer", "alf", null, null);
+        Consumer consumer = new Consumer()
+            .setName("test_consumer")
+            .setUsername("alf");
+
         when(consumerCurator.findByUuid("ae843603bdc73")).thenReturn(consumer);
 
         Response result = subResource.activateSubscription("ae843603bdc73", "alf@alfnet.com", "en");

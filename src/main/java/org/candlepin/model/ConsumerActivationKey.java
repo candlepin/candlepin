@@ -58,41 +58,44 @@ public class ConsumerActivationKey extends AbstractHibernateObject<ConsumerActiv
         // Intentionally left empty
     }
 
-    public ConsumerActivationKey(Consumer consumer, String activationKeyId, String activationKeyName) {
-        this.consumer = consumer;
-        this.activationKeyId = activationKeyId;
-        this.activationKeyName = activationKeyName;
+    public ConsumerActivationKey(String activationKeyId, String activationKeyName) {
+        this.setActivationKeyId(activationKeyId)
+            .setActivationKeyName(activationKeyName);
     }
 
     public String getActivationKeyName() {
         return activationKeyName;
     }
 
-    public void setActivationKeyName(String activationKeyName) {
+    public ConsumerActivationKey setActivationKeyName(String activationKeyName) {
         this.activationKeyName = activationKeyName;
+        return this;
     }
 
     public String getActivationKeyId() {
         return activationKeyId;
     }
 
-    public void setActivationKeyId(String activationKeyId) {
+    public ConsumerActivationKey setActivationKeyId(String activationKeyId) {
         this.activationKeyId = activationKeyId;
+        return this;
     }
 
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public ConsumerActivationKey setId(String id) {
         this.id = id;
+        return this;
     }
 
     public Consumer getConsumer() {
         return consumer;
     }
 
-    public void setConsumer(Consumer consumer) {
+    public ConsumerActivationKey setConsumer(Consumer consumer) {
         this.consumer = consumer;
+        return this;
     }
 }

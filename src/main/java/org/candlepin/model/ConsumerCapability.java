@@ -17,6 +17,7 @@ package org.candlepin.model;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -28,9 +29,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+
 
 /**
  * ConsumerCapability
@@ -40,11 +39,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  * upstream from the consumer. Entitlements which include the attribute can only
  * be bound to the consumer if the consumer has the capability.
  */
-@XmlRootElement(name = "consumercapability")
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = ConsumerCapability.DB_TABLE)
-
 public class ConsumerCapability implements Serializable {
 
     /** Name of the table backing this object in the database */
@@ -70,11 +66,11 @@ public class ConsumerCapability implements Serializable {
     private Consumer consumer;
 
     public ConsumerCapability() {
+        // intentionally left empty
     }
 
-    public ConsumerCapability(Consumer consumer, String name) {
-        this.consumer = consumer;
-        this.name = name;
+    public ConsumerCapability(String name) {
+        this.setName(name);
     }
 
     /**
@@ -93,32 +89,42 @@ public class ConsumerCapability implements Serializable {
 
     /**
      * @param name the capability name to set
+     *
+     * @return
+     *  a reference to this ConsumerCapability instance
      */
-    public void setName(String name) {
+    public ConsumerCapability setName(String name) {
         this.name = name;
+        return this;
     }
 
     /**
      * @param consumer the consumer to set
+     *
+     * @return
+     *  a reference to this ConsumerCapability instance
      */
-    public void setConsumer(Consumer consumer) {
+    public ConsumerCapability setConsumer(Consumer consumer) {
         this.consumer = consumer;
+        return this;
     }
 
     @Override
-    public boolean equals(Object anObject) {
-        if (this == anObject) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
-        if (!(anObject instanceof ConsumerCapability)) {
+
+        if (!(obj instanceof ConsumerCapability)) {
             return false;
         }
-        ConsumerCapability another = (ConsumerCapability) anObject;
-        return name.equals(another.getName());
+
+        return Objects.equals(this.getName(), ((ConsumerCapability) obj).getName());
     }
 
     @Override
     public int hashCode() {
-        return name.hashCode();
+        String name = this.getName();
+        return name != null ? name.hashCode() : 0;
     }
 }

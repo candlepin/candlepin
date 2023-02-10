@@ -338,11 +338,19 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         this.systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumerTypeCurator.create(systemType);
 
-        parentSystem = new Consumer("system", "user", o, systemType);
-        parentSystem.getFacts().put("total_guests", "0");
+        parentSystem = new Consumer()
+            .setName("system")
+            .setUsername("user")
+            .setOwner(o)
+            .setType(systemType)
+            .setFact("total_guests", "0");
         consumerCurator.create(parentSystem);
 
-        childVirtSystem = new Consumer("virt system", "user", o, systemType);
+        childVirtSystem = new Consumer()
+            .setName("virt system")
+            .setUsername("user")
+            .setOwner(o)
+            .setType(systemType);
 
         consumerCurator.create(childVirtSystem);
     }
@@ -761,11 +769,23 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
         poolCurator.create(pool2);
 
-        Consumer devSystem = new Consumer("dev", "user", owner, systemType);
-        devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
-        Consumer nonDevSystem = new Consumer("system", "user", owner, systemType);
-        nonDevSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        Consumer devSystem = new Consumer()
+            .setName("dev")
+            .setUsername("user")
+            .setOwner(owner)
+            .setType(systemType)
+            .setFact(Consumer.Facts.DEV_SKU, p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(p.getId())
+            .setProductName(p.getName()));
+        Consumer nonDevSystem = new Consumer()
+            .setName("system")
+            .setUsername("user")
+            .setOwner(owner)
+            .setType(systemType);
+        nonDevSystem.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(p.getId())
+            .setProductName(p.getName()));
 
         Page<List<Pool>> results = poolManager.listAvailableEntitlementPools(devSystem, null,
             owner.getId(), null, null, null, true, new PoolFilterBuilder(), new PageRequest(),
@@ -786,9 +806,15 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Product p = TestUtil.createProduct("test-product", "Test Product");
         productCurator.create(p);
 
-        Consumer devSystem = new Consumer("dev", "user", owner, systemType);
-        devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        Consumer devSystem = new Consumer()
+            .setName("dev")
+            .setUsername("user")
+            .setOwner(owner)
+            .setType(systemType)
+            .setFact(Consumer.Facts.DEV_SKU, p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(p.getId())
+            .setProductName(p.getName()));
         consumerCurator.create(devSystem);
 
         Pool pool1 = createPool(owner, p, 10L,
@@ -820,9 +846,15 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Product p = TestUtil.createProduct("test-product", "Test Product");
         productCurator.create(p);
 
-        Consumer devSystem = new Consumer("dev", "user", owner, systemType);
-        devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        Consumer devSystem = new Consumer()
+            .setName("dev")
+            .setUsername("user")
+            .setOwner(owner)
+            .setType(systemType)
+            .setFact(Consumer.Facts.DEV_SKU, p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(p.getId())
+            .setProductName(p.getName()));
         consumerCurator.create(devSystem);
 
         Pool pool1 = createPool(owner, p, 10L, TestUtil.createDate(2000, 3, 2),
@@ -858,9 +890,15 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         p.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
         productCurator.create(p);
 
-        Consumer devSystem = new Consumer("dev", "user", owner, systemType);
-        devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        Consumer devSystem = new Consumer()
+            .setName("dev")
+            .setUsername("user")
+            .setOwner(owner)
+            .setType(systemType)
+            .setFact(Consumer.Facts.DEV_SKU, p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(p.getId())
+            .setProductName(p.getName()));
         consumerCurator.create(devSystem);
 
         Pool pool1 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),
@@ -913,9 +951,15 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Product p = TestUtil.createProduct("test-product", "Test Product");
         productCurator.create(p);
 
-        Consumer devSystem = new Consumer("dev", "user", owner, systemType);
-        devSystem.setFact("dev_sku", p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct(p));
+        Consumer devSystem = new Consumer()
+            .setName("dev")
+            .setUsername("user")
+            .setOwner(owner)
+            .setType(systemType)
+            .setFact(Consumer.Facts.DEV_SKU, p.getId());
+        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(p.getId())
+            .setProductName(p.getName()));
         consumerCurator.create(devSystem);
 
         Pool pool1 = createPool(owner, p, 1L, TestUtil.createDate(2000, 3, 2),

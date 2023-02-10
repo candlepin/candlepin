@@ -138,8 +138,11 @@ public class HypervisorUpdateAction {
 
     public Consumer reconcileHost(Owner owner, ConsumerDTO incomingHost, HypervisorUpdateResultDTO result,
         boolean create, String principal, String jobReporterId) {
-        String systemUuid = incomingHost.getFacts() == null ? null :
-            incomingHost.getFacts().get(Consumer.Facts.DMI_SYSTEM_UUID);
+
+        String systemUuid = incomingHost.getFacts() != null ?
+            incomingHost.getFacts().get(Consumer.Facts.DMI_SYSTEM_UUID) :
+            null;
+
         String hypervisorId = incomingHost.getHypervisorId().getHypervisorId();
         Consumer resultHost = consumerCurator.getExistingConsumerByHypervisorIdOrUuid(owner.getId(),
             hypervisorId,
@@ -149,6 +152,7 @@ public class HypervisorUpdateAction {
             log.debug("hypervisor checkin reported asynchronously without reporter id " +
                 "for hypervisor:{} of owner:{}", hypervisorId, owner.getKey());
         }
+
         if (resultHost == null) {
             if (!create) {
                 result.setFailedUpdate(addFailed(result.getFailedUpdate(),
@@ -168,6 +172,7 @@ public class HypervisorUpdateAction {
                 if (guestMigration.isMigrationPending()) {
                     guestMigration.migrate(false);
                 }
+
                 try {
                     consumerCurator.create(resultHost);
                     result.setCreated(addHypervisorConsumerDTO(result.getCreated(), resultHost));
@@ -273,8 +278,9 @@ public class HypervisorUpdateAction {
         return hypervisorIdUpdated;
     }
 
-    private void parseHypervisorList(List<ConsumerDTO> hypervisorList, Set<String> hosts,
-        Set<String> guests, Map<String, ConsumerDTO> incomingHosts) {
+    private void parseHypervisorList(List<ConsumerDTO> hypervisorList, Set<String> hosts, Set<String> guests,
+        Map<String, ConsumerDTO> incomingHosts) {
+
         int emptyGuestIdCount = 0;
         int emptyHypervisorIdCount = 0;
 
@@ -303,7 +309,6 @@ public class HypervisorUpdateAction {
             hosts.add(id);
 
             List<GuestIdDTO> guestsIdList = hypervisor.getGuestIds();
-
             if (guestsIdList == null || guestsIdList.isEmpty()) {
                 continue;
             }
@@ -334,6 +339,7 @@ public class HypervisorUpdateAction {
      */
     private Consumer createConsumerForHypervisorId(String incHypervisorId, String reporterId,
         Owner owner, String principal, ConsumerDTO incoming) {
+
         Consumer consumer = new Consumer();
         consumer.ensureUUID();
 
@@ -343,6 +349,7 @@ public class HypervisorUpdateAction {
         else {
             consumer.setName(sanitizeHypervisorId(incHypervisorId));
         }
+
         consumer.setType(hypervisorType);
         consumer.setFact("uname.machine", "x86_64");
         consumer.setGuestIds(new ArrayList<>());

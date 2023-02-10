@@ -90,7 +90,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         field.setAccessible(true);
         field.set(this.consumerCurator, new FactValidator(this.config, this.i18nProvider));
 
-        factConsumer = new Consumer("a consumer", "username", owner, ct);
+        factConsumer = new Consumer()
+            .setName("a consumer")
+            .setUsername("username")
+            .setOwner(owner)
+            .setType(ct);
     }
 
     private List<Consumer> getConsumersDirect() {
@@ -101,7 +105,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void normalCreate() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(consumer);
 
         List<Consumer> results = this.getConsumersDirect();
@@ -121,9 +129,21 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetConsumersThreeConsumers() {
-        Consumer c1 = new Consumer("c1", "u1", owner, ct);
-        Consumer c2 = new Consumer("c2", "u1", owner, ct);
-        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
+        Consumer c3 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(c1);
         consumerCurator.create(c2);
         consumerCurator.create(c3);
@@ -145,11 +165,31 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetConsumersFetchThreeOfFiveConsumers() {
-        Consumer c1 = new Consumer("c1", "u1", owner, ct);
-        Consumer c2 = new Consumer("c2", "u1", owner, ct);
-        Consumer c3 = new Consumer("c3", "u1", owner, ct);
-        Consumer c4 = new Consumer("c4", "u1", owner, ct);
-        Consumer c5 = new Consumer("c5", "u1", owner, ct);
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
+        Consumer c3 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
+        Consumer c4 = new Consumer()
+            .setName("c4")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
+        Consumer c5 = new Consumer()
+            .setName("c5")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(c1);
         consumerCurator.create(c2);
         consumerCurator.create(c3);
@@ -177,9 +217,21 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetConsumersFetchFewerThanRequested() {
-        Consumer c1 = new Consumer("c1", "u1", owner, ct);
-        Consumer c2 = new Consumer("c2", "u1", owner, ct);
-        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
+        Consumer c3 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(c1);
         consumerCurator.create(c2);
         consumerCurator.create(c3);
@@ -201,9 +253,21 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetConsumersNullInput() {
-        Consumer c1 = new Consumer("c1", "u1", owner, ct);
-        Consumer c2 = new Consumer("c2", "u1", owner, ct);
-        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
+        Consumer c3 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(c1);
         consumerCurator.create(c2);
         consumerCurator.create(c3);
@@ -230,11 +294,14 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         // Create a pile of consumers
         for (int i = 0; i < partitionBlockSize * 5; ++i) {
-            Consumer consumer = new Consumer("consumer-" + i, "user-" + i, owner, ct);
-            consumer.setUuid("uuid-" + i);
+            Consumer consumer = new Consumer()
+                .setUuid("uuid-" + i)
+                .setName("consumer-" + i)
+                .setUsername("user-" + i)
+                .setOwner(owner)
+                .setType(ct);
 
             curator.create(consumer);
-
             consumers.put(consumer.getUuid(), consumer);
         }
 
@@ -266,9 +333,21 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetConsumersEmptyInput() {
-        Consumer c1 = new Consumer("c1", "u1", owner, ct);
-        Consumer c2 = new Consumer("c2", "u1", owner, ct);
-        Consumer c3 = new Consumer("c3", "u1", owner, ct);
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
+        Consumer c3 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(c1);
         consumerCurator.create(c2);
         consumerCurator.create(c3);
@@ -286,14 +365,30 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetDistinctSyspurposeRolesByOwnerReturnsAllRoles() {
-        Consumer c1 = new Consumer("c1", "u1", owner, ct);
-        c1.setRole("role1");
-        Consumer c2 = new Consumer("c2", "u1", owner, ct);
-        c2.setRole("role2");
-        Consumer c3 = new Consumer("c3", "u1", owner, ct);
-        c3.setRole("common_role");
-        Consumer c4 = new Consumer("c3", "u1", owner, ct);
-        c3.setRole("common_role");
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setRole("role1");
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setRole("role2");
+        Consumer c3 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setRole("common_role");
+        Consumer c4 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setRole("common_role");
 
         consumerCurator.create(c1);
         consumerCurator.create(c2);
@@ -313,12 +408,24 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetDistinctSyspurposeRolesByOwnerDoesNotReturnNullOrEmpty() {
-        Consumer c1 = new Consumer("c1", "u1", owner, ct);
-        c1.setRole("role1");
-        Consumer c2 = new Consumer("c2", "u1", owner, ct);
-        c2.setRole("");
-        Consumer c3 = new Consumer("c3", "u1", owner, ct);
-        c3.setRole(null);
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setRole("role1");
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setRole("");
+        Consumer c3 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setRole(null);
 
         consumerCurator.create(c1);
         consumerCurator.create(c2);
@@ -337,14 +444,30 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetDistinctSyspurposeUsageByOwnerReturnsAllUsages() {
-        Consumer c1 = new Consumer("c1", "u1", owner, ct);
-        c1.setUsage("usage1");
-        Consumer c2 = new Consumer("c2", "u1", owner, ct);
-        c2.setUsage("usage2");
-        Consumer c3 = new Consumer("c3", "u1", owner, ct);
-        c3.setUsage("common_usage");
-        Consumer c4 = new Consumer("c3", "u1", owner, ct);
-        c3.setUsage("common_usage");
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setUsage("usage1");
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setUsage("usage2");
+        Consumer c3 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setUsage("common_usage");
+        Consumer c4 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setUsage("common_usage");
 
         consumerCurator.create(c1);
         consumerCurator.create(c2);
@@ -364,12 +487,24 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetDistinctSyspurposeUsageByOwnerDoesNotReturnNullOrEmpty() {
-        Consumer c1 = new Consumer("c1", "u1", owner, ct);
-        c1.setUsage("usage1");
-        Consumer c2 = new Consumer("c2", "u1", owner, ct);
-        c2.setUsage("");
-        Consumer c3 = new Consumer("c3", "u1", owner, ct);
-        c3.setUsage(null);
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setUsage("usage1");
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setUsage("");
+        Consumer c3 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setUsage(null);
 
         consumerCurator.create(c1);
         consumerCurator.create(c2);
@@ -388,14 +523,30 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetDistinctSyspurposeServiceLevelByOwnerReturnsAllServiceLevels() {
-        Consumer c1 = new Consumer("c1", "u1", owner, ct);
-        c1.setServiceLevel("sla1");
-        Consumer c2 = new Consumer("c2", "u1", owner, ct);
-        c2.setServiceLevel("sla2");
-        Consumer c3 = new Consumer("c3", "u1", owner, ct);
-        c3.setServiceLevel("common_sla");
-        Consumer c4 = new Consumer("c3", "u1", owner, ct);
-        c3.setServiceLevel("common_sla");
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setServiceLevel("sla1");
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setServiceLevel("sla2");
+        Consumer c3 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setServiceLevel("common_sla");
+        Consumer c4 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setServiceLevel("common_sla");
 
         consumerCurator.create(c1);
         consumerCurator.create(c2);
@@ -415,12 +566,24 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetDistinctSyspurposeServiceLevelByOwnerDoesNotReturnNullOrEmpty() {
-        Consumer c1 = new Consumer("c1", "u1", owner, ct);
-        c1.setServiceLevel("sla1");
-        Consumer c2 = new Consumer("c2", "u1", owner, ct);
-        c2.setServiceLevel("");
-        Consumer c3 = new Consumer("c3", "u1", owner, ct);
-        c3.setServiceLevel(null);
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setServiceLevel("sla1");
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setServiceLevel("");
+        Consumer c3 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setServiceLevel(null);
 
         consumerCurator.create(c1);
         consumerCurator.create(c2);
@@ -439,20 +602,24 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetDistinctSyspurposeAddonsByOwnerReturnsAllAddons() {
-        Consumer c1 = new Consumer("c1", "u1", owner, ct);
-        Set<String> addons = new HashSet<>();
-        addons.add("addon1");
-        c1.setAddOns(addons);
-        Consumer c2 = new Consumer("c2", "u1", owner, ct);
-        Set<String> addons2 = new HashSet<>();
-        addons.add("addon2");
-        addons.add("common_addon");
-        c2.setAddOns(addons2);
-        Consumer c3 = new Consumer("c3", "u1", owner, ct);
-        Set<String> addons3 = new HashSet<>();
-        addons.add("addon3");
-        addons.add("common_addon");
-        c3.setAddOns(addons3);
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setAddOns(Set.of("addon1"));
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setAddOns(Set.of("addon2", "common_addon"));
+        Consumer c3 = new Consumer()
+            .setName("c3")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setAddOns(Set.of("addon3", "common_addon"));
 
         consumerCurator.create(c1);
         consumerCurator.create(c2);
@@ -471,15 +638,18 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetDistinctSyspurposeAddonsByOwnerDoesNotReturnNullOrEmpty() {
-        Consumer c1 = new Consumer("c1", "u1", owner, ct);
-        Set<String> addons = new HashSet<>();
-        addons.add("addon1");
-        c1.setAddOns(addons);
-        Consumer c2 = new Consumer("c2", "u1", owner, ct);
-        Set<String> addons2 = new HashSet<>();
-        addons.add(null);
-        addons.add("");
-        c2.setAddOns(addons2);
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setAddOns(Set.of("addon1"));
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("u1")
+            .setOwner(owner)
+            .setType(ct)
+            .setAddOns(Arrays.asList("", null));
 
         consumerCurator.create(c1);
         consumerCurator.create(c2);
@@ -496,13 +666,25 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void addGuestConsumers() {
-        Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(consumer);
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", "test-guest-1");
+        Consumer gConsumer1 = new Consumer()
+            .setName("guestConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, "test-guest-1");
         consumerCurator.create(gConsumer1);
-        Consumer gConsumer2 = new Consumer("guestConsumer2", "testUser", owner, ct);
-        gConsumer2.getFacts().put("virt.uuid", "test-guest-2");
+        Consumer gConsumer2 = new Consumer()
+            .setName("guestConsumer2")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, "test-guest-2");
         consumerCurator.create(gConsumer2);
         consumer.addGuestId(new GuestId("test-guest-1"));
         consumer.addGuestId(new GuestId("test-guest-2"));
@@ -514,13 +696,25 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void addGuestConsumersReversedEndianGuestId() {
-        Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(consumer);
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", "06F81B41-AAC0-7685-FBE9-79AA4A326511");
+        Consumer gConsumer1 = new Consumer()
+            .setName("guestConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, "06F81B41-AAC0-7685-FBE9-79AA4A326511");
         consumerCurator.create(gConsumer1);
-        Consumer gConsumer2 = new Consumer("guestConsumer2", "testUser", owner, ct);
-        gConsumer2.getFacts().put("virt.uuid", "4C4C4544-0046-4210-8031-C7C04F445831");
+        Consumer gConsumer2 = new Consumer()
+            .setName("guestConsumer2")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, "4C4C4544-0046-4210-8031-C7C04F445831");
         consumerCurator.create(gConsumer2);
         // Reversed endian, first 3 sections
         consumer.addGuestId(new GuestId("411bf806-c0aa-8576-fbe9-79aa4a326511"));
@@ -536,11 +730,19 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void caseInsensitiveVirtUuidMatching() {
-        Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
+        Consumer host = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(host);
 
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        Consumer gConsumer1 = new Consumer()
+            .setName("guestConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
         consumerCurator.create(gConsumer1);
 
         host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
@@ -552,14 +754,22 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void caseInsensitiveVirtUuidMatchingDifferentOwners() {
-        Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
+        Consumer host = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(host);
 
         owner = new Owner("test-owner2", "Test Owner2");
         owner = ownerCurator.create(owner);
 
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        Consumer gConsumer1 = new Consumer()
+            .setName("guestConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
         consumerCurator.create(gConsumer1);
 
         host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
@@ -571,7 +781,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void addGuestsNotConsumers() {
-        Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(consumer);
         consumer.addGuestId(new GuestId("test-guest-1"));
         consumer.addGuestId(new GuestId("test-guest-2"));
@@ -583,19 +797,35 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void getGuestConsumerSharedId() throws Exception {
-        Consumer hConsumer1 = new Consumer("hostConsumer1", "testUser", owner, ct);
+        Consumer hConsumer1 = new Consumer()
+            .setName("hostConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(hConsumer1);
-        Consumer hConsumer2 = new Consumer("hostConsumer2", "testUser", owner, ct);
+        Consumer hConsumer2 = new Consumer()
+            .setName("hostConsumer2")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(hConsumer2);
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", "shared-guest-id");
+        Consumer gConsumer1 = new Consumer()
+            .setName("guestConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, "shared-guest-id");
         consumerCurator.create(gConsumer1);
 
         // This can happen so fast the consumers end up with the same created/updated time
         Thread.sleep(500);
 
-        Consumer gConsumer2 = new Consumer("guestConsumer2", "testUser", owner, ct);
-        gConsumer2.getFacts().put("virt.uuid", "shared-guest-id");
+        Consumer gConsumer2 = new Consumer()
+            .setName("guestConsumer2")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, "shared-guest-id");
         consumerCurator.create(gConsumer2);
 
         GuestId hGuest1 = new GuestId("shared-guest-id");
@@ -629,11 +859,19 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void oneHostRegistered() {
-        Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
+        Consumer host = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(host);
 
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        Consumer gConsumer1 = new Consumer()
+            .setName("guestConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
         consumerCurator.create(gConsumer1);
 
         host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
@@ -645,11 +883,19 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void caseInsensitiveGetHost() {
-        Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
+        Consumer host = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(host);
 
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        Consumer gConsumer1 = new Consumer()
+            .setName("guestConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
         consumerCurator.create(gConsumer1);
 
         host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
@@ -662,11 +908,19 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void oneHostRegisteredReverseEndian() {
-        Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
+        Consumer host = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(host);
 
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        Consumer gConsumer1 = new Consumer()
+            .setName("guestConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
         consumerCurator.create(gConsumer1);
 
         host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
@@ -681,17 +935,29 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void twoHostsRegisteredPickSecond() throws Exception {
         long base = System.currentTimeMillis() - 10000;
 
-        Consumer host1 = new Consumer("hostConsumer", "testUser", owner, ct);
-        host1.setCreated(new Date(base));
+        Consumer host1 = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setCreated(new Date(base));
         consumerCurator.create(host1);
 
-        Consumer host2 = new Consumer("hostConsumer2", "testUser2", owner, ct);
-        host2.setCreated(new Date(base + 1000));
+        Consumer host2 = new Consumer()
+            .setName("hostConsumer2")
+            .setUsername("testUser2")
+            .setOwner(owner)
+            .setType(ct)
+            .setCreated(new Date(base + 1000));
         consumerCurator.create(host2);
 
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.setCreated(new Date(base + 2000));
-        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        Consumer gConsumer1 = new Consumer()
+            .setName("guestConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setCreated(new Date(base + 2000))
+            .setFact(Consumer.Facts.VIRT_UUID, "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
         consumerCurator.create(gConsumer1);
 
         GuestId host1Guest = new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8");
@@ -716,17 +982,29 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void twoHostsRegisteredPickFirst() throws Exception {
         long base = System.currentTimeMillis() - 10000;
 
-        Consumer host1 = new Consumer("hostConsumer", "testUser", owner, ct);
-        host1.setCreated(new Date(base));
+        Consumer host1 = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setCreated(new Date(base));
         consumerCurator.create(host1);
 
-        Consumer host2 = new Consumer("hostConsumer2", "testUser2", owner, ct);
-        host2.setCreated(new Date(base + 1000));
+        Consumer host2 = new Consumer()
+            .setName("hostConsumer2")
+            .setUsername("testUser2")
+            .setOwner(owner)
+            .setType(ct)
+            .setCreated(new Date(base + 1000));
         consumerCurator.create(host2);
 
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.setCreated(new Date(base + 2000));
-        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        Consumer gConsumer1 = new Consumer()
+            .setName("guestConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setCreated(new Date(base + 2000))
+            .setFact(Consumer.Facts.VIRT_UUID, "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
         consumerCurator.create(gConsumer1);
 
         GuestId host2Guest = new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8");
@@ -749,11 +1027,19 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void getHostOnceFromDb() {
         ConsumerCurator spy = Mockito.spy(consumerCurator);
-        Consumer host = new Consumer("hostConsumer", "testUser", owner, ct);
+        Consumer host = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(host);
 
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        Consumer gConsumer1 = new Consumer()
+            .setName("guestConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
         consumerCurator.create(gConsumer1);
 
         host.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
@@ -771,17 +1057,33 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void getCorrectHostFromCache() {
         ConsumerCurator spy = Mockito.spy(consumerCurator);
-        Consumer hostA = new Consumer("hostConsumer", "testUser", owner, ct);
+        Consumer hostA = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(hostA);
-        Consumer hostB = new Consumer("hostConsumer", "testUser", owner, ct);
+        Consumer hostB = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(hostB);
 
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
+        Consumer gConsumer1 = new Consumer()
+            .setName("guestConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, "daf0fe10-956b-7b4e-b7dc-b383ce681ba8");
         consumerCurator.create(gConsumer1);
 
-        Consumer gConsumer2 = new Consumer("guestConsumer2", "testUser", owner, ct);
-        gConsumer2.getFacts().put("virt.uuid", "daf0fe10-956b-7b4e-b7dc-b383ce681ba9");
+        Consumer gConsumer2 = new Consumer()
+            .setName("guestConsumer2")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, "daf0fe10-956b-7b4e-b7dc-b383ce681ba9");
         consumerCurator.create(gConsumer2);
 
         hostA.addGuestId(new GuestId("DAF0FE10-956B-7B4E-B7DC-B383CE681BA8"));
@@ -802,7 +1104,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void noGuestsRegistered() {
-        Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer = consumerCurator.create(consumer);
 
         List<Consumer> guests = consumerCurator.getGuests(consumer);
@@ -811,7 +1117,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void updateCheckinTime() {
-        Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer = consumerCurator.create(consumer);
         Date dt = Util.yesterday();
         consumerCurator.updateLastCheckin(consumer, dt);
@@ -824,7 +1134,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void updateLastCheckIn() throws Exception {
         Date date = new Date();
-        Consumer consumer = new Consumer("hostConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("hostConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer.setLastCheckin(date);
         Thread.sleep(5); // sleep for at 5ms to allow enough time to pass
         consumer = consumerCurator.create(consumer);
@@ -835,7 +1149,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void delete() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer = consumerCurator.create(consumer);
         String cid = consumer.getUuid();
 
@@ -855,7 +1173,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         altOwner = ownerCurator.create(altOwner);
 
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer.setUuid("Doppelganger");
         consumer = consumerCurator.create(consumer);
 
@@ -863,7 +1185,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         DeletedConsumer dc = dcc.findByConsumerUuid("Doppelganger");
         Date deletionDate1 = dc.getUpdated();
 
-        consumer = new Consumer("testConsumer", "testUser", altOwner, ct);
+        consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(altOwner)
+            .setType(ct);
         consumer.setUuid("Doppelganger");
         consumer = consumerCurator.create(consumer);
         consumerCurator.delete(consumer);
@@ -878,7 +1204,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         String principalName = "test_principal_name";
         this.setupAdminPrincipal(principalName);
 
-        Consumer consumer = new Consumer("test_consumer", "test_user", this.owner, this.ct);
+        Consumer consumer = new Consumer()
+            .setName("test_consumer")
+            .setUsername("test_user")
+            .setOwner(this.owner)
+            .setType(this.ct);
         consumer.setUuid("test_consumer_uuid");
         consumer = this.consumerCurator.create(consumer);
 
@@ -954,15 +1284,27 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testFindByUuids() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer.setUuid("1");
         consumer = consumerCurator.create(consumer);
 
-        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
+        Consumer consumer2 = new Consumer()
+            .setName("testConsumer2")
+            .setUsername("testUser2")
+            .setOwner(owner)
+            .setType(ct);
         consumer2.setUuid("2");
         consumer2 = consumerCurator.create(consumer2);
 
-        Consumer consumer3 = new Consumer("testConsumer3", "testUser3", owner, ct);
+        Consumer consumer3 = new Consumer()
+            .setName("testConsumer3")
+            .setUsername("testUser3")
+            .setOwner(owner)
+            .setType(ct);
         consumer3.setUuid("3");
         consumer3 = consumerCurator.create(consumer3);
 
@@ -983,8 +1325,12 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         // Create a pile of consumers
         for (int i = 0; i < partitionBlockSize * 5; ++i) {
-            Consumer consumer = new Consumer("consumer-" + i, "user-" + i, owner, ct);
-            consumer.setUuid("uuid-" + i);
+            Consumer consumer = new Consumer()
+                .setUuid("uuid-" + i)
+                .setName("consumer-" + i)
+                .setUsername("user-" + i)
+                .setOwner(owner)
+                .setType(ct);
 
             curator.create(consumer);
 
@@ -1014,18 +1360,30 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testFindByUuidsAndOwner() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer.setUuid("1");
         consumer = consumerCurator.create(consumer);
 
         Owner owner2 = new Owner("test-owner2", "Test Owner2");
         ownerCurator.create(owner2);
 
-        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner2, ct);
+        Consumer consumer2 = new Consumer()
+            .setName("testConsumer2")
+            .setUsername("testUser2")
+            .setOwner(owner2)
+            .setType(ct);
         consumer2.setUuid("2");
         consumer2 = consumerCurator.create(consumer2);
 
-        Consumer consumer3 = new Consumer("testConsumer3", "testUser3", owner2, ct);
+        Consumer consumer3 = new Consumer()
+            .setName("testConsumer3")
+            .setUsername("testUser3")
+            .setOwner(owner2)
+            .setType(ct);
         consumer3.setUuid("3");
         consumer3 = consumerCurator.create(consumer3);
 
@@ -1047,8 +1405,12 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         // Create a pile of consumers
         for (int i = 0; i < partitionBlockSize * 5; ++i) {
-            Consumer consumer = new Consumer("consumer-" + i, "user-" + i, owner, ct);
-            consumer.setUuid("uuid-" + i);
+            Consumer consumer = new Consumer()
+                .setUuid("uuid-" + i)
+                .setName("consumer-" + i)
+                .setUsername("user-" + i)
+                .setOwner(owner)
+                .setType(ct);
 
             curator.create(consumer);
 
@@ -1080,13 +1442,21 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void getGuestConsumerMap() {
         String guestId1 = "06F81B41-AAC0-7685-FBE9-79AA4A326511";
         String guestId1ReverseEndian = "411bf806-c0aa-8576-fbe9-79aa4a326511";
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", guestId1);
+        Consumer gConsumer1 = new Consumer()
+            .setName("guestConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, guestId1);
         consumerCurator.create(gConsumer1);
 
         String guestId2 = "4C4C4544-0046-4210-8031-C7C04F445831";
-        Consumer gConsumer2 = new Consumer("guestConsumer2", "testUser", owner, ct);
-        gConsumer2.getFacts().put("virt.uuid", guestId2);
+        Consumer gConsumer2 = new Consumer()
+            .setName("guestConsumer2")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, guestId2);
         consumerCurator.create(gConsumer2);
 
         Set<String> guestIds = new HashSet<>();
@@ -1107,13 +1477,21 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void getGuestConsumerMapCaseInsensitive() {
         String guestId1 = "06f81b41-AAC0-7685-FBE9-79AA4A326511";
         String guestId1ReverseEndian = "411bf806-c0aa-8576-fbe9-79aa4a326511";
-        Consumer gConsumer1 = new Consumer("guestConsumer1", "testUser", owner, ct);
-        gConsumer1.getFacts().put("virt.uuid", guestId1);
+        Consumer gConsumer1 = new Consumer()
+            .setName("guestConsumer1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, guestId1);
         consumerCurator.create(gConsumer1);
 
         String guestId2 = "4c4c4544-0046-4210-8031-C7C04F445831";
-        Consumer gConsumer2 = new Consumer("guestConsumer2", "testUser", owner, ct);
-        gConsumer2.getFacts().put("virt.uuid", guestId2);
+        Consumer gConsumer2 = new Consumer()
+            .setName("guestConsumer2")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.VIRT_UUID, guestId2);
         consumerCurator.create(gConsumer2);
 
         Set<String> guestIds = new HashSet<>();
@@ -1132,8 +1510,12 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testDoesConsumerExistNo() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setUuid("1");
+        Consumer consumer = new Consumer()
+            .setUuid("1")
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(consumer);
         boolean result = consumerCurator.doesConsumerExist("unknown");
         assertFalse(result);
@@ -1141,8 +1523,12 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testDoesConsumerExistYes() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setUuid("1");
+        Consumer consumer = new Consumer()
+            .setUuid("1")
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(consumer);
         boolean result = consumerCurator.doesConsumerExist("1");
         assertTrue(result);
@@ -1150,8 +1536,12 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testFindByUuid() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setUuid("1");
+        Consumer consumer = new Consumer()
+            .setUuid("1")
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer = consumerCurator.create(consumer);
 
         Consumer result = consumerCurator.findByUuid("1");
@@ -1166,8 +1556,12 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testVerifyAndLookupConsumer() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setUuid("1");
+        Consumer consumer = new Consumer()
+            .setUuid("1")
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer = consumerCurator.create(consumer);
 
         Consumer result = consumerCurator.verifyAndLookupConsumer("1");
@@ -1189,8 +1583,12 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testExistingConsumerUuidsWhenIdsExists() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setUuid("fooBarPlus");
+        Consumer consumer = new Consumer()
+            .setUuid("fooBarPlus")
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer = consumerCurator.create(consumer);
         List<String> ids = Arrays.asList("fooBarPlus", "testId1", "testId2");
         Set<String> existingIds = consumerCurator.getExistingConsumerUuids(ids);
@@ -1207,7 +1605,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetHypervisor() {
         String hypervisorid = "hypervisor";
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         HypervisorId hypervisorId = new HypervisorId()
             .setOwner(owner)
             .setHypervisorId(hypervisorid);
@@ -1221,7 +1623,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetHypervisorCaseInsensitive() {
         String hypervisorid = "HYpervisor";
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         HypervisorId hypervisorId = new HypervisorId()
             .setOwner(owner)
             .setHypervisorId(hypervisorid);
@@ -1237,7 +1643,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Owner otherOwner = new Owner("test-owner-other", "Test Other Owner");
         otherOwner = ownerCurator.create(otherOwner);
         String hypervisorid = "hypervisor";
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         HypervisorId hypervisorId = new HypervisorId()
             .setOwner(owner)
             .setHypervisorId(hypervisorid);
@@ -1251,7 +1661,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetHypervisorConsumerMap() {
         String hypervisorId1 = "Hypervisor";
-        Consumer consumer1 = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer1 = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         HypervisorId hid1 = new HypervisorId()
             .setOwner(owner)
             .setHypervisorId(hypervisorId1);
@@ -1259,7 +1673,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer1 = consumerCurator.create(consumer1);
 
         String hypervisorId2 = "hyPERvisor2";
-        Consumer consumer2 = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer2 = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         HypervisorId hid2 = new HypervisorId()
             .setOwner(owner)
             .setHypervisorId(hypervisorId2);
@@ -1280,8 +1698,12 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetHypervisorConsumerMapWithFacts() {
         String hypervisorId1 = "Hypervisor";
-        Consumer consumer1 = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer1.setFact(Consumer.Facts.DMI_SYSTEM_UUID, "blah");
+        Consumer consumer1 = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.DMI_SYSTEM_UUID, "blah");
         HypervisorId hid1 = new HypervisorId()
             .setOwner(owner)
             .setHypervisorId(hypervisorId1);
@@ -1299,13 +1721,21 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     public void testGetHypervisorConsumerMapWithFactsAndHypervisorId() {
         // first consumer set with only the fact, not the hypervisor
         String hypervisorId1 = "Hypervisor";
-        Consumer consumer1 = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer1.setFact(Consumer.Facts.DMI_SYSTEM_UUID, "blah");
+        Consumer consumer1 = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setFact(Consumer.Facts.DMI_SYSTEM_UUID, "blah");
         consumer1 = consumerCurator.create(consumer1);
 
         // next consumer set with the hypervisor, not the fact
         String hypervisorId2 = "hypervisor2";
-        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
+        Consumer consumer2 = new Consumer()
+            .setName("testConsumer2")
+            .setUsername("testUser2")
+            .setOwner(owner)
+            .setType(ct);
         HypervisorId hid2 = new HypervisorId()
             .setOwner(owner)
             .setHypervisorId(hypervisorId2);
@@ -1328,7 +1758,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetHypervisorsBulk() {
         String hypervisorid = "hypervisor";
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         HypervisorId hypervisorId = new HypervisorId()
             .setOwner(owner)
             .setHypervisorId(hypervisorid);
@@ -1346,7 +1780,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetHypervisorsBulkCaseInsensitive() {
         String hypervisorid = "hYPervisor";
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         HypervisorId hypervisorId = new HypervisorId()
             .setOwner(owner)
             .setHypervisorId(hypervisorid);
@@ -1365,12 +1803,17 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void testGetHypervisorsBulkEmpty() {
         String hypervisorid = "hypervisor";
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+
         HypervisorId hypervisorId = new HypervisorId()
             .setOwner(owner)
             .setHypervisorId(hypervisorid);
 
-        consumer.setHypervisorId(hypervisorId);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setHypervisorId(hypervisorId);
         consumerCurator.create(consumer);
         List<Consumer> results = consumerCurator
             .getHypervisorsBulk(new LinkedList<>(), owner.getId())
@@ -1385,8 +1828,12 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             .setOwner(owner)
             .setHypervisorId("hypervisor");
 
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        consumer.setHypervisorId(hid);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setHypervisorId(hid);
         consumer = consumerCurator.create(consumer);
 
         Owner otherOwner = ownerCurator.create(new Owner("other owner"));
@@ -1395,11 +1842,19 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             .setOwner(owner)
             .setHypervisorId("hypervisortwo");
 
-        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", otherOwner, ct);
-        consumer2.setHypervisorId(hid2);
+        Consumer consumer2 = new Consumer()
+            .setName("testConsumer2")
+            .setUsername("testUser2")
+            .setOwner(otherOwner)
+            .setType(ct)
+            .setHypervisorId(hid2);
         consumerCurator.create(consumer2);
 
-        Consumer nonHypervisor = new Consumer("testConsumer3", "testUser3", owner, ct);
+        Consumer nonHypervisor = new Consumer()
+            .setName("testConsumer3")
+            .setUsername("testUser3")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(nonHypervisor);
 
         List<Consumer> results = consumerCurator.getHypervisorsForOwner(owner.getId()).list();
@@ -1409,13 +1864,25 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetIdentityCertIdsWithExistingIdentityCerts() {
-        Consumer consumerWithIdCert1 = new Consumer("consumerWithIdCert1", "testUser", owner, ct);
-        consumerWithIdCert1.setIdCert(createIdCert());
+        Consumer consumerWithIdCert1 = new Consumer()
+            .setName("consumerWithIdCert1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setIdCert(createIdCert());
         consumerWithIdCert1 = consumerCurator.create(consumerWithIdCert1);
-        Consumer consumerWithIdCert2 = new Consumer("consumerWithIdCert2", "testUser", owner, ct);
-        consumerWithIdCert2.setIdCert(createIdCert());
+        Consumer consumerWithIdCert2 = new Consumer()
+            .setName("consumerWithIdCert2")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setIdCert(createIdCert());
         consumerWithIdCert2 = consumerCurator.create(consumerWithIdCert2);
-        Consumer consumerWithNoIdCert = new Consumer("consumerWithNoIdCert", "testUser", owner, ct);
+        Consumer consumerWithNoIdCert = new Consumer()
+            .setName("consumerWithNoIdCert")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerWithNoIdCert = consumerCurator.create(consumerWithNoIdCert);
 
         List<String> actual = consumerCurator.getIdentityCertIds(Arrays
@@ -1428,13 +1895,27 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetContentAccessCertIdsWithExistingContentAccessCerts() {
-        Consumer consumerWithCACert1 = new Consumer("consumerWithCACert1", "testUser", owner, ct);
-        consumerWithCACert1.setContentAccessCert(createContentAccessCertificate());
+        Consumer consumerWithCACert1 = new Consumer()
+            .setName("consumerWithCACert1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setContentAccessCert(createContentAccessCertificate());
         consumerWithCACert1 = consumerCurator.create(consumerWithCACert1);
-        Consumer consumerWithCACert2 = new Consumer("consumerWithCACert2", "testUser", owner, ct);
-        consumerWithCACert2.setContentAccessCert(createContentAccessCertificate());
+
+        Consumer consumerWithCACert2 = new Consumer()
+            .setName("consumerWithCACert2")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct)
+            .setContentAccessCert(createContentAccessCertificate());
         consumerWithCACert2 = consumerCurator.create(consumerWithCACert2);
-        Consumer consumerWithNoCACert = new Consumer("consumerWithNoCACert", "testUser", owner, ct);
+
+        Consumer consumerWithNoCACert = new Consumer()
+            .setName("consumerWithNoCACert")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerWithNoCACert = consumerCurator.create(consumerWithNoCACert);
 
         List<String> actual = consumerCurator.getContentAccessCertIds(Arrays
@@ -1494,12 +1975,20 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Instant nonCheckedInRetention = Instant.now()
             .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
 
-        Consumer inactiveConsumer = new Consumer("inactiveConsumer", "testUser", owner, ct);
+        Consumer inactiveConsumer = new Consumer()
+            .setName("inactiveConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         Instant lastCheckedIn = Instant.ofEpochMilli(lastCheckedInRetention.toEpochMilli() - 86400L);
         inactiveConsumer.setLastCheckin(Date.from(lastCheckedIn));
         inactiveConsumer = consumerCurator.create(inactiveConsumer);
 
-        Consumer activeConsumer = new Consumer("activeConsumer", "testUser", owner, ct);
+        Consumer activeConsumer = new Consumer()
+            .setName("activeConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         Instant activeLastCheckedIn = Instant.ofEpochMilli(lastCheckedInRetention.toEpochMilli() + 86400L);
         activeConsumer.setLastCheckin(Date.from(activeLastCheckedIn));
         consumerCurator.create(activeConsumer);
@@ -1518,7 +2007,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         ConsumerType consumerType = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
         consumerType = consumerTypeCurator.create(consumerType);
-        Consumer consumer = new Consumer("consumer", "testUser", owner, consumerType);
+        Consumer consumer = new Consumer()
+            .setName("consumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(consumerType);
 
         Instant lastCheckedIn = Instant.now()
             .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS + 10,
@@ -1538,7 +2031,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Instant nonCheckedInRetention = Instant.now()
             .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS, ChronoUnit.DAYS);
 
-        Consumer consumer = new Consumer("consumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("consumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer = consumerCurator.create(consumer);
 
         Product product = this.createProduct("1", "2", owner);
@@ -1556,7 +2053,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetConsumerIdsWithStartedEnts() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(consumer);
         Product prod = this.createProduct("1", "2", owner);
 
@@ -1573,7 +2074,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetConsumerIdsWithStartedEntsAlreadyDone() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(consumer);
         Product prod = this.createProduct("1", "2", owner);
 
@@ -1590,7 +2095,11 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testConsumerDeleteCascadesToContentTag() {
-        Consumer c = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer c = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         c.setContentTags(new HashSet<>(Arrays.asList("t1", "t2")));
 
         String countQuery = "SELECT COUNT(*) FROM cp_consumer_content_tags";
@@ -1606,8 +2115,16 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void unlinksIdCerts() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
+        Consumer consumer2 = new Consumer()
+            .setName("testConsumer2")
+            .setUsername("testUser2")
+            .setOwner(owner)
+            .setType(ct);
         IdentityCertificate idCert1 = createIdCert();
         IdentityCertificate idCert2 = createIdCert();
         consumer.setIdCert(idCert1);
@@ -1637,8 +2154,16 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void unlinksContentAccessCerts() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
-        Consumer consumer2 = new Consumer("testConsumer2", "testUser2", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
+        Consumer consumer2 = new Consumer()
+            .setName("testConsumer2")
+            .setUsername("testUser2")
+            .setOwner(owner)
+            .setType(ct);
         ContentAccessCertificate caCert1 = createExpiredContentAccessCert(consumer);
         ContentAccessCertificate caCert2 = createExpiredContentAccessCert(consumer2);
         consumer.setContentAccessCert(caCert1);

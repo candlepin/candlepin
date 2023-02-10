@@ -53,10 +53,16 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void listByConsumerTest() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
+
         for (int i = 0; i < 5; i++) {
             consumer.addGuestId(new GuestId("" + i));
         }
+
         consumerCurator.create(consumer);
 
         List<GuestId> result = curator.listByConsumer(consumer).list();
@@ -68,7 +74,11 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void listByConsumerTestEmpty() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumerCurator.create(consumer);
 
         List<GuestId> result = curator.listByConsumer(consumer).list();
@@ -77,7 +87,11 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void findByConsumerAndIdDoesntExist() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer.addGuestId(new GuestId("1"));
         consumerCurator.create(consumer);
 
@@ -87,11 +101,19 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void findByConsumerAndIdOtherConsumer() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer.addGuestId(new GuestId("1"));
         consumerCurator.create(consumer);
 
-        Consumer other = new Consumer("testConsumer2", "testUser2", owner, ct);
+        Consumer other = new Consumer()
+            .setName("testConsumer2")
+            .setUsername("testUser2")
+            .setOwner(owner)
+            .setType(ct);
         other.addGuestId(new GuestId("2"));
         consumerCurator.create(other);
 
@@ -101,7 +123,11 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void findByConsumerAndId() {
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer.addGuestId(new GuestId("1"));
         consumerCurator.create(consumer);
 
@@ -112,7 +138,11 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
     @Test
     public void findByConsumerAndIdCaseInsensitive() {
         String guestId = "GuEsTiD";
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer.addGuestId(new GuestId(guestId));
         consumerCurator.create(consumer);
 
@@ -128,7 +158,11 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
     @Test
     public void findByGuestIdAndOrgCaseInsensitive() {
         String guestId = "GuEsTiD";
-        Consumer consumer = new Consumer("testConsumer", "testUser", owner, ct);
+        Consumer consumer = new Consumer()
+            .setName("testConsumer")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer.addGuestId(new GuestId(guestId));
         consumerCurator.create(consumer);
 
