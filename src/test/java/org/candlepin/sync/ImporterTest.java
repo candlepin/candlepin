@@ -573,7 +573,7 @@ public class ImporterTest {
         Throwable throwable = assertThrows(ImportExtractionException.class,
             () -> importer.loadExport(owner, archive, co, "original_file.zip"));
 
-        String errmsg = "consumer_export archive has no contents";
+        String errmsg = "The provided manifest has no content in the exported consumer archive";
         assertThat(throwable.getMessage(), StringContains.containsString(errmsg));
     }
 

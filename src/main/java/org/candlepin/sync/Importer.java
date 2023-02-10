@@ -415,7 +415,8 @@ public class Importer {
             Map<String, File> importFiles = new HashMap<>();
             File[] listFiles = consumerExportDir.listFiles();
             if (listFiles == null || listFiles.length == 0) {
-                throw new ImportExtractionException(i18n.tr("The consumer_export archive has no contents"));
+                throw new ImportExtractionException(
+                    i18n.tr("The provided manifest has no content in the exported consumer archive"));
             }
             for (File file : listFiles) {
                 importFiles.put(file.getName(), file);
