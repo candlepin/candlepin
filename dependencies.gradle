@@ -25,7 +25,7 @@ ext {
 ext.plugins = [
     "com.adarshr:gradle-test-logger-plugin:3.2.0",
     "com.github.ben-manes:gradle-versions-plugin:0.45.0",
-    "com.netflix.nebula:gradle-lint-plugin:18.0.1",
+    "com.netflix.nebula:gradle-lint-plugin:18.0.3",
     "org.openapitools:openapi-generator-gradle-plugin:6.0.1",
     "org.owasp:dependency-check-gradle:8.0.2",
     "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.5.0.2730",
