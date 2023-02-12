@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-02 02:00-0500\n"
+"POT-Creation-Date: 2023-02-12 02:04-0500\n"
 "PO-Revision-Date: 2017-10-18 11:33-0400\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Malayalam\n"
@@ -265,7 +265,7 @@ msgstr "തെറ്റായ ആധികാരികതകള്‍"
 msgid "Error contacting user service"
 msgstr "ഉപയോക്താവിനുള്ള സര്‍വീസുമായി ബന്ധപ്പെടുന്നതില്‍ പിശക്"
 
-#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:263
+#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:264
 msgid ""
 "cloud provider or account details could not be resolved to an organization"
 msgstr ""
@@ -1728,7 +1728,8 @@ msgid ""
 "Owner has already imported from another subscription management application."
 msgstr "ഉടമസ്ഥന്‍ നിലവില്‍ മറ്റൊരു സബ്സ്ക്രിപ്ഷന്‍ മാനേജ്മെന്റ് പ്രയോഗം ഇംപോര്‍ട്ട് ചെയ്തിരിയ്ക്കുന്നു."
 
-#: src/main/java/org/candlepin/sync/EntitlementImporter.java:197
+#: src/main/java/org/candlepin/sync/EntitlementImporter.java:88
+#: src/main/java/org/candlepin/sync/ProductImporter.java:308
 #, java-format
 msgid "Unable to find product with ID: {0}"
 msgstr ""
@@ -1787,47 +1788,49 @@ msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമുള്ള �
 msgid "Archive failed signature check"
 msgstr "ആര്‍ക്കൈവില്‍ സിഗ്നേച്ചര്‍ പരിശോധന പരാജയപ്പെട്ടു"
 
-#: src/main/java/org/candlepin/sync/Importer.java:418
-msgid "The consumer_export archive has no contents"
-msgstr "consumer_export ആര്‍ക്കൈവില്‍ വിവരങ്ങള്‍ ലഭ്യമല്ല"
+#: src/main/java/org/candlepin/sync/Importer.java:419
+#, fuzzy
+#| msgid "The archive does not contain the required consumer.json file"
+msgid "The provided manifest has no content in the exported consumer archive"
+msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ consumer.json‍ ഫയല്‍ ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:439
+#: src/main/java/org/candlepin/sync/Importer.java:440
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ consumer_export.zip ഫയല്‍ ലഭ്യമല്ല"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author anipeter
-#: src/main/java/org/candlepin/sync/Importer.java:444
-#: src/main/java/org/candlepin/sync/Importer.java:448
+#: src/main/java/org/candlepin/sync/Importer.java:445
+#: src/main/java/org/candlepin/sync/Importer.java:449
 msgid "Failed to import archive"
 msgstr "ആര്‍ക്കൈവ് ഇംപോര്‍ട്ട് ചെയ്യുന്നതില്‍ പരാജയപ്പെട്ടു"
 
-#: src/main/java/org/candlepin/sync/Importer.java:452
-#: src/main/java/org/candlepin/sync/Importer.java:836
+#: src/main/java/org/candlepin/sync/Importer.java:453
+#: src/main/java/org/candlepin/sync/Importer.java:812
 msgid "Unable to extract export archive"
 msgstr "എക്സ്പോര്‍ട്ട് ആര്‍ക്കൈവ് എക്സ്ട്രാക്റ്റ് ചെയ്യുവാന്‍ സാധ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:457
+#: src/main/java/org/candlepin/sync/Importer.java:458
 msgid "Certificate exception checking archive signature"
 msgstr "സര്‍ട്ടിഫിക്കേറ്റ് എക്സപ്ഷന്‍ ആര്‍ക്കൈവ് ഒപ്പ് പരിശോധിയ്ക്കുന്നു"
 
-#: src/main/java/org/candlepin/sync/Importer.java:483
+#: src/main/java/org/candlepin/sync/Importer.java:484
 msgid "The archive does not contain the required meta.json file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ meta.json‍ ഫയല്‍ ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:488
+#: src/main/java/org/candlepin/sync/Importer.java:489
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ consumer_types ഡയറക്ടറി ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:493
+#: src/main/java/org/candlepin/sync/Importer.java:494
 msgid "The archive does not contain the required consumer.json file"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ consumer.json‍ ഫയല്‍ ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:499
+#: src/main/java/org/candlepin/sync/Importer.java:500
 msgid "The archive does not contain the required entitlements directory"
 msgstr "ആര്‍ക്കൈവില്‍ ആവശ്യമായ എന്റൈറ്റില്‍മെന്റുകളുടെ ഡയറക്ടറി ലഭ്യമല്ല"
 
-#: src/main/java/org/candlepin/sync/Importer.java:743
+#: src/main/java/org/candlepin/sync/Importer.java:719
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "ആര്‍ക്കൈവ് {0} ശരിയായി കമ്പ്രസ്സ് ചെയ്ത ഫയലല്ല അല്ലെങ്കില്‍ കാലിയാണു്"
@@ -1977,6 +1980,9 @@ msgstr ""
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
 msgid "must be a valid URL"
 msgstr "ശരിയായ യുആര്‍എല്‍ ആയിരിയ്ക്കണം"
+
+#~ msgid "The consumer_export archive has no contents"
+#~ msgstr "consumer_export ആര്‍ക്കൈവില്‍ വിവരങ്ങള്‍ ലഭ്യമല്ല"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author anipeter

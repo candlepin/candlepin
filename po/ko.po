@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-02 02:00-0500\n"
+"POT-Creation-Date: 2023-02-12 02:04-0500\n"
 "PO-Revision-Date: 2023-02-06 03:20+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
@@ -271,7 +271,7 @@ msgstr "잘못된 인증 정보"
 msgid "Error contacting user service"
 msgstr "사용자 서비스 문의 중 오류 발생"
 
-#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:263
+#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:264
 msgid ""
 "cloud provider or account details could not be resolved to an organization"
 msgstr "조직에 대한 클라우드 공급자 또는 계정 세부 정보를 확인할 수 없습니다"
@@ -1774,7 +1774,8 @@ msgid ""
 msgstr ""
 "소유자가 이미 다른 서브스크립션 관리 응용프로그램에서 가져오기 되었습니다."
 
-#: src/main/java/org/candlepin/sync/EntitlementImporter.java:197
+#: src/main/java/org/candlepin/sync/EntitlementImporter.java:88
+#: src/main/java/org/candlepin/sync/ProductImporter.java:308
 #, java-format
 msgid "Unable to find product with ID: {0}"
 msgstr "다음 ID를 갖는 제품을 찾을 수 없음: {0}"
@@ -1833,47 +1834,49 @@ msgstr "아카이브에 필요한 서명 파일이 들어있지 않습니다"
 msgid "Archive failed signature check"
 msgstr "아카이브가 서명 확인에 실패했습니다"
 
-#: src/main/java/org/candlepin/sync/Importer.java:418
-msgid "The consumer_export archive has no contents"
-msgstr "consumer_export 아카이브에는 컨텐츠가 없습니다"
+#: src/main/java/org/candlepin/sync/Importer.java:419
+#, fuzzy
+#| msgid "The archive does not contain the required consumer.json file"
+msgid "The provided manifest has no content in the exported consumer archive"
+msgstr "아카이브에 필요한 consumer.json 파일이 들어 있지 않습니다"
 
-#: src/main/java/org/candlepin/sync/Importer.java:439
+#: src/main/java/org/candlepin/sync/Importer.java:440
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "아카이브에 필요한 consumer_export.zip 파일이 들어 있지 않습니다"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
-#: src/main/java/org/candlepin/sync/Importer.java:444
-#: src/main/java/org/candlepin/sync/Importer.java:448
+#: src/main/java/org/candlepin/sync/Importer.java:445
+#: src/main/java/org/candlepin/sync/Importer.java:449
 msgid "Failed to import archive"
 msgstr "아카이브 가져오기를 실패했습니다"
 
-#: src/main/java/org/candlepin/sync/Importer.java:452
-#: src/main/java/org/candlepin/sync/Importer.java:836
+#: src/main/java/org/candlepin/sync/Importer.java:453
+#: src/main/java/org/candlepin/sync/Importer.java:812
 msgid "Unable to extract export archive"
 msgstr "내보내기 아카이브를 추출할 수 없습니다"
 
-#: src/main/java/org/candlepin/sync/Importer.java:457
+#: src/main/java/org/candlepin/sync/Importer.java:458
 msgid "Certificate exception checking archive signature"
 msgstr "인증서 예외 검사 아카이브 서명"
 
-#: src/main/java/org/candlepin/sync/Importer.java:483
+#: src/main/java/org/candlepin/sync/Importer.java:484
 msgid "The archive does not contain the required meta.json file"
 msgstr "아카이브에 필요한 meta.json 파일이 들어 있지 않습니다"
 
-#: src/main/java/org/candlepin/sync/Importer.java:488
+#: src/main/java/org/candlepin/sync/Importer.java:489
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "아카이브에 필요한 consumer_types 디렉토리가 들어 있지 않습니다"
 
-#: src/main/java/org/candlepin/sync/Importer.java:493
+#: src/main/java/org/candlepin/sync/Importer.java:494
 msgid "The archive does not contain the required consumer.json file"
 msgstr "아카이브에 필요한 consumer.json 파일이 들어 있지 않습니다"
 
-#: src/main/java/org/candlepin/sync/Importer.java:499
+#: src/main/java/org/candlepin/sync/Importer.java:500
 msgid "The archive does not contain the required entitlements directory"
 msgstr "아카이브에 필요한 인타이틀먼트 디렉토리가 들어 있지 않습니다"
 
-#: src/main/java/org/candlepin/sync/Importer.java:743
+#: src/main/java/org/candlepin/sync/Importer.java:719
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "아카이브 {0}는 제대로 압축된 파일이 아니거나 비어 있습니다"
@@ -2023,6 +2026,9 @@ msgstr "스크립트식 ''{0}''은 true로 평가되지 않았습니다"
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
 msgid "must be a valid URL"
 msgstr "올바른 URL이어야 합니다"
+
+#~ msgid "The consumer_export archive has no contents"
+#~ msgstr "consumer_export 아카이브에는 컨텐츠가 없습니다"
 
 #~ msgid "Host to guest mapping was not provided for hypervisor check-in."
 #~ msgstr ""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-02 02:00-0500\n"
+"POT-Creation-Date: 2023-02-12 02:04-0500\n"
 "PO-Revision-Date: 2017-10-18 11:42-0400\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Punjabi\n"
@@ -266,7 +266,7 @@ msgstr "ਗਲਤ ਕਰੀਡੈਂਸ਼ੀਅਲ"
 msgid "Error contacting user service"
 msgstr "ਉਪਭੋਗੀ ਸੇਵਾ ਨਾਲ ਸੰਪਰਕ ਸਮੇਂ ਗਲਤੀ"
 
-#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:263
+#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:264
 msgid ""
 "cloud provider or account details could not be resolved to an organization"
 msgstr ""
@@ -1727,7 +1727,8 @@ msgid ""
 "Owner has already imported from another subscription management application."
 msgstr "ਮਾਲਕ ਪਹਿਲਾਂ ਹੀ ਇੱਕ ਹੋਰ ਮੈਂਬਰੀ ਪ੍ਰਬੰਧਨ ਐਪਲੀਕੇਸ਼ਨ ਤੋਂ ਆਯਾਤ ਕਰ ਚੁੱਕਾ ਹੈ।"
 
-#: src/main/java/org/candlepin/sync/EntitlementImporter.java:197
+#: src/main/java/org/candlepin/sync/EntitlementImporter.java:88
+#: src/main/java/org/candlepin/sync/ProductImporter.java:308
 #, java-format
 msgid "Unable to find product with ID: {0}"
 msgstr ""
@@ -1786,47 +1787,49 @@ msgstr "ਆਰਕਾਇਵ ਵਿੱਚ ਲੋੜੀਂਦੀ ਦਸਤਖ਼ਤ
 msgid "Archive failed signature check"
 msgstr "ਆਰਕਾਇਵ ਦਸਤਖਤ ਜਾਂਚ ਅਸਫਲ ਹੋਈ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:418
-msgid "The consumer_export archive has no contents"
-msgstr "consumer_export ਆਰਕਾਇਵ ਵਿੱਚ ਕੁਝ ਵੀ ਨਹੀਂ ਹੈ"
+#: src/main/java/org/candlepin/sync/Importer.java:419
+#, fuzzy
+#| msgid "The archive does not contain the required consumer.json file"
+msgid "The provided manifest has no content in the exported consumer archive"
+msgstr "ਆਰਕਾਇਵ ਵਿੱਚ ਲੋੜੀਂਦੀ consumer.json ਫਾਈਲ ਨਹੀਂ ਹੈ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:439
+#: src/main/java/org/candlepin/sync/Importer.java:440
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "ਆਰਕਾਇਵ ਵਿੱਚ ਲੋੜੀਂਦੀ consumer_export.zip ਫਾਈਲ ਨਹੀਂ ਹੈ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy
-#: src/main/java/org/candlepin/sync/Importer.java:444
-#: src/main/java/org/candlepin/sync/Importer.java:448
+#: src/main/java/org/candlepin/sync/Importer.java:445
+#: src/main/java/org/candlepin/sync/Importer.java:449
 msgid "Failed to import archive"
 msgstr "ਆਰਕਾਇਵ ਆਯਾਤ ਕਰਨ ਤੋਂ ਅਸਫਲ ਹੋਇਆ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:452
-#: src/main/java/org/candlepin/sync/Importer.java:836
+#: src/main/java/org/candlepin/sync/Importer.java:453
+#: src/main/java/org/candlepin/sync/Importer.java:812
 msgid "Unable to extract export archive"
 msgstr "ਨਿਰਯਾਤ ਆਰਕਾਇਵ ਖੋਲ੍ਹਣ ਵਿੱਚ ਅਸਮਰਥ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:457
+#: src/main/java/org/candlepin/sync/Importer.java:458
 msgid "Certificate exception checking archive signature"
 msgstr "ਆਰਕਾਇਵ ਦਸਤਖਤ ਜਾਂਚਦਿਆਂ ਪ੍ਰਮਾਣ-ਪੱਤਰ ਖੁੱਲ੍ਹ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:483
+#: src/main/java/org/candlepin/sync/Importer.java:484
 msgid "The archive does not contain the required meta.json file"
 msgstr "ਆਰਕਾਇਵ ਵਿੱਚ ਲੋੜੀਂਦੀ meta.json ਫਾਈਲ ਨਹੀਂ ਹੈ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:488
+#: src/main/java/org/candlepin/sync/Importer.java:489
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "ਆਰਕਾਇਵ ਵਿੱਚ ਲੋੜੀਂਦੀ consumer_types ਡਾਇਰੈਕਟਰੀ ਨਹੀਂ ਹੈ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:493
+#: src/main/java/org/candlepin/sync/Importer.java:494
 msgid "The archive does not contain the required consumer.json file"
 msgstr "ਆਰਕਾਇਵ ਵਿੱਚ ਲੋੜੀਂਦੀ consumer.json ਫਾਈਲ ਨਹੀਂ ਹੈ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:499
+#: src/main/java/org/candlepin/sync/Importer.java:500
 msgid "The archive does not contain the required entitlements directory"
 msgstr "ਆਰਕਾਇਵ ਵਿੱਚ ਲੋੜੀਂਦੀ ਇੰਟਾਈਟਲਮੈਂਟ ਡਾਇਰੈਕਟਰੀ ਨਹੀਂ ਹੈ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:743
+#: src/main/java/org/candlepin/sync/Importer.java:719
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "ਆਰਕਾਇਵ {0} ਇੱਕ ਸਹੀ ਸੰਕੁਚਿਤ ਫਾਈਲ ਨਹੀਂ ਹੈ ਜਾਂ ਖਾਲੀ ਹੈ"
@@ -1975,6 +1978,9 @@ msgstr ""
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
 msgid "must be a valid URL"
 msgstr "ਇੱਕ ਯੋਗ URL ਹੋਣਾ ਲਾਜਮੀ ਹੈ"
+
+#~ msgid "The consumer_export archive has no contents"
+#~ msgstr "consumer_export ਆਰਕਾਇਵ ਵਿੱਚ ਕੁਝ ਵੀ ਨਹੀਂ ਹੈ"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author jassy

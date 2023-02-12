@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-02 02:00-0500\n"
+"POT-Creation-Date: 2023-02-12 02:04-0500\n"
 "PO-Revision-Date: 2023-01-27 18:20+0000\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
@@ -268,7 +268,7 @@ msgstr "无效证书"
 msgid "Error contacting user service"
 msgstr "联系用户服务出错"
 
-#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:263
+#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:264
 msgid ""
 "cloud provider or account details could not be resolved to an organization"
 msgstr "云供应商或账户详情无法解析到一个组织"
@@ -1736,7 +1736,8 @@ msgid ""
 "Owner has already imported from another subscription management application."
 msgstr "所有者已从另一个订阅管理程序中导入。"
 
-#: src/main/java/org/candlepin/sync/EntitlementImporter.java:197
+#: src/main/java/org/candlepin/sync/EntitlementImporter.java:88
+#: src/main/java/org/candlepin/sync/ProductImporter.java:308
 #, java-format
 msgid "Unable to find product with ID: {0}"
 msgstr "无法找到 ID 为 {0} 的产品"
@@ -1795,47 +1796,49 @@ msgstr "该归档不包含所需签名文件"
 msgid "Archive failed signature check"
 msgstr "归档签名检查失败"
 
-#: src/main/java/org/candlepin/sync/Importer.java:418
-msgid "The consumer_export archive has no contents"
-msgstr "用户导出没有内容的归档"
+#: src/main/java/org/candlepin/sync/Importer.java:419
+#, fuzzy
+#| msgid "The archive does not contain the required consumer.json file"
+msgid "The provided manifest has no content in the exported consumer archive"
+msgstr "该归档不包含所需 consumer.json 目录"
 
-#: src/main/java/org/candlepin/sync/Importer.java:439
+#: src/main/java/org/candlepin/sync/Importer.java:440
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "该归档不包含所需 consumer_export.zip 文件"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author leahliu
-#: src/main/java/org/candlepin/sync/Importer.java:444
-#: src/main/java/org/candlepin/sync/Importer.java:448
+#: src/main/java/org/candlepin/sync/Importer.java:445
+#: src/main/java/org/candlepin/sync/Importer.java:449
 msgid "Failed to import archive"
 msgstr "导入归档失败"
 
-#: src/main/java/org/candlepin/sync/Importer.java:452
-#: src/main/java/org/candlepin/sync/Importer.java:836
+#: src/main/java/org/candlepin/sync/Importer.java:453
+#: src/main/java/org/candlepin/sync/Importer.java:812
 msgid "Unable to extract export archive"
 msgstr "无法提起导出的归档"
 
-#: src/main/java/org/candlepin/sync/Importer.java:457
+#: src/main/java/org/candlepin/sync/Importer.java:458
 msgid "Certificate exception checking archive signature"
 msgstr "证书意外检查归档签名"
 
-#: src/main/java/org/candlepin/sync/Importer.java:483
+#: src/main/java/org/candlepin/sync/Importer.java:484
 msgid "The archive does not contain the required meta.json file"
 msgstr "该归档不包含所需 meta.json 文件"
 
-#: src/main/java/org/candlepin/sync/Importer.java:488
+#: src/main/java/org/candlepin/sync/Importer.java:489
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "该归档不包含所需 consumer_types 目录"
 
-#: src/main/java/org/candlepin/sync/Importer.java:493
+#: src/main/java/org/candlepin/sync/Importer.java:494
 msgid "The archive does not contain the required consumer.json file"
 msgstr "该归档不包含所需 consumer.json 目录"
 
-#: src/main/java/org/candlepin/sync/Importer.java:499
+#: src/main/java/org/candlepin/sync/Importer.java:500
 msgid "The archive does not contain the required entitlements directory"
 msgstr "该归档不包含所需授权目录"
 
-#: src/main/java/org/candlepin/sync/Importer.java:743
+#: src/main/java/org/candlepin/sync/Importer.java:719
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "归档 {0} 没有正确压缩或者为空"
@@ -1984,6 +1987,9 @@ msgstr "脚本表达式 \"{0}\" 未评估为 true"
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
 msgid "must be a valid URL"
 msgstr "必须是有效 URL"
+
+#~ msgid "The consumer_export archive has no contents"
+#~ msgstr "用户导出没有内容的归档"
 
 #~ msgid "Host to guest mapping was not provided for hypervisor check-in."
 #~ msgstr "不支持用于 hypervisor 登录的主机与虚拟机映射。"
