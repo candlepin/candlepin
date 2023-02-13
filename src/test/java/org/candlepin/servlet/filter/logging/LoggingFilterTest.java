@@ -43,6 +43,7 @@ import java.util.Enumeration;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
+import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -136,6 +137,20 @@ public class LoggingFilterTest {
             @Override
             public int read() throws IOException {
                 return bais.read();
+            }
+
+            @Override
+            public void setReadListener(ReadListener readListener) {
+            }
+
+            @Override
+            public boolean isReady() {
+                return bais.available() > 0;
+            }
+
+            @Override
+            public boolean isFinished() {
+                return bais.available() < 1;
             }
         });
 

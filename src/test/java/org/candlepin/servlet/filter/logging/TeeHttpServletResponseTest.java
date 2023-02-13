@@ -31,6 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.WriteListener;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 
@@ -47,8 +48,18 @@ public class TeeHttpServletResponseTest {
     public void setUp() throws IOException {
         final StringWriter sw = new StringWriter();
         when(resp.getOutputStream()).thenReturn(new ServletOutputStream() {
+            @Override
             public void write(int b) throws IOException {
                 sw.write(b);
+            }
+
+            @Override
+            public void setWriteListener(WriteListener writeListener) {
+            }
+
+            @Override
+            public boolean isReady() {
+                return true;
             }
         });
     }

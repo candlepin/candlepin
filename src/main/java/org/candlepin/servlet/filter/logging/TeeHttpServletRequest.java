@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import javax.servlet.ReadListener;
 import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
@@ -51,9 +52,34 @@ public class TeeHttpServletRequest extends HttpServletRequestWrapper implements 
     public ServletInputStream getInputStream() throws IOException {
         final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(body);
         ServletInputStream servletInputStream = new ServletInputStream() {
+            ReadListener readListener;
+            boolean finished = false;
             @Override
             public int read() throws IOException {
-                return byteArrayInputStream.read();
+                int output = byteArrayInputStream.read();
+                if (output == -1 && !this.finished) {
+                    this.finished = true;
+                    if (readListener != null) {
+                        // This event probably shouldn't occur more than once
+                        readListener.onAllDataRead();
+                    }
+                }
+                return output;
+            }
+
+            @Override
+            public void setReadListener(ReadListener readListener) {
+                this.readListener = readListener;
+            }
+
+            @Override
+            public boolean isReady() {
+                return byteArrayInputStream.available() > 0;
+            }
+
+            @Override
+            public boolean isFinished() {
+                return this.finished;
             }
         };
         return servletInputStream;
