@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-02 02:00-0500\n"
+"POT-Creation-Date: 2023-02-12 02:04-0500\n"
 "PO-Revision-Date: 2022-11-28 11:19+0000\n"
 "Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
 "Language-Team: Japanese <https://translate.fedoraproject.org/projects/"
@@ -267,7 +267,7 @@ msgstr "無効な識別情報"
 msgid "Error contacting user service"
 msgstr "ユーザーサービスへの連絡でエラー"
 
-#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:263
+#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:264
 msgid ""
 "cloud provider or account details could not be resolved to an organization"
 msgstr "クラウドプロバイダーやアカウントの詳細が組織に解決できませんでした"
@@ -1816,7 +1816,8 @@ msgstr ""
 "所有者はすでに別のサブスクリプション管理アプリケーションからのインポートを"
 "行っています。"
 
-#: src/main/java/org/candlepin/sync/EntitlementImporter.java:197
+#: src/main/java/org/candlepin/sync/EntitlementImporter.java:88
+#: src/main/java/org/candlepin/sync/ProductImporter.java:308
 #, java-format
 msgid "Unable to find product with ID: {0}"
 msgstr "次の ID の製品が見つかりません: {0}"
@@ -1875,47 +1876,49 @@ msgstr "アーカイブには必要な署名ファイルが含まれていませ
 msgid "Archive failed signature check"
 msgstr "アーカイブでの署名チェックに失敗しました"
 
-#: src/main/java/org/candlepin/sync/Importer.java:418
-msgid "The consumer_export archive has no contents"
-msgstr "consumer_export アーカイブにはコンテンツがありません"
+#: src/main/java/org/candlepin/sync/Importer.java:419
+#, fuzzy
+#| msgid "The archive does not contain the required consumer.json file"
+msgid "The provided manifest has no content in the exported consumer archive"
+msgstr "アーカイブに必要な consumer.json ファイルが含まれていません"
 
-#: src/main/java/org/candlepin/sync/Importer.java:439
+#: src/main/java/org/candlepin/sync/Importer.java:440
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "アーカイブには必要な consumer_export.zip ファイルが含まれていません"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author noriko
-#: src/main/java/org/candlepin/sync/Importer.java:444
-#: src/main/java/org/candlepin/sync/Importer.java:448
+#: src/main/java/org/candlepin/sync/Importer.java:445
+#: src/main/java/org/candlepin/sync/Importer.java:449
 msgid "Failed to import archive"
 msgstr "アーカイブのインポートに失敗しました"
 
-#: src/main/java/org/candlepin/sync/Importer.java:452
-#: src/main/java/org/candlepin/sync/Importer.java:836
+#: src/main/java/org/candlepin/sync/Importer.java:453
+#: src/main/java/org/candlepin/sync/Importer.java:812
 msgid "Unable to extract export archive"
 msgstr "エクスポートアーカイブが抽出できません"
 
-#: src/main/java/org/candlepin/sync/Importer.java:457
+#: src/main/java/org/candlepin/sync/Importer.java:458
 msgid "Certificate exception checking archive signature"
 msgstr "証明書例外チェックアーカイブ署名"
 
-#: src/main/java/org/candlepin/sync/Importer.java:483
+#: src/main/java/org/candlepin/sync/Importer.java:484
 msgid "The archive does not contain the required meta.json file"
 msgstr "アーカイブに必要な meta.json ファイルが含まれていません"
 
-#: src/main/java/org/candlepin/sync/Importer.java:488
+#: src/main/java/org/candlepin/sync/Importer.java:489
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "アーカイブに必要な consumer_types ディレクトリーが含まれていません"
 
-#: src/main/java/org/candlepin/sync/Importer.java:493
+#: src/main/java/org/candlepin/sync/Importer.java:494
 msgid "The archive does not contain the required consumer.json file"
 msgstr "アーカイブに必要な consumer.json ファイルが含まれていません"
 
-#: src/main/java/org/candlepin/sync/Importer.java:499
+#: src/main/java/org/candlepin/sync/Importer.java:500
 msgid "The archive does not contain the required entitlements directory"
 msgstr "アーカイブに必要なエンタイトルメントのディレクトリーが含まれていません"
 
-#: src/main/java/org/candlepin/sync/Importer.java:743
+#: src/main/java/org/candlepin/sync/Importer.java:719
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr ""
@@ -2065,6 +2068,9 @@ msgstr "スクリプト式 \"{0}\" は true にはなりませんでした"
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
 msgid "must be a valid URL"
 msgstr "有効な URLにしてください"
+
+#~ msgid "The consumer_export archive has no contents"
+#~ msgstr "consumer_export アーカイブにはコンテンツがありません"
 
 #~ msgid "Host to guest mapping was not provided for hypervisor check-in."
 #~ msgstr ""

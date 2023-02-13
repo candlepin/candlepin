@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-02 02:00-0500\n"
+"POT-Creation-Date: 2023-02-12 02:04-0500\n"
 "PO-Revision-Date: 2023-01-25 19:52+0000\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Bengali (India) <https://translate.fedoraproject.org/projects/"
@@ -267,7 +267,7 @@ msgstr "অবৈধ পরিচয়"
 msgid "Error contacting user service"
 msgstr "ব্যবহারকারী পরিসেবার সাথে সংযোগ করতে সমস্যা"
 
-#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:263
+#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:264
 msgid ""
 "cloud provider or account details could not be resolved to an organization"
 msgstr ""
@@ -1733,7 +1733,8 @@ msgid ""
 msgstr ""
 "মালিক ইতিমধ্যেই অপর সাবস্ক্রিপশন পরিচালনা অ্যাপ্লিকেশন থেকে অামদানি করা হয়েছে।"
 
-#: src/main/java/org/candlepin/sync/EntitlementImporter.java:197
+#: src/main/java/org/candlepin/sync/EntitlementImporter.java:88
+#: src/main/java/org/candlepin/sync/ProductImporter.java:308
 #, java-format
 msgid "Unable to find product with ID: {0}"
 msgstr ""
@@ -1792,47 +1793,49 @@ msgstr "আর্কাইভের মধ্যে প্রয়োজনীয় 
 msgid "Archive failed signature check"
 msgstr "আর্কাইভে স্বাক্ষর যাচাই করা গেল না"
 
-#: src/main/java/org/candlepin/sync/Importer.java:418
-msgid "The consumer_export archive has no contents"
-msgstr "consumer_export আর্কাইভের মধ্যে কোনো তথ্য নেই"
+#: src/main/java/org/candlepin/sync/Importer.java:419
+#, fuzzy
+#| msgid "The archive does not contain the required consumer.json file"
+msgid "The provided manifest has no content in the exported consumer archive"
+msgstr "আর্কাইভের মধ্যে, প্রয়োজনীয় consumer.json ফাইলটি উপস্থিত নেই।"
 
-#: src/main/java/org/candlepin/sync/Importer.java:439
+#: src/main/java/org/candlepin/sync/Importer.java:440
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "আর্কাইভের মধ্যে, প্রয়োজনীয় consumer_export.zip ফাইলটি উপস্থিত নেই।"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
-#: src/main/java/org/candlepin/sync/Importer.java:444
-#: src/main/java/org/candlepin/sync/Importer.java:448
+#: src/main/java/org/candlepin/sync/Importer.java:445
+#: src/main/java/org/candlepin/sync/Importer.java:449
 msgid "Failed to import archive"
 msgstr "আর্কাইভ ইম্পোর্ট করতে ব্যর্থ"
 
-#: src/main/java/org/candlepin/sync/Importer.java:452
-#: src/main/java/org/candlepin/sync/Importer.java:836
+#: src/main/java/org/candlepin/sync/Importer.java:453
+#: src/main/java/org/candlepin/sync/Importer.java:812
 msgid "Unable to extract export archive"
 msgstr "এক্সপোর্ট আর্কাইভ খোলা গেল না"
 
-#: src/main/java/org/candlepin/sync/Importer.java:457
+#: src/main/java/org/candlepin/sync/Importer.java:458
 msgid "Certificate exception checking archive signature"
 msgstr "সার্টিফিকেট ব্যতিক্রমের সংরক্ষণাগারের স্বাক্ষর যাচাই"
 
-#: src/main/java/org/candlepin/sync/Importer.java:483
+#: src/main/java/org/candlepin/sync/Importer.java:484
 msgid "The archive does not contain the required meta.json file"
 msgstr "আর্কাইভের মধ্যে, প্রয়োজনীয় meta.json ফাইলটি উপস্থিত নেই।"
 
-#: src/main/java/org/candlepin/sync/Importer.java:488
+#: src/main/java/org/candlepin/sync/Importer.java:489
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "আর্কাইভের মধ্যে আবশ্যক, consumer_types ডিরেক্টরি উপস্থিত নেই"
 
-#: src/main/java/org/candlepin/sync/Importer.java:493
+#: src/main/java/org/candlepin/sync/Importer.java:494
 msgid "The archive does not contain the required consumer.json file"
 msgstr "আর্কাইভের মধ্যে, প্রয়োজনীয় consumer.json ফাইলটি উপস্থিত নেই।"
 
-#: src/main/java/org/candlepin/sync/Importer.java:499
+#: src/main/java/org/candlepin/sync/Importer.java:500
 msgid "The archive does not contain the required entitlements directory"
 msgstr "আর্কাইভের মধ্যে, প্রয়োজনীয় entitlements ডিরেক্টরি উপস্থিত নেই।"
 
-#: src/main/java/org/candlepin/sync/Importer.java:743
+#: src/main/java/org/candlepin/sync/Importer.java:719
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "{0} আর্কাইভ ফাইলটি সঠিকভাবে কম্প্রেস করা হয়নি অথবা এটি ফাঁকা"
@@ -1982,6 +1985,9 @@ msgstr ""
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
 msgid "must be a valid URL"
 msgstr "অবশ্যই একটি বৈধ URL হতে হবে"
+
+#~ msgid "The consumer_export archive has no contents"
+#~ msgstr "consumer_export আর্কাইভের মধ্যে কোনো তথ্য নেই"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author runab
