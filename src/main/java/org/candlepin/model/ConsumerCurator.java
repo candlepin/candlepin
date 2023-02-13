@@ -986,7 +986,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         Query query = this.currentSession()
             .createSQLQuery(sql)
             .setParameter("ownerId", ownerId)
-            .setParameter("hypervisorId", hypervisorId);
+            .setParameter("hypervisorId", hypervisorId.toLowerCase());
         List<String> consumerIds = query.list();
 
         if (consumerIds != null && consumerIds.size() > 0) {

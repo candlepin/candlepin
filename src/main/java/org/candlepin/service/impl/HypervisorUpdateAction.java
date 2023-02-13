@@ -20,14 +20,16 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.ConsumerDTO;
+import org.candlepin.dto.api.server.v1.GuestIdDTO;
 import org.candlepin.dto.api.server.v1.HypervisorConsumerDTO;
+import org.candlepin.dto.api.server.v1.HypervisorIdDTO;
 import org.candlepin.dto.api.server.v1.HypervisorUpdateResultDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.GuestId;
 import org.candlepin.model.HypervisorId;
 import org.candlepin.model.Owner;
 import org.candlepin.model.VirtConsumerMap;
@@ -90,7 +92,7 @@ public class HypervisorUpdateAction {
 
     public Result update(
         final Owner owner,
-        final List<Consumer> hypervisors,
+        final List<ConsumerDTO> hypervisors,
         final Boolean create,
         final String principal,
         final String jobReporterId) {
@@ -102,14 +104,14 @@ public class HypervisorUpdateAction {
 
         Set<String> hosts = new HashSet<>();
         Set<String> guests = new HashSet<>();
-        Map<String, Consumer> incomingHosts = new HashMap<>();
+        Map<String, ConsumerDTO> incomingHosts = new HashMap<>();
         HypervisorUpdateResultDTO result = new HypervisorUpdateResultDTO();
         parseHypervisorList(hypervisors, hosts, guests, incomingHosts);
         VirtConsumerMap hypervisorConsumersMap = new VirtConsumerMap();
 
         HypervisorUpdateAction act = this;
         Transactional<Consumer> transaction = this.consumerCurator.transactional(args ->
-            act.reconcileHost((Owner) args[0], (Consumer) args[1], (HypervisorUpdateResultDTO) args[2],
+            act.reconcileHost((Owner) args[0], (ConsumerDTO) args[1], (HypervisorUpdateResultDTO) args[2],
             (Boolean) args[3], (String) args[4], (String) args[5]))
             .onCommit(status -> sink.sendEvents())
             .onRollback(status -> sink.rollback());
@@ -134,9 +136,10 @@ public class HypervisorUpdateAction {
         return new Result(result, hypervisorConsumersMap);
     }
 
-    public Consumer reconcileHost(Owner owner, Consumer incomingHost, HypervisorUpdateResultDTO result,
+    public Consumer reconcileHost(Owner owner, ConsumerDTO incomingHost, HypervisorUpdateResultDTO result,
         boolean create, String principal, String jobReporterId) {
-        String systemUuid = incomingHost.getFact(Consumer.Facts.DMI_SYSTEM_UUID);
+        String systemUuid = incomingHost.getFacts() == null ? null :
+            incomingHost.getFacts().get(Consumer.Facts.DMI_SYSTEM_UUID);
         String hypervisorId = incomingHost.getHypervisorId().getHypervisorId();
         Consumer resultHost = consumerCurator.getExistingConsumerByHypervisorIdOrUuid(owner.getId(),
             hypervisorId,
@@ -270,15 +273,15 @@ public class HypervisorUpdateAction {
         return hypervisorIdUpdated;
     }
 
-    private void parseHypervisorList(List<Consumer> hypervisorList, Set<String> hosts,
-        Set<String> guests, Map<String, Consumer> incomingHosts) {
+    private void parseHypervisorList(List<ConsumerDTO> hypervisorList, Set<String> hosts,
+        Set<String> guests, Map<String, ConsumerDTO> incomingHosts) {
         int emptyGuestIdCount = 0;
         int emptyHypervisorIdCount = 0;
 
-        for (Iterator<Consumer> hypervisors = hypervisorList.iterator(); hypervisors.hasNext();) {
-            Consumer hypervisor = hypervisors.next();
+        for (Iterator<ConsumerDTO> hypervisors = hypervisorList.iterator(); hypervisors.hasNext();) {
+            ConsumerDTO hypervisor = hypervisors.next();
 
-            HypervisorId idWrapper = hypervisor.getHypervisorId();
+            HypervisorIdDTO idWrapper = hypervisor.getHypervisorId();
 
             if (idWrapper == null) {
                 continue;
@@ -299,14 +302,14 @@ public class HypervisorUpdateAction {
             incomingHosts.put(id, hypervisor);
             hosts.add(id);
 
-            List<GuestId> guestsIdList = hypervisor.getGuestIds();
+            List<GuestIdDTO> guestsIdList = hypervisor.getGuestIds();
 
             if (guestsIdList == null || guestsIdList.isEmpty()) {
                 continue;
             }
 
-            for (Iterator<GuestId> guestIds = guestsIdList.iterator(); guestIds.hasNext();) {
-                GuestId guestId = guestIds.next();
+            for (Iterator<GuestIdDTO> guestIds = guestsIdList.iterator(); guestIds.hasNext();) {
+                GuestIdDTO guestId = guestIds.next();
                 if (StringUtils.isEmpty(guestId.getGuestId())) {
                     guestIds.remove();
                     emptyGuestIdCount++;
@@ -330,7 +333,7 @@ public class HypervisorUpdateAction {
      * Create a new hypervisor type consumer to represent the incoming hypervisorId
      */
     private Consumer createConsumerForHypervisorId(String incHypervisorId, String reporterId,
-        Owner owner, String principal, Consumer incoming) {
+        Owner owner, String principal, ConsumerDTO incoming) {
         Consumer consumer = new Consumer();
         consumer.ensureUUID();
 

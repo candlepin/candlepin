@@ -248,7 +248,7 @@ public class HypervisorUpdateJobTest {
         HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
             translator, hypervisorUpdateAction, i18n, objectMapper);
         job.execute(ctx);
-        verify(consumerResource).checkForFactsUpdate(any(Consumer.class), any(Consumer.class));
+        verify(consumerResource).checkForFactsUpdate(any(Consumer.class), any(ConsumerDTO.class));
         verify(consumerCurator, times(1)).update(any(Consumer.class));
     }
 
