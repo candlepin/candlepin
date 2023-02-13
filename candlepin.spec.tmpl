@@ -13,7 +13,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.14
+Version: 4.2.15
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -243,6 +243,58 @@ fi
 
 #raw
 %changelog
+* Mon Feb 13 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.15-1
+- Add new translations using Weblate (noreply@weblate.org)
+- i18n: po/keys.pot template is updated (3229038+candlepin-
+  bot@users.noreply.github.com)
+- Bump com.fasterxml.jackson.dataformat:jackson-dataformat-xml
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-jdk8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.hibernate:hibernate-jcache from 5.6.14.Final to 5.6.15.Final
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.module:jackson-module-jsonSchema
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.sevntu-checkstyle:sevntu-checks from 1.42.0 to 1.44.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.0.0 to 5.1.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-hibernate5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.netflix.nebula:gradle-lint-plugin from 18.0.1 to 18.0.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.hibernate:hibernate-c3p0 from 5.6.14.Final to 5.6.15.Final
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.dataformat:jackson-dataformat-yaml
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-jsr310
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.liquibase:liquibase-core from 4.15.0 to 4.19.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.junit.jupiter:junit-jupiter-params from 5.9.0 to 5.9.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.slf4j:slf4j-api from 2.0.0 to 2.0.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.slf4j:jcl-over-slf4j from 2.0.0 to 2.0.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.3 to 10.7.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.core:jackson-databind from 2.14.0 to 2.14.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.hibernate:hibernate-jpamodelgen
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.slf4j:log4j-over-slf4j from 2.0.0 to 2.0.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-464: Update the message for empty consumer export in manifest
+  (wpoteat@redhat.com)
+- Fixed incorrect variable reference in Content.getEntityVersion
+  (crog@redhat.com)
+- test data importers: reduce datetime operations (ptoscano@redhat.com)
+- test data importers: simplify productid addition to repos
+  (ptoscano@redhat.com)
+
 * Thu Feb 09 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.14-1
 - Add new translations using Weblate (noreply@weblate.org)
 - CANDLEPIN-467: Updates to allow Candlepin to run on Java 17
