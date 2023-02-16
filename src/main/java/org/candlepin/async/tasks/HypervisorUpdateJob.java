@@ -24,8 +24,8 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.auth.Principal;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.HypervisorUpdateResultDTO;
-import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -276,13 +276,13 @@ public class HypervisorUpdateJob implements AsyncJob {
      * @author wpoteat
      */
     public static class HypervisorList {
-        private List<Consumer> hypervisors;
+        private List<ConsumerDTO> hypervisors;
 
-        public List<Consumer> getHypervisors() {
+        public List<ConsumerDTO> getHypervisors() {
             return this.hypervisors;
         }
 
-        public void setConsumers(List<Consumer> hypervisors) {
+        public void setConsumers(List<ConsumerDTO> hypervisors) {
             this.hypervisors = hypervisors;
         }
     }
