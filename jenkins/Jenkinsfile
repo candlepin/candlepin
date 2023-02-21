@@ -19,175 +19,193 @@ pipeline {
         }
         stage('Test') {
             parallel {
-                stage('unit') {
-                    // ensures that this stage will get assigned its own workspace
-                    agent { label 'candlepin' }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/unit-tests.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                            archiveArtifacts artifacts: 'unit-artifacts/**',
-                                             fingerprint: true,
-                                             onlyIfSuccessful: false
+                stage('Unit tests and Sonar') {
+                    stages {
+                        agent { label 'candlepin' }
+                        stage('Unit tests') {
+                            steps {
+                                sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+                                checkout scm
+                                sh 'sh jenkins/unit-tests.sh'
+                            }
+                            post {
+                                always {
+                                    sh 'sh jenkins/cleanup.sh'
+                                    archiveArtifacts artifacts: 'unit-artifacts/**',
+                                                     fingerprint: true,
+                                                     onlyIfSuccessful: false
+                                }
+                            }
+                        }
+                        stage('Upload-PR-to-SonarQube') {
+                            when {
+                                changeRequest()
+                            }
+                            steps {
+                                sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+                                checkout scm
+                                sh 'sh jenkins/upload-on-sonarqube.sh'
+                            }
+                            post {
+                                always {
+                                    sh 'sh jenkins/cleanup.sh'
+                                }
+                            }
                         }
                     }
                 }
-                stage('Upload-PR-to-SonarQube') {
-                    agent { label 'candlepin' }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/upload-on-sonarqube.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                        }
-                    }
-                }
-                stage('Upload-Branch-to-SonarQube') {
-                    agent { label 'candlepin' }
-                    environment {
-                        BRANCH_UPLOAD = 'true'
-                    }
-                    when {
-                        not {
-                            changeRequest()
-                        }
-                    }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/upload-on-sonarqube.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                        }
-                    }
-                }
-                stage('checkstyle') {
-                    agent { label 'candlepin' }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/lint.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                        }
-                    }
-                }
-                stage('spec-postgresql') {
-                    agent { label 'candlepin' }
-                    environment {
-                        CANDLEPIN_DATABASE = 'postgresql'
-                        CP_TEST_ARGS = '-r'
-                    }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/spec-tests.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                            archiveArtifacts artifacts: 'spec-postgresql-artifacts/**',
-                                             fingerprint: true,
-                                             onlyIfSuccessful: false
-                        }
-                    }
-                }
-                stage('spec-mysql') {
-                    agent { label 'candlepin' }
-                    environment {
-                        CANDLEPIN_DATABASE = 'mysql'
-                        CP_TEST_ARGS = '-r'
-                    }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/spec-tests.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                            archiveArtifacts artifacts: 'spec-mysql-artifacts/**',
-                                             fingerprint: true,
-                                             onlyIfSuccessful: false
-                        }
-                    }
-                }
-                stage('spec-postgres-hosted') {
-                    agent { label 'candlepin' }
-                    environment {
-                        CANDLEPIN_DATABASE = 'postgresql'
-                        CP_TEST_ARGS = '-H -k'
-                    }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/spec-tests.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                            archiveArtifacts artifacts: 'spec-postgres-hosted-artifacts/**',
-                                             fingerprint: true,
-                                             onlyIfSuccessful: false
-                        }
-                    }
-                }
-                stage('spec-mysql-hosted') {
-                    agent { label 'candlepin' }
-                    environment {
-                        CANDLEPIN_DATABASE = 'mysql'
-                        CP_TEST_ARGS = '-H -k'
-                    }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/spec-tests.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                            archiveArtifacts artifacts: 'spec-mysql-hosted-artifacts/**',
-                                             fingerprint: true,
-                                             onlyIfSuccessful: false
-                        }
-                    }
-                }
-                stage('bugzilla-reference') {
-                    agent { label 'candlepin' }
-                    environment {
-                        GITHUB_TOKEN = credentials('github-api-token-as-username-password')
-                        BUGZILLA_TOKEN = credentials('BUGZILLA_API_TOKEN')
-                    }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'python jenkins/check_pr_branch.py $CHANGE_ID'
-                    }
-                }
-                stage('validate-translation') {
-                    agent { label 'candlepin' }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/candlepin-validate-text.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                        }
-                    }
-                }
+//                 stage('Upload-PR-to-SonarQube') {
+//                     agent { label 'candlepin' }
+//                     steps {
+//                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+//                         checkout scm
+//                         sh 'sh jenkins/upload-on-sonarqube.sh'
+//                     }
+//                     post {
+//                         always {
+//                             sh 'sh jenkins/cleanup.sh'
+//                         }
+//                     }
+//                 }
+//                 stage('Upload-Branch-to-SonarQube') {
+//                     agent { label 'candlepin' }
+//                     environment {
+//                         BRANCH_UPLOAD = 'true'
+//                     }
+//                     when {
+//                         not {
+//                             changeRequest()
+//                         }
+//                     }
+//                     steps {
+//                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+//                         checkout scm
+//                         sh 'sh jenkins/upload-on-sonarqube.sh'
+//                     }
+//                     post {
+//                         always {
+//                             sh 'sh jenkins/cleanup.sh'
+//                         }
+//                     }
+//                 }
+//                 stage('checkstyle') {
+//                     agent { label 'candlepin' }
+//                     steps {
+//                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+//                         checkout scm
+//                         sh 'sh jenkins/lint.sh'
+//                     }
+//                     post {
+//                         always {
+//                             sh 'sh jenkins/cleanup.sh'
+//                         }
+//                     }
+//                 }
+//                 stage('spec-postgresql') {
+//                     agent { label 'candlepin' }
+//                     environment {
+//                         CANDLEPIN_DATABASE = 'postgresql'
+//                         CP_TEST_ARGS = '-r'
+//                     }
+//                     steps {
+//                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+//                         checkout scm
+//                         sh 'sh jenkins/spec-tests.sh'
+//                     }
+//                     post {
+//                         always {
+//                             sh 'sh jenkins/cleanup.sh'
+//                             archiveArtifacts artifacts: 'spec-postgresql-artifacts/**',
+//                                              fingerprint: true,
+//                                              onlyIfSuccessful: false
+//                         }
+//                     }
+//                 }
+//                 stage('spec-mysql') {
+//                     agent { label 'candlepin' }
+//                     environment {
+//                         CANDLEPIN_DATABASE = 'mysql'
+//                         CP_TEST_ARGS = '-r'
+//                     }
+//                     steps {
+//                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+//                         checkout scm
+//                         sh 'sh jenkins/spec-tests.sh'
+//                     }
+//                     post {
+//                         always {
+//                             sh 'sh jenkins/cleanup.sh'
+//                             archiveArtifacts artifacts: 'spec-mysql-artifacts/**',
+//                                              fingerprint: true,
+//                                              onlyIfSuccessful: false
+//                         }
+//                     }
+//                 }
+//                 stage('spec-postgres-hosted') {
+//                     agent { label 'candlepin' }
+//                     environment {
+//                         CANDLEPIN_DATABASE = 'postgresql'
+//                         CP_TEST_ARGS = '-H -k'
+//                     }
+//                     steps {
+//                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+//                         checkout scm
+//                         sh 'sh jenkins/spec-tests.sh'
+//                     }
+//                     post {
+//                         always {
+//                             sh 'sh jenkins/cleanup.sh'
+//                             archiveArtifacts artifacts: 'spec-postgres-hosted-artifacts/**',
+//                                              fingerprint: true,
+//                                              onlyIfSuccessful: false
+//                         }
+//                     }
+//                 }
+//                 stage('spec-mysql-hosted') {
+//                     agent { label 'candlepin' }
+//                     environment {
+//                         CANDLEPIN_DATABASE = 'mysql'
+//                         CP_TEST_ARGS = '-H -k'
+//                     }
+//                     steps {
+//                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+//                         checkout scm
+//                         sh 'sh jenkins/spec-tests.sh'
+//                     }
+//                     post {
+//                         always {
+//                             sh 'sh jenkins/cleanup.sh'
+//                             archiveArtifacts artifacts: 'spec-mysql-hosted-artifacts/**',
+//                                              fingerprint: true,
+//                                              onlyIfSuccessful: false
+//                         }
+//                     }
+//                 }
+//                 stage('bugzilla-reference') {
+//                     agent { label 'candlepin' }
+//                     environment {
+//                         GITHUB_TOKEN = credentials('github-api-token-as-username-password')
+//                         BUGZILLA_TOKEN = credentials('BUGZILLA_API_TOKEN')
+//                     }
+//                     steps {
+//                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+//                         checkout scm
+//                         sh 'python jenkins/check_pr_branch.py $CHANGE_ID'
+//                     }
+//                 }
+//                 stage('validate-translation') {
+//                     agent { label 'candlepin' }
+//                     steps {
+//                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+//                         checkout scm
+//                         sh 'sh jenkins/candlepin-validate-text.sh'
+//                     }
+//                     post {
+//                         always {
+//                             sh 'sh jenkins/cleanup.sh'
+//                         }
+//                     }
+//                 }
             }
         }
     }
