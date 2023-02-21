@@ -151,9 +151,17 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testCreateDeletedConsumersWithExistingConsumers() {
-        Consumer consumer1 = new Consumer("consumer-1", "testUser", owner, ct);
+        Consumer consumer1 = new Consumer()
+            .setName("consumer-1")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer1 = consumerCurator.create(consumer1);
-        Consumer consumer2 = new Consumer("consumer-2", "testUser", owner, ct);
+        Consumer consumer2 = new Consumer()
+            .setName("consumer-2")
+            .setUsername("testUser")
+            .setOwner(owner)
+            .setType(ct);
         consumer2 = consumerCurator.create(consumer2);
 
         int actual = dcc.createDeletedConsumers(Arrays

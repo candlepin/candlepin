@@ -60,8 +60,13 @@ public class EntitleByProductsJobTest {
         ctype.setId("test-ctype");
         owner = new Owner("test-owner");
         owner.setId("test-owner-id");
-        consumer = new Consumer("Test Consumer", "test-consumer", owner, ctype);
-        consumer.setUuid(consumerUuid);
+        consumer = new Consumer()
+            .setUuid(consumerUuid)
+            .setName("Test Consumer")
+            .setUsername("test-consumer")
+            .setOwner(owner)
+            .setType(ctype);
+
         entitler = mock(Entitler.class);
     }
 

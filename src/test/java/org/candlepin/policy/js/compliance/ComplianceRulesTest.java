@@ -160,7 +160,9 @@ public class ComplianceRulesTest {
         when(this.consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
 
         for (Product product : installedProducts) {
-            consumer.addInstalledProduct(new ConsumerInstalledProduct(product.getId(), product.getName()));
+            consumer.addInstalledProduct(new ConsumerInstalledProduct()
+                .setProductId(product.getId())
+                .setProductName(product.getName()));
         }
 
         consumer.setFact("cpu.cpu_socket(s)", "8"); // 8 socket machine
@@ -2048,7 +2050,9 @@ public class ComplianceRulesTest {
 
         verify(consumerCurator).update(eq(c), eq(false));
         String pid = "testinstalledprod";
-        c.addInstalledProduct(new ConsumerInstalledProduct(pid, pid));
+        c.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(pid)
+            .setProductName(pid));
         ComplianceStatus updated = compliance.getStatus(c);
         assertNotEquals(originalStatus.getStatus(), updated.getStatus());
         assertEquals(c.getEntitlementStatus(), updated.getStatus());
@@ -2066,7 +2070,9 @@ public class ComplianceRulesTest {
 
         verify(consumerCurator).update(eq(c), eq(false));
         String pid = "testinstalledprod";
-        c.addInstalledProduct(new ConsumerInstalledProduct(pid, pid));
+        c.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(pid)
+            .setProductName(pid));
         ComplianceStatus updated = compliance.getStatus(c);
         assertNotEquals(originalStatus.getStatus(), updated.getStatus());
 

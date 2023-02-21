@@ -85,28 +85,32 @@ public abstract class ContentOverride<T extends ContentOverride, P extends Abstr
         return id;
     }
 
-    public void setId(String id) {
+    public T setId(String id) {
         this.id = id;
+        return (T) this;
     }
 
-    public void setContentLabel(String contentLabel) {
+    public T setContentLabel(String contentLabel) {
         this.contentLabel = contentLabel;
+        return (T) this;
     }
 
     public String getContentLabel() {
         return contentLabel;
     }
 
-    public void setName(String name) {
+    public T setName(String name) {
         this.name = name != null ? name.toLowerCase() : null;
+        return (T) this;
     }
 
     public String getName() {
         return name;
     }
 
-    public void setValue(String value) {
+    public T setValue(String value) {
         this.value = value;
+        return (T) this;
     }
 
     public String getValue() {

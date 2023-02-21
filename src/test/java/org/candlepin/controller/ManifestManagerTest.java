@@ -114,8 +114,12 @@ public class ManifestManagerTest {
             (new ConsumerType("test-consumer-type-" + TestUtil.randomInt()));
         type.setId("test-ctype-" + TestUtil.randomInt());
 
-        Consumer consumer = new Consumer("TestConsumer" + TestUtil.randomInt(), "User", owner, type)
-            .setUuid(Util.generateUUID());
+        Consumer consumer = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("TestConsumer" + TestUtil.randomInt())
+            .setUsername("User")
+            .setOwner(owner)
+            .setType(type);
 
         when(consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(type);
         when(consumerTypeCurator.get(eq(type.getId()))).thenReturn(type);

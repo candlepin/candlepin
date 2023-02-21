@@ -61,9 +61,17 @@ public class ConsumerCuratorPermissionsTest extends DatabaseTestFixture {
     public void testListForOwnerPermissionFiltering() {
         User u = setupOnlyMyConsumersPrincipal();
 
-        Consumer c1 = new Consumer("c1", u.getUsername(), owner, consumerType);
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername(u.getUsername())
+            .setOwner(owner)
+            .setType(consumerType);
         consumerCurator.create(c1);
-        Consumer c2 = new Consumer("c2", "anotheruser", owner, consumerType);
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("anotheruser")
+            .setOwner(owner)
+            .setType(consumerType);
         consumerCurator.create(c2);
 
         List<Consumer> results = consumerCurator.listByOwner(owner).list();
@@ -75,9 +83,17 @@ public class ConsumerCuratorPermissionsTest extends DatabaseTestFixture {
     public void testListForOwnerEditMineViewAllPermissionFiltering() {
         User u = setupEditMyConsumersViewAllPrincipal();
 
-        Consumer c1 = new Consumer("c1", u.getUsername(), owner, consumerType);
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername(u.getUsername())
+            .setOwner(owner)
+            .setType(consumerType);
         consumerCurator.create(c1);
-        Consumer c2 = new Consumer("c2", "anotheruser", owner, consumerType);
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("anotheruser")
+            .setOwner(owner)
+            .setType(consumerType);
         consumerCurator.create(c2);
 
         List<Consumer> results = consumerCurator.listByOwner(owner).list();
@@ -88,9 +104,17 @@ public class ConsumerCuratorPermissionsTest extends DatabaseTestFixture {
     public void testFindByUuidPermissionFiltering() {
         User u = setupOnlyMyConsumersPrincipal();
 
-        Consumer c1 = new Consumer("c1", u.getUsername(), owner, consumerType);
+        Consumer c1 = new Consumer()
+            .setName("c1")
+            .setUsername(u.getUsername())
+            .setOwner(owner)
+            .setType(consumerType);
         consumerCurator.create(c1);
-        Consumer c2 = new Consumer("c2", "anotheruser", owner, consumerType);
+        Consumer c2 = new Consumer()
+            .setName("c2")
+            .setUsername("anotheruser")
+            .setOwner(owner)
+            .setType(consumerType);
         consumerCurator.create(c2);
 
         assertEquals(c1, consumerCurator.findByUuid(c1.getUuid()));

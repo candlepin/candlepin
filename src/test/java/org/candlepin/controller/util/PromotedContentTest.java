@@ -29,7 +29,6 @@ import org.candlepin.model.EnvironmentContent;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
-import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
 import org.junit.jupiter.api.Test;
@@ -37,7 +36,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.Set;
 import java.util.stream.Stream;
+
+
 
 class PromotedContentTest {
 
@@ -264,12 +266,15 @@ class PromotedContentTest {
         ConsumerType type = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         type.setId("test-id");
 
-        Consumer consumer = new Consumer("Test Consumer", "bob", owner, type);
-        consumer.setUuid("test-consumer-uuid");
-        consumer.setId("test-consumer-id");
-
-        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
-        consumer.setCapabilities(Util.asSet(new ConsumerCapability(consumer, "cert_v3")));
+        Consumer consumer = new Consumer()
+            .setUuid("test-consumer-uuid")
+            .setId("test-consumer-id")
+            .setName("Test Consumer")
+            .setUsername("bob")
+            .setOwner(owner)
+            .setType(type)
+            .setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, X509V3ExtensionUtil.CERT_VERSION)
+            .setCapabilities(Set.of(new ConsumerCapability("cert_v3")));
 
         return consumer;
     }

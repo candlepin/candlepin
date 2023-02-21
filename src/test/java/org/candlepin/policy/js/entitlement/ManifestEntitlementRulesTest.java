@@ -98,9 +98,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void preEntitlementNoCoreCapableBindError() {
         // Test with sockets to make sure that they are skipped.
         Consumer c = this.createMockConsumer(true);
-        c.setFact("cpu.core(s)_per_socket", "2");
-        Set<ConsumerCapability> caps = new HashSet<>();
-        c.setCapabilities(caps);
+        c.setFact(Consumer.Facts.CPU_CORES_PER_SOCKET, "2");
+        c.setCapabilities(null);
 
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.CORES, "2");
@@ -118,9 +117,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void preEntitlementNoCoreCapableListWarn() {
         // Test with sockets to make sure that they are skipped.
         Consumer c = this.createMockConsumer(true);
-        c.setFact("cpu.core(s)_per_socket", "2");
-        Set<ConsumerCapability> caps = new HashSet<>();
-        c.setCapabilities(caps);
+        c.setFact(Consumer.Facts.CPU_CORES_PER_SOCKET, "2");
+        c.setCapabilities(null);
 
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.CORES, "2");
@@ -137,11 +135,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void preEntitlementSuccessCoreCapable() {
         // Test with sockets to make sure that they are skipped.
         Consumer c = this.createMockConsumer(true);
-        c.setFact("cpu.core(s)_per_socket", "2");
-        Set<ConsumerCapability> caps = new HashSet<>();
-        ConsumerCapability cc = new ConsumerCapability(c, "cores");
-        caps.add(cc);
-        c.setCapabilities(caps);
+        c.setFact(Consumer.Facts.CPU_CORES_PER_SOCKET, "2");
+        c.setCapabilities(Set.of(new ConsumerCapability("cores")));
 
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.CORES, "2");
@@ -157,9 +152,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void preEntitlementNoRamCapableBindError() {
         // Test with sockets to make sure that they are skipped.
         Consumer c = this.createMockConsumer(true);
-        c.setFact("memory.memtotal", "2000000");
-        Set<ConsumerCapability> caps = new HashSet<>();
-        c.setCapabilities(caps);
+        c.setFact(Consumer.Facts.MEMORY_MEMTOTAL, "2000000");
+        c.setCapabilities(null);
 
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.RAM, "2");
@@ -177,9 +171,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void preEntitlementNoRamCapableListWarn() {
         // Test with sockets to make sure that they are skipped.
         Consumer c = this.createMockConsumer(true);
-        c.setFact("memory.memtotal", "2000000");
-        Set<ConsumerCapability> caps = new HashSet<>();
-        c.setCapabilities(caps);
+        c.setFact(Consumer.Facts.MEMORY_MEMTOTAL, "2000000");
+        c.setCapabilities(null);
 
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.RAM, "2");
@@ -197,11 +190,8 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void preEntitlementSuccessRamCapable() {
         // Test with sockets to make sure that they are skipped.
         Consumer c = this.createMockConsumer(true);
-        c.setFact("memory.memtotal", "2000000");
-        Set<ConsumerCapability> caps = new HashSet<>();
-        ConsumerCapability cc = new ConsumerCapability(c, "ram");
-        caps.add(cc);
-        c.setCapabilities(caps);
+        c.setFact(Consumer.Facts.MEMORY_MEMTOTAL, "2000000");
+        c.setCapabilities(Set.of(new ConsumerCapability("ram")));
 
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.RAM, "2");
@@ -217,8 +207,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void preEntitlementNoInstanceCapableBindError() {
         // Test with sockets to make sure that they are skipped.
         Consumer c = this.createMockConsumer(true);
-        Set<ConsumerCapability> caps = new HashSet<>();
-        c.setCapabilities(caps);
+        c.setCapabilities(null);
 
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "2");
@@ -236,8 +225,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void preEntitlementNoInstanceCapableListWarn() {
         // Test with sockets to make sure that they are skipped.
         Consumer c = this.createMockConsumer(true);
-        Set<ConsumerCapability> caps = new HashSet<>();
-        c.setCapabilities(caps);
+        c.setCapabilities(null);
 
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "2");
@@ -254,10 +242,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void preEntitlementSuccessInstanceCapable() {
         // Test with sockets to make sure that they are skipped.
         Consumer c = this.createMockConsumer(true);
-        Set<ConsumerCapability> caps = new HashSet<>();
-        ConsumerCapability cc = new ConsumerCapability(c, "instance_multiplier");
-        caps.add(cc);
-        c.setCapabilities(caps);
+        c.setCapabilities(Set.of(new ConsumerCapability("instance_multiplier")));
 
         Product prod = TestUtil.createProduct();
         prod.setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "2");
@@ -419,9 +404,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void preEntitlementWithDerivedProductCapabilitySuccessOnBind() {
         Consumer c = this.createMockConsumer(true);
-        HashSet<ConsumerCapability> capabilities = new HashSet<>();
-        capabilities.add(new ConsumerCapability(c, "derived_product"));
-        c.setCapabilities(capabilities);
+        c.setCapabilities(Set.of(new ConsumerCapability("derived_product")));
 
         Product prod = TestUtil.createProduct();
         Product derived = TestUtil.createProduct("sub-prod-id");
@@ -437,9 +420,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
     @Test
     public void preEntitlementWithDerivedProductCapabilitySuccessOnBestPools() {
         Consumer c = this.createMockConsumer(true);
-        HashSet<ConsumerCapability> capabilities = new HashSet<>();
-        capabilities.add(new ConsumerCapability(c, "derived_product"));
-        c.setCapabilities(capabilities);
+        c.setCapabilities(Set.of(new ConsumerCapability("derived_product")));
 
         Product prod = TestUtil.createProduct();
         Product derived = TestUtil.createProduct("sub-prod-id");

@@ -92,7 +92,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     @Test
     public void testOwnerInfoOneSystemNoEntitlements() {
         ConsumerType type = consumerTypeCurator.getByLabel("system");
-        Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
+        Consumer consumer = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(consumer);
 
         OwnerInfo info = ownerInfoCurator.getByOwner(owner);
@@ -119,7 +123,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     @Test
     public void testOwnerInfoOneSystemEntitlement() {
         ConsumerType type = consumerTypeCurator.getByLabel("system");
-        Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
+        Consumer consumer = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(consumer);
 
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
@@ -151,7 +159,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     @Test
     public void testOwnerInfoOneSystemEntitlementWithQuantityOfTwo() {
         ConsumerType type = consumerTypeCurator.getByLabel("system");
-        Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
+        Consumer consumer = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(consumer);
 
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
@@ -183,7 +195,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     @Test
     public void testOwnerInfoOneOfEachEntitlement() {
         ConsumerType type = consumerTypeCurator.getByLabel("system");
-        Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
+        Consumer consumer = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(consumer);
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
         Entitlement entitlement = createEntitlement(owner, consumer, pool1, cert);
@@ -191,7 +207,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(entitlement);
 
         type = consumerTypeCurator.getByLabel("domain");
-        consumer = new Consumer("test-consumer", "test-user", owner, type);
+        consumer = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(consumer);
 
         cert = createEntitlementCertificate("fake", "fake");
@@ -480,7 +500,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         owner.addEntitlementPool(pool1);
 
         ConsumerType type = consumerTypeCurator.getByLabel("system");
-        Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
+        Consumer consumer = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(consumer);
 
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
@@ -508,7 +532,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         pool1.setProduct(product);
 
         ConsumerType type = consumerTypeCurator.getByLabel("system");
-        Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
+        Consumer consumer = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(consumer);
 
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
@@ -535,7 +563,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         pool1.setProduct(product);
 
         ConsumerType type = consumerTypeCurator.getByLabel("system");
-        Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
+        Consumer consumer = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(consumer);
 
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
@@ -563,7 +595,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         pool1.setProduct(product);
 
         ConsumerType type = consumerTypeCurator.getByLabel("system");
-        Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
+        Consumer consumer = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(consumer);
 
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
@@ -592,7 +628,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         pool1.setProduct(product);
 
         ConsumerType type = consumerTypeCurator.getByLabel("system");
-        Consumer consumer = new Consumer("test-consumer", "test-user", owner, type);
+        Consumer consumer = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(consumer);
 
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
@@ -612,20 +652,36 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
     @Test
     public void testConsumerGuestCount() {
         ConsumerType type = consumerTypeCurator.getByLabel("system");
-        Consumer guest1 = new Consumer("test-consumer", "test-user", owner, type);
-        guest1.setFact("virt.is_guest", "true");
+        Consumer guest1 = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type)
+            .setFact(Consumer.Facts.VIRT_IS_GUEST, "true");
         consumerCurator.create(guest1);
 
-        Consumer guest2 = new Consumer("test-consumer", "test-user", owner, type);
-        guest2.setFact("virt.is_guest", "true");
+        Consumer guest2 = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type)
+            .setFact(Consumer.Facts.VIRT_IS_GUEST, "true");
         consumerCurator.create(guest2);
 
-        Consumer physical1 = new Consumer("test-consumer", "test-user", owner, type);
-        physical1.setFact("virt.is_guest", "false");
+        Consumer physical1 = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type)
+            .setFact(Consumer.Facts.VIRT_IS_GUEST, "false");
         consumerCurator.create(physical1);
 
         // Second physical machine with no is_guest fact set.
-        Consumer physical2 = new Consumer("test-consumer2", "test-user", owner, type);
+        Consumer physical2 = new Consumer()
+            .setName("test-consumer2")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(physical2);
 
         OwnerInfo info = ownerInfoCurator.getByOwner(owner);
@@ -666,22 +722,26 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         User mySystemsUser = setupOnlyMyConsumersPrincipal();
 
         ConsumerType type = consumerTypeCurator.getByLabel("system");
-        Consumer consumer = new Consumer("my-system-1", mySystemsUser.getUsername(),
-            owner, type);
+        Consumer consumer = new Consumer()
+            .setName("my-system-1")
+            .setUsername(mySystemsUser.getUsername())
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(consumer);
 
-        consumer = new Consumer("not-my-system", "another-user", owner, type);
+        consumer = new Consumer()
+            .setName("not-my-system")
+            .setUsername("another-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(consumer);
 
         OwnerInfo info = ownerInfoCurator.getByOwner(owner);
 
-        Map<String, Integer> expectedConsumers = new HashMap<String, Integer>() {
-            {
-                put("system", 1);
-                put("domain", 0);
-                put("uebercert", 0);
-            }
-        };
+        Map<String, Integer> expectedConsumers = Map.of(
+            "system", 1,
+            "domain", 0,
+            "uebercert", 0);
 
         assertEquals(expectedConsumers, info.getConsumerCounts());
     }
@@ -691,8 +751,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         User mySystemsUser = setupOnlyMyConsumersPrincipal();
 
         ConsumerType type = consumerTypeCurator.getByLabel("system");
-        Consumer consumer = new Consumer("my-system-1", mySystemsUser.getUsername(),
-            owner, type);
+        Consumer consumer = new Consumer()
+            .setName("my-system-1")
+            .setUsername(mySystemsUser.getUsername())
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(consumer);
 
         EntitlementCertificate myConsumersCert = createEntitlementCertificate("mine",
@@ -703,7 +766,11 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(myConsumerEntitlement);
         consumerCurator.merge(consumer);
 
-        consumer = new Consumer("not-my-system", "another-user", owner, type);
+        consumer = new Consumer()
+            .setName("not-my-system")
+            .setUsername("another-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(consumer);
 
         EntitlementCertificate otherCert = createEntitlementCertificate("other", "other");
@@ -736,22 +803,39 @@ public class OwnerInfoCuratorTest extends DatabaseTestFixture {
 
     private void setupConsumerCountTest(String username) {
         ConsumerType systemType = consumerTypeCurator.getByLabel("system");
-        Consumer consumer1 = new Consumer("test-consumer1", username, owner, systemType);
-        consumer1.setEntitlementStatus(ComplianceStatus.GREEN);
+
+        Consumer consumer1 = new Consumer()
+            .setName("test-consumer1")
+            .setUsername(username)
+            .setOwner(owner)
+            .setType(systemType)
+            .setEntitlementStatus(ComplianceStatus.GREEN);
+
+        Consumer consumer2 = new Consumer()
+            .setName("test-consumer2")
+            .setUsername(username)
+            .setOwner(owner)
+            .setType(systemType)
+            .setEntitlementStatus(ComplianceStatus.RED);
+
+        Consumer consumer3 = new Consumer()
+            .setName("test-consumer3")
+            .setUsername(username)
+            .setOwner(owner)
+            .setType(systemType)
+            .setEntitlementStatus(ComplianceStatus.GREEN);
+
+        Consumer consumer4 = new Consumer()
+            .setName("test-consumer3")
+            .setUsername(username)
+            .setOwner(owner)
+            .setType(systemType)
+            .setEntitlementStatus(ComplianceStatus.YELLOW);
+
         consumerCurator.create(consumer1);
-
-        Consumer consumer2 = new Consumer("test-consumer2", username, owner, systemType);
-        consumer2.setEntitlementStatus(ComplianceStatus.RED);
         consumerCurator.create(consumer2);
-
-        Consumer consumer3 = new Consumer("test-consumer3", username, owner, systemType);
-        consumer3.setEntitlementStatus(ComplianceStatus.GREEN);
         consumerCurator.create(consumer3);
-
-        Consumer consumer4 = new Consumer("test-consumer3", username, owner, systemType);
-        consumer4.setEntitlementStatus(ComplianceStatus.YELLOW);
         consumerCurator.create(consumer4);
-
     }
 
     private void assertConsumerCountsByEntitlementStatus(OwnerInfo info) {

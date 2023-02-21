@@ -128,7 +128,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     protected Consumer createMockConsumer(Owner owner, boolean manifestType) {
         ConsumerType ctype = this.createConsumerType(manifestType);
-        Consumer consumer = new Consumer("TestConsumer" + TestUtil.randomInt(), "User", owner, ctype);
+        Consumer consumer = new Consumer()
+            .setName("TestConsumer" + TestUtil.randomInt())
+            .setUsername("User")
+            .setOwner(owner)
+            .setType(ctype);
         consumer = this.consumerCurator.create(consumer);
 
         return consumer;

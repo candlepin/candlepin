@@ -17,6 +17,8 @@ package org.candlepin.model;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Type;
 
+import java.util.Objects;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -24,15 +26,12 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+
+
 
 /**
  * Represents the type of consumer. See ProductFactory for some examples.
  */
-@XmlRootElement(name = "consumertype")
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = ConsumerType.DB_TABLE)
 public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
@@ -44,8 +43,11 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
      * Initial DB values that are part of a "basic" install ConsumerTypeEnum
      */
     public enum ConsumerTypeEnum {
-        SYSTEM("system", false), PERSON("person", false), DOMAIN("domain", false),
-        CANDLEPIN("candlepin", true), HYPERVISOR("hypervisor", false);
+        SYSTEM("system", false),
+        PERSON("person", false),
+        DOMAIN("domain", false),
+        CANDLEPIN("candlepin", true),
+        HYPERVISOR("hypervisor", false);
 
         private final String label;
         private final boolean manifest;
@@ -55,9 +57,6 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
             this.manifest = manifest;
         }
 
-        /**
-         * @return the label
-         */
         public String getLabel() {
             return this.label;
         }
@@ -90,26 +89,29 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
     @NotNull
     private boolean manifest = false;
 
-    /**
-     * default ctor
-     */
     public ConsumerType() {
+        // Intentionally left empty
     }
 
     public ConsumerType(ConsumerTypeEnum type) {
-        this.label = type.getLabel();
-        this.manifest = type.isManifest();
+        if (type != null) {
+            this.setLabel(type.getLabel())
+                .setManifest(type.isManifest());
+        }
     }
 
     /**
-     * ConsumerType constructor with label
+     * Creates a new ConsumerType instance using the specified label. If the label matches a known
+     * label from ConsumerTypeEnum, the manifest flag will also be set accordingly.
      *
-     * @param labelIn to set
+     * @param label
+     *  the label to assign to the new consumer type
      */
-    public ConsumerType(String labelIn) {
-        this.label = labelIn;
+    public ConsumerType(String label) {
+        this.setLabel(label);
+
         for (ConsumerTypeEnum cte : ConsumerTypeEnum.values()) {
-            if (cte.getLabel().equals(labelIn)) {
+            if (cte.getLabel().equals(label)) {
                 this.manifest = cte.isManifest();
                 break;
             }
@@ -154,6 +156,15 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
         return type != null && type.getLabel().equals(this.getLabel());
     }
 
+    public boolean isManifest() {
+        return this.manifest;
+    }
+
+    public ConsumerType setManifest(boolean manifest) {
+        this.manifest = manifest;
+        return this;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -163,32 +174,29 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
             this.getId(), this.getLabel(), this.isManifest());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public boolean equals(Object anObject) {
-        if (this == anObject) {
+    public boolean equals(Object obj) {
+        if (this == obj) {
             return true;
         }
-        if (!(anObject instanceof ConsumerType)) {
+
+        if (!(obj instanceof ConsumerType)) {
             return false;
         }
 
-        ConsumerType another = (ConsumerType) anObject;
-
-        return label.equals(another.getLabel());
+        return Objects.equals(this.getLabel(), ((ConsumerType) obj).getLabel());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int hashCode() {
-        return label.hashCode();
-    }
-
-    public boolean isManifest() {
-        return this.manifest;
-    }
-
-    public ConsumerType setManifest(boolean manifest) {
-        this.manifest = manifest;
-        return this;
+        String label = this.getLabel();
+        return label != null ? label.hashCode() : 0;
     }
 
 }

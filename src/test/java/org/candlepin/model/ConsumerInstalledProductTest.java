@@ -28,12 +28,17 @@ public class ConsumerInstalledProductTest {
 
     @BeforeEach
     public void setUpTestObjects() {
-        cip1 = new ConsumerInstalledProduct("ProdA", "Product A");
-        cip1.setArch("x86");
-        cip1.setVersion("1.0");
-        cip2 = new ConsumerInstalledProduct("ProdA", "Product A");
-        cip2.setArch("x86");
-        cip2.setVersion("1.0");
+        cip1 = new ConsumerInstalledProduct()
+            .setProductId("ProdA")
+            .setProductName("Product A")
+            .setArch("x86")
+            .setVersion("1.0");
+
+        cip2 = new ConsumerInstalledProduct()
+            .setProductId("ProdA")
+            .setProductName("Product A")
+            .setArch("x86")
+            .setVersion("1.0");
     }
 
     @Test

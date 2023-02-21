@@ -885,7 +885,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
             // Maintain runtime consistency.
             entity.setCertificates(null);
-            entity.getConsumer().getEntitlements().remove(entity);
+            entity.getConsumer().removeEntitlement(entity);
             entity.getPool().getEntitlements().remove(entity);
         }
     }
@@ -907,7 +907,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             entitlement.setCertificates(null);
 
             if (Hibernate.isInitialized(entitlement.getConsumer().getEntitlements())) {
-                entitlement.getConsumer().getEntitlements().remove(entitlement);
+                entitlement.getConsumer().removeEntitlement(entitlement);
             }
 
             if (Hibernate.isInitialized(entitlement.getPool().getEntitlements())) {
@@ -958,7 +958,7 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             entitlement.setCertificates(null);
 
             if (Hibernate.isInitialized(entitlement.getConsumer().getEntitlements())) {
-                entitlement.getConsumer().getEntitlements().remove(entitlement);
+                entitlement.getConsumer().removeEntitlement(entitlement);
             }
 
             if (Hibernate.isInitialized(entitlement.getPool().getEntitlements())) {

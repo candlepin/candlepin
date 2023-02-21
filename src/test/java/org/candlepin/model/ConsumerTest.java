@@ -62,9 +62,13 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         consumerType = new ConsumerType(CONSUMER_TYPE_NAME);
         consumerTypeCurator.create(consumerType);
-        consumer = new Consumer(CONSUMER_NAME, USER_NAME, owner, consumerType);
-        consumer.setFact("foo", "bar");
-        consumer.setFact("foo1", "bar1");
+        consumer = new Consumer()
+            .setName(CONSUMER_NAME)
+            .setUsername(USER_NAME)
+            .setOwner(owner)
+            .setType(consumerType)
+            .setFact("foo", "bar")
+            .setFact("foo1", "bar1");
 
         consumerCurator.create(consumer);
     }
@@ -123,7 +127,11 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testSetInitialization() {
-        Consumer noFacts = new Consumer(CONSUMER_NAME, USER_NAME, owner, consumerType);
+        Consumer noFacts = new Consumer()
+            .setName(CONSUMER_NAME)
+            .setUsername(USER_NAME)
+            .setOwner(owner)
+            .setType(consumerType);
         consumerCurator.create(noFacts);
         noFacts = consumerCurator.get(noFacts.getId());
         assertNotNull(noFacts.getFacts());
@@ -162,8 +170,12 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testMetadataInfo() {
-        Consumer consumer2 = new Consumer("consumer2", USER_NAME, owner, consumerType);
-        consumer2.setFact("foo", "bar2");
+        Consumer consumer2 = new Consumer()
+            .setName("consumer2")
+            .setUsername(USER_NAME)
+            .setOwner(owner)
+            .setType(consumerType)
+            .setFact("foo", "bar2");
         consumerCurator.create(consumer2);
 
         Consumer lookedUp = consumerCurator.get(consumer.getId());
@@ -202,7 +214,11 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testgetByUuid() {
-        Consumer consumer2 = new Consumer("consumer2", USER_NAME, owner, consumerType);
+        Consumer consumer2 = new Consumer()
+            .setName("consumer2")
+            .setUsername(USER_NAME)
+            .setOwner(owner)
+            .setType(consumerType);
         consumerCurator.create(consumer2);
 
         Consumer lookedUp = consumerCurator.findByUuid(consumer2.getUuid());
@@ -243,9 +259,8 @@ public class ConsumerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testNullType() {
-        Consumer c = new Consumer("name", USER_NAME, owner, null);
-        assertNotNull(c);
+    public void testConsumerTypeCannotBeNull() {
+        assertThrows(IllegalArgumentException.class, () -> new Consumer().setType(null));
     }
 
     @Test
@@ -406,8 +421,11 @@ public class ConsumerTest extends DatabaseTestFixture {
         String newUsername = "newusername";
 
         // Need to make sure another consumer already exists, different type:
-        Consumer existing = new Consumer("existing consumer", newUsername, owner,
-            consumerType);
+        Consumer existing = new Consumer()
+            .setName("existing consumer")
+            .setUsername(newUsername)
+            .setOwner(owner)
+            .setType(consumerType);
         consumerCurator.create(existing);
 
         ConsumerType personType = new ConsumerType(ConsumerTypeEnum.PERSON);
@@ -422,7 +440,11 @@ public class ConsumerTest extends DatabaseTestFixture {
 
         assertNull(consumerCurator.findByUser(user));
 
-        consumer = new Consumer(CONSUMER_NAME, newUsername, owner, personType);
+        consumer = new Consumer()
+            .setName(CONSUMER_NAME)
+            .setUsername(newUsername)
+            .setOwner(owner)
+            .setType(personType);
         consumerCurator.create(consumer);
         assertEquals(consumer, consumerCurator.findByUser(user));
     }
@@ -430,18 +452,17 @@ public class ConsumerTest extends DatabaseTestFixture {
     @Test
     public void testInstalledProducts() {
         Consumer lookedUp = consumerCurator.get(consumer.getId());
-        lookedUp.addInstalledProduct(
-            new ConsumerInstalledProduct("someproduct", "someproductname")
-        );
-        lookedUp.addInstalledProduct(
-            new ConsumerInstalledProduct("someproduct2", "someproductname2")
-        );
+        lookedUp.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId("someproduct")
+            .setProductName("someproductname"));
+        lookedUp.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId("someproduct2")
+            .setProductName("someproductname2"));
         consumerCurator.update(lookedUp);
         lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(2, lookedUp.getInstalledProducts().size());
-        ConsumerInstalledProduct installed = lookedUp.getInstalledProducts().
-            iterator().next();
-        lookedUp.getInstalledProducts().remove(installed);
+        ConsumerInstalledProduct installed = lookedUp.getInstalledProducts().iterator().next();
+        lookedUp.removeInstalledProduct(installed);
         consumerCurator.update(lookedUp);
         lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(1, lookedUp.getInstalledProducts().size());
@@ -453,11 +474,12 @@ public class ConsumerTest extends DatabaseTestFixture {
         lookedUp.addGuestId(new GuestId("guest1"));
         lookedUp.addGuestId(new GuestId("guest2"));
         consumerCurator.update(lookedUp);
+
         lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(2, lookedUp.getGuestIds().size());
-        GuestId installed = lookedUp.getGuestIds().
-            iterator().next();
-        lookedUp.getGuestIds().remove(installed);
+        GuestId installed = lookedUp.getGuestIds().iterator().next();
+        lookedUp.removeGuestId(installed);
+
         consumerCurator.update(lookedUp);
         lookedUp = consumerCurator.get(consumer.getId());
         assertEquals(1, lookedUp.getGuestIds().size());
@@ -465,7 +487,12 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testRoleConvertedToEmpty() {
-        Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
+        Consumer consumer = new Consumer()
+            .setName("consumer1")
+            .setUsername("consumer1")
+            .setOwner(owner)
+            .setType(consumerType);
+
         consumerCurator.create(consumer);
 
         String cid = consumer.getId();
@@ -493,7 +520,11 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testUsageConvertedToEmpty() {
-        Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
+        Consumer consumer = new Consumer()
+            .setName("consumer1")
+            .setUsername("consumer1")
+            .setOwner(owner)
+            .setType(consumerType);
         consumerCurator.create(consumer);
 
         String cid = consumer.getId();
@@ -594,7 +625,11 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void testServiceTypeConvertedToEmpty() {
-        Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
+        Consumer consumer = new Consumer()
+            .setName("consumer1")
+            .setUsername("consumer1")
+            .setOwner(owner)
+            .setType(consumerType);
         consumerCurator.create(consumer);
 
         String cid = consumer.getId();
@@ -622,7 +657,11 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void shouldFailWithDuplicateEnvIds() {
-        Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
+        Consumer consumer = new Consumer()
+            .setName("consumer1")
+            .setUsername("consumer1")
+            .setOwner(owner)
+            .setType(consumerType);
 
         assertThrows(DuplicateEntryException.class,
             () -> consumer.setEnvironmentIds(List.of("env_1", "env_2", "env_1")));
@@ -630,7 +669,11 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void shouldCleanEnvIdsWhenNull() {
-        Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
+        Consumer consumer = new Consumer()
+            .setName("consumer1")
+            .setUsername("consumer1")
+            .setOwner(owner)
+            .setType(consumerType);
 
         consumer.setEnvironmentIds(List.of("env_1", "env_2"));
         assertEquals(2, consumer.getEnvironmentIds().size());
@@ -641,7 +684,11 @@ public class ConsumerTest extends DatabaseTestFixture {
 
     @Test
     public void shouldAddEnvironments() {
-        Consumer consumer = new Consumer("consumer1", "consumer1", owner, consumerType);
+        Consumer consumer = new Consumer()
+            .setName("consumer1")
+            .setUsername("consumer1")
+            .setOwner(owner)
+            .setType(consumerType);
 
         assertTrue(consumer.getEnvironmentIds().isEmpty());
 

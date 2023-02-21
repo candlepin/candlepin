@@ -104,7 +104,11 @@ public class EntitlementResourceTest {
         ConsumerType ctype = TestUtil.createConsumerType();
         this.mockConsumerType(ctype);
 
-        consumer = new Consumer("myconsumer", "bill", owner, ctype).setUuid(Util.generateUUID());
+        consumer = new Consumer()
+            .setName("myconsumer")
+            .setUsername("bill")
+            .setOwner(owner)
+            .setType(ctype).setUuid(Util.generateUUID());
 
         PageRequest req = new PageRequest();
         req.setPage(1);
@@ -221,11 +225,21 @@ public class EntitlementResourceTest {
         ct.setManifest(true);
         this.mockConsumerType(ct);
 
+        Consumer sourceConsumer = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("source-consumer")
+            .setUsername("bill")
+            .setOwner(owner)
+            .setType(ct);
+
+        Consumer destConsumer = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("destination-consumer")
+            .setUsername("bill")
+            .setOwner(owner)
+            .setType(ct);
+
         Entitlement e = TestUtil.createEntitlement();
-        Consumer sourceConsumer = new Consumer("source-consumer", "bill", owner, ct)
-            .setUuid(Util.generateUUID());
-        Consumer destConsumer = new Consumer("destination-consumer", "bill", owner, ct)
-            .setUuid(Util.generateUUID());
         e.setConsumer(sourceConsumer);
         e.setQuantity(25);
 
@@ -244,9 +258,14 @@ public class EntitlementResourceTest {
         ct.setManifest(true);
         this.mockConsumerType(ct);
 
+        Consumer destConsumer = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("destination-consumer")
+            .setUsername("bill")
+            .setOwner(owner)
+            .setType(ct);
+
         Entitlement e = TestUtil.createEntitlement();
-        Consumer destConsumer = new Consumer("destination-consumer", "bill", owner, ct)
-            .setUuid(Util.generateUUID());
         e.setConsumer(consumer);
         e.setQuantity(25);
 
@@ -264,9 +283,14 @@ public class EntitlementResourceTest {
         ct.setManifest(true);
         this.mockConsumerType(ct);
 
+        Consumer sourceConsumer = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("source-consumer")
+            .setUsername("bill")
+            .setOwner(owner)
+            .setType(ct);
+
         Entitlement e = TestUtil.createEntitlement();
-        Consumer sourceConsumer = new Consumer("source-consumer", "bill", owner, ct)
-            .setUuid(Util.generateUUID());
         e.setConsumer(sourceConsumer);
         e.setQuantity(25);
 
@@ -284,14 +308,28 @@ public class EntitlementResourceTest {
         ct.setManifest(true);
         this.mockConsumerType(ct);
 
-        Entitlement e = TestUtil.createEntitlement();
-        Owner owner2 = new Owner("admin2");
         owner.setId(TestUtil.randomString());
-        owner2.setId(TestUtil.randomString());
-        Consumer sourceConsumer = new Consumer("source-consumer", "bill", owner, ct)
-            .setUuid(Util.generateUUID());
-        Consumer destConsumer = new Consumer("destination-consumer", "bill", owner2, ct)
-            .setUuid(Util.generateUUID());
+
+        Owner owner2 = new Owner()
+            .setId(TestUtil.randomString())
+            .setKey("admin2")
+            .setDisplayName("admin2");
+
+        Consumer sourceConsumer = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("source-consumer")
+            .setUsername("bill")
+            .setOwner(owner)
+            .setType(ct);
+
+        Consumer destConsumer = new Consumer()
+            .setUuid(Util.generateUUID())
+            .setName("destination-consumer")
+            .setUsername("bill")
+            .setOwner(owner2)
+            .setType(ct);
+
+        Entitlement e = TestUtil.createEntitlement();
         e.setConsumer(sourceConsumer);
         e.setQuantity(25);
 

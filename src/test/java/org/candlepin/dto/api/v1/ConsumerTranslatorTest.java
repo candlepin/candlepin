@@ -192,8 +192,7 @@ public class ConsumerTranslatorTest extends
 
         Set<ConsumerActivationKey> keys = new HashSet<>();
         for (int i = 0; i < 5; ++i) {
-            keys.add(new ConsumerActivationKey(consumer,
-                "keyId" + i, "keyName" + i));
+            keys.add(new ConsumerActivationKey("keyId" + i, "keyName" + i));
         }
         consumer.setActivationKeys(keys);
 

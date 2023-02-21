@@ -45,7 +45,11 @@ public class UsernameConsumersPermissionTest {
 
     @Test
     public void allowsUsernameConsumersModification() {
-        Consumer c = new Consumer("consumer", username, owner, null);
+        Consumer c = new Consumer()
+            .setName("consumer")
+            .setUsername(username)
+            .setOwner(owner);
+
         assertTrue(perm.canAccess(c, SubResource.NONE, Access.ALL));
         assertTrue(perm.canAccess(c, SubResource.NONE, Access.CREATE));
         assertTrue(perm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
@@ -53,13 +57,21 @@ public class UsernameConsumersPermissionTest {
 
     @Test
     public void allowsRegisterOrgConsumers() {
-        Consumer c = new Consumer("consumer", username, owner, null);
+        Consumer c = new Consumer()
+            .setName("consumer")
+            .setUsername(username)
+            .setOwner(owner);
+
         assertTrue(perm.canAccess(owner, SubResource.CONSUMERS, Access.CREATE));
     }
 
     @Test
     public void allowsListOrgConsumers() {
-        Consumer c = new Consumer("consumer", username, owner, null);
+        Consumer c = new Consumer()
+            .setName("consumer")
+            .setUsername(username)
+            .setOwner(owner);
+
         assertTrue(perm.canAccess(owner, SubResource.CONSUMERS, Access.READ_ONLY));
     }
 
@@ -81,21 +93,33 @@ public class UsernameConsumersPermissionTest {
     public void blocksConsumersInOtherOrgDespiteSameUsername() {
         Owner other = new Owner("ownerkey2", "My Org 2");
         other.setId(TestUtil.randomString());
-        Consumer c = new Consumer("consumer", username, other, null);
+        Consumer c = new Consumer()
+            .setName("consumer")
+            .setUsername(username)
+            .setOwner(other);
+
         assertFalse(perm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
         assertFalse(perm.canAccess(c, SubResource.NONE, Access.ALL));
     }
 
     @Test
     public void blocksOtherUsernameConsumers() {
-        Consumer c = new Consumer("consumer", "somebodyelse", owner, null);
+        Consumer c = new Consumer()
+            .setName("consumer")
+            .setUsername("somebodyelse")
+            .setOwner(owner);
+
         assertFalse(perm.canAccess(c, SubResource.NONE, Access.READ_ONLY));
         assertFalse(perm.canAccess(c, SubResource.NONE, Access.ALL));
     }
 
     @Test
     public void allowsUsernameConsumersUnbind() {
-        Consumer c = new Consumer("consumer", username, owner, null);
+        Consumer c = new Consumer()
+            .setName("consumer")
+            .setUsername(username)
+            .setOwner(owner);
+
         Entitlement e = new Entitlement();
         e.setOwner(owner);
         e.setConsumer(c);
@@ -104,7 +128,11 @@ public class UsernameConsumersPermissionTest {
 
     @Test
     public void blocksOtherUsernameConsumersUnbind() {
-        Consumer c = new Consumer("consumer", "somebodyelse", owner, null);
+        Consumer c = new Consumer()
+            .setName("consumer")
+            .setUsername("somebodyelse")
+            .setOwner(owner);
+
         Entitlement e = new Entitlement();
         e.setOwner(owner);
         e.setConsumer(c);

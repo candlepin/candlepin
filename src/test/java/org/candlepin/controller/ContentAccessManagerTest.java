@@ -95,6 +95,7 @@ import java.security.KeyPair;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 
@@ -227,12 +228,15 @@ public class ContentAccessManagerTest {
         ConsumerType type = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         type.setId("test-id");
 
-        Consumer consumer = new Consumer("Test Consumer", "bob", owner, type);
-        consumer.setUuid("test-consumer-uuid");
-        consumer.setId("test-consumer-id");
-
-        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
-        consumer.setCapabilities(Util.asSet(new ConsumerCapability(consumer, "cert_v3")));
+        Consumer consumer = new Consumer()
+            .setUuid("test-consumer-uuid")
+            .setId("test-consumer-id")
+            .setName("Test Consumer")
+            .setUsername("bob")
+            .setOwner(owner)
+            .setType(type)
+            .setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, X509V3ExtensionUtil.CERT_VERSION)
+            .setCapabilities(Set.of(new ConsumerCapability("cert_v3")));
 
         doReturn(type).when(this.mockConsumerTypeCurator).getConsumerType(eq(consumer));
 
@@ -312,7 +316,8 @@ public class ContentAccessManagerTest {
         consumer.addEnvironment(environment);
 
         doReturn(environment).when(this.mockEnvironmentCurator).get(eq(environment.getId()));
-        doReturn(environment).when(this.mockEnvironmentCurator).getConsumerEnvironment(eq(consumer));
+        doReturn(List.of(environment)).when(this.mockEnvironmentCurator)
+            .getConsumerEnvironments(eq(consumer));
 
         return environment;
     }
@@ -679,7 +684,7 @@ public class ContentAccessManagerTest {
     public void testGetCertificateReturnsNullIfConsumerDoesNotSupportV3Cert() throws Exception {
         Owner owner = this.mockOwner();
         Consumer consumer = this.mockConsumer(owner);
-        consumer.setFact("system.certificate_version", null); // remove v3 cert capability
+        consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, null); // remove v3 cert capability
         Content content = this.mockContent(owner);
         Product product = this.mockProduct(owner, content);
         Pool pool = this.mockPool(product);

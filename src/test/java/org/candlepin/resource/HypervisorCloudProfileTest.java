@@ -99,7 +99,11 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
 
     @Test
     public void testCloudProfileUpdatedOnGuestUpdate() {
-        Consumer testConsumer = new Consumer("test_consumer", someuser.getUsername(), owner, hypervisorType);
+        Consumer testConsumer = new Consumer()
+            .setName("test_consumer")
+            .setUsername(someuser.getUsername())
+            .setOwner(owner)
+            .setType(hypervisorType);
         testConsumer = consumerCurator.create(testConsumer);
 
         GuestIdDTO guest = TestUtil.createGuestIdDTO("some_guest");

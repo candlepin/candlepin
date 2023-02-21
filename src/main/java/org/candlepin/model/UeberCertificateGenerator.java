@@ -222,8 +222,11 @@ public class UeberCertificateGenerator {
         }
 
         private Consumer createUeberConsumer(String username, Owner owner) {
-            Consumer consumer = new Consumer(UEBER_CERT_CONSUMER, username, owner, this.ueberCertType);
-            return consumer;
+            return new Consumer()
+                .setName(UEBER_CERT_CONSUMER)
+                .setUsername(username)
+                .setOwner(owner)
+                .setType(this.ueberCertType);
         }
 
         private Product createUeberProductForOwner(UniqueIdGenerator idGenerator, Owner owner) {

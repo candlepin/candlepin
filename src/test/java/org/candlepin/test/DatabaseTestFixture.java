@@ -436,7 +436,11 @@ public class DatabaseTestFixture {
             ctype = this.createConsumerType();
         }
 
-        Consumer consumer = new Consumer("test-consumer", "test-user", owner, ctype);
+        Consumer consumer = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(ctype);
 
         return this.consumerCurator.create(consumer);
     }
@@ -447,7 +451,11 @@ public class DatabaseTestFixture {
 
     protected Consumer createDistributor(Owner owner) {
         ConsumerType type = this.createConsumerType(true);
-        Consumer consumer = new Consumer("test-distributor", "test-user", owner, type);
+        Consumer consumer = new Consumer()
+            .setName("test-distributor")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
 
         return this.consumerCurator.create(consumer);
     }

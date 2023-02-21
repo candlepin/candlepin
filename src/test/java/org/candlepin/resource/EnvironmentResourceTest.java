@@ -285,11 +285,15 @@ class EnvironmentResourceTest {
     private Consumer createConsumer(Environment environment) {
         ConsumerType cType = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
         cType.setId("ctype1");
-        Consumer consumer = new Consumer("c1", "u1", this.owner, cType);
-        consumer.setIdCert(TestUtil.createIdCert());
-        consumer.setContentAccessCert(createContentAccessCert());
-        consumer.addEnvironment(environment);
-        return consumer;
+
+        return new Consumer()
+            .setName("c1")
+            .setUsername("u1")
+            .setOwner(this.owner)
+            .setType(cType)
+            .setIdCert(TestUtil.createIdCert())
+            .setContentAccessCert(createContentAccessCert())
+            .addEnvironment(environment);
     }
 
     private ContentAccessCertificate createContentAccessCert() {

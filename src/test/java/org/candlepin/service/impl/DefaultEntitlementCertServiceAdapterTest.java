@@ -306,7 +306,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
         ConsumerType type = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         type.setId("test-id");
 
-        consumer = new Consumer("Test Consumer", "bob", owner, type).setUuid("test-consumer");
+        consumer = new Consumer()
+            .setUuid("test-consumer")
+            .setName("Test Consumer")
+            .setUsername("bob")
+            .setOwner(owner)
+            .setType(type);
 
         when(this.mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(type);
         when(this.mockConsumerTypeCurator.get(eq(type.getId()))).thenReturn(type);
@@ -351,27 +356,30 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
             when(this.mockEnvironmentCurator.get(eq(environment.getId()))).thenReturn(environment);
 
-            doAnswer((Answer<Environment>) invocation -> {
-                Object[] args = invocation.getArguments();
-                Consumer consumer = (Consumer) args[0];
-                EnvironmentCurator curator = (EnvironmentCurator) invocation.getMock();
-                Environment environment1 = null;
+            doAnswer((Answer<List<Environment>>) iom -> {
+                EnvironmentCurator curator = (EnvironmentCurator) iom.getMock();
+                Consumer consumer = iom.getArgument(0);
 
                 if (consumer == null) {
                     throw new IllegalArgumentException("consumer is null");
                 }
 
-                if (consumer.getEnvironmentId() != null) {
-                    environment1 = curator.get(consumer.getEnvironmentId());
+                List<Environment> environments = new ArrayList<>();
+                List<String> envIds = consumer.getEnvironmentIds();
 
-                    if (environment1 == null) {
-                        throw new IllegalStateException("No such environment: " +
-                            consumer.getEnvironmentId());
+                if (envIds != null) {
+                    for (String envId : envIds) {
+                        Environment consumerEnv = curator.get(envId);
+                        if (consumerEnv == null) {
+                            throw new IllegalStateException("No such environment: " + envId);
+                        }
+
+                        environments.add(consumerEnv);
                     }
                 }
 
-                return environment1;
-            }).when(this.mockEnvironmentCurator).getConsumerEnvironment(any(Consumer.class));
+                return environments;
+            }).when(this.mockEnvironmentCurator).getConsumerEnvironments(any(Consumer.class));
         }
 
         return environment;
@@ -820,7 +828,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void ensureV3CertificateCreationOkWhenConsumerSupportsV3Dot1Certs()
         throws Exception {
 
-        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
+        consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, X509V3ExtensionUtil.CERT_VERSION);
         subscription.getProduct().setAttribute(Product.Attributes.RAM, "4");
         subscription.getProduct().setAttribute(Product.Attributes.ROLES, "role1, role2 ");
 
@@ -855,7 +863,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void ensureV3CertIsCreatedWhenEnableCertV3ConfigIsTrue() throws Exception {
-        consumer.setFact("system.certificate_version", "3.0");
+        consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, "3.0");
 
         DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 
@@ -879,9 +887,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(mockConsumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
         when(mockConsumerTypeCurator.getConsumerType(consumer)).thenReturn(ctype);
 
-        Set<ConsumerCapability> set = new HashSet<>();
-        set.add(new ConsumerCapability(consumer, "cert_v3"));
-        consumer.setCapabilities(set);
+        consumer.setCapabilities(Set.of(new ConsumerCapability("cert_v3")));
 
         DefaultEntitlementCertServiceAdapter entAdapter = this.initCertServiceAdapter();
 
@@ -1197,8 +1203,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     public void testPrepareV3EntitlementData() throws IOException {
         Set<Product> products = new HashSet<>();
         products.add(product);
-        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
-        consumer.setFact("uname.machine", "x86_64");
+        consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, X509V3ExtensionUtil.CERT_VERSION);
+        consumer.setFact(Consumer.Facts.UNAME_MACHINE, "x86_64");
 
         Product product = pool.getProduct();
 
@@ -1304,8 +1310,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     private void setupEntitlements(String consumerArch, String certVersion) {
-        consumer.setFact("system.certificate_version", certVersion);
-        consumer.setFact("uname.machine", consumerArch);
+        consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, certVersion);
+        consumer.setFact(Consumer.Facts.UNAME_MACHINE, consumerArch);
 
         ProductData pdata = subscription.getProduct();
 
@@ -1511,8 +1517,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Set<Product> products = new HashSet<>();
         products.add(product);
 
-        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
-        consumer.setFact("uname.machine", "x86_64");
+        consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, X509V3ExtensionUtil.CERT_VERSION);
+        consumer.setFact(Consumer.Facts.UNAME_MACHINE, "x86_64");
 
         subscription.getProduct().setAttribute(Product.Attributes.WARNING_PERIOD, "0");
         subscription.getProduct().setAttribute(Product.Attributes.MANAGEMENT_ENABLED, "false");
@@ -1564,8 +1570,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         products.add(product);
 
         consumer.setUuid("test-consumer");
-        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
-        consumer.setFact("uname.machine", "x86_64");
+        consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, X509V3ExtensionUtil.CERT_VERSION);
+        consumer.setFact(Consumer.Facts.UNAME_MACHINE, "x86_64");
 
         pool.getProduct().setAttribute(Product.Attributes.MANAGEMENT_ENABLED, "1");
         entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
@@ -1637,8 +1643,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             product.addContent(content, false);
         }
 
-        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
-        consumer.setFact("uname.machine", "x86_64");
+        consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, X509V3ExtensionUtil.CERT_VERSION);
+        consumer.setFact(Consumer.Facts.UNAME_MACHINE, "x86_64");
 
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         Set<X509ByteExtensionWrapper> byteExtensions = v3extensionUtil.getByteExtensions(
@@ -1683,7 +1689,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
         product.addContent(wrongArchContent, false);
 
-        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
+        consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, X509V3ExtensionUtil.CERT_VERSION);
 
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         Set<X509ByteExtensionWrapper> byteExtensions = this.v3extensionUtil.getByteExtensions(
@@ -1721,7 +1727,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             largeContentProduct.addContent(content, false);
         }
 
-        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
+        consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, X509V3ExtensionUtil.CERT_VERSION);
 
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         Set<X509ByteExtensionWrapper> byteExtensions = this.v3extensionUtil.getByteExtensions(
@@ -1760,7 +1766,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         largeContentProduct.addContent(createContent(CONTENT_NAME, CONTENT_ID,
             CONTENT_LABEL, CONTENT_TYPE, CONTENT_VENDOR, "/single", CONTENT_GPG_URL, ARCH_LABEL), false);
 
-        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
+        consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, X509V3ExtensionUtil.CERT_VERSION);
 
         PromotedContent promotedContent = new PromotedContent(prefix(""));
         Set<X509ByteExtensionWrapper> byteExtensions = this.v3extensionUtil.getByteExtensions(
@@ -1801,8 +1807,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         }
 
         consumer.setUuid("test-consumer");
-        consumer.setFact("system.certificate_version", X509V3ExtensionUtil.CERT_VERSION);
-        consumer.setFact("uname.machine", "x86_64");
+        consumer.setFact(Consumer.Facts.SYSTEM_CERTIFICATE_VERSION, X509V3ExtensionUtil.CERT_VERSION);
+        consumer.setFact(Consumer.Facts.UNAME_MACHINE, "x86_64");
 
         certServiceAdapter.prepareV3Extensions();
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));

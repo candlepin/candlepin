@@ -601,6 +601,7 @@ class ExportSpecTest {
             ReleaseVerDTO releaseVer = new ReleaseVerDTO()
                 .releaseVer("");
             consumer.setReleaseVer(releaseVer);
+            consumer.setCapabilities(null);
             consumerApi.updateConsumer(consumer.getUuid(), consumer);
             consumer = consumerApi.getConsumer(consumer.getUuid());
 

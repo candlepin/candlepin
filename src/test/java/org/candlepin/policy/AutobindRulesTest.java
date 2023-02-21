@@ -131,7 +131,11 @@ public class AutobindRulesTest {
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ctype.setId("test-ctype");
 
-        consumer = new Consumer("test consumer", "test user", owner, ctype);
+        consumer = new Consumer()
+            .setName("test consumer")
+            .setUsername("test user")
+            .setOwner(owner)
+            .setType(ctype);
 
         doReturn(ctype).when(this.consumerTypeCurator).get(eq(ctype.getId()));
         doReturn(ctype).when(this.consumerTypeCurator).getByLabel(eq(ctype.getLabel()));
@@ -230,7 +234,11 @@ public class AutobindRulesTest {
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
         ctype.setId("test-ctype");
 
-        consumer = new Consumer("test consumer", "test user", owner, ctype);
+        consumer = new Consumer()
+            .setName("test consumer")
+            .setUsername("test user")
+            .setOwner(owner)
+            .setType(ctype);
 
         doReturn(ctype).when(this.consumerTypeCurator).get(eq(ctype.getId()));
         doReturn(ctype).when(this.consumerTypeCurator).getByLabel(eq(ctype.getLabel()));
@@ -615,8 +623,10 @@ public class AutobindRulesTest {
         requiredEngProduct.setId("requiredEngProduct");
 
         // Consumer has an installed product (requiredEngProduct).
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(requiredEngProduct);
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(requiredEngProduct.getId())
+            .setProductName(requiredEngProduct.getName());
+
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes or products on the consumer ---
@@ -919,8 +929,11 @@ public class AutobindRulesTest {
 
         // Consumer specified syspurpose attributes:
         consumer.setUsage("good-usage");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1458,7 +1471,11 @@ public class AutobindRulesTest {
         consumer.setRole("RHEL Server");
         consumer.setServiceLevel("Premium");
         consumer.setUsage("Production");
-        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
+
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1495,20 +1512,19 @@ public class AutobindRulesTest {
 
     @SuppressWarnings("checkstyle:localvariablename")
     @Test
-    public void testSysPurposePoolPriorityUseCaseSLABeatsUsage()
-        throws NoSuchMethodException {
-
+    public void testSysPurposePoolPriorityUseCaseSLABeatsUsage() throws NoSuchMethodException {
         Product product69 = new Product();
         product69.setId("non-compliant-69");
+
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
 
         // Consumer specified syspurpose attributes:
         consumer.setRole("RHEL Server");
         consumer.setServiceLevel("Standard");
         consumer.setUsage("Development");
-        Set<String> addons = new HashSet<>();
-        addons.add("RHEL EUS");
-        consumer.setAddOns(addons);
-        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
+        consumer.setAddOns(Set.of("RHEL EUS"));
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1554,14 +1570,15 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("non-compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
         consumer.setRole("RHEL Server");
         consumer.setServiceLevel("Premium");
         consumer.setUsage("Production");
-        Set<String> addons = new HashSet<>();
-        addons.add("Smart Management");
-        consumer.setAddOns(addons);
-        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
+        consumer.setAddOns(Set.of("Smart Management"));
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1603,23 +1620,23 @@ public class AutobindRulesTest {
      */
     @SuppressWarnings("checkstyle:localvariablename")
     @Test
-    public void testSysPurposePoolPriorityShouldNotBeNegative()
-        throws NoSuchMethodException {
-
+    public void testSysPurposePoolPriorityShouldNotBeNegative() throws NoSuchMethodException {
         Product product69 = new Product();
         product69.setId("compliant-69");
+
         Product mismatched_product = new Product();
         mismatched_product.setId("non-compliant-100");
+
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
 
         // Consumer specified syspurpose attributes:
         consumer.setRole("RHEL Server");
         consumer.setServiceLevel("Premium");
         consumer.setUsage("Production");
         consumer.setServiceType("L1-L3");
-        Set<String> addons = new HashSet<>();
-        addons.add("Smart Management");
-        consumer.setAddOns(addons);
-        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
+        consumer.setAddOns(Set.of("Smart Management"));
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1648,15 +1665,17 @@ public class AutobindRulesTest {
     @SuppressWarnings("checkstyle:localvariablename")
     @Test
     public void testSysPurposePoolPriorityUseCaseSLAOrUsageMatchDoesNotOverpowerRoleDuringAutoAttach() {
-
         Product product69 = new Product();
         product69.setId("non-compliant-69");
+
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
 
         // Consumer specified syspurpose attributes:
         consumer.setRole("RHEL Server");
         consumer.setServiceLevel("Premium");
         consumer.setUsage("Production");
-        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1697,10 +1716,12 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
         consumer.setRole("my_role");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1733,12 +1754,12 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        Set<String> addons = new HashSet<>();
-        addons.add("My Type of Management");
-        consumer.setAddOns(addons);
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        consumer.setAddOns(Set.of("My Type of Management"));
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1770,10 +1791,12 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
         consumer.setRole("RHEL Server");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1806,13 +1829,12 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        Set<String> addons = new HashSet<>();
-        addons.add("My Type of Management");
-        addons.add("Other Management");
-        consumer.setAddOns(addons);
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        consumer.setAddOns(Set.of("My Type of Management", "Other Management"));
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1846,13 +1868,12 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        Set<String> addons = new HashSet<>();
-        addons.add("My Type of Management");
-        addons.add("Other Management");
-        consumer.setAddOns(addons);
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        consumer.setAddOns(Set.of("My Type of Management", "Other Management"));
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1886,10 +1907,12 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
         consumer.setRole("My Role");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1925,8 +1948,10 @@ public class AutobindRulesTest {
 
         // Consumer specified syspurpose attributes:
         // ---> Consumer has no addons specified! <---
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1962,8 +1987,10 @@ public class AutobindRulesTest {
 
         // Consumer specified syspurpose attributes:
         // ---> Consumer has no role specified! <---
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -1996,10 +2023,12 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
         consumer.setRole("RHEL Server");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -2049,12 +2078,12 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        Set<String> addons = new HashSet<>();
-        addons.add("One Addon");
-        consumer.setAddOns(addons);
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        consumer.setAddOns(Set.of("One Addon"));
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -2151,9 +2180,7 @@ public class AutobindRulesTest {
     @Test
     public void testSelectBestPoolsShouldSelectBothPoolsInStackWhenOneProvidesAddonAndTheOtherRole() {
         // Consumer specified syspurpose attributes:
-        Set<String> addons = new HashSet<>();
-        addons.add("My Addon");
-        consumer.setAddOns(addons);
+        consumer.setAddOns(Set.of("My Addon"));
         consumer.setRole("My Role");
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -2201,9 +2228,11 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
         consumer.setRole("Other Role");
 
@@ -2238,9 +2267,11 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
         Set<String> addons = new HashSet<>();
         addons.add("Other Addon");
@@ -2276,9 +2307,11 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
         consumer.setUsage("Other Usage");
 
@@ -2311,9 +2344,11 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
         consumer.setServiceLevel("Other SLA");
 
@@ -2347,14 +2382,14 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
         consumer.setRole("Other Role");
-        Set<String> addons = new HashSet<>();
-        addons.add("Other Addon");
-        consumer.setAddOns(addons);
+        consumer.setAddOns(Set.of("Other Addon"));
         consumer.setUsage("Other Usage");
         consumer.setServiceLevel("Other SLA");
         consumer.setServiceType("Other Service Type");
@@ -2439,14 +2474,14 @@ public class AutobindRulesTest {
         Product product100 = new Product();
         product100.setId("compliant-100");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
         consumer.setRole("Other Role");
-        Set<String> addons = new HashSet<>();
-        addons.add("Other Addon");
-        consumer.setAddOns(addons);
+        consumer.setAddOns(Set.of("Other Addon"));
         consumer.setUsage("Other Usage");
         consumer.setServiceLevel("Other SLA");
         consumer.setServiceType("Other Service Type");
@@ -2536,13 +2571,15 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
         consumer.setServiceLevel("mysla");
         consumer.setFact("cpu.cpu_socket(s)", "1");
         consumer.setFact("cpu.core(s)_per_socket", "1");
         consumer.setFact("memory.memtotal", "9980456");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -2586,13 +2623,15 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
         consumer.setRole("myrole");
         consumer.setFact("cpu.cpu_socket(s)", "1");
         consumer.setFact("cpu.core(s)_per_socket", "1");
         consumer.setFact("memory.memtotal", "9980456");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -2636,13 +2675,15 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
         consumer.addAddOn("myaddon");
         consumer.setFact("cpu.cpu_socket(s)", "1");
         consumer.setFact("cpu.core(s)_per_socket", "1");
         consumer.setFact("memory.memtotal", "9980456");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -2686,11 +2727,14 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
         consumer.setServiceLevel("mysla");
         consumer.setFact("memory.memtotal", "9980456");
         consumer.setFact("virt.is_guest", "True");
-        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -2737,10 +2781,12 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
         consumer.setUsage("myusage");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -2784,9 +2830,12 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
         consumer.setRole("RHEL Server");
-        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -2832,12 +2881,12 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        Set<String> addons = new HashSet<>();
-        addons.add("my_addon1");
-        addons.add("my_addon2");
-        consumer.setAddOns(addons);
-        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct(product69);
+        consumer.setAddOns(Set.of("my_addon1", "my_addon2"));
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -2972,15 +3021,15 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        Set<String> addons = new HashSet<>();
-        addons.add("my_addon");
-        consumer.setAddOns(addons);
+        consumer.setAddOns(Set.of("my_addon"));
         consumer.setRole("RHEL Workstation");
         consumer.setServiceLevel("Premium");
         consumer.setUsage("Production");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
         consumer.setServiceType("L1-L3");
 
@@ -3020,16 +3069,16 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        Set<String> addons = new HashSet<>();
-        addons.add("my_addon");
-        consumer.setAddOns(addons);
+        consumer.setAddOns(Set.of("my_addon"));
         consumer.setRole("RHEL Workstation");
         consumer.setServiceLevel("Premium");
         consumer.setUsage("Production");
         consumer.setServiceType("L1");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -3068,15 +3117,15 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        Set<String> addons = new HashSet<>();
-        addons.add("my_addon");
-        consumer.setAddOns(addons);
+        consumer.setAddOns(Set.of("my_addon"));
         consumer.setRole("RHEL Workstation");
         consumer.setServiceLevel("Premium");
         consumer.setUsage("Production");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
         consumer.setServiceType("L1-L3");
 
@@ -3116,15 +3165,16 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
-        Set<String> addons = new HashSet<>();
-        addons.add("my_addon");
-        consumer.setAddOns(addons);
+        consumer.setAddOns(Set.of("my_addon"));
         consumer.setRole("RHEL Workstation");
         consumer.setServiceLevel("Premium");
         consumer.setUsage("Production");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+
         consumer.addInstalledProduct(consumerInstalledProduct);
         consumer.setServiceType("L1-L3");
 
@@ -3252,10 +3302,12 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("prod-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
         consumer.setUsage("dEvElOpMeNt");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // No consumer satisfied syspurpose attributes
@@ -3294,10 +3346,12 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("prod-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified syspurpose attributes:
         consumer.setServiceLevel("pReMiUm");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // No consumer satisfied syspurpose attributes
@@ -4326,9 +4380,11 @@ public class AutobindRulesTest {
         product69.setId("prod-69");
 
         // Consumer specified syspurpose attributes:
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         consumer.setServiceType("SerVIcE-TyPe");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // No consumer satisfied syspurpose attributes
@@ -4373,9 +4429,11 @@ public class AutobindRulesTest {
         product69.setId("compliant-69");
 
         // Consumer specified syspurpose attributes:
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         consumer.setServiceType("my-service-type");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // Candidate pools:
@@ -4427,8 +4485,10 @@ public class AutobindRulesTest {
         consumer.setUsage("Production");
         consumer.setServiceType("L1-l3");
 
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---
@@ -4469,8 +4529,10 @@ public class AutobindRulesTest {
         product69.setId("compliant-69");
 
         // Consumer specified syspurpose attributes:
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         consumer.addInstalledProduct(consumerInstalledProduct);
         consumer.setServiceType("Other ServiceType");
 
@@ -4502,14 +4564,16 @@ public class AutobindRulesTest {
         Product product69 = new Product();
         product69.setId("compliant-69");
 
+        ConsumerInstalledProduct consumerInstalledProduct = new ConsumerInstalledProduct()
+            .setProductId(product69.getId())
+            .setProductName(product69.getName());
+
         // Consumer specified attributes:
         consumer.setUsage("myusage");
         consumer.setServiceType("myservicetype");
         consumer.setFact("cpu.cpu_socket(s)", "1");
         consumer.setFact("cpu.core(s)_per_socket", "1");
         consumer.setFact("memory.memtotal", "9980456");
-        ConsumerInstalledProduct consumerInstalledProduct =
-            new ConsumerInstalledProduct(product69);
         consumer.addInstalledProduct(consumerInstalledProduct);
 
         // --- No satisfied syspurpose attributes on the consumer ---

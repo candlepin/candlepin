@@ -31,43 +31,52 @@ import javax.persistence.ManyToOne;
 @DiscriminatorValue("consumer")
 public class ConsumerContentOverride extends ContentOverride<ConsumerContentOverride, Consumer> {
 
+    // TODO: FIXME: This field has no matching field on content, yet is permitted to be null?? If
+    // such an override is created, it'll be lost to the void and sit in the database until it is
+    // manually cleaned up.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = true)
     private Consumer consumer;
 
     public ConsumerContentOverride() {
-
+        // Intentionally left empty
     }
 
-    public ConsumerContentOverride(Consumer consumer, String contentLabel, String name, String value) {
-        super(contentLabel, name, value);
-        this.setConsumer(consumer);
-    }
-
-    public void setConsumer(Consumer consumer) {
+    public ConsumerContentOverride setConsumer(Consumer consumer) {
         this.consumer = consumer;
+        return this;
     }
 
     public Consumer getConsumer() {
         return consumer;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public ConsumerContentOverride setParent(Consumer parent) {
         this.setConsumer(parent);
         return this;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Consumer getParent() {
         return this.getConsumer();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public String toString() {
         Consumer consumer = this.getConsumer();
 
         return String.format("ConsumerContentOverride [consumer: %s, content: %s, name: %s, value: %s]",
-            consumer != null ? consumer.getUuid() : null,
-            this.getContentLabel(),
-            this.getName(),
+            consumer != null ? consumer.getUuid() : null, this.getContentLabel(), this.getName(),
             this.getValue());
     }
 

@@ -181,6 +181,9 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
                 }
                 dest.setInstalledProducts(ips);
             }
+            else {
+                dest.setInstalledProducts(null);
+            }
 
             Set<ConsumerCapability> capabilities = source.getCapabilities();
             if (capabilities != null) {
@@ -198,9 +201,11 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
                 }
                 dest.setCapabilities(capabilitiesDTO);
             }
+            else {
+                dest.setCapabilities(null);
+            }
 
             Set<ConsumerActivationKey> keys = source.getActivationKeys();
-
             if (keys != null) {
                 Set<ConsumerActivationKeyDTO> keysDTOSet = new HashSet<>();
 
@@ -212,6 +217,10 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
 
                 dest.setActivationKeys(keysDTOSet);
             }
+            else {
+                dest.setActivationKeys(null);
+            }
+
 
             // Temporary measure to maintain API compatibility
             if (source.getTypeId() != null) {

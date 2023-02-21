@@ -872,10 +872,12 @@ public class InstalledProductStatusCalculatorTest {
         consumer.setOwner(owner);
 
         for (Product product : installedProducts) {
-            consumer.addInstalledProduct(new ConsumerInstalledProduct(consumer, product));
+            consumer.addInstalledProduct(new ConsumerInstalledProduct()
+                .setProductId(product.getId())
+                .setProductName(product.getName()));
         }
 
-        consumer.setFact("cpu.cpu_socket(s)", "4");
+        consumer.setFact(Consumer.Facts.CPU_SOCKETS, "4");
 
         when(this.consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
         when(this.consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);

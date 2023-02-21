@@ -151,7 +151,12 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         // create a manifest consumer
         ConsumerType type = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
         consumerTypeCurator.create(type);
-        Consumer c = new Consumer("test-consumer", "test-user", owner, type);
+
+        Consumer c = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(c);
 
         Consumer host = createConsumer(owner);
@@ -176,7 +181,12 @@ public class CriteriaRulesTest extends DatabaseTestFixture {
         // create a manifest consumer
         ConsumerType type = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
         consumerTypeCurator.create(type);
-        Consumer c = new Consumer("test-consumer", "test-user", owner, type);
+
+        Consumer c = new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(type);
         consumerCurator.create(c);
 
         Consumer host = createConsumer(owner);

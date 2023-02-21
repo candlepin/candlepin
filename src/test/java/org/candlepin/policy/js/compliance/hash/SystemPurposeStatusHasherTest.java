@@ -101,7 +101,7 @@ class SystemPurposeStatusHasherTest {
         SystemPurposeComplianceStatus status = createStatus();
         String initialHash = hash(this.consumer, status);
 
-        this.consumer.getEntitlements().clear();
+        this.consumer.setEntitlements(null);
 
         assertNotEquals(initialHash, hash(this.consumer, status));
     }
@@ -124,14 +124,18 @@ class SystemPurposeStatusHasherTest {
         ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         ctype.setId("test-ctype");
 
-        Consumer consumer = new Consumer("test-consumer", "test-consumer", this.owner, ctype);
-        consumer.setId("1");
-        consumer.setUuid("12345");
-        consumer.setServiceLevel("SLA");
-        consumer.setServiceType("L1-L3");
-        consumer.setRole("common_role");
-        consumer.setUsage("Development");
-        consumer.setAddOns(new HashSet<>(Set.of("RHEL EUS", "RHEL ELS")));
+        Consumer consumer = new Consumer()
+            .setUuid("12345")
+            .setId("1")
+            .setName("test-consumer")
+            .setUsername("test-consumer")
+            .setOwner(this.owner)
+            .setType(ctype)
+            .setServiceLevel("SLA")
+            .setServiceType("L1-L3")
+            .setRole("common_role")
+            .setUsage("Development")
+            .setAddOns(Set.of("RHEL EUS", "RHEL ELS"));
 
         Product product = TestUtil.createProduct("prod1");
         Pool pool = TestUtil.createPool(owner, product);

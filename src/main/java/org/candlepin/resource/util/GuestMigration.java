@@ -91,7 +91,6 @@ public class GuestMigration {
         manifest = new MigrationManifest(existing);
 
         log.debug("Updating {} guest IDs.", incoming.getGuestIds().size());
-        List<GuestId> existingGuests = existing.getGuestIds();
         // Transform incoming GuestIdDTOs to GuestIds
         List<GuestId> incomingGuestIds = incoming.getGuestIds().stream().filter(Objects::nonNull).distinct()
             .map(guestIdDTO -> new GuestId(guestIdDTO.getGuestId(), existing, guestIdDTO.getAttributes()))
@@ -101,11 +100,9 @@ public class GuestMigration {
         List<GuestId> addedGuests = getAddedGuestIds(existing, incomingGuestIds);
 
         // remove guests that are missing.
-        if (existingGuests != null) {
-            for (GuestId guestId : removedGuests) {
-                existingGuests.remove(guestId);
-                log.debug("Guest ID removed: {}", guestId);
-            }
+        for (GuestId guestId : removedGuests) {
+            existing.removeGuestId(guestId);
+            log.debug("Guest ID removed: {}", guestId);
         }
 
         // Check guests that are existing/added.
@@ -145,11 +142,9 @@ public class GuestMigration {
         List<GuestId> addedGuests = getAddedGuestIds(existing, incoming.getGuestIds());
 
         // remove guests that are missing.
-        if (existingGuests != null) {
-            for (GuestId guestId : removedGuests) {
-                existingGuests.remove(guestId);
-                log.debug("Guest ID removed: {}", guestId);
-            }
+        for (GuestId guestId : removedGuests) {
+            existing.removeGuestId(guestId);
+            log.debug("Guest ID removed: {}", guestId);
         }
 
         // Check guests that are existing/added.
@@ -165,36 +160,36 @@ public class GuestMigration {
     }
 
     private List<GuestId> getRemovedGuestIds(Consumer existingConsumer, List<GuestId> incomingIds) {
-        List<GuestId> existingIds = (existingConsumer.getGuestIds() == null) ? new ArrayList<>() :
-            (new ArrayList<>(existingConsumer.getGuestIds()));
-
-        if (incomingIds == null) {
-            incomingIds = new ArrayList<>();
-        }
+        List<GuestId> existingGuestIds = existingConsumer.getGuestIds();
+        List<GuestId> removedGuestIds = existingGuestIds != null ?
+            (new ArrayList<>(existingGuestIds)) :
+            (new ArrayList<>());
 
         // The incomingId list is expected to be a *complete* list of guest IDs.  Therefore, any id on our
         // consumer that is not on the list of incoming IDs is an ID that needs to be removed.
-        List<GuestId> removedGuests = new ArrayList<>(existingIds);
-        removedGuests.removeAll(incomingIds);
-        return removedGuests;
+        if (incomingIds != null) {
+            removedGuestIds.removeAll(incomingIds);
+        }
+
+        return removedGuestIds;
     }
 
     private List<GuestId> getAddedGuestIds(Consumer existingConsumer, List<GuestId> incomingIds) {
-        List<GuestId> existingIds = (existingConsumer.getGuestIds() == null) ? new ArrayList<>() :
-            (new ArrayList<>(existingConsumer.getGuestIds()));
-
-        if (incomingIds == null) {
-            incomingIds = new ArrayList<>();
-        }
+        List<GuestId> existingGuestIds = existingConsumer.getGuestIds();
+        List<GuestId> addedGuestIds = incomingIds != null ?
+            (new ArrayList<>(incomingIds)) :
+            (new ArrayList<>());
 
         // Any id on our list of incoming IDs that's not one of the current IDs should be considered new
-        List<GuestId> addedGuests = new ArrayList<>(incomingIds);
-        addedGuests.removeAll(existingIds);
-        return addedGuests;
+        if (existingGuestIds != null) {
+            addedGuestIds.removeAll(existingGuestIds);
+        }
+
+        return addedGuestIds;
     }
 
     public String toString() {
-        return "GuestMigration[pending: " + migrationPending + "]";
+        return String.format("GuestMigration [pending: %s]", this.isMigrationPending());
     }
 
     /**
@@ -214,11 +209,8 @@ public class GuestMigration {
         }
 
         public void addOldMapping(Consumer host, GuestId guest) {
-            if (!oldMappings.containsKey(host)) {
-                oldMappings.put(host, new ArrayList<>());
-            }
-
-            oldMappings.get(host).add(guest);
+            this.oldMappings.computeIfAbsent(host, key -> new ArrayList<>())
+                .add(guest);
         }
 
         /**
@@ -229,6 +221,7 @@ public class GuestMigration {
             Set<Consumer> modifiedConsumers = new HashSet<>();
             modifiedConsumers.add(newHost);
             modifiedConsumers.addAll(oldMappings.keySet());
+
             return modifiedConsumers;
         }
 
@@ -240,8 +233,7 @@ public class GuestMigration {
 
             for (Map.Entry<Consumer, List<GuestId>> entry : oldMappings.entrySet()) {
                 Consumer oldHost = entry.getKey();
-                List<GuestId> transferedGuests = entry.getValue();
-                oldHost.getGuestIds().removeAll(transferedGuests);
+                entry.getValue().forEach(oldHost::removeGuestId);
             }
         }
     }

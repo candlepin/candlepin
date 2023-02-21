@@ -51,7 +51,6 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -123,10 +122,14 @@ public class ConsumerBindUtilTest {
 
         List<ActivationKey> keys = List.of(key1);
 
+        ConsumerInstalledProduct cip = new ConsumerInstalledProduct()
+            .setProductId(prod.getId())
+            .setProductName(prod.getName());
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
-        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(consumer, prod);
-        consumer.setInstalledProducts(Set.of(cip));
+        Consumer consumer = new Consumer()
+            .setName("sys.example.com")
+            .setType(this.systemConsumerType)
+            .setInstalledProducts(Set.of(cip));
 
         AutobindData ad = new AutobindData(consumer, owner)
             .withPools(poolIds)
@@ -147,11 +150,14 @@ public class ConsumerBindUtilTest {
         keys.add(key1);
         key1.setAutoAttach(true);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
-        Set<ConsumerInstalledProduct> cips = new HashSet<>();
-        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(consumer, prod);
-        cips.add(cip);
-        consumer.setInstalledProducts(cips);
+        ConsumerInstalledProduct cip = new ConsumerInstalledProduct()
+            .setProductId(prod.getId())
+            .setProductName(prod.getName());
+
+        Consumer consumer = new Consumer()
+            .setName("sys.example.com")
+            .setType(this.systemConsumerType)
+            .setInstalledProducts(Set.of(cip));
 
         AutobindData ad = new AutobindData(consumer, owner)
             .forProducts(prodIds);
@@ -175,11 +181,14 @@ public class ConsumerBindUtilTest {
         key1.addProduct(prod2);
         key1.setAutoAttach(true);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
-        Set<ConsumerInstalledProduct> cips = new HashSet<>();
-        ConsumerInstalledProduct cip = new ConsumerInstalledProduct(consumer, prod1);
-        cips.add(cip);
-        consumer.setInstalledProducts(cips);
+        ConsumerInstalledProduct cip = new ConsumerInstalledProduct()
+            .setProductId(prod1.getId())
+            .setProductName(prod1.getName());
+
+        Consumer consumer = new Consumer()
+            .setName("sys.example.com")
+            .setType(this.systemConsumerType)
+            .setInstalledProducts(Set.of(cip));
 
         AutobindData ad = new AutobindData(consumer, owner)
             .forProducts(prodIds);
@@ -196,7 +205,10 @@ public class ConsumerBindUtilTest {
         keys.add(key1);
         key1.setServiceLevel("I don't exist");
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        Consumer consumer = new Consumer()
+            .setName("sys.example.com")
+            .setType(this.systemConsumerType);
+
         ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
 
         doThrow(new BadRequestException("exception")).when(serviceLevelValidator)
@@ -213,7 +225,10 @@ public class ConsumerBindUtilTest {
         keys.add(key1);
         key1.setServiceLevel("I don't exist");
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        Consumer consumer = new Consumer()
+            .setName("sys.example.com")
+            .setType(this.systemConsumerType);
+
         ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
 
         doThrow(new BadRequestException("exception")).when(serviceLevelValidator)
@@ -232,7 +247,10 @@ public class ConsumerBindUtilTest {
         ghost.setId("ghost-pool");
         key1.addPool(ghost, 10L);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        Consumer consumer = new Consumer()
+            .setName("sys.example.com")
+            .setType(this.systemConsumerType);
+
         ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
 
         when(entitler.bindByPoolQuantity(eq(consumer), eq(ghost.getId()), eq(10)))
@@ -261,7 +279,10 @@ public class ConsumerBindUtilTest {
         pool3.setId("pool3");
         key1.addPool(pool3, 5L);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        Consumer consumer = new Consumer()
+            .setName("sys.example.com")
+            .setType(this.systemConsumerType);
+
         ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
 
         when(entitler.bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(10)))
@@ -293,7 +314,10 @@ public class ConsumerBindUtilTest {
         pool3.setId("pool3");
         key2.addPool(pool3, 5L);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        Consumer consumer = new Consumer()
+            .setName("sys.example.com")
+            .setType(this.systemConsumerType);
+
         ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
 
         when(entitler.bindByPoolQuantity(eq(consumer), eq(pool1.getId()), eq(10)))
@@ -316,7 +340,10 @@ public class ConsumerBindUtilTest {
         pool1.setId("pool1");
         key1.addPool(pool1, 10L);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        Consumer consumer = new Consumer()
+            .setName("sys.example.com")
+            .setType(this.systemConsumerType);
+
         ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
 
         consumerBindUtil.handleActivationKeys(consumer, keys, true);
@@ -333,7 +360,10 @@ public class ConsumerBindUtilTest {
         key1.setAutoAttach(false);
         key1.addPool(pool1, 1L);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        Consumer consumer = new Consumer()
+            .setName("sys.example.com")
+            .setType(this.systemConsumerType);
+
         ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
 
         consumerBindUtil.handleActivationKeys(consumer, Arrays.asList(key1), false);
@@ -352,7 +382,10 @@ public class ConsumerBindUtilTest {
         key1.setAutoAttach(false);
         key1.addPool(pool1, 5L);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        Consumer consumer = new Consumer()
+            .setName("sys.example.com")
+            .setType(this.systemConsumerType);
+
         ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
 
         doThrow(new ForbiddenException("exception")).when(this.entitler)
@@ -372,7 +405,10 @@ public class ConsumerBindUtilTest {
         ActivationKey key1 = new ActivationKey("test_key-1", this.owner);
         key1.setAutoAttach(true);
 
-        Consumer consumer = new Consumer("sys.example.com", null, null, this.systemConsumerType);
+        Consumer consumer = new Consumer()
+            .setName("sys.example.com")
+            .setType(this.systemConsumerType);
+
         ConsumerBindUtil consumerBindUtil = this.buildConsumerBindUtil();
 
         consumerBindUtil.handleActivationKeys(consumer, Arrays.asList(key1), false);

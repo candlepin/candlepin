@@ -63,16 +63,24 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
         ct = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);
 
-        consumer = new Consumer("a consumer", "username", owner, ct);
-        consumer.addInstalledProduct(new ConsumerInstalledProduct(prod.getId(), prod.getName()));
+        consumer = new Consumer()
+            .setType(ct)
+            .setOwner(owner)
+            .setName("a consumer")
+            .setUsername("username");
+
+        consumer.addInstalledProduct(new ConsumerInstalledProduct()
+            .setProductId(prod.getId())
+            .setProductName(prod.getName()));
+
         consumerCurator.create(consumer);
     }
 
     @Test
     public void testActiveEntitlementJob() throws JobExecutionException {
         Pool p = createPool(owner, prod, 5L, Util.yesterday(), Util.tomorrow());
-        Entitlement ent = this
-            .createEntitlement(owner, consumer, p, createEntitlementCertificate("entkey", "ecert"));
+        Entitlement ent = this.createEntitlement(owner, consumer, p,
+            createEntitlementCertificate("entkey", "ecert"));
         // Needs to be flipped
         ent.setUpdatedOnStart(false);
         entitlementCurator.create(ent);

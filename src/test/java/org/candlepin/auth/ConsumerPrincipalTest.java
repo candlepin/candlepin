@@ -99,8 +99,12 @@ public class ConsumerPrincipalTest {
 
         Owner newOwner = new Owner("o1");
         newOwner.setId("o1-id");
+        Consumer c = new Consumer()
+            .setName("Test Consumer")
+            .setUsername("test-consumer")
+            .setOwner(newOwner)
+            .setType(ctype);
 
-        Consumer c = new Consumer("Test Consumer", "test-consumer", newOwner, ctype);
         ConsumerPrincipal cp = new ConsumerPrincipal(c, o);
         assertNotEquals(principal, cp);
     }

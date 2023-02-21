@@ -367,7 +367,11 @@ public class ConsumerResourceTest {
         }
 
         this.mockConsumerType(ctype);
-        Consumer consumer = this.mockConsumer(new Consumer("test-consumer", "test-user", owner, ctype));
+        Consumer consumer = this.mockConsumer(new Consumer()
+            .setName("test-consumer")
+            .setUsername("test-user")
+            .setOwner(owner)
+            .setType(ctype));
 
         return consumer;
     }
