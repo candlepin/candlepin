@@ -16,7 +16,7 @@ buildscript {
 }
 
 plugins {
-    id "nebula.lint" version "16.2.3"
+    id "nebula.lint" version "18.0.3"
     /*
     The Versions plugin is used to provide the dependencyUpdates task which is used
     to look for libraries that have newer versions available.
