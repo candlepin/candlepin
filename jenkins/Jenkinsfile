@@ -20,8 +20,8 @@ pipeline {
         stage('Test') {
             parallel {
                 stage('Unit tests and Sonar') {
+                    agent { label 'candlepin' }
                     stages {
-                        agent { label 'candlepin' }
                         stage('Unit tests') {
                             steps {
                                 sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
