@@ -172,7 +172,7 @@
     <dependency>
       <groupId>net.logstash.logback</groupId>
       <artifactId>logstash-logback-encoder</artifactId>
-      <version>7.2</version>
+      <version>7.3</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -292,7 +292,7 @@
     <dependency>
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-servlet-filter-adapter</artifactId>
-      <version>20.0.3</version>
+      <version>20.0.4</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -310,7 +310,7 @@
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <version>42.5.3</version>
+      <version>42.5.4</version>
       <scope>runtime</scope>
     </dependency>
     <dependency>
