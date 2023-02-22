@@ -19,5 +19,5 @@ esac
 
 ./docker/test $TEST_DB -c "cp-test ${CP_TEST_ARGS} -c ${CHANGE_BRANCH}" -n "${STAGE_NAME}-${BUILD_TAG}"
 RETVAL=$?
-sudo chown -R jenkins:jenkins $WORKSPACE/artifacts
+sudo chown -R jenkins:jenkins $WORKSPACE
 exit $RETVAL
