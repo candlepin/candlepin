@@ -23,17 +23,3 @@
   tags:
     - candlepin
     - candlepin-setup
-
-# Impl note:
-# This has to be done with a login shell to get the correct version of Ruby when using RVM
-- name: "Install Candlepin gem bundle"
-  ansible.builtin.shell: bash --login -c 'bundle install'
-  args:
-    chdir: "{{ candlepin_home }}"
-  when:
-    - cp_configure_ruby | bool
-    - candlepin_home_dir.stat.exists and candlepin_home_dir.stat.isdir
-  changed_when: false
-  tags:
-    - candlepin
-    - candlepin-setup

@@ -13,14 +13,6 @@ Candlepin has many requirements for its developers. You will need a Fedora or Ce
 enabled to use this role. It is recommmended that that box has a non-root user to run Candlepin on (see
 variables below).
 
-Dependencies
-------------
-
-This role depends on the `rvm1.ruby` role for installing and configuring RVM. At the time of writing, Candlpin
-has a strict requirement on Ruby 2.4, which is installed and managed via RVM.
-
-The dependency can be avoided by setting `cp_configure_ruby`, see the following section.
-
 Role Variables
 --------------
 
@@ -34,7 +26,6 @@ primary flow control variables are the six boolean variables listed below:
   be setup, such as bash prompts, colors, copying in SSH keys, etc.; defaults to false
 - `cp_configure_debugging`: controls whether or not Tomcat will be configured for remote debugging and
   profiling via YourKit; defaults to false
-- `cp_configure_ruby`: controls whether or not setup Ruby; defaults to true
 - `cp_git_checkout`: whether or not the Candlepin repo will be cloned via git; defaults to true
 - `cp_deploy`: whether or not Candlepin will be deployed after provisionining the system; defaults to true
 
