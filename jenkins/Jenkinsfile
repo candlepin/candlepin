@@ -6,7 +6,7 @@ library identifier: 'fh-pipeline-library@master', retriever: modernSCM(
 pipeline {
     agent none
     options {
-        skipDefaultCheckout true
+        skipDefaultCheckout()
         timeout(time: 16, unit: 'HOURS')
         disableConcurrentBuilds(abortPrevious: true)
     }
@@ -19,68 +19,73 @@ pipeline {
         }
         stage('Test') {
             parallel {
-                stage('unit') {
-                    // ensures that this stage will get assigned its own workspace
-                    agent { label 'candlepin' }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/unit-tests.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                            archiveArtifacts artifacts: 'unit-artifacts/**',
-                                             fingerprint: true,
-                                             onlyIfSuccessful: false
+                stage('Unit tests and Sonar') {
+                    stages {
+                        stage('Unit tests') {
+                            agent { label 'candlepin' }
+                            steps {
+                                checkout scm
+                                sh './gradlew test coverage'
+                            }
+                            post {
+                                always {
+                                    stash name: 'jacocoReports', includes: 'build/**/*'
+                                    junit '**/build/test-results/**/*.xml'
+                                }
+                            }
                         }
-                    }
-                }
-                stage('Upload-PR-to-SonarQube') {
-                    agent { label 'candlepin' }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/upload-on-sonarqube.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
+                        stage('Upload-PR-to-SonarQube') {
+                            agent { label 'candlepin' }
+                            when {
+                                changeRequest()
+                            }
+                            steps {
+                                checkout scm
+                                unstash 'jacocoReports'
+                                sh "./gradlew sonar -x coverage -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.pullrequest.key=${CHANGE_ID} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.pullrequest.branch=${BRANCH_NAME} -Dsonar.projectKey=chainsaw:candlepin-server"
+                            }
                         }
-                    }
-                }
-                stage('Upload-Branch-to-SonarQube') {
-                    agent { label 'candlepin' }
-                    environment {
-                        BRANCH_UPLOAD = 'true'
-                    }
-                    when {
-                        not {
-                            changeRequest()
-                        }
-                    }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/upload-on-sonarqube.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
+                        stage('Upload-Branch-to-SonarQube') {
+                            agent { label 'candlepin' }
+                            environment {
+                                BRANCH_UPLOAD = 'true'
+                            }
+                            when {
+                                not {
+                                    changeRequest()
+                                }
+                            }
+                            steps {
+                                checkout scm
+                                unstash 'jacocoReports'
+                                sh "./gradlew sonar -x coverage -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.branch.name=${BRANCH_NAME} -Dsonar.projectKey=chainsaw:candlepin-server"
+                            }
                         }
                     }
                 }
                 stage('checkstyle') {
                     agent { label 'candlepin' }
                     steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
-                        sh 'sh jenkins/lint.sh'
+                        sh './gradlew checkstyle'
                     }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                        }
+                }
+                stage('bugzilla-reference') {
+                    agent { label 'candlepin' }
+                    environment {
+                        GITHUB_TOKEN = credentials('github-api-token-as-username-password')
+                        BUGZILLA_TOKEN = credentials('BUGZILLA_API_TOKEN')
+                    }
+                    steps {
+                        checkout scm
+                        sh 'python jenkins/check_pr_branch.py $CHANGE_ID'
+                    }
+                }
+                stage('validate-translation') {
+                    agent { label 'candlepin' }
+                    steps {
+                        checkout scm
+                        sh './gradlew validate_translation'
                     }
                 }
                 stage('spec-postgresql') {
@@ -160,31 +165,6 @@ pipeline {
                             archiveArtifacts artifacts: 'spec-mysql-hosted-artifacts/**',
                                              fingerprint: true,
                                              onlyIfSuccessful: false
-                        }
-                    }
-                }
-                stage('bugzilla-reference') {
-                    agent { label 'candlepin' }
-                    environment {
-                        GITHUB_TOKEN = credentials('github-api-token-as-username-password')
-                        BUGZILLA_TOKEN = credentials('BUGZILLA_API_TOKEN')
-                    }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'python jenkins/check_pr_branch.py $CHANGE_ID'
-                    }
-                }
-                stage('validate-translation') {
-                    agent { label 'candlepin' }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/candlepin-validate-text.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
                         }
                     }
                 }
