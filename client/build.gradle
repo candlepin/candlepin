@@ -38,7 +38,6 @@ openApiGenerate {
     configOptions = [
         dateLibrary: "java8"
     ]
-    templateDir = "$rootDir/client/buildSrc/src/main/resources/templates"
     modelPackage = "org.candlepin.dto.api.client.v1"
     apiPackage = "org.candlepin.resource.client.v1"
     invokerPackage = "org.candlepin.invoker.client"
