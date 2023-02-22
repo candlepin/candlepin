@@ -13,5 +13,5 @@ chcon -Rt svirt_sandbox_file_t $WORKSPACE//artifacts/
 # Run the validation on translations
 ./docker/test -x -c "cp-test -i -c ${CHANGE_BRANCH}" -n "${STAGE_NAME}-${BUILD_TAG}"
 RETVAL=$?
-sudo chown -R jenkins:jenkins $WORKSPACE/artifacts
+sudo chown -R jenkins:jenkins $WORKSPACE
 exit $RETVAL
