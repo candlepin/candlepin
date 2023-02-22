@@ -19,5 +19,5 @@ else
 fi
 
 RETVAL=$?
-sudo chown -R jenkins:jenkins $WORKSPACE/artifacts
+sudo chown -R jenkins:jenkins $WORKSPACE
 exit $RETVAL
