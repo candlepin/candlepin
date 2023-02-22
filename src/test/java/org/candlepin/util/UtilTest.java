@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.dto.api.v1.AttributeDTO;
@@ -320,14 +319,9 @@ public class UtilTest {
     }
 
     @Test
-    public void testGetHostname() {
-        try {
-            String hostname = Util.getHostname();
-            assertNotNull(hostname);
-        }
-        catch (Exception e) {
-            fail("getHostname should not throw an exception");
-        }
+    public void testGetHostname() throws Exception {
+        String hostname = Util.getHostname();
+        assertNotNull(hostname);
     }
 
     @Test
