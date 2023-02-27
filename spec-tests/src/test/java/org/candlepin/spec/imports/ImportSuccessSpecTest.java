@@ -306,6 +306,38 @@ public class ImportSuccessSpecTest {
             .containsOnly(export.cdn().label());
     }
 
+    @Test
+    public void shouldImportContentWithMetadataExpirationSetTo1() {
+        ProductDTO providedProduct = Products.random();
+        ProductDTO derivedProvidedProduct = Products.random();
+        ProductDTO derivedProduct = Products.random()
+            .providedProducts(Set.of(derivedProvidedProduct));
+        ProductDTO product = Products.random()
+            .addProvidedProductsItem(providedProduct)
+            .derivedProduct(derivedProduct);
+        Export export = generateWith(generator -> generator
+            .withProduct(providedProduct, createContent())
+            .withProduct(derivedProvidedProduct, createContent())
+            .withProduct(derivedProduct, createContent())
+            .withProduct(product, createContent()));
+
+        doImport(owner.getKey(), export.file());
+
+        List<ContentDTO> content = userClient.ownerContent().listOwnerContent(owner.getKey());
+        assertThat(content)
+            .hasSize(4)
+            .map(ContentDTO::getMetadataExpire)
+            .containsOnly(1L);
+    }
+
+    private ContentDTO createContent() {
+        return Contents.random()
+            .metadataExpire(6000L)
+            .contentUrl("/path/to/arch/specific/content")
+            .requiredTags("TAG1,TAG2")
+            .arches("i386,x86_64");
+    }
+
     public Export generateWith(Consumer<ExportGenerator> setup) {
         ExportGenerator exportGenerator = new ExportGenerator(admin);
         setup.accept(exportGenerator.minimal());

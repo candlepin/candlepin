@@ -66,144 +66,6 @@ public class ProductImporterTest {
         this.mapper = new SyncUtils(this.config).getObjectMapper();
     }
 
-    private ProductImporter buildProductImporter() throws IOException {
-        return new ProductImporter(this.tmpdir, this.mapper, this.i18n);
-    }
-
-    private void writeMockProductData(ProductDTO... products) throws IOException {
-        if (products == null) {
-            return;
-        }
-
-        // Impl note: we're intentionally *not* collecting children products here so we can
-        // easily test the case where a child product does not exist in the manifest
-
-        for (ProductDTO pdto : products) {
-            File pfile = new File(this.tmpdir, pdto.getId() + ProductImporter.PRODUCT_FILE_SUFFIX);
-            pfile.deleteOnExit();
-
-            try (FileWriter writer = new FileWriter(pfile)) {
-                this.mapper.writeValue(writer, pdto);
-            }
-        }
-    }
-
-    private ProductDTO generateProductDTO(int content, int branding) {
-        String suffix = TestUtil.randomString(8, TestUtil.CHARSET_NUMERIC);
-
-        ProductDTO pdto = new ProductDTO()
-            .setUuid(TestUtil.randomString(32, TestUtil.CHARSET_NUMERIC_HEX))
-            .setId("test_prod-" + suffix)
-            .setName("Test Prod " + suffix)
-            .setMultiplier(5L)
-            .setAttribute("attr1", "attr1val_" + suffix)
-            .setAttribute("attr2", "attr2val_" + suffix)
-            .setAttribute("attr3", "attr3val_" + suffix);
-
-        for (int i = 0; i < content; ++i) {
-            Set<String> requiredProductIds = Set.of("rpi1-" + suffix, "rpi2-" + suffix, "rpi3-" + suffix);
-            String csuffix = TestUtil.randomString(8, TestUtil.CHARSET_NUMERIC);
-
-            ContentDTO cdto = new ContentDTO()
-                .setUuid(TestUtil.randomString(32, TestUtil.CHARSET_NUMERIC_HEX))
-                .setId("test_cont-" + csuffix)
-                .setType("test_type-" + csuffix)
-                .setLabel("test_label-" + csuffix)
-                .setName("Test Content " + csuffix)
-                .setVendor("test_vendor-" + csuffix)
-                .setContentUrl("test_content_url-" + csuffix)
-                .setRequiredTags("test_tags-" + csuffix)
-                .setReleaseVersion("release_ver-" + csuffix)
-                .setArches("test_arches-" + csuffix)
-                .setMetadataExpiration(50L)
-                .setRequiredProductIds(requiredProductIds);
-
-            pdto.addContent(cdto, true);
-        }
-
-        for (int i = 0; i < branding; ++i) {
-            String bsuffix = TestUtil.randomString(8, TestUtil.CHARSET_NUMERIC);
-            BrandingDTO bdto = new BrandingDTO()
-                .setId("test_branding-" + bsuffix)
-                .setProductId(pdto.getId())
-                .setName("Test Branding " + bsuffix)
-                .setType("test_brand_type-" + bsuffix);
-
-            pdto.addBranding(bdto);
-        }
-
-        return pdto;
-    }
-
-    /**
-     * Normalizes content data according to the logic expected from the importer's output. This
-     * allows us to write simpler test cases using assert[Not]Equals rather than having to manually
-     * test field-by-field.
-     *
-     * @param input
-     *  the input content DTO to normalize
-     *
-     * @return
-     *  a normalized copy of the input DTO
-     */
-    private ContentDTO normalizeContentDTO(ContentDTO input) {
-        if (input == null) {
-            return null;
-        }
-
-        ContentDTO normalized = new ContentDTO(input)
-            .setUuid(null)
-            .setMetadataExpiration(1L);
-
-        if (normalized.getVendor() == null || normalized.getVendor().isEmpty()) {
-            normalized.setVendor("unknown");
-        }
-
-        return normalized;
-    }
-
-    /**
-     * Normalizes product and content data according to the logic expected from the importer's
-     * output. This allows us to write simpler test cases using assert[Not]Equals rather than
-     * having to manually test field-by-field.
-     *
-     * @param input
-     *  the input product DTO to normalize
-     *
-     * @return
-     *  a normalized copy of the input DTO
-     */
-    private ProductDTO normalizeProductDTO(ProductDTO input) {
-        if (input == null) {
-            return null;
-        }
-
-        // Impl note: We're doing our own deep copy here, so we don't need a deep copy to start with
-        ProductDTO normalized = new ProductDTO(input)
-            .setUuid(null)
-            .setMultiplier(1L)
-            .setProductContent(null)
-            .setProvidedProducts(null)
-            .setBranding(null); // apparently we @JsonIgnore branding on product...???
-
-        normalized.setDerivedProduct(this.normalizeProductDTO(normalized.getDerivedProduct()));
-
-        Collection<ProductDTO> providedProducts = input.getProvidedProducts();
-        if (providedProducts != null) {
-            providedProducts.forEach(ppdto -> normalized.addProvidedProduct(this.normalizeProductDTO(ppdto)));
-        }
-
-        Collection<ProductContentDTO> productContent = input.getProductContent();
-        if (productContent != null) {
-            for (ProductContentDTO pcdto : productContent) {
-                ContentDTO cdto = this.normalizeContentDTO(pcdto.getContent());
-                normalized.addContent(cdto, pcdto.isEnabled());
-            }
-        }
-
-        return normalized;
-    }
-
     @Test
     public void testImportProduct() throws Exception {
         ProductDTO pdto1 = this.generateProductDTO(3, 3);
@@ -382,8 +244,7 @@ public class ProductImporterTest {
         ProductDTO pdto2 = this.generateProductDTO(3, 3);
         ProductDTO pdto3 = this.generateProductDTO(3, 3);
 
-        Map<String, ProductDTO> expected = List.of(pdto1, pdto2, pdto3)
-            .stream()
+        Map<String, ProductDTO> expected = Stream.of(pdto1, pdto2, pdto3)
             .map(this::normalizeProductDTO)
             .collect(Collectors.toMap(ProductDTO::getId, Function.identity()));
 
@@ -404,6 +265,172 @@ public class ProductImporterTest {
 
         assertNotNull(output);
         assertTrue(output.isEmpty());
+    }
+
+    @Test
+    public void importShouldSetMetadataExpireTo1() throws Exception {
+        ProductDTO productToImport = this.generateProductDTO(3, 3);
+        ProductDTO providedProduct = this.generateProductDTO(3, 3);
+        ProductDTO derivedProduct = this.generateProductDTO(3, 3);
+        productToImport.addProvidedProduct(providedProduct);
+        productToImport.setDerivedProduct(derivedProduct);
+
+        this.writeMockProductData(productToImport, providedProduct);
+
+        ProductImporter importer = this.buildProductImporter();
+
+        ProductDTO importedProduct = importer.importProduct(productToImport.getId());
+
+        assertNotNull(importedProduct);
+        for (ProductContentDTO content : importedProduct.getProductContent()) {
+            assertEquals(1L, content.getContent().getMetadataExpiration());
+        }
+        for (ProductDTO importedProvided : importedProduct.getProvidedProducts()) {
+            for (ProductContentDTO content : importedProvided.getProductContent()) {
+                assertEquals(1L, content.getContent().getMetadataExpiration());
+            }
+        }
+        for (ProductContentDTO content : importedProduct.getDerivedProduct().getProductContent()) {
+            assertEquals(1L, content.getContent().getMetadataExpiration());
+        }
+    }
+
+    private ProductImporter buildProductImporter() {
+        return new ProductImporter(this.tmpdir, this.mapper, this.i18n);
+    }
+
+    private void writeMockProductData(ProductDTO... products) throws IOException {
+        if (products == null) {
+            return;
+        }
+
+        // Impl note: we're intentionally *not* collecting children products here so we can
+        // easily test the case where a child product does not exist in the manifest
+
+        for (ProductDTO pdto : products) {
+            File pfile = new File(this.tmpdir, pdto.getId() + ProductImporter.PRODUCT_FILE_SUFFIX);
+            pfile.deleteOnExit();
+
+            try (FileWriter writer = new FileWriter(pfile)) {
+                this.mapper.writeValue(writer, pdto);
+            }
+        }
+    }
+
+    private ProductDTO generateProductDTO(int content, int branding) {
+        String suffix = TestUtil.randomString(8, TestUtil.CHARSET_NUMERIC);
+
+        ProductDTO pdto = new ProductDTO()
+            .setUuid(TestUtil.randomString(32, TestUtil.CHARSET_NUMERIC_HEX))
+            .setId("test_prod-" + suffix)
+            .setName("Test Prod " + suffix)
+            .setMultiplier(5L)
+            .setAttribute("attr1", "attr1val_" + suffix)
+            .setAttribute("attr2", "attr2val_" + suffix)
+            .setAttribute("attr3", "attr3val_" + suffix);
+
+        for (int i = 0; i < content; ++i) {
+            Set<String> requiredProductIds = Set.of("rpi1-" + suffix, "rpi2-" + suffix, "rpi3-" + suffix);
+            String csuffix = TestUtil.randomString(8, TestUtil.CHARSET_NUMERIC);
+
+            ContentDTO cdto = new ContentDTO()
+                .setUuid(TestUtil.randomString(32, TestUtil.CHARSET_NUMERIC_HEX))
+                .setId("test_cont-" + csuffix)
+                .setType("test_type-" + csuffix)
+                .setLabel("test_label-" + csuffix)
+                .setName("Test Content " + csuffix)
+                .setVendor("test_vendor-" + csuffix)
+                .setContentUrl("test_content_url-" + csuffix)
+                .setRequiredTags("test_tags-" + csuffix)
+                .setReleaseVersion("release_ver-" + csuffix)
+                .setArches("test_arches-" + csuffix)
+                .setMetadataExpiration(50L)
+                .setRequiredProductIds(requiredProductIds);
+
+            pdto.addContent(cdto, true);
+        }
+
+        for (int i = 0; i < branding; ++i) {
+            String bsuffix = TestUtil.randomString(8, TestUtil.CHARSET_NUMERIC);
+            BrandingDTO bdto = new BrandingDTO()
+                .setId("test_branding-" + bsuffix)
+                .setProductId(pdto.getId())
+                .setName("Test Branding " + bsuffix)
+                .setType("test_brand_type-" + bsuffix);
+
+            pdto.addBranding(bdto);
+        }
+
+        return pdto;
+    }
+
+    /**
+     * Normalizes content data according to the logic expected from the importer's output. This
+     * allows us to write simpler test cases using assert[Not]Equals rather than having to manually
+     * test field-by-field.
+     *
+     * @param input
+     *  the input content DTO to normalize
+     *
+     * @return
+     *  a normalized copy of the input DTO
+     */
+    private ContentDTO normalizeContentDTO(ContentDTO input) {
+        if (input == null) {
+            return null;
+        }
+
+        ContentDTO normalized = new ContentDTO(input)
+            .setUuid(null)
+            .setMetadataExpiration(1L);
+
+        if (normalized.getVendor() == null || normalized.getVendor().isEmpty()) {
+            normalized.setVendor("unknown");
+        }
+
+        return normalized;
+    }
+
+    /**
+     * Normalizes product and content data according to the logic expected from the importer's
+     * output. This allows us to write simpler test cases using assert[Not]Equals rather than
+     * having to manually test field-by-field.
+     *
+     * @param input
+     *  the input product DTO to normalize
+     *
+     * @return
+     *  a normalized copy of the input DTO
+     */
+    private ProductDTO normalizeProductDTO(ProductDTO input) {
+        if (input == null) {
+            return null;
+        }
+
+        // Impl note: We're doing our own deep copy here, so we don't need a deep copy to start with
+        ProductDTO normalized = new ProductDTO(input)
+            .setUuid(null)
+            .setMultiplier(1L)
+            .setProductContent(null)
+            .setProvidedProducts(null)
+            .setBranding(null); // apparently we @JsonIgnore branding on product...???
+
+        normalized.setDerivedProduct(this.normalizeProductDTO(normalized.getDerivedProduct()));
+
+        Collection<ProductDTO> providedProducts = input.getProvidedProducts();
+        if (providedProducts != null) {
+            providedProducts.forEach(ppdto -> normalized.addProvidedProduct(this.normalizeProductDTO(ppdto)));
+        }
+
+        Collection<ProductContentDTO> productContent = input.getProductContent();
+        if (productContent != null) {
+            for (ProductContentDTO pcdto : productContent) {
+                ContentDTO cdto = this.normalizeContentDTO(pcdto.getContent());
+                normalized.addContent(cdto, pcdto.isEnabled());
+            }
+        }
+
+        return normalized;
     }
 
 }
