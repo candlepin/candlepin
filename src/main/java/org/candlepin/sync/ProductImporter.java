@@ -20,7 +20,6 @@ import org.candlepin.model.Owner;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +33,7 @@ import java.io.Reader;
  */
 public class ProductImporter {
     private static Logger log = LoggerFactory.getLogger(ProductImporter.class);
+    public static final String PRODUCT_FILE_SUFFIX = ".json";
 
     public ProductImporter() {
         // Intentionally left empty
@@ -43,24 +43,42 @@ public class ProductImporter {
 
         ProductDTO importedProduct = mapper.readValue(reader, ProductDTO.class);
 
-        // Make sure the (UU)ID's are null, otherwise Hibernate thinks these are
-        // detached entities.
-        importedProduct.setUuid(null);
+        return normalizeProduct(importedProduct);
+    }
+
+
+    /**
+     * Normalizes the given product to ensure it is safe for import. If the given product is null,
+     * this method returns null.
+     *
+     * @param product
+     *  the product to normalize
+     *
+     * @return
+     *  the input, normalized product
+     */
+    private ProductDTO normalizeProduct(ProductDTO product) {
+        if (product == null) {
+            return null;
+        }
+
+        // Make sure the UUID is null, otherwise Hibernate thinks these are detached entities.
+        product.setUuid(null);
 
         // Multiplication has already happened on the upstream candlepin. set this to 1
         // so we can use multipliers on local products if necessary.
-        importedProduct.setMultiplier(1L);
+        product.setMultiplier(1L);
 
-        if (importedProduct.getProductContent() != null) {
-            // Update attached content and ensure it isn't malformed
-            for (ProductDTO.ProductContentDTO pc : importedProduct.getProductContent()) {
+        // Update attached content and ensure it isn't malformed
+        if (product.getProductContent() != null) {
+            for (ProductDTO.ProductContentDTO pc : product.getProductContent()) {
                 ContentDTO content = pc.getContent();
 
                 // Clear the UUID
                 content.setUuid(null);
 
                 // Fix the vendor string if it is/was cleared (BZ 990113)
-                if (StringUtils.isBlank(content.getVendor())) {
+                if (org.apache.commons.lang3.StringUtils.isBlank(content.getVendor())) {
                     content.setVendor("unknown");
                 }
 
@@ -76,7 +94,14 @@ public class ProductImporter {
             }
         }
 
-        return importedProduct;
+        // Update children products
+        this.normalizeProduct(product.getDerivedProduct());
+
+        if (product.getProvidedProducts() != null) {
+            product.getProvidedProducts().forEach(this::normalizeProduct);
+        }
+
+        return product;
     }
 
 }
