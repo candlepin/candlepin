@@ -144,7 +144,7 @@ class PomToolkit implements Plugin<Project> {
         def plugin = parentNode.appendNode('plugin')
         plugin.appendNode('groupId', 'org.openapitools')
         plugin.appendNode('artifactId', 'openapi-generator-maven-plugin')
-        plugin.appendNode('version', '5.4.0')
+        plugin.appendNode('version', '5.2.1')
         def executionsNode = plugin.appendNode('executions')
         def executionNode = executionsNode.appendNode('execution')
         def goalsNode = executionNode.appendNode('goals')
