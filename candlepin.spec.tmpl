@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.20
+Version: 4.1.21
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,17 @@ fi
 
 #raw
 %changelog
+* Tue Feb 28 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.21-1
+- 2172538: Fix setting of metadata expiration during import (ojanus@redhat.com)
+- CANDLEPIN-331: Jenkins: Reuse result of unit test stage (ojanus@redhat.com)
+- Fix workspace ownership (ojanus@redhat.com)
+- Update nebula lint (ojanus@redhat.com)
+- Optimize hibernate use in AsyncJobStatusCuratorTest (bcourt@redhat.com)
+- Updated Util.getHostname to no longer use reflection (crog@redhat.com)
+- Update Gradle Wrapper to 7.4.2 (ojanus@redhat.com)
+- Changed Maven plugin to maven-publish for Gradle 7+  * Updated pom.xml
+  generation to use maven-publish plugin (joshmalbrecht@gmail.com)
+
 * Wed Feb 01 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.20-1
 - Upgrade to Postgresql JDBC 42.5.1 (nmoumoul@redhat.com)
 - Add new translations using Weblate (noreply@weblate.org)
