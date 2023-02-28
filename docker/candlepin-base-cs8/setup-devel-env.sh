@@ -41,7 +41,7 @@ PACKAGES=(
 
 dnf module enable -y pki-core pki-deps
 
-dnf install -y ${PACKAGES[@]}
+dnf install -y ${PACKAGES[@]} --nobest
 
 sh -c 'alternatives --set python $(which python3)'
 

@@ -7,7 +7,6 @@ cp_configure_postgresql: true
 cp_configure_mariadb: true
 cp_configure_user_env: false
 cp_configure_debugging: false
-cp_configure_ruby: true
 
 cp_git_checkout: true
 cp_git_repo: "https://github.com/candlepin/candlepin"
