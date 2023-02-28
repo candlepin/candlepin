@@ -14,7 +14,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.1.21
+Version: 4.1.22
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -241,6 +241,9 @@ fi
 
 #raw
 %changelog
+* Tue Feb 28 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.22-1
+- Revert accidental openapi maven plugin upgrade (nmoumoul@redhat.com)
+
 * Tue Feb 28 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.1.21-1
 - 2172538: Fix setting of metadata expiration during import (ojanus@redhat.com)
 - CANDLEPIN-331: Jenkins: Reuse result of unit test stage (ojanus@redhat.com)
