@@ -17,7 +17,10 @@ RUN /bin/bash /root/setup-supervisord.sh
 # Script for actually running the tests, could theoretically move to candlepin
 # checkout for easier updating.
 COPY /base-scripts/setup-db.sh /root/
-COPY cp-test /usr/bin/
+
+# This allows the cp-test file in the branch to be used instead of one baked into the docker image.
+RUN ln -s /candlepin-dev/docker/cp-test /usr/bin/cp-test
+
 
 # Centos Streams 8 uses Python3 so we must create alias to not break existing scripts.
 RUN echo 'alias python="python3"' >> ~/.bashrc
