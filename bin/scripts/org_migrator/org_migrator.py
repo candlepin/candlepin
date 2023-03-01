@@ -15,10 +15,8 @@ import zipfile
 import cp_connectors as cp
 
 # Tables as of CP v4.2 (2022-09-29)
-#   - cp2_activation_key_products
 #   - cp2_content
 #   - cp2_content_modified_products
-#   - cp2_environment_content
 #   - cp2_owner_content
 #   - cp2_owner_products
 #   - cp2_pool_source_sub
@@ -31,6 +29,7 @@ import cp_connectors as cp
 #   - cp2_products
 #   - cp_act_key_sp_add_on
 #   - cp_activation_key
+#   - cp_activation_key_products
 #   - cp_activationkey_pool
 #   - cp_async_job_arguments            -- intentionally omitted
 #   - cp_async_jobs                     -- intentionally omitted
@@ -56,6 +55,7 @@ import cp_connectors as cp
 #   - cp_ent_certificate
 #   - cp_entitlement
 #   - cp_environment
+#   - cp_environment_content
 #   - cp_export_metadata                -- intentionally omitted
 #   - cp_id_cert
 #   - cp_import_record                  -- intentionally omitted
@@ -209,9 +209,7 @@ def fetch_product_uuids(db, org_id):
     # DB-level deduplication feature anyway.
     product_uuid_query = 'SELECT op.product_uuid FROM cp2_owner_products op WHERE op.owner_id = %s ' + \
         'UNION ' + \
-        'SELECT pool.product_uuid FROM cp_pool pool WHERE pool.owner_id = %s ' + \
-        'UNION ' + \
-        'SELECT akp.product_uuid FROM cp_activation_key ak JOIN cp2_activation_key_products akp ON akp.key_id = ak.id WHERE ak.owner_id = %s'
+        'SELECT pool.product_uuid FROM cp_pool pool WHERE pool.owner_id = %s '
 
     children_uuid_query = 'SELECT p.derived_product_uuid AS product_uuid FROM cp2_products p WHERE p.derived_product_uuid IS NOT NULL AND p.uuid IN (%s) ' + \
         'UNION ' + \
@@ -227,7 +225,7 @@ def fetch_product_uuids(db, org_id):
     tier = 0
 
     # Fetch top-level product UUIDs
-    with db.execQuery(product_uuid_query, (org_id, org_id, org_id)) as cursor:
+    with db.execQuery(product_uuid_query, (org_id, org_id)) as cursor:
         process_cursor(cursor, uuids, children_uuids, tier)
 
     # Fetch children UUIDs
@@ -443,7 +441,6 @@ class ContentManager(ModelManager):
         # target org), and then fetched via UUID as a partitioned query
 
         # Content references references:
-        #   - cp2_environment_content.content_uuid
         #   - cp2_owner_products.content_uuid
         #   - cp2_product_content.content_uuid
         #
@@ -453,14 +450,11 @@ class ContentManager(ModelManager):
 
         content_uuids = set()
 
-        content_uuid_query1 = 'SELECT oc.content_uuid FROM cp2_owner_content oc WHERE oc.owner_id = %s' + \
-            'UNION ' + \
-            'SELECT ec.content_uuid FROM cp2_environment_content ec JOIN cp_environment e on e.id = ec.environment_id WHERE e.owner_id = %s'
-
+        content_uuid_query1 = 'SELECT oc.content_uuid FROM cp2_owner_content oc WHERE oc.owner_id = %s'
         content_uuid_query2 = 'SELECT pc.content_uuid FROM cp2_product_content pc WHERE pc.product_uuid IN (%s)'
 
         # Pull content UUIDs from referencing tables
-        with self.db.execQuery(content_uuid_query1, (self.org_id, self.org_id)) as cursor:
+        with self.db.execQuery(content_uuid_query1, (self.org_id,)) as cursor:
             for row in cursor:
                 content_uuids.add(row[0])
 
@@ -513,7 +507,6 @@ class ProductManager(ModelManager):
         # then recursively sift through the products we've pulled to check for children products
         #
         # Product references:
-        #   - cp2_activation_key_products.product_uuid
         #   - cp2_owner_products.product_uuid
         #   - cp_pool.product_uuid
         #
@@ -582,7 +575,7 @@ class EnvironmentManager(ModelManager):
             return True
 
         self._export_query('cp_environment.json', 'cp_environment', 'SELECT * FROM cp_environment WHERE owner_id=%s', (self.org_id,))
-        self._export_query('cp2_environment_content.json', 'cp2_environment_content', 'SELECT ec.* FROM cp2_environment_content ec JOIN cp_environment e ON ec.environment_id = e.id WHERE e.owner_id=%s', (self.org_id,))
+        self._export_query('cp_environment_content.json', 'cp_environment_content', 'SELECT ec.* FROM cp_environment_content ec JOIN cp_environment e ON ec.environment_id = e.id WHERE e.owner_id=%s', (self.org_id,))
 
         self._exported = True
         return True
@@ -592,7 +585,7 @@ class EnvironmentManager(ModelManager):
             return True
 
         result = self._import_json('cp_environment.json')
-        result = result and self._import_json('cp2_environment_content.json')
+        result = result and self._import_json('cp_environment_content.json')
 
         self._imported = result
         return result
@@ -908,7 +901,7 @@ class ActivationKeyManager(ModelManager):
 
         self._export_query('cp_activation_key.json', 'cp_activation_key', 'SELECT * FROM cp_activation_key WHERE owner_id=%s', (self.org_id,))
         self._export_query('cp_activationkey_pool.json', 'cp_activationkey_pool', 'SELECT akp.* FROM cp_activationkey_pool akp JOIN cp_activation_key ak ON ak.id = akp.key_id WHERE ak.owner_id=%s', (self.org_id,))
-        self._export_query('cp2_activation_key_products.json', 'cp2_activation_key_products', 'SELECT akp.* FROM cp2_activation_key_products akp JOIN cp2_owner_products op ON op.product_uuid = akp.product_uuid WHERE op.owner_id=%s', (self.org_id,))
+        self._export_query('cp_activation_key_products.json', 'cp_activation_key_products', 'SELECT akp.* FROM cp_activation_key_products akp join cp_activation_key ak on akp.key_id=ak.id WHERE ak.owner_id=%s', (self.org_id,))
         self._export_query('cp_act_key_sp_add_on.json', 'cp_act_key_sp_add_on', 'SELECT aksao.* FROM cp_act_key_sp_add_on aksao JOIN cp_activation_key ak ON ak.id = aksao.activation_key_id WHERE ak.owner_id=%s', (self.org_id,))
 
         self._exported = True
@@ -920,7 +913,7 @@ class ActivationKeyManager(ModelManager):
 
         result = self._import_json('cp_activation_key.json')
         result = result and self._import_json('cp_activationkey_pool.json')
-        result = result and self._import_json('cp2_activation_key_products.json')
+        result = result and self._import_json('cp_activation_key_products.json')
         result = result and self._import_json('cp_act_key_sp_add_on.json')
 
         self._imported = result
