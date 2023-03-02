@@ -17,7 +17,7 @@ USAGE
 switcher() {
   echo "Setting default to: $1"
   cd $DIR
-  ln --force -s docker-compose-$1.yml docker-compose.yml
+  ln --force -s podman-compose-$1.yml podman-compose.yml
   cd - >/dev/null 2>&1
   exit 0
 }
