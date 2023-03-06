@@ -1,4 +1,4 @@
-library identifier: 'fh-pipeline-library@master', retriever: modernSCM(
+library identifier: 'fh-pipeline-library@main', retriever: modernSCM(
   [$class: 'GitSCMSource',
    remote: 'https://github.com/candlepin/fh-pipeline-library.git',
    credentialsId: 'github-api-token-as-username-password'])
