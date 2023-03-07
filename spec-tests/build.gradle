@@ -1,7 +1,7 @@
 plugins {
     id "java"
-    id "checkstyle"
-    id "test-logging-convention"
+    id "checkstyle-conventions"
+    id "test-logging-conventions"
 }
 apply from: "../dependencies.gradle"
 
@@ -32,9 +32,6 @@ dependencies {
     testImplementation libraries["jimfs"]
 
     testRuntimeOnly libraries["junitEngine"]
-
-    checkstyle libraries["checkstyle"]
-    checkstyle libraries["checkstyleSevntu"]
 
     implementation fileTree(dir: '/usr/lib64/jss', include: '*.jar')
 }
@@ -72,10 +69,4 @@ task spec(type: Test) {
             systemProperty properyKey, System.getProperty(properyKey)
         }
     }
-}
-
-// Create a single checkstyle task to make it easier to run both the checkstyleMain & checkstyleTest targets
-task checkstyleSpec(dependsOn: [tasks.checkstyleMain, tasks.checkstyleTest]) {
-    description = "Run checkstyle for both the Main & Test targets"
-    group = "Verification"
 }

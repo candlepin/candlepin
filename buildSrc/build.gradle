@@ -3,6 +3,7 @@ plugins {
     id "groovy-gradle-plugin"
     id "java-gradle-plugin"
 }
+
 apply from: "../dependencies.gradle"
 
 repositories {

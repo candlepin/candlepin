@@ -13,7 +13,6 @@ plugins {
     id "java"
     id "maven-publish"
     id "war"
-    id "checkstyle"
     id "org.owasp.dependencycheck"
     id "jacoco"
     id "org.sonarqube"
@@ -23,7 +22,8 @@ plugins {
     id "org.candlepin.gradle.msgfmt"
     id "org.candlepin.gradle.SpecVersion"
     id "org.candlepin.gradle.PomToolkit"
-    id "test-logging-convention"
+    id "checkstyle-conventions"
+    id "test-logging-conventions"
 }
 
 apply from: "dependencies.gradle"
@@ -178,9 +178,6 @@ dependencies {
     implementation libraries["hibernateJpamodelgen"]
     annotationProcessor libraries["hibernateJpamodelgen"]
 
-    checkstyle libraries["checkstyle"]
-    checkstyle libraries["checkstyleSevntu"]
-
     // Use wildcard because this could be called jss4.jar or jss.jar
     // (depending on if we are before Fedora35/RHEL9 or after)
     providedCompile fileTree(dir: '/usr/lib64/jss', include: '*.jar')
@@ -284,13 +281,6 @@ task generateOpenApiJson(type: org.openapitools.generator.gradle.plugin.tasks.Ge
     generateModelTests = false
     generateApiTests = false
     withXml = false
-}
-
-// Create a single checkstyle task to make it easier to run both the checkstyleMain, checkstyleTest,
-// and checkstyleSPec targets
-task checkstyle(dependsOn: [tasks.checkstyleMain, tasks.checkstyleTest, ":spec-tests:checkstyleSpec"]) {
-    description = 'Run checkstyle for the Main, Test, and Spec-test targets'
-    group = 'Verification'
 }
 
 //Update the compileJava & processResourcesTasks depend on the openapi generation so that the generated classes
@@ -448,11 +438,6 @@ war {
         include "openapi.json"
         into("WEB-INF/classes")
     }
-}
-
-// Exclude the generated i18n translation files from checkstyle
-tasks.withType(Checkstyle) {
-    exclude "**/i18n/Messages*"
 }
 
 task pom {
