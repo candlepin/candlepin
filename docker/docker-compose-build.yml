@@ -12,6 +12,11 @@ services:
       dockerfile: ./candlepin-base-cs8/Dockerfile
       context: .
     image: ${REGISTRY}/candlepin-base-cs8
+  candlepin-base-cs9:
+    build:
+      dockerfile: ./candlepin-base-cs9/Dockerfile
+      context: .
+    image: ${REGISTRY}/candlepin-base-cs9
 networks:
   default:
     driver: bridge

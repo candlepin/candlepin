@@ -22,7 +22,9 @@ fi
 
 export HOME=/root
 
-export SUPERVISOR=1
+if [ -f /usr/bin/supervisord ]; then
+    export SUPERVISOR=1
+fi
 export AUTOCONF=1
 export FORCECERT=1
 export UNITTEST=0
@@ -388,7 +390,9 @@ else
 fi
 
 # WARNING: control+c while this is running will take out supervisor as well.
-/usr/bin/supervisord -c /etc/supervisord.conf
+if [ -f /usr/bin/supervisord ]; then
+    /usr/bin/supervisord -c /etc/supervisord.conf
+fi
 
 # Make sure we update the ruby bundle:
 if [ ! -f ./gradlew ]; then
@@ -517,7 +521,7 @@ if [ "$SPEC_TESTS" == "1" ]; then
     tee /var/log/candlepin/spec.log < /tmp/teepipe &
     build_spec $SPEC_FILTER > /tmp/teepipe 2>&1
 
-    if [ -d "$RSPEC_DIR" ]; then
+    if (./gradlew tasks --all | grep -qw rspec) ; then
         tee /var/log/candlepin/rspec.log < /tmp/teepipe &
         build_rspec $SPEC_FILTER > /tmp/teepipe 2>&1
     fi
