@@ -23,14 +23,13 @@ Basic invocations of `build-images` are as follows:
 These options can be combined.  See `build-images -h` for more information.
 
 ## Running containers
-The main interface for this is the `test` script.  This script is designed as a basic wrapper around `docker-compose`
+The main interface for this is the `test` script.  This script is designed as a basic wrapper around `podman pod`
 in order to stop and clean up existing running containers, as well as invoking the candlepin test script with default
 options.  This script will mount your current development checkout of candlepin (this repo) into `/candlepin-dev/`
 and bring up a database at hostname `db` on the running container
 
 By default the `test` script will run candlepin against a postgres database.  You can change this behavior with the
-`-m` or `-p` flags which will use mysql or postgres respectively. To change the default permanently,
-run the `switch-defaults` script. Additionally, you can use the `-x` flag which will use no database at all (useful
+`-m` or `-p` flags which will use mysql or postgres respectively. Additionally, you can use the `-x` flag which will use no database at all (useful
 for running tasks that do not require a running server and database, such as unit tests, checkstyle, translation
 validation). Finally, the `-q` flag does what the `-x` flag does already, plus requires a sonarqube server certificate
 (used for running the sonarqube analysis upload task).
@@ -40,7 +39,7 @@ To run multiple candlepin containers simultaneously, give each invocation of `te
 You can also use the `-d` option which will run containers in detached mode, keeping them from being removed
 when the test script exits.
 
-Using the `-e` flag will expose ports 8443, 8080 and 22 to the host.
+Using the `-e` flag will expose ports 8443 and 8080 to the host.
 
 Some useful invocations of the `test` command:
 
