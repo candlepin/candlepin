@@ -15,6 +15,7 @@
 package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.data.builder.Pools.PRIMARY_POOL_SUB_KEY;
 
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
 import org.candlepin.dto.api.client.v1.ConsumerInstalledProductDTO;
@@ -88,7 +89,7 @@ public class InstanceSpecTest {
             .quantity(Long.valueOf(poolQuantity))
             .subscriptionId(StringUtil.random("sourceSub-"))
             .upstreamPoolId(StringUtil.random("upstream-"))
-            .subscriptionSubKey("master"));
+            .subscriptionSubKey(PRIMARY_POOL_SUB_KEY));
 
         List<PoolDTO> pools =  adminClient.pools()
             .listPoolsByOwnerAndProduct(owner.getId(), instanceProduct.getId());
@@ -145,7 +146,7 @@ public class InstanceSpecTest {
             .quantity(10L)
             .subscriptionId(StringUtil.random("sourceSub-"))
             .upstreamPoolId(StringUtil.random("upstream-"))
-            .subscriptionSubKey("master"));
+            .subscriptionSubKey(PRIMARY_POOL_SUB_KEY));
 
         List<PoolDTO> pools =  adminClient.pools()
             .listPoolsByOwnerAndProduct(owner.getId(), instanceProduct.getId());

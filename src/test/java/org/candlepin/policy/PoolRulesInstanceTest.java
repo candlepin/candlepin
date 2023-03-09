@@ -140,21 +140,21 @@ public class PoolRulesInstanceTest {
     @Test
     public void hostedInstanceBasedRemoved() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, false);
-        Pool masterPool = TestUtil.copyFromSub(s);
-        List<Pool> pools = poolRules.createAndEnrichPools(masterPool, new LinkedList<>());
+        Pool primaryPool = TestUtil.copyFromSub(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(primaryPool, new LinkedList<>());
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
 
         // Remove the instance multiplier attribute entirely, pool quantity should
         // revert to half of what it was. No existing entitlements need to be adjusted,
         // we will let a (future) overconsumption routine handle that.
-        masterPool = TestUtil.copyFromSub(s);
-        masterPool.getProduct().removeAttribute(Product.Attributes.INSTANCE_MULTIPLIER);
+        primaryPool = TestUtil.copyFromSub(s);
+        primaryPool.getProduct().removeAttribute(Product.Attributes.INSTANCE_MULTIPLIER);
 
         List<Pool> existingPools = new LinkedList<>();
         existingPools.add(pool);
-        List<PoolUpdate> updates = poolRules.updatePools(masterPool, existingPools, s.getQuantity(),
-            TestUtil.stubChangedProducts(masterPool.getProduct()));
+        List<PoolUpdate> updates = poolRules.updatePools(primaryPool, existingPools, s.getQuantity(),
+            TestUtil.stubChangedProducts(primaryPool.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -166,21 +166,21 @@ public class PoolRulesInstanceTest {
     @Test
     public void standaloneInstanceBasedUpdatePool() {
         Subscription s = createInstanceBasedSub("INSTANCEPROD", 100, 2, true);
-        Pool masterPool = TestUtil.copyFromSub(s);
-        List<Pool> pools = poolRules.createAndEnrichPools(masterPool, new LinkedList<>());
+        Pool primaryPool = TestUtil.copyFromSub(s);
+        List<Pool> pools = poolRules.createAndEnrichPools(primaryPool, new LinkedList<>());
         assertEquals(1, pools.size());
         Pool pool = pools.get(0);
 
-        masterPool = TestUtil.copyFromSub(s);
+        primaryPool = TestUtil.copyFromSub(s);
         // Change the value of instance multiplier:
-        masterPool.getProduct().setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "4");
+        primaryPool.getProduct().setAttribute(Product.Attributes.INSTANCE_MULTIPLIER, "4");
         // Change the quantity as well:
-        masterPool.setQuantity(200L);
+        primaryPool.setQuantity(200L);
 
         List<Pool> existingPools = new LinkedList<>();
         existingPools.add(pool);
-        List<PoolUpdate> updates = poolRules.updatePools(masterPool, existingPools,
-            masterPool.getQuantity(), TestUtil.stubChangedProducts(masterPool.getProduct()));
+        List<PoolUpdate> updates = poolRules.updatePools(primaryPool, existingPools,
+            primaryPool.getQuantity(), TestUtil.stubChangedProducts(primaryPool.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);

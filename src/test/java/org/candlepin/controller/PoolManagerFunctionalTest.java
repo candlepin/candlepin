@@ -15,6 +15,8 @@
 package org.candlepin.controller;
 
 import static org.apache.commons.collections.CollectionUtils.containsAny;
+import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
+import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -446,18 +448,18 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Test
     public void testFabricateWithBranding() {
-        List<Pool> masterPools = poolManager.getPoolsBySubscriptionId(sub4.getId()).list();
-        Pool masterPool = null;
-        for (Pool pool : masterPools) {
+        List<Pool> primaryPools = poolManager.getPoolsBySubscriptionId(sub4.getId()).list();
+        Pool primaryPool = null;
+        for (Pool pool : primaryPools) {
             if (pool.getType() == Pool.PoolType.NORMAL) {
-                masterPool = pool;
+                primaryPool = pool;
             }
         }
 
-        org.candlepin.dto.api.server.v1.SubscriptionDTO fabricated = modelTranslator.translate(masterPool,
+        org.candlepin.dto.api.server.v1.SubscriptionDTO fabricated = modelTranslator.translate(primaryPool,
             org.candlepin.dto.api.server.v1.SubscriptionDTO.class);
         assertNotNull(fabricated);
-        assertNotNull(masterPool.getProduct());
+        assertNotNull(primaryPool.getProduct());
         assertNotNull(fabricated.getProduct());
 
         Set<org.candlepin.dto.api.server.v1.BrandingDTO> brandingSet = fabricated.getProduct().getBranding();
@@ -1108,8 +1110,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Owner owner = this.createOwner();
         Product product1 = this.createProduct("test-product-1", "Test Product 1", owner);
         String suscriptionId = Util.generateDbUUID();
-        Pool pool2 = this.createPool(owner, product1, 1L, expiredStart, expiredEnd, suscriptionId, "master");
-        Pool pool3 = this.createPool(owner, product1, 1L, expiredStart, expiredEnd, suscriptionId, "derived");
+        Pool pool2 = this.createPool(
+            owner, product1, 1L, expiredStart, expiredEnd, suscriptionId, PRIMARY_POOL_SUB_KEY);
+        Pool pool3 = this.createPool(
+            owner, product1, 1L, expiredStart, expiredEnd, suscriptionId, DERIVED_POOL_SUB_KEY);
 
         pool3.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         this.poolCurator.merge(pool3);
@@ -1299,7 +1303,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     // test covers scenario from bug 1012386
     @Test
-    public void testRefreshPoolsWithRemovedMasterPool() {
+    public void testRefreshPoolsWithRemovedPrimaryPool() {
         Owner owner = this.createOwner();
         Product prod = TestUtil.createProduct();
 
@@ -1330,12 +1334,12 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
         String bonusId =  "";
-        String masterId = "";
+        String primaryId = "";
 
         for (Pool p : pools) {
-            if (p.getSourceSubscription().getSubscriptionSubKey().equals("master")) {
+            if (p.getSourceSubscription().getSubscriptionSubKey().equals(PRIMARY_POOL_SUB_KEY)) {
                 poolCurator.delete(p);
-                masterId = p.getId();
+                primaryId = p.getId();
             }
             else {
                 bonusId = p.getId();
@@ -1347,18 +1351,18 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         prodAdapter = new MockProductServiceAdapter(prod);
         poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
-        assertNull(poolCurator.get(masterId), "Original Master Pool should be gone");
+        assertNull(poolCurator.get(primaryId), "Original Primary Pool should be gone");
         assertNotNull(poolCurator.get(bonusId), "Bonus Pool should be the same");
-        // master pool should have been recreated
+        // primary pool should have been recreated
         pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
-        boolean newMaster = false;
+        boolean newPrimary = false;
         for (Pool p : pools) {
-            if (p.getSourceSubscription().getSubscriptionSubKey().equals("master")) {
-                newMaster = true;
+            if (p.getSourceSubscription().getSubscriptionSubKey().equals(PRIMARY_POOL_SUB_KEY)) {
+                newPrimary = true;
             }
         }
-        assertTrue(newMaster);
+        assertTrue(newPrimary);
     }
 
     // test covers a corollary scenario from bug 1012386
@@ -1394,15 +1398,15 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
         String bonusId =  "";
-        String masterId = "";
+        String primaryId = "";
 
         for (Pool p : pools) {
-            if (p.getSourceSubscription().getSubscriptionSubKey().equals("derived")) {
+            if (p.getSourceSubscription().getSubscriptionSubKey().equals(DERIVED_POOL_SUB_KEY)) {
                 poolCurator.delete(p);
                 bonusId = p.getId();
             }
             else {
-                masterId = p.getId();
+                primaryId = p.getId();
             }
         }
 
@@ -1410,13 +1414,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         assertNull(poolCurator.get(bonusId), "Original bonus pool should be gone");
-        assertNotNull(poolCurator.get(masterId), "Master pool should be the same");
-        // master pool should have been recreated
+        assertNotNull(poolCurator.get(primaryId), "Primary pool should be the same");
+        // primary pool should have been recreated
         pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
         boolean newBonus = false;
         for (Pool p : pools) {
-            if (p.getSourceSubscription().getSubscriptionSubKey().equals("derived")) {
+            if (p.getSourceSubscription().getSubscriptionSubKey().equals(DERIVED_POOL_SUB_KEY)) {
                 newBonus = true;
             }
         }

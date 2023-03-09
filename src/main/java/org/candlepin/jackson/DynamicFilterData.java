@@ -54,20 +54,20 @@ public class DynamicFilterData {
 
     private Map<String, List<String>> includeFilters;
     private Map<String, List<String>> excludeFilters;
-    private boolean whitelist;
+    private boolean allowlist;
 
     public DynamicFilterData() {
         this(false);
     }
 
-    public DynamicFilterData(boolean whitelist) {
+    public DynamicFilterData(boolean allowlist) {
         this.includeFilters = new HashMap<>();
         this.excludeFilters = new HashMap<>();
-        this.whitelist = whitelist;
+        this.allowlist = allowlist;
     }
 
-    public void setWhitelistMode(boolean whitelist) {
-        this.whitelist = whitelist;
+    public void setAllowlistMode(boolean allowlist) {
+        this.allowlist = allowlist;
     }
 
     public void includeAttribute(String path) {
@@ -108,7 +108,7 @@ public class DynamicFilterData {
             return true;
         }
 
-        return this.whitelist && (iLevel.getLevel() < 1 || iLevel.getLevel() < eLevel.getLevel());
+        return this.allowlist && (iLevel.getLevel() < 1 || iLevel.getLevel() < eLevel.getLevel());
     }
 
     private Match getFilterLevel(Map<String, List<String>> filters, List<String> path) {

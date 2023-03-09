@@ -17,6 +17,7 @@ package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
+import static org.candlepin.spec.bootstrap.data.builder.Pools.PRIMARY_POOL_SUB_KEY;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.ConsumerDTO;
@@ -48,7 +49,6 @@ import java.util.stream.Collectors;
 
 @SpecTest
 public class SubscriptionResourceSpecTest {
-
     private static ApiClient client;
     private static OwnerClient ownerApi;
     private static OwnerProductApi ownerProductApi;
@@ -63,7 +63,7 @@ public class SubscriptionResourceSpecTest {
     }
 
     @Test
-    public void shouldAllowOwnersToCreateSubscriptionsAndRetrieveAll() throws Exception {
+    public void shouldAllowOwnersToCreateSubscriptionsAndRetrieveAll() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
         int size = 3;
         for (int i = 0; i < size; i++) {
@@ -100,7 +100,7 @@ public class SubscriptionResourceSpecTest {
             .productId(prod.getId())
             .quantity(2L)
             .subscriptionId(StringUtil.random("test"))
-            .subscriptionSubKey("master");
+            .subscriptionSubKey(PRIMARY_POOL_SUB_KEY);
         pool = ownerApi.createPool(owner.getKey(), pool);
         assertThat(ownerApi.getOwnerSubscriptions(owner.getKey())).isNotNull()
             .singleElement()
@@ -116,7 +116,7 @@ public class SubscriptionResourceSpecTest {
             .productId(prod.getId())
             .quantity(2L)
             .subscriptionId(StringUtil.random("test"))
-            .subscriptionSubKey("master");
+            .subscriptionSubKey(PRIMARY_POOL_SUB_KEY);
         pool = ownerApi.createPool(owner.getKey(), pool);
         assertThat(ownerApi.getOwnerSubscriptions(owner.getKey())).isNotNull()
             .singleElement()
@@ -133,7 +133,7 @@ public class SubscriptionResourceSpecTest {
             .productId(prod.getId())
             .quantity(2L)
             .subscriptionId(StringUtil.random("test"))
-            .subscriptionSubKey("master");
+            .subscriptionSubKey(PRIMARY_POOL_SUB_KEY);
         pool = ownerApi.createPool(owner.getKey(), pool);
         assertThat(ownerApi.getOwnerSubscriptions(owner.getKey())).isNotNull()
             .singleElement()
@@ -148,7 +148,7 @@ public class SubscriptionResourceSpecTest {
             PoolDTO pool1 = ownerApi.createPool(owner.getKey(),
                 Pools.random(prod)
                 .subscriptionId(StringUtil.random("id"))
-                .subscriptionSubKey("master")
+                .subscriptionSubKey(PRIMARY_POOL_SUB_KEY)
                 .upstreamPoolId(StringUtil.random("pool")));
             ownerApi.createPool(owner.getKey(), pool1);
             return pool1;

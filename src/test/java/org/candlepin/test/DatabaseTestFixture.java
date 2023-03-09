@@ -14,6 +14,7 @@
  */
 package org.candlepin.test;
 
+import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
@@ -605,7 +606,7 @@ public class DatabaseTestFixture {
             .setContractNumber(DEFAULT_CONTRACT)
             .setAccountNumber(DEFAULT_ACCOUNT)
             .setOrderNumber(DEFAULT_ORDER)
-            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), "master"));
+            .setSourceSubscription(new SourceSubscription(Util.generateDbUUID(), PRIMARY_POOL_SUB_KEY));
 
         return this.poolCurator.create(pool);
     }

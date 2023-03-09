@@ -519,7 +519,7 @@ public class EntitlementRules implements Enforcer {
                  * exported, we need to add back the reduced bonus pool quantity.
                  *
                  * Case II
-                 * If Master pool quantity is unlimited, with non-zero virt_limit & pool under
+                 * If Primary pool quantity is unlimited, with non-zero virt_limit & pool under
                  * consideration is of type Unmapped guest or Bonus pool, set its quantity to be
                  * unlimited.
                  */
@@ -527,11 +527,11 @@ public class EntitlementRules implements Enforcer {
                 if (virtQuantity > 0) {
                     List<Pool> pools = poolManager.getBySubscriptionId(pool.getOwner(),
                         pool.getSubscriptionId());
-                    boolean isMasterPoolUnlimited = false;
+                    boolean isPrimaryPoolUnlimited = false;
 
                     for (Pool poolToCheck : pools) {
                         if (poolToCheck.getQuantity() == UNLIMITED_QUANTITY) {
-                            isMasterPoolUnlimited = true;
+                            isPrimaryPoolUnlimited = true;
                         }
                     }
 
@@ -539,7 +539,7 @@ public class EntitlementRules implements Enforcer {
                         Pool derivedPool = pools.get(idex);
 
                         if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
-                            if (isMasterPoolUnlimited && (derivedPool.getType() == Pool.PoolType.BONUS ||
+                            if (isPrimaryPoolUnlimited && (derivedPool.getType() == Pool.PoolType.BONUS ||
                                 derivedPool.getType() == Pool.PoolType.UNMAPPED_GUEST)) {
                                 // Set pool quantity to be unlimited.
                                 poolManager.setPoolQuantity(derivedPool, UNLIMITED_QUANTITY);
@@ -704,7 +704,7 @@ public class EntitlementRules implements Enforcer {
                      * we may need to increment or decrement the bonus pool quantity based on the change
                      *
                      * Case II
-                     * Master pool quantity is unlimited, with non-zero virt_limit & pool under
+                     * Primary pool quantity is unlimited, with non-zero virt_limit & pool under
                      * consideration is of type Unmapped guest or Bonus pool, set its quantity to be
                      * unlimited.
                      */
@@ -713,20 +713,20 @@ public class EntitlementRules implements Enforcer {
                     if (virtQuantity != 0) {
                         List<Pool> pools = subscriptionPoolMap.get(pool.getSubscriptionId());
 
-                        boolean isMasterPoolUnlimited = false;
+                        boolean isPrimaryPoolUnlimited = false;
 
                         for (Pool poolToCheck : pools) {
                             if (poolToCheck.getQuantity() == UNLIMITED_QUANTITY) {
-                                isMasterPoolUnlimited = true;
+                                isPrimaryPoolUnlimited = true;
                             }
                         }
 
                         for (int idex = 0; idex < pools.size(); idex++) {
                             Pool derivedPool = pools.get(idex);
                             if (derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null) {
-                                // If master pool is of unlimited quantity, set pool quantity as unlimited
+                                // If primary pool is of unlimited quantity, set pool quantity as unlimited
                                 // if pool type is bonus or unmapped_guest pool.
-                                if (isMasterPoolUnlimited && (derivedPool.getType() == Pool.PoolType.BONUS ||
+                                if (isPrimaryPoolUnlimited && (derivedPool.getType() == Pool.PoolType.BONUS ||
                                     derivedPool.getType() == Pool.PoolType.UNMAPPED_GUEST)) {
                                     poolOperationCallback.setQuantityToPool(derivedPool, UNLIMITED_QUANTITY);
                                 }

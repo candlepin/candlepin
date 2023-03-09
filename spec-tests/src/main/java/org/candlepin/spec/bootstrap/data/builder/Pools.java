@@ -30,6 +30,9 @@ import java.time.OffsetDateTime;
  */
 public final class Pools {
 
+    public static final String PRIMARY_POOL_SUB_KEY = "master";
+    public static final String DERIVED_POOL_SUB_KEY = "derived";
+
     private Pools() {
         throw new UnsupportedOperationException();
     }

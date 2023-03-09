@@ -73,7 +73,7 @@ public class DynamicJsonFilterTest {
     }
 
     @Test
-    public void testSimpleBlacklist() throws Exception {
+    public void testSimpleBlocklist() throws Exception {
         mockReq = MockHttpRequest.create("GET",
             new URI("/candlepin/status?exclude=a2"),
             new URI("http://localhost"));
@@ -106,7 +106,7 @@ public class DynamicJsonFilterTest {
     }
 
     @Test
-    public void testSimpleMultiBlacklist() throws Exception {
+    public void testSimpleMultiBlocklist() throws Exception {
         mockReq = MockHttpRequest.create("GET",
             new URI("/candlepin/status?exclude=a2&exclude=a3"),
             new URI("http://localhost"));
@@ -139,7 +139,7 @@ public class DynamicJsonFilterTest {
     }
 
     @Test
-    public void testNestedAttributeBlacklist() throws Exception {
+    public void testNestedAttributeBlocklist() throws Exception {
         mockReq = MockHttpRequest.create("GET",
             new URI("/candlepin/status?exclude=a2&exclude=a3.c1"),
             new URI("http://localhost"));
@@ -172,7 +172,7 @@ public class DynamicJsonFilterTest {
     }
 
     @Test
-    public void testSimpleWhitelist() throws Exception {
+    public void testSimpleAllowlist() throws Exception {
         mockReq = MockHttpRequest.create("GET",
             new URI("/candlepin/status?include=a2"),
             new URI("http://localhost"));
@@ -205,7 +205,7 @@ public class DynamicJsonFilterTest {
     }
 
     @Test
-    public void testSimpleMultiWhitelist() throws Exception {
+    public void testSimpleMultiAllowlist() throws Exception {
         mockReq = MockHttpRequest.create("GET",
             new URI("/candlepin/status?include=a1&include=a3"),
             new URI("http://localhost"));
@@ -238,7 +238,7 @@ public class DynamicJsonFilterTest {
     }
 
     @Test
-    public void testNestedAttributeWhitelist() throws Exception {
+    public void testNestedAttributeAllowlist() throws Exception {
         mockReq = MockHttpRequest.create("GET",
             new URI("/candlepin/status?include=a2&include=a3.c1"),
             new URI("http://localhost"));
@@ -306,9 +306,9 @@ public class DynamicJsonFilterTest {
     }
 
     @Test
-    public void testIncludesWithExcludesUsingWhitelist() throws Exception {
+    public void testIncludesWithExcludesUsingAllowlist() throws Exception {
         mockReq = MockHttpRequest.create("GET",
-            new URI("/candlepin/status?include=a.b1&exclude=a.b1.c2&include=a.b2.d2&filtermode=whitelist"),
+            new URI("/candlepin/status?include=a.b1&exclude=a.b1.c2&include=a.b2.d2&filtermode=allowlist"),
             new URI("http://localhost"));
         when(mockRequestContext.getUriInfo()).thenReturn(mockReq.getUri());
 

@@ -76,11 +76,11 @@ class PostBindBonusPoolSpecTest {
         ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO limitedVirtProd = createLimitedVirtProduct(adminClient, ownerKey, 4);
-        PoolDTO limitedMasterPool = Pools.randomUpstream(limitedVirtProd);
-        limitedMasterPool = adminClient.owners().createPool(ownerKey, limitedMasterPool);
+        PoolDTO limitedPrimaryPool = Pools.randomUpstream(limitedVirtProd);
+        limitedPrimaryPool = adminClient.owners().createPool(ownerKey, limitedPrimaryPool);
 
         // does not create ent derived if host_limited != true
-        verifyBindTimePoolCreation(systemClient, owner, limitedMasterPool, systemUser, false);
+        verifyBindTimePoolCreation(systemClient, owner, limitedPrimaryPool, systemUser, false);
     }
 
     @Test
@@ -93,10 +93,10 @@ class PostBindBonusPoolSpecTest {
         ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO limitVirtProd = createLimitedVirtProduct(adminClient, ownerKey, 4);
-        PoolDTO limitedMasterPool = Pools.randomUpstream(limitVirtProd);
-        limitedMasterPool = adminClient.owners().createPool(ownerKey, limitedMasterPool);
+        PoolDTO limitedPrimaryPool = Pools.randomUpstream(limitVirtProd);
+        limitedPrimaryPool = adminClient.owners().createPool(ownerKey, limitedPrimaryPool);
 
-        verifyBindTimePoolCreation(systemClient, owner, limitedMasterPool, systemUser, true);
+        verifyBindTimePoolCreation(systemClient, owner, limitedPrimaryPool, systemUser, true);
     }
 
     @Test
@@ -108,10 +108,10 @@ class PostBindBonusPoolSpecTest {
         ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO hostLimitedProd = createHostLimitedProduct(adminClient, ownerKey);
-        PoolDTO hostLimitedMasterPool = Pools.randomUpstream(hostLimitedProd);
-        hostLimitedMasterPool = adminClient.owners().createPool(ownerKey, hostLimitedMasterPool);
+        PoolDTO hostLimitedPrimaryPool = Pools.randomUpstream(hostLimitedProd);
+        hostLimitedPrimaryPool = adminClient.owners().createPool(ownerKey, hostLimitedPrimaryPool);
 
-        verifyBindTimePoolCreation(systemClient, owner, hostLimitedMasterPool, systemUser, true);
+        verifyBindTimePoolCreation(systemClient, owner, hostLimitedPrimaryPool, systemUser, true);
     }
 
     @Test
@@ -124,10 +124,10 @@ class PostBindBonusPoolSpecTest {
         ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO virtLimitStackedProd = createVirtLimitStackedProduct(adminClient, ownerKey, 9);
-        PoolDTO limitedMasterStackedPool = Pools.randomUpstream(virtLimitStackedProd);
-        limitedMasterStackedPool = adminClient.owners().createPool(ownerKey, limitedMasterStackedPool);
+        PoolDTO limitedPrimaryStackedPool = Pools.randomUpstream(virtLimitStackedProd);
+        limitedPrimaryStackedPool = adminClient.owners().createPool(ownerKey, limitedPrimaryStackedPool);
 
-        verifyBindTimePoolCreation(systemClient, owner, limitedMasterStackedPool, systemUser, true);
+        verifyBindTimePoolCreation(systemClient, owner, limitedPrimaryStackedPool, systemUser, true);
     }
 
     @Test
@@ -140,11 +140,11 @@ class PostBindBonusPoolSpecTest {
         ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO hostLimitedStackedProd = createHostLimitedStackedProduct(adminClient, ownerKey, 9);
-        PoolDTO hostLimitedMasterStackedPool = Pools.randomUpstream(hostLimitedStackedProd);
-        hostLimitedMasterStackedPool = adminClient.owners()
-            .createPool(ownerKey, hostLimitedMasterStackedPool);
+        PoolDTO hostLimitedPrimaryStackedPool = Pools.randomUpstream(hostLimitedStackedProd);
+        hostLimitedPrimaryStackedPool = adminClient.owners()
+            .createPool(ownerKey, hostLimitedPrimaryStackedPool);
 
-        verifyBindTimePoolCreation(systemClient, owner, hostLimitedMasterStackedPool, systemUser, true);
+        verifyBindTimePoolCreation(systemClient, owner, hostLimitedPrimaryStackedPool, systemUser, true);
     }
 
     @Test
@@ -156,20 +156,20 @@ class PostBindBonusPoolSpecTest {
         ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO hostLimitedProd = createHostLimitedProduct(adminClient, ownerKey);
-        PoolDTO hostLimitedMasterPool = Pools.randomUpstream(hostLimitedProd);
-        hostLimitedMasterPool = adminClient.owners().createPool(ownerKey, hostLimitedMasterPool);
+        PoolDTO hostLimitedPrimaryPool = Pools.randomUpstream(hostLimitedProd);
+        hostLimitedPrimaryPool = adminClient.owners().createPool(ownerKey, hostLimitedPrimaryPool);
 
         int beforeSize = adminClient.owners().listOwnerPools(ownerKey).size();
-        systemClient.consumers().bindPool(systemUser.getUuid(), hostLimitedMasterPool.getId(), 1);
-        systemClient.consumers().bindPool(systemUser.getUuid(), hostLimitedMasterPool.getId(), 1);
-        systemClient.consumers().bindPool(systemUser.getUuid(), hostLimitedMasterPool.getId(), 1);
+        systemClient.consumers().bindPool(systemUser.getUuid(), hostLimitedPrimaryPool.getId(), 1);
+        systemClient.consumers().bindPool(systemUser.getUuid(), hostLimitedPrimaryPool.getId(), 1);
+        systemClient.consumers().bindPool(systemUser.getUuid(), hostLimitedPrimaryPool.getId(), 1);
 
         assertEquals(beforeSize + 3, adminClient.owners().listOwnerPools(ownerKey).size());
     }
 
     @Test
     @OnlyInHosted
-    void shouldDecrementBonusPoolQuantityWhenFiniteVirtLimitedMasterPoolIsPartiallyExported()
+    void shouldDecrementBonusPoolQuantityWhenFiniteVirtLimitedPrimaryPoolIsPartiallyExported()
         throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
@@ -177,21 +177,22 @@ class PostBindBonusPoolSpecTest {
 
         int virtLimit = 4;
         ProductDTO limitVirtProd = createLimitedVirtProduct(adminClient, ownerKey, virtLimit);
-        PoolDTO limitedMasterPool = Pools.randomUpstream(limitVirtProd);
-        limitedMasterPool = adminClient.owners().createPool(ownerKey, limitedMasterPool);
-        PoolDTO limitedBonusPool = getBonusPool(adminClient, ownerKey, limitedMasterPool.getSubscriptionId());
+        PoolDTO limitedPrimaryPool = Pools.randomUpstream(limitVirtProd);
+        limitedPrimaryPool = adminClient.owners().createPool(ownerKey, limitedPrimaryPool);
+        PoolDTO limitedBonusPool =
+            getBonusPool(adminClient, ownerKey, limitedPrimaryPool.getSubscriptionId());
         int initialBonusPoolQuantity = limitedBonusPool.getQuantity().intValue();
 
         // reduce by quantity * virt_limit
         int consumptionQuantity = 2;
         candlepinClient.consumers()
-            .bindPool(cpUser.getUuid(), limitedMasterPool.getId(), consumptionQuantity);
+            .bindPool(cpUser.getUuid(), limitedPrimaryPool.getId(), consumptionQuantity);
         limitedBonusPool = adminClient.pools().getPool(limitedBonusPool.getId(), null, null);
         int expectedQuantity = initialBonusPoolQuantity - (virtLimit * consumptionQuantity);
         assertEquals(expectedQuantity, limitedBonusPool.getQuantity());
 
         // now set to 0 when fully exported
-        candlepinClient.consumers().bindPool(cpUser.getUuid(), limitedMasterPool.getId(), 8);
+        candlepinClient.consumers().bindPool(cpUser.getUuid(), limitedPrimaryPool.getId(), 8);
         limitedBonusPool = adminClient.pools().getPool(limitedBonusPool.getId(), null, null);
         assertEquals(0, limitedBonusPool.getQuantity());
     }
@@ -205,15 +206,16 @@ class PostBindBonusPoolSpecTest {
 
         int virtLimit = 4;
         ProductDTO limitVirtProd = createLimitedVirtProduct(adminClient, ownerKey, virtLimit);
-        PoolDTO limitedMasterPool = Pools.randomUpstream(limitVirtProd);
-        limitedMasterPool = adminClient.owners().createPool(ownerKey, limitedMasterPool);
-        PoolDTO limitedBonusPool = getBonusPool(adminClient, ownerKey, limitedMasterPool.getSubscriptionId());
+        PoolDTO limitedPrimaryPool = Pools.randomUpstream(limitVirtProd);
+        limitedPrimaryPool = adminClient.owners().createPool(ownerKey, limitedPrimaryPool);
+        PoolDTO limitedBonusPool =
+            getBonusPool(adminClient, ownerKey, limitedPrimaryPool.getSubscriptionId());
         int initialBonusPoolQuantity = limitedBonusPool.getQuantity().intValue();
 
         // bonus pool quantity adjusted by quantity * virt_limit
         int consumptionQuantity = 2;
         JsonNode ent = candlepinClient.consumers()
-            .bindPool(cpUser.getUuid(), limitedMasterPool.getId(), consumptionQuantity).get(0);
+            .bindPool(cpUser.getUuid(), limitedPrimaryPool.getId(), consumptionQuantity).get(0);
         limitedBonusPool = adminClient.pools().getPool(limitedBonusPool.getId(), null, null);
         int expectedQuantity = initialBonusPoolQuantity - (virtLimit * consumptionQuantity);
         assertEquals(expectedQuantity, limitedBonusPool.getQuantity());
@@ -235,59 +237,59 @@ class PostBindBonusPoolSpecTest {
 
     @Test
     @OnlyInHosted
-    void shouldNotChangeBonusPoolQuantityWhenUnlimitedVirtLimitedMasterPoolIsPartiallyExported()
+    void shouldNotChangeBonusPoolQuantityWhenUnlimitedVirtLimitedPrimaryPoolIsPartiallyExported()
         throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
         ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ProductDTO unlimitedVirtProd = createUnlimitedVirtProduct(adminClient, ownerKey);
-        PoolDTO unlimitedMasterPool = Pools.randomUpstream(unlimitedVirtProd);
-        unlimitedMasterPool = adminClient.owners().createPool(ownerKey, unlimitedMasterPool);
+        PoolDTO unlimitedPrimaryPool = Pools.randomUpstream(unlimitedVirtProd);
+        unlimitedPrimaryPool = adminClient.owners().createPool(ownerKey, unlimitedPrimaryPool);
         PoolDTO unlimitedBonusPool =
-            getBonusPool(adminClient, ownerKey, unlimitedMasterPool.getSubscriptionId());
+            getBonusPool(adminClient, ownerKey, unlimitedPrimaryPool.getSubscriptionId());
 
-        candlepinClient.consumers().bindPool(cpUser.getUuid(), unlimitedMasterPool.getId(), 9);
+        candlepinClient.consumers().bindPool(cpUser.getUuid(), unlimitedPrimaryPool.getId(), 9);
         unlimitedBonusPool = adminClient.pools().getPool(unlimitedBonusPool.getId(), null, null);
         assertEquals(-1, unlimitedBonusPool.getQuantity());
 
         // once it is fully consumed, set to 0
-        candlepinClient.consumers().bindPool(cpUser.getUuid(), unlimitedMasterPool.getId(), 1);
+        candlepinClient.consumers().bindPool(cpUser.getUuid(), unlimitedPrimaryPool.getId(), 1);
         unlimitedBonusPool = adminClient.pools().getPool(unlimitedBonusPool.getId(), null, null);
         assertEquals(0, unlimitedBonusPool.getQuantity());
     }
 
     @Test
     @OnlyInHosted
-    void shouldChangeBonusPoolQuantityWhenUnlimitedVirtLimitedMasterPoolIsFullyExportedAndThenReduced()
+    void shouldChangeBonusPoolQuantityWhenUnlimitedVirtLimitedPrimaryPoolIsFullyExportedAndThenReduced()
         throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
         ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ProductDTO unlimitedVirtProd = createUnlimitedVirtProduct(adminClient, ownerKey);
-        int masterPoolQuantity = 10;
-        PoolDTO unlimitedMasterPool = Pools.randomUpstream(unlimitedVirtProd)
-            .quantity(Long.valueOf(masterPoolQuantity));
-        unlimitedMasterPool = adminClient.owners().createPool(ownerKey, unlimitedMasterPool);
+        int primaryPoolQuantity = 10;
+        PoolDTO unlimitedPrimaryPool = Pools.randomUpstream(unlimitedVirtProd)
+            .quantity(Long.valueOf(primaryPoolQuantity));
+        unlimitedPrimaryPool = adminClient.owners().createPool(ownerKey, unlimitedPrimaryPool);
         PoolDTO unlimitedBonusPool =
-            getBonusPool(adminClient, ownerKey, unlimitedMasterPool.getSubscriptionId());
+            getBonusPool(adminClient, ownerKey, unlimitedPrimaryPool.getSubscriptionId());
 
         JsonNode ent = candlepinClient.consumers()
-            .bindPool(cpUser.getUuid(), unlimitedMasterPool.getId(), masterPoolQuantity).get(0);
+            .bindPool(cpUser.getUuid(), unlimitedPrimaryPool.getId(), primaryPoolQuantity).get(0);
         unlimitedBonusPool = adminClient.pools().getPool(unlimitedBonusPool.getId(), null, null);
         assertEquals(0, unlimitedBonusPool.getQuantity());
 
         // reduce the entitlement quantity and the bonus pool should update to unlimited quantity. BZ 2078029
         EntitlementDTO entitlement  = ApiClient.MAPPER.convertValue(ent, EntitlementDTO.class);
-        entitlement.setQuantity(masterPoolQuantity - 1);
+        entitlement.setQuantity(primaryPoolQuantity - 1);
         adminClient.entitlements().updateEntitlement(entitlement.getId(), entitlement);
         unlimitedBonusPool = adminClient.pools().getPool(unlimitedBonusPool.getId(), null, null);
         assertEquals(-1, unlimitedBonusPool.getQuantity());
     }
 
     @Test
-    void shouldNotChangeBonusPoolQuantityWhenUnlimitedVirtLimitedMasterPoolIsConsumedByNonManifestConsumer()
+    void shouldNotChangeBonusPoolQuantityWhenUnlimitedVirtLimitedPrimaryPoolIsConsumedByNonManifestConsumer()
         throws Exception {
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
         guest.setUuid(StringUtil.random("guest"));
@@ -302,23 +304,23 @@ class PostBindBonusPoolSpecTest {
         ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO unlimitedVirtProd = createUnlimitedVirtProduct(adminClient, ownerKey);
-        PoolDTO unlimitedMasterPool = Pools.randomUpstream(unlimitedVirtProd);
-        unlimitedMasterPool = adminClient.owners().createPool(ownerKey, unlimitedMasterPool);
+        PoolDTO unlimitedPrimaryPool = Pools.randomUpstream(unlimitedVirtProd);
+        unlimitedPrimaryPool = adminClient.owners().createPool(ownerKey, unlimitedPrimaryPool);
         PoolDTO unlimitedBonusPool =
-            getBonusPool(adminClient, ownerKey, unlimitedMasterPool.getSubscriptionId());
+            getBonusPool(adminClient, ownerKey, unlimitedPrimaryPool.getSubscriptionId());
 
-        guestClient.consumers().bindPool(guest.getUuid(), unlimitedMasterPool.getId(), 1);
+        guestClient.consumers().bindPool(guest.getUuid(), unlimitedPrimaryPool.getId(), 1);
         unlimitedBonusPool = adminClient.pools().getPool(unlimitedBonusPool.getId(), null, null);
         assertEquals(-1, unlimitedBonusPool.getQuantity());
-        unlimitedMasterPool = adminClient.pools().getPool(unlimitedMasterPool.getId(), null, null);
-        assertEquals(1, unlimitedMasterPool.getConsumed());
-        assertEquals(0, unlimitedMasterPool.getExported());
+        unlimitedPrimaryPool = adminClient.pools().getPool(unlimitedPrimaryPool.getId(), null, null);
+        assertEquals(1, unlimitedPrimaryPool.getConsumed());
+        assertEquals(0, unlimitedPrimaryPool.getExported());
 
         // even if one quantity was consumed but not exported, do not update quantity of the bonus pool
-        systemClient.consumers().bindPool(systemUser.getUuid(), unlimitedMasterPool.getId(), 9);
-        unlimitedMasterPool = adminClient.pools().getPool(unlimitedMasterPool.getId(), null, null);
-        assertEquals(unlimitedMasterPool.getConsumed(), unlimitedMasterPool.getQuantity());
-        assertNotEquals(unlimitedMasterPool.getExported(), unlimitedMasterPool.getConsumed());
+        systemClient.consumers().bindPool(systemUser.getUuid(), unlimitedPrimaryPool.getId(), 9);
+        unlimitedPrimaryPool = adminClient.pools().getPool(unlimitedPrimaryPool.getId(), null, null);
+        assertEquals(unlimitedPrimaryPool.getConsumed(), unlimitedPrimaryPool.getQuantity());
+        assertNotEquals(unlimitedPrimaryPool.getExported(), unlimitedPrimaryPool.getConsumed());
         unlimitedBonusPool = adminClient.pools().getPool(unlimitedBonusPool.getId(), null, null);
         assertEquals(-1, unlimitedBonusPool.getQuantity());
     }
@@ -333,12 +335,12 @@ class PostBindBonusPoolSpecTest {
         ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO hostLimitedProd = createHostLimitedProduct(adminClient, ownerKey);
-        PoolDTO hostLimitedMasterPool = Pools.randomUpstream(hostLimitedProd);
-        hostLimitedMasterPool = adminClient.owners().createPool(ownerKey, hostLimitedMasterPool);
+        PoolDTO hostLimitedPrimaryPool = Pools.randomUpstream(hostLimitedProd);
+        hostLimitedPrimaryPool = adminClient.owners().createPool(ownerKey, hostLimitedPrimaryPool);
 
         int initialPoolSize = adminClient.owners().listOwnerPools(ownerKey).size();
         JsonNode ent = systemClient.consumers()
-            .bindPool(systemUser.getUuid(), hostLimitedMasterPool.getId(), 4).get(0);
+            .bindPool(systemUser.getUuid(), hostLimitedPrimaryPool.getId(), 4).get(0);
         List<PoolDTO> pools = adminClient.owners().listOwnerPools(ownerKey);
         assertEquals(initialPoolSize + 1, pools.size());
 
@@ -374,12 +376,12 @@ class PostBindBonusPoolSpecTest {
         ApiClient systemClient = ApiClients.ssl(systemUser);
 
         ProductDTO unlimitedVirtProd = createUnlimitedVirtProduct(adminClient, ownerKey);
-        PoolDTO unlimitedMasterPool = Pools.randomUpstream(unlimitedVirtProd);
-        unlimitedMasterPool = adminClient.owners().createPool(ownerKey, unlimitedMasterPool);
+        PoolDTO unlimitedPrimaryPool = Pools.randomUpstream(unlimitedVirtProd);
+        unlimitedPrimaryPool = adminClient.owners().createPool(ownerKey, unlimitedPrimaryPool);
 
         int initialPoolSize = adminClient.owners().listOwnerPools(ownerKey).size();
         JsonNode ent = systemClient.consumers()
-            .bindPool(systemUser.getUuid(), unlimitedMasterPool.getId(), 4).get(0);
+            .bindPool(systemUser.getUuid(), unlimitedPrimaryPool.getId(), 4).get(0);
         List<PoolDTO> pools = adminClient.owners().listOwnerPools(ownerKey);
         assertEquals(initialPoolSize + 1, pools.size());
 
@@ -416,12 +418,12 @@ class PostBindBonusPoolSpecTest {
 
         int virtLimit = 4;
         ProductDTO limitedVirtProd = createLimitedVirtProduct(adminClient, ownerKey, virtLimit);
-        PoolDTO limitedMasterPool = Pools.randomUpstream(limitedVirtProd);
-        limitedMasterPool = adminClient.owners().createPool(ownerKey, limitedMasterPool);
+        PoolDTO limitedPrimaryPool = Pools.randomUpstream(limitedVirtProd);
+        limitedPrimaryPool = adminClient.owners().createPool(ownerKey, limitedPrimaryPool);
 
         int initialPoolSize = adminClient.owners().listOwnerPools(ownerKey).size();
         JsonNode ent = systemClient.consumers()
-            .bindPool(systemUser.getUuid(), limitedMasterPool.getId(), virtLimit).get(0);
+            .bindPool(systemUser.getUuid(), limitedPrimaryPool.getId(), virtLimit).get(0);
         List<PoolDTO> pools = adminClient.owners().listOwnerPools(ownerKey);
         assertEquals(initialPoolSize + 1, pools.size());
 
@@ -448,7 +450,7 @@ class PostBindBonusPoolSpecTest {
 
     @Test
     @OnlyInHosted
-    void shouldRevokeExcessEntitlementsWhenFiniteVirtLimitedMasterPoolIsExported() throws Exception {
+    void shouldRevokeExcessEntitlementsWhenFiniteVirtLimitedPrimaryPoolIsExported() throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
         ApiClient candlepinClient = ApiClients.ssl(cpUser);
@@ -461,9 +463,10 @@ class PostBindBonusPoolSpecTest {
 
         int virtLimit = 4;
         ProductDTO limitVirtProd = createLimitedVirtProduct(adminClient, ownerKey, virtLimit);
-        PoolDTO limitedMasterPool = Pools.randomUpstream(limitVirtProd);
-        limitedMasterPool = adminClient.owners().createPool(ownerKey, limitedMasterPool);
-        PoolDTO limitedBonusPool = getBonusPool(adminClient, ownerKey, limitedMasterPool.getSubscriptionId());
+        PoolDTO limitedPrimaryPool = Pools.randomUpstream(limitVirtProd);
+        limitedPrimaryPool = adminClient.owners().createPool(ownerKey, limitedPrimaryPool);
+        PoolDTO limitedBonusPool =
+            getBonusPool(adminClient, ownerKey, limitedPrimaryPool.getSubscriptionId());
         int initialBonusPoolQuantity = limitedBonusPool.getQuantity().intValue();
 
         JsonNode ent = guestClient.consumers().bindPool(guest.getUuid(), limitedBonusPool.getId(), 1).get(0);
@@ -472,13 +475,14 @@ class PostBindBonusPoolSpecTest {
         // reduce by quantity * virt_limit
         int bindQuantity = 2;
         int expectedRemainingBonusPoolQuant = initialBonusPoolQuantity - (virtLimit * bindQuantity);
-        candlepinClient.consumers().bindPool(cpUser.getUuid(), limitedMasterPool.getId(), bindQuantity);
+        candlepinClient.consumers().bindPool(cpUser.getUuid(), limitedPrimaryPool.getId(), bindQuantity);
         limitedBonusPool = adminClient.pools().getPool(limitedBonusPool.getId(), null, null);
         assertEquals(expectedRemainingBonusPoolQuant, limitedBonusPool.getQuantity());
 
         // if fully exported, bonus pool is set to 0 quantity
         int remainingBindQuant = expectedRemainingBonusPoolQuant / virtLimit;
-        candlepinClient.consumers().bindPool(cpUser.getUuid(), limitedMasterPool.getId(), remainingBindQuant);
+        candlepinClient.consumers().bindPool(
+            cpUser.getUuid(), limitedPrimaryPool.getId(), remainingBindQuant);
         limitedBonusPool = adminClient.pools().getPool(limitedBonusPool.getId(), null, null);
         assertEquals(0, limitedBonusPool.getQuantity());
 
@@ -488,7 +492,7 @@ class PostBindBonusPoolSpecTest {
 
     @Test
     @OnlyInHosted
-    void shouldRevokeOnlySufficientEntitlementsWhenFiniteVirtLimitedMasterPoolIsExported() throws Exception {
+    void shouldRevokeOnlySufficientEntitlementsWhenFiniteVirtLimitedPrimaryPoolIsExported() throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
         ApiClient candlepinClient = ApiClients.ssl(cpUser);
@@ -506,14 +510,14 @@ class PostBindBonusPoolSpecTest {
         ApiClient guestClient2 = ApiClients.ssl(guest2);
 
         int virtLimit = 4;
-        int masterPoolQuant = 10;
+        int primaryPoolQuant = 10;
         ProductDTO limitVirtProd = createLimitedVirtProduct(adminClient, ownerKey, virtLimit);
-        PoolDTO limitedMasterPool = Pools.randomUpstream(limitVirtProd)
-            .quantity(Long.valueOf(masterPoolQuant));
-        limitedMasterPool = adminClient.owners().createPool(ownerKey, limitedMasterPool);
+        PoolDTO limitedPrimaryPool = Pools.randomUpstream(limitVirtProd)
+            .quantity(Long.valueOf(primaryPoolQuant));
+        limitedPrimaryPool = adminClient.owners().createPool(ownerKey, limitedPrimaryPool);
         PoolDTO limitedBonusPool =
-            getBonusPool(adminClient, ownerKey, limitedMasterPool.getSubscriptionId());
-        assertEquals(virtLimit * masterPoolQuant, limitedBonusPool.getQuantity());
+            getBonusPool(adminClient, ownerKey, limitedPrimaryPool.getSubscriptionId());
+        assertEquals(virtLimit * primaryPoolQuant, limitedBonusPool.getQuantity());
         assertEquals(0, limitedBonusPool.getConsumed());
 
         int initialBonusPoolQuantity = limitedBonusPool.getQuantity().intValue();
@@ -532,7 +536,7 @@ class PostBindBonusPoolSpecTest {
 
         // reduce by quantity * virt_limit
         int bindQuantity = 9;
-        candlepinClient.consumers().bindPool(cpUser.getUuid(), limitedMasterPool.getId(), bindQuantity);
+        candlepinClient.consumers().bindPool(cpUser.getUuid(), limitedPrimaryPool.getId(), bindQuantity);
         limitedBonusPool = adminClient.pools().getPool(limitedBonusPool.getId(), null, null);
         assertEquals(initialBonusPoolQuantity - (virtLimit * bindQuantity), limitedBonusPool.getConsumed());
 
@@ -570,15 +574,15 @@ class PostBindBonusPoolSpecTest {
         ApiClient guestClient = ApiClients.ssl(guest);
 
         int virtLimit = 4;
-        int masterPoolQuant = 10;
+        int primaryPoolQuant = 10;
         ProductDTO limitVirtProd = createLimitedVirtProduct(adminClient, ownerKey, 4);
-        PoolDTO limitedMasterPool = Pools.randomUpstream(limitVirtProd)
-            .quantity(Long.valueOf(masterPoolQuant));
-        limitedMasterPool = adminClient.owners().createPool(ownerKey, limitedMasterPool);
+        PoolDTO limitedPrimaryPool = Pools.randomUpstream(limitVirtProd)
+            .quantity(Long.valueOf(primaryPoolQuant));
+        limitedPrimaryPool = adminClient.owners().createPool(ownerKey, limitedPrimaryPool);
         PoolDTO limitedBonusPool =
-            getBonusPool(adminClient, ownerKey, limitedMasterPool.getSubscriptionId());
+            getBonusPool(adminClient, ownerKey, limitedPrimaryPool.getSubscriptionId());
         int initialBonusPoolQuantity = limitedBonusPool.getQuantity().intValue();
-        assertEquals(virtLimit * masterPoolQuant, initialBonusPoolQuantity);
+        assertEquals(virtLimit * primaryPoolQuant, initialBonusPoolQuantity);
         assertEquals(0, limitedBonusPool.getConsumed());
 
         // create a bonus pool ent
@@ -590,15 +594,15 @@ class PostBindBonusPoolSpecTest {
 
         // reduce by quantity * virt_limit
         int bindQuantity = 9;
-        JsonNode masterEnt = candlepinClient.consumers()
-            .bindPool(cpUser.getUuid(), limitedMasterPool.getId(), bindQuantity).get(0);
+        JsonNode primaryEnt = candlepinClient.consumers()
+            .bindPool(cpUser.getUuid(), limitedPrimaryPool.getId(), bindQuantity).get(0);
         limitedBonusPool = adminClient.pools().getPool(limitedBonusPool.getId(), null, null);
         assertEquals(initialBonusPoolQuantity - (virtLimit * bindQuantity), limitedBonusPool.getQuantity());
 
         // verify ent still exists
         adminClient.entitlements().getEntitlement(bonusEnt.get("id").asText());
 
-        EntitlementDTO entitlement  = ApiClient.MAPPER.convertValue(masterEnt, EntitlementDTO.class);
+        EntitlementDTO entitlement  = ApiClient.MAPPER.convertValue(primaryEnt, EntitlementDTO.class);
         int newEntitlementQuant = 10;
         entitlement.setQuantity(newEntitlementQuant);
         adminClient.entitlements().updateEntitlement(entitlement.getId(), entitlement);
@@ -614,7 +618,7 @@ class PostBindBonusPoolSpecTest {
 
     @Test
     @OnlyInHosted
-    void shouldNotRevokeExcessEntitlementsWhenUnlimitedVirtLimitedMasterPoolIsPartiallyExported()
+    void shouldNotRevokeExcessEntitlementsWhenUnlimitedVirtLimitedPrimaryPoolIsPartiallyExported()
         throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
@@ -627,10 +631,10 @@ class PostBindBonusPoolSpecTest {
         ApiClient guestClient = ApiClients.ssl(guest);
 
         ProductDTO unlimitedVirtProd = createUnlimitedVirtProduct(adminClient, ownerKey);
-        PoolDTO unlimitedMasterPool = Pools.randomUpstream(unlimitedVirtProd);
-        unlimitedMasterPool = adminClient.owners().createPool(ownerKey, unlimitedMasterPool);
+        PoolDTO unlimitedPrimaryPool = Pools.randomUpstream(unlimitedVirtProd);
+        unlimitedPrimaryPool = adminClient.owners().createPool(ownerKey, unlimitedPrimaryPool);
         PoolDTO unlimitedBonusPool =
-            getBonusPool(adminClient, ownerKey, unlimitedMasterPool.getSubscriptionId());
+            getBonusPool(adminClient, ownerKey, unlimitedPrimaryPool.getSubscriptionId());
 
         JsonNode ent = guestClient.consumers()
             .bindPool(guest.getUuid(), unlimitedBonusPool.getId(), 10).get(0);
@@ -638,13 +642,13 @@ class PostBindBonusPoolSpecTest {
         unlimitedBonusPool = adminClient.pools().getPool(unlimitedBonusPool.getId(), null, null);
         assertEquals(-1, unlimitedBonusPool.getQuantity());
 
-        // not revoked untill master is completely consumed
-        candlepinClient.consumers().bindPool(cpUser.getUuid(), unlimitedMasterPool.getId(), 9);
+        // not revoked until primary is completely consumed
+        candlepinClient.consumers().bindPool(cpUser.getUuid(), unlimitedPrimaryPool.getId(), 9);
         unlimitedBonusPool = adminClient.pools().getPool(unlimitedBonusPool.getId(), null, null);
         assertEquals(-1, unlimitedBonusPool.getQuantity());
         adminClient.entitlements().getEntitlement(ent.get("id").asText());
 
-        candlepinClient.consumers().bindPool(cpUser.getUuid(), unlimitedMasterPool.getId(), 1);
+        candlepinClient.consumers().bindPool(cpUser.getUuid(), unlimitedPrimaryPool.getId(), 1);
         unlimitedBonusPool = adminClient.pools().getPool(unlimitedBonusPool.getId(), null, null);
         assertEquals(0, unlimitedBonusPool.getQuantity());
         assertNotFound(() -> adminClient.entitlements().getEntitlement(ent.get("id").asText()));
@@ -652,7 +656,7 @@ class PostBindBonusPoolSpecTest {
 
     @Test
     @OnlyInHosted
-    void shouldNotRevokeExcessEntitlementsWhenUnlimitedVirtLimitedMasterPoolIsConsumedByNonManifestConsumer()
+    void shouldNotRevokeExcessEntitlementsWhenUnlimitedVirtLimitedPrimaryPoolIsConsumedByNonManifestConsumer()
         throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
@@ -671,10 +675,10 @@ class PostBindBonusPoolSpecTest {
         ApiClient guestClient2 = ApiClients.ssl(guest2);
 
         ProductDTO unlimitedVirtProd = createUnlimitedVirtProduct(adminClient, ownerKey);
-        PoolDTO unlimitedMasterPool = Pools.randomUpstream(unlimitedVirtProd);
-        unlimitedMasterPool = adminClient.owners().createPool(ownerKey, unlimitedMasterPool);
+        PoolDTO unlimitedPrimaryPool = Pools.randomUpstream(unlimitedVirtProd);
+        unlimitedPrimaryPool = adminClient.owners().createPool(ownerKey, unlimitedPrimaryPool);
         PoolDTO unlimitedBonusPool =
-            getBonusPool(adminClient, ownerKey, unlimitedMasterPool.getSubscriptionId());
+            getBonusPool(adminClient, ownerKey, unlimitedPrimaryPool.getSubscriptionId());
 
         int entBindQuant = 10;
         JsonNode ent = guestClient.consumers()
@@ -683,14 +687,14 @@ class PostBindBonusPoolSpecTest {
         unlimitedBonusPool = adminClient.pools().getPool(unlimitedBonusPool.getId(), null, null);
         assertEquals(-1, unlimitedBonusPool.getQuantity());
 
-        // consumer master pool from non candlepin type consumer
-        guestClient2.consumers().bindPool(guest2.getUuid(), unlimitedMasterPool.getId(), 1);
-        unlimitedMasterPool = adminClient.pools().getPool(unlimitedMasterPool.getId(), null, null);
-        assertEquals(1, unlimitedMasterPool.getConsumed());
-        assertEquals(0, unlimitedMasterPool.getExported());
+        // consumer primary pool from non candlepin type consumer
+        guestClient2.consumers().bindPool(guest2.getUuid(), unlimitedPrimaryPool.getId(), 1);
+        unlimitedPrimaryPool = adminClient.pools().getPool(unlimitedPrimaryPool.getId(), null, null);
+        assertEquals(1, unlimitedPrimaryPool.getConsumed());
+        assertEquals(0, unlimitedPrimaryPool.getExported());
 
         // even if 1 qty is consumed but not exported, do not set bonus pool to qty 0
-        candlepinClient.consumers().bindPool(cpUser.getUuid(), unlimitedMasterPool.getId(), 9);
+        candlepinClient.consumers().bindPool(cpUser.getUuid(), unlimitedPrimaryPool.getId(), 9);
         unlimitedBonusPool = adminClient.pools().getPool(unlimitedBonusPool.getId(), null, null);
         assertEquals(-1, unlimitedBonusPool.getQuantity());
 
@@ -700,7 +704,7 @@ class PostBindBonusPoolSpecTest {
 
     @Test
     @OnlyInStandalone
-    void shouldAllowUnlimitedConsumptionOfBonusPoolsForUnlimitedQuantityMasterPoolStandalone()
+    void shouldAllowUnlimitedConsumptionOfBonusPoolsForUnlimitedQuantityPrimaryPoolStandalone()
         throws Exception {
         ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
         guest.setUuid(StringUtil.random("guest"));
@@ -709,58 +713,58 @@ class PostBindBonusPoolSpecTest {
         ApiClient guestClient = ApiClients.ssl(guest);
 
         ProductDTO unlimitedProd = createUnlimitedProduct(adminClient, ownerKey, 4);
-        PoolDTO unlimitedProdMasterPool = Pools.randomUpstream(unlimitedProd).quantity(-1L);
-        unlimitedProdMasterPool = adminClient.owners().createPool(ownerKey, unlimitedProdMasterPool);
+        PoolDTO unlimitedProdPrimaryPool = Pools.randomUpstream(unlimitedProd).quantity(-1L);
+        unlimitedProdPrimaryPool = adminClient.owners().createPool(ownerKey, unlimitedProdPrimaryPool);
         PoolDTO unlimitedProdBonusPool =
-            getBonusPool(adminClient, ownerKey, unlimitedProdMasterPool.getSubscriptionId());
+            getBonusPool(adminClient, ownerKey, unlimitedProdPrimaryPool.getSubscriptionId());
 
         // Consume bonus pool
         JsonNode ents = guestClient.consumers().bindPool(guest.getUuid(), unlimitedProdBonusPool.getId(), 1);
         unlimitedProdBonusPool = adminClient.pools().getPool(unlimitedProdBonusPool.getId(), null, null);
         assertEquals(-1, unlimitedProdBonusPool.getQuantity());
 
-        // master pool quantity remains unchanged
-        unlimitedProdMasterPool = adminClient.pools().getPool(unlimitedProdMasterPool.getId(), null, null);
-        assertEquals(-1, unlimitedProdMasterPool.getQuantity());
+        // primary pool quantity remains unchanged
+        unlimitedProdPrimaryPool = adminClient.pools().getPool(unlimitedProdPrimaryPool.getId(), null, null);
+        assertEquals(-1, unlimitedProdPrimaryPool.getQuantity());
 
         // unbind & refresh
         guestClient.consumers().unbindByEntitlementId(guest.getUuid(), ents.get(0).get("id").asText());
         unlimitedProdBonusPool = adminClient.pools().getPool(unlimitedProdBonusPool.getId(), null, null);
         assertEquals(-1, unlimitedProdBonusPool.getQuantity());
-        unlimitedProdMasterPool = adminClient.pools().getPool(unlimitedProdMasterPool.getId(), null, null);
-        assertEquals(-1, unlimitedProdMasterPool.getQuantity());
+        unlimitedProdPrimaryPool = adminClient.pools().getPool(unlimitedProdPrimaryPool.getId(), null, null);
+        assertEquals(-1, unlimitedProdPrimaryPool.getQuantity());
     }
 
     @Test
     @OnlyInStandalone
-    void shouldAllowUnlimitedConsumptionOfMasterPoolWhenQuantityIsUnlimitedRegardlessOfVirtLimitStandalone()
+    void shouldAllowUnlimitedConsumptionOfPrimaryPoolWhenQuantityIsUnlimitedRegardlessOfVirtLimitStandalone()
         throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
         ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
         ProductDTO unlimitedProd = createUnlimitedProduct(adminClient, ownerKey, 4);
-        PoolDTO unlimitedProdMasterPool = Pools.randomUpstream(unlimitedProd).quantity(-1L);
-        unlimitedProdMasterPool = adminClient.owners().createPool(ownerKey, unlimitedProdMasterPool);
-        assertEquals(-1, unlimitedProdMasterPool.getQuantity());
+        PoolDTO unlimitedProdPrimaryPool = Pools.randomUpstream(unlimitedProd).quantity(-1L);
+        unlimitedProdPrimaryPool = adminClient.owners().createPool(ownerKey, unlimitedProdPrimaryPool);
+        assertEquals(-1, unlimitedProdPrimaryPool.getQuantity());
 
         PoolDTO unlimitedProductBonusPool =
-            getBonusPool(adminClient, ownerKey, unlimitedProdMasterPool.getSubscriptionId());
+            getBonusPool(adminClient, ownerKey, unlimitedProdPrimaryPool.getSubscriptionId());
         assertEquals(-1, unlimitedProductBonusPool.getQuantity());
 
-        // consume master pool in any quantity
+        // consume primary pool in any quantity
         JsonNode ents = candlepinClient.consumers()
-            .bindPool(cpUser.getUuid(), unlimitedProdMasterPool.getId(), 1000);
-        unlimitedProdMasterPool = adminClient.pools().getPool(unlimitedProdMasterPool.getId(), null, null);
-        assertEquals(-1, unlimitedProdMasterPool.getQuantity());
+            .bindPool(cpUser.getUuid(), unlimitedProdPrimaryPool.getId(), 1000);
+        unlimitedProdPrimaryPool = adminClient.pools().getPool(unlimitedProdPrimaryPool.getId(), null, null);
+        assertEquals(-1, unlimitedProdPrimaryPool.getQuantity());
         unlimitedProductBonusPool = adminClient.pools()
             .getPool(unlimitedProductBonusPool.getId(), null, null);
         assertEquals(-1, unlimitedProductBonusPool.getQuantity());
 
         // entitlement unbind
         candlepinClient.consumers().unbindByEntitlementId(cpUser.getUuid(), ents.get(0).get("id").asText());
-        unlimitedProdMasterPool = adminClient.pools().getPool(unlimitedProdMasterPool.getId(), null, null);
-        assertEquals(-1, unlimitedProdMasterPool.getQuantity());
+        unlimitedProdPrimaryPool = adminClient.pools().getPool(unlimitedProdPrimaryPool.getId(), null, null);
+        assertEquals(-1, unlimitedProdPrimaryPool.getQuantity());
         unlimitedProductBonusPool = adminClient.pools()
             .getPool(unlimitedProductBonusPool.getId(), null, null);
         assertEquals(-1, unlimitedProductBonusPool.getQuantity());
@@ -776,13 +780,13 @@ class PostBindBonusPoolSpecTest {
 
         ProductDTO hostLimitedUnlimitedVirtProduct =
             createHostLimitedUnlimitedVirtProduct(adminClient, ownerKey);
-        PoolDTO hostLimitedUnlimitedVirtMasterPool = adminClient.owners()
+        PoolDTO hostLimitedUnlimitedVirtPrimaryPool = adminClient.owners()
             .createPool(ownerKey, Pools.randomUpstream(hostLimitedUnlimitedVirtProduct));
-        assertEquals(10, hostLimitedUnlimitedVirtMasterPool.getQuantity());
+        assertEquals(10, hostLimitedUnlimitedVirtPrimaryPool.getQuantity());
 
         // unmapped_guest pool quantity is expected to be unlimited
         PoolDTO hostLimitedUnlimitedVirtBonusPool =
-            getBonusPool(adminClient, ownerKey, hostLimitedUnlimitedVirtMasterPool.getSubscriptionId());
+            getBonusPool(adminClient, ownerKey, hostLimitedUnlimitedVirtPrimaryPool.getSubscriptionId());
         assertEquals(-1, hostLimitedUnlimitedVirtBonusPool.getQuantity());
 
         guestClient.consumers().bindPool(guest.getUuid(), hostLimitedUnlimitedVirtBonusPool.getId(), 500);
@@ -793,7 +797,7 @@ class PostBindBonusPoolSpecTest {
 
     @Test
     @OnlyInStandalone
-    void shouldAllowUnlimitedConsumptionOfUnmappedGuestPoolForUnlimitedMasterPoolQuantity()
+    void shouldAllowUnlimitedConsumptionOfUnmappedGuestPoolForUnlimitedPrimaryPoolQuantity()
         throws Exception {
         ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
         cpUser = adminClient.consumers().createConsumer(cpUser);
@@ -807,24 +811,24 @@ class PostBindBonusPoolSpecTest {
 
         ProductDTO hostLimitedUnlimitedVirtProd =
             createHostLimitedUnlimitedVirtProduct(adminClient, ownerKey);
-        PoolDTO hostAndVirtLimitedProdMasterPool = Pools.randomUpstream(hostLimitedUnlimitedVirtProd)
+        PoolDTO hostAndVirtLimitedProdPrimaryPool = Pools.randomUpstream(hostLimitedUnlimitedVirtProd)
             .quantity(-1L);
-        hostAndVirtLimitedProdMasterPool = adminClient.owners()
-            .createPool(ownerKey, hostAndVirtLimitedProdMasterPool);
+        hostAndVirtLimitedProdPrimaryPool = adminClient.owners()
+            .createPool(ownerKey, hostAndVirtLimitedProdPrimaryPool);
         PoolDTO hostLimitedUnlimitedVirtBonusPool =
-            getBonusPool(adminClient, ownerKey, hostAndVirtLimitedProdMasterPool.getSubscriptionId());
-        hostAndVirtLimitedProdMasterPool = adminClient.pools()
-            .getPool(hostAndVirtLimitedProdMasterPool.getId(), null, null);
-        assertEquals(-1, hostAndVirtLimitedProdMasterPool.getQuantity());
+            getBonusPool(adminClient, ownerKey, hostAndVirtLimitedProdPrimaryPool.getSubscriptionId());
+        hostAndVirtLimitedProdPrimaryPool = adminClient.pools()
+            .getPool(hostAndVirtLimitedProdPrimaryPool.getId(), null, null);
+        assertEquals(-1, hostAndVirtLimitedProdPrimaryPool.getQuantity());
 
         ProductDTO unlimitedProd = createUnlimitedProduct(adminClient, ownerKey, 4);
-        PoolDTO unlimitedMasterPool = adminClient.owners()
+        PoolDTO unlimitedPrimaryPool = adminClient.owners()
             .createPool(ownerKey, Pools.randomUpstream(unlimitedProd).quantity(-1L));
 
-        // consume master pool in any quantity
-        candlepinClient.consumers().bindPool(cpUser.getUuid(), unlimitedMasterPool.getId(), 1000);
-        unlimitedMasterPool = adminClient.pools().getPool(unlimitedMasterPool.getId(), null, null);
-        assertEquals(-1, unlimitedMasterPool.getQuantity());
+        // consume primary pool in any quantity
+        candlepinClient.consumers().bindPool(cpUser.getUuid(), unlimitedPrimaryPool.getId(), 1000);
+        unlimitedPrimaryPool = adminClient.pools().getPool(unlimitedPrimaryPool.getId(), null, null);
+        assertEquals(-1, unlimitedPrimaryPool.getQuantity());
 
         // unmapped_guest pool quantity is expected to be unlimited
         hostLimitedUnlimitedVirtBonusPool = adminClient.pools()
@@ -841,8 +845,8 @@ class PostBindBonusPoolSpecTest {
     @Nested
     @OnlyInHosted
     public class LockedEntityTests {
-        private PoolDTO unlimitedProdMasterPool;
-        private PoolDTO hostAndVirtLimitedProdMasterPool;
+        private PoolDTO unlimitedProdPrimaryPool;
+        private PoolDTO hostAndVirtLimitedProdPrimaryPool;
 
         @BeforeEach
         void setup() throws Exception {
@@ -853,15 +857,15 @@ class PostBindBonusPoolSpecTest {
             AsyncJobStatusDTO status = adminClient.jobs().waitForJob(job.getId());
             assertEquals("FINISHED", status.getState());
 
-            unlimitedProdMasterPool = getPoolBySubId(unlimitedProdSub.getId());
-            assertEquals(-1, unlimitedProdMasterPool.getQuantity());
+            unlimitedProdPrimaryPool = getPoolBySubId(unlimitedProdSub.getId());
+            assertEquals(-1, unlimitedProdPrimaryPool.getQuantity());
 
-            hostAndVirtLimitedProdMasterPool = getPoolBySubId(limitedHostVirtSub.getId());
-            assertEquals(-1, hostAndVirtLimitedProdMasterPool.getQuantity());
+            hostAndVirtLimitedProdPrimaryPool = getPoolBySubId(limitedHostVirtSub.getId());
+            assertEquals(-1, hostAndVirtLimitedProdPrimaryPool.getQuantity());
         }
 
         @Test
-        void shouldAllowUnlimitedConsumptionOfBonusPoolsForUnlimitedQuantityMasterPool() throws Exception {
+        void shouldAllowUnlimitedConsumptionOfBonusPoolsForUnlimitedQuantityPrimaryPool() throws Exception {
             ConsumerDTO guest = Consumers.random(owner, ConsumerTypes.System);
             guest.setUuid(StringUtil.random("guest"));
             guest.setFacts(Map.of("virt.is_guest", "true", "virt.uuid", guest.getUuid()));
@@ -869,7 +873,7 @@ class PostBindBonusPoolSpecTest {
             ApiClient guestClient = ApiClients.ssl(guest);
 
             PoolDTO unlimitedProdBonusPool =
-                getBonusPool(adminClient, ownerKey, unlimitedProdMasterPool.getSubscriptionId());
+                getBonusPool(adminClient, ownerKey, unlimitedProdPrimaryPool.getSubscriptionId());
             assertEquals(-1, unlimitedProdBonusPool.getQuantity());
 
             // Consume bonus pool
@@ -883,10 +887,10 @@ class PostBindBonusPoolSpecTest {
             unlimitedProdBonusPool = adminClient.pools().getPool(unlimitedProdBonusPool.getId(), null, null);
             assertEquals(-1, unlimitedProdBonusPool.getQuantity());
 
-            // master pool quantity remains unchanged
-            unlimitedProdMasterPool = adminClient.pools()
-                .getPool(unlimitedProdMasterPool.getId(), null, null);
-            assertEquals(-1, unlimitedProdMasterPool.getQuantity());
+            // primary pool quantity remains unchanged
+            unlimitedProdPrimaryPool = adminClient.pools()
+                .getPool(unlimitedProdPrimaryPool.getId(), null, null);
+            assertEquals(-1, unlimitedProdPrimaryPool.getQuantity());
 
             // unbind & refresh
             guestClient.consumers().unbindByEntitlementId(guest.getUuid(), ents.get(0).get("id").asText());
@@ -897,28 +901,28 @@ class PostBindBonusPoolSpecTest {
 
             unlimitedProdBonusPool = adminClient.pools().getPool(unlimitedProdBonusPool.getId(), null, null);
             assertEquals(-1, unlimitedProdBonusPool.getQuantity());
-            unlimitedProdMasterPool = adminClient.pools()
-                .getPool(unlimitedProdMasterPool.getId(), null, null);
-            assertEquals(-1, unlimitedProdMasterPool.getQuantity());
+            unlimitedProdPrimaryPool = adminClient.pools()
+                .getPool(unlimitedProdPrimaryPool.getId(), null, null);
+            assertEquals(-1, unlimitedProdPrimaryPool.getQuantity());
         }
 
         @Test
-        void shouldAllowUnlimitedConsumptionOfMasterPoolWhenQuantityIsUnlimitedRegardlessOfVirtLimit()
+        void shouldAllowUnlimitedConsumptionOfPrimaryPoolWhenQuantityIsUnlimitedRegardlessOfVirtLimit()
             throws Exception {
             ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
             cpUser = adminClient.consumers().createConsumer(cpUser);
             ApiClient candlepinClient = ApiClients.ssl(cpUser);
 
             PoolDTO unlimitedProductBonusPool =
-                getBonusPool(adminClient, ownerKey, unlimitedProdMasterPool.getSubscriptionId());
+                getBonusPool(adminClient, ownerKey, unlimitedProdPrimaryPool.getSubscriptionId());
             assertEquals(-1, unlimitedProductBonusPool.getQuantity());
 
-            // consume master pool in any quantity
+            // consume primary pool in any quantity
             JsonNode ents = candlepinClient.consumers()
-                .bindPool(cpUser.getUuid(), unlimitedProdMasterPool.getId(), 1000);
-            unlimitedProdMasterPool = adminClient.pools()
-                .getPool(unlimitedProdMasterPool.getId(), null, null);
-            assertEquals(-1, unlimitedProdMasterPool.getQuantity());
+                .bindPool(cpUser.getUuid(), unlimitedProdPrimaryPool.getId(), 1000);
+            unlimitedProdPrimaryPool = adminClient.pools()
+                .getPool(unlimitedProdPrimaryPool.getId(), null, null);
+            assertEquals(-1, unlimitedProdPrimaryPool.getQuantity());
             unlimitedProductBonusPool = adminClient.pools()
                 .getPool(unlimitedProductBonusPool.getId(), null, null);
             assertEquals(-1, unlimitedProductBonusPool.getQuantity());
@@ -927,9 +931,9 @@ class PostBindBonusPoolSpecTest {
             AsyncJobStatusDTO status = adminClient.jobs().waitForJob(job.getId());
             assertEquals("FINISHED", status.getState());
 
-            unlimitedProdMasterPool = adminClient.pools()
-                .getPool(unlimitedProdMasterPool.getId(), null, null);
-            assertEquals(-1, unlimitedProdMasterPool.getQuantity());
+            unlimitedProdPrimaryPool = adminClient.pools()
+                .getPool(unlimitedProdPrimaryPool.getId(), null, null);
+            assertEquals(-1, unlimitedProdPrimaryPool.getQuantity());
             unlimitedProductBonusPool = adminClient.pools()
                 .getPool(unlimitedProductBonusPool.getId(), null, null);
             assertEquals(-1, unlimitedProductBonusPool.getQuantity());
@@ -937,16 +941,16 @@ class PostBindBonusPoolSpecTest {
             // entitlement unbind
             candlepinClient.consumers()
                 .unbindByEntitlementId(cpUser.getUuid(), ents.get(0).get("id").asText());
-            unlimitedProdMasterPool = adminClient.pools()
-                .getPool(unlimitedProdMasterPool.getId(), null, null);
-            assertEquals(-1, unlimitedProdMasterPool.getQuantity());
+            unlimitedProdPrimaryPool = adminClient.pools()
+                .getPool(unlimitedProdPrimaryPool.getId(), null, null);
+            assertEquals(-1, unlimitedProdPrimaryPool.getQuantity());
             unlimitedProductBonusPool = adminClient.pools()
                 .getPool(unlimitedProductBonusPool.getId(), null, null);
             assertEquals(-1, unlimitedProductBonusPool.getQuantity());
         }
 
         @Test
-        void shouldAllowUnlimitedConsumptionOfUnmappedGuestPoolForUnlimitedMasterPoolQuantity()
+        void shouldAllowUnlimitedConsumptionOfUnmappedGuestPoolForUnlimitedPrimaryPoolQuantity()
             throws Exception {
             ConsumerDTO cpUser = Consumers.random(owner, ConsumerTypes.Candlepin);
             cpUser = adminClient.consumers().createConsumer(cpUser);
@@ -959,18 +963,18 @@ class PostBindBonusPoolSpecTest {
             ApiClient guestClient = ApiClients.ssl(guest);
 
             PoolDTO hostLimitedUnlimitedVirtBonusPool =
-                getBonusPool(adminClient, ownerKey, hostAndVirtLimitedProdMasterPool.getSubscriptionId());
-            hostAndVirtLimitedProdMasterPool = adminClient.pools()
-                .getPool(hostAndVirtLimitedProdMasterPool.getId(), null, null);
+                getBonusPool(adminClient, ownerKey, hostAndVirtLimitedProdPrimaryPool.getSubscriptionId());
+            hostAndVirtLimitedProdPrimaryPool = adminClient.pools()
+                .getPool(hostAndVirtLimitedProdPrimaryPool.getId(), null, null);
 
             ProductDTO unlimitedProd = createUnlimitedProduct(adminClient, ownerKey, 4);
-            PoolDTO unlimitedMasterPool = adminClient.owners()
+            PoolDTO unlimitedPrimaryPool = adminClient.owners()
                 .createPool(ownerKey, Pools.randomUpstream(unlimitedProd).quantity(-1L));
 
-            // consume master pool in any quantity
-            candlepinClient.consumers().bindPool(cpUser.getUuid(), unlimitedMasterPool.getId(), 1000);
-            unlimitedMasterPool = adminClient.pools().getPool(unlimitedMasterPool.getId(), null, null);
-            assertEquals(-1, unlimitedMasterPool.getQuantity());
+            // consume primary pool in any quantity
+            candlepinClient.consumers().bindPool(cpUser.getUuid(), unlimitedPrimaryPool.getId(), 1000);
+            unlimitedPrimaryPool = adminClient.pools().getPool(unlimitedPrimaryPool.getId(), null, null);
+            assertEquals(-1, unlimitedPrimaryPool.getQuantity());
 
             // unmapped_guest pool quantity is expected to be unlimited
             hostLimitedUnlimitedVirtBonusPool = adminClient.pools()

@@ -63,7 +63,7 @@ public interface PoolManager {
 
     Pool createAndEnrichPools(Pool pool, List<Pool> existingPools);
 
-    Pool convertToMasterPool(SubscriptionInfo subscription);
+    Pool convertToPrimaryPool(SubscriptionInfo subscription);
 
     /**
      * Applies changes to the given pool to itself and any of its derived pools. This may result in
@@ -72,7 +72,7 @@ public interface PoolManager {
      * @param pool
      *  The pool to update
      */
-    void updateMasterPool(Pool pool);
+    void updatePrimaryPool(Pool pool);
 
     /**
      * Deletes the pools associated with the specified subscription IDs.
@@ -274,38 +274,12 @@ public interface PoolManager {
     CandlepinQuery<Pool> getPoolsBySubscriptionId(String subscriptionId);
 
     /**
-     * Retrieves a list consisting of all known master pools.
+     * Retrieves a list consisting of all known primary pools.
      *
      * @return
-     *  a list of known master pools
+     *  a list of known primary pools
      */
-    CandlepinQuery<Pool> getMasterPools();
-
-    /**
-     * Retrieves a list consisting of all known master pools for the given owner
-     *
-     * @param owner
-     *  The owner for which to retrieve master pools
-     *
-     * @return
-     *  a list of known master pools for the given owner
-     */
-    CandlepinQuery<Pool> getMasterPoolsForOwner(Owner owner);
-
-    /**
-     * Retrieves a list consisting of all known master pools for the given owner, excluding those
-     * for the specified subscriptions.
-     *
-     * @param owner
-     *  The owner for which to retrieve master pools
-     *
-     * @param excludedSubs
-     *  A collection of subscription IDs to exclude from the retrieved master pools
-     *
-     * @return
-     *  a list of known master pools for the given owner
-     */
-    CandlepinQuery<Pool> getMasterPoolsForOwnerExcludingSubs(Owner owner, Collection<String> excludedSubs);
+    CandlepinQuery<Pool> getPrimaryPools();
 
     void deletePools(Collection<Pool> pools);
 

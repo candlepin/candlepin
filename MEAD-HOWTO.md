@@ -89,7 +89,7 @@ MEAD is set up to pull our source from a git repository rather than from a
 tarball like rpmbuild.  If you are doing a scratch build, you don't want to push
 your code to our official MEAD git repository.  Instead you need to create a git
 repository somewhere else that Brew can access.  GitHub is not on the
-whitelist, so the easiest solution is to set up a repository off of
+allowlist, so the easiest solution is to set up a repository off of
 git.engineering.redhat.com like so:
 
 ```

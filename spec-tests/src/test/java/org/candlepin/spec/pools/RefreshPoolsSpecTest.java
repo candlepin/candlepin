@@ -841,7 +841,7 @@ public class RefreshPoolsSpecTest {
 
     @Test
     @OnlyInHosted
-    public void shouldDeleteBonusPoolsWhenVirtLimitAttributeIsRemovedFromMasterPool() throws Exception {
+    public void shouldDeleteBonusPoolsWhenVirtLimitAttributeIsRemovedFromPrimaryPool() throws Exception {
         ContentDTO content = adminClient.hosted().createContent(Contents.random());
         ProductDTO prod = Products.random();
         prod.setAttributes(List.of(ProductAttributes.VirtualLimit.withValue("unlimited"),
@@ -854,13 +854,13 @@ public class RefreshPoolsSpecTest {
 
         refreshPools(adminClient, owner.getKey());
         List<PoolDTO> pools = adminClient.pools().listPoolsByOwner(owner.getId());
-        // 2 master pool and 2 bonus pools
+        // 2 primary pool and 2 bonus pools
         assertEquals(4, pools.size());
 
-        List<PoolDTO> masterPools = pools.stream()
+        List<PoolDTO> primaryPools = pools.stream()
             .filter(pool -> pool.getType().equals("NORMAL"))
             .collect(Collectors.toList());
-        assertThat(masterPools)
+        assertThat(primaryPools)
             .hasSize(2)
             .map(PoolDTO::getQuantity)
             .containsOnly(subQuantity);
@@ -906,7 +906,7 @@ public class RefreshPoolsSpecTest {
 
     @Test
     @OnlyInHosted
-    public void shouldInvalidateBonusPoolEntsWhenMasterPoolQuantityIsReduced() throws Exception {
+    public void shouldInvalidateBonusPoolEntsWhenPrimaryPoolQuantityIsReduced() throws Exception {
         ContentDTO content = adminClient.hosted().createContent(Contents.random());
         ProductDTO prod = Products.random();
         prod.setAttributes(List.of(ProductAttributes.VirtualLimit.withValue("1")));
@@ -918,7 +918,7 @@ public class RefreshPoolsSpecTest {
 
         refreshPools(adminClient, owner.getKey());
         List<PoolDTO> pools = adminClient.pools().listPoolsByOwner(owner.getId());
-        // master pool and bonus pool
+        // primary pool and bonus pool
         assertThat(pools)
             .hasSize(2)
             .map(PoolDTO::getType)
@@ -927,7 +927,7 @@ public class RefreshPoolsSpecTest {
             .map(PoolDTO::getQuantity)
             .containsOnly(subQuantity);
 
-        PoolDTO masterPool = pools.get(0).getType().equals("NORMAL") ? pools.get(0) : pools.get(1);
+        PoolDTO primaryPool = pools.get(0).getType().equals("NORMAL") ? pools.get(0) : pools.get(1);
         PoolDTO bonusPool = pools.get(0).getType().equals("BONUS") ? pools.get(0) : pools.get(1);
 
         // Verify the product exists in its initial state
@@ -949,7 +949,7 @@ public class RefreshPoolsSpecTest {
         }
 
         // Verify the entitlement count for this pool
-        assertThat(adminClient.pools().getPoolEntitlements(masterPool.getId()))
+        assertThat(adminClient.pools().getPoolEntitlements(primaryPool.getId()))
             .hasSize(0);
         assertThat(adminClient.pools().getPoolEntitlements(bonusPool.getId()))
             .hasSize(expectedNumberOfEnts);
@@ -965,11 +965,11 @@ public class RefreshPoolsSpecTest {
             .map(PoolDTO::getType)
             .containsExactlyInAnyOrder("NORMAL", "BONUS");
 
-        masterPool = pools.get(0).getType().equals("NORMAL") ? pools.get(0) : pools.get(1);
+        primaryPool = pools.get(0).getType().equals("NORMAL") ? pools.get(0) : pools.get(1);
         bonusPool = pools.get(0).getType().equals("BONUS") ? pools.get(0) : pools.get(1);
 
         // Verify the entitlement count has changed
-        assertThat(adminClient.pools().getPoolEntitlements(masterPool.getId()))
+        assertThat(adminClient.pools().getPoolEntitlements(primaryPool.getId()))
             .isNotNull()
             .hasSize(0);
 
@@ -993,14 +993,14 @@ public class RefreshPoolsSpecTest {
 
         refreshPools(adminClient, owner.getKey());
         List<PoolDTO> pools = adminClient.pools().listPoolsByOwner(owner.getId());
-        // master pool and bonus pool
+        // primary pool and bonus pool
         assertThat(pools)
             .hasSize(2)
             .map(PoolDTO::getType)
             .containsExactlyInAnyOrder("NORMAL", "BONUS");
 
-        PoolDTO masterPool = pools.get(0).getType().equals("NORMAL") ? pools.get(0) : pools.get(1);
-        assertThat(masterPool).returns(1L, PoolDTO::getQuantity);
+        PoolDTO primaryPool = pools.get(0).getType().equals("NORMAL") ? pools.get(0) : pools.get(1);
+        assertThat(primaryPool).returns(1L, PoolDTO::getQuantity);
         PoolDTO bonusPool = pools.get(0).getType().equals("BONUS") ? pools.get(0) : pools.get(1);
         assertThat(bonusPool).returns(virtLimit, PoolDTO::getQuantity);
 
@@ -1023,7 +1023,7 @@ public class RefreshPoolsSpecTest {
         }
 
         // Verify the entitlement count for this pool
-        assertThat(adminClient.pools().getPoolEntitlements(masterPool.getId()))
+        assertThat(adminClient.pools().getPoolEntitlements(primaryPool.getId()))
             .hasSize(0);
         assertThat(adminClient.pools().getPoolEntitlements(bonusPool.getId()))
             .hasSize(expectedNumberOfEnts);
@@ -1040,8 +1040,8 @@ public class RefreshPoolsSpecTest {
             .containsExactlyInAnyOrder("NORMAL", "BONUS");
 
         // Verify the entitlement count has changed
-        masterPool = pools.get(0).getType().equals("NORMAL") ? pools.get(0) : pools.get(1);
-        assertThat(masterPool).returns(1L, PoolDTO::getQuantity);
+        primaryPool = pools.get(0).getType().equals("NORMAL") ? pools.get(0) : pools.get(1);
+        assertThat(primaryPool).returns(1L, PoolDTO::getQuantity);
         bonusPool = pools.get(0).getType().equals("BONUS") ? pools.get(0) : pools.get(1);
         assertThat(bonusPool).returns(1L, PoolDTO::getQuantity);
     }

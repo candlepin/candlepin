@@ -14,6 +14,8 @@
  */
 package org.candlepin.liquibase;
 
+import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
+
 import liquibase.database.Database;
 import liquibase.exception.DatabaseException;
 
@@ -823,13 +825,13 @@ public class PerOrgProductsMigrationTask extends LiquibaseCustomTask {
             "FROM cp_pool_source_sub "
         );
 
-        // Migrate upstream tracking columns from subscription to master pool
+        // Migrate upstream tracking columns from subscription to primary pool
         ResultSet subscriptionInfo = this.executeQuery(
             "SELECT ss.pool_id, s.cdn_id, s.certificate_id, s.upstream_entitlement_id, " +
             "  s.upstream_consumer_id, s.upstream_pool_id " +
             "FROM cp_subscription s " +
             "JOIN cp2_pool_source_sub ss ON s.id = ss.subscription_id " +
-            "WHERE ss.subscription_sub_key = 'master'"
+            "WHERE ss.subscription_sub_key = ?", PRIMARY_POOL_SUB_KEY
         );
 
         // Update any pool referencing this subscription...

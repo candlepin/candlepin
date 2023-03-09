@@ -16,6 +16,7 @@
 package org.candlepin.spec.imports;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.candlepin.spec.bootstrap.data.builder.Pools.PRIMARY_POOL_SUB_KEY;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.AttributeDTO;
@@ -273,7 +274,7 @@ public class ImportSuccessSpecTest {
         // to bind to a virt_only or other weird pool
         List<PoolDTO> pools = userClient.pools().listPoolsByOwner(owner.getId());
         PoolDTO pool = pools.stream()
-            .filter(dto -> "master".equalsIgnoreCase(dto.getSubscriptionSubKey()))
+            .filter(dto -> PRIMARY_POOL_SUB_KEY.equalsIgnoreCase(dto.getSubscriptionSubKey()))
             .filter(dto -> !isVirtOnly(dto))
             .findFirst()
             .orElseThrow();

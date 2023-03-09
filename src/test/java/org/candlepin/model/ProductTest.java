@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -704,7 +705,7 @@ public class ProductTest {
     public void testEntityVersioningAvoidsCollidingOnDifferentChildren() {
         // Create a set of children which all have the same version or hashcode
         Product derived = spy(new Product())
-            .setId("derived");
+            .setId(DERIVED_POOL_SUB_KEY);
         Product provided = spy(new Product())
             .setId("provided");
         ProductContent pcontent = spy(new ProductContent())

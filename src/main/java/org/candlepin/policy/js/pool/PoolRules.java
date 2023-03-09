@@ -14,6 +14,9 @@
  */
 package org.candlepin.policy.js.pool;
 
+import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
+import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
+
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.PoolManager;
@@ -106,7 +109,7 @@ public class PoolRules {
     }
 
     public List<Pool> createAndEnrichPools(SubscriptionInfo sub, List<Pool> existingPools) {
-        Pool pool = this.poolManager.convertToMasterPool(sub);
+        Pool pool = this.poolManager.convertToPrimaryPool(sub);
         return createAndEnrichPools(pool, existingPools);
     }
 
@@ -119,53 +122,53 @@ public class PoolRules {
      *
      * For a genuine new pool, the existing pools list will be empty.
      *
-     * @param masterPool
+     * @param primaryPool
      * @param existingPools
      * @return a list of pools created for the given pool
      */
-    public List<Pool> createAndEnrichPools(Pool masterPool, List<Pool> existingPools) {
+    public List<Pool> createAndEnrichPools(Pool primaryPool, List<Pool> existingPools) {
         List<Pool> pools = new LinkedList<>();
 
         long calculated = this.calculateQuantity(
-            masterPool.getQuantity() != null ? masterPool.getQuantity() : 1, masterPool.getProduct(),
-            masterPool.getUpstreamPoolId());
+            primaryPool.getQuantity() != null ? primaryPool.getQuantity() : 1, primaryPool.getProduct(),
+            primaryPool.getUpstreamPoolId());
 
-        masterPool.setQuantity(calculated);
+        primaryPool.setQuantity(calculated);
 
         // The following will make virt_only a pool attribute. That makes the
         // pool explicitly virt_only to subscription manager and any other
         // downstream consumer.
-        String virtOnly = masterPool.getProductAttributes().get(Product.Attributes.VIRT_ONLY);
+        String virtOnly = primaryPool.getProductAttributes().get(Product.Attributes.VIRT_ONLY);
         if (virtOnly != null && !virtOnly.isEmpty()) {
-            masterPool.setAttribute(Pool.Attributes.VIRT_ONLY, virtOnly);
+            primaryPool.setAttribute(Pool.Attributes.VIRT_ONLY, virtOnly);
         }
         else {
-            masterPool.removeAttribute(Pool.Attributes.VIRT_ONLY);
+            primaryPool.removeAttribute(Pool.Attributes.VIRT_ONLY);
         }
 
-        log.info("Checking if pools need to be created for: {}", masterPool);
-        if (masterPool.getSubscriptionId() != null) {
-            if (!hasMasterPool(existingPools)) {
-                if (masterPool.getSubscriptionSubKey() != null &&
-                    masterPool.getSubscriptionSubKey().contentEquals("derived")) {
+        log.info("Checking if pools need to be created for: {}", primaryPool);
+        if (primaryPool.getSubscriptionId() != null) {
+            if (!hasPrimaryPool(existingPools)) {
+                if (primaryPool.getSubscriptionSubKey() != null &&
+                    primaryPool.getSubscriptionSubKey().contentEquals(DERIVED_POOL_SUB_KEY)) {
 
-                    // while we can create bonus pool from master pool, the reverse
+                    // while we can create bonus pool from primary pool, the reverse
                     // is not possible without the subscription itself
-                    throw new IllegalStateException("Cannot create master pool from bonus pool");
+                    throw new IllegalStateException("Cannot create primary pool from bonus pool");
                 }
 
-                pools.add(masterPool);
-                log.info("Creating new master pool: {}", masterPool);
+                pools.add(primaryPool);
+                log.info("Creating new primary pool: {}", primaryPool);
             }
         }
-        else if (masterPool.getId() == null) {
+        else if (primaryPool.getId() == null) {
             // This is a bit of a hack to ensure we still add net-new pools to the list of pools
             // to be created. When we get around to refactoring all of this for the pool hierarchy
             // stuff, this should be removed.
-            pools.add(masterPool);
+            pools.add(primaryPool);
         }
 
-        Pool bonusPool = createBonusPool(masterPool, existingPools);
+        Pool bonusPool = createBonusPool(primaryPool, existingPools);
         if (bonusPool != null) {
             pools.add(bonusPool);
         }
@@ -179,21 +182,21 @@ public class PoolRules {
      * temporary use of unmapped guests. (current behavior for any pool with
      * virt_limit)
      */
-    private Pool createBonusPool(Pool masterPool, List<Pool> existingPools) {
-        Map<String, String> attributes = masterPool.getProductAttributes();
+    private Pool createBonusPool(Pool primaryPool, List<Pool> existingPools) {
+        Map<String, String> attributes = primaryPool.getProductAttributes();
 
         String virtQuantity = getVirtQuantity(
-            attributes.get(Product.Attributes.VIRT_LIMIT), masterPool.getQuantity());
+            attributes.get(Product.Attributes.VIRT_LIMIT), primaryPool.getQuantity());
 
-        log.info("Checking if bonus pools need to be created for pool: {}", masterPool);
+        log.info("Checking if bonus pools need to be created for pool: {}", primaryPool);
 
         // Impl note:
         // We check if the pool has a source subscription to determine whether or not it's a custom
         // pool that doesn't originate from an subscription. If there isn't a source subscription,
-        // we have no way of linking the bonus/derived pools to the master pool (at the time of
+        // we have no way of linking the bonus/derived pools to the primary pool (at the time of
         // writing), and we'd end up with orphaned pools. If/when this issue is resolved, the check
         // for a source subscription should be removed.
-        if (poolManager.isManaged(masterPool) && virtQuantity != null &&
+        if (poolManager.isManaged(primaryPool) && virtQuantity != null &&
             !hasBonusPool(existingPools)) {
             boolean hostLimited = "true".equals(attributes.get(Product.Attributes.HOST_LIMITED));
             HashMap<String, String> virtAttributes = new HashMap<>();
@@ -209,14 +212,14 @@ public class PoolRules {
             virtAttributes.put(Product.Attributes.VIRT_LIMIT, "0");
 
             // Favor derived products if they are available
-            Product mpProduct = masterPool.getProduct();
+            Product mpProduct = primaryPool.getProduct();
             Product mpDerived = mpProduct != null ? mpProduct.getDerivedProduct() : null;
             Product sku = mpDerived != null ? mpDerived : mpProduct;
 
             // Using derived here because only one derived pool is created for
             // this subscription
-            Pool bonusPool = PoolHelper.clonePool(masterPool, sku, virtQuantity, virtAttributes, "derived",
-                ownerProductCurator, null, null, productCurator);
+            Pool bonusPool = PoolHelper.clonePool(primaryPool, sku, virtQuantity, virtAttributes,
+                DERIVED_POOL_SUB_KEY, ownerProductCurator, null, null, productCurator);
 
             log.info("Creating new derived pool: {}", bonusPool);
             return bonusPool;
@@ -225,11 +228,11 @@ public class PoolRules {
         return null;
     }
 
-    private boolean hasMasterPool(List<Pool> pools) {
+    private boolean hasPrimaryPool(List<Pool> pools) {
         if (pools != null) {
             for (Pool pool : pools) {
                 SourceSubscription srcSub = pool.getSourceSubscription();
-                if (srcSub != null && "master".equals(srcSub.getSubscriptionSubKey())) {
+                if (srcSub != null && PRIMARY_POOL_SUB_KEY.equals(srcSub.getSubscriptionSubKey())) {
                     return true;
                 }
             }
@@ -242,7 +245,7 @@ public class PoolRules {
         if (pools != null) {
             for (Pool pool : pools) {
                 SourceSubscription srcSub = pool.getSourceSubscription();
-                if (srcSub != null && "derived".equals(srcSub.getSubscriptionSubKey())) {
+                if (srcSub != null && DERIVED_POOL_SUB_KEY.equals(srcSub.getSubscriptionSubKey())) {
                     return true;
                 }
             }
@@ -254,9 +257,9 @@ public class PoolRules {
     /*
      * Returns null if invalid
      */
-    private String getVirtQuantity(String virtLimit, long masterPoolQuantity) {
+    private String getVirtQuantity(String virtLimit, long primaryPoolQuantity) {
         if (virtLimit != null &&
-            ("unlimited".equals(virtLimit) || masterPoolQuantity == UNLIMITED_QUANTITY)) {
+            ("unlimited".equals(virtLimit) || primaryPoolQuantity == UNLIMITED_QUANTITY)) {
             return String.valueOf(UNLIMITED_QUANTITY);
         }
 
@@ -264,7 +267,7 @@ public class PoolRules {
             int virtLimitInt = Integer.parseInt(virtLimit);
 
             if (virtLimitInt > 0) {
-                long quantity = virtLimitInt * masterPoolQuantity;
+                long quantity = virtLimitInt * primaryPoolQuantity;
                 return String.valueOf(quantity);
             }
         }
@@ -312,39 +315,39 @@ public class PoolRules {
         return updates;
     }
 
-    public List<PoolUpdate> updatePools(Pool masterPool, List<Pool> existingPools, Long originalQuantity,
+    public List<PoolUpdate> updatePools(Pool primaryPool, List<Pool> existingPools, Long originalQuantity,
         Map<String, Product> changedProducts) {
         //local.setCertificate(subscription.getCertificate());
 
-        log.debug("Refreshing pools for existing master pool: {}", masterPool);
+        log.debug("Refreshing pools for existing primary pool: {}", primaryPool);
         log.debug("  existing pools: {}", existingPools.size());
 
         List<PoolUpdate> poolsUpdated = new LinkedList<>();
-        Map<String, String> attributes = masterPool.getProductAttributes();
+        Map<String, String> attributes = primaryPool.getProductAttributes();
 
-        Product product = masterPool.getProduct();
+        Product product = primaryPool.getProduct();
         Product derived = product != null ? product.getDerivedProduct() : null;
 
         for (Pool existingPool : existingPools) {
             log.debug("Checking pool: {}", existingPool);
 
-            // Ensure subscription details are maintained on the master pool
-            if ("master".equalsIgnoreCase(existingPool.getSubscriptionSubKey())) {
-                existingPool.setUpstreamPoolId(masterPool.getUpstreamPoolId());
-                existingPool.setUpstreamEntitlementId(masterPool.getUpstreamEntitlementId());
-                existingPool.setUpstreamConsumerId(masterPool.getUpstreamConsumerId());
+            // Ensure subscription details are maintained on the primary pool
+            if (PRIMARY_POOL_SUB_KEY.equalsIgnoreCase(existingPool.getSubscriptionSubKey())) {
+                existingPool.setUpstreamPoolId(primaryPool.getUpstreamPoolId());
+                existingPool.setUpstreamEntitlementId(primaryPool.getUpstreamEntitlementId());
+                existingPool.setUpstreamConsumerId(primaryPool.getUpstreamConsumerId());
 
-                existingPool.setCdn(masterPool.getCdn());
-                existingPool.setCertificate(masterPool.getCertificate());
+                existingPool.setCdn(primaryPool.getCdn());
+                existingPool.setCertificate(primaryPool.getCertificate());
             }
 
             // Used to track if anything has changed:
             PoolUpdate update = new PoolUpdate(existingPool);
 
-            update.setDatesChanged(checkForDateChange(masterPool.getStartDate(), masterPool.getEndDate(),
+            update.setDatesChanged(checkForDateChange(primaryPool.getStartDate(), primaryPool.getEndDate(),
                 existingPool));
 
-            update.setQuantityChanged(checkForQuantityChange(masterPool, existingPool, originalQuantity,
+            update.setQuantityChanged(checkForQuantityChange(primaryPool, existingPool, originalQuantity,
                 existingPools, attributes));
             if (!existingPool.isMarkedForDelete()) {
                 boolean useDerived = derived != null &&
@@ -353,7 +356,7 @@ public class PoolRules {
                 update.setProductsChanged(this.checkForChangedProducts(useDerived ? derived : product,
                     existingPool, changedProducts));
 
-                update.setOrderChanged(checkForOrderDataChanges(masterPool, existingPool));
+                update.setOrderChanged(checkForOrderDataChanges(primaryPool, existingPool));
             }
 
             // All done, see if we found any changes and return an update object if so:
@@ -558,7 +561,7 @@ public class PoolRules {
 
         update.setDatesChanged(checkForDateChange(acc.getStartDate(), acc.getEndDate(), pool));
 
-        // We use the "oldest" entitlement as the master for determining values that
+        // We use the "oldest" entitlement as the primary for determining values that
         // could have come from the various subscriptions.
         Entitlement eldest = acc.getEldest();
         Pool eldestEntPool = eldest.getPool();
@@ -718,7 +721,7 @@ public class PoolRules {
                             // adjustment for exported quantities if there are multiple
                             // pools in play.
                             long adjust = 0L;
-                            boolean isMasterUnlimited = false;
+                            boolean isPrimaryUnlimited = false;
 
                             for (Pool derivedPool : existingPools) {
                                 String isDerived =
@@ -728,14 +731,14 @@ public class PoolRules {
                                     adjust = derivedPool.getExported();
 
                                     if (derivedPool.getQuantity() == UNLIMITED_QUANTITY) {
-                                        isMasterUnlimited = true;
+                                        isPrimaryUnlimited = true;
                                     }
                                 }
                             }
 
-                            // If master pool quantity is unlimited & existingPool is of type
+                            // If primary pool quantity is unlimited & existingPool is of type
                             // virt bonus or unmapped guest pool, set its quantity as unlimited.
-                            if (isMasterUnlimited && (existingPool.getType() == PoolType.BONUS ||
+                            if (isPrimaryUnlimited && (existingPool.getType() == PoolType.BONUS ||
                                 existingPool.getType() == PoolType.UNMAPPED_GUEST)) {
                                 expectedQuantity = UNLIMITED_QUANTITY;
                             }

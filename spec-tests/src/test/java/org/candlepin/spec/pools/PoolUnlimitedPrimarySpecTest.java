@@ -49,7 +49,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @SpecTest
-public class PoolUnlimitedMasterSpecTest {
+public class PoolUnlimitedPrimarySpecTest {
 
     private static ApiClient client;
     private OwnerDTO owner;
@@ -114,23 +114,23 @@ public class PoolUnlimitedMasterSpecTest {
     }
 
     @Test
-    public void shouldNotShowEffectFromProductMultiplierToUnlimitedMasterPoolQuantity() throws Exception {
+    public void shouldNotShowEffectFromProductMultiplierToUnlimitedPrimaryPoolQuantity() throws Exception {
         setupConsumersAndClients();
         setupProductsAndPools(false, false, false, false, false, true);
         List<PoolDTO> pools = ownerApi.listOwnerPools(owner.getKey());
-        // master pool quantity expected to be -1
-        PoolDTO masterPool = pools.stream()
+        // primary pool quantity expected to be -1
+        PoolDTO primaryPool = pools.stream()
             .filter(x -> x.getId().equals(poolVirtProductMuliplier.getId()))
             .collect(Collectors.toList()).get(0);
-        assertEquals(-1L, masterPool.getQuantity());
+        assertEquals(-1L, primaryPool.getQuantity());
 
-        // consume master pool with physical client in any quantity
-        physicalClient.consumers().bindPool(physicalSystem.getUuid(), masterPool.getId(), 1000);
+        // consume primary pool with physical client in any quantity
+        physicalClient.consumers().bindPool(physicalSystem.getUuid(), primaryPool.getId(), 1000);
         pools = ownerApi.listOwnerPools(owner.getKey());
-        masterPool = pools.stream()
+        primaryPool = pools.stream()
             .filter(x -> x.getId().equals(poolVirtProductMuliplier.getId()))
             .collect(Collectors.toList()).get(0);
-        assertEquals(-1L, masterPool.getQuantity());
+        assertEquals(-1L, primaryPool.getQuantity());
 
         PoolDTO subPool = pools.stream()
             .filter(x -> x.getSubscriptionId().equals(poolVirtProductMuliplier.getSubscriptionId()) &&
@@ -140,24 +140,24 @@ public class PoolUnlimitedMasterSpecTest {
     }
 
     @Test
-    public void shouldNotShowEffectFromInstanceMultiplierToUnlimitedMasterPoolQuantity() throws Exception {
+    public void shouldNotShowEffectFromInstanceMultiplierToUnlimitedPrimaryPoolQuantity() throws Exception {
         setupConsumersAndClients();
         setupProductsAndPools(false, false, false, false, true, false);
         List<PoolDTO> pools = ownerApi.listOwnerPools(owner.getKey());
         final String poolId = poolVirtInstanceMuliplier.getId();
-        // master pool quantity expected to be -1
-        PoolDTO masterPool = pools.stream()
+        // primary pool quantity expected to be -1
+        PoolDTO primaryPool = pools.stream()
             .filter(x -> x.getId().equals(poolId))
             .collect(Collectors.toList()).get(0);
-        assertEquals(-1L, masterPool.getQuantity());
+        assertEquals(-1L, primaryPool.getQuantity());
 
-        // consume master pool with physical client in any quantity
-        physicalClient.consumers().bindPool(physicalSystem.getUuid(), masterPool.getId(), 60);
+        // consume primary pool with physical client in any quantity
+        physicalClient.consumers().bindPool(physicalSystem.getUuid(), primaryPool.getId(), 60);
         pools = ownerApi.listOwnerPools(owner.getKey());
-        masterPool = pools.stream()
+        primaryPool = pools.stream()
             .filter(x -> x.getId().equals(poolId))
             .collect(Collectors.toList()).get(0);
-        assertEquals(-1L, masterPool.getQuantity());
+        assertEquals(-1L, primaryPool.getQuantity());
 
         final String subId = poolVirtInstanceMuliplier.getSubscriptionId();
         PoolDTO subPool = pools.stream()
@@ -168,7 +168,7 @@ public class PoolUnlimitedMasterSpecTest {
     }
 
     @Test
-    public void shouldAlwaysHaveUnlimitedMasterPoolQuantityEqualtoNegOne() throws Exception {
+    public void shouldAlwaysHaveUnlimitedPrimaryPoolQuantityEqualtoNegOne() throws Exception {
         setupConsumersAndClients();
         ProductDTO product = Products.randomSKU()
             .addAttributesItem(new AttributeDTO().name("virt_limit").value("4"))
@@ -184,18 +184,18 @@ public class PoolUnlimitedMasterSpecTest {
         final String poolId = unlimitedPool.getId();
 
         List<PoolDTO> pools = ownerApi.listOwnerPools(owner.getKey());
-        // master pool quantity expected to be -1
-        PoolDTO masterPool = pools.stream()
+        // primary pool quantity expected to be -1
+        PoolDTO primaryPool = pools.stream()
             .filter(x -> x.getId().equals(poolId))
             .collect(Collectors.toList()).get(0);
-        assertEquals(-1L, masterPool.getQuantity());
+        assertEquals(-1L, primaryPool.getQuantity());
 
-        physicalClient.consumers().bindPool(physicalSystem.getUuid(), masterPool.getId(), 1000);
+        physicalClient.consumers().bindPool(physicalSystem.getUuid(), primaryPool.getId(), 1000);
         pools = ownerApi.listOwnerPools(owner.getKey());
-        masterPool = pools.stream()
+        primaryPool = pools.stream()
             .filter(x -> x.getId().equals(poolId))
             .collect(Collectors.toList()).get(0);
-        assertEquals(-1L, masterPool.getQuantity());
+        assertEquals(-1L, primaryPool.getQuantity());
     }
 
     @Test

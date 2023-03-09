@@ -171,7 +171,7 @@ public class ConsumerResourceContentSpecTest {
     }
 
     @Test
-    public void shouldRejectChangesForBlacklistedAttributes() {
+    public void shouldRejectChangesForBlocklistedAttributes() {
         ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(this.owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
         List<ContentOverrideDTO> overrides = List.of(ContentOverrides.random().name("label"));
@@ -181,7 +181,7 @@ public class ConsumerResourceContentSpecTest {
     }
 
     @Test
-    public void shouldRejectChangesForBlacklistedAttributesRegardlessOfCase() {
+    public void shouldRejectChangesForBlocklistedAttributesRegardlessOfCase() {
         ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(this.owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
         List<ContentOverrideDTO> overrides = List.of(ContentOverrides.random().name("LABEL"));
@@ -191,7 +191,7 @@ public class ConsumerResourceContentSpecTest {
     }
 
     @Test
-    public void shouldRejectAllChangesIfAnyBlacklistedAttributesExist() {
+    public void shouldRejectAllChangesIfAnyBlocklistedAttributesExist() {
         ConsumerDTO consumer = admin.consumers().createConsumer(Consumers.random(this.owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
         List<ContentOverrideDTO> overrides = List.of(

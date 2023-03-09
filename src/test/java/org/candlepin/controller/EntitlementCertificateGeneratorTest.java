@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller;
 
+import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -76,7 +77,6 @@ import java.util.Set;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class EntitlementCertificateGeneratorTest {
-
     @Mock private ContentAccessManager mockContentAccessManager;
     @Mock private EntitlementCertServiceAdapter mockEntCertAdapter;
     @Mock private EntitlementCertificateCurator mockEntCertCurator;
@@ -353,7 +353,7 @@ public class EntitlementCertificateGeneratorTest {
         Product product = TestUtil.createProduct();
 
         Pool pool = TestUtil.createPool(owner, product);
-        pool.setSourceSubscription(new SourceSubscription("source-sub-id", "master"));
+        pool.setSourceSubscription(new SourceSubscription("source-sub-id", PRIMARY_POOL_SUB_KEY));
 
         Map<String, EntitlementCertificate> entCerts = new HashMap<>();
         entCerts.put(pool.getId(), new EntitlementCertificate());

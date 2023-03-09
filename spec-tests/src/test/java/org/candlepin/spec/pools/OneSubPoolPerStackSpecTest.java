@@ -379,7 +379,7 @@ public class OneSubPoolPerStackSpecTest {
     }
 
     @Test
-    public void shouldUseDerivedProductInSubPoolWhenMasterPoolHasDerivedProduct() {
+    public void shouldUseDerivedProductInSubPoolWhenPrimaryPoolHasDerivedProduct() {
         TestData data = new TestData();
         createStackedDatacenterProductPool(data.owner, data.stackId1);
         List<PoolDTO> pools = getHostPools(data, List.of(DATACENTER_POOL));

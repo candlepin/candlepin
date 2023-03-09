@@ -32,7 +32,7 @@ import java.util.Arrays;
 public class DynamicFilterDataTest {
 
     @Test
-    public void testSimpleWhitelistFiltering() {
+    public void testSimpleAllowlistFiltering() {
         DynamicFilterData filterData = new DynamicFilterData(true);
         filterData.includeAttribute("bacon");
 
@@ -43,7 +43,7 @@ public class DynamicFilterDataTest {
     }
 
     @Test
-    public void testMultiLevelWhitelistFiltering() {
+    public void testMultiLevelAllowlistFiltering() {
         DynamicFilterData filterData = new DynamicFilterData(true);
         filterData.includeAttribute("bacon.egg");
 
@@ -66,7 +66,7 @@ public class DynamicFilterDataTest {
     }
 
     @Test
-    public void testSimpleBlacklistFiltering() {
+    public void testSimpleBlocklistFiltering() {
         DynamicFilterData filterData = new DynamicFilterData(false);
         filterData.excludeAttribute("bacon");
 
@@ -77,7 +77,7 @@ public class DynamicFilterDataTest {
     }
 
     @Test
-    public void testMultiLevelBlacklistFiltering() {
+    public void testMultiLevelBlocklistFiltering() {
         DynamicFilterData filterData = new DynamicFilterData(false);
         filterData.excludeAttribute("bacon.egg");
 

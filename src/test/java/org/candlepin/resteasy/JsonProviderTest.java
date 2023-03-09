@@ -216,7 +216,7 @@ public class JsonProviderTest {
     public void testDynamicPropertyFilterIncludeSingleProperty() {
         DynamicFilterData filterData = new DynamicFilterData();
         filterData.includeAttribute("name");
-        filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
+        filterData.setAllowlistMode(true); // When only includes are set, we should be in allowlist mode
         ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         ActivationKeyDTO keyDTO = new ActivationKeyDTO();
@@ -246,7 +246,7 @@ public class JsonProviderTest {
         filterData.includeAttribute("name");
         filterData.includeAttribute("releaseVer");
         filterData.includeAttribute("addOns");
-        filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
+        filterData.setAllowlistMode(true); // When only includes are set, we should be in allowlist mode
         ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         ActivationKeyDTO keyDTO = new ActivationKeyDTO();
@@ -276,7 +276,7 @@ public class JsonProviderTest {
     public void testDynamicPropertyFilterIncludeNestedProperty() {
         DynamicFilterData filterData = new DynamicFilterData();
         filterData.includeAttribute("owner.id");
-        filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
+        filterData.setAllowlistMode(true); // When only includes are set, we should be in allowlist mode
         ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         ActivationKeyDTO keyDTO = new ActivationKeyDTO();
@@ -311,7 +311,7 @@ public class JsonProviderTest {
     public void testDynamicPropertyFilterIncludeNestedPropertiesOnListElements() {
         DynamicFilterData filterData = new DynamicFilterData();
         filterData.includeAttribute("owner.id");
-        filterData.setWhitelistMode(true); // When only includes are set, we should be in whitelist mode
+        filterData.setAllowlistMode(true); // When only includes are set, we should be in allowlist mode
         ResteasyContext.pushContext(DynamicFilterData.class, filterData);
 
         NestedOwnerDTO ownerDTO = new NestedOwnerDTO()

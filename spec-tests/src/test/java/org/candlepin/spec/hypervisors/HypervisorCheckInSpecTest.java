@@ -1319,7 +1319,7 @@ public class HypervisorCheckInSpecTest {
         ContentDTO rh00271Content = createRH00271Content(owner, rh00051Product);
         ownerProductApi.addContent(owner.getKey(), rh00051EngProduct.getId(), rh00051Content.getId(), true);
         ownerProductApi.addContent(owner.getKey(), rh00271EngProduct.getId(), rh00271Content.getId(), true);
-        // creating master pool for the products
+        // creating primary pool for the products
         PoolDTO rh00271Pool = createRH00271Pool(owner, rh00271Product, rh00271EngProduct);
         PoolDTO rh00051Pool = createRH00051Pool(owner, rh00051Product, rh00051EngProduct);
 

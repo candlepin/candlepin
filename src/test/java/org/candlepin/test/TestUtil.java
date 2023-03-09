@@ -14,6 +14,7 @@
  */
 package org.candlepin.test;
 
+import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -55,7 +56,6 @@ import org.candlepin.service.model.ProductInfo;
 import org.candlepin.util.Transactional;
 import org.candlepin.util.Util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -570,7 +570,8 @@ public class TestUtil {
             .setContractNumber("SUB234598S" + random)
             .setAccountNumber("ACC123" + random)
             .setOrderNumber("ORD222" + random)
-            .setSourceSubscription(new SourceSubscription("SUB234598S" + random, "master" + random));
+            .setSourceSubscription(
+                new SourceSubscription("SUB234598S" + random, PRIMARY_POOL_SUB_KEY + random));
 
         return pool;
     }
@@ -759,7 +760,7 @@ public class TestUtil {
         }
 
         if (sub.getId() != null) {
-            pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
+            pool.setSourceSubscription(new SourceSubscription(sub.getId(), PRIMARY_POOL_SUB_KEY));
         }
 
         pool.setUpstreamPoolId(sub.getUpstreamPoolId());
@@ -791,7 +792,7 @@ public class TestUtil {
             "\n//somerules";
     }
 
-    public static boolean isJsonEqual(String one, String two) throws JsonProcessingException, IOException {
+    public static boolean isJsonEqual(String one, String two) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode tree1 = mapper.readTree(one);
         JsonNode tree2 = mapper.readTree(two);

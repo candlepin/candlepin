@@ -156,12 +156,12 @@ public class PoolToSubscriptionTranslator implements ObjectTranslator<Pool, Subs
          * To reconstruct subscription, we must therefore divide the quantity of the pool
          * by the product.multiplier.
          * It's not easy to find COMPLETE code related to the conversion of
-         * subscription to the pool. There is a method convertToMasterPool in this class,
+         * subscription to the pool. There is a method convertToPrimaryPool in this class,
          * that should do part of that (multiplication is not there).
          * But looking at its javadoc, it directly instructs callers of the
-         * convertToMasterPool method to override quantity with method
-         * PoolRules.calculateQuantity (when browsing the code that calls convertToMasterPool,
-         * the calculateQuantity is usually called after convertToMasterPool).
+         * convertToPrimaryPool method to override quantity with method
+         * PoolRules.calculateQuantity (when browsing the code that calls convertToPrimaryPool,
+         * the calculateQuantity is usually called after convertToPrimaryPool).
          * The method PoolRules.calculateQuantity does the actual
          * multiplication of pool.quantity by pool.product.multiplier.
          * It seems that we also need to account account for

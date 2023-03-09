@@ -14,6 +14,8 @@
  */
 package org.candlepin.model;
 
+import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
+import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
@@ -927,7 +929,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             .setStartDate(TestUtil.createDate(2011, 3, 2))
             .setEndDate(TestUtil.createDate(2055, 3, 2))
             .setSourceEntitlement(sourceEnt)
-            .setSourceSubscription(new SourceSubscription(subid, "derived"));
+            .setSourceSubscription(new SourceSubscription(subid, DERIVED_POOL_SUB_KEY));
+
 
         poolCurator.create(derivedPool);
 
@@ -1570,7 +1573,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         Pool pool2 = TestUtil.createPool(owner, product);
         pool2.setSourceEntitlement(e);
-        pool2.setSourceSubscription(new SourceSubscription(sourcePool.getSubscriptionId(), "derived"));
+        pool2.setSourceSubscription(
+            new SourceSubscription(sourcePool.getSubscriptionId(), DERIVED_POOL_SUB_KEY));
         poolCurator.create(pool2);
 
         assertEquals(2, poolCurator.getBySubscriptionId(owner, sub.getId()).size());
@@ -1700,13 +1704,13 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Owner owner1 = this.createOwner();
 
         Pool p1 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p1", "xyz"))
-            .setSourceSubscription(new SourceSubscription("subscriptionId-phil", "master"));
+            .setSourceSubscription(new SourceSubscription("subscriptionId-phil", PRIMARY_POOL_SUB_KEY));
 
         Pool p2 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p2", "abc"))
-            .setSourceSubscription(new SourceSubscription("subscriptionId-ned", "master1"));
+            .setSourceSubscription(new SourceSubscription("subscriptionId-ned", "primary1"));
 
         Pool p3 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p3", "lmn"))
-            .setSourceSubscription(new SourceSubscription("subscriptionId-ned1", "master11"));
+            .setSourceSubscription(new SourceSubscription("subscriptionId-ned1", "primary11"));
 
         this.poolCurator.create(p3);
         this.poolCurator.create(p2);
@@ -1737,11 +1741,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         this.ownerCurator.create(owner1);
 
         Pool p1 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p1", "xyz"));
-        p1.setSourceSubscription(new SourceSubscription("subscriptionId-phil", "master"));
+        p1.setSourceSubscription(new SourceSubscription("subscriptionId-phil", PRIMARY_POOL_SUB_KEY));
         Pool p2 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p2", "abc"));
-        p2.setSourceSubscription(new SourceSubscription("subscriptionId-ned", "master1"));
+        p2.setSourceSubscription(new SourceSubscription("subscriptionId-ned", "primary1"));
         Pool p3 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p3", "lmn"));
-        p3.setSourceSubscription(new SourceSubscription("subscriptionId-ned1", "master11"));
+        p3.setSourceSubscription(new SourceSubscription("subscriptionId-ned1", "primary11"));
         this.poolCurator.create(p3);
         this.poolCurator.create(p1);
         this.poolCurator.create(p2);
@@ -1799,10 +1803,10 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         this.ownerCurator.create(owner1);
 
         Pool p1 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p1", "p1"));
-        p1.setSourceSubscription(new SourceSubscription("subscriptionId-phil", "master"));
+        p1.setSourceSubscription(new SourceSubscription("subscriptionId-phil", PRIMARY_POOL_SUB_KEY));
 
         Pool p2 = TestUtil.createPool(owner1, this.generateProduct(owner1, "p2", "p2"));
-        p2.setSourceSubscription(new SourceSubscription("subscriptionId-ned", "master"));
+        p2.setSourceSubscription(new SourceSubscription("subscriptionId-ned", PRIMARY_POOL_SUB_KEY));
 
         this.poolCurator.create(p1);
         this.poolCurator.create(p2);
@@ -1829,11 +1833,11 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     private Pool createPool(Owner o, String subId) {
         Pool pool = TestUtil.createPool(o, product);
-        pool.setSourceSubscription(new SourceSubscription(subId, "master"));
+        pool.setSourceSubscription(new SourceSubscription(subId, PRIMARY_POOL_SUB_KEY));
         return poolCurator.create(pool);
     }
 
-    protected List<Pool> setupMasterPoolsTests() {
+    protected List<Pool> setupPrimaryPoolsTests() {
         Owner owner1 = this.createOwner();
         Owner owner2 = this.createOwner();
         this.ownerCurator.create(owner1);
@@ -1882,7 +1886,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         return list;
     }
 
-    private Pool getMasterPoolBySubscriptionId(String subscriptionId) {
+    private Pool getPrimaryPoolBySubscriptionId(String subscriptionId) {
         for (Pool pool : this.poolCurator.getPoolsBySubscriptionId(subscriptionId)) {
             if (pool.getType() == Pool.PoolType.NORMAL) {
                 return pool;
@@ -1892,58 +1896,28 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetMasterPoolBySubscriptionId() {
-        List<Pool> pools = this.setupMasterPoolsTests();
+    public void testGetPrimaryPoolBySubscriptionId() {
+        List<Pool> pools = this.setupPrimaryPoolsTests();
 
-        Pool actual = getMasterPoolBySubscriptionId("sub1");
+        Pool actual = getPrimaryPoolBySubscriptionId("sub1");
         assertEquals(pools.get(0), actual);
 
-        actual = getMasterPoolBySubscriptionId("sub2");
+        actual = getPrimaryPoolBySubscriptionId("sub2");
         assertEquals(pools.get(1), actual);
-        actual = getMasterPoolBySubscriptionId("sub5");
+        actual = getPrimaryPoolBySubscriptionId("sub5");
         assertNull(actual);
     }
 
     @Test
-    public void testGetMasterPools() {
-        List<Pool> pools = this.setupMasterPoolsTests();
+    public void testGetPrimaryPools() {
+        List<Pool> pools = this.setupPrimaryPoolsTests();
         List<Pool> expected = new LinkedList<>();
 
         expected.add(pools.get(0));
         expected.add(pools.get(1));
         expected.add(pools.get(4));
 
-        List<Pool> actual = this.poolCurator.getMasterPools().list();
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void testGetMasterPoolsForOwner() {
-        List<Pool> pools = this.setupMasterPoolsTests();
-        List<Pool> expected = new LinkedList<>();
-
-        Owner owner = pools.get(0).getOwner();
-
-        expected.add(pools.get(0));
-        expected.add(pools.get(4));
-
-        List<Pool> actual = this.poolCurator.getMasterPoolsForOwner(owner).list();
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void testGetMasterPoolsForOwnerExcludingSubs() {
-        List<Pool> pools = this.setupMasterPoolsTests();
-        List<Pool> expected = new LinkedList<>();
-
-        Owner owner = pools.get(0).getOwner();
-        expected.add(pools.get(0));
-
-        Collection<String> excludedSubIds = Arrays.asList(pools.get(4).getSubscriptionId());
-
-        List<Pool> actual = this.poolCurator.getMasterPoolsForOwnerExcludingSubs(owner, excludedSubIds)
-            .list();
-
+        List<Pool> actual = this.poolCurator.getPrimaryPools().list();
         assertEquals(expected, actual);
     }
 

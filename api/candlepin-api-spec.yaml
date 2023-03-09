@@ -5636,8 +5636,8 @@ paths:
 
     put:
       description: |
-        Updates a pool for an Owner. assumes this is a normal pool, and
-        errors out otherwise cause we cannot create master pools from bonus pools
+        Updates a pool for an Owner. Assumes this is a normal pool, and
+        errors out otherwise cause we cannot create primary pools from bonus pools
       tags:
         - owner
       operationId: updatePool
