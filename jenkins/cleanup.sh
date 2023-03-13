@@ -2,7 +2,7 @@
 
 echo "Cleaning up workspace: ${WORKSPACE}"
 
-DIR="$(git rev-parse --show-toplevel)/docker/"
+DIR="$(git rev-parse --show-toplevel)/containers/"
 cd $DIR
 
 # Run the cleanup

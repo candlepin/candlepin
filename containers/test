@@ -2,7 +2,7 @@
 
 REGISTRY="quay.io/candlepin"
 TEST_CMD="/usr/bin/cp-test -t -u -r"
-DIR="$(git rev-parse --show-toplevel)/docker/"
+DIR="$(git rev-parse --show-toplevel)/containers/"
 OPERATING_SYSTEM="cs8" # Changing this variable, change default OS
 PROJ_NAME="pod"
 

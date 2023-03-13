@@ -134,7 +134,6 @@ Unit Testing & Molecule
 The unit tests will run on github actions; to run the unit tests locally you will need ansible, molecule and its drivers.
 
 To install molecule run the following.
-Replace `podman` with `docker` if that is your container manager:
 
 ```sh
 pip3 install molecule molecule[podman] molecule-containers

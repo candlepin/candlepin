@@ -8,7 +8,7 @@ ENV LANG en_US.UTF-8
 # Enable systemd.
 RUN dnf -y install systemd && dnf clean all
 
-COPY /base-scripts/dockerlib.sh /root/
+COPY /base-scripts/containerlib.sh /root/
 COPY /candlepin-base-cs9/setup-devel-env.sh /root/
 RUN /bin/bash /root/setup-devel-env.sh
 
@@ -16,8 +16,8 @@ RUN /bin/bash /root/setup-devel-env.sh
 # checkout for easier updating.
 COPY /base-scripts/setup-db.sh /root/
 
-# This allows the cp-test file in the branch to be used instead of one baked into the docker image.
-RUN ln -s /candlepin-dev/docker/cp-test /usr/bin/cp-test
+# This allows the cp-test file in the branch to be used instead of one baked into the container image.
+RUN ln -s /candlepin-dev/containers/cp-test /usr/bin/cp-test
 
 EXPOSE 8443
 
