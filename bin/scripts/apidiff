@@ -24,20 +24,20 @@ since=$1
 echo "API diff run for $(date)"
 echo
 
-git checkout -f master &> /dev/null
+git checkout -f main &> /dev/null
 git pull &> /dev/null
 
-echo "master - $(git log --pretty=format:%h -n1)"
+echo "main - $(git log --pretty=format:%h -n1)"
 
 gen_api api1.json
-git checkout -f `git rev-list -n 1 --before="$since" master`
+git checkout -f `git rev-list -n 1 --before="$since" main`
 #git checkout -f "@{$since}" &> /dev/null
 
 echo "$since - $(git log --pretty=format:%h -n1)"
 echo
 
 gen_api api2.json
-git checkout -f master &> /dev/null
+git checkout -f main &> /dev/null
 
 diff_apis api2.json api1.json | tee api_diff.txt
 

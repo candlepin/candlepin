@@ -25,19 +25,19 @@ since=$1
 echo "Schemadiff run for $(date)"
 echo
 
-git checkout -f master &> /dev/null
+git checkout -f main &> /dev/null
 git pull &> /dev/null
 
-echo "master - $(git log --pretty=format:%h -n1)"
+echo "main - $(git log --pretty=format:%h -n1)"
 
 gen_schema schema1.txt
-git checkout -f `git rev-list -n 1 --before="$since" master`
+git checkout -f `git rev-list -n 1 --before="$since" main`
 
 echo "$since - $(git log --pretty=format:%h -n1)"
 echo
 
 gen_schema schema2.txt
-git checkout -f master &> /dev/null
+git checkout -f main &> /dev/null
 
 diff_schemas schema2.txt schema1.txt | tee schema_diff.txt
 

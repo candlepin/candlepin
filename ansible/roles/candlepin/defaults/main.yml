@@ -10,7 +10,7 @@ cp_configure_debugging: false
 
 cp_git_checkout: true
 cp_git_repo: "https://github.com/candlepin/candlepin"
-cp_git_ref: master
+cp_git_ref: main
 
 cp_deploy: true
 cp_deploy_args: '-gta'

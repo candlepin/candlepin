@@ -3,8 +3,8 @@ Mead is a Maven-based build system for Brew.  It works by building your
 project via Maven, rendering a RPM spec file from a template, and then packaging
 everything as an RPM with the rendered spec file.
 
-## Master Builds
-Building for the master branch for EL6 is available in Tito.
+## Main Builds
+Building for the main branch for EL6 is available in Tito.
 
 ```
 $ tito release mead

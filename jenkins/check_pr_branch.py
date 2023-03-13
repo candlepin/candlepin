@@ -37,29 +37,29 @@ target = pr['base']['ref']
 
 bz = Bugzilla('bugzilla.redhat.com', api_key=bugzilla_token)
 
-master_version = None
-def fetch_master_version():
-    global master_version
-    if master_version:
-        return master_version
-    spec_file = requests.get('https://raw.githubusercontent.com/candlepin/candlepin/master/candlepin.spec.tmpl').text
+main_version = None
+def fetch_main_version():
+    global main_version
+    if main_version:
+        return main_version
+    spec_file = requests.get('https://raw.githubusercontent.com/candlepin/candlepin/main/candlepin.spec.tmpl').text
     for line in spec_file.split('\n'):
         if line.startswith('Version:'):
             match = re.search('^Version: (\d+\.\d+)\.\d+$', line)
             version = match.group(1)
-            master_version = version
+            main_version = version
             return version
 
 version = None
-if target == 'master':
-    # fetch master spec and then parse from it
-    version = fetch_master_version()
+if target == 'main':
+    # fetch main spec and then parse from it
+    version = fetch_main_version()
 else:
     version_match = re.search('^candlepin-(.*)-HOTFIX$', target)
     if version_match:
         version = version_match.group(1)
 if not version:
-    print('Skipping because target branch is not master or HOTFIX branch')
+    print('Skipping because target branch is not main or HOTFIX branch')
     sys.exit(0)
 
 pr_commits = requests.get('https://api.github.com/repos/candlepin/candlepin/pulls/{pr}/commits'.format(pr=args.pr),
@@ -77,7 +77,7 @@ for commit in pr_commits:
 
         target_release = bug.target_release[0]
         if '---' in target_release:
-            target_release = fetch_master_version()
+            target_release = fetch_main_version()
 
 
         final_version = target_release or bug.version
