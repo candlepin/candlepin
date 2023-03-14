@@ -96,7 +96,7 @@ class TomcatSetup(object):
         self.main_conf = '/etc/tomcat/tomcat.conf'
         self.main_comment_pattern = '^#\s*JAVA_HOME.*'
         self.main_existing_pattern = '^JAVA_HOME.*'
-        self.new_java_home = 'JAVA_HOME="/usr/lib/jvm/jre-11-openjdk"'
+        self.new_java_home = 'JAVA_HOME="/usr/lib/jvm/jre-17-openjdk"'
 
     def _backup_config(self, conf_dir):
         run_command('cp %s/server.xml %s/server.xml.original' % (conf_dir, conf_dir))
