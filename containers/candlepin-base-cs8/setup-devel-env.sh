@@ -20,6 +20,7 @@ PACKAGES=(
     git
     hostname
     java-$JAVA_VERSION-openjdk-devel
+    java-17-openjdk-devel
     jss
     mariadb
     openssl

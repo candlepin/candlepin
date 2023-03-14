@@ -7,7 +7,7 @@ set -ve
 
 source /root/containerlib.sh
 
-export JAVA_VERSION=11
+export JAVA_VERSION=17
 export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION
 
 # Install & configure dev environment
@@ -39,6 +39,8 @@ PACKAGES=(
 )
 
 dnf install -y ${PACKAGES[@]}
+
+echo "JAVA_HOME="/usr/lib/jvm/java"" >> /etc/tomcat/tomcat.conf
 
 # Setup for autoconf:
 mkdir /etc/candlepin
