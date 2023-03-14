@@ -63,7 +63,7 @@ variables control whether or not this action is performed, and what repo and tag
 - `cp_git_checkout`: whether or not to perform a git checkout at all; defaults to true
 - `cp_git_repo`: a URI to the repo to check out, may use any repo reference supported by the git command;
   defaults to "https://github.com/candlepin/candlepin"
-- `cp_git_ref`: a git ref tag indicating the branch, tag, or reference to checkout; defaults to "master"
+- `cp_git_ref`: a git ref tag indicating the branch, tag, or reference to checkout; defaults to "main"
 
 Deploying Candlpin
 ------------------

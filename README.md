@@ -1,5 +1,5 @@
   
-<img align="left" width="100" height="100" src="https://raw.githubusercontent.com/candlepin/candlepinproject.org/master/images/logo-frontpage.png">
+<img align="left" width="100" height="100" src="https://raw.githubusercontent.com/candlepin/candlepinproject.org/main/images/logo-frontpage.png">
 
 # Candlepin - Subscription & Entitlement Management
 Candlepin is an open source subscription & entitlement engine which is designed to manage software subscriptions from both vendor's & customer's perspectives. It allows vendors to create a database of software they offer and then manage the database (such as changing policies, revoking rights for the software for specific customers). It enables customers to consume their rights for the software and also enables them to transparently manage the software portfolio they acquired from the vendor. 
