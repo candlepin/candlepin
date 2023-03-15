@@ -29,40 +29,27 @@ export AUTOCONF=1
 export FORCECERT=1
 export UNITTEST=0
 
-# functions to abstract away buildr vs. gradle differences
 build_clean() {
-    if [ -f ./gradlew ]; then
-        ./gradlew clean
-    else
-        buildr clean
-    fi
+    ./gradlew clean
 }
 build_lint() {
-    if [ -f ./gradlew ]; then
-        ./gradlew checkstyleMain checkstyleTest
-    else
-        buildr lint
-    fi
+    ./gradlew checkstyleMain checkstyleTest
 }
 
 validate_translation() {
-    if [ -f ./gradlew ]; then
-        ./gradlew validate_translation
-    fi
+    ./gradlew validate_translation
 }
 
 sonarqube_upload() {
     #Adding the cert to the keystore.
     add_cert_to_keystore
 
-    if [ -f ./gradlew ]; then
-        if [ ! -z "$CHANGE_ID" ] && [ ! -z "$CHANGE_TARGET" ]; then
-          echo "Uploading PR to SonarQube server"
-          ./gradlew --no-daemon test --fail-fast sonarqube -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.pullrequest.branch=${BRANCH_NAME} -Dsonar.pullrequest.key=${CHANGE_ID} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.projectKey=chainsaw:candlepin-server
-        else
-          echo "Uploading branch to SonarQube server"
-          ./gradlew --no-daemon test --fail-fast sonarqube -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.branch.name=${BRANCH_NAME}  -Dsonar.projectKey=chainsaw:candlepin-server
-        fi
+    if [ -n "$CHANGE_ID" ] && [ -n "$CHANGE_TARGET" ]; then
+      echo "Uploading PR to SonarQube server"
+      ./gradlew --no-daemon test --fail-fast sonarqube -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.pullrequest.branch=${BRANCH_NAME} -Dsonar.pullrequest.key=${CHANGE_ID} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.projectKey=chainsaw:candlepin-server
+    else
+      echo "Uploading branch to SonarQube server"
+      ./gradlew --no-daemon test --fail-fast sonarqube -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.branch.name=${BRANCH_NAME}  -Dsonar.projectKey=chainsaw:candlepin-server
     fi
 }
 
@@ -85,31 +72,20 @@ add_cert_to_keystore() {
 }
 
 build_unittest() {
-    UTCMD=$1
-    if [ -f ./gradlew ]; then
-        ./gradlew test;
-    else
-        buildr $UTCMD
-    fi
+    ./gradlew test;
 }
 
 build_rspec() {
     RSPEC_FILTER=$1
 
-    BUILDR_ARGS="rspec"
     GRADLE_ARGS=""
-    if [ ! -z "$RSPEC_FILTER" ]; then
-        BUILDR_ARGS="rspec:${RSPEC_FILTER}"
+    if [ -n "$RSPEC_FILTER" ]; then
         GRADLE_ARGS="--spec ${RSPEC_FILTER}"
     fi
 
     GRADLE_ARGS="${GRADLE_ARGS} --no-file"
 
-    if [ -f ./gradlew ]; then
-        ./gradlew rspec ${GRADLE_ARGS}
-    else
-        buildr "${BUILDR_ARGS}"
-    fi
+    ./gradlew rspec ${GRADLE_ARGS}
 }
 
 build_spec() {
@@ -151,7 +127,6 @@ collect_artifacts() {
         candlepin.log
         error.log
         lint.log
-        buildr.log
         unit_tests.log
         spec.log
         rspec.log
@@ -190,7 +165,7 @@ cleanup() {
         trap - $signals
         trap "" ERR EXIT
 
-        # Run buildr or gradle clean in our target CP directory
+        # Run gradle clean in our target CP directory
         if [ "$CLEAN_CP" == "1" ]; then
             cd $CP_HOME
             build_clean
@@ -242,7 +217,6 @@ OPTIONS:
                     of times u was specifed in the arguments
   -l                run the linters against the code
   -s                run a bash shell when done
-  -b <task>         execute the specified buildr task (deprecated)
   -c <ref>          git reference to checkout
   -j <version>      use a specific Java version instead of the auto-detected default
   -v                enable verbose/debug output
@@ -259,7 +233,7 @@ HELP
 }
 
 ARGV=("$@")
-while getopts ":dtRqrHulskib:c:a:vj:n" opt; do
+while getopts ":dtRqrHulskic:a:vj:n" opt; do
     case $opt in
         d  ) DEPLOY="1";;
         t  )
@@ -299,7 +273,6 @@ while getopts ":dtRqrHulskib:c:a:vj:n" opt; do
             ;;
         l  ) LINTER="1";;
         s  ) LAUNCHSHELL="1";;
-        b  ) BUILDR_TASK="${OPTARG}";;
         c  ) CHECKOUT="${OPTARG}";;
         v  ) VERBOSE="1";;
         j  ) JAVA_VERSION="${OPTARG}";;
@@ -334,7 +307,7 @@ else
     git clean -df
     git merge FETCH_HEAD
 
-    if [ ! -z "$CHECKOUT" ]; then
+    if [ -n "$CHECKOUT" ]; then
         echo "Checking out: $CHECKOUT"
         git checkout "$CHECKOUT"
     fi
@@ -441,7 +414,7 @@ if [ "$UNITTEST" -gt 0 ]; then
 
     UTCMD="test"
     cd $CP_HOME
-    if [ ! -z "${UNITTEST_FILTER}" ]; then
+    if [ -n "${UNITTEST_FILTER}" ]; then
         UTCMD="${UTCMD}:${UNITTEST_FILTER}"
     fi
 
@@ -524,19 +497,6 @@ if [ "$SPEC_TESTS" == "1" ]; then
     if (./gradlew tasks --all | grep -qw rspec) ; then
         tee /var/log/candlepin/rspec.log < /tmp/teepipe &
         build_rspec $SPEC_FILTER > /tmp/teepipe 2>&1
-    fi
-fi
-
-if [ ! -z "$BUILDR_TASK" ]; then
-    if [ -f ./gradlew ]; then
-        echo 'Warning: buildr is deprecated in this branch. Cannot run a buildr task.'
-    else
-        echo "Running buildr $BUILDR_TASK..."
-        CLEAN_CP=1
-
-        cd $CP_HOME
-        tee /var/log/candlepin/buildr.log < /tmp/teepipe &
-        buildr $BUILDR_TASK > /tmp/teepipe 2>&1
     fi
 fi
 
