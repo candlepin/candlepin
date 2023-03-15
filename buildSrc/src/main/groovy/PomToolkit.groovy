@@ -91,6 +91,7 @@ class PomToolkit implements Plugin<Project> {
         createGettextMavenPlugin(pluginsNode)
         createMavenResourcePlugin(pluginsNode)
         createMavenCompilerPlugin(pluginsNode, annotationProcessorDependencies)
+        createMavenWarPlugin(pluginsNode)
         createMavenSurefirePlugin(pluginsNode)
         createMavenAssemblyPlugin(pluginsNode)
         createMavenCleanPlugin(pluginsNode)
@@ -241,10 +242,10 @@ class PomToolkit implements Plugin<Project> {
     private static void createMavenCompilerPlugin(Node parentNode, DefaultDependencySet annotationProcessorDependencies) {
         def plugin = parentNode.appendNode('plugin')
         plugin.appendNode('artifactId', 'maven-compiler-plugin')
-        plugin.appendNode('version', '3.8.0')
+        plugin.appendNode('version', '3.10.1')
         def configurationsNode = plugin.appendNode('configuration')
-        configurationsNode.appendNode('source', '11')
-        configurationsNode.appendNode('target', '11')
+        configurationsNode.appendNode('source', '17')
+        configurationsNode.appendNode('target', '17')
         configurationsNode.appendNode('debug', 'true')
         configurationsNode.appendNode('debuglevel', 'lines,vars,source')
         configurationsNode.appendNode('compilerArgument', '-proc:none')
@@ -264,6 +265,14 @@ class PomToolkit implements Plugin<Project> {
                 annotationProcessorPath.appendNode('version', version)
             }
         }
+    }
+
+    private static void createMavenWarPlugin(Node parentNode) {
+        def plugin = parentNode.appendNode('plugin')
+        plugin.appendNode('artifactId', 'maven-war-plugin')
+        plugin.appendNode('version', '3.3.2')
+        def configurationsNode = plugin.appendNode('configuration')
+        configurationsNode.appendNode('skipTests', 'true')
     }
 
     private static void createMavenSurefirePlugin(Node parentNode) {
