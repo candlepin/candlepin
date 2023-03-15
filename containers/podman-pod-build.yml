@@ -4,17 +4,17 @@ version: '3'
 services:
   candlepin-base:
     build:
-      dockerfile: ./candlepin-base/Dockerfile
+      dockerfile: ./candlepin-base/Containerfile
       context: .
     image: ${REGISTRY}/candlepin-base
   candlepin-base-cs8:
     build:
-      dockerfile: ./candlepin-base-cs8/Dockerfile
+      dockerfile: ./candlepin-base-cs8/Containerfile
       context: .
     image: ${REGISTRY}/candlepin-base-cs8
   candlepin-base-cs9:
     build:
-      dockerfile: ./candlepin-base-cs9/Dockerfile
+      dockerfile: ./candlepin-base-cs9/Containerfile
       context: .
     image: ${REGISTRY}/candlepin-base-cs9
 networks:

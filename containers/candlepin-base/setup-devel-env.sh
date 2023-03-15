@@ -5,7 +5,7 @@
 
 set -ve
 
-source /root/dockerlib.sh
+source /root/containerlib.sh
 
 export JAVA_VERSION=1.8.0
 export JAVA_HOME=/usr/lib/jvm/java-$JAVA_VERSION

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Launch point for the docker container to run Candlepin tests.
+# Launch point for the container to run Candlepin tests.
 #
 # Starts supervisor to manage services, then tries to cd to the correct
 # location, either /candlepin-dev if you mounted this as a volume when
@@ -312,7 +312,7 @@ done
 
 shift $(($OPTIND - 1))
 
-# Pass volume with docker run mounted at this location if you'd like to
+# Pass volume with container run mounted at this location if you'd like to
 # run against your source checkout.
 # i.e. -v /home/dgoodwin/src/candlepin:/candlepin-dev
 if [ -d "/candlepin-dev" ]; then
