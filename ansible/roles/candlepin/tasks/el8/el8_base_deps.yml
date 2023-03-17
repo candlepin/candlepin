@@ -7,12 +7,12 @@
     - system
     - candlepin
 
-# FIXME: Update this task to use the dnf module once Ansible 2.10 or newer is readily available
 - name: "Update system packages"
   become: true
-  ansible.builtin.command:
-    cmd: dnf update -y --allowerasing
-  changed_when: false
+  ansible.builtin.dnf:
+    name: "*"
+    state: latest
+    allowerasing: true
   tags:
     - system
     - system_update
