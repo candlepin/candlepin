@@ -26,8 +26,6 @@ import org.candlepin.model.Product;
 import org.candlepin.policy.js.compliance.hash.ComplianceStatusHasher;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -42,6 +40,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.inject.Inject;
 
 
 

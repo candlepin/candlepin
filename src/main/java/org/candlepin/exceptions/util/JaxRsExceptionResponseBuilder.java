@@ -18,8 +18,6 @@ import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.mappers.CandlepinExceptionMapper;
 import org.candlepin.version.VersionUtil;
 
-import com.google.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.xnap.commons.i18n.I18n;
 
@@ -27,6 +25,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;

@@ -46,7 +46,6 @@ import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.server.v1.EntitlementsApi;
 import org.candlepin.resource.util.KeyValueStringParser;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -60,6 +59,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 

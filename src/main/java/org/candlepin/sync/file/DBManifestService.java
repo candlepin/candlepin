@@ -16,11 +16,11 @@ package org.candlepin.sync.file;
 
 import org.candlepin.model.ManifestFileRecordCurator;
 
-import com.google.inject.Inject;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+
+import javax.inject.Inject;
 
 /**
  * A ManifestFileService implementation that stores manifest files in a DB.

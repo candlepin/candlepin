@@ -27,7 +27,6 @@ import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.IdentityCertificateCurator;
 
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
@@ -38,6 +37,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+
+import javax.inject.Inject;
 
 
 

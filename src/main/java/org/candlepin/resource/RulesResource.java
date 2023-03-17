@@ -23,12 +23,12 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.resource.server.v1.RulesApi;
 
-import com.google.inject.Inject;
-
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+
+import javax.inject.Inject;
 
 
 /**

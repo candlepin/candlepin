@@ -14,11 +14,12 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.criterion.Restrictions;
+
+import javax.inject.Inject;
 
 
 /**

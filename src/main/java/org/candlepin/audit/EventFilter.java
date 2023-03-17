@@ -19,11 +19,11 @@ import org.candlepin.audit.Event.Type;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 
-import com.google.inject.Inject;
-
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.inject.Inject;
 
 /**
  * This class is used to filter audit events so that they cannot enter

@@ -21,10 +21,10 @@ import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.resource.server.v1.DeletedConsumerApi;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
-
 import java.time.OffsetDateTime;
 import java.util.Objects;
+
+import javax.inject.Inject;
 
 /**
  * DeletedConsumerResource

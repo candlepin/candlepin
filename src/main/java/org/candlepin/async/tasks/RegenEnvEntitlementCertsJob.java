@@ -23,12 +23,12 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Environment;
 
-import com.google.inject.Inject;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.inject.Inject;
 
 
 

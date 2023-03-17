@@ -16,8 +16,7 @@ package org.candlepin.exceptions.mappers;
 
 import org.candlepin.exceptions.util.JaxRsExceptionResponseBuilder;
 
-import com.google.inject.Inject;
-
+import javax.inject.Inject;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;

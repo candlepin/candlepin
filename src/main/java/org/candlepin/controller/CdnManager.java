@@ -20,10 +20,11 @@ import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.PoolCurator;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import java.util.Arrays;
+
+import javax.inject.Inject;
 
 /**
  * Manages Cdn entity operations.

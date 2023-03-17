@@ -18,10 +18,11 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 
 import com.google.common.base.Function;
-import com.google.inject.Inject;
 
 import java.util.Calendar;
 import java.util.Date;
+
+import javax.inject.Inject;
 
 /**
  * ExpiryDateFunction

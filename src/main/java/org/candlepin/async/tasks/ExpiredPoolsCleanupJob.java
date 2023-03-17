@@ -19,7 +19,7 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.controller.PoolManager;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
 
 
 

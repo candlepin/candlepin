@@ -44,8 +44,6 @@ import org.candlepin.resource.server.v1.PoolsApi;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.slf4j.Logger;
@@ -59,6 +57,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 
 /**

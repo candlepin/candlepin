@@ -21,11 +21,11 @@ import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.resource.server.v1.ContentApi;
 
-import com.google.inject.Inject;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Objects;
+
+import javax.inject.Inject;
 
 public class ContentResource implements ContentApi {
 

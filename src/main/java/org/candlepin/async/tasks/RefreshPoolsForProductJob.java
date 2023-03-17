@@ -26,9 +26,9 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
-import com.google.inject.Inject;
-
 import java.util.Objects;
+
+import javax.inject.Inject;
 
 
 

@@ -23,7 +23,6 @@ import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.ExpiredCertificate;
 import org.candlepin.model.IdentityCertificateCurator;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
@@ -32,6 +31,8 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 
 /**

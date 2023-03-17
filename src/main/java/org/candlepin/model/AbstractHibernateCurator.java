@@ -24,7 +24,6 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.persist.Transactional;
 
@@ -61,6 +60,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;

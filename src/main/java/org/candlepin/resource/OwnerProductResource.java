@@ -47,7 +47,6 @@ import org.candlepin.resource.server.v1.OwnerProductApi;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.resource.validation.DTOValidator;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -59,6 +58,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.persistence.LockModeType;
 
 public class OwnerProductResource implements OwnerProductApi {

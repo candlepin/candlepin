@@ -53,7 +53,6 @@ import org.candlepin.sync.file.ManifestFileService;
 import org.candlepin.sync.file.ManifestFileServiceException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.io.FileUtils;
@@ -84,6 +83,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 
 

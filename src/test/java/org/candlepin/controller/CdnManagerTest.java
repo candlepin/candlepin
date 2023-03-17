@@ -29,11 +29,11 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 
-import com.google.inject.Inject;
-
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
+
+import javax.inject.Inject;
 
 
 public class CdnManagerTest extends DatabaseTestFixture {

@@ -139,7 +139,6 @@ import org.candlepin.util.FactValidator;
 import org.candlepin.util.PropertyValidationException;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -175,6 +174,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.persistence.OptimisticLockException;
 import javax.servlet.http.HttpServletResponse;

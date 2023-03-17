@@ -115,7 +115,6 @@ import org.candlepin.util.Util;
 
 import ch.qos.logback.classic.Level;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -147,6 +146,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 
 

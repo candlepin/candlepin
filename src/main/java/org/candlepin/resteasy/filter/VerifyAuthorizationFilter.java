@@ -26,8 +26,6 @@ import org.candlepin.model.Persisted;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Priority;
+import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.HeaderParam;
 import javax.ws.rs.POST;

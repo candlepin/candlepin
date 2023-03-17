@@ -23,10 +23,11 @@ import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.ProductInfo;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import java.util.Collection;
+
+import javax.inject.Inject;
 
 
 

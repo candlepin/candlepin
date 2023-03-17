@@ -19,9 +19,9 @@ import org.candlepin.cache.JCacheManagerProvider;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
-import com.google.inject.Singleton;
 
 import javax.cache.CacheManager;
+import javax.inject.Singleton;
 
 /**
  * Test that runs in-memory Cache and in-memory database

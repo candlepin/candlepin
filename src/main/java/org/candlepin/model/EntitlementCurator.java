@@ -19,7 +19,6 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
@@ -44,6 +43,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;

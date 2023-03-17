@@ -46,7 +46,6 @@ import org.candlepin.policy.js.pool.PoolHelper;
 import org.candlepin.util.DateSource;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.inject.Inject;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
@@ -67,6 +66,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.inject.Inject;
 
 
 

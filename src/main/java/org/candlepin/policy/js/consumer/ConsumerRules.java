@@ -22,9 +22,9 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 
-import com.google.inject.Inject;
-
 import java.util.List;
+
+import javax.inject.Inject;
 
 
 

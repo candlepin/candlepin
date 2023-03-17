@@ -32,8 +32,6 @@ import org.candlepin.resource.server.v1.StatusApi;
 import org.candlepin.util.Util;
 import org.candlepin.version.VersionUtil;
 
-import com.google.inject.Inject;
-
 import org.keycloak.representations.adapters.config.AdapterConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +40,8 @@ import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
+
+import javax.inject.Inject;
 
 
 

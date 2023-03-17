@@ -31,7 +31,6 @@ import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.util.CertificateSizeException;
 import org.candlepin.version.CertVersionConflictException;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
@@ -47,6 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 
 

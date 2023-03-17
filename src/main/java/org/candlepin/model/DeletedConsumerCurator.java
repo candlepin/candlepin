@@ -17,8 +17,6 @@ package org.candlepin.model;
 import org.candlepin.auth.Principal;
 import org.candlepin.guice.PrincipalProvider;
 
-import com.google.inject.Inject;
-
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
@@ -27,6 +25,7 @@ import org.hibernate.criterion.Restrictions;
 import java.util.Collection;
 import java.util.Date;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 

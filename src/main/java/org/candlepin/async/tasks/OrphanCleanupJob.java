@@ -22,7 +22,6 @@ import org.candlepin.controller.ProductManager;
 import org.candlepin.model.ContentCurator;
 import org.candlepin.model.ProductCurator;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
@@ -34,6 +33,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.persistence.LockModeType;
 
 

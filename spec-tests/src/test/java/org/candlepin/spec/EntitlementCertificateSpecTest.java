@@ -21,7 +21,6 @@ import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.asser
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
-
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.client.v1.AttributeDTO;
 import org.candlepin.dto.api.client.v1.CertificateDTO;

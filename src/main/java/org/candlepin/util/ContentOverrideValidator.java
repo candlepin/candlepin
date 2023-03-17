@@ -20,8 +20,6 @@ import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.ContentOverride;
 
-import com.google.inject.Inject;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Arrays;
@@ -29,6 +27,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.inject.Inject;
 
 
 

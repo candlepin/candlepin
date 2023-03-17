@@ -20,8 +20,6 @@ import org.candlepin.exceptions.ServiceUnavailableException;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.ConsumerInfo;
 
-import com.google.inject.Inject;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
@@ -30,6 +28,8 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 
 

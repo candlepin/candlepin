@@ -16,10 +16,10 @@ package org.candlepin.sync;
 
 import org.candlepin.model.RulesCurator;
 
-import com.google.inject.Inject;
-
 import java.io.IOException;
 import java.io.Writer;
+
+import javax.inject.Inject;
 
 /**
  * RulesExporter

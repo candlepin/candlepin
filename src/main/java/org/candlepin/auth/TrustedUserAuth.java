@@ -18,13 +18,12 @@ import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.resteasy.filter.AuthUtil;
 import org.candlepin.service.UserServiceAdapter;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.spi.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 
 /**

@@ -14,11 +14,10 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
-
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 

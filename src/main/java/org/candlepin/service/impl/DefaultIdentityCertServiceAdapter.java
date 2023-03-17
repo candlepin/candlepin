@@ -23,8 +23,6 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.IdentityCertServiceAdapter;
 
 import com.google.common.base.Function;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +34,9 @@ import java.security.KeyPair;
 import java.security.cert.X509Certificate;
 import java.util.Calendar;
 import java.util.Date;
+
+import javax.inject.Inject;
+import javax.inject.Named;
 
 /**
  * DefaultIdentityCertServiceAdapter

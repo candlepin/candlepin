@@ -22,7 +22,6 @@ import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.filter.StoreFactory;
 import org.candlepin.resteasy.filter.VerifyAuthorizationFilter;
 
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -33,6 +32,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 /**
  * This is a testing class that converts our Authorization interceptor

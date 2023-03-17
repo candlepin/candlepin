@@ -23,9 +23,9 @@ import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 
-import com.google.inject.Inject;
-
 import java.util.Map;
+
+import javax.inject.Inject;
 
 /**
  * This bind operation pre-computes the compliance of a consumer,

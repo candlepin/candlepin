@@ -28,10 +28,11 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
-import com.google.inject.Inject;
 
 import java.io.File;
 import java.io.IOException;
+
+import javax.inject.Inject;
 
 
 

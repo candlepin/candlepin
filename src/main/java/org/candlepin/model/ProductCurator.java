@@ -17,7 +17,6 @@ package org.candlepin.model;
 import org.candlepin.config.Configuration;
 import org.candlepin.util.AttributeValidator;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.Criteria;
@@ -36,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.Cache;
 import javax.persistence.Query;

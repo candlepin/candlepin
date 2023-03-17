@@ -27,12 +27,12 @@ import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
 import org.candlepin.service.exception.MalformedCloudRegistrationException;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.core.ResteasyContext;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Objects;
+
+import javax.inject.Inject;
 
 
 /**

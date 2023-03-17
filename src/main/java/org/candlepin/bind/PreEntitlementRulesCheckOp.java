@@ -21,13 +21,14 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 
-import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+
+import javax.inject.Inject;
 
 /**
  * This operation is responsible for validating if a bind request is permissible.

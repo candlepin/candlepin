@@ -21,10 +21,10 @@ import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.model.Owner;
 
-import com.google.inject.Inject;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 /**
  *

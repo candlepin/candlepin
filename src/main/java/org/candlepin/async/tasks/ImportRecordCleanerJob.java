@@ -24,12 +24,12 @@ import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 
-import com.google.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+
+import javax.inject.Inject;
 
 /**
  * Deletes all but the newest N records, defined by the num_of_records_to_keep/DEFAULT_KEEP variable,

@@ -17,12 +17,12 @@ package org.candlepin.controller;
 import org.candlepin.audit.ActiveMQStatus;
 import org.candlepin.controller.mode.CandlepinModeManager;
 
-import com.google.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
+
+import javax.inject.Inject;
 
 
 

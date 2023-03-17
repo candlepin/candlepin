@@ -33,8 +33,6 @@ import org.candlepin.pki.X509ExtensionWrapper;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Collections2;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -59,6 +57,9 @@ import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterOutputStream;
+
+import javax.inject.Inject;
+import javax.inject.Named;
 
 
 

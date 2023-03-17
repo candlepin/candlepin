@@ -44,7 +44,6 @@ import org.candlepin.sync.file.ManifestFileServiceException;
 import org.candlepin.sync.file.ManifestFileType;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.io.FileUtils;
@@ -60,6 +59,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 
 /**

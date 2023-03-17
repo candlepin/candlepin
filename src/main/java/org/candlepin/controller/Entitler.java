@@ -47,7 +47,6 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.model.ProductInfo;
 
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -68,6 +67,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.SortedSet;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 
 

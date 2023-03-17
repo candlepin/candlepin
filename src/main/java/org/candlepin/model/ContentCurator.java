@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.hibernate.criterion.Restrictions;
@@ -28,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;

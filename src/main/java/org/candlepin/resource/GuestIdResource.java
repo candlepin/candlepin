@@ -40,8 +40,6 @@ import org.candlepin.model.VirtConsumerMap;
 import org.candlepin.resource.server.v1.GuestIdsApi;
 import org.candlepin.resource.util.GuestMigration;
 
-import com.google.inject.Inject;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.util.HashSet;
@@ -49,6 +47,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 
 public class GuestIdResource implements GuestIdsApi {

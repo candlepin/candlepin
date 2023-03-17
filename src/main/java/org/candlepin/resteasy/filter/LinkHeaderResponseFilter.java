@@ -18,9 +18,6 @@ import org.candlepin.config.Configuration;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.LinkHeader;
 import org.slf4j.Logger;
@@ -30,6 +27,8 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import javax.annotation.Priority;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.ServletContext;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;

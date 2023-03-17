@@ -81,7 +81,6 @@ import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -108,6 +107,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.ws.rs.core.MediaType;
 

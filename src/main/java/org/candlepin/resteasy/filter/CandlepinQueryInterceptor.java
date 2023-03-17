@@ -23,7 +23,6 @@ import org.candlepin.resteasy.JsonProvider;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import org.hibernate.Session;
@@ -34,6 +33,7 @@ import org.jboss.resteasy.core.ResteasyContext;
 
 import java.util.Objects;
 
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerResponseContext;

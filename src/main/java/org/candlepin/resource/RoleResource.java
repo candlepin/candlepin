@@ -29,13 +29,13 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.spi.BadRequestException;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
 import java.util.stream.Stream;
+
+import javax.inject.Inject;
 
 /**
  * API implementation for Role operations

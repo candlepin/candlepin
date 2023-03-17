@@ -23,10 +23,10 @@ import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.util.Transactional;
 
-import com.google.inject.Inject;
-
 import java.util.List;
 import java.util.Objects;
+
+import javax.inject.Inject;
 
 
 

@@ -24,8 +24,6 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.js.entitlement.Enforcer;
 
-import com.google.inject.Inject;
-
 import org.apache.commons.collections.CollectionUtils;
 
 import java.util.ArrayList;
@@ -34,6 +32,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import javax.inject.Inject;
 
 /**
  * This BindOperation will be replaced shortly in an upcoming PR, where we

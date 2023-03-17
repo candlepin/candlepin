@@ -18,8 +18,6 @@ import org.candlepin.pki.PKIUtility;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.util.X509ExtensionUtil;
 
-import com.google.inject.Inject;
-
 import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +31,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 

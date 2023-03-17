@@ -16,10 +16,9 @@ package org.candlepin.exceptions.mappers;
 
 import org.candlepin.version.VersionUtil;
 
-import com.google.inject.Inject;
-
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.persistence.RollbackException;
 import javax.validation.ValidationException;
 import javax.ws.rs.core.Response;

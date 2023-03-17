@@ -14,7 +14,10 @@
  */
 package org.candlepin.guice;
 
-import static org.candlepin.config.ConfigProperties.*;
+import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
+import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
+import static org.candlepin.config.ConfigProperties.HALT_ON_LIQUIBASE_DESYNC;
+import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.ActiveMQContextListener;

@@ -29,11 +29,11 @@ import org.candlepin.model.CertificateSerial;
 import org.candlepin.resource.server.v1.CdnApi;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.time.OffsetDateTime;
+
+import javax.inject.Inject;
 
 /**
  * CdnResource

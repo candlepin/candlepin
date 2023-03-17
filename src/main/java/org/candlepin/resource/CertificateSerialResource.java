@@ -20,7 +20,7 @@ import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.resource.server.v1.CertificateSerialApi;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
 
 
 

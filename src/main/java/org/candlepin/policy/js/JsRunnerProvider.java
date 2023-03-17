@@ -18,7 +18,6 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.Rules.RulesSourceEnum;
 import org.candlepin.model.RulesCurator;
 
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import org.mozilla.javascript.Context;
@@ -32,6 +31,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Date;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import javax.inject.Inject;
 
 /**
  * Reads/compiles our javascript rules and the standard js objects only

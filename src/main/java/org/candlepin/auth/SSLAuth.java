@@ -20,8 +20,6 @@ import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.util.OIDUtil;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.spi.HttpRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +29,7 @@ import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.security.auth.x500.X500Principal;
 
