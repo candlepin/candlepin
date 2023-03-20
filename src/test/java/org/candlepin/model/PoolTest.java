@@ -15,15 +15,23 @@
 package org.candlepin.model;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 import org.candlepin.model.Pool.PoolType;
+import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.test.TestUtil;
 
+import org.hibernate.Hibernate;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-
+import java.lang.reflect.Field;
 
 /**
  * Test suite for the Pool object
@@ -294,5 +302,123 @@ public class PoolTest {
             .setQuantity(1000L);
 
         assertFalse(pool.isDerived());
+    }
+
+    @Nested
+    @DisplayName("Field Access Tests")
+    public class FieldAccessTest extends DatabaseTestFixture {
+
+        @Test
+        public void testGetProductUuidWithDesyncedProduct() throws Exception {
+            Owner owner = this.createOwner();
+            Product product = this.createProduct(TestUtil.randomString("id-"),
+                TestUtil.randomString("name-"),
+                owner);
+            Pool pool = this.createPool(owner, product);
+
+            // We don't want to persist the upcoming changes to the pool, so commit now
+            this.commitTransaction();
+            this.getEntityManager().clear();
+
+            Field prodField = pool.getClass().getDeclaredField("product");
+            prodField.setAccessible(true);
+            prodField.set(pool, null);
+
+            assertNull(pool.getProductUuid());
+        }
+
+        @Test
+        public void testGetProductUuidWithNullProductUuidAndHydratedProduct() throws Exception {
+            Owner owner = this.createOwner();
+            Product product1 = this.createProduct(TestUtil.randomString("id-"),
+                TestUtil.randomString("name-"),
+                owner);
+            Pool pool1 = this.createPool(owner, product1);
+            Product product2 = this.createProduct(TestUtil.randomString("id-"),
+                TestUtil.randomString("name-"),
+                owner);
+            Pool pool2 = this.createPool(owner, product2);
+
+            this.commitTransaction();
+            this.getEntityManager().clear();
+
+            Pool retrievedPool1 = this.poolCurator.get(pool1.getId());
+            Pool retrievedPool2 = this.poolCurator.get(pool2.getId());
+            assertFalse(Hibernate.isInitialized(retrievedPool1.getProduct()));
+            assertFalse(Hibernate.isInitialized(retrievedPool2.getProduct()));
+
+            // Hydrate pool2's product
+            Hibernate.initialize(retrievedPool2.getProduct());
+            Product prodSpy = spy(retrievedPool2.getProduct());
+            retrievedPool1.setProduct(prodSpy);
+            assertTrue(Hibernate.isInitialized(retrievedPool1.getProduct()));
+
+            String actual = retrievedPool1.getProductUuid();
+            assertEquals(product2.getUuid(), actual);
+            verify(prodSpy).getUuid();
+        }
+
+        @Test
+        public void testGetProductUuidWithNullProductUuidAndUnhydratedProduct() throws Exception {
+            Owner owner = this.createOwner();
+            Product product1 = this.createProduct(TestUtil.randomString("id-"),
+                TestUtil.randomString("name-"),
+                owner);
+            Pool pool1 = this.createPool(owner, product1);
+            Product product2 = this.createProduct(TestUtil.randomString("id-"),
+                TestUtil.randomString("name-"),
+                owner);
+            Pool pool2 = this.createPool(owner, product2);
+
+            this.commitTransaction();
+            this.getEntityManager().clear();
+
+            Pool retrievedPool1 = this.poolCurator.get(pool1.getId());
+            Pool retrievedPool2 = this.poolCurator.get(pool2.getId());
+            assertFalse(Hibernate.isInitialized(retrievedPool1.getProduct()));
+            assertFalse(Hibernate.isInitialized(retrievedPool2.getProduct()));
+
+            // Should read the product uuid value from the productuuid field and not from the Product object
+            String actual = retrievedPool1.getProductUuid();
+            assertEquals(product1.getUuid(), actual);
+            assertFalse(Hibernate.isInitialized(retrievedPool1.getProduct()));
+
+            // Set the product to another proxy object.
+            Product prodSpy = spy(retrievedPool2.getProduct());
+            retrievedPool1.setProduct(prodSpy);
+            assertFalse(Hibernate.isInitialized(retrievedPool1.getProduct()));
+
+            // Perform a lazy lookup on the Product object to retrieve the uuid
+            actual = retrievedPool1.getProductUuid();
+            assertEquals(product2.getUuid(), actual);
+            verify(prodSpy).getUuid();
+            // The product's uuid is cached in the ByteBuddyInterceptor on the Proxy object and that is used
+            // instead of a lazy lookup.
+            assertFalse(Hibernate.isInitialized(retrievedPool1.getProduct()));
+        }
+
+        @Test
+        public void testGetProductUuidWithPopulatedProductUuidAndUnhydratedProduct() throws Exception {
+            Owner owner = this.createOwner();
+            Product product = this.createProduct(TestUtil.randomString("id-"),
+                TestUtil.randomString("name-"),
+                owner);
+            Pool pool = this.createPool(owner, product);
+
+            this.commitTransaction();
+            this.getEntityManager().clear();
+
+            Pool retrievedPool = this.poolCurator.get(pool.getId());
+            Product prodSpy = spy(retrievedPool.getProduct());
+            Field prodField = pool.getClass().getDeclaredField("product");
+            prodField.setAccessible(true);
+            prodField.set(pool, prodSpy);
+
+            String actual = retrievedPool.getProductUuid();
+
+            assertEquals(product.getUuid(), actual);
+            verify(prodSpy, never()).getUuid();
+            assertFalse(Hibernate.isInitialized(retrievedPool.getProduct()));
+        }
     }
 }

@@ -19,6 +19,7 @@ import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.util.DateSource;
 
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Fetch;
@@ -241,11 +242,11 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     @NotNull
     private Date endDate;
 
-    @Column(name = "product_uuid", nullable = false)
+    @Column(name = "product_uuid", insertable = false, updatable = false, nullable = false)
     private String productUuid;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_uuid", insertable = false, updatable = false)
+    @JoinColumn(name = "product_uuid", nullable = false)
     private Product product;
 
     @ElementCollection
@@ -838,7 +839,20 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      *  otherwise
      */
     public String getProductUuid() {
-        return this.productUuid;
+        Product product = this.getProduct();
+
+        // If we don't have a product instance, it doesn't matter what the
+        // productUuid field contains -- we've desync'd and it's likely wrong.
+        if (product == null) {
+            return null;
+        }
+
+        // Return the productUuid if, and only if, our product instance is an
+        // uninitialized Hibernate proxy and we have a non-null UUID value.
+        // Otherwise, defer to the product itself.
+        return !Hibernate.isInitialized(product) && this.productUuid != null ?
+            this.productUuid :
+            product.getUuid();
     }
 
     /**
@@ -864,22 +878,9 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      */
     public Pool setProduct(Product product) {
         this.product = product;
-        this.productUuid = product != null ? product.getUuid() : null;
+        this.productUuid = null;
 
         return this;
-    }
-
-    /**
-     * Sets the product UUID from the product instance if, and only if, the product UUID is
-     * currently null, but the product is not.
-     *
-     * This method is used by the persist and update hooks to ensure the productUuid field is
-     * populated even in instances where the product was set before it was persisted.
-     */
-    private void synchronizeProductUuid() {
-        if (this.productUuid == null && this.product != null) {
-            this.productUuid = this.product.getUuid();
-        }
     }
 
     /**
@@ -1309,15 +1310,13 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     protected void onCreate() {
         super.onCreate();
 
-        this.synchronizeProductUuid();
         this.type = this.getType();
     }
 
     @Override
     protected void onUpdate() {
-        super.onCreate();
+        super.onUpdate();
 
-        this.synchronizeProductUuid();
         this.type = this.getType();
     }
 

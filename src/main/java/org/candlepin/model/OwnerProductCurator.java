@@ -1148,9 +1148,13 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             return;
         }
 
+        String sql = "UPDATE " + Product.DB_TABLE + " SET entity_version = NULL " +
+            "WHERE uuid = :product_uuid";
+
         this.getEntityManager()
-            .createQuery("UPDATE Product SET entityVersion = NULL WHERE uuid = :product_uuid")
+            .createNativeQuery(sql)
             .setParameter("product_uuid", productUuid)
+            .setHint(QueryHints.NATIVE_SPACES, Product.class.getName())
             .executeUpdate();
     }
 

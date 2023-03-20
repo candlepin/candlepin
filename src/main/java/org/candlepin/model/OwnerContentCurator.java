@@ -746,9 +746,13 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
             return;
         }
 
+        String sql = "UPDATE " + Content.DB_TABLE + " SET entity_version = NULL " +
+            "WHERE uuid = :content_uuid";
+
         this.getEntityManager()
-            .createQuery("UPDATE Content SET entityVersion = NULL WHERE uuid = :content_uuid")
+            .createNativeQuery(sql)
             .setParameter("content_uuid", contentUuid)
+            .setHint(QueryHints.NATIVE_SPACES, Content.class.getName())
             .executeUpdate();
     }
 
