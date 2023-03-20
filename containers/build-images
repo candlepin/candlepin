@@ -33,7 +33,7 @@ OPTIONS:
 HELP
 }
 
-while getopts ":pd:c:v" opt; do
+while getopts ":pd:cv" opt; do
   case $opt in
   h)
     usage
