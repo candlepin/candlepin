@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.guice.CommonI18nProvider;
+import org.candlepin.guice.I18nProvider;
 import org.candlepin.paging.PageRequest;
 
 import org.jboss.resteasy.core.ResteasyContext;
@@ -54,7 +54,7 @@ public class PageRequestFilterTest {
 
     @BeforeEach
     public void setUp() {
-        this.i18nProvider = new CommonI18nProvider(this.mockServletReq);
+        this.i18nProvider = new I18nProvider(() -> this.mockServletReq);
         interceptor = new PageRequestFilter(this.i18nProvider);
     }
 

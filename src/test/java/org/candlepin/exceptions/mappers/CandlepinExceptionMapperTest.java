@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.exceptions.ExceptionMessage;
-import org.candlepin.guice.CommonI18nProvider;
+import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.TestingScope;
 
 import com.google.inject.AbstractModule;
@@ -103,7 +103,7 @@ public class CandlepinExceptionMapperTest {
             bind(CandlepinExceptionMapper.class);
             bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
             bind(ServletRequest.class).toInstance(mock(HttpServletRequest.class));
-            bind(I18n.class).toProvider(CommonI18nProvider.class);
+            bind(I18n.class).toProvider(I18nProvider.class);
         }
     }
 }
