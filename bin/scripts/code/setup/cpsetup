@@ -116,6 +116,14 @@ class TomcatSetup(object):
         regex = re.compile(self.main_comment_pattern, re.MULTILINE)
         return regex.sub(self.new_java_home, original, 1)
 
+    def _write_disable_fips_conf(self):
+        filename = "candlepin_disable_fips.conf"
+        confd_dir = os.path.join(self.conf_dir, "conf.d")
+        target_file = os.path.join(confd_dir, filename)
+
+        with open(target_file, 'w') as file:
+            file.write("JAVA_OPTS=\"$JAVA_OPTS -Dcom.redhat.fips=false\"\n")
+
     def update_config(self):
         # Edit server.xml
         self._backup_config(self.conf_dir)
@@ -148,6 +156,9 @@ class TomcatSetup(object):
 
         with open(self.main_conf, 'w') as main_config:
             main_config.write(updated_main)
+
+        # Write extra config file to conf.d to disable FIPS in this TC instance:
+        self._write_disable_fips_conf()
 
     def fix_perms(self):
         run_command("chmod g+x /var/log/" + TOMCAT)
@@ -362,7 +373,6 @@ def main(argv):
     certsetup = CertSetup()
     certsetup.generate()
 
-    tsetup = TomcatSetup('/etc/' + TOMCAT, options.keystorepwd)
     tsetup.update_config()
 
     if not options.skip_service:
