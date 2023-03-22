@@ -20,7 +20,7 @@ PACKAGES=(
     git
     hostname
     java-$JAVA_VERSION-openjdk-devel
-    jss-5.0.3-1.el9 # last jss package that support Java version 11
+    jss
     mariadb
     openssl
     pki-servlet-engine
