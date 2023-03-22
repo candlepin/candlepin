@@ -59,11 +59,7 @@ add_cert_to_keystore() {
   # Covert sonar.crt to DER format
   openssl x509 -in "/run/secrets/sonar_crt" -inform pem -out "ca.der" -outform der
 
-  if [ "$JAVA_VERSION" == "11" ]; then
-      KEYSTORE_PATH="${JAVA_HOME}/lib/security/cacerts"
-  else
-      KEYSTORE_PATH="${JAVA_HOME}/jre/lib/security/cacerts"
-  fi
+  KEYSTORE_PATH="${JAVA_HOME}/lib/security/cacerts"
 
   # Importing root cert to the JVM trust store
   keytool -importcert -noprompt -alias startssl -keystore "${KEYSTORE_PATH}" -storepass changeit -file "ca.der"
@@ -232,6 +228,7 @@ OPTIONS:
 HELP
 }
 
+JAVA_VERSION=17
 ARGV=("$@")
 while getopts ":dtRqrHulskic:a:vj:n" opt; do
     case $opt in
@@ -331,17 +328,10 @@ else
   echo "This build is running with NEW Candlepin project structure."
 fi
 
-# Check if we need to use Java 11, otherwise auto detect Java version.
-# Candlepin support Java 11 from 3.2.0 & onwards.
-CANDLEPIN_BASE_VERSION=$(grep "Version:" $PROJECT_DIR/candlepin.spec.tmpl | awk -F"Version: " '{print $2}')
-JAVA_11_SUPPORTED_VERSION=3.2.0
-
-echo "Base version of candlepin: " $CANDLEPIN_BASE_VERSION
-if [ $(get_simplified_version $CANDLEPIN_BASE_VERSION) -ge $(get_simplified_version $JAVA_11_SUPPORTED_VERSION) ] ; then
-    JAVA_VERSION=11
-    echo "Overriding tomcat.conf to use Java 11"
+if [ -n "${JAVA_VERSION}" ]; then
+    echo "Overriding tomcat.conf to use Java ${JAVA_VERSION}"
     update-alternatives --set java /usr/lib/jvm/java-$JAVA_VERSION-openjdk-$JAVA_VERSION*/bin/java
-    sed -i 's/JAVA_HOME=.*/JAVA_HOME="\/usr\/lib\/jvm\/jre-11"/' /etc/tomcat/tomcat.conf
+    sed -i "s/JAVA_HOME=.*/JAVA_HOME=\"\/usr\/lib\/jvm\/jre-${JAVA_VERSION}\"/" /etc/tomcat/tomcat.conf
 fi
 
 # Auto-detect JAVA_VERSION if necessary and set JAVA_HOME and update executable links
