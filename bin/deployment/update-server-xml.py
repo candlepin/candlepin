@@ -12,17 +12,6 @@ from contextlib import contextmanager
 logging.basicConfig(level=logging.INFO, format="%(levelname)-7s %(message)s")
 logger = logging.getLogger('update_server_xml')
 
-SSL_CIPHERS = [
-    "SSL_RSA_WITH_3DES_EDE_CBC_SHA",
-    "TLS_RSA_WITH_AES_256_CBC_SHA",
-    "TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA",
-    "TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA",
-    "TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA",
-    "TLS_ECDH_RSA_WITH_AES_128_CBC_SHA",
-    "TLS_ECDH_RSA_WITH_AES_256_CBC_SHA",
-    "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA",
-]
-
 def compare_nodes(cnode, nnode):
     """Compares the two nodes and checks for differences in attributes or children.
     Returns True if the nodes differ, False otherwise."""
@@ -211,7 +200,6 @@ class LegacySSLContextEditor(AbstractBaseEditor):
             # existing python-rhsm based clients (RHEL5).
             ("sslEnabledProtocols", "TLSv1.2,TLSv1.1,TLSv1"),
             ("SSLProtocol", "TLSv1.2,TLSv1.1,TLSv1"),
-            ("ciphers", ",".join(SSL_CIPHERS)),
             ("truststoreFile", "conf/keystore"),
             ("truststorePass", "password"),
             ("keystoreFile", "conf/keystore"),
@@ -268,8 +256,7 @@ class CandlepinConnectorEditorV3(AbstractBaseEditor):
         #
         #     <SSLHostConfig certificateVerification="optional"
         #         protocols="+TLSv1,+TLSv1.1,+TLSv1.2"
-        #         sslProtocol="TLS"
-        #         ciphers="SSL_RSA_WITH_3DES_EDE_CBC_SHA,TLS_RSA_WITH_AES_256_CBC_SHA,TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA">
+        #         sslProtocol="TLS">
         #
         #         <Certificate
         #                certificateFile="/etc/candlepin/certs/candlepin-ca.crt"
@@ -289,8 +276,7 @@ class CandlepinConnectorEditorV3(AbstractBaseEditor):
             # For the time being, TLSv1 needs to stay enabled in Satellite deployments to support
             # existing python-rhsm based clients (RHEL5).
             ("protocols", "+TLSv1,+TLSv1.1,+TLSv1.2"),
-            ("sslProtocol", "TLS"),
-            ("ciphers", ",".join(SSL_CIPHERS))
+            ("sslProtocol", "TLS")
         ])
 
         certificate = libxml2.newNode("Certificate")
