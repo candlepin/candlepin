@@ -120,6 +120,28 @@ update_legacy_keystore() {
     fi
 }
 
+configure_tomcat() {
+    if [ "$FORCECERT" == "1" ]; then
+        GEN_CERTS_ARGS="-f"
+    fi
+
+    # generate SSL certs and keystores as needed
+    $SUDO bash $SELF_DIR/gen_certs.sh $GEN_CERTS_ARGS
+
+    # Update symlink to legacy keystore if we're on an old version of TC
+    update_legacy_keystore
+
+    # update server.xml
+    $SUDO python $PROJECT_DIR/bin/deployment/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR
+
+    # create conf.d file to disable FIPS for our TC instance
+    local CONTAINER_CONFD_DIR="${CONTAINER_CONF_DIR}/conf.d"
+    local FIPS_CONF_FILE="${CONTAINER_CONFD_DIR}/candlepin_disable_fips.conf"
+
+    $SUDO sh -c "echo 'JAVA_OPTS=\"\$JAVA_OPTS -Dcom.redhat.fips=false\"' > $FIPS_CONF_FILE"
+    $SUDO sh -c "echo >> $FIPS_CONF_FILE"
+}
+
 upload_products() {
   if [ "$TESTDATA" = "1" ]; then
       $SELF_DIR/test_data_importer.py $SELF_DIR/test_data.json
@@ -365,18 +387,7 @@ fi
 # generate the DB
 gendb
 
-if [ "$FORCECERT" == "1" ]; then
-    GEN_CERTS_ARGS="-f"
-fi
-
-# generate SSL certs and keystores as needed
-$SUDO bash $SELF_DIR/gen_certs.sh $GEN_CERTS_ARGS
-
-# Update symlink to legacy keystore if we're on an old version of TC
-update_legacy_keystore
-
-# update server.xml
-$SUDO python $PROJECT_DIR/bin/deployment/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR
+configure_tomcat
 
 create_var_lib_candlepin
 configure_tomcat_root_dir
