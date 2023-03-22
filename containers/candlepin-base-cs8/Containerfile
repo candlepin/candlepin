@@ -18,7 +18,7 @@ RUN /bin/bash /root/setup-devel-env.sh
 COPY /base-scripts/setup-db.sh /root/
 
 # This allows the cp-test file in the branch to be used instead of one baked into the container image.
-RUN ln -s /candlepin-dev/containers/cp-test /usr/bin/cp-test
+RUN ln -s /candlepin-dev/docker/cp-test /usr/bin/cp-test
 
 # Centos Streams 8 uses Python3 so we must create alias to not break existing scripts.
 RUN echo 'alias python="python3"' >> ~/.bashrc
