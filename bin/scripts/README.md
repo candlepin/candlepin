@@ -14,13 +14,17 @@ of the running portal system.
 
 The input for this script is made by running an organization refresh in the portal with TRACE logging on. It is  
 usually compressed [.gz] , which the script is capable of handling.  
-The resulting file contains a JSON representation of the upstream data for the org. This script will parse the data  
-and establish an in-memory instance of the data that can be accessed during a local refresh. The instance will  
-remain until tomcat is restarted.
+The resulting output contains a JSON representation of the upstream data for the org. To use this data, it must be  
+redirected to a file then input through the API to the local Candlepin in hosted mode.  
+
+`curl -k -u admin:admin -X POST -F 'data=@[filename]' -H 'Content-Type: multipart/form-data'`  
+`https://[hostname]:[port]/candlepin/hostedtest/import/subscriptions`  
+
+The data instance will remain in memory until tomcat is restarted.  
 
 ### Output
 
-The JSON parsed from the log file
+The JSON parsed from the log file.
 
 ## Organization Migrator - org_migrator/org_migrator.py
 
