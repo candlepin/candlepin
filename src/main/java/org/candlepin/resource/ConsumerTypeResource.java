@@ -23,11 +23,11 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.resource.server.v1.ConsumerTypeApi;
 
-import com.google.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+
+import javax.inject.Inject;
 
 
 

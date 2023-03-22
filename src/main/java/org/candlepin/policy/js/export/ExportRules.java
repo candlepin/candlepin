@@ -19,7 +19,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Pool;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
 
 
 

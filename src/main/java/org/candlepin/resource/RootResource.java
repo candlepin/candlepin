@@ -24,8 +24,6 @@ import org.candlepin.config.Configuration;
 import org.candlepin.dto.api.server.v1.Link;
 import org.candlepin.resource.server.v1.RootApi;
 
-import com.google.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +41,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.ws.rs.Path;
 
 /**

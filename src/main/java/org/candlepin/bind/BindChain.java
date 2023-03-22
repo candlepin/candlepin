@@ -20,7 +20,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 
-import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import org.hibernate.exception.ConstraintViolationException;
@@ -31,6 +30,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 /**
  * Holds and represents the binding chain of responsibility.

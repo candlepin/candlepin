@@ -24,9 +24,9 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 
-import com.google.inject.Inject;
-
 import org.xnap.commons.i18n.I18n;
+
+import javax.inject.Inject;
 
 
 /**

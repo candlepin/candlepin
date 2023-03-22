@@ -19,10 +19,11 @@ import org.candlepin.dto.manifest.v1.DistributorVersionDTO;
 import org.candlepin.model.DistributorVersion;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
 
 import java.io.IOException;
 import java.io.Writer;
+
+import javax.inject.Inject;
 
 /**
  * DistributorVersionExporter

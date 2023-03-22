@@ -21,8 +21,6 @@ import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.version.VersionUtil;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.util.HttpHeaderNames;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;

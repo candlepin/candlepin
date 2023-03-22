@@ -14,8 +14,7 @@
  */
 package org.candlepin.model;
 
-import com.google.inject.Inject;
-
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 

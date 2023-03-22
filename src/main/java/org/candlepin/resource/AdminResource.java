@@ -25,13 +25,13 @@ import org.candlepin.resource.server.v1.AdminApi;
 import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+
+import javax.inject.Inject;
 
 
 

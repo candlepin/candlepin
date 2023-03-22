@@ -20,8 +20,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolComplianceType;
 import org.candlepin.policy.js.quantity.QuantityRules;
 
-import com.google.inject.Inject;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
@@ -29,6 +27,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 
 

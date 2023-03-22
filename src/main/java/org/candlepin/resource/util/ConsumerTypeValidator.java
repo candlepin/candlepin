@@ -18,14 +18,14 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 
-import com.google.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+
+import javax.inject.Inject;
 /**
  *
  * ConsumerTypeValidator validate consumer type in REST API

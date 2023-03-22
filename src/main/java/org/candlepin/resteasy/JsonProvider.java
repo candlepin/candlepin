@@ -50,11 +50,11 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.jaxrs.cfg.Annotations;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
-import com.google.inject.Inject;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
 
+import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.ext.Provider;

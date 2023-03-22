@@ -14,15 +14,15 @@
  */
 package org.candlepin.guice;
 
-import com.google.inject.Inject;
 import com.google.inject.Provider;
-import com.google.inject.name.Named;
 
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 
 import java.util.Properties;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.validation.ValidatorFactory;
 
 /**

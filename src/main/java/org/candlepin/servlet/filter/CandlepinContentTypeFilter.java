@@ -14,14 +14,14 @@
  */
 package org.candlepin.servlet.filter;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Singleton;
 
 import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;

@@ -16,9 +16,9 @@ package org.candlepin.audit;
 
 import ch.qos.logback.classic.Logger;
 
-import com.google.inject.Inject;
-
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
 
 /**
  * LoggingListener

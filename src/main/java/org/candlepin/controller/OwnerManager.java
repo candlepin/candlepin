@@ -34,7 +34,6 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.service.OwnerServiceAdapter;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
@@ -42,6 +41,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Date;
+
+import javax.inject.Inject;
 
 
 

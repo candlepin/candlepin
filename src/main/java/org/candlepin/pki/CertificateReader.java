@@ -17,8 +17,6 @@ package org.candlepin.pki;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 
-import com.google.inject.Inject;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -30,6 +28,8 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.inject.Inject;
 
 /**
  * A generic mechanism for reading CA certificates from an underlying datastore.

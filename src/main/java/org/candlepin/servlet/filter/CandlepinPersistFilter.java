@@ -14,11 +14,11 @@
  */
 package org.candlepin.servlet.filter;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.UnitOfWork;
 
 import java.io.IOException;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;

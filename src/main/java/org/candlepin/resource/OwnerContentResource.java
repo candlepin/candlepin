@@ -33,7 +33,6 @@ import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.UniqueIdGenerator;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.xnap.commons.i18n.I18n;
@@ -41,6 +40,8 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 public class OwnerContentResource implements OwnerContentApi {
     private DTOValidator validator;

@@ -22,12 +22,12 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 
-import com.google.inject.Inject;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javax.inject.Inject;
 
 /**
  * This bind operation is responsible to create, enrich and persist entitlements.

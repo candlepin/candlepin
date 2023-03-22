@@ -42,7 +42,6 @@ import org.candlepin.resource.util.JobStateMapper;
 import org.candlepin.resource.util.JobStateMapper.ExternalJobState;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.jboss.resteasy.core.ResteasyContext;
@@ -58,6 +57,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import javax.inject.Inject;
 
 
 

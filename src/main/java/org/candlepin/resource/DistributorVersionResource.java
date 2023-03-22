@@ -24,8 +24,6 @@ import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.resource.server.v1.DistributorVersionsApi;
 import org.candlepin.resource.validation.DTOValidator;
 
-import com.google.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.xnap.commons.i18n.I18n;
 
@@ -34,6 +32,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.inject.Inject;
 
 /**
  * DistributorVersionResource

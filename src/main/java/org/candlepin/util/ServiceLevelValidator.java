@@ -19,8 +19,6 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 
-import com.google.inject.Inject;
-
 import org.apache.commons.lang3.StringUtils;
 import org.xnap.commons.i18n.I18n;
 
@@ -28,6 +26,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.inject.Inject;
 
 
 

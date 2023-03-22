@@ -21,8 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.candlepin.sync.file.ManifestFileType;
 import org.candlepin.test.DatabaseTestFixture;
 
-import com.google.inject.Inject;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +29,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Calendar;
+
+import javax.inject.Inject;
 
 public class ManifestFileRecordCuratorTest extends DatabaseTestFixture {
 

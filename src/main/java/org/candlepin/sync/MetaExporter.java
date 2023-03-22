@@ -15,10 +15,11 @@
 package org.candlepin.sync;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
 
 import java.io.IOException;
 import java.io.Writer;
+
+import javax.inject.Inject;
 
 /**
  * Meta maps to meta.json in the export

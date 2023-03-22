@@ -47,7 +47,6 @@ import org.candlepin.util.OIDUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -69,6 +68,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.naming.ldap.Rdn;
 
 

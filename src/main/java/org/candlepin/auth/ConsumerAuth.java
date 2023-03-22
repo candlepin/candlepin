@@ -21,12 +21,11 @@ import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 
-import com.google.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 
 /**

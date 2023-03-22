@@ -24,7 +24,6 @@ import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.service.UniqueIdGenerator;
 import org.candlepin.util.X509ExtensionUtil;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
@@ -41,6 +40,8 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.TimeZone;
+
+import javax.inject.Inject;
 
 
 

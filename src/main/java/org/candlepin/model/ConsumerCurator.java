@@ -22,7 +22,6 @@ import org.candlepin.util.FactValidator;
 import org.candlepin.util.Util;
 
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -58,6 +57,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;

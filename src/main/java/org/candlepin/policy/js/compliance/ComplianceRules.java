@@ -37,8 +37,6 @@ import org.candlepin.policy.js.RuleExecutionException;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.hash.ComplianceStatusHasher;
 
-import com.google.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,6 +51,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.inject.Inject;
 
 
 

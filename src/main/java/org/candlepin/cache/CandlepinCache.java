@@ -14,9 +14,8 @@
  */
 package org.candlepin.cache;
 
-import com.google.inject.Inject;
-
 import javax.cache.CacheManager;
+import javax.inject.Inject;
 import javax.inject.Singleton;
 
 /**

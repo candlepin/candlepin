@@ -22,8 +22,6 @@ import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.resteasy.filter.AuthUtil;
 import org.candlepin.resteasy.filter.RestEasyOAuthMessage;
 
-import com.google.inject.Inject;
-
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
 import net.oauth.OAuthException;
@@ -43,6 +41,7 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.ws.rs.core.Response;
 

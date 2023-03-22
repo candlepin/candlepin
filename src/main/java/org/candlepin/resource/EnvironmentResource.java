@@ -53,7 +53,6 @@ import org.candlepin.resource.util.EnvironmentUpdates;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.util.RdbmsExceptionTranslator;
 
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
@@ -71,6 +70,7 @@ import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 

@@ -17,7 +17,6 @@ package org.candlepin.model;
 import org.candlepin.controller.OwnerContentAccess;
 
 import com.google.common.collect.Iterables;
-import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +38,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;

@@ -76,7 +76,6 @@ import org.candlepin.util.X509V3ExtensionUtil.PathNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.name.Named;
 
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
@@ -120,6 +119,7 @@ import java.util.stream.Stream;
 import java.util.zip.InflaterOutputStream;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 
 

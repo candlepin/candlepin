@@ -17,10 +17,10 @@ package org.candlepin.resource;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.resource.server.v1.CertificateRevocationListApi;
 
-import com.google.inject.Inject;
-
 import java.util.List;
 import java.util.Objects;
+
+import javax.inject.Inject;
 
 public class CrlResource implements CertificateRevocationListApi {
 

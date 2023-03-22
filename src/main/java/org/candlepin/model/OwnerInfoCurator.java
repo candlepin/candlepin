@@ -16,7 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.dto.api.server.v1.OwnerInfo;
 
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import org.hibernate.Criteria;
@@ -43,6 +42,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 

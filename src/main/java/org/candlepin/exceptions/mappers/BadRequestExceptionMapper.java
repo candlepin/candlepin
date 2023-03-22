@@ -18,13 +18,12 @@ import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.util.JaxRsExceptionResponseBuilder;
 import org.candlepin.version.VersionUtil;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.spi.BadRequestException;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Map;
 
+import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;

@@ -136,7 +136,7 @@ import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.service.model.UserInfo;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
 
 /**
  * The StandardTranslator is a SimpleModelTranslator that comes pre-configured to handle most, if

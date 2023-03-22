@@ -18,14 +18,13 @@ import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.paging.PageRequest.Order;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.core.ResteasyContext;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Objects;
 
 import javax.annotation.Priority;
+import javax.inject.Inject;
 import javax.ws.rs.Priorities;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;

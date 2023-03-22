@@ -17,12 +17,11 @@ package org.candlepin.util;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 
-import com.google.inject.Inject;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 

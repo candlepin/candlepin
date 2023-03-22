@@ -15,7 +15,10 @@
 package org.candlepin.resteasy.filter;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.SSLAuth;

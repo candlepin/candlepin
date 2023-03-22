@@ -17,15 +17,15 @@ package org.candlepin.servlet.filter;
 import org.candlepin.audit.EventSink;
 import org.candlepin.servlet.filter.logging.TeeHttpServletResponse;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;

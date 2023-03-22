@@ -23,13 +23,13 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 
-import com.google.inject.Inject;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 /**
  * This bind operation is responsible to create certificates and regenerate

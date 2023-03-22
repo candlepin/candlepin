@@ -49,7 +49,6 @@ import org.candlepin.util.X509Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
 import com.google.common.collect.Collections2;
-import com.google.inject.Inject;
 
 import org.apache.commons.lang3.BooleanUtils;
 import org.slf4j.Logger;
@@ -72,6 +71,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 /**
  * DefaultEntitlementCertServiceAdapter

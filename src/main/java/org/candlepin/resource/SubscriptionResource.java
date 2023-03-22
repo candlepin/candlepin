@@ -28,8 +28,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.resource.server.v1.SubscriptionApi;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
-import com.google.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -40,6 +38,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 

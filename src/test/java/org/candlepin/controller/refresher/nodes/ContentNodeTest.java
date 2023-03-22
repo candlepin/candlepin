@@ -14,7 +14,7 @@
  */
 package org.candlepin.controller.refresher.nodes;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;

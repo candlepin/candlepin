@@ -17,9 +17,6 @@ package org.candlepin.async.impl;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ActiveMQClient;
 import org.apache.activemq.artemis.api.core.client.ClientSession;
@@ -28,6 +25,9 @@ import org.apache.activemq.artemis.api.core.client.ServerLocator;
 import org.apache.activemq.artemis.core.remoting.CloseListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 
 

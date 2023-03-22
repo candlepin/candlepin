@@ -22,8 +22,6 @@ import org.candlepin.config.Configuration;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
-
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +29,8 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
+
+import javax.inject.Inject;
 
 
 

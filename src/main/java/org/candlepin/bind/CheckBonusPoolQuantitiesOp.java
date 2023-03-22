@@ -18,9 +18,9 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 
-import com.google.inject.Inject;
-
 import java.util.Map;
+
+import javax.inject.Inject;
 
 /**
  * This BindOperation will be replaced shortly in an upcoming PR, where we

@@ -29,7 +29,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
-import com.google.inject.Inject;
+import javax.inject.Inject;
 
 
 

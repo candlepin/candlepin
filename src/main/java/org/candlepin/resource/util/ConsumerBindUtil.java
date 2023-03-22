@@ -38,8 +38,6 @@ import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.version.CertVersionConflictException;
 
-import com.google.inject.Inject;
-
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -53,6 +51,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import javax.inject.Inject;
 
 
 

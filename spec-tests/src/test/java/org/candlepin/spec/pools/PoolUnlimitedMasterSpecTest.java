@@ -26,7 +26,7 @@ import org.candlepin.dto.api.client.v1.GuestIdDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
-import org.candlepin.invoker.client.ApiException;;
+import org.candlepin.invoker.client.ApiException;
 import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
@@ -47,7 +47,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
 
 @SpecTest
 public class PoolUnlimitedMasterSpecTest {

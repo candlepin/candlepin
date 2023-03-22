@@ -40,8 +40,6 @@ import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.util.X509ExtensionUtil;
 
-import com.google.inject.Inject;
-
 import org.mozilla.javascript.RhinoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +52,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Stream;
+
+import javax.inject.Inject;
 
 
 /**

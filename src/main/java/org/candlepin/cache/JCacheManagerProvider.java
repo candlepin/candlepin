@@ -18,7 +18,6 @@ import static org.candlepin.config.ConfigProperties.CACHE_CONFIG_FILE_URI;
 
 import org.candlepin.config.Configuration;
 
-import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import java.net.URISyntaxException;
@@ -27,6 +26,7 @@ import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 import javax.cache.spi.CachingProvider;
+import javax.inject.Inject;
 
 /**
  * Provides object cache by indexed by String.

@@ -27,7 +27,6 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.util.Util;
 
-import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 
 import org.xnap.commons.i18n.I18n;
@@ -36,6 +35,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.inject.Inject;
 
 /**
  * - Container class for holding bind information.

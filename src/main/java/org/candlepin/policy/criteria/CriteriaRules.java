@@ -22,8 +22,6 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolFilterBuilder;
 
-import com.google.inject.Inject;
-
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
@@ -32,6 +30,8 @@ import org.hibernate.criterion.Subqueries;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 
 

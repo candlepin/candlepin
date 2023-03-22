@@ -18,13 +18,12 @@ import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.OwnerCurator;
 
-import com.google.inject.Inject;
-
 import org.jboss.resteasy.spi.HttpRequest;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.List;
 
+import javax.inject.Inject;
 import javax.inject.Provider;
 /**
  * This auth form allows for a consumer id to

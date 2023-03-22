@@ -22,11 +22,11 @@ import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.RulesValidationError;
 import org.candlepin.policy.ValidationResult;
 
-import com.google.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
+
+import javax.inject.Inject;
 
 
 /**

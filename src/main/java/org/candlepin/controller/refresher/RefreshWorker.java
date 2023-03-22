@@ -46,8 +46,6 @@ import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.util.Transactional;
 
-import com.google.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +57,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
 import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;
 

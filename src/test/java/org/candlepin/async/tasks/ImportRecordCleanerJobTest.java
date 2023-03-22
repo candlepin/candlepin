@@ -16,7 +16,9 @@ package org.candlepin.async.tasks;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;

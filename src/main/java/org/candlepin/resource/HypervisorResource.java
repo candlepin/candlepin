@@ -46,8 +46,6 @@ import org.candlepin.resource.util.GuestMigration;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.google.inject.persist.Transactional;
 
 import org.slf4j.Logger;
@@ -59,6 +57,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 
 

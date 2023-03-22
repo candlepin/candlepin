@@ -25,8 +25,6 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
 import org.candlepin.service.impl.BaseEntitlementCertServiceAdapter;
 
-import com.google.inject.Inject;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +34,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javax.inject.Inject;
 
 /**
  * StubEntitlementCertServiceAdapter
