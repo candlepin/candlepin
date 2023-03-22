@@ -80,7 +80,9 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp_consumer";
 
-    public static final int MAX_LENGTH_OF_CONSUMER_NAME = 255;
+    // This is based on the limitation of the name in the generated identity certificate
+    // BZ 1451107
+    public static final int MAX_LENGTH_OF_CONSUMER_NAME = 250;
 
     /**
      * Commonly used/recognized consumer facts
