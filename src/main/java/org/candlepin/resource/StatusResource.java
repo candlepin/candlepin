@@ -49,7 +49,7 @@ import javax.inject.Inject;
  * Status Resource
  */
 public class StatusResource implements StatusApi {
-    private static Logger log = LoggerFactory.getLogger(StatusResource.class);
+    private static final Logger log = LoggerFactory.getLogger(StatusResource.class);
 
     /**
      * The current version of candlepin
@@ -115,7 +115,7 @@ public class StatusResource implements StatusApi {
      * @httpcode 200
      */
     @Override
-    @SecurityHole(noAuth = true, anon = true)
+//    @SecurityHole(noAuth = true, anon = true)
     public StatusDTO status() {
         StatusCache statusCache = candlepinCache.getStatusCache();
         StatusDTO cached = statusCache.getStatus();
