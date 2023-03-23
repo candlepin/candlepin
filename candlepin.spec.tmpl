@@ -13,7 +13,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.2.15
+Version: 4.3.0
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,119 @@ fi
 
 #raw
 %changelog
+* Thu Mar 23 2023 Nikos Moumoulidis <nmoumoul@redhat.com> 4.3.0-1
+- Bump org.owasp:dependency-check-gradle from 8.2.0 to 8.2.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.1.2 to 3.1.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-534: Update to doc for refresh_data_extractor (wpoteat@redhat.com)
+- CANDLEPIN-538: Disabled FIPS mode for dev Tomcat setup (crog@redhat.com)
+- CANDLEPIN-537: Removed cipher specification for dev Tomcat setup
+  (crog@redhat.com)
+- Bump org.owasp:dependency-check-gradle from 8.1.2 to 8.2.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-540: Fix cp-test link (ojanus@redhat.com)
+- CANDLEPIN-534: Documentation for org_migration and refresh_data_extractor
+  (wpoteat@redhat.com)
+- Switch from Guice inject annotations to javax.inject (ojanus@redhat.com)
+- Bump com.mattbertolini:liquibase-slf4j from 4.1.0 to 5.0.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.swagger:swagger-annotations from 1.6.9 to 1.6.10
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-532: Update build target for Java 17 (wpoteat@redhat.com)
+- CANDLEPIN-476: Updated Pools model to avoid immutability warning - Updated
+  OwnerProductCurator.clearProductEntityVersion to use native query - Updated
+  OwnerConentCurator.clearContentEntityVersion to use native query
+  (joshmalbrecht@gmail.com)
+- Remove argument requirement for build-images -c flag (nmoumoul@redhat.com)
+- Bump org.slf4j:slf4j-api from 2.0.6 to 2.0.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.slf4j:log4j-over-slf4j from 2.0.6 to 2.0.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.slf4j:jcl-over-slf4j from 2.0.6 to 2.0.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.postgresql:postgresql from 42.5.4 to 42.6.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.9.1 to 10.9.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-512: Update org_migrator for schema changes (wpoteat@redhat.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.9.0 to 10.9.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Fix vagrant up (ojanus@redhat.com)
+- CANDLEPIN-471: Compile and run Candlepin with Java 17 (ojanus@redhat.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.8.1 to 10.9.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-471: Remove jss workaround (ojanus@redhat.com)
+- Remove buildr from cp-test (ojanus@redhat.com)
+- Bump ch.qos.logback:logback-classic from 1.4.5 to 1.4.6
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Update Gradle Wrapper to 8.0.2 (ojanus@redhat.com)
+- CANDLEPIN-472: Update Ansible/Vagrant setup with Java 17 (wpoteat@redhat.com)
+- CANDLEPIN-513: Docker to Podman cleanup (wpoteat@redhat.com)
+- CANDLEPIN-469: Require compiling and running with Java 17 (ojanus@redhat.com)
+- CANDLEPIN-519: Switch to main branch (ojanus@redhat.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.8.0 to 10.8.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.liquibase:liquibase-core from 4.19.1 to 4.20.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.1.1 to 5.2.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- RPM spec file cleanup (nmoumoul@redhat.com)
+- CANDLEPIN-509: Link to source cp-test (wpoteat@redhat.com)
+- CANDLEPIN-151: Introduce Centos Stream 9 container image (sbakaj@redhat.com)
+- Extract checkstyle config into a conventions plugin (ojanus@redhat.com)
+- CANDLEPIN-518: Update for renamed default branch in fh-pipeline-library
+  (wpoteat@redhat.com)
+- CANDLEPIN-514: Set grace period to 0 for orphan entities in hosted
+  (wpoteat@redhat.com)
+- Bump org.liquibase:liquibase-core from 4.19.0 to 4.19.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 21.0.0 to 21.0.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.owasp:dependency-check-gradle from 8.1.1 to 8.1.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Upgrade maven openapi plugin to be in line with gradle (nmoumoul@redhat.com)
+- CANDLEPIN-497: Remove Ruby setup from ansible and add Gemfiles back
+  (wpoteat@redhat.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.7.0 to 10.8.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.owasp:dependency-check-gradle from 8.1.0 to 8.1.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- 2172535: Fix setting of metadata expiration during import (ojanus@redhat.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 20.0.5 to 21.0.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Cleanup unused Jenkins scripts (ojanus@redhat.com)
+- Cleanup openapi template overrides for 6.3.0 (nmoumoul@redhat.com)
+- CANDLEPIN-331: Jenkins: Reuse result of unit test stage (ojanus@redhat.com)
+- Fix workspace ownership (ojanus@redhat.com)
+- CANDLEPIN-443: drop obsolete tables - cp2_activation_key_products -
+  cp2_environment_content tables (wpoteat@redhat.com)
+- Bump com.github.ben-manes:gradle-versions-plugin from 0.45.0 to 0.46.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 20.0.4 to 20.0.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-481: Updated the Consumer model object and related children
+  (crog@redhat.com)
+- Update Gradle Wrapper to version 8.0.1 (ojanus@redhat.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 20.0.3 to 20.0.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump net.logstash.logback:logstash-logback-encoder from 7.2 to 7.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.postgresql:postgresql from 42.5.3 to 42.5.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.sonarsource.scanner.gradle:sonarqube-gradle-plugin
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-128: Upgrade to RESTEasy 4.7.7 (nmoumoul@redhat.com)
+- CANDLEPIN-402: Update hypervisor logic to not use model objects for external
+  API (wpoteat@redhat.com)
+- Do not assign reviewer when PR is marked ready for review
+  (nmoumoul@redhat.com)
+- CANDLEPIN-461: Upgrade openapi-generator to 6.3.0 (wpoteat@redhat.com)
+- CANDLEPIN-121: Update servlet API dependency to latest version
+  (wpoteat@redhat.com)
+- Bump org.owasp:dependency-check-gradle from 8.0.2 to 8.1.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Mon Feb 13 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.2.15-1
 - Add new translations using Weblate (noreply@weblate.org)
 - i18n: po/keys.pot template is updated (3229038+candlepin-
