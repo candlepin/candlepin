@@ -16,6 +16,7 @@ plugins {
     id "org.owasp.dependencycheck"
     id "jacoco"
     id "org.sonarqube"
+    id 'io.quarkus'
 
     // The following are plugins are plugins we wrote in the buildSrc folder
     id "org.candlepin.gradle.gettext"
@@ -199,18 +200,32 @@ dependencies {
     testImplementation libraries["hamcrest"]
     testImplementation libraries["mockitoJunit"]
     testImplementation libraries["liquibaseSlf4j"]
+
+    implementation platform("io.quarkus.platform:quarkus-bom:2.16.4.Final")
+    implementation 'io.quarkus:quarkus-resteasy-reactive-jackson'
+    implementation 'io.quarkus:quarkus-config-yaml'
+    implementation 'io.quarkus:quarkus-hibernate-orm'
+    implementation 'io.quarkus:quarkus-hibernate-validator'
+    implementation 'io.quarkus:quarkus-jdbc-mariadb'
+    implementation 'io.quarkus:quarkus-liquibase'
+    implementation 'io.quarkus:quarkus-jdbc-postgresql'
+    implementation 'io.quarkus:quarkus-arc'
+    implementation 'io.quarkus:quarkus-resteasy-reactive'
+//    testImplementation 'io.quarkus:quarkus-junit5'
+//    testImplementation 'io.rest-assured:rest-assured'
+
 }
 
 // Copy the resources to the main classes directory so that the
 // persistence context is in the the same classpath entry for
 // Hibernate annotation based discovery.
-sourceSets.main.output.resourcesDir = new File(buildDir, "classes/java/main")
+//sourceSets.main.output.resourcesDir = new File(buildDir, "classes/java/main")
 
 compileJava.dependsOn(processResources)
 
 // Add the openapi generated classes to the main java source sets to compile in the generated interfaces
 sourceSets {
-    main.java.srcDir generatedMetamodels
+    main.java.srcDir "${buildDir}/generated/api/src/gen/java"
 }
 
 java {
