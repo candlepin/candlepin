@@ -1277,4 +1277,5 @@
     <include file="db/changelog/20221212140215-remove_prodcont_fk_delete_cascade.xml"/>
     <include file="db/changelog/20230207161633-clear_entity_versions-1.xml"/>
     <include file="db/changelog/20230220150433-drop-act-key-env-tables.xml"/>
+    <include file="db/changelog/20230322103117-reduce-consumer-name.xml"/>
 </databaseChangeLog>
