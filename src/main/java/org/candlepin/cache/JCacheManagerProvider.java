@@ -1,22 +1,19 @@
-/**
- * Copyright (c) 2009 - 2012 Red Hat, Inc.
+/*
+ *  Copyright (c) 2009 - ${YEAR} Red Hat, Inc.
  *
- * This software is licensed to you under the GNU General Public License,
- * version 2 (GPLv2). There is NO WARRANTY for this software, express or
- * implied, including the implied warranties of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
- * along with this software; if not, see
- * http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+ *  This software is licensed to you under the GNU General Public License,
+ *  version 2 (GPLv2). There is NO WARRANTY for this software, express or
+ *  implied, including the implied warranties of MERCHANTABILITY or FITNESS
+ *  FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+ *  along with this software; if not, see
+ *  http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
  *
- * Red Hat trademarks are not licensed under GPLv2. No permission is
- * granted to use or replicate Red Hat trademarks that are incorporated
- * in this software or its documentation.
+ *  Red Hat trademarks are not licensed under GPLv2. No permission is
+ *  granted to use or replicate Red Hat trademarks that are incorporated
+ *  in this software or its documentation.
  */
 package org.candlepin.cache;
 
-import static org.candlepin.config.ConfigProperties.CACHE_CONFIG_FILE_URI;
-
-import org.candlepin.config.Configuration;
 import org.candlepin.config.HibernateConfig;
 
 import com.google.inject.Provider;
@@ -28,6 +25,7 @@ import javax.cache.CacheException;
 import javax.cache.CacheManager;
 import javax.cache.Caching;
 import javax.cache.spi.CachingProvider;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 /**
@@ -35,6 +33,7 @@ import javax.inject.Inject;
  *
  * @author fnguyen
  */
+@ApplicationScoped
 public class JCacheManagerProvider implements Provider<CacheManager> {
 
     private final HibernateConfig config;
