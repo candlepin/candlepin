@@ -36,7 +36,7 @@ public class OffsetDateTimeSerializer extends JsonSerializer<OffsetDateTime> {
 
     public OffsetDateTimeSerializer() {
         // This DateTimeFormatter pattern is ISO 8601 without milliseconds
-        this.dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
+        this.dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssxxx");
     }
 
     @Override
