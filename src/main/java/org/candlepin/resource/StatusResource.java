@@ -43,7 +43,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import javax.inject.Inject;
-
+import javax.transaction.Transactional;
 
 
 /**
@@ -119,6 +119,7 @@ public class StatusResource implements StatusApi {
      */
     @Override
 //    @SecurityHole(noAuth = true, anon = true)
+    @Transactional
     public StatusDTO status() {
         StatusCache statusCache = candlepinCache.getStatusCache();
         StatusDTO cached = statusCache.getStatus();

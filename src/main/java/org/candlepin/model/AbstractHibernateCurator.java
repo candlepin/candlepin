@@ -233,8 +233,9 @@ public abstract class AbstractHibernateCurator<E extends Persisted> {
      *  true if the calling thread is operating within a database transaction; false otherwise
      */
     public boolean inTransaction() {
-        EntityTransaction transaction = this.getTransaction();
-        return transaction != null && transaction.isActive();
+//        EntityTransaction transaction = this.getTransaction();
+//        return transaction != null && transaction.isActive();
+        return false;
     }
 
     public void refresh(Iterable<E> entities) {
