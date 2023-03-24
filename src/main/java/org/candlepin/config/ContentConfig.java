@@ -12,26 +12,20 @@
  *  granted to use or replicate Red Hat trademarks that are incorporated
  *  in this software or its documentation.
  */
+
 package org.candlepin.config;
 
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithName;
 
-@ConfigMapping(prefix = "db.config")
-public interface DatabaseConfig {
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-    @WithName("in.operator.block.size")
-    @WithDefault("15000")
-    int inOperatorBlockSize();
-    @WithName("case.operator.block.size")
-    @WithDefault("100")
-    int caseOperatorBlockSize();
-    @WithName("batch.block.size")
-    @WithDefault("500")
-    int batchBlockSize();
-    @WithName("query.parameter.limit")
-    @WithDefault("32000")
-    int queryParameterLimit();
+@ConfigMapping
+public interface ContentConfig {
+
+    @WithName("candlepin.environment_content_filtering")
+    @WithDefault("false")
+    boolean environmentFilteringEnabled();
 
 }
