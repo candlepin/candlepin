@@ -219,7 +219,7 @@ dependencies {
 // Copy the resources to the main classes directory so that the
 // persistence context is in the the same classpath entry for
 // Hibernate annotation based discovery.
-//sourceSets.main.output.resourcesDir = new File(buildDir, "classes/java/main")
+sourceSets.main.output.resourcesDir = new File(buildDir, "classes/java/main")
 
 compileJava.dependsOn(processResources)
 

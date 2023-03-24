@@ -32,11 +32,14 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Date;
 
-import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Singleton;
 
-@ApplicationScoped
+/**
+ * RulesCurator
+ */
+@Singleton
 public class RulesCurator extends AbstractHibernateCurator<Rules> {
-    private static final Logger log = LoggerFactory.getLogger(RulesCurator.class);
+    private static Logger log = LoggerFactory.getLogger(RulesCurator.class);
     public static final String DEFAULT_RULES_FILE = "/rules/rules.js";
 
     /*

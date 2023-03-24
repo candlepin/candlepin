@@ -41,7 +41,6 @@ import javax.xml.bind.annotation.XmlTransient;
  */
 @Entity
 @Table(name = Rules.DB_TABLE)
-//@Embeddable
 public class Rules extends AbstractHibernateObject implements Named, Eventful {
 
     /** Name of the table backing this object in the database */
@@ -178,7 +177,7 @@ public class Rules extends AbstractHibernateObject implements Named, Eventful {
     }
 
     @Override
-//    @XmlTransient
+    @XmlTransient
     public String getName() {
         return getVersion();
     }
