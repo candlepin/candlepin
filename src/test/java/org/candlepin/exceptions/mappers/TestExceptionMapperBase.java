@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.exceptions.ExceptionMessage;
-import org.candlepin.guice.CommonI18nProvider;
+import org.candlepin.guice.I18nProvider;
 import org.candlepin.guice.TestingScope;
 
 import com.google.inject.AbstractModule;
@@ -77,7 +77,7 @@ public abstract class TestExceptionMapperBase {
             bind(mapper);
             bind(HttpServletRequest.class).toInstance(mock(HttpServletRequest.class));
             bind(ServletRequest.class).toInstance(mock(HttpServletRequest.class));
-            bind(I18n.class).toProvider(CommonI18nProvider.class);
+            bind(I18n.class).toProvider(I18nProvider.class);
         }
     }
 }

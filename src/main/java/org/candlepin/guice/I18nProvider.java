@@ -30,13 +30,13 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.servlet.http.HttpServletRequest;
 
-/**
- * I18nProvider
- */
 @Singleton
-public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
-    private static Logger log = LoggerFactory.getLogger(I18nProvider.class);
-    private static Map<Locale, I18n> cache = new ConcurrentHashMap<>();
+public class I18nProvider implements Provider<I18n> {
+    private static final Logger log = LoggerFactory.getLogger(I18nProvider.class);
+    public static final String BASENAME = "org.candlepin.common.i18n.Messages";
+    private static final Map<Locale, I18n> CACHE = new ConcurrentHashMap<>();
+
+    // TODO Use context to decouple it from request
     private final Provider<HttpServletRequest> request;
 
     @Inject
@@ -46,6 +46,15 @@ public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
 
     @Override
     public I18n get() {
+        Locale locale = getLocale();
+
+        return CACHE.computeIfAbsent(locale, requestedLocale -> {
+            log.debug("Getting i18n engine for locale {}", requestedLocale);
+            return I18nFactory.getI18n(getClass(), BASENAME, requestedLocale, I18nFactory.FALLBACK);
+        });
+    }
+
+    private Locale getLocale() {
         Locale locale = null;
 
         try {
@@ -58,27 +67,7 @@ public class I18nProvider extends CommonI18nProvider implements Provider<I18n> {
         }
 
         locale = (locale == null) ? Locale.US : locale;
-
-        // If the locale does not exist, xnap is pretty inefficient.
-        // This cache will hold the records more efficiently.
-
-        // see https://en.wikipedia.org/wiki/Double-checked_locking
-        I18n i18n = cache.get(locale);
-        if (i18n == null) {
-            synchronized (cache) {
-                i18n = cache.get(locale);
-                if (i18n == null) {
-                    log.debug("Getting i18n engine for locale {}", locale);
-
-                    i18n = I18nFactory.getI18n(getClass(), getBaseName(), locale, I18nFactory.FALLBACK);
-                    cache.put(locale, i18n);
-                }
-            }
-        }
-        return i18n;
+        return locale;
     }
 
-    public String getTestString() {
-        return get().tr("Bad Request");
-    }
 }
