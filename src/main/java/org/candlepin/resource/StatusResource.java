@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
@@ -158,7 +159,7 @@ public class StatusResource implements StatusApi {
             .modeReason(mcr != null ? mcr.toString() : null)
             .modeChangeTime(Util.toDateTime(mcr != null ? mcr.getTime() : null))
             .managerCapabilities(caps)
-            .timeUTC(OffsetDateTime.now());
+            .timeUTC(OffsetDateTime.now(ZoneOffset.UTC));
 
         if (keycloakEnabled) {
             AdapterConfig adapterConfig = keycloakConfig.getAdapterConfig();
