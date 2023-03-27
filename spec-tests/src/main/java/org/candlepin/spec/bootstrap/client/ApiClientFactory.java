@@ -205,7 +205,7 @@ public class ApiClientFactory {
     }
 
     private String getUrl() {
-        return String.format("https://%s:%s%s",
+        return String.format("http://%s:%s%s",
             properties.getProperty(ConfigKey.HOST.key()),
             properties.getProperty(ConfigKey.PORT.key()),
             properties.getProperty(ConfigKey.PREFIX.key()));
