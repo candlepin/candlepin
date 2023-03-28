@@ -30,6 +30,7 @@ PACKAGES=(
     python3-pip
     python3-pyyaml
     python3-requests
+    python3-libxml2
     rpm-build
     rpm-sign
     rsyslog
