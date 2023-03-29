@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2009 - 2019 Red Hat, Inc.
+ *  Copyright (c) 2009 - 2023 Red Hat, Inc.
  *
  *  This software is licensed to you under the GNU General Public License,
  *  version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -33,34 +33,51 @@ class Gettext implements Plugin<Project> {
             group = 'Build'
 
             doLast {
-                File source_files = new File("${project.buildDir}/gettext_file_list.tmp")
-                def root_dir_length = project.getRootDir().getCanonicalPath().size()
-                println("Root dir length: ${root_dir_length}")
-                def source_file_list = []
+                // Scan for source files...
+                logger.lifecycle("Scanning for source files in project root: ${project.getRootDir().getCanonicalPath()}")
+                List source_file_list = []
+
+                int root_dir_length = project.getRootDir().getCanonicalPath().size()
                 project.sourceSets.main.java.findAll().each { File file ->
                     file.toString().substring(root_dir_length + 1)
                     source_file_list.add(file.toString().substring(root_dir_length + 1))
                 }
-                source_files.write source_file_list.join("\n")
+
+                if (source_file_list.size() < 1) {
+                    // Given the age of this project, we should never hit this
+                    String errmsg = "No source files found in project root: ${project.getRootDir().getCanonicalPath()}"
+                    throw new GradleException(errmsg)
+                }
+
+                logger.lifecycle("Found ${source_file_list.size()} source files")
+
+                // Ensure build directory has been created
+                project.getBuildDir().mkdirs()
+
+                // Write manifest
+                File manifest = new File("${project.buildDir}/gettext_manifest.txt")
+
+                logger.lifecycle("Writing manifest file: ${manifest}")
+                manifest.write(source_file_list.join("\n"))
 
                 // Find the keys file, if it already exists merge into the existing one.
-
                 File keys_file = new File("${extension.keys_project_dir}/po/keys.pot")
+
                 // Perform the extraction
-                List gettext_args = ["-k", "-F", "-ktrc:1c,2", "-ktrnc:1c,2,3","-ktr",
-                                     "-kmarktr", "-ktrn:1,2", "--from-code=utf-8", "-o", "${keys_file}"
+                List gettext_args = [
+                    "-k", "-F", "-ktrc:1c,2", "-ktrnc:1c,2,3", "-ktr",
+                    "-kmarktr", "-ktrn:1,2", "--from-code=utf-8", "-o", "${keys_file}",
+                    "-f", manifest
                 ]
 
-                gettext_args.add("-f")
-                gettext_args.add("${source_files}")
-                println(gettext_args.join(" "))
+                logger.lifecycle("Building keys file: ${keys_file}")
+                logger.debug("Executing command: xgettext ${gettext_args.join(" ")}")
 
                 project.exec {
                     executable "xgettext"
                     args gettext_args
                     workingDir project.getRootDir()
                 }
-
             }
         }
 

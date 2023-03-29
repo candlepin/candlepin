@@ -468,6 +468,7 @@
               <sources>
                 <source>${project.build.directory}/generated-sources/jpamodel/gen/java</source>
                 <source>${project.build.directory}/generated-sources/openapi/src/gen/java</source>
+                <source>${project.build.directory}/generated-sources/msgfmt/gen/java</source>
                 <source>src/main/java</source>
               </sources>
             </configuration>
@@ -475,20 +476,28 @@
         </executions>
       </plugin>
       <plugin>
-        <groupId>com.googlecode.gettext-commons</groupId>
-        <artifactId>gettext-maven-plugin</artifactId>
-        <version>1.2.4</version>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
         <executions>
           <execution>
-            <phase>generate-resources</phase>
+            <phase>generate-sources</phase>
             <goals>
-              <goal>dist</goal>
+              <goal>exec</goal>
             </goals>
           </execution>
         </executions>
         <configuration>
-          <targetBundle>org.candlepin.common.i18n.Messages</targetBundle>
-          <poDirectory>po</poDirectory>
+          <executable>gradlew</executable>
+          <workingDirectory>${project.basedir}</workingDirectory>
+          <arguments>
+            <argument>msgfmt</argument>
+            <argument>--no-daemon</argument>
+            <argument>--input</argument>
+            <argument>${project.basedir}/po</argument>
+            <argument>--output</argument>
+            <argument>${project.build.directory}/generated-sources/msgfmt/gen/java</argument>
+          </arguments>
         </configuration>
       </plugin>
       <plugin>
