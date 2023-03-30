@@ -956,7 +956,6 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
-     * @param session
      * @param consumerFilter
      */
     private void enableIfPrevEnabled(Filter consumerFilter) {
@@ -1445,65 +1444,17 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
-     * Retrieves all known master pools (subscriptions) for all owners.
+     * Retrieves all known primary pools (subscriptions) for all owners.
      *
      * @return
-     *  A query to fetch all known master pools
+     *  A query to fetch all known primary pools
      */
-    public CandlepinQuery<Pool> getMasterPools() {
+    public CandlepinQuery<Pool> getPrimaryPools() {
         DetachedCriteria criteria = DetachedCriteria.forClass(Pool.class)
             .createAlias("sourceSubscription", "srcsub")
             .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"));
 
         return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
-    }
-
-    /**
-     * Retrieves all known master pools (subscriptions) for the given owner.
-     *
-     * @param owner
-     *  The owner for which to fetch master pools
-     *
-     * @return
-     *  A query to fetch all known master pools for the given owner
-     */
-    public CandlepinQuery<Pool> getMasterPoolsForOwner(Owner owner) {
-        DetachedCriteria criteria = DetachedCriteria.forClass(Pool.class)
-            .createAlias("sourceSubscription", "srcsub")
-            .add(Restrictions.eq("owner", owner))
-            .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"));
-
-        return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
-    }
-
-    /**
-     * Retrieves all known master pools (subscriptions) for the given owner that have subscription
-     * IDs not present in the provided collection.
-     *
-     * @param owner
-     *  The owner for which to fetch master pools
-     *
-     * @param excludedSubIds
-     *  A collection of
-     *
-     * @return
-     *  A query to fetch all known master pools for the given owner
-     */
-    public CandlepinQuery<Pool> getMasterPoolsForOwnerExcludingSubs(Owner owner,
-        Collection<String> excludedSubIds) {
-
-        if (excludedSubIds != null && !excludedSubIds.isEmpty()) {
-            DetachedCriteria criteria = DetachedCriteria.forClass(Pool.class)
-                .createAlias("sourceSubscription", "srcsub")
-                .add(Restrictions.eq("owner", owner))
-                .add(Restrictions.eq("srcsub.subscriptionSubKey", "master"))
-                .add(Restrictions.not(CPRestrictions.in("srcsub.subscriptionId", excludedSubIds)));
-
-            return this.cpQueryFactory.buildQuery(this.currentSession(), criteria);
-        }
-        else {
-            return this.getMasterPoolsForOwner(owner);
-        }
     }
 
     @SuppressWarnings("checkstyle:indentation")

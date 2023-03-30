@@ -14,6 +14,8 @@
  */
 package org.candlepin.controller;
 
+import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
+
 import org.candlepin.audit.Event;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
@@ -300,11 +302,11 @@ public class CandlepinPoolManager implements PoolManager {
                 }
 
                 log.debug("Processing subscription: {}", sub);
-                Pool pool = this.convertToMasterPoolImpl(sub, resolvedOwner, existingProducts);
+                Pool pool = this.convertToPrimaryPoolImpl(sub, resolvedOwner, existingProducts);
                 pool.setLocked(true);
 
                 List<Pool> subPools = subscriptionPools.getOrDefault(sub.getId(), Collections.emptyList());
-                this.refreshPoolsForMasterPool(pool, false, lazy, updatedProducts, subPools);
+                this.refreshPoolsForPrimaryPool(pool, false, lazy, updatedProducts, subPools);
                 poolsModified = true;
             }
 
@@ -347,7 +349,7 @@ public class CandlepinPoolManager implements PoolManager {
             // a fairly accurate guess as to whether or not the content view changed. That is:
             //
             // - We only receive product and content info from subscriptions provided upstream
-            // - We only call refreshPoolsForMasterPool or deletePools based on matches with the
+            // - We only call refreshPoolsForPrimaryPool or deletePools based on matches with the
             //   received subscriptions
             //
             // By checking both of these, we can estimate that if we have changed products/content AND
@@ -397,7 +399,7 @@ public class CandlepinPoolManager implements PoolManager {
         return owner;
     }
 
-    void refreshPoolsForMasterPool(Pool pool, boolean updateStackDerived, boolean lazy,
+    void refreshPoolsForPrimaryPool(Pool pool, boolean updateStackDerived, boolean lazy,
         Map<String, Product> changedProducts) {
 
         // These don't all necessarily belong to this owner
@@ -416,18 +418,18 @@ public class CandlepinPoolManager implements PoolManager {
             }
         }
         else {
-            // If we don't have a subscription ID, this *is* the master pool, but we need to use
+            // If we don't have a subscription ID, this *is* the primary pool, but we need to use
             // the original, hopefully unmodified, pool
             subscriptionPools = pool.getId() != null ?
                 Collections.<Pool>singletonList(this.poolCurator.get(pool.getId())) :
                 Collections.<Pool>singletonList(pool);
         }
 
-        this.refreshPoolsForMasterPool(pool, updateStackDerived, lazy, changedProducts, subscriptionPools);
+        this.refreshPoolsForPrimaryPool(pool, updateStackDerived, lazy, changedProducts, subscriptionPools);
     }
 
     @Transactional
-    void refreshPoolsForMasterPool(Pool pool, boolean updateStackDerived, boolean lazy,
+    void refreshPoolsForPrimaryPool(Pool pool, boolean updateStackDerived, boolean lazy,
         Map<String, Product> changedProducts, List<Pool> subscriptionPools) {
 
         // Update product references on the pools, I guess
@@ -454,15 +456,15 @@ public class CandlepinPoolManager implements PoolManager {
         // capture the original quantity to check for updates later
         Long originalQuantity = pool.getQuantity();
 
-        // BZ 1012386: This will regenerate master/derived for bonus scenarios if only one of the
+        // BZ 1012386: This will regenerate primary/derived for bonus scenarios if only one of the
         // pair still exists.
         this.createAndEnrichPools(pool, subscriptionPools, false);
 
         // don't update floating here, we'll do that later so we don't update anything twice
-        Set<String> updatedMasterPools = updatePoolsForMasterPool(
+        Set<String> updatedPrimaryPools = updatePoolsForPrimaryPool(
             subscriptionPools, pool, originalQuantity, updateStackDerived, changedProducts);
 
-        regenerateCertificatesByEntIds(updatedMasterPools, lazy);
+        regenerateCertificatesByEntIds(updatedPrimaryPools, lazy);
     }
 
     private void removeAndDeletePoolsOnOtherOwners(List<Pool> existingPools, Pool pool) {
@@ -534,15 +536,15 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     /**
-     * Update pool for master pool.
+     * Update pool for primary pool.
      *
      * @param existingPools the existing pools
-     * @param pool the master pool
+     * @param pool the primary pool
      * @param originalQuantity the pool's original quantity before multiplier was applied
      * @param updateStackDerived whether or not to attempt to update stack
      *        derived pools
      */
-    Set<String> updatePoolsForMasterPool(List<Pool> existingPools, Pool pool, Long originalQuantity,
+    Set<String> updatePoolsForPrimaryPool(List<Pool> existingPools, Pool pool, Long originalQuantity,
         boolean updateStackDerived, Map<String, Product> changedProducts) {
 
         /*
@@ -554,7 +556,7 @@ public class CandlepinPoolManager implements PoolManager {
             return new HashSet<>(0);
         }
 
-        log.debug("Updating {} pools for existing master pool: {}", existingPools.size(), pool);
+        log.debug("Updating {} pools for existing primary pool: {}", existingPools.size(), pool);
 
         Map<String, EventBuilder> poolEvents = new HashMap<>();
         for (Pool existing : existingPools) {
@@ -574,7 +576,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Update subpools if necessary
         if (updateStackDerived && !updatedPools.isEmpty() && createsSubPools && pool.isStacked()) {
-            // Get all pools for the master pool owner derived from the pool's
+            // Get all pools for the primary pool owner derived from the pool's
             // stack id, because we cannot look it up by subscriptionId
             List<Pool> subPools = getOwnerSubPoolsForStackId(pool.getOwner(), pool.getStackId());
 
@@ -857,7 +859,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public void updateMasterPool(Pool pool) {
+    public void updatePrimaryPool(Pool pool) {
         if (pool == null) {
             throw new IllegalArgumentException("pool is null");
         }
@@ -867,7 +869,7 @@ public class CandlepinPoolManager implements PoolManager {
             this.deletePoolsForSubscriptions(Collections.<String>singletonList(pool.getSubscriptionId()));
         }
         else {
-            this.refreshPoolsForMasterPool(pool, false, true, Collections.<String, Product>emptyMap());
+            this.refreshPoolsForPrimaryPool(pool, false, true, Collections.<String, Product>emptyMap());
         }
     }
 
@@ -899,7 +901,8 @@ public class CandlepinPoolManager implements PoolManager {
      *  The owner the pool will be assigned to
      */
     @SuppressWarnings("checkstyle:methodlength")
-    private Pool convertToMasterPoolImpl(SubscriptionInfo sub, Owner owner, Map<String, Product> productMap) {
+    private Pool convertToPrimaryPoolImpl(
+        SubscriptionInfo sub, Owner owner, Map<String, Product> productMap) {
         if (sub == null) {
             throw new IllegalArgumentException("subscription is null");
         }
@@ -928,7 +931,7 @@ public class CandlepinPoolManager implements PoolManager {
         pool.setOrderNumber(sub.getOrderNumber());
 
         // Copy over subscription details
-        pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
+        pool.setSourceSubscription(new SourceSubscription(sub.getId(), PRIMARY_POOL_SUB_KEY));
 
         // Copy over upstream details
         pool.setUpstreamPoolId(sub.getUpstreamPoolId());
@@ -1031,7 +1034,7 @@ public class CandlepinPoolManager implements PoolManager {
      * with PoolRules.calculateQuantity
      */
     @Override
-    public Pool convertToMasterPool(SubscriptionInfo sub) {
+    public Pool convertToPrimaryPool(SubscriptionInfo sub) {
         // TODO: Replace this method with a call to the (currently unwritten) EntityResolver.
 
         if (sub == null) {
@@ -1063,7 +1066,7 @@ public class CandlepinPoolManager implements PoolManager {
         Product product = this.ownerProductCurator.getProductById(owner, pid);
 
         // Do the actual conversion work & return the result
-        return this.convertToMasterPoolImpl(sub, owner, Collections.singletonMap(pid, product));
+        return this.convertToPrimaryPoolImpl(sub, owner, Collections.singletonMap(pid, product));
     }
 
     // TODO:
@@ -2551,26 +2554,8 @@ public class CandlepinPoolManager implements PoolManager {
      * {@inheritDoc}
      */
     @Override
-    public CandlepinQuery<Pool> getMasterPools() {
-        return this.poolCurator.getMasterPools();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public CandlepinQuery<Pool> getMasterPoolsForOwner(Owner owner) {
-        return this.poolCurator.getMasterPoolsForOwner(owner);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public CandlepinQuery<Pool> getMasterPoolsForOwnerExcludingSubs(Owner owner,
-        Collection<String> excludedSubs) {
-
-        return this.poolCurator.getMasterPoolsForOwnerExcludingSubs(owner, excludedSubs);
+    public CandlepinQuery<Pool> getPrimaryPools() {
+        return this.poolCurator.getPrimaryPools();
     }
 
     @Override

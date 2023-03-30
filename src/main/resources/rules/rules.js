@@ -1,4 +1,4 @@
-// Version: 5.43
+// Version: 5.44
 
 /*
  * Default Candlepin rule set.
@@ -245,7 +245,7 @@ function createPool(pool, consumer) {
     // case. (this is probably impossible to hit due to changes in rule
     // versioning)
     pool.hasDerived = function () {
-        if (this.derivedProductId == null) {
+        if (this.derivedProductId    == null) {
           return false;
         }
         return true;
@@ -3826,14 +3826,14 @@ var Override = {
 
     get_allow_override: function() {
         var context = Override.get_override_context();
-        var blacklist = ['name','label']
+        var blocklist = ['name','label']
 
         if (context.hosted) {
-            blacklist.push('baseurl')
+            blocklist.push('baseurl')
         }
 
         var check = context.name ? context.name.toLowerCase() : "";
-        return Utils.inArray(blacklist, check);
+        return Utils.inArray(blocklist, check);
     }
 }
 

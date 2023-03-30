@@ -146,8 +146,8 @@ public class Refresher {
              * thing rolls back. We don't want to refresh without marking ents
              * dirty, they will never get regenerated
              */
-            Pool masterPool = poolManager.convertToMasterPool(subscription);
-            poolManager.refreshPoolsForMasterPool(masterPool, true, lazy, Collections.emptyMap());
+            Pool primaryPool = poolManager.convertToPrimaryPool(subscription);
+            poolManager.refreshPoolsForPrimaryPool(primaryPool, true, lazy, Collections.emptyMap());
         }
 
         for (Owner owner : this.owners.values()) {

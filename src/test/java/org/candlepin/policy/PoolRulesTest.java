@@ -14,6 +14,8 @@
  */
 package org.candlepin.policy;
 
+import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
+import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -387,7 +389,7 @@ public class PoolRulesTest {
         List<Pool> pools = poolRules.createAndEnrichPools(p1, new LinkedList<>());
         assertEquals(2, pools.size());
         for (Pool p : pools) {
-            if (p.getSourceSubscription().getSubscriptionSubKey().equals("derived")) {
+            if (p.getSourceSubscription().getSubscriptionSubKey().equals(DERIVED_POOL_SUB_KEY)) {
                 assertTrue(p.hasAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY));
                 assertEquals("true", p.getAttributeValue(Pool.Attributes.UNMAPPED_GUESTS_ONLY));
             }
@@ -976,13 +978,13 @@ public class PoolRulesTest {
     public void noPoolsCreatedTest() {
         Product product = TestUtil.createProduct();
         List<Pool> existingPools = new ArrayList<>();
-        Pool masterPool = TestUtil.createPool(product);
-        masterPool.setSubscriptionSubKey("master");
-        existingPools.add(masterPool);
+        Pool primaryPool = TestUtil.createPool(product);
+        primaryPool.setSubscriptionSubKey(PRIMARY_POOL_SUB_KEY);
+        existingPools.add(primaryPool);
         Pool derivedPool = TestUtil.createPool(product);
-        derivedPool.setSubscriptionSubKey("derived");
+        derivedPool.setSubscriptionSubKey(DERIVED_POOL_SUB_KEY);
         existingPools.add(derivedPool);
-        List<Pool> pools = this.poolRules.createAndEnrichPools(masterPool, existingPools);
+        List<Pool> pools = this.poolRules.createAndEnrichPools(primaryPool, existingPools);
         assertEquals(0, pools.size());
     }
 
@@ -991,25 +993,25 @@ public class PoolRulesTest {
         Product product = TestUtil.createProduct();
         product.setAttribute(Product.Attributes.VIRT_LIMIT, "4");
         List<Pool> existingPools = new ArrayList<>();
-        Pool masterPool = TestUtil.createPool(product);
-        when(poolManager.isManaged(eq(masterPool))).thenReturn(true);
-        masterPool.setSubscriptionSubKey("master");
-        existingPools.add(masterPool);
-        List<Pool> pools = this.poolRules.createAndEnrichPools(masterPool, existingPools);
+        Pool primaryPool = TestUtil.createPool(product);
+        when(poolManager.isManaged(eq(primaryPool))).thenReturn(true);
+        primaryPool.setSubscriptionSubKey(PRIMARY_POOL_SUB_KEY);
+        existingPools.add(primaryPool);
+        List<Pool> pools = this.poolRules.createAndEnrichPools(primaryPool, existingPools);
         assertEquals(1, pools.size());
-        assertEquals("derived", pools.get(0).getSubscriptionSubKey());
+        assertEquals(DERIVED_POOL_SUB_KEY, pools.get(0).getSubscriptionSubKey());
     }
 
     @Test
-    public void cantCreateMasterPoolFromDerivedPoolTest() {
+    public void cantCreatePrimaryPoolFromDerivedPoolTest() {
         Product product = TestUtil.createProduct();
         List<Pool> existingPools = new ArrayList<>();
-        Pool masterPool = TestUtil.createPool(product);
-        masterPool.setSubscriptionSubKey("derived");
-        existingPools.add(masterPool);
+        Pool primaryPool = TestUtil.createPool(product);
+        primaryPool.setSubscriptionSubKey(DERIVED_POOL_SUB_KEY);
+        existingPools.add(primaryPool);
 
         assertThrows(IllegalStateException.class,
-            () -> poolRules.createAndEnrichPools(masterPool, existingPools));
+            () -> poolRules.createAndEnrichPools(primaryPool, existingPools));
     }
 
     @Test

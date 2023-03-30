@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller;
 
+import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.anyMap;
@@ -53,7 +54,6 @@ import java.util.List;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class RefresherTest {
-
     private CandlepinPoolManager poolManager;
     private SubscriptionServiceAdapter subAdapter;
     private ProductServiceAdapter prodAdapter;
@@ -111,7 +111,7 @@ public class RefresherTest {
         product.setUuid("product uuid");
 
         Pool pool = new Pool();
-        pool.setSourceSubscription(new SourceSubscription("subId", "master"));
+        pool.setSourceSubscription(new SourceSubscription("subId", PRIMARY_POOL_SUB_KEY));
         pool.setOwner(owner);
         Subscription subscription = new Subscription();
         subscription.setId("subId");
@@ -132,7 +132,7 @@ public class RefresherTest {
 
         verify(poolManager, times(1))
             .refreshPoolsWithRegeneration(eq(subAdapter), eq(prodAdapter), eq(owner), eq(false));
-        verify(poolManager, times(0)).updatePoolsForMasterPool(anyList(),
+        verify(poolManager, times(0)).updatePoolsForPrimaryPool(anyList(),
             any(Pool.class), eq(pool.getQuantity()), eq(false), anyMap());
     }
 
@@ -144,7 +144,7 @@ public class RefresherTest {
         product2.setUuid("product id 2");
 
         Pool pool = new Pool();
-        pool.setSourceSubscription(new SourceSubscription("subId", "master"));
+        pool.setSourceSubscription(new SourceSubscription("subId", PRIMARY_POOL_SUB_KEY));
         Subscription subscription = new Subscription();
         subscription.setId("subId");
         Owner owner = TestUtil.createOwner();
@@ -159,12 +159,12 @@ public class RefresherTest {
         when(poolManager.getBySubscriptionId(owner, "subId")).thenReturn(pools);
 
         Pool mainPool = TestUtil.copyFromSub(subscription);
-        when(poolManager.convertToMasterPool(subscription)).thenReturn(mainPool);
+        when(poolManager.convertToPrimaryPool(subscription)).thenReturn(mainPool);
         refresher.add(product);
         refresher.add(product2);
         refresher.run();
 
-        verify(poolManager, times(1)).refreshPoolsForMasterPool(eq(mainPool), eq(true), eq(false),
+        verify(poolManager, times(1)).refreshPoolsForPrimaryPool(eq(mainPool), eq(true), eq(false),
             anyMap());
     }
 

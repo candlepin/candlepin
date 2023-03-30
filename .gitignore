@@ -23,7 +23,7 @@
 .vscode
 dataSources/
 
-# The main checkstyle configuration is in project_conf
+# The checkstyle configuration is in project_root/config/checkstyle
 **/.checkstyle
 **/.DS_Store
 **/.externalToolBuilders

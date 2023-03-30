@@ -35,18 +35,18 @@ import javax.inject.Inject;
 /**
  * ContentOverrideValidator utility class used to validate
  * ContentOverride and its subclasses.  Includes column length
- * checking and overrideRules to check against blacklisted
+ * checking and overrideRules to check against blocklisted
  * name overrides
  */
 public class ContentOverrideValidator {
 
-    public static final Set<String> DEFAULT_BLACKLIST = Collections.<String>unmodifiableSet(
+    public static final Set<String> DEFAULT_BLOCKLIST = Collections.<String>unmodifiableSet(
         new HashSet<String>(Arrays.asList("", "name", "label")));
-    public static final Set<String> HOSTED_BLACKLIST = Collections.<String>unmodifiableSet(
+    public static final Set<String> HOSTED_BLOCKLIST = Collections.<String>unmodifiableSet(
         new HashSet<String>(Arrays.asList("", "name", "label", "baseurl")));
 
 
-    protected final Set<String> blacklist;
+    protected final Set<String> blocklist;
 
     protected Configuration config;
     protected I18n i18n;
@@ -57,10 +57,10 @@ public class ContentOverrideValidator {
         this.i18n = i18n;
 
         if (config.getBoolean(ConfigProperties.STANDALONE, true)) {
-            this.blacklist = DEFAULT_BLACKLIST;
+            this.blocklist = DEFAULT_BLOCKLIST;
         }
         else {
-            this.blacklist = HOSTED_BLACKLIST;
+            this.blocklist = HOSTED_BLOCKLIST;
         }
     }
 
@@ -94,7 +94,7 @@ public class ContentOverrideValidator {
                         invalidLabels.add(label != null ? label : "null");
                     }
 
-                    if (name == null || this.blacklist.contains(name.toLowerCase()) ||
+                    if (name == null || this.blocklist.contains(name.toLowerCase()) ||
                         name.length() > ContentOverride.MAX_NAME_AND_LABEL_LENGTH) {
 
                         invalidProps.add(name != null ? name : "null");

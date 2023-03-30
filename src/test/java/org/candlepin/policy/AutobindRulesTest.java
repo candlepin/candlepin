@@ -14,6 +14,7 @@
  */
 package org.candlepin.policy;
 
+import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -3497,7 +3498,8 @@ public class AutobindRulesTest {
     protected Pool createPool(Owner owner, Product product, int quantity, Date startDate, Date endDate) {
         Pool p = TestUtil.createPool(owner, product, quantity);
         p.setId("testpool" + TestUtil.randomInt());
-        p.setSourceSubscription(new SourceSubscription("testsub" + TestUtil.randomInt(), "master"));
+        p.setSourceSubscription(
+            new SourceSubscription("testsub" + TestUtil.randomInt(), PRIMARY_POOL_SUB_KEY));
         p.setStartDate(startDate);
         p.setEndDate(endDate);
 

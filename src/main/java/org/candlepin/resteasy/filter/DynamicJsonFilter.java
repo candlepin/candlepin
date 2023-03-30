@@ -51,12 +51,13 @@ public class DynamicJsonFilter implements ContainerRequestFilter {
 
         if (queryParams.containsKey("filtermode")) {
             List<String> values = queryParams.get("filtermode");
-            filterData.setWhitelistMode("whitelist".equalsIgnoreCase(values.get(0)));
+            filterData.setAllowlistMode(
+                "whitelist".equalsIgnoreCase(values.get(0)) || "allowlist".equalsIgnoreCase(values.get(0)));
         }
         else {
-            // We want the list to be a blacklist by default when neither include nor exclude is
+            // We want the list to be a blocklist by default when neither include nor exclude is
             // provided, so we don't accidentally filter anything
-            filterData.setWhitelistMode(containsIncludes && !containsExcludes);
+            filterData.setAllowlistMode(containsIncludes && !containsExcludes);
         }
 
         if (containsIncludes) {

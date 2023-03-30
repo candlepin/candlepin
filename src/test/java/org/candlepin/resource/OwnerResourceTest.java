@@ -14,6 +14,8 @@
  */
 package org.candlepin.resource;
 
+import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
+import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -165,7 +167,6 @@ import javax.ws.rs.core.MultivaluedMap;
  */
 public class OwnerResourceTest extends DatabaseTestFixture {
     private static final String OWNER_NAME = "Jar Jar Binks";
-
     @Inject private CandlepinPoolManager poolManager;
     @Inject private I18n i18n;
     @Inject private OwnerResource ownerResource;
@@ -1694,7 +1695,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void updatePool() {
         Product prod = this.createProduct(owner);
         Pool pool = TestUtil.createPool(owner, prod);
-        pool.setSubscriptionSubKey("master");
+        pool.setSubscriptionSubKey(PRIMARY_POOL_SUB_KEY);
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
 
         poolDto = ownerResource.createPool(owner.getKey(), poolDto);
@@ -1723,10 +1724,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         List<Pool> pools = poolCurator.listByOwner(owner).list();
         assertEquals(2, pools.size());
-        assertTrue(pools.get(0).getSubscriptionSubKey().startsWith("master") ||
-            pools.get(1).getSubscriptionSubKey().startsWith("master"));
-        assertTrue(pools.get(0).getSubscriptionSubKey().equals("derived") ||
-            pools.get(1).getSubscriptionSubKey().equals("derived"));
+        assertTrue(pools.get(0).getSubscriptionSubKey().startsWith(PRIMARY_POOL_SUB_KEY) ||
+            pools.get(1).getSubscriptionSubKey().startsWith(PRIMARY_POOL_SUB_KEY));
+        assertTrue(pools.get(0).getSubscriptionSubKey().equals(DERIVED_POOL_SUB_KEY) ||
+            pools.get(1).getSubscriptionSubKey().equals(DERIVED_POOL_SUB_KEY));
     }
 
     @Test
@@ -1736,7 +1737,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         createProduct(prod, owner);
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setUpstreamPoolId("upstream-" + pool.getId());
-        pool.setSubscriptionSubKey("master");
+        pool.setSubscriptionSubKey(PRIMARY_POOL_SUB_KEY);
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
         poolDto = ownerResource.createPool(owner.getKey(), poolDto);
 
@@ -1745,10 +1746,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         List<Pool> pools = poolCurator.listByOwner(owner).list();
         assertEquals(2, pools.size());
-        assertTrue(pools.get(0).getSubscriptionSubKey().startsWith("master") ||
-            pools.get(1).getSubscriptionSubKey().startsWith("master"));
-        assertTrue(pools.get(0).getSubscriptionSubKey().equals("derived") ||
-            pools.get(1).getSubscriptionSubKey().equals("derived"));
+        assertTrue(pools.get(0).getSubscriptionSubKey().startsWith(PRIMARY_POOL_SUB_KEY) ||
+            pools.get(1).getSubscriptionSubKey().startsWith(PRIMARY_POOL_SUB_KEY));
+        assertTrue(pools.get(0).getSubscriptionSubKey().equals(DERIVED_POOL_SUB_KEY) ||
+            pools.get(1).getSubscriptionSubKey().equals(DERIVED_POOL_SUB_KEY));
         assertEquals(100L, pools.get(0).getQuantity().longValue());
         assertEquals(300L, pools.get(1).getQuantity().longValue());
     }
@@ -1760,7 +1761,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.createProduct(prod, owner);
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setUpstreamPoolId("upstream-" + pool.getId());
-        pool.setSubscriptionSubKey("master");
+        pool.setSubscriptionSubKey(PRIMARY_POOL_SUB_KEY);
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
         poolDto = ownerResource.createPool(owner.getKey(), poolDto);
 
@@ -1781,14 +1782,14 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         createProduct(prod, owner);
         Pool pool = TestUtil.createPool(owner, prod);
         pool.setUpstreamPoolId("upstream-" + pool.getId());
-        pool.setSubscriptionSubKey("master");
+        pool.setSubscriptionSubKey(PRIMARY_POOL_SUB_KEY);
         PoolDTO poolDto = this.modelTranslator.translate(pool, PoolDTO.class);
         ownerResource.createPool(owner.getKey(), poolDto);
         List<Pool> pools = poolCurator.listByOwner(owner).list();
 
         Pool bonusPool = null;
         for (Pool p : pools) {
-            if (p.getSubscriptionSubKey().contentEquals("derived")) {
+            if (p.getSubscriptionSubKey().contentEquals(DERIVED_POOL_SUB_KEY)) {
                 bonusPool = p;
             }
         }

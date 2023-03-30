@@ -215,7 +215,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
      * Property generator for the ValidateWithInvalidPropertyNameStandalone test
      */
     protected static Stream<String> invalidStandaloneProperties() {
-        Set<String> properties = ContentOverrideValidator.DEFAULT_BLACKLIST;
+        Set<String> properties = ContentOverrideValidator.DEFAULT_BLOCKLIST;
 
         List<String> output = new LinkedList<>();
 
@@ -249,7 +249,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
      * Property generator for the ValidateWithInvalidPropertyNameHosted test
      */
     protected static Stream<String> invalidHostedProperties() {
-        Set<String> properties = ContentOverrideValidator.HOSTED_BLACKLIST;
+        Set<String> properties = ContentOverrideValidator.HOSTED_BLOCKLIST;
 
         List<String> output = new LinkedList<>();
 

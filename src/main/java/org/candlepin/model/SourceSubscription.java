@@ -37,6 +37,9 @@ public class SourceSubscription extends AbstractHibernateObject<SourceSubscripti
     /** Name of the table backing this object in the database */
     public static final String DB_TABLE = "cp2_pool_source_sub";
 
+    public static final String PRIMARY_POOL_SUB_KEY = "master";
+    public static final String DERIVED_POOL_SUB_KEY = "derived";
+
     @Id
     @GeneratedValue(generator = "system-uuid")
     @GenericGenerator(name = "system-uuid", strategy = "uuid")

@@ -156,8 +156,7 @@ public class ImportJobTest {
         config.validate();
     }
 
-    // TODO: Update this test to use the JUnit5 exception handling once this branch catches up
-    // with master
+    // TODO: Update this test to use the JUnit5 exception handling once this branch catches up with main
     @Test
     public void testValidateNoOwner() {
         JobConfig config = ImportJob.createJobConfig()

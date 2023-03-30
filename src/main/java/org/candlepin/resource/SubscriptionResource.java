@@ -73,7 +73,7 @@ public class SubscriptionResource implements SubscriptionApi {
     public List<SubscriptionDTO> getSubscriptions() {
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
 
-        for (Pool pool : this.poolManager.getMasterPools()) {
+        for (Pool pool : this.poolManager.getPrimaryPools()) {
             subscriptions.add(this.translator.translate(pool,
                 SubscriptionDTO.class));
         }

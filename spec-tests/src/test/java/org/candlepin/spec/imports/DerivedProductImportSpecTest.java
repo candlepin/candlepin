@@ -151,7 +151,7 @@ public class DerivedProductImportSpecTest {
         EntitlementDTO distEnt = ApiClient.MAPPER.convertValue(distConsumerClient2.consumers().bindPool(
             distConsumer2.getUuid(), poolToBind.get().getId(), 1).get(0), EntitlementDTO.class);
 
-        // use entitlement to get subscription cert back at master pool
+        // use entitlement to get subscription cert back at primary pool
         assertThat(client.entitlements().getUpstreamCert(distEnt.getId()))
             .startsWith("-----BEGIN CERTIFICATE-----");
     }

@@ -583,12 +583,12 @@ public class ConditionalContentSpecTest {
         adminClient.ownerProducts().addContent(ownerKey, engProd2.getId(), engProd2Content.getId(), true);
         adminClient.ownerProducts().addContent(ownerKey, engProd1.getId(), engProd1Content.getId(), true);
 
-        // Creating master pool for prod2
+        // Creating primary pool for prod2
         PoolDTO prod2Pool = adminClient.owners().createPool(ownerKey, Pools.random(prod2)
             .providedProducts(Set.of(Products.toProvidedProduct(engProd2)))
             .locked(true));
 
-        // Create master pool for prod1
+        // Create primary pool for prod1
         PoolDTO prod1Pool = adminClient.owners().createPool(ownerKey, Pools.random(prod1)
             .providedProducts(Set.of(Products.toProvidedProduct(engProd1)))
             .locked(true));
@@ -667,12 +667,12 @@ public class ConditionalContentSpecTest {
         adminClient.ownerProducts().addContent(ownerKey, engProd2.getId(), engProd2Content.getId(), true);
         adminClient.ownerProducts().addContent(ownerKey, engProd1.getId(), engProd1Content.getId(), true);
 
-        // Creating master pool for prod2
+        // Creating primary pool for prod2
         PoolDTO prod2Pool = adminClient.owners().createPool(ownerKey, Pools.random(prod2)
             .providedProducts(Set.of(Products.toProvidedProduct(engProd2)))
             .locked(true));
 
-        // Create master pool for prod1
+        // Create primary pool for prod1
         PoolDTO prod1Pool = adminClient.owners().createPool(ownerKey, Pools.random(prod1)
             .providedProducts(Set.of(Products.toProvidedProduct(engProd1)))
             .locked(true));

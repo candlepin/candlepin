@@ -14,6 +14,7 @@
  */
 package org.candlepin.sync;
 
+import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
@@ -139,7 +140,7 @@ public class SubscriptionReconcilerTest {
             .setUpstreamEntitlementId(sub.getUpstreamEntitlementId());
 
         if (sub.getId() != null) {
-            pool.setSourceSubscription(new SourceSubscription(sub.getId(), "master"));
+            pool.setSourceSubscription(new SourceSubscription(sub.getId(), PRIMARY_POOL_SUB_KEY));
         }
 
         return pool;
@@ -149,7 +150,7 @@ public class SubscriptionReconcilerTest {
      * Creates a pool with the properties of each incoming subscription. This is partially
      * being used due to the original test suite comparing existing local subscriptions
      * to incoming subscriptions. Today we don't have local subscriptions, only the
-     * master pools they created.
+     * primary pools they created.
      *
      * TODO: Might be worth switching from copying data of a subscription to just creating
      * the local pool with params.

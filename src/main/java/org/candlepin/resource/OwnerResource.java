@@ -14,6 +14,8 @@
  */
 package org.candlepin.resource;
 
+import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
+
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
@@ -1263,7 +1265,7 @@ public class OwnerResource implements OwnerApi {
         for (Pool pool : this.poolManager.listPoolsByOwner(owner).list()) {
 
             SourceSubscription srcsub = pool.getSourceSubscription();
-            if (srcsub != null && "master".equalsIgnoreCase(srcsub.getSubscriptionSubKey())) {
+            if (srcsub != null && PRIMARY_POOL_SUB_KEY.equalsIgnoreCase(srcsub.getSubscriptionSubKey())) {
                 subscriptions.add(this.translator.translate(pool, SubscriptionDTO.class));
             }
         }
@@ -1415,7 +1417,7 @@ public class OwnerResource implements OwnerApi {
         }
 
         // Apply changes to the pool and its derived pools
-        this.poolManager.updateMasterPool(newPool);
+        this.poolManager.updatePrimaryPool(newPool);
 
         Owner owner = newPool.getOwner();
         log.debug("Synchronizing last content update for org: {}", owner);
