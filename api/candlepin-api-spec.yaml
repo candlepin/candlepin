@@ -35,20 +35,17 @@ paths:
 
   /admin/init:
     get:
+      deprecated: true
       description: |
-        Initializes the Candlepin database. Currently this just
-        creates the admin user for standalone deployments using the
-        default user service adapter. It must be called once after
-        candlepin is installed, repeat calls are not required, but
-        will be harmless. The String returned is the description if
-        the db was or already is initialized.
+        Deprecated. Formerly used to finish deployment by creating a default admin user in select
+        environments, but no longer performs any action. Will be removed entirely in a future release.
       tags:
         - admin
       operationId: initialize
       security: [ ]
       responses:
         200:
-          description: Candlepin successfully initialized.
+          description: always returns a 200
           content:
             text/plain:
               schema:

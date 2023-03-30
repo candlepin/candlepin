@@ -41,6 +41,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -52,7 +53,7 @@ import javax.inject.Inject;
  * for user creation and persistence.
  */
 public class DefaultUserServiceAdapter implements UserServiceAdapter {
-    private static Logger log = LoggerFactory.getLogger(DefaultUserServiceAdapter.class);
+    private static final Logger log = LoggerFactory.getLogger(DefaultUserServiceAdapter.class);
 
     private UserCurator userCurator;
     private RoleCurator roleCurator;
@@ -65,11 +66,26 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         PermissionBlueprintCurator permissionCurator, OwnerCurator ownerCurator,
         PermissionFactory permissionFactory) {
 
-        this.userCurator = userCurator;
-        this.roleCurator = roleCurator;
-        this.permissionCurator = permissionCurator;
-        this.ownerCurator = ownerCurator;
-        this.permissionFactory = permissionFactory;
+        this.userCurator = Objects.requireNonNull(userCurator);
+        this.roleCurator = Objects.requireNonNull(roleCurator);
+        this.permissionCurator = Objects.requireNonNull(permissionCurator);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.permissionFactory = Objects.requireNonNull(permissionFactory);
+
+        this.createDefaultAdminUser();
+    }
+
+    /**
+     * Creates the default super-admin user "admin" if no other users exist in the backing user data
+     * store.
+     */
+    private void createDefaultAdminUser() {
+        if (this.userCurator.getUserCount() == 0) {
+            log.info("Creating default super-admin user");
+
+            User adminUser = new User("admin", "admin", true);
+            this.createUser(adminUser);
+        }
     }
 
     /**

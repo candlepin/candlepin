@@ -62,6 +62,7 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.OwnerInfoCurator;
 import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.PermissionBlueprint;
+import org.candlepin.model.PermissionBlueprintCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
@@ -151,6 +152,7 @@ public class DatabaseTestFixture {
     @Inject protected OwnerCurator ownerCurator;
     @Inject protected OwnerInfoCurator ownerInfoCurator;
     @Inject protected OwnerProductCurator ownerProductCurator;
+    @Inject protected PermissionBlueprintCurator permissionBlueprintCurator;
     @Inject protected ProductCertificateCurator productCertificateCurator;
     @Inject protected ProductCurator productCurator;
     @Inject protected ContentAccessCertificateCurator caCertCurator;
