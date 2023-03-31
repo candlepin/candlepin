@@ -31,24 +31,41 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
+import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import javax.inject.Inject;
 
 
 /**
  * UserResourceTest
  */
 public class UserResourceTest extends DatabaseTestFixture {
-    @Inject private UserResource resource;
+
+    private UserServiceAdapter userServiceAdapter;
+    private UserResource userResource;
+
+    @BeforeEach
+    public void init() throws Exception {
+        super.init();
+
+        // This test suite relies upon the resource being backed by the default user service
+        this.userServiceAdapter = new DefaultUserServiceAdapter(this.userCurator, this.roleCurator,
+            this.permissionBlueprintCurator, this.ownerCurator, this.permissionFactory);
+
+        this.userResource = new UserResource(this.userServiceAdapter, this.i18n, this.ownerCurator,
+            this.modelTranslator);
+    }
 
     @Test
     public void testCreateUser() {
@@ -60,7 +77,7 @@ public class UserResourceTest extends DatabaseTestFixture {
         User existing = this.userCurator.findByLogin(dto.getUsername());
         assertNull(existing);
 
-        UserDTO output = this.resource.createUser(dto);
+        UserDTO output = this.userResource.createUser(dto);
 
         assertNotNull(output);
         assertEquals(dto.getUsername(), output.getUsername());
@@ -84,7 +101,7 @@ public class UserResourceTest extends DatabaseTestFixture {
             .password("banana")
             .superAdmin(true);
 
-        assertThrows(BadRequestException.class, () -> this.resource.createUser(dto));
+        assertThrows(BadRequestException.class, () -> this.userResource.createUser(dto));
     }
 
     @Test
@@ -96,7 +113,7 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         this.userCurator.create(user);
 
-        UserDTO output = this.resource.getUserInfo(user.getUsername());
+        UserDTO output = this.userResource.getUserInfo(user.getUsername());
 
         assertNotNull(output);
         assertEquals(output.getUsername(), user.getUsername());
@@ -115,7 +132,7 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         this.userCurator.create(user);
 
-        assertThrows(NotFoundException.class, () -> this.resource.getUserInfo("no such user"));
+        assertThrows(NotFoundException.class, () -> this.userResource.getUserInfo("no such user"));
     }
 
     @Test
@@ -127,7 +144,7 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         this.userCurator.create(user);
 
-        assertThrows(BadRequestException.class, () -> this.resource.getUserInfo(null));
+        assertThrows(BadRequestException.class, () -> this.userResource.getUserInfo(null));
     }
 
     // test lookup doesn't exist
@@ -135,8 +152,9 @@ public class UserResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testListAllUsers() {
+        // Impl note: the DefaultUserServiceAdapter (which is backing this test suite) automatically
+        // creates an admin user at build time, so we need to account for that here.
         int userCount = 5;
-
         for (int i = 0; i < userCount; ++i) {
             User user = new User();
             user.setUsername("test-user-" + i);
@@ -146,24 +164,31 @@ public class UserResourceTest extends DatabaseTestFixture {
             this.userCurator.create(user);
         }
 
-        Stream<UserDTO> response = this.resource.listUsers();
+        Map<String, User> existingUsers = new HashMap<>();
+        for (User user : this.userCurator.listAll()) {
+            assertFalse(existingUsers.containsKey(user.getUsername()));
+            existingUsers.put(user.getUsername(), user);
+        }
+
+        Stream<UserDTO> response = this.userResource.listUsers();
 
         assertNotNull(response);
 
         List<UserDTO> users = response.collect(Collectors.toList());
+        assertEquals(existingUsers.size(), users.size());
 
-        assertEquals(userCount, users.size());
+        for (UserDTO userDto : users) {
+            assertNotNull(userDto);
+            assertNotNull(userDto.getUsername());
 
-        for (UserDTO user : users) {
-            assertNotNull(user);
+            User existingUser = existingUsers.get(userDto.getUsername());
 
-            assertNotNull(user.getUsername());
-            assertTrue(user.getUsername().startsWith("test-user-"));
+            assertNotNull(existingUser);
+            assertEquals(existingUser.getUsername(), userDto.getUsername());
+            assertEquals(existingUser.isSuperAdmin(), userDto.getSuperAdmin());
 
             // This better be null
-            assertNull(user.getPassword());
-
-            assertTrue(user.getSuperAdmin());
+            assertNull(userDto.getPassword());
         }
     }
 
@@ -189,7 +214,7 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         // Requesting the list of owners for this user should assume ALL, and not
         // return owner2:
-        Stream<OwnerDTO> response = this.resource.listUserOwners(user.getUsername());
+        Stream<OwnerDTO> response = this.userResource.listUserOwners(user.getUsername());
 
         assertNotNull(response);
 
@@ -215,7 +240,7 @@ public class UserResourceTest extends DatabaseTestFixture {
         owner1Role.addUser(user);
         roleCurator.create(owner1Role);
 
-        Stream<OwnerDTO> response = this.resource.listUserOwners(user.getUsername());
+        Stream<OwnerDTO> response = this.userResource.listUserOwners(user.getUsername());
         assertNotNull(response);
 
         List<OwnerDTO> owners = response.collect(Collectors.toList());
@@ -233,7 +258,7 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         this.userCurator.create(user);
 
-        this.resource.deleteUser(user.getUsername());
+        this.userResource.deleteUser(user.getUsername());
 
         User existing = this.userCurator.findByLogin(user.getUsername());
         assertNull(existing);
@@ -248,7 +273,7 @@ public class UserResourceTest extends DatabaseTestFixture {
 
         this.userCurator.create(user);
 
-        assertThrows(NotFoundException.class, () -> this.resource.deleteUser("no such user"));
+        assertThrows(NotFoundException.class, () -> this.userResource.deleteUser("no such user"));
     }
 
     @Test
@@ -263,7 +288,7 @@ public class UserResourceTest extends DatabaseTestFixture {
         UserDTO update = new UserDTO()
             .username("Luke");
 
-        UserDTO result = this.resource.updateUser("test-user", update);
+        UserDTO result = this.userResource.updateUser("test-user", update);
 
         assertEquals("Luke", result.getUsername());
         assertFalse(result.getSuperAdmin());
@@ -288,7 +313,7 @@ public class UserResourceTest extends DatabaseTestFixture {
         UserDTO update = new UserDTO()
             .password("Skywalker");
 
-        UserDTO result = this.resource.updateUser("test-user", update);
+        UserDTO result = this.userResource.updateUser("test-user", update);
 
         assertEquals("test-user", result.getUsername());
         assertFalse(result.getSuperAdmin());
@@ -313,7 +338,7 @@ public class UserResourceTest extends DatabaseTestFixture {
         UserDTO update = new UserDTO()
             .superAdmin(true);
 
-        UserDTO result = this.resource.updateUser("test-user", update);
+        UserDTO result = this.userResource.updateUser("test-user", update);
 
         assertEquals("test-user", result.getUsername());
         assertTrue(result.getSuperAdmin());
@@ -332,6 +357,6 @@ public class UserResourceTest extends DatabaseTestFixture {
             .username("henri")
             .password("password");
 
-        assertThrows(NotFoundException.class, () -> this.resource.updateUser("JarJarIsMyCopilot", dto));
+        assertThrows(NotFoundException.class, () -> this.userResource.updateUser("JarJarIsMyCopilot", dto));
     }
 }

@@ -15,17 +15,11 @@
 package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
 import org.candlepin.dto.api.server.v1.QueueStatus;
-import org.candlepin.model.User;
-import org.candlepin.model.UserCurator;
-import org.candlepin.service.UserServiceAdapter;
-import org.candlepin.service.impl.DefaultUserServiceAdapter;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,41 +27,26 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
+
+
 /**
  * AdminResourceTest
  */
 public class AdminResourceTest {
 
-    private UserServiceAdapter usa;
     private AdminResource ar;
-    private UserCurator uc;
     private EventSink sink;
 
     @BeforeEach
     public void init() {
-        usa = mock(DefaultUserServiceAdapter.class);
-        uc = mock(UserCurator.class);
         sink = mock(EventSink.class);
-        ar = new AdminResource(usa, uc, sink);
+        ar = new AdminResource(sink);
     }
 
     @Test
     public void initialize() {
-        when(uc.getUserCount()).thenReturn(0L);
-        assertEquals("Initialized!", ar.initialize());
-        verify(usa).createUser(any(User.class));
-    }
-
-    @Test
-    public void initWithNonDefaultUserService() {
-        ar = new AdminResource(mock(UserServiceAdapter.class), uc, null);
-        assertEquals("Already initialized.", ar.initialize());
-    }
-
-    @Test
-    public void alreadyInitialized() {
-        when(uc.getUserCount()).thenReturn(1000L);
-        assertEquals("Already initialized.", ar.initialize());
+        // Should always no-op and return the default "already initialized" string
+        assertEquals("Already initialized.", this.ar.initialize());
     }
 
     @Test

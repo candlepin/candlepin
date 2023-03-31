@@ -42,6 +42,7 @@ import org.junit.jupiter.api.Test;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -72,11 +73,23 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
 
     @Test
     public void testFindAllUsers() {
+        List<? extends UserInfo> users = this.service.listUsers();
+
+        // The default super-admin is always created by default, and should be present
+        assertEquals(1, users.size());
+        assertEquals("admin", users.get(0).getUsername());
+
         User user = new User("test_user", "mypassword");
         this.service.createUser(user);
-        List<? extends UserInfo> users = this.service.listUsers();
-        assertEquals(1, users.size());
-        assertEquals("test_user", users.get(0).getUsername());
+
+        users = this.service.listUsers();
+        assertEquals(2, users.size());
+
+        Set<String> usernames = users.stream()
+            .map(UserInfo::getUsername)
+            .collect(Collectors.toSet());
+
+        assertEquals(Set.of("admin", "test_user"), usernames);
     }
 
     @Test
@@ -107,10 +120,6 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
         Role adminRole = createAdminRole(owner);
         adminRole.addUser(user);
         roleCurator.create(adminRole);
-
-        //List<Owner> owners = this.service.getOwners("test_name");
-        //Assert.assertEquals(1, owners.size());
-        //Assert.assertEquals(owner, owners.get(0));
     }
 
     @Test
