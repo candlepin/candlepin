@@ -93,12 +93,16 @@ pipeline {
                     environment {
                         CANDLEPIN_DATABASE = 'postgresql'
                         OS_IMAGE = 'cs9'
-                        CP_TEST_ARGS = '-r'
+                        CP_TEST_ARGS = '-d'
                     }
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
                         sh 'sh jenkins/spec-tests.sh'
+                        script {
+                           def output = sh(returnStdout: true, script: 'sudo podman port "$STAGE_NAME-$BUILD_TAG-candlepin" 8443 | awk -F: \'{print $2}\'')
+                           sh "./gradlew spec -Dspec.test.client.port=${output}"
+                        }
                     }
                     post {
                         always {
@@ -113,12 +117,16 @@ pipeline {
                     agent { label 'candlepin' }
                     environment {
                         CANDLEPIN_DATABASE = 'mysql'
-                        CP_TEST_ARGS = '-r'
+                        CP_TEST_ARGS = '-d'
                     }
                     steps {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
                         sh 'sh jenkins/spec-tests.sh'
+                        script {
+                           def output = sh(returnStdout: true, script: 'sudo podman port "$STAGE_NAME-$BUILD_TAG-candlepin" 8443 | awk -F: \'{print $2}\'')
+                           sh "./gradlew spec -Dspec.test.client.port=${output}"
+                        }
                     }
                     post {
                         always {
@@ -139,6 +147,10 @@ pipeline {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
                         sh 'sh jenkins/spec-tests.sh'
+                        script {
+                           def output = sh(returnStdout: true, script: 'sudo podman port "$STAGE_NAME-$BUILD_TAG-candlepin" 8443 | awk -F: \'{print $2}\'')
+                           sh "./gradlew spec -Dspec.test.client.port=${output}"
+                        }
                     }
                     post {
                         always {
@@ -159,6 +171,10 @@ pipeline {
                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
                         checkout scm
                         sh 'sh jenkins/spec-tests.sh'
+                        script {
+                           def output = sh(returnStdout: true, script: 'sudo podman port "$STAGE_NAME-$BUILD_TAG-candlepin" 8443 | awk -F: \'{print $2}\'')
+                           sh "./gradlew spec -Dspec.test.client.port=${output}"
+                        }
                     }
                     post {
                         always {

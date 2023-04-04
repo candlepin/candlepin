@@ -23,8 +23,7 @@ case $OS_IMAGE in
   cs8) IMAGE="-o cs8";;
 esac
 
-./containers/test $TEST_DB $IMAGE -c "cp-test ${CP_TEST_ARGS} -c ${CHANGE_BRANCH}" -n "${STAGE_NAME}-${BUILD_TAG}"
+sudo ./containers/test $TEST_DB $IMAGE -c "cp-test $CP_TEST_ARGS -c ${CHANGE_BRANCH} -j 17" -n "${STAGE_NAME}-${BUILD_TAG}"
 RETVAL=$?
 sudo chown -R jenkins:jenkins $WORKSPACE
-mv $WORKSPACE/artifacts "${WORKSPACE}/${STAGE_NAME}-artifacts"
 exit $RETVAL

@@ -29,73 +29,6 @@ export AUTOCONF=1
 export FORCECERT=1
 export UNITTEST=0
 
-build_clean() {
-    ./gradlew clean
-}
-build_lint() {
-    ./gradlew checkstyleMain checkstyleTest
-}
-
-validate_translation() {
-    ./gradlew validate_translation
-}
-
-sonarqube_upload() {
-    #Adding the cert to the keystore.
-    add_cert_to_keystore
-
-    if [ -n "$CHANGE_ID" ] && [ -n "$CHANGE_TARGET" ]; then
-      echo "Uploading PR to SonarQube server"
-      ./gradlew --no-daemon test --fail-fast sonarqube -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.pullrequest.branch=${BRANCH_NAME} -Dsonar.pullrequest.key=${CHANGE_ID} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.projectKey=chainsaw:candlepin-server
-    else
-      echo "Uploading branch to SonarQube server"
-      ./gradlew --no-daemon test --fail-fast sonarqube -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.branch.name=${BRANCH_NAME}  -Dsonar.projectKey=chainsaw:candlepin-server
-    fi
-}
-
-add_cert_to_keystore() {
-  KEYSTORE_PATH=""
-
-  # Covert sonar.crt to DER format
-  openssl x509 -in "/run/secrets/sonar_crt" -inform pem -out "ca.der" -outform der
-
-  KEYSTORE_PATH="${JAVA_HOME}/lib/security/cacerts"
-
-  # Importing root cert to the JVM trust store
-  keytool -importcert -noprompt -alias startssl -keystore "${KEYSTORE_PATH}" -storepass changeit -file "ca.der"
-
-  rm ca.der
-}
-
-build_unittest() {
-    ./gradlew test;
-}
-
-build_rspec() {
-    RSPEC_FILTER=$1
-
-    GRADLE_ARGS=""
-    if [ -n "$RSPEC_FILTER" ]; then
-        GRADLE_ARGS="--spec ${RSPEC_FILTER}"
-    fi
-
-    GRADLE_ARGS="${GRADLE_ARGS} --no-file"
-
-    ./gradlew rspec ${GRADLE_ARGS}
-}
-
-build_spec() {
-    # TODO: Add support for filtering spec tests once it's supported
-
-    # Check that both gradlew exists and the task exists
-    if ! test -f ./gradlew || ! ./gradlew tasks | grep -q "^spec\b"; then
-        echo "Warning: Java spec tests not found"
-        return;
-    fi
-
-    ./gradlew spec
-}
-
 trapex() {
     target="$1"
     shift
@@ -104,48 +37,6 @@ trapex() {
         trap "$target $sig" "$sig"
         signals="$signals $sig"
     done
-}
-
-move_artifact() {
-    if [ -f "$1" ] && [ -d "$2" ]; then
-        cp -v "$1" "$2" || true
-    fi
-}
-
-collect_artifacts() {
-    # If the caller mounted a volume at /artifacts, copy server logs out:
-    ARTIFACT_DIR="/candlepin-dev/artifacts/"
-
-    # We only want these from /var/log/candlepin
-    CANDLEPIN_LOGS=(
-        access.log
-        audit.log
-        candlepin.log
-        error.log
-        lint.log
-        unit_tests.log
-        spec.log
-        rspec.log
-        translation.log
-        sonarqube_upload.log
-    )
-    # prepend full file path for maximum lazy typers
-    for ((i=0; i<${#CANDLEPIN_LOGS[*]}; i++)); do
-        CANDLEPIN_LOGS[${i}]="/var/log/candlepin/${CANDLEPIN_LOGS[${i}]}"
-    done
-
-    TOMCAT_LOGS=$(find /var/log/tomcat/ -maxdepth 1 -type f)
-    ARCHIVE_LOGS=("${CANDLEPIN_LOGS[@]}" "${TOMCAT_LOGS[@]}")
-
-    if [ -d "${ARTIFACT_DIR}" ]; then
-        echo "Collecting artifacts..."
-
-        # It's entirely possible for these to not exist, so we'll copy them if we can, but if we
-        # fail, we shouldn't abort
-        for i in ${ARCHIVE_LOGS[@]}; do
-            move_artifact "${i}" "${ARTIFACT_DIR}"
-        done
-    fi
 }
 
 # Be sure to run cleanup on any error, SIGINT, or SIGTERM
@@ -160,19 +51,6 @@ cleanup() {
         # Remove our traps so we don't keep trying to call this
         trap - $signals
         trap "" ERR EXIT
-
-        # Run gradle clean in our target CP directory
-        if [ "$CLEAN_CP" == "1" ]; then
-            cd $CP_HOME
-            build_clean
-        fi
-
-        # Collect artifacts up to this point. If we're about to drop into a shell, we'll leave any
-        # additional artifact collection up to the user
-        collect_artifacts
-
-        # Remove our tee pipe, if it exists
-        rm -f /tmp/teepipe
 
         # Errors in the script should still launch the shell, as they're likely CP config errors, not
         # actual errors with the script
@@ -206,31 +84,18 @@ OPTIONS:
   -d                deploy a live candlepin
   -t                populate Candlepin database with test data (implies -d)
   -R                populate Candlepin environment with test repositories (implies -t)
-  -r [filter]       run spec test suite (implies -d); may be filtered by test
-                    suite and name
-  -H                run spec tests in "hosted" mode (implies -r and -d)
-  -u                run unit test suite N number of times, where N is number
-                    of times u was specifed in the arguments
-  -l                run the linters against the code
+  -H                run in "hosted" mode (implies -d)
   -s                run a bash shell when done
   -c <ref>          git reference to checkout
   -j <version>      use a specific Java version instead of the auto-detected default
   -v                enable verbose/debug output
-  -i                internationalization - validate translation files
   -k                run cloud registration spec test suite (only for "hosted" mode)
-  -n                uploading PR/Branch on SonarQube server
-                    Below arguments are passed:
-                    1) SONAR_HOST_URL
-                    2) BRANCH_NAME, branch to be analyzed
-                    3) CHANGE_ID, pull request ID (when Uploading PR)
-                    4) CHANGE_TARGET, pull request target branch (when Uploading PR)
   -a <arguments>    extra arguments to pass to the Candlepin deploy script (implies -d)
 HELP
 }
 
 JAVA_VERSION=17
-ARGV=("$@")
-while getopts ":dtRqrHulskic:a:vj:n" opt; do
+while getopts ":dtRqHskic:a:vj:" opt; do
     case $opt in
         d  ) DEPLOY="1";;
         t  )
@@ -242,45 +107,21 @@ while getopts ":dtRqrHulskic:a:vj:n" opt; do
             TESTDATA="1"
             REPODATA="1"
             ;;
-        r  )
-            SPEC_TESTS="1"
-            DEPLOY="1"
-
-            ARG="${ARGV[$OPTIND - 1]}"
-            if [ "${ARG:0:1}" != "-" ] && [ "${ARG:0:1}" != "" ]; then
-                SPEC_FILTER="$ARG"
-                OPTIND=$((OPTIND + 1))
-            fi
-            ;;
         H  )
             HOSTED="1"
-            SPEC_TESTS="1"
             DEPLOY="1"
-            ;;
-        u  ) UNITTEST=$((UNITTEST + 1))
-
-            ARG="${ARGV[$OPTIND - 1]}"
-            if [ "${ARG:0:1}" != "-" ] && [ "${ARG:0:1}" != "" ]; then
-                UNITTEST_FILTER="$ARG"
-                OPTIND=$((OPTIND + 1))
-            fi
             ;;
         a  ) EX_ARGS="${EX_ARGS} ${OPTARG}"
             DEPLOY="1"
             ;;
-        l  ) LINTER="1";;
         s  ) LAUNCHSHELL="1";;
         c  ) CHECKOUT="${OPTARG}";;
         v  ) VERBOSE="1";;
         j  ) JAVA_VERSION="${OPTARG}";;
-        i  ) TRANSLATE="1";;
         k  ) CLOUD_AUTH_SPEC="1";;
-        n  ) SONARQUBE="1";;
         ?  ) usage; exit;;
     esac
 done
-
-shift $(($OPTIND - 1))
 
 # Pass volume with container run mounted at this location if you'd like to
 # run against your source checkout.
@@ -308,24 +149,6 @@ else
         echo "Checking out: $CHECKOUT"
         git checkout "$CHECKOUT"
     fi
-fi
-
-
-# Candlpin project restructuring
-# We need to correctly set the project home path.
-# We define CP_NEW_STRUCTURE boolean to check if
-# we are running with new candlepin project structure.
-# In new candlepin project structure, candlepin.spec.tmpl
-# file is moved to project root.
-CP_NEW_STRUCTURE=true
-PROJECT_DIR="."
-
-if [ ! -f candlepin.spec.tmpl ]; then
-  CP_NEW_STRUCTURE=false
-  PROJECT_DIR=$CP_HOME/server
-  echo "This build is running with OLD Candlepin project structure."
-else
-  echo "This build is running with NEW Candlepin project structure."
 fi
 
 if [ -n "${JAVA_VERSION}" ]; then
@@ -357,67 +180,7 @@ if [ -f /usr/bin/supervisord ]; then
     /usr/bin/supervisord -c /etc/supervisord.conf
 fi
 
-# Make sure we update the ruby bundle:
-if [ ! -f ./gradlew ]; then
-    bundle install --without=proton
-fi
-
 mkdir -p /var/log/candlepin
-
-# Setup our tee pipe
-mkfifo /tmp/teepipe
-
-if [ "$LINTER" == "1" ]; then
-    echo "Running linter..."
-    CLEAN_CP=1
-
-    cd $CP_HOME
-    tee /var/log/candlepin/lint.log < /tmp/teepipe &
-    build_lint > /tmp/teepipe 2>&1
-fi
-
-if [ "$TRANSLATE" == "1" ]; then
-    echo "Running validator for translated files..."
-    CLEAN_CP=1
-
-    cd $CP_HOME
-    tee /var/log/candlepin/translation.log < /tmp/teepipe &
-    validate_translation > /tmp/teepipe 2>&1
-fi
-
-if [ "$SONARQUBE" == "1" ]; then
-    echo "About to upload code to SonarQube server..."
-    CLEAN_CP=1
-
-    SONAR_HOST_URL=$1 # SONARQUBE Host URL
-    BRANCH_NAME=$2    # The branch to analyze
-    CHANGE_ID=$3      # If PR needs to be uploaded, accept the pull request ID
-    CHANGE_TARGET=$4  # If PR needs to be uploaded, accept the pull request target branch
-
-    tee /var/log/candlepin/sonarqube_upload.log < /tmp/teepipe &
-    sonarqube_upload > /tmp/teepipe 2>&1
-fi
-
-if [ "$UNITTEST" -gt 0 ]; then
-    echo "Running unit tests $UNITTEST time(s)"
-    CLEAN_CP=1
-
-    UTCMD="test"
-    cd $CP_HOME
-    if [ -n "${UNITTEST_FILTER}" ]; then
-        UTCMD="${UTCMD}:${UNITTEST_FILTER}"
-    fi
-
-    # run $UNITTEST time(s) to increase chance of capturing
-    # non-deterministic unit test failures.
-    for (( i=1; i<=$UNITTEST; i++ ))
-    do
-        tee /var/log/candlepin/unit_tests.log < /tmp/teepipe &
-        build_unittest $UTCMD > /tmp/teepipe 2>&1
-        rm -f /tmp/teepipe
-        mkfifo /tmp/teepipe
-    done
-fi
 
 if [ "$DEPLOY" == "1" ]; then
     echo "Deploying candlepin..."
@@ -425,11 +188,7 @@ if [ "$DEPLOY" == "1" ]; then
 
     DEPLOY_FLAGS="-g"
 
-    if [ "$SPEC_TESTS" == "1" ] && [ "$HOSTED" == "1" ] \
-        && [ "$CP_NEW_STRUCTURE" == false ] && ($PROJECT_DIR/bin/deploy '-?' | grep -q -- '-H'); then
-        DEPLOY_FLAGS="$DEPLOY_FLAGS -H -a"
-    elif [ "$SPEC_TESTS" == "1" ] && [ "$HOSTED" == "1" ] \
-        && [ "$CP_NEW_STRUCTURE" == true ] && ($PROJECT_DIR/bin/deployment/deploy '-?' | grep -q -- '-H'); then
+    if [ "$HOSTED" == "1" ] && (./bin/deployment/deploy '-?' | grep -q -- '-H'); then
         DEPLOY_FLAGS="$DEPLOY_FLAGS -H -a"
     else
         DEPLOY_FLAGS="$DEPLOY_FLAGS -a"
@@ -456,38 +215,15 @@ if [ "$DEPLOY" == "1" ]; then
     # This is valid only for hosted mode.
 
     if [ "$CLOUD_AUTH_SPEC" == "1" ] && [ "$HOSTED" == "1" ]; then
-        if [ "$CP_NEW_STRUCTURE" == false ]; then
-            python $PROJECT_DIR/bin/generate_custom_yaml.py $PROJECT_DIR
-        else
-            python $PROJECT_DIR/bin/scripts/generate_custom_yaml.py $PROJECT_DIR
-        fi
+        python ./bin/scripts/generate_custom_yaml.py .
     fi
 
     # set up the database from setup-db.sh
     # only runs if function is defined
     type -t setup_database &>/dev/null && setup_database
 
-    if [ "$CP_NEW_STRUCTURE" == true ]; then
-        $PROJECT_DIR/bin/deployment/deploy $DEPLOY_FLAGS
-    else
-        $PROJECT_DIR/bin/deploy $DEPLOY_FLAGS
-    fi
+    ./bin/deployment/deploy $DEPLOY_FLAGS
 
-    sleep 7
-fi
-
-if [ "$SPEC_TESTS" == "1" ]; then
-    echo "Running spec tests..."
-    CLEAN_CP=1
-    RSPEC_DIR="$PROJECT_DIR/spec"
-
-    tee /var/log/candlepin/spec.log < /tmp/teepipe &
-    build_spec $SPEC_FILTER > /tmp/teepipe 2>&1
-
-    if (./gradlew tasks --all | grep -qw rspec) ; then
-        tee /var/log/candlepin/rspec.log < /tmp/teepipe &
-        build_rspec $SPEC_FILTER > /tmp/teepipe 2>&1
-    fi
 fi
 
 cleanup

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 REGISTRY="quay.io/candlepin"
-TEST_CMD="/usr/bin/cp-test -t -u -r"
+TEST_CMD="/usr/bin/cp-test -d"
 DIR="$(git rev-parse --show-toplevel)/containers/"
 OPERATING_SYSTEM="cs8" # Changing this variable, change default OS
 PROJ_NAME="pod"
@@ -26,15 +26,11 @@ OPTIONS:
               and also is used as prefix for containers
   -p        use postgres
   -l        skip podman pull and use local images
-  -d        run containers detached and do not
-              automatically shut down & remove the
-              containers on the script's exit
-  -e        expose ports 8443 and 8080 to the host machine
 
 USAGE
 }
 
-while getopts ":c:mn:o:plde" opt; do
+while getopts ":c:mn:o:pl" opt; do
   case $opt in
     c) TEST_CMD="$OPTARG";;
     m) DB="mariadb:10.2";
@@ -44,8 +40,6 @@ while getopts ":c:mn:o:plde" opt; do
     o) OPERATING_SYSTEM=$OPTARG;;
     p) DB="postgres:12";;
     l) USE_CACHE="1";;
-    d) DETACHED="1";;
-    e) EXPOSE_PORTS="1";;
     \?)
       echo "Invalid option: -$OPTARG" >&2
       usage
@@ -62,13 +56,6 @@ done
 # PROJ_NAME should be set in a jenkins environment. It allows multiple
 #  instances of the compose to run without clobbering each other.
 cd $DIR
-
-SERVICE_PORTS_ARG=""
-if [ "$EXPOSE_PORTS" == "1" ]; then
-  SERVICE_PORTS_ARG="-p 8080:8080 -p 8443:8443"
-fi
-
-podman pod rm -f $PROJ_NAME
 
 if [ "$USE_CACHE" != "1" ]; then
   podman pull "$REGISTRY/candlepin-base-$OPERATING_SYSTEM"
@@ -105,11 +92,11 @@ fi
 
 if [[ $OPERATING_SYSTEM == cs8 ]] || [[ $OPERATING_SYSTEM == cs9 ]]; then
   podman create --name="$PROJ_NAME-candlepin" \
-     --pod $PROJ_NAME \
+     --pod "$PROJ_NAME" \
      $ENV_DATABASE \
      -v ../:/candlepin-dev \
      -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-     $SERVICE_PORTS_ARG \
+     -p 8443 \
      --net network-$PROJ_NAME \
      --network-alias candlepin \
      --privileged \
@@ -123,22 +110,11 @@ else
   exit 1
 fi
 
-
 podman pod start $PROJ_NAME
 sleep 5 # Waiting to start systemd
 
-TEST_CMD="${TEST_CMD} -j 17"
-
-if [ "$DETACHED" == "1" ]; then
-    # Run detached, and don't remove the containers
-    podman exec -d $PROJ_NAME-candlepin $TEST_CMD
-    RETVAL=$?
-  else
-    podman exec -t $PROJ_NAME-candlepin $TEST_CMD
-    RETVAL=$?
-    podman pod rm -f $PROJ_NAME
-    podman network rm network-$PROJ_NAME
-fi
+podman exec -i $PROJ_NAME-candlepin $TEST_CMD
+RETVAL=$?
 
 echo "return value: $RETVAL"
 cd -
