@@ -15,8 +15,8 @@
 package org.candlepin.guice;
 
 import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
+import static org.candlepin.config.ConfigProperties.DB_MANAGE_ON_START;
 import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
-import static org.candlepin.config.ConfigProperties.HALT_ON_LIQUIBASE_DESYNC;
 import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 import org.candlepin.async.JobManager;
@@ -43,8 +43,10 @@ import com.google.inject.util.Modules;
 import liquibase.Liquibase;
 import liquibase.changelog.ChangeSet;
 import liquibase.database.Database;
+import liquibase.database.DatabaseConnection;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
+import liquibase.exception.DatabaseException;
 import liquibase.exception.LiquibaseException;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.ResourceAccessor;
@@ -397,6 +399,23 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         registry.getEventListenerGroup(EventType.PRE_DELETE).appendListener(listenerProvider.get());
     }
 
+    public enum DBManageLevel {
+        NONE("none"),
+        REPORT("report"),
+        HALT("halt"),
+        MANAGE("manage");
+
+        private String name;
+
+        DBManageLevel(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+    }
+
     /**
      * Check the state of the database in regards to the application of changesets via Liquibase.
      *
@@ -405,11 +424,16 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
      * @throws RuntimeException if there are missing changesets or a LiqubaseException
      */
     protected void checkDbChangelog() {
-        if (!config.getBoolean(HALT_ON_LIQUIBASE_DESYNC)) {
+        log.info(String.format("Liquibase startup management set to %s",
+            config.getString(DB_MANAGE_ON_START)));
+        String liquibaseOnStart = config.getString(DB_MANAGE_ON_START).toLowerCase();
+
+        if (liquibaseOnStart == null || liquibaseOnStart.equals(DBManageLevel.NONE.getName())) {
             return;
         }
+        Liquibase liquibase = null;
         try {
-            Liquibase liquibase = getLiquibase();
+            liquibase = getLiquibase();
             List<ChangeSet> unrunChangesets = liquibase.listUnrunChangeSets(null, null);
 
             if (!unrunChangesets.isEmpty()) {
@@ -426,16 +450,44 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
                         .append(changeset.getFilePath())
                         .append('\n');
                 });
+                // all levels above None need this
+                log.warn(builder.toString());
 
-                log.error(builder.toString());
-                log.error("Please update the database");
-                log.error("Aborting Candlepin initialization...");
-
-                throw new RuntimeException("The database is missing Liquibase changeset(s)");
+                if (liquibaseOnStart.equals(DBManageLevel.REPORT.getName())) {
+                    log.warn("Please update the database");
+                }
+                else if (liquibaseOnStart.equals(DBManageLevel.HALT.getName())) {
+                    log.error("Aborting Candlepin initialization...");
+                    throw new RuntimeException("The database is missing Liquibase changeset(s)");
+                }
+                else if (liquibaseOnStart.equals(DBManageLevel.MANAGE.getName())) {
+                    log.warn("Calling liquibase to update the database");
+                    liquibase.update();
+                    log.warn("Update complete");
+                }
+                else {
+                    log.error("The value for 'candlepin.db.database_manage_on_startup' is invalid. " +
+                        "No action taken.");
+                }
             }
         }
         catch (LiquibaseException e) {
+            log.error("Liquibase exception: " +  e.getMessage());
             throw new RuntimeException(e);
+        }
+        finally {
+            if (liquibase != null && liquibase.getDatabase() != null) {
+                DatabaseConnection dc = liquibase.getDatabase().getConnection();
+                if (dc != null) {
+                    try {
+                        dc.rollback();
+                        dc.close();
+                    }
+                    catch (DatabaseException de) {
+                        // just go on
+                    }
+                }
+            }
         }
     }
 
@@ -460,7 +512,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
             Database database =
                 DatabaseFactory.getInstance().findCorrectDatabaseImplementation(jdbcConnection);
             ResourceAccessor accessor = new ClassLoaderResourceAccessor();
-            liquibase = new Liquibase("WEB-INF/classes/db/changelog/changelog-update.xml",
+            liquibase = new Liquibase("db/changelog/changelog-create.xml",
                 accessor, database);
         }
         catch (ReflectiveOperationException e) {
