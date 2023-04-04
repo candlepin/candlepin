@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2009 - ${YEAR} Red Hat, Inc.
+ *  Copyright (c) 2009 - 2023 Red Hat, Inc.
  *
  *  This software is licensed to you under the GNU General Public License,
  *  version 2 (GPLv2). There is NO WARRANTY for this software, express or
@@ -13,72 +13,114 @@
  *  in this software or its documentation.
  */
 
-
+import java.nio.file.Files
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.options.Option
+
+
 
 class MsgfmtExtension {
     String resource = "foo"
 }
 
 class MsgfmtTask extends DefaultTask {
+
+    private DirectoryProperty po_directory = project.objects.directoryProperty()
+        .convention(project.layout.projectDirectory.dir("po"))
+
+    private DirectoryProperty output_directory = project.objects.directoryProperty()
+        .convention(project.layout.buildDirectory.dir("msgfmt/generated_source"))
+
     @InputDirectory
-    File getInputDir() {
-        return project.file("po")
+    public DirectoryProperty getInputDirectory() {
+        return this.po_directory
+    }
+
+    @Option(option = "input", description = "Sets the input directory containing gettext .po files; defaults to <project root>/po")
+    public void setInputDirectory(String input_path) {
+        File input_dir = new File(input_path)
+
+        if (!input_dir.isDirectory() || !input_dir.canRead()) {
+            throw new GradleException("directory does not exist, is not a directory, or cannot be read: ${input_path}")
+        }
+
+        this.po_directory.set(input_dir)
     }
 
     @OutputDirectory
-    File getOutputDir() {
-        return project.file("${project.buildDir}/msgfmt/generated_source")
+    public DirectoryProperty getOutputDirectory() {
+        return this.output_directory
+    }
+
+    @Option(option = "output", description = "Sets the output directory for generated i18n source files; defaults to <project root>/msgfmt/generated_source")
+    public void setOutputDirectory(String output_path) {
+        File output_dir = new File(output_path)
+
+        if (output_dir.exists() && (!output_dir.isDirectory() || !output_dir.canWrite())) {
+            throw new GradleException("output location cannot be written to, or is not a directory: ${output_path}")
+        }
+
+        this.output_directory.set(output_dir)
     }
 
     @TaskAction
     void execute() {
-        def po_dir = project.file("po")
-        def msgfmt_target_directory = project.file("${project.buildDir}/msgfmt/generated_source")
-        def msgfmt_root_directory = new File("${project.buildDir}/msgfmt")
-        if (!msgfmt_root_directory.exists()) {
-            msgfmt_root_directory.mkdirs()
-        }
+        File po_dir = this.getInputDirectory()
+            .getAsFile()
+            .get()
 
-        def msgfmt_directory = new File("${project.buildDir}/msgfmt/source-1")
-        if (!msgfmt_directory.exists()) {
-            msgfmt_directory.mkdirs()
-        }
-        if (!msgfmt_target_directory.exists()) {
-            msgfmt_target_directory.mkdirs()
-        }
+        File output_dir = this.getOutputDirectory()
+            .getAsFile()
+            .get()
 
-        // msgfmt does not allow us to convert more than one PO file at a time due to the need
-        // to specify the locale directly for the java command.
-        // For this reason we do the initial generation in source1 & then copy over to source2
-        // Loop over all the .po files and run msgfmt for them to generate compiled message bundles form the po files
+        // Create a temporary directory that we can freely munge with temporary build artifacts
+        File build_dir = Files.createTempDirectory("msgfmt").toFile()
+        build_dir.deleteOnExit()
+
+        // Ensure our output directory exists
+        output_dir.mkdirs()
+        logger.lifecycle("Writing i18n catalog source files to: ${output_dir}")
+
+        // Impl note:
+        // msgfmt does not allow us to convert more than one .po file at a time due to the need to
+        // specify the locale directly for the Java command. For this reason we do the initial
+        // generation in the build directory and then copy the artifact the output directory.
         def extension = project.extensions.getByName("msgfmt")
         po_dir.eachFileMatch(~/.*.po/) {
             File po_file ->
-                // Remove the org directory from generated-source since the
-                // --source argument complains if it already exists
-                project.delete("${project.buildDir}/msgfmt/source-1/org")
+                logger.lifecycle("Processing file: ${po_file}")
+
+                // Ensure the the build directory is empty, as msgfmt complains if any artifacts
+                // a previous build already exist when building sources
+                project.delete(build_dir.listFiles())
 
                 def locale = po_file.name[0..<po_file.name.lastIndexOf('.')]
-                List msgfmt_args = ["--java2", "--source",
-                                    "--resource", extension.resource,
-                                    "-d", "${project.buildDir}/msgfmt/source-1",
-                                    "-l", locale,
-                                    "${po_file.canonicalPath}"
+                List msgfmt_args = [
+                    "--java2", "--source",
+                    "--resource", extension.resource,
+                    "-d", build_dir.canonicalPath,
+                    "-l", locale,
+                    po_file.canonicalPath
                 ]
+
+                logger.debug("Executing command: msgfmt ${msgfmt_args.join(" ")}")
 
                 project.exec {
                     executable "msgfmt"
                     args msgfmt_args
                 }
+
                 project.copy {
-                    from "${msgfmt_directory}"
-                    into "${msgfmt_target_directory}"
+                    from "${build_dir}"
+                    into "${output_dir}"
                 }
         }
     }
@@ -87,13 +129,14 @@ class MsgfmtTask extends DefaultTask {
 class Msgfmt implements Plugin<Project> {
     void apply(Project project) {
         project.extensions.create('msgfmt', MsgfmtExtension)
-        // Add the generated sources for all the i18n files to the main java source dirs so that they will be compiled
-        // during the normal compileJava step
-        def msgfmt_target_directory = project.file("${project.buildDir}/msgfmt/generated_source")
+        Task msgfmt_task = project.task('msgfmt', type: MsgfmtTask)
+
+        // Add the generated sources for all the i18n files to the main java source dirs so that
+        // they will be compiled during the normal compileJava step
         project.sourceSets {
-            main.java.srcDir msgfmt_target_directory
+            main.java.srcDir msgfmt_task.getOutputDirectory()
         }
-        def msgfmt_task = project.tasks.register("msgfmt", MsgfmtTask)
+
         project.compileJava.dependsOn msgfmt_task
     }
 }

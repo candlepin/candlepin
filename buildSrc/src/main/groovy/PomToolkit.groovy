@@ -203,22 +203,34 @@ class PomToolkit implements Plugin<Project> {
         def sourcesNode = configurationsNode.appendNode('sources')
         sourcesNode.appendNode('source', '${project.build.directory}/generated-sources/jpamodel/gen/java')
         sourcesNode.appendNode('source', '${project.build.directory}/generated-sources/openapi/src/gen/java')
+        sourcesNode.appendNode('source', '${project.build.directory}/generated-sources/msgfmt/gen/java')
         sourcesNode.appendNode('source', 'src/main/java')
     }
 
     private static void createGettextMavenPlugin(Node parentNode) {
         def plugin = parentNode.appendNode('plugin')
-        plugin.appendNode('groupId', 'com.googlecode.gettext-commons')
-        plugin.appendNode('artifactId', 'gettext-maven-plugin')
-        plugin.appendNode('version', '1.2.4')
+        plugin.appendNode('groupId', 'org.codehaus.mojo')
+        plugin.appendNode('artifactId', 'exec-maven-plugin')
+        plugin.appendNode('version', '3.1.0')
+
         def executionsNode = plugin.appendNode('executions')
         def executionNode = executionsNode.appendNode('execution')
-        executionNode.appendNode('phase', 'generate-resources')
+        executionNode.appendNode('phase', 'generate-sources')
+
         def goalsNode = executionNode.appendNode('goals')
-        goalsNode.appendNode('goal', 'dist')
+        goalsNode.appendNode('goal', 'exec')
+
         def configurationsNode = plugin.appendNode('configuration')
-        configurationsNode.appendNode('targetBundle', 'org.candlepin.common.i18n.Messages')
-        configurationsNode.appendNode('poDirectory', 'po')
+        configurationsNode.appendNode('executable', 'gradlew')
+        configurationsNode.appendNode('workingDirectory', '${project.basedir}')
+
+        def argumentsNode = configurationsNode.appendNode('arguments')
+        argumentsNode.appendNode('argument', 'msgfmt')
+        argumentsNode.appendNode('argument', '--no-daemon')
+        argumentsNode.appendNode('argument', '--input')
+        argumentsNode.appendNode('argument', '${project.basedir}/po')
+        argumentsNode.appendNode('argument', '--output')
+        argumentsNode.appendNode('argument', '${project.build.directory}/generated-sources/msgfmt/gen/java')
     }
 
     private static void createMavenResourcePlugin(Node parentNode) {
