@@ -25,6 +25,7 @@ import org.candlepin.async.tasks.JobCleaner;
 import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.async.tasks.OrphanCleanupJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
+import org.candlepin.guice.CandlepinContextListener;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -128,7 +129,7 @@ public class ConfigProperties {
     // Space separated list of resources to hide in GET /status
     public static final String HIDDEN_CAPABILITIES = "candlepin.hidden_capabilities";
 
-    public static final String HALT_ON_LIQUIBASE_DESYNC = "candlepin.db.halt_on_liquibase_desync";
+    public static final String DB_MANAGE_ON_START = "candlepin.db.database_manage_on_startup";
 
     // Authentication
     public static final String TRUSTED_AUTHENTICATION = "candlepin.auth.trusted.enable";
@@ -170,7 +171,11 @@ public class ConfigProperties {
     public static final String QUARTZ_CLUSTERED_MODE = "org.quartz.jobStore.isClustered";
 
     // Hibernate
+    public static final String DB_DRIVER_CLASS = JPA_CONFIG_PREFIX + "hibernate.connection.driver_class";
+    public static final String DB_URL = JPA_CONFIG_PREFIX + "hibernate.connection.url";
+    public static final String DB_USERNAME = JPA_CONFIG_PREFIX + "hibernate.connection.username";
     public static final String DB_PASSWORD = JPA_CONFIG_PREFIX + "hibernate.connection.password";
+
     // Cache
     public static final String CACHE_JMX_STATS = "cache.jmx.statistics";
     public static final String CACHE_CONFIG_FILE_URI = JPA_CONFIG_PREFIX + "hibernate.javax.cache.uri";
@@ -405,7 +410,7 @@ public class ConfigProperties {
             // submit one when registering.
             this.put(HIDDEN_RESOURCES, "environments");
             this.put(HIDDEN_CAPABILITIES, "");
-            this.put(HALT_ON_LIQUIBASE_DESYNC, "true");
+            this.put(DB_MANAGE_ON_START, CandlepinContextListener.DBManagementLevel.NONE.getName());
             this.put(SSL_VERIFY, "false");
 
             this.put(FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
