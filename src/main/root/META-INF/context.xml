@@ -1,2 +1,4 @@
 <!-- Testing repositories have to contain symlinks, when golden ticket is used -->
-<Context override="true" allowLinking="true" />
+<Context>
+    <Resources allowLinking="true"/>
+</Context>
