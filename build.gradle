@@ -1,18 +1,15 @@
 import groovy.text.GStringTemplateEngine
+import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 import org.yaml.snakeyaml.Yaml
 
 plugins {
     id "nebula.lint"
-    /*
-    The Versions plugin is used to provide the dependencyUpdates task which is used
-    to look for libraries that have newer versions available.
-     */
     id "com.github.ben-manes.versions"
-    // Openapi version is set in the buildscript block for use in the pom generation as well
     id "org.openapi.generator"
     id "java"
-    id "maven-publish"
     id "war"
+    id "distribution"
+    id "maven-publish"
     id "org.owasp.dependencycheck"
     id "jacoco"
     id "org.sonarqube"
@@ -47,7 +44,7 @@ ext {
     }
 
     if (!project.findProperty("db_host") ||
-        (project.findProperty("db_host") && "".equals(project.findProperty("db_host")))) {
+            (project.findProperty("db_host") && "".equals(project.findProperty("db_host")))) {
 
         db_host = "localhost"
     }
@@ -72,17 +69,7 @@ ext {
     external_broker = "true".equals(project.findProperty("external_broker"))
     hostedtest = "true".equals(project.findProperty("hostedtest"))
     async_scheduler_enabled = !project.findProperty("async_scheduler_enabled") ||
-        "true".equals(project.findProperty("async_scheduler_enabled"))
-
-    generatedMetamodels = "${buildDir}/generated/api/src/gen/java"
-}
-
-ext {
-    // Denotes BOM versions
-    resteasy_version = "4.4.3.Final"
-    jackson_version = "2.13.2"
-    guice_version = "5.1.0"
-    junit_version = "5.8.2"
+            "true".equals(project.findProperty("async_scheduler_enabled"))
 }
 
 dependencies {
@@ -210,7 +197,7 @@ compileJava.dependsOn(processResources)
 
 // Add the openapi generated classes to the main java source sets to compile in the generated interfaces
 sourceSets {
-    main.java.srcDir generatedMetamodels
+    main.java.srcDir "${buildDir}/generated/api/src/gen/java"
 }
 
 java {
@@ -226,7 +213,7 @@ gradleLint {
     // criticalRules = ["unused-dependency"]
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
     // options.compilerArgs << "-Xlint:deprecation"
     // options.compilerArgs.addAll(['--release', '8'])
@@ -250,9 +237,9 @@ openApiGenerate {
     outputDir = "$buildDir/generated/api"
     configOptions = [
             interfaceOnly: 'true',
-            generatePom: 'false',
-            dateLibrary: "java8",
-            useTags: "true"
+            generatePom  : 'false',
+            dateLibrary  : "java8",
+            useTags      : "true"
     ]
     templateDir = "$rootDir/buildSrc/src/main/resources/templates"
 }
@@ -261,7 +248,7 @@ openApiValidate {
     inputSpec = api_spec_path
 }
 
-task generateApiDocs(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+tasks.register('generateApiDocs', GenerateTask) {
     generatorName = "html"
     inputSpec = api_spec_path
     outputDir = "$buildDir/docs"
@@ -272,7 +259,7 @@ task generateApiDocs(type: org.openapitools.generator.gradle.plugin.tasks.Genera
     withXml = false
 }
 
-task generateOpenApiJson(type: org.openapitools.generator.gradle.plugin.tasks.GenerateTask) {
+tasks.register('generateOpenApiJson', GenerateTask) {
     generatorName = "openapi"
     inputSpec = api_spec_path
     outputDir = "$buildDir/generated/json"
@@ -331,10 +318,10 @@ tasks.register("coverage") {
 }
 
 project.tasks["sonar"].dependsOn "coverage"
-sonarqube{
-    properties{
-        property "sonar.sourceEncoding","Utf-8"
-        property "sonar.exclusions","**/*generated*"
+sonarqube {
+    properties {
+        property "sonar.sourceEncoding", "Utf-8"
+        property "sonar.exclusions", "**/*generated*"
     }
 }
 
@@ -359,7 +346,7 @@ processResources {
 }
 
 // A task to generate the the candlepin config file for use in etc or other locations.
-task generateConfig() {
+tasks.register('generateConfig') {
     dependsOn ":processResources"
     def template = file("$projectDir/config/candlepin/candlepin.conf.template")
     def targetFile = file("$buildDir/candlepin.conf")
@@ -392,7 +379,7 @@ assemble.dependsOn(generateConfig)
 
 // task to generate candlepin-api jar that Hosted adapters build against
 // invoked as `./gradlew apiJar`
-task apiJar(type: Jar) {
+tasks.register('apiJar', Jar) {
     archiveBaseName = 'candlepin-api'
     from sourceSets.main.output
     includes = [
@@ -440,51 +427,61 @@ war {
     }
 }
 
-task pom {
+tasks.register('pom') {
     dependsOn "generatePomFileForLocalPublication"
 }
 
 publishing {
-  publications {
-    local(MavenPublication) {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'org.candlepin'
+            artifactId 'candlepin'
 
-        generatePomFileForLocalPublication {
-           destination = file("./pom.xml")
+            from components.web
+            pom {
+                name = 'Candlepin'
+                description = 'Candlepin WAR'
+            }
         }
+        local(MavenPublication) {
 
-        pom {
-            description = 'The Candlepin Entitlement Engine'
-            packaging = 'war'
-            licenses {
-                license {
-                    name = 'GNU Public License (GPL) version 2.0'
-                    url = 'http://www.gnu.org/licenses/gpl-2.0.html'
-                    distribution = 'repo'
+            generatePomFileForLocalPublication {
+                destination = file("./pom.xml")
+            }
+
+            pom {
+                description = 'The Candlepin Entitlement Engine'
+                packaging = 'war'
+                licenses {
+                    license {
+                        name = 'GNU Public License (GPL) version 2.0'
+                        url = 'http://www.gnu.org/licenses/gpl-2.0.html'
+                        distribution = 'repo'
+                    }
                 }
-            }
 
-            scm {
-                connection = 'scm:git:git://github.com/candlepin/candlepin.git'
-                developerConnection = 'scm:git:git@github.com:candlepin/candlepin.git'
-            }
+                scm {
+                    connection = 'scm:git:git://github.com/candlepin/candlepin.git'
+                    developerConnection = 'scm:git:git@github.com:candlepin/candlepin.git'
+                }
 
-            pom.withXml {
-                PomToolkit.generatePomDependencies(
-                    asNode(),
-                    configurations.compileOnly.dependencies,
-                    configurations.implementation.dependencies,
-                    configurations.providedCompile.dependencies,
-                    configurations.runtimeOnly.dependencies,
-                    configurations.testImplementation.dependencies,
-                    configurations.testRuntimeOnly.dependencies
-                )
+                pom.withXml {
+                    PomToolkit.generatePomDependencies(
+                            asNode(),
+                            configurations.compileOnly.dependencies,
+                            configurations.implementation.dependencies,
+                            configurations.providedCompile.dependencies,
+                            configurations.runtimeOnly.dependencies,
+                            configurations.testImplementation.dependencies,
+                            configurations.testRuntimeOnly.dependencies
+                    )
 
-                PomToolkit.generateRepositories(asNode())
-                PomToolkit.generateBuild(asNode(), configurations.annotationProcessor.dependencies)
-                PomToolkit.generateProfiles(asNode())
-                PomToolkit.generateDependencyManagement(asNode())
+                    PomToolkit.generateRepositories(asNode())
+                    PomToolkit.generateBuild(asNode(), configurations.annotationProcessor.dependencies)
+                    PomToolkit.generateProfiles(asNode())
+                    PomToolkit.generateDependencyManagement(asNode())
+                }
             }
         }
     }
-  }
 }
