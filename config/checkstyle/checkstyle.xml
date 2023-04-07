@@ -63,7 +63,7 @@
      ##########################################################################
    -->
   <module name="RegexpHeader">
-    <property name="header" value="^/\*\*$\n^ \* Copyright \(c\) 20\d\d - 20\d\d Red Hat, Inc.$"/>
+    <property name="header" value="^/\*$\n^ \* Copyright \(c\) 20\d\d - 20\d\d Red Hat, Inc.$"/>
   </module>
   <module name="Header">
     <property name="headerFile" value="${config_loc}/HEADER.txt" />

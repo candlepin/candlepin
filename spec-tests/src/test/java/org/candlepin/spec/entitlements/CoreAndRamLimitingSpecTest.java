@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) 2009 - 2023 Red Hat, Inc.
  *
  * This software is licensed to you under the GNU General Public License,
@@ -12,7 +12,6 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.spec.entitlements;
 
 import static org.assertj.core.api.Assertions.assertThat;
