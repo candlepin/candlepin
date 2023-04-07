@@ -318,7 +318,7 @@ def generate_symlinks_for_owners(owner_names):
         try:
             log.info('  Creating symbolic link %s' % symlink_name)
             if not os.path.islink(symlink_name):
-                os.symlink(REPO_ROOT_DIR, symlink_name)
+                os.symlink('.', symlink_name)
         except OSError as err:
             log.error(
                 "Unable to create symbolic link: {link} ({err})".format(
