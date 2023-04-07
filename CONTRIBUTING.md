@@ -34,7 +34,17 @@ git config --global user.email your.email@example.com
 All submissions, including submissions by project members, need to be reviewed before being merged.
 
 ### Coding Guidelines
-TODO
+In the interest of supporting Red Hat's Conscious Language Initiative, we are discouraging the use of the  
+following terms in the code, messages, or comments. Note the alternatives we will accept:
+
+ - Whitelist -> allowlist
+ - Blacklist -> blocklist
+ - Master/Slave terminology suggestions:
+   * primary / secondary
+   * source / replica
+   * initiator, requester / responder
+   * controller, host / device, worker, proxy
+   * director / performer
 
 ### Continuous Integration
 TODO
