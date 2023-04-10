@@ -125,7 +125,7 @@ fi
 
 
 podman pod start $PROJ_NAME
-sleep 5 # Waiting to start systemd
+sleep 60 # Waiting to start systemd
 
 TEST_CMD="${TEST_CMD} -j 17"
 
