@@ -1,0 +1,12 @@
+rules:
+  - name: dummy
+  - name: sanity
+  - name: grandfathered
+  - name: man-hours
+  - name: guys
+ignore_files:
+  - CONTRIBUTING.md
+  - rel-eng/tito.props
+  - candlepin.spec.tmpl
+  - src/main/java/org/candlepin/resteasy/filter/DynamicJsonFilter.java
+  - src/main/webapp/docs/swagger*.map
