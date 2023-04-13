@@ -6,7 +6,11 @@ plugins {
 apply from: "../dependencies.gradle"
 
 repositories {
+    mavenLocal()
     mavenCentral()
+    maven { url "https://repo.jenkins-ci.org/public/" }
+    maven { url "https://repository.jboss.org/nexus/content/groups/public/" }
+    maven { url "https://oauth.googlecode.com/svn/code/maven/" }
 }
 
 description = "Candlepin Spec Tests"
