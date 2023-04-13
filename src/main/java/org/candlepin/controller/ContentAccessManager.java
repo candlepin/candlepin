@@ -67,6 +67,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import javax.inject.Inject;
 import javax.naming.ldap.Rdn;
@@ -85,7 +86,10 @@ public class ContentAccessManager {
      * utility methods for resolving, matching, and converting to database-compatible values.
      */
     public enum ContentAccessMode {
+        /** traditional entitlement mode requiring clients to consume pools to access content */
         ENTITLEMENT,
+
+        /** simple content access (SCA) mode; clients have access to all org content by default */
         ORG_ENVIRONMENT;
 
         /**
@@ -189,6 +193,43 @@ public class ContentAccessManager {
             ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
     }
 
+    /**
+     * Resolves the content access mode for the given consumer, translating the mode name assigned
+     * to a ContentAccessMode enum value. If no explicit value is defined for the consumer or its
+     * owner, this function returns the default content access mode.
+     *
+     * @param consumer
+     *  the consumer for which to fetch the content access mode
+     *
+     * @throws IllegalArgumentException
+     *  if the provided consumer is null
+     *
+     * @throws IllegalStateException
+     *  if the resolved content access mode for the consumer is invalid or otherwise cannot be
+     *  mapped to a ContentAccessMode value
+     *
+     * @return
+     *  a ContentAccessMode enum value for the given consumer
+     */
+    public static ContentAccessMode resolveContentAccessMode(Consumer consumer) {
+        if (consumer == null) {
+            throw new IllegalArgumentException("consumer is null");
+        }
+
+        Predicate<String> predicate = (str) -> str != null && !str.isEmpty();
+
+        String caMode = Util.firstOf(predicate,
+            consumer.getContentAccessMode(),
+            consumer.getOwner().getContentAccessMode());
+
+        try {
+            return ContentAccessMode.resolveModeName(caMode, true);
+        }
+        catch (IllegalArgumentException e) {
+            throw new IllegalStateException("consumer is using an invalid content access mode: " + caMode, e);
+        }
+    }
+
     private final Configuration config;
     private final PKIUtility pki;
     private final CertificateSerialCurator serialCurator;
@@ -201,6 +242,7 @@ public class ContentAccessManager {
     private final EnvironmentCurator environmentCurator;
     private final ContentAccessCertificateCurator contentAccessCertCurator;
     private final EventSink eventSink;
+
     private final boolean standalone;
 
     @Inject
@@ -599,7 +641,6 @@ public class ContentAccessManager {
         }
     }
 
-
     /**
      * Updates the content access mode state for the given owner using the updated content access mode
      * list and content access mode provided.
@@ -691,10 +732,13 @@ public class ContentAccessManager {
             owner = this.ownerCurator.merge(owner);
             ownerCurator.flush();
 
-            this.syncOwnerLastContentUpdate(owner);
-            if (isTurningOffSca(updatedMode, currentMode)) {
+            // Delete the SCA cert if we're leaving SCA mode
+            if (this.isTransitioningFrom(currentMode, updatedMode, ContentAccessMode.ORG_ENVIRONMENT)) {
                 this.contentAccessCertCurator.deleteForOwner(owner);
             }
+
+            // Update sync times & report
+            this.syncOwnerLastContentUpdate(owner);
             this.eventSink.emitOwnerContentAccessModeChanged(owner);
 
             log.info("Content access mode changed from {} to {} for owner {}", currentMode,
@@ -715,9 +759,28 @@ public class ContentAccessManager {
         return owner;
     }
 
-    private boolean isTurningOffSca(String updatedMode, String currentMode) {
-        return ContentAccessMode.ORG_ENVIRONMENT.matches(currentMode) &&
-            ContentAccessMode.ENTITLEMENT.matches(updatedMode);
+    /**
+     * Checks if the content access mode is transitioning and, if so, if it is transitioning away
+     * the target mode. That is, the current mode and updated modes are not equal, and the current
+     * mode is equal to the target mode.
+     *
+     * @param current
+     *  the current content access mode name
+     *
+     * @param updated
+     *  the updated content access mode name
+     *
+     * @param target
+     *  the targeted content access mode to check
+     *
+     * @return
+     *  true if the content access mode is transitioning away the target mode; false otherwise
+     */
+    private boolean isTransitioningFrom(String current, String updated, ContentAccessMode target) {
+        ContentAccessMode currentMode = ContentAccessMode.resolveModeName(current, true);
+        ContentAccessMode updatedMode = ContentAccessMode.resolveModeName(updated, true);
+
+        return currentMode != updatedMode && currentMode == target;
     }
 
     /**

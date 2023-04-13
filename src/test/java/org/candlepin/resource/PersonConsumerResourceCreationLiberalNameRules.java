@@ -48,8 +48,7 @@ public class PersonConsumerResourceCreationLiberalNameRules extends
         // create an owner, an ownerperm, and roles for the user we provide
         // as coming from userService
         owner = new Owner("test_owner");
-        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner,
-            Access.ALL);
+        PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner, Access.ALL);
         User user = new User("anyuser", "");
         role = new Role();
         role.addPermission(p);

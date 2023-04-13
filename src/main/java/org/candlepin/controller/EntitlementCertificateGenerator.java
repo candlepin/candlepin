@@ -314,10 +314,8 @@ public class EntitlementCertificateGenerator {
      */
     @Transactional
     public void regenerateCertificatesOf(Consumer consumer, boolean lazy) {
-        log.info(
-            "Regenerating #{}, entitlement certificates for consumer: {}",
-            consumer.getEntitlements().size(), consumer
-        );
+        log.info("Regenerating {} entitlement certificate(s) for consumer: {}",
+            consumer.getEntitlements().size(), consumer);
 
         // we need to clear the content access cert on regenerate
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());

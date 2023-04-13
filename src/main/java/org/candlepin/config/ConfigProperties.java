@@ -377,13 +377,7 @@ public class ConfigProperties {
 
             this.put(ENTITLER_BULK_SIZE, "1000");
 
-            /**
-            * These default DO_NOT_FILTER events are those events needed by
-            * other Satellite components. See sources:
-            *
-            * https://gitlab.sat.lab.tlv.redhat.com/satellite6/katello/blob/
-            * SATELLITE-6.1.0/app/lib/actions/candlepin/reindex_pool_subscription_handler.rb#L43
-            */
+            // These default DO_NOT_FILTER events are those events needed by other Satellite components.
             this.put(AUDIT_FILTER_DO_NOT_FILTER,
                 "CREATED-ENTITLEMENT," +
                 "DELETED-ENTITLEMENT," +

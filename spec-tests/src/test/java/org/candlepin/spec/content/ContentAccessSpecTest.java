@@ -537,7 +537,7 @@ public class ContentAccessSpecTest {
         assertThatCert(X509Cert.from(payloadCerts.get(0)))
             .hasEntitlementType("OrgLevel");
 
-        consumerClient.consumers().regenerateEntitlementCertificates(consumer.getUuid(), null, true);
+        consumerClient.consumers().regenerateEntitlementCertificates(consumer.getUuid(), null, true, true);
 
         export = consumerApi.exportCertificates(consumer.getUuid(), null);
         List<JsonNode> updatedCerts = CertificateUtil

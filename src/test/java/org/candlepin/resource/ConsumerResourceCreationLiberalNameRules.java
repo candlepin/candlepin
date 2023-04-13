@@ -16,17 +16,15 @@ package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.config.MapConfiguration;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-
-import java.util.HashMap;
 
 
 
@@ -37,20 +35,13 @@ import java.util.HashMap;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ConsumerResourceCreationLiberalNameRules extends ConsumerResourceCreationTest {
 
-    private static class ConfigForTesting extends MapConfiguration {
-        @SuppressWarnings("serial")
-        ConfigForTesting() {
-            super(new HashMap<String, String>() {
-                {
-                    this.put(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN, ".+");
-                    this.put(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN, ".+");
-                }
-            });
-        }
-    }
     public Configuration initConfig() {
-        Configuration config = new ConfigForTesting();
+        Configuration config = new CandlepinCommonTestConfig();
+
+        config.setProperty(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN, ".+");
+        config.setProperty(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN, ".+");
         config.setProperty(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING, "true");
+
         return config;
     }
 
