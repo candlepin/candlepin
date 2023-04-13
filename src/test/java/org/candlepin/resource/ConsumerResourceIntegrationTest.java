@@ -154,10 +154,23 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         standardSystemTypeDTO = modelTranslator.translate(standardSystemType, ConsumerTypeDTO.class);
         personType = consumerTypeCurator.create(new ConsumerType(ConsumerTypeEnum.PERSON));
         personTypeDTO = modelTranslator.translate(personType, ConsumerTypeDTO.class);
-        owner = ownerCurator.create(new Owner("test-owner"));
-        ownerDTO = modelTranslator.translate(owner, OwnerDTO.class);
-        owner.setDefaultServiceLevel(DEFAULT_SERVICE_LEVEL);
-        ownerCurator.create(owner);
+
+        this.owner = new Owner()
+            .setKey("test-owner")
+            .setDisplayName("test-owner")
+            .setDefaultServiceLevel(DEFAULT_SERVICE_LEVEL);
+
+        // Many of these tests were written before the conception of SCA mode, so explicitly set the
+        // shared owners's CA mode to entitlement. In the future, the tests should be updated to
+        // (a) not use shared data like this, and (b) be explicit about the operating mode necessary
+        // for testing a given unit.
+        this.owner.setContentAccessModeList(ContentAccessMode.ENTITLEMENT.toDatabaseValue())
+            .setContentAccessMode(ContentAccessMode.ENTITLEMENT.toDatabaseValue());
+
+        this.owner = this.ownerCurator.create(owner);
+
+        this.ownerDTO = modelTranslator.translate(owner, OwnerDTO.class);
+
         this.principalProvider = mock(PrincipalProvider.class);
         someuser = userCurator.create(new User(USER_NAME, "dontcare"));
 

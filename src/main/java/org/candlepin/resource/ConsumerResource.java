@@ -228,9 +228,11 @@ public class ConsumerResource implements ConsumerApi {
     private final ContentOverrideValidator coValidator;
     private final ConsumerContentOverrideCurator ccoCurator;
     private final EntitlementCertificateGenerator entCertGenerator;
+
+    private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
     private final Pattern consumerSystemNamePattern;
     private final Pattern consumerPersonNamePattern;
-    private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
+    private final boolean scaEntitlementCleanup;
 
     @Inject
     @SuppressWarnings({"checkstyle:parameternumber"})
@@ -309,13 +311,16 @@ public class ConsumerResource implements ConsumerApi {
         this.principalProvider = Objects.requireNonNull(principalProvider);
         this.coValidator = Objects.requireNonNull(coValidator);
         this.ccoCurator = Objects.requireNonNull(ccoCurator);
+        this.entCertGenerator = Objects.requireNonNull(entCertGenerator);
+
+        this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(
+            entitlementCurator, environmentContentCurator);
         this.consumerPersonNamePattern = Pattern.compile(config.getString(
             ConfigProperties.CONSUMER_PERSON_NAME_PATTERN));
         this.consumerSystemNamePattern = Pattern.compile(config.getString(
             ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN));
-        this.entCertGenerator = Objects.requireNonNull(entCertGenerator);
-        this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(
-            entitlementCurator, environmentContentCurator);
+
+        this.scaEntitlementCleanup = config.getBoolean(ConfigProperties.SCA_ENTITLEMENT_CLEANUP);
     }
 
     /**
@@ -2177,6 +2182,7 @@ public class ConsumerResource implements ConsumerApi {
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
         HttpServletResponse response = ResteasyContext.getContextData(HttpServletResponse.class);
         revokeOnGuestMigration(consumer);
+
         Set<Long> serialSet = this.extractSerials(serials);
         // filtering requires a null set, so make this null if it is
         // empty
@@ -2617,7 +2623,25 @@ public class ConsumerResource implements ConsumerApi {
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
         ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
+        // If consumer is in an org running in SCA mode, revoke their entitlements -- they won't be
+        // needing them anymore, apparently
+        boolean revokeEntitlements = false;
+
+        try {
+            ContentAccessMode caMode = ContentAccessManager.resolveContentAccessMode(consumer);
+            revokeEntitlements = (caMode == ContentAccessMode.ORG_ENVIRONMENT) && this.scaEntitlementCleanup;
+        }
+        catch (IllegalStateException e) {
+            // Consumer or org have an invald mode set. Assume it's not SCA.
+        }
+
+        if (revokeEntitlements) {
+            this.poolManager.revokeAllEntitlements(consumer, false);
+        }
+
         if (entitlementId != null) {
+            // TODO: This should probably verify that the consumer in the path is related to it,
+            // otherwise this belongs in another endpoint.
             Entitlement e = verifyAndLookupEntitlement(entitlementId);
             poolManager.regenerateCertificatesOf(e, lazyRegen);
         }

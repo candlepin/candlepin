@@ -263,8 +263,7 @@ class ExportSpecTest {
         @Test
         void shouldExportConsumers() throws Exception {
             String path = EXPORT_PATH + "consumer.json";
-            ConsumerDTO actual = ExportUtil
-                .deserializeJsonFile(export, path, ConsumerDTO.class);
+            ConsumerDTO actual = ExportUtil.deserializeJsonFile(export, path, ConsumerDTO.class);
             assertNotNull(actual);
             assertEquals(consumer.getUuid(), actual.getUuid());
             assertEquals(consumer.getName(), actual.getName());

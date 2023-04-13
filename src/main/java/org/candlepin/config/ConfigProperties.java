@@ -296,6 +296,10 @@ public class ConfigProperties {
     // manifest import. Default: 30 days
     public static final String ORPHANED_ENTITY_GRACE_PERIOD = "candlepin.refresh.orphan_entity_grace_period";
 
+    // Whether or not to automatically revoke consumer entitlements during a regeneration request
+    // when operating in SCA mode.
+    public static final String SCA_ENTITLEMENT_CLEANUP = "candlepin.sca_entitlement_cleanup";
+
     /**
      * Fetches a string representing the prefix for all per-job configuration for the specified job.
      * The job key or class name may be used, but the usage must be consistent.
@@ -377,13 +381,7 @@ public class ConfigProperties {
 
             this.put(ENTITLER_BULK_SIZE, "1000");
 
-            /**
-            * These default DO_NOT_FILTER events are those events needed by
-            * other Satellite components. See sources:
-            *
-            * https://gitlab.sat.lab.tlv.redhat.com/satellite6/katello/blob/
-            * SATELLITE-6.1.0/app/lib/actions/candlepin/reindex_pool_subscription_handler.rb#L43
-            */
+            // These default DO_NOT_FILTER events are those events needed by other Satellite components.
             this.put(AUDIT_FILTER_DO_NOT_FILTER,
                 "CREATED-ENTITLEMENT," +
                 "DELETED-ENTITLEMENT," +
@@ -501,6 +499,8 @@ public class ConfigProperties {
             this.put(ASYNC_JOBS_TRIGGERABLE_JOBS, String.join(", ", ASYNC_JOBS_TRIGGERABLE_JOBS_LIST));
 
             this.put(ORPHANED_ENTITY_GRACE_PERIOD, "30");
+
+            this.put(SCA_ENTITLEMENT_CLEANUP, "true");
         }
     };
 }
