@@ -66,7 +66,7 @@ public class ConsumerCheckinSpecTest {
         ApiClient consumerClient = ApiClients.ssl(consumer);
         OffsetDateTime initialCheckin = consumer.getLastCheckin();
 
-        consumerClient.consumers().regenerateEntitlementCertificates(consumer.getUuid(), null, true);
+        consumerClient.consumers().regenerateEntitlementCertificates(consumer.getUuid(), null, true, false);
 
         consumer = consumerClient.consumers().getConsumer(consumer.getUuid());
         assertThat(consumer)

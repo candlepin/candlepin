@@ -47,6 +47,7 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
@@ -118,6 +119,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -219,7 +223,12 @@ public class ConsumerResourceTest {
 
         this.factValidator = new FactValidator(this.config, this.i18nProvider);
 
-        this.consumerResource = new ConsumerResource(
+        this.consumerResource = this.buildConsumerResource();
+        mockedConsumerResource = Mockito.spy(consumerResource);
+    }
+
+    private ConsumerResource buildConsumerResource() {
+        return new ConsumerResource(
             this.consumerCurator,
             this.consumerTypeCurator,
             this.subscriptionServiceAdapter,
@@ -259,8 +268,6 @@ public class ConsumerResourceTest {
             this.entCertGenerator,
             this.environmentContentCurator
         );
-
-        mockedConsumerResource = Mockito.spy(consumerResource);
     }
 
     protected ConsumerType buildConsumerType() {
@@ -463,7 +470,7 @@ public class ConsumerResourceTest {
 
         // Fixme throw custom exception from generator instead of generic RuntimeException
         assertThrows(RuntimeException.class, () ->
-            consumerResource.regenerateEntitlementCertificates(consumer.getUuid(), "9999", false)
+            consumerResource.regenerateEntitlementCertificates(consumer.getUuid(), "9999", false, false)
         );
     }
 
@@ -488,8 +495,166 @@ public class ConsumerResourceTest {
     public void testRegenerateEntitlementCertificateWithValidConsumer() {
         Consumer consumer = createConsumer(createOwner());
 
-        consumerResource.regenerateEntitlementCertificates(consumer.getUuid(), null, true);
+        consumerResource.regenerateEntitlementCertificates(consumer.getUuid(), null, true, false);
         Mockito.verify(poolManager, Mockito.times(1)).regenerateCertificatesOf(eq(consumer), eq(true));
+    }
+
+    /**
+     * Basic test. If invalid id is given, should throw
+     * {@link NotFoundException}
+     */
+    @Test
+    public void testRegenerateEntitlementCertificatesWithInvalidConsumerId() {
+        when(consumerCurator.verifyAndLookupConsumer(any(String.class)))
+            .thenThrow(new NotFoundException(""));
+
+        assertThrows(NotFoundException.class, () ->
+            consumerResource.regenerateEntitlementCertificates("xyz", null, true, false)
+        );
+    }
+
+    /*
+        Tests for entitlement revocation before regeneration in SCA mode
+
+        The table of these tests is as follows:
+
+        Org CA mode     Consumer CA mode    cleanupEntitlements     expected behavior
+        ==============  ==================  ======================  =================
+        entitlement     unset               true                    retain
+        sca             unset               true                    > revoke
+        entitlement     entitlement         true                    retain
+        sca             entitlement         true                    retain
+        entitlement     sca                 true                    > revoke
+        sca             sca                 true                    > revoke
+        *               *                   false                   retain
+        *               *                   null                    retain
+
+        In SCA mode (either consumer or org) and the cleanupEntitlements is enabled, entitlements
+        should be revoked before regeneration. If the CA mode resolves to entitlement mode or the
+        flag is either set to "false" or not specified, entitlements should be retained.
+
+        Note that the lazyRegen flag should have no affect on the above table.
+
+        Unfortunately, this test suite is setup to heavily rely on narrow mocks, so we are verifying
+        this behavior using call verifications. This should be corrected at some point in the future.
+     */
+    public static Stream<Arguments> scaModeEntitlementCleanupProvider() {
+        String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
+        String scaMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
+
+        return Stream.of(
+            Arguments.of(scaMode, null, false),
+            Arguments.of(scaMode, null, true),
+            Arguments.of(scaMode, null, null),
+            Arguments.of(entitlementMode, scaMode, false),
+            Arguments.of(entitlementMode, scaMode, true),
+            Arguments.of(entitlementMode, scaMode, null),
+            Arguments.of(scaMode, scaMode, false),
+            Arguments.of(scaMode, scaMode, true),
+            Arguments.of(scaMode, scaMode, null));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}, {1}, {2}")
+    @MethodSource("scaModeEntitlementCleanupProvider")
+    public void testRegenerateEntitlementCertificatesRevokesEntitlementsInSCAWithEntitlementCleanupEnabled(
+        String orgCAMode, String consumerCAMode, Boolean lazyRegen) {
+
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner);
+
+        // Set up org and consumer content access modes
+        owner.setContentAccessModeList(String.join(",", orgCAMode, consumerCAMode));
+        owner.setContentAccessMode(orgCAMode);
+        consumer.setContentAccessMode(consumerCAMode);
+
+        ConsumerResource resource = this.buildConsumerResource();
+        resource.regenerateEntitlementCertificates(consumer.getUuid(), null, lazyRegen, true);
+
+        // The consumer is operating in SCA mode and we've specified entitlement cleanup, so we
+        // expect that the revocation step is invoked.
+        Mockito.verify(this.poolManager, Mockito.times(1)).revokeAllEntitlements(eq(consumer),
+            Mockito.anyBoolean());
+    }
+
+    public static Stream<Arguments> entitlementModeConfigurationProvider() {
+        String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
+        String scaMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
+
+        return Stream.of(
+            Arguments.of(entitlementMode, null, true),
+            Arguments.of(entitlementMode, null, false),
+            Arguments.of(entitlementMode, null, null),
+            Arguments.of(scaMode, entitlementMode, true),
+            Arguments.of(scaMode, entitlementMode, false),
+            Arguments.of(scaMode, entitlementMode, null),
+            Arguments.of(entitlementMode, entitlementMode, true),
+            Arguments.of(entitlementMode, entitlementMode, false),
+            Arguments.of(entitlementMode, entitlementMode, null));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}, {1}, {2}")
+    @MethodSource("entitlementModeConfigurationProvider")
+    public void testRegenerateEntitlementCertificatesRetainsEntitlementsInEntitlementMode(
+        String orgCAMode, String consumerCAMode, Boolean lazyRegen) {
+
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner);
+
+        // Set up org and consumer content access modes
+        owner.setContentAccessModeList(String.join(",", orgCAMode, consumerCAMode));
+        owner.setContentAccessMode(orgCAMode);
+        consumer.setContentAccessMode(consumerCAMode);
+
+        ConsumerResource resource = this.buildConsumerResource();
+        resource.regenerateEntitlementCertificates(consumer.getUuid(), null, lazyRegen, true);
+
+        // Since the consumer is operating in entitlement mode, entitlement revocation should not
+        // be invoked, even though we've specified entitlement cleanup
+        Mockito.verify(this.poolManager, Mockito.times(0)).revokeAllEntitlements(eq(consumer),
+            Mockito.anyBoolean());
+    }
+
+    public static Stream<Arguments> allCAModesConfigurationProvider() {
+        String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
+        String scaMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
+
+        List<String> orgCAModeList = List.of(entitlementMode, scaMode);
+        List<String> consumerCAModeList = Arrays.asList(entitlementMode, scaMode, null);
+        List<Boolean> lazyRegenList = Arrays.asList(true, false, null);
+
+        List<Arguments> arguments = new ArrayList<>();
+
+        for (String orgCAMode : orgCAModeList) {
+            for (String consumerCAMode : consumerCAModeList) {
+                for (Boolean lazyRegen : lazyRegenList) {
+                    arguments.add(Arguments.of(orgCAMode, consumerCAMode, lazyRegen));
+                }
+            }
+        }
+
+        return arguments.stream();
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}, {1}, {2}")
+    @MethodSource("allCAModesConfigurationProvider")
+    public void testRegenerateEntitlementCertificatesRetainsEntitlementsWithSCAEntitlementCleanupDisabled(
+        String orgCAMode, String consumerCAMode, Boolean lazyRegen) {
+
+        Owner owner = this.createOwner();
+        Consumer consumer = this.createConsumer(owner);
+
+        // Set up org and consumer content access modes
+        owner.setContentAccessModeList(String.join(",", orgCAMode, consumerCAMode));
+        owner.setContentAccessMode(orgCAMode);
+        consumer.setContentAccessMode(consumerCAMode);
+
+        ConsumerResource resource = this.buildConsumerResource();
+        resource.regenerateEntitlementCertificates(consumer.getUuid(), null, lazyRegen, false);
+
+        // We're explicitly telling the regeneration op to not clean up entitlements, so we should not
+        // be invoking the revocation logic no matter what other options we throw at it.
+        Mockito.verify(this.poolManager, Mockito.times(0)).revokeAllEntitlements(eq(consumer),
+            Mockito.anyBoolean());
     }
 
     @Test
@@ -637,20 +802,6 @@ public class ConsumerResourceTest {
             .thenThrow(new NotFoundException(""));
         assertThrows(NotFoundException.class, () -> consumerResource.bind(c.getUuid(), "fake pool uuid", null,
             null, null, null, false, null, null)
-        );
-    }
-
-    /**
-     * Basic test. If invalid id is given, should throw
-     * {@link NotFoundException}
-     */
-    @Test
-    public void testRegenerateEntitlementCertificatesWithInvalidConsumerId() {
-        when(consumerCurator.verifyAndLookupConsumer(any(String.class)))
-            .thenThrow(new NotFoundException(""));
-
-        assertThrows(NotFoundException.class, () ->
-            consumerResource.regenerateEntitlementCertificates("xyz", null, true)
         );
     }
 

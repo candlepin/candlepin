@@ -263,8 +263,7 @@ class ExportSpecTest {
         @Test
         void shouldExportConsumers() throws Exception {
             String path = EXPORT_PATH + "consumer.json";
-            ConsumerDTO actual = ExportUtil
-                .deserializeJsonFile(export, path, ConsumerDTO.class);
+            ConsumerDTO actual = ExportUtil.deserializeJsonFile(export, path, ConsumerDTO.class);
             assertNotNull(actual);
             assertEquals(consumer.getUuid(), actual.getUuid());
             assertEquals(consumer.getName(), actual.getName());
@@ -391,7 +390,7 @@ class ExportSpecTest {
 
             // Regenerate some entitlement certificates, and generate a new manifest:
             String consumerUuid = consumer.getUuid();
-            consumerApi.regenerateEntitlementCertificates(consumerUuid, null, true);
+            consumerApi.regenerateEntitlementCertificates(consumerUuid, null, true, false);
             File newManifest = createExport(client, consumerUuid, cdn);
             ZipFile newExport = ExportUtil.getExportArchive(newManifest);
             long newEntitlementsSize = newExport.stream()

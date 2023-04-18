@@ -108,7 +108,7 @@ public class EntitlementCertificateSpecTest {
     @Test
     public void shouldBeManuallyRegeneratedForAConsumer() throws Exception {
         List<CertificateDTO> oldCerts = consumerApi.fetchCertificates(system.getUuid());
-        consumerApi.regenerateEntitlementCertificates(system.getUuid(), null, false);
+        consumerApi.regenerateEntitlementCertificates(system.getUuid(), null, false, false);
         List<CertificateDTO> newCerts = consumerApi.fetchCertificates(system.getUuid());
         assertThat(newCerts).hasSize(1);
         assertNotEquals(oldCerts.get(0).getSerial().getId(), newCerts.get(0).getSerial().getId());
@@ -118,7 +118,7 @@ public class EntitlementCertificateSpecTest {
     public void shouldRegenerateACertByEntId() throws Exception {
         List<CertificateDTO> oldCerts = consumerApi.fetchCertificates(system.getUuid());
         List<EntitlementDTO> ents = consumerApi.listEntitlements(system.getUuid());
-        consumerApi.regenerateEntitlementCertificates(system.getUuid(), ents.get(0).getId(), false);
+        consumerApi.regenerateEntitlementCertificates(system.getUuid(), ents.get(0).getId(), false, false);
         List<CertificateDTO> newCerts = consumerApi.fetchCertificates(system.getUuid());
         assertThat(newCerts).hasSize(1);
         assertNotEquals(oldCerts.get(0).getSerial().getId(), newCerts.get(0).getSerial().getId());
@@ -130,9 +130,8 @@ public class EntitlementCertificateSpecTest {
         ConsumerDTO system2 = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(system2);
         ConsumerClient consumerApi2 = consumerClient.consumers();
-        assertNotFound(
-            () -> consumerApi2.regenerateEntitlementCertificates(
-            system.getUuid(), ents.get(0).getId(), false));
+        assertNotFound(() -> consumerApi2.regenerateEntitlementCertificates(
+            system.getUuid(), ents.get(0).getId(), false, false));
     }
 
     @Test
@@ -140,8 +139,8 @@ public class EntitlementCertificateSpecTest {
         ConsumerDTO system2 = client.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(system2);
         ConsumerClient consumerApi2 = consumerClient.consumers();
-        assertNotFound(
-            () -> consumerApi2.regenerateEntitlementCertificates(system.getUuid(), null, false));
+        assertNotFound(() -> consumerApi2.regenerateEntitlementCertificates(
+            system.getUuid(), null, false, false));
     }
 
     @Test

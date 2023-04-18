@@ -259,7 +259,7 @@ public class ImportUpdateSpecTest {
         ownerProductApi.addContent(ownerKey, product2.getId(), archContent.getId(), true);
 
         EntitlementDTO ent1 = consumerApi.listEntitlements(consumer.getUuid()).get(0);
-        consumerApi.regenerateEntitlementCertificates(consumer.getUuid(), ent1.getId(), false);
+        consumerApi.regenerateEntitlementCertificates(consumer.getUuid(), ent1.getId(), false, false);
         consumerApi.listEntitlements(consumer.getUuid());
 
         PoolDTO pool1 = Pools.random().productId(product1.getId())

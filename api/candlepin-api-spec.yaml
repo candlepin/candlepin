@@ -1090,6 +1090,14 @@ paths:
           schema:
             type: boolean
             default: true
+        - name: cleanup_entitlements
+          in: query
+          description: |
+            Whether or not to remove unnecessary or unused entitlements for the consumer before regenerating
+            certificates
+          schema:
+            type: boolean
+            default: false
       responses:
         204:
           description: Successful operation
@@ -3179,7 +3187,13 @@ paths:
 
   /environments/{env_id}/content:
     post:
-      description: Promotes a Content into an Environment. This call accepts multiple content sets to promote at once, after which all affected certificates for consumers in the environment will be regenerated. Consumers registered to this environment will now receive this content in their entitlement certificates. Because the certificate regeneraiton can be quite time consuming, this is done as an asynchronous job. The content will be promoted and immediately available for new entitlements, but existing entitlements could take some time to be regenerated and sent down to clients as they check in.
+      description: |
+        Promotes a Content into an Environment. This call accepts multiple content sets to promote at once,
+        after which all affected certificates for consumers in the environment will be regenerated. Consumers
+        registered to this environment will now receive this content in their entitlement certificates.
+        Because the certificate regeneraiton can be quite time consuming, this is done as an asynchronous job.
+        The content will be promoted and immediately available for new entitlements, but existing entitlements
+        could take some time to be regenerated and sent down to clients as they check in.
       operationId: promoteContent
       tags:
         - environment

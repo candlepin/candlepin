@@ -38,9 +38,9 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
+import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.config.MapConfiguration;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
@@ -114,7 +114,6 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -306,8 +305,14 @@ public class ConsumerResourceCreationTest {
     }
 
     public Configuration initConfig() {
-        Configuration config = new ConfigForTesting();
+        Configuration config = new CandlepinCommonTestConfig();
+
+        config.setProperty(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN,
+            "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
+        config.setProperty(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN,
+            "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
         config.setProperty(ConfigProperties.USE_SYSTEM_UUID_FOR_MATCHING, "true");
+
         return config;
     }
 
@@ -343,22 +348,6 @@ public class ConsumerResourceCreationTest {
 
         return ctype;
     }
-
-    private static class ConfigForTesting extends MapConfiguration {
-        @SuppressWarnings("serial")
-        public ConfigForTesting() {
-            super(new HashMap<String, String>() {
-                {
-                    this.put(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN,
-                        "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
-                    this.put(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN,
-                        "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
-                }
-            });
-        }
-
-    }
-
 
     protected ConsumerDTO createConsumer(String consumerName) {
         Collection<Permission> perms = new HashSet<>();
