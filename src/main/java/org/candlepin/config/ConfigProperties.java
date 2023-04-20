@@ -26,6 +26,8 @@ import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.async.tasks.OrphanCleanupJob;
 import org.candlepin.async.tasks.UnmappedGuestEntitlementCleanerJob;
 
+import org.hibernate.dialect.PostgreSQL92Dialect;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -174,6 +176,8 @@ public class ConfigProperties {
     // Cache
     public static final String CACHE_JMX_STATS = "cache.jmx.statistics";
     public static final String CACHE_CONFIG_FILE_URI = JPA_CONFIG_PREFIX + "hibernate.javax.cache.uri";
+    public static final String HIBERNATE_DIALECT = JPA_CONFIG_PREFIX + "hibernate.dialect";
+
 
     public static final String[] ENCRYPTED_PROPERTIES = new String[] {
         DB_PASSWORD,
@@ -412,6 +416,7 @@ public class ConfigProperties {
 
             this.put(CACHE_JMX_STATS, "false");
             this.put(CACHE_CONFIG_FILE_URI, "ehcache.xml");
+            this.put(HIBERNATE_DIALECT, PostgreSQL92Dialect.class.getName());
 
             this.put(SUSPEND_MODE_ENABLED, "true");
 

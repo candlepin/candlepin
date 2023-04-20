@@ -17,7 +17,6 @@ package org.candlepin.guice;
 import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
 import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
 import static org.candlepin.config.ConfigProperties.HALT_ON_LIQUIBASE_DESYNC;
-import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.ActiveMQContextListener;
@@ -25,8 +24,8 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.ConfigurationException;
 import org.candlepin.config.DatabaseConfigFactory;
-import org.candlepin.config.EncryptedConfiguration;
-import org.candlepin.config.MapConfiguration;
+import org.candlepin.config.LegacyEncryptedInterceptor;
+import org.candlepin.config.RyeConfig;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.logging.LoggingConfigurator;
 import org.candlepin.messaging.CPMContextListener;
@@ -40,6 +39,10 @@ import com.google.inject.Stage;
 import com.google.inject.persist.PersistService;
 import com.google.inject.util.Modules;
 
+import io.smallrye.config.PropertiesConfigSource;
+import io.smallrye.config.SmallRyeConfig;
+import io.smallrye.config.SmallRyeConfigBuilder;
+
 import liquibase.Liquibase;
 import liquibase.changelog.ChangeSet;
 import liquibase.database.Database;
@@ -51,7 +54,6 @@ import liquibase.resource.ResourceAccessor;
 
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
-import org.hibernate.dialect.PostgreSQL92Dialect;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
@@ -61,8 +63,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
 
-import java.io.File;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -77,6 +79,8 @@ import javax.cache.CacheManager;
 import javax.persistence.EntityManagerFactory;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
+
+
 
 
 /**
@@ -303,34 +307,35 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
     }
 
     protected Configuration readConfiguration(ServletContext context) throws ConfigurationException {
-        File configFile = new File(ConfigProperties.DEFAULT_CONFIG_FILE);
+        RyeConfig ryeConfig = new RyeConfig();
+        try {
+            SmallRyeConfig smallRyeConfig = new SmallRyeConfigBuilder()
+                .addDefaultInterceptors()
+                .withInterceptors(new LegacyEncryptedInterceptor(ENCRYPTED_PROPERTIES))
+                .withDefaultValues(ConfigProperties.DEFAULT_PROPERTIES)
+                .withSources(new PropertiesConfigSource(DatabaseConfigFactory.POSTGRESQL_CONFIG,
+                "database-map", 100))
+                .withSources(new PropertiesConfigSource(
+                Paths.get(ConfigProperties.DEFAULT_CONFIG_FILE).toUri().toURL()))
+                .build();
+            ryeConfig.setConfig(smallRyeConfig);
 
-        EncryptedConfiguration systemConfig = new EncryptedConfiguration();
-
-        if (configFile.canRead()) {
-            log.debug("Loading system configuration");
-
-            // First, read the system configuration
-            systemConfig.load(configFile, StandardCharsets.UTF_8);
-            log.debug("System configuration: {}", systemConfig);
+            // check backs for parts for POC
+            log.info("Loaded the smallrye config: ", ryeConfig != null);
+            String value = ryeConfig.getString(ConfigProperties.CA_CERT_UPSTREAM);
+            log.info("Property: CA_CERT_UPSTREAM, value: " + value);
+            log.info("Property: candlepin.audit.hornetq.enable, value:" +
+                ryeConfig.getBoolean(ConfigProperties.ACTIVEMQ_ENABLED));
+            String password = ryeConfig.getString("jpa.config.hibernate.connection.password");
+            log.info("Property: jpa.config.hibernate.connection.password, value:" + password);
+            log.info("Property: IN_OPERATOR_BLOCK_SIZE: " +
+                ryeConfig.getString(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE));
         }
-
-        systemConfig.use(PASSPHRASE_SECRET_FILE).toDecrypt(ENCRYPTED_PROPERTIES);
-
-        // load the defaults
-        MapConfiguration defaults = new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES);
-
-        // Default to Postgresql if jpa.config.hibernate.dialect is unset
-        DatabaseConfigFactory.SupportedDatabase db = determinDatabaseConfiguration(
-            systemConfig.getString("jpa.config.hibernate.dialect", PostgreSQL92Dialect.class.getName()));
-        log.info("Running under {}", db.getLabel());
-        Configuration databaseConfig = DatabaseConfigFactory.fetchConfig(db);
-
-        // merge the defaults with the system configuration. PARAMETER ORDER MATTERS.
-        // systemConfig must be FIRST to override subsequent configs.  This set up allows
-        // the systemConfig to override databaseConfig if necessary, but that's not really something
-        // users should be doing unbidden so it is undocumented.
-        return EncryptedConfiguration.merge(systemConfig, databaseConfig, defaults);
+        catch (IOException ioe) {
+            log.error(ioe.getMessage());
+            throw new RuntimeException(ioe);
+        }
+        return ryeConfig;
     }
 
     private DatabaseConfigFactory.SupportedDatabase determinDatabaseConfiguration(String dialect) {

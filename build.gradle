@@ -178,6 +178,10 @@ dependencies {
     implementation libraries["hibernateJpamodelgen"]
     annotationProcessor libraries["hibernateJpamodelgen"]
 
+    //Small Rye Config
+    implementation libraries["smallrye"]
+    implementation libraries["annotations"]
+
     // Use wildcard because this could be called jss4.jar or jss.jar
     // (depending on if we are before Fedora35/RHEL9 or after)
     providedCompile fileTree(dir: '/usr/lib64/jss', include: '*.jar')
