@@ -1,5 +1,5 @@
 ---
-name: PR verification workflow
+name: Pull request verification
 
 on:
   pull_request:
@@ -11,16 +11,17 @@ jobs:
     container:
       image: fedora:38
     steps:
-      - name: Check out repository code
+      - name: Check out repository
         uses: actions/checkout@v3
       - name: Install dependencies
         shell: bash
         run: dnf --setopt install_weak_deps=False install -y gettext jss
-      - uses: actions/setup-java@v3
+      - name: Set up Java
+        uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Setup Gradle
+      - name: Run checkstyle
         uses: gradle/gradle-build-action@v2
         with:
           arguments: checkstyle
@@ -29,10 +30,31 @@ jobs:
     name: woke
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Check out repository
         uses: actions/checkout@v3
-      - name: woke
+      - name: Run woke
         uses: get-woke/woke-action@v0
         with:
           # Cause the check to fail on any broke rules
           fail-on-error: true
+
+  unit_tests:
+    name: unit tests
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:38
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+      - name: Install dependencies
+        shell: bash
+        run: dnf --setopt install_weak_deps=False install -y gettext jss
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Run unit tests
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test
