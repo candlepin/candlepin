@@ -22,5 +22,5 @@ group :development do
   # Rubocop can add new checks in new releases which
   # can result in new errors, so we control the version
   # very strictly
-  gem 'rubocop', '=0.36.0'
+  gem 'rubocop', '0.49.0'
 end
