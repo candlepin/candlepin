@@ -1,6 +1,7 @@
 ---
-name: CI
-'on':
+name: Ansible verification workflow
+
+on:
   pull_request:
     types:
       - opened
