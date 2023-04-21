@@ -7,3 +7,9 @@ updates:
     target-branch: "main"
     ignore:
       - dependency-name: "org.jboss.resteasy"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    target-branch: "main"
