@@ -1,32 +1,29 @@
 ---
-name: Ansible verification workflow
+name: Ansible verification
 
 on:
   pull_request:
-    types:
-      - opened
-      - ready_for_review
-      - synchronize
     paths:
       - 'ansible/**'
+  workflow_dispatch:
 
 jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the codebase.
-        uses: actions/checkout@v2
+      - name: Check out repository
+        uses: actions/checkout@v3
 
-      - name: Set up Python 3.
-        uses: actions/setup-python@v2
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
           python-version: '3.x'
 
-      - name: Install test dependencies.
+      - name: Install dependencies
         run: pip3 install yamllint ansible-lint
 
-      - name: Lint code.
+      - name: Run Ansible linter
         working-directory: ./ansible
         run: |
           yamllint .

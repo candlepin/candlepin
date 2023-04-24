@@ -13,14 +13,17 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
+
       - name: Install dependencies
         shell: bash
         run: dnf --setopt install_weak_deps=False install -y gettext jss
+
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
+
       - name: Run checkstyle
         uses: gradle/gradle-build-action@v2
         with:
@@ -32,6 +35,7 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
+
       - name: Run woke
         uses: get-woke/woke-action@v0
         with:
@@ -46,14 +50,17 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
+
       - name: Install dependencies
         shell: bash
         run: dnf --setopt install_weak_deps=False install -y gettext jss
+
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
+
       - name: Run unit tests
         uses: gradle/gradle-build-action@v2
         with:
