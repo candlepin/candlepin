@@ -52,9 +52,10 @@ public class CalculatedAttributesUtil {
 
         // TODO: Check that this doesn't break our translation stuff. We may need to have the
         // description strings translated instead.
-        attrMap.put("compliance_type",
-            i18n.tr("{0}{1}", type.getDescription(), (pool.isUnmappedGuestPool() ? " (Temporary)" : ""))
-        );
+        String message = pool.isUnmappedGuestPool() ?
+            i18n.tr("{0} (Temporary)", type.getDescription()) :
+            type.getDescription();
+        attrMap.put("compliance_type", message);
 
         return attrMap;
     }

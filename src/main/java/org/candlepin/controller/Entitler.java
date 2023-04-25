@@ -234,9 +234,11 @@ public class Entitler {
                 consumer.getUuid(), owner.getKey(), caMessage, hypMessage);
 
             if (autobindHypervisorDisabled) {
-                throw new AutobindHypervisorDisabledException(i18n.tr(
-                    "Auto-attach is disabled for owner \"{0}\"{1}.",
-                    owner.getKey(), hypMessage));
+                String message = owner.isAutobindHypervisorDisabled() ?
+                    i18n.tr("Auto-attach is disabled for owner \"{0}\" because of the hypervisor " +
+                    "autobind setting.", owner.getKey()) :
+                    i18n.tr("Auto-attach is disabled for owner \"{0}\".", owner.getKey());
+                throw new AutobindHypervisorDisabledException(message);
             }
             else if (owner.isAutobindDisabled()) {
                 throw new AutobindDisabledForOwnerException(i18n.tr(
