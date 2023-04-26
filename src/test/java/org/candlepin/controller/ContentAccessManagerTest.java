@@ -81,10 +81,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
@@ -100,7 +96,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 
@@ -333,81 +328,6 @@ public class ContentAccessManagerTest {
         cert.setKey("test-key");
         cert.setConsumer(consumer);
         return cert;
-    }
-
-    public static Stream<Arguments> contentAccessModeConfigProvider() {
-        String entMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
-        String scaMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
-
-        return Stream.of(
-            Arguments.of(null, null, ContentAccessMode.getDefault()),
-            Arguments.of(null, entMode, ContentAccessMode.ENTITLEMENT),
-            Arguments.of(null, scaMode, ContentAccessMode.ORG_ENVIRONMENT),
-
-            Arguments.of(entMode, null, ContentAccessMode.ENTITLEMENT),
-            Arguments.of(entMode, entMode, ContentAccessMode.ENTITLEMENT),
-            Arguments.of(entMode, scaMode, ContentAccessMode.ORG_ENVIRONMENT),
-
-            Arguments.of(scaMode, null, ContentAccessMode.ORG_ENVIRONMENT),
-            Arguments.of(scaMode, entMode, ContentAccessMode.ENTITLEMENT),
-            Arguments.of(scaMode, scaMode, ContentAccessMode.ORG_ENVIRONMENT)
-        );
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}, {1} => {2}")
-    @MethodSource("contentAccessModeConfigProvider")
-    public void testResolveContentAccessMode(String orgCAMode, String consumerCAMode,
-        ContentAccessMode expected) {
-
-        Owner owner = this.mockOwner();
-        Consumer consumer = this.mockConsumer(owner);
-
-        // Set up org and consumer content access modes
-        owner.setContentAccessModeList(String.join(",", orgCAMode, consumerCAMode));
-        owner.setContentAccessMode(orgCAMode);
-        consumer.setContentAccessMode(consumerCAMode);
-
-        ContentAccessMode output = ContentAccessManager.resolveContentAccessMode(consumer);
-        assertEquals(expected, output);
-    }
-
-    @Test
-    public void testResolveContentAccessModeRequiresValidInput() {
-        assertThrows(IllegalArgumentException.class, () ->
-            ContentAccessManager.resolveContentAccessMode(null));
-    }
-
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @EnumSource
-    public void testResolveContentAccessModeThrowsExceptionOnInvalidConsumerCAMode(
-        ContentAccessMode orgCAMode) {
-
-        Owner owner = this.mockOwner();
-        Consumer consumer = this.mockConsumer(owner);
-
-        String consumerCAMode = "invalid_mode";
-
-        owner.setContentAccessModeList(String.join(",", orgCAMode.toDatabaseValue(), consumerCAMode));
-        owner.setContentAccessMode(orgCAMode.toDatabaseValue());
-        consumer.setContentAccessMode(consumerCAMode);
-
-        assertThrows(IllegalStateException.class, () ->
-            ContentAccessManager.resolveContentAccessMode(consumer));
-    }
-
-    @Test
-    public void testResolveContentAccessModeThrowsExceptionOnInvalidOrgCAMode() {
-        Owner owner = this.mockOwner();
-        Consumer consumer = this.mockConsumer(owner);
-
-        String orgCAMode = "invalid_mode";
-
-        owner.setContentAccessModeList(orgCAMode);
-        owner.setContentAccessMode(orgCAMode);
-        consumer.setContentAccessMode(null);
-
-        assertThrows(IllegalStateException.class, () ->
-            ContentAccessManager.resolveContentAccessMode(consumer));
     }
 
     @Test

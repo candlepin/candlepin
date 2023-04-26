@@ -67,7 +67,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Predicate;
 
 import javax.inject.Inject;
 import javax.naming.ldap.Rdn;
@@ -193,42 +192,6 @@ public class ContentAccessManager {
             ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue());
     }
 
-    /**
-     * Resolves the content access mode for the given consumer, translating the mode name assigned
-     * to a ContentAccessMode enum value. If no explicit value is defined for the consumer or its
-     * owner, this function returns the default content access mode.
-     *
-     * @param consumer
-     *  the consumer for which to fetch the content access mode
-     *
-     * @throws IllegalArgumentException
-     *  if the provided consumer is null
-     *
-     * @throws IllegalStateException
-     *  if the resolved content access mode for the consumer is invalid or otherwise cannot be
-     *  mapped to a ContentAccessMode value
-     *
-     * @return
-     *  a ContentAccessMode enum value for the given consumer
-     */
-    public static ContentAccessMode resolveContentAccessMode(Consumer consumer) {
-        if (consumer == null) {
-            throw new IllegalArgumentException("consumer is null");
-        }
-
-        Predicate<String> predicate = (str) -> str != null && !str.isEmpty();
-
-        String caMode = Util.firstOf(predicate,
-            consumer.getContentAccessMode(),
-            consumer.getOwner().getContentAccessMode());
-
-        try {
-            return ContentAccessMode.resolveModeName(caMode, true);
-        }
-        catch (IllegalArgumentException e) {
-            throw new IllegalStateException("consumer is using an invalid content access mode: " + caMode, e);
-        }
-    }
 
     private final Configuration config;
     private final PKIUtility pki;
