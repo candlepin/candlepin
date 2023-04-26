@@ -13,7 +13,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.3.2
+Version: 4.3.3
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,68 @@ fi
 
 #raw
 %changelog
+* Wed Apr 26 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.3-1
+- Bump com.fasterxml.jackson.dataformat:jackson-dataformat-xml
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.dataformat:jackson-dataformat-yaml
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-jsr310
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-jdk8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.3.0 to 5.3.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.core:jackson-databind from 2.14.2 to 2.15.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-hibernate5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.module:jackson-module-jsonSchema
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.squareup.okhttp3:okhttp from 4.10.0 to 4.11.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-502: Migrate verify translations to GH Actions (ojanus@redhat.com)
+- CANDLEPIN-564: Normalized Github Actions workflows (crog@redhat.com)
+- CANDLEPIN-510: Added unit tests to the Github actions (crog@redhat.com)
+- Enable Dependabot for GH Actions (ojanus@redhat.com)
+- Update Gradle Wrapper to version 8.1 (ojanus@redhat.com)
+- CANDLEPIN-501: Migrate checkstyle to GH Actions (ojanus@redhat.com)
+- Bump ch.qos.logback:logback-classic from 1.4.6 to 1.4.7
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump info.picocli:picocli from 4.7.2 to 4.7.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-557: Added support for entitlement cleanup in SCA mode
+  (crog@redhat.com)
+- Bump org.liquibase:liquibase-core from 4.21.0 to 4.21.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.liquibase:liquibase-core from 4.20.0 to 4.21.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- test data importers: make repos symlinks relative (ptoscano@redhat.com)
+- CANDLEPIN-530: Added Conscios Language Initiative check to pipeline
+  (wpoteat@redhat.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.2.0 to 5.3.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump info.picocli:picocli from 4.7.1 to 4.7.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-529: Add Conscious Language Initiative guidelines
+  (wpoteat@redhat.com)
+- Adapt META-INF/context.xml for webapp to Tomcat 8+ (ptoscano@redhat.com)
+- CANDLEPIN-494: Update resteasy packages (wpoteat@redhat.com)
+- Apply updated copyright header (ojanus@redhat.com)
+- Fix copyright header generation and checkstyle (ojanus@redhat.com)
+- Updated the gettext and msgfmt Gradle tasks (crog@redhat.com)
+- CANDLEPIN-551: Moved default user creation to DefaultUserServiceAdapter
+  (crog@redhat.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 21.0.1 to 21.0.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-541: Spec test improvements for Jenkins runs (wpoteat@redhat.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.9.2 to 10.9.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-528: Update problematic terms for candlepin (sbakaj@redhat.com)
+- Install python3-libxml2 also on c8s (ptoscano@redhat.com)
+- Ensure Status output has proper UTC time (wpoteat@redhat.com)
+- Update JSON time serializer to follow more strict ISO-8601 derivatives
+  (wpoteat@redhat.com)
+
 * Fri Mar 24 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.2-1
 - 2170446: Reduce consumer name field to match certificate length
   (wpoteat@redhat.com)
