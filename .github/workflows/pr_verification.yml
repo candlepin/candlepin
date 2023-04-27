@@ -3,6 +3,11 @@ name: Pull request verification
 
 on:
   pull_request:
+    branches:
+      - ${{ vars.GITHUB_BASE_REF }}
+  push:
+    branches:
+      - ${{ vars.GITHUB_BASE_REF }}
   workflow_dispatch:
 
 env:

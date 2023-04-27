@@ -19,50 +19,50 @@ pipeline {
         }
         stage('Test') {
             parallel {
-                stage('Unit tests and Sonar') {
-                    stages {
-                        stage('Unit tests') {
-                            agent { label 'candlepin' }
-                            steps {
-                                checkout scm
-                                sh './gradlew test coverage'
-                            }
-                            post {
-                                always {
-                                    stash name: 'jacocoReports', includes: 'build/**/*'
-                                    junit '**/build/test-results/**/*.xml'
-                                }
-                            }
-                        }
-                        stage('Upload-PR-to-SonarQube') {
-                            agent { label 'candlepin' }
-                            when {
-                                changeRequest()
-                            }
-                            steps {
-                                checkout scm
-                                unstash 'jacocoReports'
-                                sh "./gradlew sonar -x coverage -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.pullrequest.key=${CHANGE_ID} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.pullrequest.branch=${BRANCH_NAME} -Dsonar.projectKey=chainsaw:candlepin-server"
-                            }
-                        }
-                        stage('Upload-Branch-to-SonarQube') {
-                            agent { label 'candlepin' }
-                            environment {
-                                BRANCH_UPLOAD = 'true'
-                            }
-                            when {
-                                not {
-                                    changeRequest()
-                                }
-                            }
-                            steps {
-                                checkout scm
-                                unstash 'jacocoReports'
-                                sh "./gradlew sonar -x coverage -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.branch.name=${BRANCH_NAME} -Dsonar.projectKey=chainsaw:candlepin-server"
-                            }
-                        }
-                    }
-                }
+//                 stage('Unit tests and Sonar') {
+//                     stages {
+//                         stage('Unit tests') {
+//                             agent { label 'candlepin' }
+//                             steps {
+//                                 checkout scm
+//                                 sh './gradlew test coverage'
+//                             }
+//                             post {
+//                                 always {
+//                                     stash name: 'jacocoReports', includes: 'build/**/*'
+//                                     junit '**/build/test-results/**/*.xml'
+//                                 }
+//                             }
+//                         }
+//                         stage('Upload-PR-to-SonarQube') {
+//                             agent { label 'candlepin' }
+//                             when {
+//                                 changeRequest()
+//                             }
+//                             steps {
+//                                 checkout scm
+//                                 unstash 'jacocoReports'
+//                                 sh "./gradlew sonar -x coverage -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.pullrequest.key=${CHANGE_ID} -Dsonar.pullrequest.base=${CHANGE_TARGET} -Dsonar.pullrequest.branch=${BRANCH_NAME} -Dsonar.projectKey=chainsaw:candlepin-server"
+//                             }
+//                         }
+//                         stage('Upload-Branch-to-SonarQube') {
+//                             agent { label 'candlepin' }
+//                             environment {
+//                                 BRANCH_UPLOAD = 'true'
+//                             }
+//                             when {
+//                                 not {
+//                                     changeRequest()
+//                                 }
+//                             }
+//                             steps {
+//                                 checkout scm
+//                                 unstash 'jacocoReports'
+//                                 sh "./gradlew sonar -x coverage -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.branch.name=${BRANCH_NAME} -Dsonar.projectKey=chainsaw:candlepin-server"
+//                             }
+//                         }
+//                     }
+//                 }
                 stage('checkstyle') {
                     agent { label 'candlepin' }
                     steps {
@@ -70,105 +70,105 @@ pipeline {
                         sh './gradlew checkstyle'
                     }
                 }
-                stage('bugzilla-reference') {
-                    agent { label 'candlepin' }
-                    environment {
-                        GITHUB_TOKEN = credentials('github-api-token-as-username-password')
-                        BUGZILLA_TOKEN = credentials('BUGZILLA_API_TOKEN')
-                    }
-                    steps {
-                        checkout scm
-                        sh 'python jenkins/check_pr_branch.py $CHANGE_ID'
-                    }
-                }
-                stage('validate-translation') {
-                    agent { label 'candlepin' }
-                    steps {
-                        checkout scm
-                        sh './gradlew validate_translation'
-                    }
-                }
-                stage('spec-postgresql') {
-                    agent { label 'candlepin' }
-                    environment {
-                        CANDLEPIN_DATABASE = 'postgresql'
-                        OS_IMAGE = 'cs9'
-                        CP_TEST_ARGS = '-r'
-                    }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/spec-tests.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                            archiveArtifacts artifacts: 'spec-postgresql-artifacts/**',
-                                             fingerprint: true,
-                                             onlyIfSuccessful: false
-                        }
-                    }
-                }
-                stage('spec-mysql') {
-                    agent { label 'candlepin' }
-                    environment {
-                        CANDLEPIN_DATABASE = 'mysql'
-                        CP_TEST_ARGS = '-r'
-                    }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/spec-tests.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                            archiveArtifacts artifacts: 'spec-mysql-artifacts/**',
-                                             fingerprint: true,
-                                             onlyIfSuccessful: false
-                        }
-                    }
-                }
-                stage('spec-postgres-hosted') {
-                    agent { label 'candlepin' }
-                    environment {
-                        CANDLEPIN_DATABASE = 'postgresql'
-                        CP_TEST_ARGS = '-H -k'
-                    }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/spec-tests.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                            archiveArtifacts artifacts: 'spec-postgres-hosted-artifacts/**',
-                                             fingerprint: true,
-                                             onlyIfSuccessful: false
-                        }
-                    }
-                }
-                stage('spec-mysql-hosted') {
-                    agent { label 'candlepin' }
-                    environment {
-                        CANDLEPIN_DATABASE = 'mysql'
-                        CP_TEST_ARGS = '-H -k'
-                    }
-                    steps {
-                        sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
-                        checkout scm
-                        sh 'sh jenkins/spec-tests.sh'
-                    }
-                    post {
-                        always {
-                            sh 'sh jenkins/cleanup.sh'
-                            archiveArtifacts artifacts: 'spec-mysql-hosted-artifacts/**',
-                                             fingerprint: true,
-                                             onlyIfSuccessful: false
-                        }
-                    }
-                }
+//                 stage('bugzilla-reference') {
+//                     agent { label 'candlepin' }
+//                     environment {
+//                         GITHUB_TOKEN = credentials('github-api-token-as-username-password')
+//                         BUGZILLA_TOKEN = credentials('BUGZILLA_API_TOKEN')
+//                     }
+//                     steps {
+//                         checkout scm
+//                         sh 'python jenkins/check_pr_branch.py $CHANGE_ID'
+//                     }
+//                 }
+//                 stage('validate-translation') {
+//                     agent { label 'candlepin' }
+//                     steps {
+//                         checkout scm
+//                         sh './gradlew validate_translation'
+//                     }
+//                 }
+//                 stage('spec-postgresql') {
+//                     agent { label 'candlepin' }
+//                     environment {
+//                         CANDLEPIN_DATABASE = 'postgresql'
+//                         OS_IMAGE = 'cs9'
+//                         CP_TEST_ARGS = '-r'
+//                     }
+//                     steps {
+//                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+//                         checkout scm
+//                         sh 'sh jenkins/spec-tests.sh'
+//                     }
+//                     post {
+//                         always {
+//                             sh 'sh jenkins/cleanup.sh'
+//                             archiveArtifacts artifacts: 'spec-postgresql-artifacts/**',
+//                                              fingerprint: true,
+//                                              onlyIfSuccessful: false
+//                         }
+//                     }
+//                 }
+//                 stage('spec-mysql') {
+//                     agent { label 'candlepin' }
+//                     environment {
+//                         CANDLEPIN_DATABASE = 'mysql'
+//                         CP_TEST_ARGS = '-r'
+//                     }
+//                     steps {
+//                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+//                         checkout scm
+//                         sh 'sh jenkins/spec-tests.sh'
+//                     }
+//                     post {
+//                         always {
+//                             sh 'sh jenkins/cleanup.sh'
+//                             archiveArtifacts artifacts: 'spec-mysql-artifacts/**',
+//                                              fingerprint: true,
+//                                              onlyIfSuccessful: false
+//                         }
+//                     }
+//                 }
+//                 stage('spec-postgres-hosted') {
+//                     agent { label 'candlepin' }
+//                     environment {
+//                         CANDLEPIN_DATABASE = 'postgresql'
+//                         CP_TEST_ARGS = '-H -k'
+//                     }
+//                     steps {
+//                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+//                         checkout scm
+//                         sh 'sh jenkins/spec-tests.sh'
+//                     }
+//                     post {
+//                         always {
+//                             sh 'sh jenkins/cleanup.sh'
+//                             archiveArtifacts artifacts: 'spec-postgres-hosted-artifacts/**',
+//                                              fingerprint: true,
+//                                              onlyIfSuccessful: false
+//                         }
+//                     }
+//                 }
+//                 stage('spec-mysql-hosted') {
+//                     agent { label 'candlepin' }
+//                     environment {
+//                         CANDLEPIN_DATABASE = 'mysql'
+//                         CP_TEST_ARGS = '-H -k'
+//                     }
+//                     steps {
+//                         sh 'sudo chown -R jenkins:jenkins $WORKSPACE'
+//                         checkout scm
+//                         sh 'sh jenkins/spec-tests.sh'
+//                     }
+//                     post {
+//                         always {
+//                             sh 'sh jenkins/cleanup.sh'
+//                             archiveArtifacts artifacts: 'spec-mysql-hosted-artifacts/**',
+//                                              fingerprint: true,
+//                                              onlyIfSuccessful: false
+//                         }
+//                     }
+//                 }
             }
         }
     }
