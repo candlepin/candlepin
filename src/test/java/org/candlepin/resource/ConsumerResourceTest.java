@@ -523,8 +523,8 @@ public class ConsumerResourceTest {
         entitlement     unset               true                    retain
         sca             unset               true                    > revoke
         entitlement     entitlement         true                    retain
-        sca             entitlement         true                    retain
-        entitlement     sca                 true                    > revoke
+        sca             entitlement         true                    > revoke
+        entitlement     sca                 true                    retain
         sca             sca                 true                    > revoke
         *               *                   false                   retain
         *               *                   null                    retain
@@ -546,9 +546,9 @@ public class ConsumerResourceTest {
             Arguments.of(scaMode, null, false),
             Arguments.of(scaMode, null, true),
             Arguments.of(scaMode, null, null),
-            Arguments.of(entitlementMode, scaMode, false),
-            Arguments.of(entitlementMode, scaMode, true),
-            Arguments.of(entitlementMode, scaMode, null),
+            Arguments.of(scaMode, entitlementMode, false),
+            Arguments.of(scaMode, entitlementMode, true),
+            Arguments.of(scaMode, entitlementMode, null),
             Arguments.of(scaMode, scaMode, false),
             Arguments.of(scaMode, scaMode, true),
             Arguments.of(scaMode, scaMode, null));
@@ -584,9 +584,9 @@ public class ConsumerResourceTest {
             Arguments.of(entitlementMode, null, true),
             Arguments.of(entitlementMode, null, false),
             Arguments.of(entitlementMode, null, null),
-            Arguments.of(scaMode, entitlementMode, true),
-            Arguments.of(scaMode, entitlementMode, false),
-            Arguments.of(scaMode, entitlementMode, null),
+            Arguments.of(entitlementMode, scaMode, false),
+            Arguments.of(entitlementMode, scaMode, true),
+            Arguments.of(entitlementMode, scaMode, null),
             Arguments.of(entitlementMode, entitlementMode, true),
             Arguments.of(entitlementMode, entitlementMode, false),
             Arguments.of(entitlementMode, entitlementMode, null));

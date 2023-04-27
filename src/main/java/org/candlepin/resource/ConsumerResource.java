@@ -2626,19 +2626,7 @@ public class ConsumerResource implements ConsumerApi {
 
         // If consumer is in an org running in SCA mode and the client has requested entitlement cleanup,
         // revoke all entitlements. They won't be needing them anymore, apparently.
-        try {
-            ContentAccessMode caMode = ContentAccessManager.resolveContentAccessMode(consumer);
-            if (caMode != ContentAccessMode.ORG_ENVIRONMENT) {
-                cleanupEntitlements = false;
-            }
-        }
-        catch (IllegalStateException e) {
-            // Consumer or org have an invald mode set. Assume it's not SCA.
-            log.error("Invalid content access mode set for consumer; skipping entitlement cleanup", e);
-            cleanupEntitlements = false;
-        }
-
-        if (cleanupEntitlements) {
+        if (cleanupEntitlements && consumer.getOwner().isUsingSimpleContentAccess()) {
             // At the time of writing, we should only be doing this cleanup in SCA mode, which
             // omits consumer status calculation anyway. As a result, we can save some time by
             // skipping the recalculation during revocation.
