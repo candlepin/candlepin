@@ -1,0 +1,29 @@
+[ req ]
+default_bits = 4096
+string_mask = utf8only
+prompt = no
+distinguished_name = ca_dn
+
+[ ca_dn ]
+C=US
+L=Raleigh
+OU=Candlepin
+CN=localhost
+
+[ v3_ca ]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer
+basicConstraints = critical, CA:true
+keyUsage = critical, digitalSignature, cRLSign, keyCertSign
+
+[ intermediate_ca_dn ]
+C=US
+L=Raleigh
+OU=Candlepin
+CN=localhost
+
+[ v3_intermediate_ca ]
+subjectKeyIdentifier = hash
+authorityKeyIdentifier = keyid,issuer
+basicConstraints = critical, CA:true
+keyUsage = critical, digitalSignature, cRLSign, keyCertSign

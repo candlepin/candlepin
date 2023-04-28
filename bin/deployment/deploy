@@ -125,11 +125,17 @@ configure_tomcat() {
         GEN_CERTS_ARGS="-f"
     fi
 
-    # generate SSL certs and keystores as needed
-    $SUDO bash $SELF_DIR/gen_certs.sh $GEN_CERTS_ARGS
+    local CERTS_UTIL_DIR="${PROJECT_DIR}/certs"
+    local CA_CERT="${CERTS_UTIL_DIR}/cp-dev-ca.crt"
+    local CA_KEY="${CERTS_UTIL_DIR}/cp-dev-ca.key"
 
-    # Update symlink to legacy keystore if we're on an old version of TC
-    update_legacy_keystore
+    if [ ! -f $CA_CERT ] || [ ! -f $CA_KEY ]; then
+        err_msg "Error: Dev CA cert and/or key is absent"
+        return 1;
+    fi
+
+    # generate SSL certs and keystores as needed
+    $SUDO "${PROJECT_DIR}/certs/generate_server_cert.sh" -t $GEN_CERTS_ARGS -C $CA_CERT -K $CA_KEY
 
     # update server.xml
     $SUDO python $PROJECT_DIR/bin/deployment/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR

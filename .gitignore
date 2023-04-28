@@ -54,6 +54,8 @@ dataSources/
 ansible/roles/*
 !ansible/roles/candlepin
 
+certs/*.srl
+
 buildconf/builder/config/local
 client.crt
 client.key
