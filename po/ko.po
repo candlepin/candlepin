@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-02-12 02:04-0500\n"
-"PO-Revision-Date: 2023-02-06 03:20+0000\n"
+"PO-Revision-Date: 2023-03-16 07:20+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/master/ko/>\n"
@@ -1835,10 +1835,8 @@ msgid "Archive failed signature check"
 msgstr "아카이브가 서명 확인에 실패했습니다"
 
 #: src/main/java/org/candlepin/sync/Importer.java:419
-#, fuzzy
-#| msgid "The archive does not contain the required consumer.json file"
 msgid "The provided manifest has no content in the exported consumer archive"
-msgstr "아카이브에 필요한 consumer.json 파일이 들어 있지 않습니다"
+msgstr "제공된 명세서는 내보낸 소비자 자료실에서 콘텐츠를 가지고 있지 않습니다"
 
 #: src/main/java/org/candlepin/sync/Importer.java:440
 msgid "The archive does not contain the required consumer_export.zip file"
