@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
     <!-- POSTGRES/ORACLE QUERIES -->
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_stray_ueber_consumers"
         value="delete from cp_consumer
                where id IN (
@@ -16,7 +16,7 @@
                     where c.name = 'ueber_cert_consumer' and e.id is null);"/>
 
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_stray_ueber_subs"
         value="delete from cp_subscription
                where id in (
@@ -27,7 +27,7 @@
                );"/>
 
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_stray_ueber_content"
         value="delete from cp_content
                where id in (
@@ -39,7 +39,7 @@
                );"/>
 
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_stray_ueber_owner_content_2_0"
         value="delete from cp2_owner_content
                where content_uuid in (
@@ -51,7 +51,7 @@
                );"/>
 
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_stray_ueber_content_2_0"
         value="delete from cp2_content
                where uuid in (
@@ -63,7 +63,7 @@
                );"/>
 
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_stray_ueber_products"
         value="delete from cp_product
                   where id in (
@@ -73,7 +73,7 @@
                   );"/>
 
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_stray_ueber_owner_product_2_0"
         value="delete from cp2_owner_products
                where product_uuid in (
@@ -83,7 +83,7 @@
                );"/>
 
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_stray_ueber_product_2_0"
         value="delete from cp2_products
                where uuid in (

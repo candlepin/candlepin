@@ -172,7 +172,7 @@ class DbToolTest(unittest.TestCase):
             m_postgres_instance.assert_called_with("candlepin", None,None,None)
             m_postgres_instance.return_value.create.assert_called_with("candlepin")
             m_liquibase_wrapper.assert_called_with("candlepin", None, "some cp:jdbccp", "dbinstance.driver", "dbinstance.jdbcurl", False)
-            m_liquibase_wrapper.return_value.migrate.assert_called_with("db/changelog/changelog-create.xml");
+            m_liquibase_wrapper.return_value.migrate.assert_called_with("db/changelog/changelog-update.xml");
 
     def test_bad_arg_list_should_raise_exception(self):
         with self.assertRaisesRegex(Exception, "You must specify product using --product switch"):

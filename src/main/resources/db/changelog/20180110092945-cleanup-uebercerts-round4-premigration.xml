@@ -6,39 +6,39 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <!-- POSTGRES, ORACLE, HSQLDB QUERIES -->
+    <!-- POSTGRES, HSQLDB QUERIES -->
     <property
-            dbms="postgresql,oracle,hsqldb"
+            dbms="postgresql,hsqldb"
             name="round4_premigration_cleanup_ueber_subs"
             value="delete from cp_subscription where id in (select s.id from cp_subscription s inner join cp_product p on s.product_id = p.id where p.name LIKE '%_ueber_product');" />
 
     <property
-            dbms="postgresql,oracle,hsqldb"
+            dbms="postgresql,hsqldb"
             name="round4_premigration_cleanup_ueber_ent_certs"
             value="delete from cp_ent_certificate where entitlement_id in (select e.id from cp_entitlement e inner join cp_pool p on e.pool_id = p.id where p.productname LIKE '%_ueber_product');" />
 
     <property
-            dbms="postgresql,oracle,hsqldb"
+            dbms="postgresql,hsqldb"
             name="round4_premigration_cleanup_ueber_ents"
             value="delete from cp_entitlement where pool_id in (select id from cp_pool p where p.productname LIKE '%_ueber_product');" />
 
     <property
-            dbms="postgresql,oracle,hsqldb"
+            dbms="postgresql,hsqldb"
             name="round4_premigration_cleanup_ueber_pools"
             value="delete from cp_pool where productname like '%_ueber_product%';" />
 
     <property
-            dbms="postgresql,oracle,hsqldb"
+            dbms="postgresql,hsqldb"
             name="round4_premigration_cleanup_ueber_content"
             value="delete from cp_content where id in (select id from cp_content where name = 'ueber_content');" />
 
     <property
-            dbms="postgresql,oracle,hsqldb"
+            dbms="postgresql,hsqldb"
             name="round4_premigration_cleanup_ueber_products"
             value="delete from cp_product where name like '%_ueber_product';" />
 
     <property
-            dbms="postgresql,oracle,hsqldb"
+            dbms="postgresql,hsqldb"
             name="round4_premigration_cleanup_ueber_consumers"
             value="delete from cp_consumer where name = 'ueber_cert_consumer';" />
 

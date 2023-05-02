@@ -68,15 +68,5 @@
              referencedTableName="cp_cert_serial" />
     </changeSet>
 
-    <changeSet id="20161013145834-5" author="wpoteat" dbms="oracle">
-        <comment>Add indexes for foreign keys in oracle</comment>
-        <createIndex indexName="cont_acc_cert_fk" tableName="cp_consumer" unique="false">
-            <column name="cont_acc_cert_id"/>
-        </createIndex>
-        <createIndex indexName="cont_acc_cert_serial_fk" tableName="cp_cont_access_cert" unique="false">
-            <column name="serial_id"/>
-        </createIndex>
-    </changeSet>
-
 </databaseChangeLog>
 <!-- vim: set expandtab sts=4 sw=4 ai: -->

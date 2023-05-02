@@ -10,9 +10,9 @@
     <!-- to java.sql.Blob type which gives us streaming capabilities.             -->
     <property name="data.type" value="oid" dbms="postgresql" />
     <property name="data.type" value="longblob" dbms="mysql,mariadb" />
-    <property name="data.type" value="blob" dbms="oracle,hsqldb" />
+    <property name="data.type" value="blob" dbms="hsqldb" />
 
-    <property name="date.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql,oracle,hsqldb"/>
+    <property name="date.type" value="TIMESTAMP WITHOUT TIME ZONE" dbms="postgresql,hsqldb"/>
     <property name="date.type" value="DATETIME" dbms="mysql,mariadb"/>
 
     <changeSet id="20160419092221-1" author="mstead">

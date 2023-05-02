@@ -41,14 +41,14 @@
         <addForeignKeyConstraint baseColumnNames="derivedpool_id" baseTableName="cp_pool_source_stack" constraintName="fk_sourcestack_pool" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_pool" referencesUniqueColumn="false"/>   
     </changeSet>
 
-    <changeSet id="20140306150357-1" author="ckozak" dbms="mysql,mariadb,postgresql">
-        <comment>Index cp_pool_source_stack.derivedpool_id.  oracle already does this</comment>
+    <changeSet id="20140306150357-1" author="ckozak">
+        <comment>Index cp_pool_source_stack.derivedpool_id</comment>
         <createIndex indexName="idx_sourcestack_pool_fk" tableName="cp_pool_source_stack" unique="false">
             <column name="derivedpool_id"/>
         </createIndex>
     </changeSet>
 
-    <changeSet id="20140306150357-2" author="ckozak">
+    <changeSet id="20140306150357-2" author="ckozak" dbms="postgresql,mysql,mariadb">
         <comment>Allow pool deletion.  Add cascading deletes</comment>
 
         <!-- activation key pool cascade -->
@@ -136,6 +136,91 @@
             referencedTableName="cp_entitlement"
             referencesUniqueColumn="false"/>
     </changeSet>
+
+  <changeSet id="20140306150357-2h" author="ckozak" dbms="hsqldb">
+    <comment>Allow pool deletion.  Add cascading deletes</comment>
+
+    <!-- activation key pool cascade -->
+    <dropForeignKeyConstraint
+      baseTableName="cp_activationkey_pool"
+      constraintName="fk_activation_key_pool_p"/>
+
+    <addForeignKeyConstraint
+      baseColumnNames="pool_id"
+      baseTableName="cp_activationkey_pool"
+      constraintName="fk_activation_key_pool_p"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+      referencedColumnNames="id"
+      referencedTableName="cp_pool"
+      referencesUniqueColumn="false"/>
+
+    <!-- entitlement pool cascade -->
+    <dropForeignKeyConstraint
+      baseTableName="cp_entitlement"
+      constraintName="fk_entitlement_pool"/>
+
+    <addForeignKeyConstraint
+      baseColumnNames="pool_id"
+      baseTableName="cp_entitlement"
+      constraintName="fk_entitlement_pool"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+      referencedColumnNames="id"
+      referencedTableName="cp_pool"
+      referencesUniqueColumn="false"/>
+
+    <!-- pool attribute cascade -->
+    <addForeignKeyConstraint
+      baseColumnNames="pool_id"
+      baseTableName="cp_pool_attribute"
+      constraintName="fk_pool_id"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+      referencedColumnNames="id"
+      referencedTableName="cp_pool"
+      referencesUniqueColumn="false"/>
+
+    <!-- entitlement certificate cascade -->
+    <dropForeignKeyConstraint
+      baseTableName="cp_ent_certificate"
+      constraintName="fk_cert_entitlement"/>
+
+    <addForeignKeyConstraint
+      baseColumnNames="entitlement_id"
+      baseTableName="cp_ent_certificate"
+      constraintName="fk_cert_entitlement"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+      referencedColumnNames="id"
+      referencedTableName="cp_entitlement"
+      referencesUniqueColumn="false"/>
+
+    <!-- derived pool cascade, shouldn't be necessary -->
+    <dropForeignKeyConstraint
+      baseTableName="cp_pool"
+      constraintName="fk_pool_source_entitlement"/>
+
+    <addForeignKeyConstraint
+      baseColumnNames="sourceentitlement_id"
+      baseTableName="cp_pool"
+      constraintName="fk_pool_source_entitlement"
+      deferrable="false"
+      initiallyDeferred="false"
+      onDelete="CASCADE"
+      onUpdate="NO ACTION"
+      referencedColumnNames="id"
+      referencedTableName="cp_entitlement"
+      referencesUniqueColumn="false"/>
+  </changeSet>
 
     <changeSet id="20140306150357-3" author="ckozak">
         <comment>Remove duplicate pools per stack</comment>

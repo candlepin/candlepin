@@ -670,27 +670,4 @@
         />
     </changeSet>
 
-    <changeSet id="20150210094558-46" author="crog" dbms="oracle">
-        <createIndex indexName="cp2_owner_products_idx1" tableName="cp2_owner_products" unique="false">
-            <column name="owner_id"/>
-        </createIndex>
-    </changeSet>
-
-    <changeSet id="20150210094558-47" author="crog" dbms="oracle">
-        <createIndex indexName="cp2_owner_products_idx2" tableName="cp2_owner_products" unique="false">
-            <column name="product_uuid"/>
-        </createIndex>
-    </changeSet>
-
-    <changeSet id="20150210094558-48" author="crog" dbms="oracle">
-        <createIndex indexName="cp2_owner_content_idx1" tableName="cp2_owner_content" unique="false">
-            <column name="owner_id"/>
-        </createIndex>
-    </changeSet>
-
-    <changeSet id="20150210094558-49" author="crog" dbms="oracle">
-        <createIndex indexName="cp2_owner_content_idx2" tableName="cp2_owner_content" unique="false">
-            <column name="content_uuid"/>
-        </createIndex>
-    </changeSet>
 </databaseChangeLog>

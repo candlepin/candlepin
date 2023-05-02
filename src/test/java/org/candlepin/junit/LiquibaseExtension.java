@@ -82,7 +82,7 @@ public class LiquibaseExtension implements BeforeAllCallback, AfterAllCallback, 
     }
 
     public LiquibaseExtension() {
-        this("db/changelog/changelog-testing.xml");
+        this("db/changelog/changelog-update.xml");
     }
 
     public Liquibase getLiquibase() {

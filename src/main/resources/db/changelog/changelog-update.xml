@@ -1,6 +1,9 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
     <property name="project.name" value="candlepin"/>
+    <include file="db/changelog/changelog-create.xml"/>
+    <include file="db/changelog/20120411152729-insert-quartz-locks.xml"/>
+    <include file="db/changelog/20120413094334-insert-default-consumer-types.xml"/>
     <include file="db/changelog/20120416134048-insert-uebercert-consumer-type.xml"/>
     <include file="db/changelog/20120420143629-consumer-release-to-varchar.xml"/>
     <include file="db/changelog/20120523102544-add-owner-default-sla.xml"/>
@@ -24,7 +27,6 @@
     <include file="db/changelog/20130319110704-drop-upstream-uuid.xml"/>
     <include file="db/changelog/20130319112409-drop-columns-from-import-record.xml"/>
     <include file="db/changelog/20130402153704-add-upstream-consumer-fk.xml"/>
-    <include file="db/changelog/20130402164325-create-oracle-schema.xml"/>
     <include file="db/changelog/20130403095818-reconcile-postgresql-with-oracle.xml"/>
     <include file="db/changelog/20130514152949-consumer_installed_product_add_version.xml"/>
     <include file="db/changelog/20130515095101-consumer_installed_product_arch_column.xml"/>
@@ -32,7 +34,6 @@
     <include file="db/changelog/20130429105623-distributor-version-addition.xml"/>
     <include file="db/changelog/20130501152202-add-content-arch.xml"/>
     <include file="db/changelog/20130531164013-remove-arch-table.xml"/>
-    <include file="db/changelog/20130611152026-add-missing-capability-indexes-on-oracle.xml"/>
     <include file="db/changelog/20130611101437-add-subscription-derivedproduct.xml"/>
     <include file="db/changelog/20130624133949-add-sub-product-dist-version-capability.xml"/>
     <include file="db/changelog/20130705140300-add-certv3-capability.xml"/>
@@ -75,8 +76,8 @@
     <include file="db/changelog/20140811163932-compliance-on-startdate.xml"/>
     <include file="db/changelog/20140911164800-add-activation-key-description.xml"/>
     <include file="db/changelog/20140916131808-activation-key-expansion.xml"/>
-    <include file="db/changelog/20141203123727-add-compliance-status-hash-column.xml"/>
     <include file="db/changelog/20141126150611-create-content-tags-table.xml"/>
+    <include file="db/changelog/20141203123727-add-compliance-status-hash-column.xml"/>
     <include file="db/changelog/20150123105016-add-consumer-checkin-table.xml"/>
     <include file="db/changelog/20150211111319-add-last-guest-update-table.xml"/>
     <include file="db/changelog/20150316122833-add-entitlement-end-date-override.xml"/>
@@ -95,7 +96,6 @@
     <include file="db/changelog/20150915094638-add-reporter-id-to-hypervisor-id.xml"/>
     <include file="db/changelog/20160224171417-drop-stat-history-table.xml"/>
     <include file="db/changelog/20160412131122-add-unique-constraint-to-product-certificate-rows.xml"/>
-    <include file="db/changelog/20160419110701-oracle-add-indexes-for-foreign-keys.xml"/>
     <include file="db/changelog/20160714130753-add_lower_columns.xml"/>
     <include file="db/changelog/20160722162105-remove-bad-ueber-cert-data.xml"/>
     <include file="db/changelog/20160812153414-simplify-attribute-tables.xml"/>
