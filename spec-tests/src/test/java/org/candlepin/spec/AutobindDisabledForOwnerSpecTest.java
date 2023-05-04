@@ -169,8 +169,8 @@ public class AutobindDisabledForOwnerSpecTest {
         AsyncJobStatusDTO job = adminClient.owners().healEntire(owner.getKey());
         job = adminClient.jobs().waitForJob(job);
 
-        assertThatJob(job).isFailed();
         assertThatJob(job)
+            .isFailed()
             .contains("org.candlepin.async.JobExecutionException: Auto-attach is disabled for owner");
     }
 
@@ -183,10 +183,10 @@ public class AutobindDisabledForOwnerSpecTest {
         AsyncJobStatusDTO job = adminClient.owners().healEntire(owner.getKey());
         job = adminClient.jobs().waitForJob(job);
 
-        assertThatJob(job).isFailed();
         assertThatJob(job)
-            .contains("org.candlepin.async.JobExecutionException: Auto-attach is disabled for owner");
-        assertThatJob(job).contains("because of the content access mode setting.");
+            .isFailed()
+            .contains("org.candlepin.async.JobExecutionException: Auto-attach is disabled for owner")
+            .contains("simple content access");
     }
 
     @Test
