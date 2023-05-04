@@ -488,16 +488,8 @@
           </execution>
         </executions>
         <configuration>
-          <executable>gradlew</executable>
+          <executable>./bin/scripts/generate_translations.sh</executable>
           <workingDirectory>${project.basedir}</workingDirectory>
-          <arguments>
-            <argument>msgfmt</argument>
-            <argument>--no-daemon</argument>
-            <argument>--input</argument>
-            <argument>${project.basedir}/po</argument>
-            <argument>--output</argument>
-            <argument>${project.build.directory}/generated-sources/msgfmt/gen/java</argument>
-          </arguments>
         </configuration>
       </plugin>
       <plugin>
