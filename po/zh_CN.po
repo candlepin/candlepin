@@ -1,7 +1,7 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021, 2022.
 # Sundeep Anand <suanand@redhat.com>, 2021, 2022.
-# Charles Lee <lchopn@gmail.com>, 2021.
+# Charles Lee <lchopn@gmail.com>, 2021, 2023.
 # Transtats <suanand@redhat.com>, 2022.
 # John Sefler <jsefler@redhat.com>, 2023.
 msgid ""
@@ -9,8 +9,8 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-02-12 02:04-0500\n"
-"PO-Revision-Date: 2023-01-27 18:20+0000\n"
-"Last-Translator: John Sefler <jsefler@redhat.com>\n"
+"PO-Revision-Date: 2023-04-21 10:20+0000\n"
+"Last-Translator: Charles Lee <lchopn@gmail.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
 "projects/candlepin/master/zh_CN/>\n"
 "Language: zh_CN\n"
@@ -1220,28 +1220,20 @@ msgid "Invalid date range; start date occurs after the end date: {0} > {1}"
 msgstr "日期范围无效；开始日期在结束日期之后： {0}> {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:89
-#, fuzzy
-#| msgid "role data is null or empty"
 msgid "content label cannot be null or empty"
-msgstr "角色数据为 null 或空"
+msgstr "内容标签不能为空值或为空"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:93
-#, fuzzy
-#| msgid "role name is null or empty"
 msgid "content name cannot be null or empty"
-msgstr "角色名称为 null 或空"
+msgstr "内容名称不能为空值或为空"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:97
-#, fuzzy
-#| msgid "role data is null or empty"
 msgid "content type cannot be null or empty"
-msgstr "角色数据为 null 或空"
+msgstr "内容类型不能为空值或为空"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:101
-#, fuzzy
-#| msgid "role data is null or empty"
 msgid "content vendor cannot be null or empty"
-msgstr "角色数据为 null 或空"
+msgstr "内容厂商不能为空值或为空"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:164
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:181
@@ -1276,10 +1268,8 @@ msgid "product has a null or invalid ID"
 msgstr "产品有一个 null 或无效的 ID"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:157
-#, fuzzy
-#| msgid "product has null or invalid name"
 msgid "product has a null or invalid name"
-msgstr "产品有 null 或无效的名称"
+msgstr "产品有空的或无效的名称"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:181
 #, java-format
@@ -1797,10 +1787,8 @@ msgid "Archive failed signature check"
 msgstr "归档签名检查失败"
 
 #: src/main/java/org/candlepin/sync/Importer.java:419
-#, fuzzy
-#| msgid "The archive does not contain the required consumer.json file"
 msgid "The provided manifest has no content in the exported consumer archive"
-msgstr "该归档不包含所需 consumer.json 目录"
+msgstr "提供的清单在导出的消费者存档中没有内容"
 
 #: src/main/java/org/candlepin/sync/Importer.java:440
 msgid "The archive does not contain the required consumer_export.zip file"

@@ -1,13 +1,14 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Lucas Costa Paula Pessoa <lcppcoding@gmail.com>, 2020, 2021.
 # Fábio Rodrigues Ribeiro <farribeiro@gmail.com>, 2021.
+# Felipe Nogueira <contato.fnog@gmail.com>, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-02-12 02:04-0500\n"
-"PO-Revision-Date: 2021-03-30 22:02+0000\n"
-"Last-Translator: Lucas Costa Paula Pessoa <lcppcoding@gmail.com>\n"
+"PO-Revision-Date: 2023-04-11 05:20+0000\n"
+"Last-Translator: Felipe Nogueira <contato.fnog@gmail.com>\n"
 "Language-Team: Portuguese (Brazil) <https://translate.fedoraproject.org/"
 "projects/candlepin/master/pt_BR/>\n"
 "Language: pt_BR\n"
@@ -15,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Weblate 4.5.2\n"
+"X-Generator: Weblate 4.15.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 #, fuzzy
@@ -307,10 +308,8 @@ msgstr "Erro ao obter a chave da unidade OAuth"
 # translation auto-copied from project Candlepin, version master, document
 # keys
 #: src/main/java/org/candlepin/auth/SSLAuth.java:103
-#, fuzzy
-#| msgid "Invalid Credentials"
 msgid "Invalid Certificate Type"
-msgstr "Credenciais inválidas"
+msgstr "Tipo de certificado inválido"
 
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1300
@@ -321,7 +320,7 @@ msgid "User not found: {0}"
 msgstr "Usuário não encontrado: {0}"
 
 #: src/main/java/org/candlepin/bind/BindContext.java:117
-#, fuzzy, java-format
+#, java-format
 msgid "Subscription pool(s) {0} do not exist."
 msgstr "Pool(s) de inscrição {0} não existe."
 
@@ -395,7 +394,7 @@ msgstr ""
 #: src/main/java/org/candlepin/controller/ManifestManager.java:305
 #, java-format
 msgid "Unable to download manifest: {0}"
-msgstr ""
+msgstr "Não foi possível baixar o manifesto: {0}"
 
 #: src/main/java/org/candlepin/controller/ManifestManager.java:316
 #, java-format
@@ -777,7 +776,7 @@ msgstr "Permissões insuficientes"
 #: src/main/java/org/candlepin/resource/CdnResource.java:74
 #, java-format
 msgid "A CDN with the label {0} already exists"
-msgstr ""
+msgstr "Um CDN com a etiqueta {0} já existe"
 
 #: src/main/java/org/candlepin/resource/CdnResource.java:154
 msgid "CDN certificate has null key or cert."
