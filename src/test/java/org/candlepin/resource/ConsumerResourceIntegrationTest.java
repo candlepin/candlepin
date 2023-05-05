@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.ConsumerPrincipal;
@@ -73,6 +72,7 @@ import org.candlepin.util.Util;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
+import org.apache.commons.io.FileUtils;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,6 +82,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -89,7 +90,6 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -99,9 +99,8 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
-/**
- * ConsumerResourceTest
- */
+
+
 public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     private static final String METADATA_VALUE = "jsontestname";
     private static final String METADATA_NAME = "name";
@@ -198,18 +197,30 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @AfterEach
     public void cleanup() {
         // cleanup the temp exports
-        TestUtil.cleanupDir("/tmp", "export");
+        File tempDir = new File("/tmp");
+
+        for (File f : tempDir.listFiles()) {
+            if (f.isDirectory() && f.getName().startsWith("export")) {
+                try {
+                    FileUtils.deleteDirectory(f);
+                }
+                catch (IOException e) {
+                    throw new RuntimeException(
+                        "Failed to cleanup directory: " + "/tmp", e);
+                }
+            }
+        }
     }
 
     @Test
-    public void testGetCerts() throws JobException, Exception {
+    public void testGetCerts() {
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
         List<CertificateDTO> serials = consumerResource.getEntitlementCertificates(consumer.getUuid(), null);
         assertEquals(1, serials.size());
     }
 
     @Test
-    public void testGetSerialFiltering() throws JobException {
+    public void testGetSerialFiltering() {
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null, null, false, null, null);
@@ -425,7 +436,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void testBindByPool() throws Exception {
+    public void testBindByPool() {
         Response rsp = consumerResource.bind(
             consumer.getUuid(), pool.getId(), null, 1, null,
             null, false, null, null);
@@ -475,7 +486,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void unbindBySerialWithExistingCertificateShouldPass() throws JobException {
+    public void unbindBySerialWithExistingCertificateShouldPass() {
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
         List<CertificateDTO> serials = consumerResource
@@ -488,7 +499,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCannotGetAnotherConsumersCerts() throws JobException {
+    public void testCannotGetAnotherConsumersCerts() {
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(),
@@ -508,7 +519,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testCanGetOwnedConsumersCerts() throws JobException {
+    public void testCanGetOwnedConsumersCerts() {
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(),
@@ -584,7 +595,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void consumerShouldSeeOwnEntitlements() throws JobException {
+    public void consumerShouldSeeOwnEntitlements() {
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(),
@@ -600,7 +611,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void consumerShouldNotSeeAnotherConsumersEntitlements() throws JobException {
+    public void consumerShouldNotSeeAnotherConsumersEntitlements() {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
 
@@ -620,7 +631,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void ownerShouldNotSeeOtherOwnerEntitlements() throws JobException {
+    public void ownerShouldNotSeeOtherOwnerEntitlements() {
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(),
@@ -640,7 +651,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void ownerShouldSeeOwnEntitlements() throws JobException {
+    public void ownerShouldSeeOwnEntitlements() {
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
         consumerResource.bind(consumer.getUuid(), pool.getId(),
@@ -699,7 +710,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
      */
     @SuppressWarnings("unchecked")
     @Test
-    public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() throws JobException {
+    public void testRegenerateEntitlementCertificateWithValidConsumerByEntitlement() {
         Response rsp = consumerResource.bind(consumer.getUuid(), pool.getId(), null, 1, null,
             null, false, null, null);
 
@@ -732,12 +743,6 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
             bind(Configuration.class).to(CandlepinCommonTestConfig.class);
             bind(CertificateReader.class).asEagerSingleton();
         }
-    }
-
-    private Set<String> toSet(String item) {
-        Set<String> result = new HashSet<>();
-        result.add(item);
-        return result;
     }
 
     @Test
