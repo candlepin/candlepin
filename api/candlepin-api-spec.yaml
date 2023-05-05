@@ -2,7 +2,7 @@ openapi: 3.0.2
 info:
   title: Candlepin
   description: Candlepin is a subscription management server written in Java. It helps with management of software subscriptions.
-  version: 4.3.3
+  version: 4.3.4
 
 servers:
   - url: /candlepin

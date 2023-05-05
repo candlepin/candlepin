@@ -13,7 +13,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.3.3
+Version: 4.3.4
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -230,6 +230,26 @@ fi
 
 #raw
 %changelog
+* Fri May 05 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.4-1
+- Add new translations using Weblate (noreply@weblate.org)
+- Use shell script for source translation generation (nmoumoul@redhat.com)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.1.3 to 3.1.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-503: Migrated bugzilla reference to Github actions
+  (joshmalbrecht@gmail.com)
+- Bump org.junit.jupiter:junit-jupiter from 5.9.2 to 5.9.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-557: Fixed content access mode resolution for consumers
+  (crog@redhat.com)
+- Bump org.junit.jupiter:junit-jupiter-engine from 5.9.2 to 5.9.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.9.3 to 10.10.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 21.0.2 to 21.1.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+
 * Wed Apr 26 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.3-1
 - Bump com.fasterxml.jackson.dataformat:jackson-dataformat-xml
   (49699333+dependabot[bot]@users.noreply.github.com)
