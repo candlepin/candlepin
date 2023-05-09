@@ -65,16 +65,5 @@
 
     </changeSet>
 
-    <changeSet id="20170202093945-3" author="mstead" dbms="oracle">
-        <validCheckSum>7:2fd5ee53d1ac8510b3168bf2265d6a0d</validCheckSum>
-        <validCheckSum>8:5873675b6c018690a89d017744ff8512</validCheckSum>
-        <comment>Add indexes for the foreign keys in oracle.</comment>
-
-        <!-- Oracle automatically creates an index for the unique constraint -->
-        <createIndex indexName="ueber_cert_serial_fk" tableName="cp_ueber_cert" unique="false">
-            <column name="serial_id"/>
-        </createIndex>
-    </changeSet>
-
 </databaseChangeLog>
 <!-- vim: set expandtab sts=4 sw=4 ai: -->

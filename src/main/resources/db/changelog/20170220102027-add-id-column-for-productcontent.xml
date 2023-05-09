@@ -32,10 +32,6 @@
             UPDATE cp2_product_content SET id=md5(product_uuid || content_uuid || random()::text || clock_timestamp()::text)
         </sql>
 
-        <sql dbms="oracle">
-            UPDATE cp2_product_content SET id=SYS_GUID()
-        </sql>
-
         <!-- Add the primary key -->
         <addPrimaryKey tableName="cp2_product_content"
             columnNames="id"

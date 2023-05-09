@@ -180,7 +180,7 @@ class Candlepin():
     def classpath(self):
         return classpath_for_war("candlepin")
     def create_changelog_location(self):
-        return "db/changelog/changelog-create.xml"
+        return "db/changelog/changelog-update.xml"
     def update_changelog_location(self):
         return "db/changelog/changelog-update.xml"
     def default_db_name(self):

@@ -6,28 +6,13 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <changeSet author="wpoteat" id="20140916131808-1" dbms="postgresql">
+    <changeSet author="wpoteat" id="20140916131808-1" dbms="postgresql,hsqldb">
         <createTable tableName="cp_activationkey_product">
             <column name="id" type="VARCHAR(32)">
                 <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activationkey_product_pkey"/>
             </column>
             <column name="created" type="TIMESTAMP WITHOUT TIME ZONE"/>
             <column name="updated" type="TIMESTAMP WITHOUT TIME ZONE"/>
-            <column name="key_id" type="VARCHAR(32)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="product_id" type="VARCHAR(32)">
-                <constraints nullable="false"/>
-            </column>
-        </createTable>
-    </changeSet>
-    <changeSet author="wpoteat" id="20140916131808-2" dbms="oracle">
-        <createTable tableName="cp_activationkey_product">
-            <column name="id" type="VARCHAR(32)">
-                <constraints nullable="false" primaryKey="true" primaryKeyName="cp_activationkey_product_pkey"/>
-            </column>
-            <column name="created" type="TIMESTAMP WITH TIME ZONE"/>
-            <column name="updated" type="TIMESTAMP WITH TIME ZONE"/>
             <column name="key_id" type="VARCHAR(32)">
                 <constraints nullable="false"/>
             </column>

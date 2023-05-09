@@ -8,10 +8,8 @@
 
 
     <property dbms="postgresql" name="tmp_table_creation_args" value="TEMPORARY"/>
-    <property dbms="oracle" name="tmp_table_creation_args" value="GLOBAL TEMPORARY"/>
 
     <property dbms="postgresql" name="revoked_value" value="true"/>
-    <property dbms="oracle" name="revoked_value" value="1"/>
 
     <changeSet id="20170718095058-1" author="vrjain, crog">
       <validCheckSum>7:5494d3a96b8e4205ce7993d2c2b96e29</validCheckSum>
@@ -92,7 +90,7 @@
         DROP TABLE IF EXISTS tmp_orphaned_pools;
       </sql>
 
-      <sql dbms="postgresql, oracle">
+      <sql dbms="postgresql">
         CREATE ${tmp_table_creation_args} TABLE tmp_orphaned_pools (pool_id varchar(32) PRIMARY KEY);
 
         -- Find our orphaned pools

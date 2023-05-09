@@ -7,7 +7,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
 
-    <changeSet id="20131101140657" author="bkearney">
+    <changeSet id="20131101140657" author="bkearney"  dbms="postgresql,mysql,mariadb">
         <comment>Remove the bad foreign key names based on https://bugzilla.redhat.com/show_bug.cgi?id=984090</comment>
         <dropForeignKeyConstraint baseTableName="cp_subscription_products" constraintName="fk_product_id" />
         <dropForeignKeyConstraint baseTableName="cp_subscription_products" constraintName="fk_subscription_id" />
@@ -16,11 +16,6 @@
         <comment>Add back in the correct foreign key names based on https://bugzilla.redhat.com/show_bug.cgi?id=984090</comment>
         <addForeignKeyConstraint baseColumnNames="subscription_id" baseTableName="cp_subscription_products" constraintName="fk_subscription_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_subscription" />
         <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_subscription_products" constraintName="fk_product_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" />
-    </changeSet>
-    <changeSet id="20131101140657-2" author="bkearney" dbms="oracle">
-        <comment>Add back in the correct foreign key names based on https://bugzilla.redhat.com/show_bug.cgi?id=984090</comment>
-        <addForeignKeyConstraint baseColumnNames="subscription_id" baseTableName="cp_subscription_products" constraintName="fk_subscription_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_subscription" referencesUniqueColumn="false"/>
-        <addForeignKeyConstraint baseColumnNames="product_id" baseTableName="cp_subscription_products" constraintName="fk_product_id" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" referencedColumnNames="id" referencedTableName="cp_product" referencesUniqueColumn="false"/>
     </changeSet>
     <changeSet id="20131101140657-3" author="bkearney" dbms="postgresql">
         <comment>Add back in the correct foreign key names based on https://bugzilla.redhat.com/show_bug.cgi?id=984090</comment>

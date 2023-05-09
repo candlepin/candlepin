@@ -26,7 +26,7 @@ gendb() {
 
     if [ "$GENDB" == "1" ]; then
         MESSAGE="Generating New Database"
-        CHANGELOG="changelog-create.xml"
+        CHANGELOG="changelog-update.xml"
         if [ "$USE_MYSQL" == "1" ]; then
             recreate_mysql $APP_DB_NAME $DBUSER
         else

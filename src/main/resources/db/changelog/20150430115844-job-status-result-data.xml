@@ -13,7 +13,7 @@
         </addColumn>
     </changeSet>
 
-    <changeSet id="20150430115844-2" author="wpoteat" dbms="oracle, hsqldb">
+    <changeSet id="20150430115844-2" author="wpoteat" dbms=" hsqldb">
         <comment>Add field for result data</comment>
         <addColumn tableName="cp_job">
             <column name="resultdata" type="BLOB"/>

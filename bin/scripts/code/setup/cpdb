@@ -64,7 +64,7 @@ class DbSetup(object):
 
     def initialize_schema(self):
         print("Loading Candlepin schema")
-        self._run_liquibase("db/changelog/changelog-create.xml")
+        self._run_liquibase("db/changelog/changelog-update.xml")
 
     def drop(self):
         raise NotImplementedError("Implemented by subclasses")

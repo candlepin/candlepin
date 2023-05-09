@@ -10,7 +10,7 @@
 
     <!-- Delete ueber entitlement certificates -->
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_ueber_certs_round3"
         value="delete from cp_ent_certificate
                where entitlement_id in (
@@ -22,7 +22,7 @@
 
     <!-- Delete ueber entitlements -->
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_ueber_ents_round3"
         value="delete from cp_entitlement
                where pool_id in (
@@ -32,7 +32,7 @@
 
     <!-- Delete any ueber pool source subscriptions -->
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_pool_source_sub_round3"
         value="delete from cp2_pool_source_sub
                where pool_id in (
@@ -42,7 +42,7 @@
 
     <!-- Delete any ueber pools -->
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_ueber_pools_round3"
         value="delete from cp_pool
                where id in (
@@ -52,7 +52,7 @@
 
     <!-- Delete any ueber owner content (2.0 records) -->
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_owner_content_round3"
         value="delete from cp2_owner_content
                where content_uuid in (
@@ -63,7 +63,7 @@
 
     <!-- Delete any ueber content  -->
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_ueber_content_round3"
         value="delete from cp2_content
                where uuid in (
@@ -74,7 +74,7 @@
 
     <!-- Delete any ueber owner products -->
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_owner_products_round3"
         value="delete from cp2_owner_products
                where product_uuid in (
@@ -83,13 +83,13 @@
 
     <!-- Delete any ueber products  -->
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_ueber_products_round3"
         value="delete from cp2_products where name like '%_ueber_product';"/>
 
     <!-- Delete any ueber consumers -->
     <property
-        dbms="postgresql,oracle,hsqldb"
+        dbms="postgresql,hsqldb"
         name="delete_ueber_consumers_round3"
         value="delete from cp_consumer where name like 'ueber_cert_consumer';"/>
 

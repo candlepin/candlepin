@@ -9,7 +9,7 @@
     <!-- ********************************************************************* -->
     <!-- *** Postgres/Oracle cleanup                                        ** -->
     <!-- ********************************************************************* -->
-    <changeSet id="20170214115606-1" dbms="postgresql,oracle,hsqldb" author="mstead">
+    <changeSet id="20170214115606-1" dbms="postgresql,hsqldb" author="mstead">
         <comment>Cleanup all ueber data so that the new style ueber certs can be used.</comment>
 
         <!-- Delete ueber entitlement certificates -->
@@ -83,7 +83,7 @@
         <sql>delete from cp_consumer where name like 'ueber_cert_consumer';</sql>
     </changeSet>
 
-    <changeSet id="20170214115606-2" dbms="postgresql,oracle,hsqldb" author="mstead">
+    <changeSet id="20170214115606-2" dbms="postgresql,hsqldb" author="mstead">
         <comment>Delete the UeberConsumer consumer type as it is no longer used.</comment>
         <sql>delete from cp_consumer_type where label='uebercert';</sql>
     </changeSet>

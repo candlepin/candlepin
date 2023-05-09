@@ -6,8 +6,7 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
 
-    <property name="quantity.type" value="BIGINT" dbms="oracle"/>
-    <property name="quantity.type" value="int8" dbms="postgresql"/>
+    <property name="quantity.type" value="int8" dbms="postgresql,hsqldb"/>
     <property name="quantity.type" value="BIGINT" dbms="mysql,mariadb"/>
 
     <changeSet id="20131025150828" author="ckozak">

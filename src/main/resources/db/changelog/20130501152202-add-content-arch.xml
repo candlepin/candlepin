@@ -10,7 +10,7 @@
     <include file="db/changelog/datatypes.xml"/>
 
 
-    <changeSet id="20130501152202-1" author="alikins" dbms="oracle,postgresql">
+    <changeSet id="20130501152202-1" author="alikins" dbms="postgresql,hsqldb">
         <validCheckSum>7:75a2f97f5bab86b5a9a2e2dbe7691846</validCheckSum>
         <validCheckSum>7:9f23549e635ccba246d3932a9dc5a40d</validCheckSum>
         <validCheckSum>7:a8a8479ea5703b60cf9ef21459bae983</validCheckSum>
@@ -30,7 +30,7 @@
        </createTable>
     </changeSet>
 
-    <changeSet id="20130501152202-2" author="alikins" dbms="oracle,postgresql">
+    <changeSet id="20130501152202-2" author="alikins" dbms="postgresql,hsqldb">
         <validCheckSum>7:21a6dfe6c97700d58f1f8149007b7d7b</validCheckSum>
         <validCheckSum>7:3b4602097ebfc5c75e3244fab603acbd</validCheckSum>
         <validCheckSum>7:4b694f84dc22cb635c07172d6fa01f4c</validCheckSum>
@@ -49,19 +49,19 @@
        </createTable>
    </changeSet>
 
-    <changeSet id="20130501152202-3" author="alikins" dbms="oracle,postgresql">
+    <changeSet id="20130501152202-3" author="alikins" dbms="postgresql,hsqldb">
         <addPrimaryKey columnNames="arch_id, content_id" constraintName="cp_content_arch_pkey" tableName="cp_content_arch"/>
     </changeSet>
 
-    <changeSet id="20130501152202-4" author="alikins" dbms="oracle,postgresql">
+    <changeSet id="20130501152202-4" author="alikins" dbms="postgresql,hsqldb">
         <addForeignKeyConstraint baseColumnNames="arch_id" baseTableName="cp_content_arch" constraintName="fk_content_arch_arch" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_arch" referencesUniqueColumn="false"/>
     </changeSet>
 
-    <changeSet id="20130501152202-5" author="alikins" dbms="oracle,postgresql">
+    <changeSet id="20130501152202-5" author="alikins" dbms="postgresql,hsqldb">
         <addForeignKeyConstraint baseColumnNames="content_id" baseTableName="cp_content_arch" constraintName="fk_content_arch_content" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="cp_content" referencesUniqueColumn="false"/>
     </changeSet>
 
-    <changeSet id="20130501152202-6" author="alikins" dbms="oracle,postgresql">
+    <changeSet id="20130501152202-6" author="alikins" dbms="postgresql,hsqldb">
         <comment>populate arch table</comment>
         <insert tableName="cp_arch">
             <column name="id" value="0"/>

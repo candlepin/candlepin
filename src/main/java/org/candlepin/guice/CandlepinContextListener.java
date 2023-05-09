@@ -460,7 +460,7 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
             Database database =
                 DatabaseFactory.getInstance().findCorrectDatabaseImplementation(jdbcConnection);
             ResourceAccessor accessor = new ClassLoaderResourceAccessor();
-            liquibase = new Liquibase("WEB-INF/classes/db/changelog/changelog-update.xml",
+            liquibase = new Liquibase("db/changelog/changelog-update.xml",
                 accessor, database);
         }
         catch (ReflectiveOperationException e) {
