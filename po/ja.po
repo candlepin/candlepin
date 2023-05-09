@@ -2,22 +2,22 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Ludek Janda <ljanda@redhat.com>, 2020. #zanata, 2021, 2022.
 # Sundeep Anand <suanand@redhat.com>, 2021, 2022.
-# Transtats <suanand@redhat.com>, 2022.
+# Transtats <suanand@redhat.com>, 2022, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-02-12 02:04-0500\n"
-"PO-Revision-Date: 2022-11-28 11:19+0000\n"
-"Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
+"PO-Revision-Date: 2023-03-02 08:20+0000\n"
+"Last-Translator: Transtats <suanand@redhat.com>\n"
 "Language-Team: Japanese <https://translate.fedoraproject.org/projects/"
-"candlepin/master/ja/>\n"
+"candlepin/candlepin-4-2-hotfix/ja/>\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.14.2\n"
+"X-Generator: Weblate 4.15.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -1271,28 +1271,20 @@ msgid "Invalid date range; start date occurs after the end date: {0} > {1}"
 msgstr "日付の範囲が無効です。開始日が終了日の後に設定されています: {0} > {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:89
-#, fuzzy
-#| msgid "role data is null or empty"
 msgid "content label cannot be null or empty"
-msgstr "ロールデータは null または空です"
+msgstr "コンテンツラベルは null または空欄にすることはできません"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:93
-#, fuzzy
-#| msgid "role name is null or empty"
 msgid "content name cannot be null or empty"
-msgstr "ロール名は null または空です"
+msgstr "コンテンツ名は null または空欄にすることはできません"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:97
-#, fuzzy
-#| msgid "role data is null or empty"
 msgid "content type cannot be null or empty"
-msgstr "ロールデータは null または空です"
+msgstr "コンテンツタイプは null または空欄にすることはできません"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:101
-#, fuzzy
-#| msgid "role data is null or empty"
 msgid "content vendor cannot be null or empty"
-msgstr "ロールデータは null または空です"
+msgstr "コンテンツベンダーは null または空欄にすることはできません"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:164
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:181
@@ -1327,10 +1319,8 @@ msgid "product has a null or invalid ID"
 msgstr "製品の ID が null または無効です"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:157
-#, fuzzy
-#| msgid "product has null or invalid name"
 msgid "product has a null or invalid name"
-msgstr "製品の名前が null または無効です"
+msgstr "製品が null または無効な名前です"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:181
 #, java-format
@@ -1877,10 +1867,9 @@ msgid "Archive failed signature check"
 msgstr "アーカイブでの署名チェックに失敗しました"
 
 #: src/main/java/org/candlepin/sync/Importer.java:419
-#, fuzzy
-#| msgid "The archive does not contain the required consumer.json file"
 msgid "The provided manifest has no content in the exported consumer archive"
-msgstr "アーカイブに必要な consumer.json ファイルが含まれていません"
+msgstr "エクスポートされたコンシューマーアーカイブにある、指定のマニフェストにはコン"
+"テンツがありません"
 
 #: src/main/java/org/candlepin/sync/Importer.java:440
 msgid "The archive does not contain the required consumer_export.zip file"
