@@ -28,6 +28,7 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
+import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -218,34 +219,30 @@ public class Entitler {
         Consumer consumer = data.getConsumer();
         Owner owner = data.getOwner();
         ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
-        boolean autobindHypervisorDisabled = owner.isAutobindHypervisorDisabled() &&
-            type != null && type.isType(ConsumerType.ConsumerTypeEnum.HYPERVISOR);
 
-        if (!consumer.isDev() && (owner.isAutobindDisabled() || autobindHypervisorDisabled ||
-            owner.isUsingSimpleContentAccess())) {
-
-            String caMessage = owner.isUsingSimpleContentAccess() ?
-                " because simple content access is enabled" : "";
-
-            String hypMessage = owner.isAutobindHypervisorDisabled() ?
-                " because of the hypervisor autobind setting" : "";
-
-            log.info("Skipping auto-attach for consumer '{}'. Auto-attach is disabled for owner {}{}{}",
-                consumer.getUuid(), owner.getKey(), caMessage, hypMessage);
-
-            if (autobindHypervisorDisabled) {
-                throw new AutobindHypervisorDisabledException(i18n.tr(
-                    "Auto-attach is disabled for owner \"{0}\"{1}.",
-                    owner.getKey(), hypMessage));
+        if (!consumer.isDev()) {
+            // Don't autobind if the org's autobind is entirely disabled
+            if (owner.isAutobindDisabled()) {
+                log.info("Auto-attach is disabled for org {}; skipping auto-attach for consumer {}",
+                    owner.getKey(), consumer.getUuid());
+                throw new AutobindDisabledForOwnerException(this.i18n.tr(
+                    "Auto-attach is disabled for owner {0}", owner.getKey()));
             }
-            else if (owner.isAutobindDisabled()) {
-                throw new AutobindDisabledForOwnerException(i18n.tr(
-                    "Auto-attach is disabled for owner \"{0}\".",
-                    owner.getKey()));
+
+            // Don't autobind if the consumer is a hypervisor and hypervisor autobind is disabled in this org
+            if (owner.isAutobindHypervisorDisabled() && ConsumerTypeEnum.HYPERVISOR.matches(type)) {
+                log.info("Auto-attach is disabled for hypervisors of org {}; skipping auto-attach for " +
+                    "consumer {}", owner.getKey(), consumer.getUuid());
+                throw new AutobindHypervisorDisabledException(this.i18n.tr(
+                    "Auto-attach is disabled for hypervisors of owner {0}", owner.getKey()));
             }
-            else {
-                log.debug("Auto-attach is disabled for owner \"{0}\"{1}.",
-                    owner.getKey(), caMessage);
+
+            // Don't autobind if the org is in SCA mode; but also don't fail?
+            if (owner.isUsingSimpleContentAccess()) {
+                log.info("Auto-attach is disabled for owner {} while using simple content access",
+                    owner.getKey());
+
+                // TODO: Investigate why this path doesn't fail, but the other disabled cases do
                 return Collections.EMPTY_LIST;
             }
         }

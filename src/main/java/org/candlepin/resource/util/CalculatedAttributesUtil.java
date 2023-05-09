@@ -50,11 +50,12 @@ public class CalculatedAttributesUtil {
         Map<String, String> attrMap = new HashMap<>();
         PoolComplianceType type = pool.getComplianceType();
 
-        // TODO: Check that this doesn't break our translation stuff. We may need to have the
-        // description strings translated instead.
-        attrMap.put("compliance_type",
-            i18n.tr("{0}{1}", type.getDescription(), (pool.isUnmappedGuestPool() ? " (Temporary)" : ""))
-        );
+        String complianceType = this.i18n.tr(type.getDescription());
+        if (pool.isUnmappedGuestPool()) {
+            complianceType = this.i18n.tr("{0} (Temporary)", complianceType);
+        }
+
+        attrMap.put("compliance_type", complianceType);
 
         return attrMap;
     }

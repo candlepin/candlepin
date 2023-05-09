@@ -28,6 +28,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.Type;
+import org.xnap.commons.i18n.I18n;
 
 import java.util.Collections;
 import java.util.Date;
@@ -165,12 +166,12 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
      * Indicates how a pool can be used
      */
     public enum PoolComplianceType {
-        UNKNOWN("Other"),
-        STANDARD("Standard"),
-        INSTANCE_BASED("Instance Based"),
-        STACKABLE("Stackable"),
-        UNIQUE_STACKABLE("Stackable only with other subscriptions"),
-        MULTI_ENTITLEMENT("Multi-Entitleable");
+        UNKNOWN(I18n.marktr("Other")),
+        STANDARD(I18n.marktr("Standard")),
+        INSTANCE_BASED(I18n.marktr("Instance Based")),
+        STACKABLE(I18n.marktr("Stackable")),
+        UNIQUE_STACKABLE(I18n.marktr("Stackable only with other subscriptions")),
+        MULTI_ENTITLEMENT(I18n.marktr("Multi-Entitleable"));
 
         private final String description;
 

@@ -65,6 +65,10 @@ public class ConsumerType extends AbstractHibernateObject<ConsumerType> {
             return this.manifest;
         }
 
+        public boolean matches(ConsumerType type) {
+            return type != null && type.getLabel().equals(this.getLabel());
+        }
+
         @Override
         public String toString() {
             return getLabel();

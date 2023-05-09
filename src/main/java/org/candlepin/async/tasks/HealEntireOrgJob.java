@@ -88,11 +88,15 @@ public class HealEntireOrgJob implements AsyncJob {
                     i18n.tr("Healing attempted against non-existent org key \"{}\"", ownerKey), true);
             }
 
-            if (owner.isAutobindDisabled() || owner.isUsingSimpleContentAccess()) {
-                String caMessage = owner.isUsingSimpleContentAccess() ?
-                    " because of the content access mode setting" : "";
-                throw new JobExecutionException(
-                    i18n.tr("Auto-attach is disabled for owner {0}{1}.", owner.getKey(), caMessage), true);
+            if (owner.isAutobindDisabled()) {
+                String errmsg = this.i18n.tr("Auto-attach is disabled for owner {0}", owner.getKey());
+                throw new JobExecutionException(errmsg, true);
+            }
+
+            if (owner.isUsingSimpleContentAccess()) {
+                String errmsg = this.i18n.tr("Auto-attach is disabled for owner {0} while using simple " +
+                    "content access", owner.getKey());
+                throw new JobExecutionException(errmsg, true);
             }
 
             Date entitleDate = arguments.getAs(ENTITLE_DATE_KEY, Date.class);
