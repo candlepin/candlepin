@@ -64,7 +64,8 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
 
         EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
             .setExistingEntity(existingEntity)
-            .setImportedEntity(importedEntity);
+            .setImportedEntity(importedEntity)
+            .setDirty(mapper.isDirty(id));
 
         // Figure out our source entity from which we'll derive children nodes
         ProductInfo sourceEntity = importedEntity != null ? importedEntity : existingEntity;

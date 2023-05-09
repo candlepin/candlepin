@@ -249,6 +249,46 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testProcessNodeFlagsUnchangedNodesCorrectlyWhenNotDirty() {
+        Owner owner = this.createOwner();
+
+        Content existing = this.createContent("test_content", "test content", owner);
+        Content imported = existing.clone();
+
+        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existing.getId())
+            .setExistingEntity(existing)
+            .setImportedEntity(imported)
+            .setDirty(false);
+
+        assertNull(pnode.getNodeState());
+
+        ContentNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
+    }
+
+    @Test
+    public void testProcessNodeFlagsAlwaysUpdatesDirtyNodes() {
+        Owner owner = this.createOwner();
+
+        // The content should be identical to ensure that we still update dirty nodes even when we
+        // have no reason to do so otherwise
+        Content existing = this.createContent("test_content", "test content", owner);
+        Content imported = existing.clone();
+
+        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existing.getId())
+            .setExistingEntity(existing)
+            .setImportedEntity(imported)
+            .setDirty(true);
+
+        ContentNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
+    }
+
+    @Test
     public void testProcessNodeFlagsCreatedNodeCorrectly() {
         Owner owner = this.createOwner();
         ContentInfo importedEntity = this.createContent("test_content-1", "Test Content", owner);

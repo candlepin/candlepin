@@ -221,26 +221,26 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
      * {@inheritDoc}
      */
     @Override
-    public boolean containsOnlyExistingEntityIds(Collection<String> ids) {
+    public boolean containsUnmappedExistingEntityIds(Collection<String> ids) {
         return ids != null ?
-            ids.containsAll(this.existingEntities.keySet()) :
-            this.existingEntities.isEmpty();
+            !ids.containsAll(this.existingEntities.keySet()) :
+            !this.existingEntities.isEmpty();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean containsOnlyExistingEntities(Collection<? extends E> entities) {
-        if (entities != null && !entities.isEmpty()) {
-            Collection<String> ids = entities.stream()
-                .map(this::getEntityId)
-                .collect(Collectors.toSet());
-
-            return this.containsOnlyExistingEntityIds(ids);
+    public boolean containsUnmappedExistingEntities(Collection<? extends E> entities) {
+        if (entities == null || entities.isEmpty()) {
+            return !this.existingEntities.isEmpty();
         }
 
-        return this.existingEntities.isEmpty();
+        Collection<String> ids = entities.stream()
+            .map(this::getEntityId)
+            .collect(Collectors.toSet());
+
+        return this.containsUnmappedExistingEntityIds(ids);
     }
 
     /**

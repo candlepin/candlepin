@@ -17,6 +17,7 @@ package org.candlepin.controller.refresher.builders;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -136,6 +137,9 @@ public class ProductNodeBuilderTest {
         // Its pseudo-state getters should match our expectations
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
+
+        // The node should not be flagged dirty
+        assertFalse(output.isDirty());
     }
 
     @Test
@@ -180,6 +184,9 @@ public class ProductNodeBuilderTest {
         // Its pseudo-state getters should match our expectations
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
+
+        // The node should not be flagged dirty
+        assertFalse(output.isDirty());
     }
 
     @Test
@@ -223,6 +230,73 @@ public class ProductNodeBuilderTest {
         // Its pseudo-state getters should match our expectations
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
+
+        // The node should not be flagged dirty
+        assertFalse(output.isDirty());
+    }
+
+    @Test
+    public void testBuildNodeWithOnlyExistingEntityUsingDirtyMappingCreatesDirtyNode() {
+        String id = "test_id";
+
+        Owner owner = TestUtil.createOwner();
+        Product existing = TestUtil.createProduct(id, "existing");
+        ProductInfo imported = TestUtil.createProduct(id, "imported");
+
+        ProductMapper mapper = spy(new ProductMapper());
+
+        mapper.addExistingEntity(existing);
+        doReturn(true).when(mapper).isDirty(eq(id));
+
+        ProductNodeBuilder builder = this.buildNodeBuilder();
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, mapper, owner, id);
+
+        assertNotNull(output);
+        assertEquals(id, output.getEntityId());
+        assertTrue(output.isDirty());
+    }
+
+    @Test
+    public void testBuildNodeWithOnlyImportedEntityUsingDirtyMappingCreatesDirtyNode() {
+        String id = "test_id";
+
+        Owner owner = TestUtil.createOwner();
+        Product existing = TestUtil.createProduct(id, "existing");
+        ProductInfo imported = TestUtil.createProduct(id, "imported");
+
+        ProductMapper mapper = spy(new ProductMapper());
+
+        mapper.addImportedEntity(imported);
+        doReturn(true).when(mapper).isDirty(eq(id));
+
+        ProductNodeBuilder builder = this.buildNodeBuilder();
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, mapper, owner, id);
+
+        assertNotNull(output);
+        assertEquals(id, output.getEntityId());
+        assertTrue(output.isDirty());
+    }
+
+    @Test
+    public void testBuildNodeWithOnlyExistingAndImportedEntitiesUsingDirtyMappingCreatesDirtyNode() {
+        String id = "test_id";
+
+        Owner owner = TestUtil.createOwner();
+        Product existing = TestUtil.createProduct(id, "existing");
+        ProductInfo imported = TestUtil.createProduct(id, "imported");
+
+        ProductMapper mapper = spy(new ProductMapper());
+
+        mapper.addExistingEntity(existing);
+        mapper.addImportedEntity(imported);
+        doReturn(true).when(mapper).isDirty(eq(id));
+
+        ProductNodeBuilder builder = this.buildNodeBuilder();
+        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, mapper, owner, id);
+
+        assertNotNull(output);
+        assertEquals(id, output.getEntityId());
+        assertTrue(output.isDirty());
     }
 
     @Test

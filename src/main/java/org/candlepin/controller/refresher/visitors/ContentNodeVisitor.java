@@ -114,13 +114,18 @@ public class ContentNodeVisitor implements NodeVisitor<Content, ContentInfo> {
         node.setNodeState(NodeState.UNCHANGED);
 
         if (existingEntity != null) {
-            if (importedEntity != null) {
-                if (ContentManager.isChangedBy(existingEntity, importedEntity)) {
-                    Content mergedEntity = this.createEntity(node);
-                    node.setMergedEntity(mergedEntity);
+            // Check if the node is dirty or has changed any...
+            boolean nodeChanged = node.isDirty();
 
-                    node.setNodeState(NodeState.UPDATED);
-                }
+            // Check if the node has changed upstream...
+            nodeChanged = nodeChanged || (importedEntity != null &&
+                ContentManager.isChangedBy(existingEntity, importedEntity));
+
+            if (nodeChanged) {
+                Content mergedEntity = this.createEntity(node);
+                node.setMergedEntity(mergedEntity);
+
+                node.setNodeState(NodeState.UPDATED);
             }
         }
         else if (importedEntity != null) {

@@ -103,6 +103,46 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
     }
 
     @Test
+    public void testProcessNodeFlagsUnchangedNodesCorrectlyWhenNotDirty() {
+        Owner owner = this.createOwner();
+
+        Product existing = this.createProduct("test_product", "test product", owner);
+        Product imported = existing.clone();
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existing.getId())
+            .setExistingEntity(existing)
+            .setImportedEntity(imported)
+            .setDirty(false);
+
+        assertNull(pnode.getNodeState());
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
+    }
+
+    @Test
+    public void testProcessNodeFlagsAlwaysUpdatesDirtyNodes() {
+        Owner owner = this.createOwner();
+
+        // The products should be identical to ensure that we still update dirty nodes even when we
+        // have no reason to do so otherwise
+        Product existing = this.createProduct("test_product", "test product", owner);
+        Product imported = existing.clone();
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existing.getId())
+            .setExistingEntity(existing)
+            .setImportedEntity(imported)
+            .setDirty(true);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
+    }
+
+    @Test
     public void testProcessNodeFlagsUnchangedNodeAsUpdatedWithUpdatedChildren() {
         Owner owner = this.createOwner();
         Product existingEntity = this.createProduct("test_prod-1", "Test Product", owner);

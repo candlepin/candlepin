@@ -129,12 +129,6 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
             return;
         }
 
-        boolean nodeChanged = false;
-
-        // Check if we need to make reference updates on this entity due to children updates
-        boolean childrenUpdated = node.getChildrenNodes()
-            .anyMatch(EntityNode::changed);
-
         Product existingEntity = node.getExistingEntity();
         ProductInfo importedEntity = node.getImportedEntity();
 
@@ -146,11 +140,17 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
             this.ownerOrphanEntityIdPrecache.computeIfAbsent(node.getOwner(), key -> new HashSet<>())
                 .add(node.getEntityId());
 
-            if (importedEntity != null) {
-                nodeChanged = ProductManager.isChangedBy(existingEntity, importedEntity);
-            }
+            // Check if the node is dirty or has changed any...
+            boolean nodeChanged = node.isDirty();
 
-            if (nodeChanged || childrenUpdated) {
+            // Check if we need to make reference updates on this entity due to children updates
+            nodeChanged = nodeChanged || (node.getChildrenNodes().anyMatch(EntityNode::changed));
+
+            // Check if the node has changed upstream
+            nodeChanged = nodeChanged || (importedEntity != null &&
+                ProductManager.isChangedBy(existingEntity, importedEntity));
+
+            if (nodeChanged) {
                 Product mergedEntity = this.createEntity(node);
                 node.setMergedEntity(mergedEntity);
 
