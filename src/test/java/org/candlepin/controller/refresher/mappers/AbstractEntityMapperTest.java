@@ -322,9 +322,6 @@ public abstract class AbstractEntityMapperTest<E extends AbstractHibernateObject
         }
     }
 
-
-
-
     @Test
     public void testAddImportedEntity() {
         Owner owner = TestUtil.createOwner();
@@ -884,7 +881,7 @@ public abstract class AbstractEntityMapperTest<E extends AbstractHibernateObject
     }
 
     @Test
-    public void testContainsOnlyExistingEntityIds() {
+    public void testContainsUnmappedExistingEntityIds() {
         Owner owner = TestUtil.createOwner();
 
         E entity1 = this.buildLocalEntity(owner, "test_entity-1");
@@ -898,21 +895,21 @@ public abstract class AbstractEntityMapperTest<E extends AbstractHibernateObject
             .collect(Collectors.toList());
 
         // An empty mapper is still a subset of the expected list
-        assertTrue(mapper.containsOnlyExistingEntityIds(entityIds));
+        assertFalse(mapper.containsUnmappedExistingEntityIds(entityIds));
 
         for (E entity : List.of(entity1, entity2, entity3)) {
             mapper.addExistingEntity(entity);
-            assertTrue(mapper.containsOnlyExistingEntityIds(entityIds));
+            assertFalse(mapper.containsUnmappedExistingEntityIds(entityIds));
         }
 
         // Add a new entity and verify the original entityId list is no longer a superset
         mapper.addExistingEntity(this.buildLocalEntity(owner, "test_entity-4"));
-        assertFalse(mapper.containsOnlyExistingEntityIds(entityIds));
+        assertTrue(mapper.containsUnmappedExistingEntityIds(entityIds));
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @NullAndEmptySource
-    public void testContainsOnlyExistingEntityIdsPermitsEmptyCollections(List<String> input) {
+    public void testContainsUnmappedExistingEntityIdsPermitsEmptyCollections(List<String> input) {
         Owner owner = TestUtil.createOwner();
 
         E entity1 = this.buildLocalEntity(owner, "test_entity-1");
@@ -922,20 +919,20 @@ public abstract class AbstractEntityMapperTest<E extends AbstractHibernateObject
         EntityMapper<E, I> mapper = this.buildEntityMapper();
 
         // Empty is a subset of empty. Null/empty values should match until the mapper has data
-        assertTrue(mapper.containsOnlyExistingEntityIds(input));
+        assertFalse(mapper.containsUnmappedExistingEntityIds(input));
 
         for (E entity : List.of(entity1, entity2, entity3)) {
             mapper.addExistingEntity(entity);
-            assertFalse(mapper.containsOnlyExistingEntityIds(input));
+            assertTrue(mapper.containsUnmappedExistingEntityIds(input));
         }
 
         // Clearing the mapper should bring this back to its original state and return as expected
         mapper.clear();
-        assertTrue(mapper.containsOnlyExistingEntityIds(input));
+        assertFalse(mapper.containsUnmappedExistingEntityIds(input));
     }
 
     @Test
-    public void testContainsOnlyExistingEntities() {
+    public void testContainsUnmappedExistingEntities() {
         Owner owner = TestUtil.createOwner();
 
         E entity1 = this.buildLocalEntity(owner, "test_entity-1");
@@ -947,21 +944,21 @@ public abstract class AbstractEntityMapperTest<E extends AbstractHibernateObject
         List<E> entities = List.of(entity1, entity2, entity3);
 
         // An empty mapper is still a subset of the expected list
-        assertTrue(mapper.containsOnlyExistingEntities(entities));
+        assertFalse(mapper.containsUnmappedExistingEntities(entities));
 
         for (E entity : List.of(entity1, entity2, entity3)) {
             mapper.addExistingEntity(entity);
-            assertTrue(mapper.containsOnlyExistingEntities(entities));
+            assertFalse(mapper.containsUnmappedExistingEntities(entities));
         }
 
         // Add a new entity and verify the original entityId list is no longer a superset
         mapper.addExistingEntity(this.buildLocalEntity(owner, "test_entity-4"));
-        assertFalse(mapper.containsOnlyExistingEntities(entities));
+        assertTrue(mapper.containsUnmappedExistingEntities(entities));
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @NullAndEmptySource
-    public void testContainsOnlyExistingEntitiesPermitsEmptyCollections(List<E> input) {
+    public void testContainsUnmappedExistingEntitiesPermitsEmptyCollections(List<E> input) {
         Owner owner = TestUtil.createOwner();
 
         E entity1 = this.buildLocalEntity(owner, "test_entity-1");
@@ -971,15 +968,15 @@ public abstract class AbstractEntityMapperTest<E extends AbstractHibernateObject
         EntityMapper<E, I> mapper = this.buildEntityMapper();
 
         // Empty is a subset of empty. Null/empty values should match until the mapper has data
-        assertTrue(mapper.containsOnlyExistingEntities(input));
+        assertFalse(mapper.containsUnmappedExistingEntities(input));
 
         for (E entity : List.of(entity1, entity2, entity3)) {
             mapper.addExistingEntity(entity);
-            assertFalse(mapper.containsOnlyExistingEntities(input));
+            assertTrue(mapper.containsUnmappedExistingEntities(input));
         }
 
         // Clearing the mapper should bring this back to its original state and return as expected
         mapper.clear();
-        assertTrue(mapper.containsOnlyExistingEntities(input));
+        assertFalse(mapper.containsUnmappedExistingEntities(input));
     }
 }

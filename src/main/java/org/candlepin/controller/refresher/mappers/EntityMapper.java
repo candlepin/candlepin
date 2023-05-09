@@ -203,9 +203,10 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
     boolean isDirty(String id);
 
     /**
-     * Checks that this mapper only contains only existing entity mappings for entities with the
-     * given IDs. If the given collection is null or empty, this method will return true if, and
-     * only if, the mapper contains no existing entity mappings.
+     * Checks if this mapper contains one or more "unmapped" existing entities, defined as an
+     * existing entity mapping which is not represented in the specified collection of IDs. If the
+     * given collection is null or empty, this method will return true if the mapper contains one or
+     * more mapped existing entities.
      * <p></p>
      * <strong>Note:</strong> This method has no effect on the state of the dirty flag for any
      * mapped existing entity.
@@ -214,15 +215,16 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
      *  a collection of entity IDs representing the superset of expected mapped existing entities
      *
      * @return
-     *  true if this mapper contains only existing entities with IDs that are not present in the
-     *  provided collection of IDs; false otherwise
+     *  true if this mapper contains one or more existing entities with IDs that are not present in
+     *  the provided collection of IDs; false otherwise
      */
-    boolean containsOnlyExistingEntityIds(Collection<String> ids);
+    boolean containsUnmappedExistingEntityIds(Collection<String> ids);
 
     /**
-     * Checks that this mapper only contains only existing entity mappings for entities contained in
-     * the given collection of entities. If the given collection is null or empty, this method will
-     * return true if, and only if, the mapper contains no existing entity mappings.
+     * Checks if this mapper contains one or more "unmapped" existing entities, defined as an
+     * existing entity mapping which is not represented in the specified collection of IDs. If the
+     * given collection is null or empty, this method will return true if the mapper contains one or
+     * more mapped existing entities.
      * <p></p>
      * <strong>Note:</strong> This method has no effect on the state of the dirty flag for any
      * mapped existing entity.
@@ -231,10 +233,10 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
      *  a collection of entities representing the superset of expected mapped existing entities
      *
      * @return
-     *  true if this mapper contains only existing entities that are not present in the
-     *  provided entity collection; false otherwise
+     *  true if this mapper contains one or more existing entities that are not present in the
+     *  provided collection of IDs; false otherwise
      */
-    boolean containsOnlyExistingEntities(Collection<? extends E> entities);
+    boolean containsUnmappedExistingEntities(Collection<? extends E> entities);
 
     /**
      * Clears this entity mapper, removing all known existing and imported entities

@@ -227,12 +227,14 @@ public class PoolRulesStackDerivedTest {
      * @return
      */
     private Pool copyFromSub(Subscription sub) {
-        Pool pool = TestUtil.copyFromSub(sub);
-        pool.setId("" + lastPoolId++);
+        Pool pool = TestUtil.copyFromSub(sub)
+            .setId(String.valueOf(lastPoolId++));
+
         when(productCurator.getPoolProvidedProductsCached(pool))
-            .thenReturn((Set<Product>) pool.getProduct().getProvidedProducts());
+            .thenReturn(new ArrayList<>(pool.getProduct().getProvidedProducts()));
         when(productCurator.getPoolDerivedProvidedProductsCached(pool))
-            .thenReturn((Set<Product>) pool.getProduct().getProvidedProducts());
+            .thenReturn(new ArrayList<>(pool.getProduct().getProvidedProducts()));
+
         return pool;
     }
 

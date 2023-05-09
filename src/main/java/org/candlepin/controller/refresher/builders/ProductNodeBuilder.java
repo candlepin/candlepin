@@ -61,6 +61,7 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
 
         Product existingEntity = mapper.getExistingEntity(id);
         ProductInfo importedEntity = mapper.getImportedEntity(id);
+        boolean dirty = mapper.isDirty(id);
 
         EntityNode<Product, ProductInfo> node = new ProductNode(owner, id)
             .setExistingEntity(existingEntity)
@@ -85,6 +86,7 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
                     <Product, ProductInfo>buildNode(owner, Product.class, provided.getId());
 
                 node.addChildNode(child);
+                dirty = dirty || child.isDirty();
             }
         }
 
@@ -93,6 +95,7 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
         if (derived != null) {
             EntityNode<Product, ProductInfo> child = factory.buildNode(owner, Product.class, derived.getId());
             node.addChildNode(child);
+            dirty = dirty || child.isDirty();
         }
 
         // Add content nodes
@@ -126,8 +129,12 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
                     <Content, ContentInfo>buildNode(owner, Content.class, content.getId());
 
                 node.addChildNode(child);
+                dirty = dirty || child.isDirty();
             }
         }
+
+        // If the node or any of its children were dirty, set the dirty flag
+        node.setDirty(dirty);
 
         return node;
     }

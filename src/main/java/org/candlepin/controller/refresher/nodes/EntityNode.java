@@ -199,6 +199,27 @@ public interface EntityNode<E extends AbstractHibernateObject, I extends Service
     boolean changed();
 
     /**
+     * Checks if this node represents an existing entity that is dirty, or needs to be forcefully
+     * updated, even in cases where it otherwise may not be.
+     *
+     * @return
+     *  true if this node represents a "dirty" existing entity which needs updating; false otherwise
+     */
+    boolean isDirty();
+
+    /**
+     * Sets whether or not this node represents a dirty existing entity which needs to be forcefully
+     * updated, even in cases where it otherwise may not be.
+     *
+     * @param dirty
+     *  whether or not this node should be considered dirty
+     *
+     * @return
+     *  a reference to this entity node
+     */
+    EntityNode<E, I> setDirty(boolean dirty);
+
+    /**
      * Fetches the operation to be performed on this node
      *
      * @return
@@ -283,4 +304,5 @@ public interface EntityNode<E extends AbstractHibernateObject, I extends Service
      *  change
      */
     E getMergedEntity();
+
 }

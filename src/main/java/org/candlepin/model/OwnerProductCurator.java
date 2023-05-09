@@ -1171,4 +1171,5 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             this.clearProductEntityVersion(entity.getUuid());
         }
     }
+
 }

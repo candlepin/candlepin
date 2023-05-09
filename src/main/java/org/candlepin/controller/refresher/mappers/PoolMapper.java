@@ -87,4 +87,20 @@ public class PoolMapper extends AbstractEntityMapper<Pool, SubscriptionInfo> {
         return id;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean entitiesMatch(Pool existing, Pool inbound) {
+        return existing.equals(inbound);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean entitiesMatch(SubscriptionInfo existing, SubscriptionInfo inbound) {
+        return existing.equals(inbound);
+    }
+
 }
