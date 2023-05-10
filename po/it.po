@@ -5,7 +5,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-02-12 02:04-0500\n"
-"PO-Revision-Date: 2023-05-01 15:20+0000\n"
+"PO-Revision-Date: 2023-05-08 10:20+0000\n"
 "Last-Translator: Pino Toscano <toscano.pino@tiscali.it>\n"
 "Language-Team: Italian <https://translate.fedoraproject.org/projects/"
 "candlepin/master/it/>\n"
@@ -476,6 +476,7 @@ msgid ""
 "The requested role \"{0}\" is not provided by a currently consumed "
 "subscription."
 msgstr ""
+"Il ruolo richiesto \"{0}\" non è fornito da alcuna sottoscrizione usata."
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:133
 #, java-format
@@ -483,6 +484,7 @@ msgid ""
 "The requested add-on \"{0}\" is not provided by a currently consumed "
 "subscription."
 msgstr ""
+"L''add-on richiesto \"{0}\" non è fornito da alcuna sottoscrizione usata."
 
 #: src/main/java/org/candlepin/policy/SystemPurposeComplianceStatus.java:187
 #, java-format
@@ -656,19 +658,21 @@ msgstr ""
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:179
 #, java-format
 msgid "Pool is restricted to unmapped virtual guests: \"{1}\""
-msgstr ""
+msgstr "Il pool è limitato ai guest virtuali non mappati: \"{1}\""
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:181
 #, java-format
 msgid ""
 "Pool is restricted to virtual guests in their first day of existence: \"{1}\""
 msgstr ""
+"Il pool è limitato ai guest virtuali nel loro primo giorno di esistenza: \""
+"{1}\""
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:183
 #, java-format
 msgid ""
 "Pool is restricted when it is temporary and begins in the future: \"{1}\""
-msgstr ""
+msgstr "Il pool è limitato quando è temporaneo e inizia nel futuro: \"{1}\""
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:185
 #, java-format
@@ -699,6 +703,7 @@ msgstr ""
 #, java-format
 msgid "Only virtual systems can have subscription \"{1}\" attached."
 msgstr ""
+"È possibile associare la sottoscrizione \"{1}\" solo a sistemi virtuali."
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:201
 #, java-format
@@ -739,6 +744,8 @@ msgid ""
 "The activation key name \"{0}\" must be alphanumeric or include the "
 "characters \"-\" or \"_\""
 msgstr ""
+"Il nome della chiave di attivazione \"{0}\" deve includere solo lettere, "
+"cifre, \"-\" o \"_\""
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:212
 #, java-format
@@ -955,7 +962,7 @@ msgstr "La modalità di accesso al contenuto non permette questa richiesta."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2152
 msgid "Cannot retrieve content access certificate"
-msgstr ""
+msgstr "Impossibile recuperare il certificato di accesso al contenuto"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2199
 msgid "Unable to create entitlement certificate archive"
@@ -993,6 +1000,8 @@ msgstr ""
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
+"Richiesta di associazione automatica ignorata. È disabilitata per "
+"l''organizzazione \"{0}\"."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2405
 #, java-format
@@ -1005,6 +1014,7 @@ msgstr ""
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr ""
+"L''associazione automatica è disabilitata per l''organizzazione \"{0}\"."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2487
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2579
@@ -1163,6 +1173,8 @@ msgstr "Due o più ambienti appartengono a diverse organizzazioni"
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:401
 msgid "No environment specified, or environment lacks owner information"
 msgstr ""
+"Nessun ambiente specificato, oppure l''ambiente non ha informazioni sul "
+"proprietario"
 
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:405
 msgid "No content ID specified"
@@ -1240,6 +1252,8 @@ msgstr ""
 #, java-format
 msgid "Invalid date range; start date occurs after the end date: {0} > {1}"
 msgstr ""
+"Intervallo di date non valido; la data iniziale è dopo la data finale: {0} > "
+"{1}"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:89
 msgid "content label cannot be null or empty"
@@ -1262,7 +1276,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:268
 #, java-format
 msgid "content \"{0}\" is locked"
-msgstr ""
+msgstr "il contenuto \"{0}\" è bloccato"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:209
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:414
@@ -1283,7 +1297,7 @@ msgstr "Non è stato trovato il proprietario con la chiave \"{0}\"."
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:317
 #, java-format
 msgid "product \"{0}\" is locked"
-msgstr ""
+msgstr "il prodotto \"{0}\" è bloccato"
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:153
 msgid "product has a null or invalid ID"
@@ -1308,7 +1322,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:206
 msgid "Only numeric product IDs are allowed."
-msgstr ""
+msgstr "Sono ammessi solo ID numerici per i prodotti."
 
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:300
 #, java-format
@@ -1317,7 +1331,7 @@ msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:276
 msgid "Owner key is null or empty."
-msgstr ""
+msgstr "La chiave del proprietario è nulla o vuota."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:280
 #, java-format
@@ -1326,7 +1340,7 @@ msgstr "Non è stato trovato il proprietario con la chiave \"{0}\""
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:306
 msgid "Owner id is null or empty."
-msgstr ""
+msgstr "L''ID del proprietario è nullo o vuoto."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:310
 #, java-format
@@ -1336,6 +1350,8 @@ msgstr "Non è stato trovato il proprietario con l''ID \"{0}\""
 #: src/main/java/org/candlepin/resource/OwnerResource.java:339
 msgid "Owner lookup failed because id and key were null or empty."
 msgstr ""
+"Non è stato trovato un proprietario poiché l''ID e la chiave erano nulli o "
+"vuoti."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:363
 msgid "Entitlement id is null or empty."
@@ -1358,7 +1374,7 @@ msgstr "Unità non trovata: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:424
 msgid "Pool id is null or empty."
-msgstr ""
+msgstr "L''ID del pool è nullo o vuoto."
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:466
 #: src/main/java/org/candlepin/resource/util/ResolverUtil.java:93
@@ -1378,6 +1394,8 @@ msgstr ""
 #, java-format
 msgid "Content access mode list contains an unsupported mode: {0}"
 msgstr ""
+"La lista delle modalità di accesso al contenuto contiene una modalità non "
+"supportata: {0}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:899
 #, java-format
@@ -1385,6 +1403,8 @@ msgid ""
 "Content access mode is not present in the content access mode list for this "
 "org: {0}"
 msgstr ""
+"La modalità di accesso al contenuto non è presente nella lista delle "
+"modalità di accesso al contenuto di questa organizzazione: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author fvalen
@@ -1476,6 +1496,8 @@ msgstr "I proprietari devono essere creati con una chiave valida"
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1677
 msgid "The default service level cannot be specified during owner creation"
 msgstr ""
+"Il livello di servizio predefinito non può essere specificato durante la "
+"creazione di un proprietario"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1715
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1727
@@ -1577,7 +1599,7 @@ msgstr "il nome utente è nullo o vuoto"
 
 #: src/main/java/org/candlepin/resource/RoleResource.java:125
 msgid "role data is null or empty"
-msgstr ""
+msgstr "i dati del ruolo sono nulli o vuoti"
 
 #: src/main/java/org/candlepin/resource/RoleResource.java:129
 msgid "role name not specified"
@@ -1629,7 +1651,7 @@ msgstr "Non è stata trovata una sottoscrizione con l''ID \"{0}\"."
 
 #: src/main/java/org/candlepin/resource/UserResource.java:136
 msgid "user data is null or empty"
-msgstr ""
+msgstr "i dati dell''utente sono nulli o vuoti"
 
 #: src/main/java/org/candlepin/resource/UserResource.java:140
 msgid "Username not specified"
