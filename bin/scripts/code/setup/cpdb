@@ -59,27 +59,22 @@ class DbSetup(object):
         self.community = community
         self.verbose = verbose
 
-    def create(self):
-        raise NotImplementedError("Implemented by subclasses")
-
-    def initialize_schema(self):
-        print("Loading Candlepin schema")
-        self._run_liquibase("db/changelog/changelog-update.xml")
-
     def drop(self):
         raise NotImplementedError("Implemented by subclasses")
 
-    def validate(self):
-        """ Validates an existing candlepin database. """
-        print("Validating Candlepin database")
-        self._run_liquibase("db/changelog/changelog-validate.xml")
+    def create(self):
+        raise NotImplementedError("Implemented by subclasses")
 
-    def update(self):
-        """ Upgrades an existing candlepin database. """
-        print("Migrating Candlepin database")
-        self._run_liquibase("db/changelog/changelog-update.xml")
+    def update_schema(self):
+        print("Updating Candlepin schema")
+        self._run_liquibase("update", "db/changelog/changelog-update.xml")
 
-    def _run_liquibase(self, changelog_path):
+    def status(self):
+        """ Checks an existing Candlepin database. """
+        print("Checking Candlepin database")
+        self._run_liquibase("status", "db/changelog/changelog-update.xml")
+
+    def _run_liquibase(self, action, changelog_path):
         # Figure out what to append to the classpath for liquibase:
         classpath = ":".join(glob.glob(JAR_PATH + "*postgresql*.jar"))
 
@@ -112,8 +107,12 @@ class DbSetup(object):
 
         print(liquibase_options)
 
-        output = run_command("/usr/share/candlepin/liquibase.sh %s update -Dcommunity=%s" % (liquibase_options, self.community))
-        print(output)
+        command = "/usr/share/candlepin/liquibase.sh %s %s -Dcommunity=%s" % (liquibase_options, action, self.community)
+        (status, output) = getstatusoutput(command)
+        if status > 0 and output.find('database "%s" does not exist' % self.db) > 0:
+            print ('ERROR: The database "%s" does not exist.' % self.db)
+        else:
+            print(output)
 
 
 class PostgresqlSetup(DbSetup):
@@ -153,7 +152,7 @@ class PostgresqlSetup(DbSetup):
             os.environ["PGPASSWORD"] = password
 
     def create(self):
-        print("Creating candlepin database 2")
+        print("Creating Candlepin database")
         command = "createdb -U %s" % (self.username)
         if self.host:
             command = "%s -h %s" % (command, self.host)
@@ -163,13 +162,13 @@ class PostgresqlSetup(DbSetup):
         (status, output) = getstatusoutput(command)
 
         if status > 0 and output.find("already exists") > 0:
-            print("Candlepin database already exists, skipping...")
-            return
+            print("ERROR: The Candlepin database already exists. Use --drop first if you intend to make a new database.")
+            sys.exit(1)
         elif status > 0:
             error_out(command, status, output)
 
     def drop(self):
-        print("Dropping candlepin database")
+        print("Dropping Candlepin database")
         command = "dropdb -U %s %s" % (self.username, self.db)
         (status, output) = getstatusoutput(command)
         if status > 0 and output.find('does not exist') > 0:
@@ -180,26 +179,22 @@ class PostgresqlSetup(DbSetup):
 
 if __name__ == "__main__":
     parser = OptionParser()
-    parser.add_option("--create",
-            dest="create", action="store_true", default=False,
-            help="create the Candlepin database; cannot be used with --update or --validate")
 
-    parser.add_option("--schema-only",
-            dest="schema_only", action="store_true", default=False,
-            help="assumes database is already created by another tool and "
-                 "applies schema to database; used with --create")
-
-    parser.add_option("--validate",
-            dest="validate", action="store_true", default=False,
-            help="validate the current state of the Candlepin database; cannot be used with --create")
-
-    parser.add_option("--update",
-            dest="update", action="store_true", default=False,
-            help="update the Candlepin database; cannot be used with --create")
+    parser.add_option("--status",
+            dest="status", action="store_true", default=False,
+            help="check status of the Candlepin database; cannot be used with other action options")
 
     parser.add_option("--drop",
             dest="drop", action="store_true", default=False,
-            help="drop the existing Candlepin database before creating")
+            help="drop the existing Candlepin database")
+
+    parser.add_option("--create",
+            dest="create", action="store_true", default=False,
+            help="create the Candlepin database without the schema")
+
+    parser.add_option("--update-schema",
+            dest="updateschema", action="store_true", default=False,
+            help="update the Candlepin database schema in an existing database")
 
     parser.add_option("-u", "--user",
             dest="dbuser", default="candlepin",
@@ -244,24 +239,12 @@ if __name__ == "__main__":
 
     (options, args) = parser.parse_args()
 
-    if (not options.create and not options.update and not options.validate):
-        print("ERROR: Please specify --create, --update or --validate.")
+    if (not options.create and not options.updateschema and not options.drop and not options.status):
+        print("ERROR: Please specify --drop, --create, --update-schema, or --status.")
         sys.exit(1)
 
-    if (options.create and options.validate):
-        print("ERROR: --create cannot be used with --validate")
-        sys.exit(1)
-
-    if (options.create and options.update):
-        print("ERROR: --create cannot be used with --update")
-        sys.exit(1)
-
-    if options.schema_only and not options.create:
-        print("ERROR: --schema-only must only be specified with --create.")
-        sys.exit(1)
-
-    if options.drop and options.schema_only:
-        print("ERROR: --drop can not be used with --schema-only")
+    if ((options.create or options.updateschema or options.drop) and options.status):
+        print("ERROR: --status cannot be used with any other action.")
         sys.exit(1)
 
     if options.ssl:
@@ -275,17 +258,14 @@ if __name__ == "__main__":
     dbsetup = PostgresqlSetup(options.dbhost, options.dbport, options.dbuser, options.dbpassword,
         options.db, options.community, options.verbose, options.ssl, options.sslfactory, options.sslcertpath)
 
+    if options.drop:
+        dbsetup.drop()
+
     if options.create:
-        if options.drop:
-            dbsetup.drop()
+      dbsetup.create()
 
-        if not options.schema_only:
-            dbsetup.create()
+    if options.updateschema:
+        dbsetup.update_schema()
 
-        dbsetup.initialize_schema()
-
-    if options.validate:
-        dbsetup.validate()
-
-    if options.update:
-        dbsetup.update()
+    if options.status:
+        dbsetup.status()
