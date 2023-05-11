@@ -16,10 +16,6 @@ UH_OH = '''
  \__,_|_| |_|      \___/|_| |_(_)
 '''
 
-bugzilla_token = os.environ.get('BUGZILLA_TOKEN')
-if not bugzilla_token:
-    raise EnvironmentError('BUGZILLA_TOKEN not specified')
-
 github_token = os.environ.get('GITHUB_TOKEN_PSW')
 if not github_token:
     raise EnvironmentError('GITHUB_TOKEN not specified')
@@ -32,7 +28,7 @@ pr = requests.get('https://api.github.com/repos/candlepin/candlepin/pulls/{pr}'.
                   headers={'Authorization': 'token {}'.format(github_token)}).json()
 target = pr['base']['ref']
 
-bz = Bugzilla('bugzilla.redhat.com', api_key=bugzilla_token)
+bz = Bugzilla('bugzilla.redhat.com')
 
 main_version = None
 def fetch_main_version():

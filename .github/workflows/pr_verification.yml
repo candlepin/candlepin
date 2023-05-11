@@ -10,6 +10,33 @@ env:
   JAVA_VERSION: '17'
 
 jobs:
+  bugzilla_check:
+    name: bugzilla reference check
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:38
+    steps:
+      - name: Mask secrets
+        shell: bash
+        run: |
+          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Install packages
+        shell: bash
+        run: dnf --setopt install_weak_deps=False install -y python3 python3-pip python3-requests
+
+      - name: Install python dependencies
+        run: pip install python-bugzilla
+
+      - name: Run bugzilla reference check
+        run: ./.github/scripts/bugzilla_reference_check.py
+        env:
+          GITHUB_TOKEN_PSW: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+
   checkstyle:
     runs-on: ubuntu-latest
     container:
@@ -32,6 +59,30 @@ jobs:
         uses: gradle/gradle-build-action@v2
         with:
           arguments: checkstyle
+
+  unit_tests:
+    name: unit tests
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:38
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        shell: bash
+        run: dnf --setopt install_weak_deps=False install -y gettext jss
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Run unit tests
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test
 
   validate_translations:
     runs-on: ubuntu-latest
@@ -68,56 +119,3 @@ jobs:
         with:
           # Cause the check to fail on any broke rules
           fail-on-error: true
-
-  unit_tests:
-    name: unit tests
-    runs-on: ubuntu-latest
-    container:
-      image: fedora:38
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Install dependencies
-        shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext jss
-
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: ${{ env.JAVA_DISTRIBUTION }}
-          java-version: ${{ env.JAVA_VERSION }}
-
-      - name: Run unit tests
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: test
-
-  bugzilla_check:
-    name: bugzilla reference check
-    runs-on: ubuntu-latest
-    container:
-      image: fedora:38
-    steps:
-      - name: Mask secrets
-        shell: bash
-        run: |
-          echo "::add-mask::${{ secrets.BUGZILLA_API_TOKEN }}"
-          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
-
-      - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Install packages
-        shell: bash
-        run: dnf --setopt install_weak_deps=False install -y python3 python3-pip python3-requests
-
-      - name: Install python dependencies
-        run: pip install Bugzilla
-
-      - name: Run bugzilla reference check
-        run: ./.github/scripts/bugzilla_reference_check.py
-        env:
-          BUGZILLA_TOKEN: ${{ secrets.BUGZILLA_API_TOKEN }}
-          GITHUB_TOKEN_PSW: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
