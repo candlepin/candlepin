@@ -59,9 +59,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -796,22 +793,6 @@ public class TestUtil {
         char[] charArray = new char[size];
         Arrays.fill(charArray, 'x');
         return new String(charArray);
-    }
-
-    public static void cleanupDir(String dir, String basename) {
-        File tempDir = new File(dir);
-
-        for (File f : tempDir.listFiles()) {
-            if (f.getName().startsWith(basename)) {
-                try {
-                    FileUtils.deleteDirectory(f);
-                }
-                catch (IOException e) {
-                    throw new RuntimeException(
-                        "Failed to cleanup directory: " + dir, e);
-                }
-            }
-        }
     }
 
     public static Map<String, Product> stubChangedProducts(Product ... products) {
