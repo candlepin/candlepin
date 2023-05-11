@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -31,13 +32,21 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
+import org.candlepin.service.model.ContentInfo;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
 
 
 
@@ -406,5 +415,211 @@ public class ContentManagerTest extends DatabaseTestFixture {
             .getSingleResult();
 
         assertNull(existingEntityVersion);
+    }
+
+    protected static Stream<Arguments> equalityTestParameterProvider() {
+        return Stream.of(
+            Arguments.of("Id", "test_value", "alt_value"),
+            Arguments.of("Type", "test_value", "alt_value"),
+            Arguments.of("Label", "test_value", "alt_value"),
+            Arguments.of("Name", "test_value", "alt_value"),
+            Arguments.of("Vendor", "test_value", "alt_value"),
+            Arguments.of("ContentUrl", "test_value", "alt_value"),
+            Arguments.of("RequiredTags", "test_value", "alt_value"),
+            Arguments.of("ReleaseVersion", "test_value", "alt_value"),
+            Arguments.of("GpgUrl", "test_value", "alt_value"),
+            Arguments.of("MetadataExpiration", 1234L, 5678L),
+            Arguments.of("Arches", "test_value", "alt_value"));
+    }
+
+    private static Method[] getAccessorAndMutator(Class objClass, String propertyName, Class argClass)
+        throws Exception {
+
+        Method accessor = null;
+        Method mutator = null;
+
+        try {
+            accessor = objClass.getDeclaredMethod("get" + propertyName);
+        }
+        catch (NoSuchMethodException e) {
+            accessor = objClass.getDeclaredMethod("is" + propertyName);
+        }
+
+        try {
+            mutator = objClass.getDeclaredMethod("set" + propertyName, argClass);
+        }
+        catch (NoSuchMethodException e) {
+            if (Collection.class.isAssignableFrom(argClass)) {
+                mutator = objClass.getDeclaredMethod("set" + propertyName, Collection.class);
+            }
+            else if (Boolean.class.isAssignableFrom(argClass)) {
+                mutator = objClass.getDeclaredMethod("set" + propertyName, boolean.class);
+            }
+            else {
+                throw e;
+            }
+        }
+
+        return new Method[] { accessor, mutator };
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("equalityTestParameterProvider")
+    public void testIsChangedByDetectsNonNullChanges(String propertyName, Object initialValue,
+        Object updatedValue) throws Exception {
+
+        Method[] methods = getAccessorAndMutator(Content.class, propertyName, initialValue.getClass());
+        Method mutator = methods[1];
+
+        Content entity = new Content();
+        Content update = new Content(); // Note: Content is a ContentInfo impl
+
+        mutator.invoke(entity, initialValue);
+        mutator.invoke(update, updatedValue);
+
+        boolean result = ContentManager.isChangedBy(entity, update);
+        assertTrue(result);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("equalityTestParameterProvider")
+    public void testIsChangedByIgnoresIdenticalValues(String propertyName, Object initialValue,
+        Object updatedValue) throws Exception {
+
+        Method[] methods = getAccessorAndMutator(Content.class, propertyName, initialValue.getClass());
+        Method mutator = methods[1];
+
+        Content entity = new Content();
+        Content update = new Content(); // Note: Content is a ContentInfo impl
+
+        mutator.invoke(entity, initialValue);
+        mutator.invoke(update, initialValue);
+
+        boolean result = ContentManager.isChangedBy(entity, update);
+        assertFalse(result);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("equalityTestParameterProvider")
+    public void testIsChangedByIgnoresNullUpstreamFields(String propertyName, Object initialValue,
+        Object updatedValue) throws Exception {
+
+        Method[] methods = getAccessorAndMutator(Content.class, propertyName, initialValue.getClass());
+        Method mutator = methods[1];
+
+        Content entity = new Content();
+        Content update = new Content(); // Note: Content is a ContentInfo impl
+
+        mutator.invoke(entity, initialValue);
+        mutator.invoke(update, new Object[] { null });
+
+        boolean result = ContentManager.isChangedBy(entity, update);
+        assertFalse(result);
+    }
+
+    protected static Stream<Arguments> emptyAsNullFieldProvider() {
+        return Stream.of(
+            Arguments.of("Arches"),
+            Arguments.of("ContentUrl"),
+            Arguments.of("GpgUrl"),
+            Arguments.of("ReleaseVersion"),
+            Arguments.of("RequiredTags"));
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("emptyAsNullFieldProvider")
+    public void testIsChangedByHandlesSpecialEmptyFields(String propertyName) throws Exception {
+        Method[] methods = getAccessorAndMutator(Content.class, propertyName, String.class);
+        Method mutator = methods[1];
+
+        Content entity = new Content();
+        Content update = new Content(); // Note: Content is a ContentInfo impl
+
+        mutator.invoke(entity, new Object[] { null });
+        mutator.invoke(update, "");
+
+        boolean result = ContentManager.isChangedBy(entity, update);
+        assertFalse(result);
+    }
+
+    protected static Stream<Arguments> standardStringFieldProvider() {
+        return Stream.of(
+            Arguments.of("Id"),
+            Arguments.of("Type"),
+            Arguments.of("Label"),
+            Arguments.of("Name"),
+            Arguments.of("Vendor"));
+    }
+
+    // This test verifies that the null-as-empty behavior does not extend to the other string
+    // fields.
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @MethodSource("standardStringFieldProvider")
+    public void testIsChangedByLimitsApplicationOfEmptyStringBehavior(String propertyName) throws Exception {
+        Method[] methods = getAccessorAndMutator(Content.class, propertyName, String.class);
+        Method mutator = methods[1];
+
+        Content entity = new Content();
+        Content update = new Content(); // Note: Content is a ContentInfo impl
+
+        mutator.invoke(entity, new Object[] { null });
+        mutator.invoke(update, "");
+
+        boolean result = ContentManager.isChangedBy(entity, update);
+        assertTrue(result);
+    }
+
+    // The required/modified products tests need special attention due to the default behavior of
+    // the content object on that field (never return null).
+    @Test
+    public void testIsChangedByDetectsChangesInRequiredProducts() {
+        Content entity = new Content();
+        ContentInfo update = mock(ContentInfo.class);
+
+        entity.setModifiedProductIds(List.of("a", "b", "c"));
+        doReturn(List.of("1", "2", "3")).when(update).getRequiredProductIds();
+        doReturn(null).when(update).getMetadataExpiration();
+
+        boolean result = ContentManager.isChangedBy(entity, update);
+        assertTrue(result);
+    }
+
+    @Test
+    public void testIsChangedByDetectsChangesInRequiredProductsWithEmptyList() {
+        Content entity = new Content();
+        ContentInfo update = mock(ContentInfo.class);
+
+        entity.setModifiedProductIds(List.of("a", "b", "c"));
+        doReturn(List.of()).when(update).getRequiredProductIds();
+        doReturn(null).when(update).getMetadataExpiration();
+
+        boolean result = ContentManager.isChangedBy(entity, update);
+        assertTrue(result);
+    }
+
+    @Test
+    public void testIsChangedByIgnoresUnchangedRequiredProductsField() {
+        Content entity = new Content();
+        ContentInfo update = mock(ContentInfo.class);
+
+        entity.setModifiedProductIds(List.of("a", "b", "c"));
+        doReturn(List.of("a", "b", "c")).when(update).getRequiredProductIds();
+        doReturn(null).when(update).getMetadataExpiration();
+
+        boolean result = ContentManager.isChangedBy(entity, update);
+        assertFalse(result);
+    }
+
+    @Test
+    public void testIsChangedByIgnoresNullRequiredProductsField() {
+        Content entity = new Content();
+        ContentInfo update = mock(ContentInfo.class);
+
+        entity.setModifiedProductIds(List.of("a", "b", "c"));
+        doReturn(null).when(update).getRequiredProductIds();
+        doReturn(null).when(update).getMetadataExpiration();
+
+        boolean result = ContentManager.isChangedBy(entity, update);
+        assertFalse(result);
     }
 }

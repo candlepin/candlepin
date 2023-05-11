@@ -484,41 +484,27 @@ public class ContentManager {
         }
 
         // Field checks
-        if (update.getId() != null && !update.getId().equals(entity.getId())) {
+        if (hasValueChanged(entity.getId(), update.getId(), false)) {
             return true;
         }
 
-        if (update.getType() != null && !update.getType().equals(entity.getType())) {
+        if (hasValueChanged(entity.getType(), update.getType(), false)) {
             return true;
         }
 
-        if (update.getLabel() != null && !update.getLabel().equals(entity.getLabel())) {
+        if (hasValueChanged(entity.getLabel(), update.getLabel(), false)) {
             return true;
         }
 
-        if (update.getName() != null && !update.getName().equals(entity.getName())) {
+        if (hasValueChanged(entity.getName(), update.getName(), false)) {
             return true;
         }
 
-        if (update.getVendor() != null && !update.getVendor().equals(entity.getVendor())) {
+        if (hasValueChanged(entity.getVendor(), update.getVendor(), false)) {
             return true;
         }
 
-        if (update.getContentUrl() != null && !update.getContentUrl().equals(entity.getContentUrl())) {
-            return true;
-        }
-
-        if (update.getRequiredTags() != null && !update.getRequiredTags().equals(entity.getRequiredTags())) {
-            return true;
-        }
-
-        if (update.getReleaseVersion() != null &&
-            !update.getReleaseVersion().equals(entity.getReleaseVersion())) {
-
-            return true;
-        }
-
-        if (update.getGpgUrl() != null && !update.getGpgUrl().equals(entity.getGpgUrl())) {
+        if (hasValueChanged(entity.getGpgUrl(), update.getGpgUrl(), false)) {
             return true;
         }
 
@@ -528,11 +514,31 @@ public class ContentManager {
             return true;
         }
 
-        if (update.getArches() != null && !update.getArches().equals(entity.getArches())) {
+        // These values historically store and treat nulls as interchangeable. As a result, we need
+        // to treat an inbound empty values as equivalent to a local null value
+        if (hasValueChanged(entity.getArches(), update.getArches(), true)) {
             return true;
         }
 
+        if (hasValueChanged(entity.getContentUrl(), update.getContentUrl(), true)) {
+            return true;
+        }
+
+        if (hasValueChanged(entity.getGpgUrl(), update.getGpgUrl(), true)) {
+            return true;
+        }
+
+        if (hasValueChanged(entity.getReleaseVersion(), update.getReleaseVersion(), true)) {
+            return true;
+        }
+
+        if (hasValueChanged(entity.getRequiredTags(), update.getRequiredTags(), true)) {
+            return true;
+        }
+
+        // Collections require special consideration as always
         Collection<String> requiredProductIds = update.getRequiredProductIds();
+
         if (requiredProductIds != null &&
             !Util.collectionsAreEqual(entity.getModifiedProductIds(), requiredProductIds)) {
 
@@ -540,6 +546,30 @@ public class ContentManager {
         }
 
         return false;
+    }
+
+    /**
+     * Checks if the given incoming value would cause a change to the existing value. Typically this
+     * means that the incoming value is not null, and not equal to the existing value; however, if
+     * the treatNullAsEmpty option is set, this method will also treat an existing null value the
+     * same as an incoming empty value to deal with fields that treat null and empty as the same
+     * value at the logic or database layers.
+     *
+     * @param existing
+     *  the existing value to check
+     *
+     * @param incoming
+     *  the new incoming value to test
+     *
+     * @param treatNullAsEmpty
+     *  whether or not to treat an existing null value the same as an incoming empty string
+     *
+     * @return
+     *  true if the incoming value would change the existing value, false otherwise
+     */
+    private static boolean hasValueChanged(String existing, String incoming, boolean treatNullAsEmpty) {
+        return incoming != null &&
+            !(incoming.equals(existing) || (treatNullAsEmpty && existing == null && incoming.isEmpty()));
     }
 
     /**
