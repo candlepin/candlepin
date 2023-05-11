@@ -13,13 +13,13 @@ plugins {
     id "org.owasp.dependencycheck"
     id "jacoco"
     id "org.sonarqube"
+    id "com.diffplug.spotless"
 
     // The following are plugins are plugins we wrote in the buildSrc folder
     id "org.candlepin.gradle.gettext"
     id "org.candlepin.gradle.msgfmt"
     id "org.candlepin.gradle.SpecVersion"
     id "org.candlepin.gradle.PomToolkit"
-    id "checkstyle-conventions"
     id "test-logging-conventions"
 }
 
@@ -71,6 +71,23 @@ ext {
     async_scheduler_enabled = !project.findProperty("async_scheduler_enabled") ||
             "true".equals(project.findProperty("async_scheduler_enabled"))
 }
+
+
+apply plugin: "com.diffplug.spotless"
+spotless {
+    ratchetFrom 'origin/main'
+    java {
+        targetExclude '**/build/**' // exclude generated code
+        enforceCheck false
+        importOrder('org.candlepin', '', '\\#org.candlepin', 'java|javax', '\\#')
+        //allows build task to be successful, even if there is a code style violation
+        eclipse().configFile("${rootDir}/config/codestyle/eclipse-formatter.xml")
+        licenseHeaderFile "${rootDir}/config/codestyle/HEADER.txt"
+        //lets you specify code that you don't want to violate rules or be reformatted
+        toggleOffOn()
+    }
+}
+
 
 dependencies {
     // Commons
@@ -186,6 +203,7 @@ dependencies {
     testImplementation libraries["hamcrest"]
     testImplementation libraries["mockitoJunit"]
     testImplementation libraries["liquibaseSlf4j"]
+
 }
 
 // Copy the resources to the main classes directory so that the

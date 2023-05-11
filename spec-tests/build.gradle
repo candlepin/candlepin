@@ -1,7 +1,7 @@
 plugins {
     id "java"
-    id "checkstyle-conventions"
     id "test-logging-conventions"
+    id "com.diffplug.spotless"
 }
 apply from: "../dependencies.gradle"
 
