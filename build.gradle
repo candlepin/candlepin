@@ -25,12 +25,13 @@ plugins {
     // Openapi version is set in the buildscript block for use in the pom generation as well
     id "org.openapi.generator" version '5.2.1'
     id "java"
+    id "distribution"
     id "maven-publish"
     id "war"
     id "checkstyle"
     id 'org.owasp.dependencycheck' version '6.2.2'
     id "jacoco"
-    id "org.sonarqube" version "3.2.0"
+    id "org.sonarqube" version "4.0.0.2929"
 
 
     // The following are plugins are plugins we wrote in the buildSrc folder
@@ -272,8 +273,8 @@ openApiGenerate {
     outputDir = "$buildDir/generated/api"
     configOptions = [
             interfaceOnly: 'true',
-            generatePom: 'false',
-            dateLibrary: "java8"
+            generatePom  : 'false',
+            dateLibrary  : "java8"
     ]
     templateDir = "$rootDir/buildSrc/src/main/resources/templates"
 }
@@ -337,9 +338,9 @@ test {
     testLogging {
         // set options for log level LIFECYCLE
         events TestLogEvent.FAILED,
-            TestLogEvent.PASSED,
-            TestLogEvent.SKIPPED
-            // TestLogEvent.STANDARD_OUT
+                TestLogEvent.PASSED,
+                TestLogEvent.SKIPPED
+        // TestLogEvent.STANDARD_OUT
         exceptionFormat TestExceptionFormat.FULL
         showExceptions true
         showCauses true
@@ -348,11 +349,11 @@ test {
         // set options for log level DEBUG and INFO
         debug {
             events TestLogEvent.STARTED,
-                TestLogEvent.FAILED,
-                TestLogEvent.PASSED,
-                TestLogEvent.SKIPPED,
-                TestLogEvent.STANDARD_ERROR,
-                TestLogEvent.STANDARD_OUT
+                    TestLogEvent.FAILED,
+                    TestLogEvent.PASSED,
+                    TestLogEvent.SKIPPED,
+                    TestLogEvent.STANDARD_ERROR,
+                    TestLogEvent.STANDARD_OUT
             exceptionFormat TestExceptionFormat.FULL
         }
         info.events = debug.events
@@ -371,7 +372,7 @@ test {
 
 jacocoTestReport {
     reports {
-        xml.enabled true
+        xml.required = true
     }
 
     doLast {
@@ -500,46 +501,56 @@ task pom {
 }
 
 publishing {
-  publications {
-    local(MavenPublication) {
+    publications {
+        mavenJava(MavenPublication) {
+            groupId 'org.candlepin'
+            artifactId 'candlepin'
 
-        generatePomFileForLocalPublication {
-           destination = file("./pom.xml")
+            from components.web
+            pom {
+                name = 'Candlepin'
+                description = 'Candlepin WAR'
+            }
         }
+        local(MavenPublication) {
 
-        pom {
-            description = 'The Candlepin Entitlement Engine'
-            packaging = 'war'
-            licenses {
-                license {
-                    name = 'GNU Public License (GPL) version 2.0'
-                    url = 'http://www.gnu.org/licenses/gpl-2.0.html'
-                    distribution = 'repo'
+            generatePomFileForLocalPublication {
+                destination = file("./pom.xml")
+            }
+
+            pom {
+                description = 'The Candlepin Entitlement Engine'
+                packaging = 'war'
+                licenses {
+                    license {
+                        name = 'GNU Public License (GPL) version 2.0'
+                        url = 'http://www.gnu.org/licenses/gpl-2.0.html'
+                        distribution = 'repo'
+                    }
                 }
-            }
 
-            scm {
-                connection = 'scm:git:git://github.com/candlepin/candlepin.git'
-                developerConnection = 'scm:git:git@github.com:candlepin/candlepin.git'
-            }
+                scm {
+                    connection = 'scm:git:git://github.com/candlepin/candlepin.git'
+                    developerConnection = 'scm:git:git@github.com:candlepin/candlepin.git'
+                }
 
-            pom.withXml {
-                PomToolkit.generatePomDependencies(
-                    asNode(),
-                    configurations.annotationProcessor.dependencies,
-                    configurations.compileOnly.dependencies,
-                    configurations.implementation.dependencies,
-                    configurations.providedCompile.dependencies,
-                    configurations.runtimeOnly.dependencies,
-                    configurations.testImplementation.dependencies,
-                    configurations.testRuntimeOnly.dependencies
-                )
+                pom.withXml {
+                    PomToolkit.generatePomDependencies(
+                            asNode(),
+                            configurations.annotationProcessor.dependencies,
+                            configurations.compileOnly.dependencies,
+                            configurations.implementation.dependencies,
+                            configurations.providedCompile.dependencies,
+                            configurations.runtimeOnly.dependencies,
+                            configurations.testImplementation.dependencies,
+                            configurations.testRuntimeOnly.dependencies
+                    )
 
-                PomToolkit.generateRepositories(asNode())
-                PomToolkit.generateBuild(asNode())
-                PomToolkit.generateProfiles(asNode())
+                    PomToolkit.generateRepositories(asNode())
+                    PomToolkit.generateBuild(asNode())
+                    PomToolkit.generateProfiles(asNode())
+                }
             }
         }
     }
-  }
 }
