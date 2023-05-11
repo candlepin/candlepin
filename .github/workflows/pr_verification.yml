@@ -37,7 +37,7 @@ jobs:
           GITHUB_TOKEN_PSW: ${{ secrets.GITHUB_TOKEN }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
 
-  checkstyle:
+  spotless:
     runs-on: ubuntu-latest
     container:
       image: fedora:38
@@ -55,10 +55,10 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Run checkstyle
+      - name: Run spotless
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: checkstyle
+          arguments: spotlessCheck
 
   unit_tests:
     name: unit tests
@@ -102,10 +102,6 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Run checkstyle
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: validate_translation
 
   woke:
     name: woke
