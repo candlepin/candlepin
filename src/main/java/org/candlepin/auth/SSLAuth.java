@@ -55,10 +55,7 @@ public class SSLAuth extends ConsumerAuth {
         X509Certificate[] certs = (X509Certificate[]) httpRequest.getAttribute(CERTIFICATES_ATTR);
 
         if (certs == null || certs.length < 1) {
-            if (log.isDebugEnabled()) {
-                log.debug("no certificate was present to authenticate the client");
-            }
-
+            log.debug("no certificate was present to authenticate the client");
             return null;
         }
 

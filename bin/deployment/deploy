@@ -122,14 +122,23 @@ update_legacy_keystore() {
 
 configure_tomcat() {
     if [ "$FORCECERT" == "1" ]; then
-        GEN_CERTS_ARGS="-f"
+        GEN_CERTS_ARGS="--force"
     fi
 
-    # generate SSL certs and keystores as needed
-    $SUDO bash $SELF_DIR/gen_certs.sh $GEN_CERTS_ARGS
+    # This works fine for our dev deployment -- especially within Vagrant images -- but may not work as
+    # expected on systems with multiple interfaces or multiple external IPs (i.e. IPv4 and IPv6)
+    local HOSTNAME=$(hostname)
+    local HOSTADDR=$(hostname -I | cut -d ' ' -f 1)
 
-    # Update symlink to legacy keystore if we're on an old version of TC
-    update_legacy_keystore
+    if [ ! -z $HOSTNAME ]; then
+        GEN_CERTS_ARGS="${GEN_CERTS_ARGS} --hostname ${HOSTNAME}"
+    fi
+
+    if [ ! -z $HOSTADDR ]; then
+        GEN_CERTS_ARGS="${GEN_CERTS_ARGS} --hostaddr ${HOSTADDR}"
+    fi
+
+    $SUDO "${PROJECT_DIR}/bin/deployment/gen_certs.sh" --trust $GEN_CERTS_ARGS
 
     # update server.xml
     $SUDO python $PROJECT_DIR/bin/deployment/update-server-xml.py --tomcat-version $TC_VERSION $CONTAINER_CONF_DIR

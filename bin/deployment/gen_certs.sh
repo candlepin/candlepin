@@ -1,142 +1,230 @@
 #!/bin/bash
 
 SCRIPT_NAME=$(basename "$0")
+SCRIPT_HOME=$(dirname "$0")
 
-# This works fine for our dev deployment -- especially within Vagrant images -- but may not work as
-# expected on systems with multiple interfaces or multiple external IPs (i.e. IPv4 and IPv6). On
-# such systems, this script should be run with explicit arguments for these values.
-HOSTNAME=$(hostname)
-HOST_ADDR=$(hostname -I | cut -d ' ' -f 1)
+CA_TRUST_ANCHORS="/etc/pki/ca-trust/source/anchors"
+CA_CHAIN_BUNDLE="${CA_TRUST_ANCHORS}/cp-ca-chain.pem"
 
-CERT_HOME='/etc/candlepin/certs'
-CERT_NAME='candlepin-ca'
+CP_CERT_HOME="/etc/candlepin/certs"
+TMP_CSR_FILE="cp_tmp-${RANDOM}.csr"
 
-NOISE_FILE="${CERT_HOME}/noise.bin"
-PASSWORD_FILE="${CERT_HOME}/cppw.txt"
+# Script defaults
+CA_CERT=
+CA_KEY=
 
-CA_KEY="${CERT_HOME}/candlepin-ca.key"
-CA_PUB_KEY="${CERT_HOME}/candlepin-ca-pub.key"
-CA_CERT="${CERT_HOME}/candlepin-ca.crt"
+CERT_OUT="${CP_CERT_HOME}/candlepin-ca.crt"
+KEY_OUT="${CP_CERT_HOME}/candlepin-ca.key"
+CERT_DAYS=1095
+KEY_BITS=4096
+SAN=("IP:127.0.0.1" "DNS:localhost")
 
-CA_CERT_DAYS=365
-CERT_BIT_LENGTH=4096
+FORCE_REGEN=0
+TRUST=0
 
-set -e
-
-check_dependency() {
-    if ! command -v $1 > /dev/null; then
-        >&2 echo "Error: Certificate generation failed; $1 not detected"
-        exit 1
-    fi
-}
-
-generate_certs() {
-    # Ensure we have all of our dependencies available
-    check_dependency openssl
-
-    # prep environment, noise and password files
-    rm -rf $CERT_HOME
-    mkdir -p $CERT_HOME
-    openssl rand -out $NOISE_FILE $CERT_BIT_LENGTH
-    openssl rand -base64 -out $PASSWORD_FILE 24
-
-    # Generate keys
-    echo "Generating keys..."
-    openssl genpkey -out $CA_KEY -pass "file:${PASSWORD_FILE}" -algorithm rsa -pkeyopt rsa_keygen_bits:$CERT_BIT_LENGTH
-    openssl pkey -pubout -in $CA_KEY -out $CA_PUB_KEY
-
-    # Generate our cert, using the newer options if available
-    echo "Generating certificates..."
-    if openssl req --help 2>&1 | grep -q addext; then
-        openssl req -new -x509 -days $CA_CERT_DAYS -key $CA_KEY -out $CA_CERT -subj "/CN=${HOSTNAME}/C=US/L=Raleigh/" \
-            -addext "subjectAltName=IP:127.0.0.1, IP:${HOST_ADDR}, DNS:localhost, DNS:${HOSTNAME}"
-    else
-        openssl req -new -x509 -days $CA_CERT_DAYS -key $CA_KEY -out $CA_CERT \
-            -subj "/CN=$(hostname)/C=US/L=Raleigh/" \
-            -config <(
-                echo "[req]"
-                echo distinguished_name = req
-                echo x509_extensions = v3_ext
-                echo "[v3_ext]"
-                echo subjectKeyIdentifier = hash
-                echo authorityKeyIdentifier = keyid, issuer
-                echo basicConstraints = critical, CA:true
-                echo subjectAltName = @san
-                echo "[san]"
-                echo IP.1 = 127.0.0.1
-                echo IP.2 = $HOST_ADDR
-                echo DNS.1 = localhost
-                echo DNS.2 = $HOSTNAME )
-    fi
-
-    chmod a+r ${CERT_HOME}/*
-
-    # Update CA trust such that it includes our CA cert
-    cp -f $CA_CERT "/etc/pki/ca-trust/source/anchors/${CERT_NAME}.crt"
-    update-ca-trust
-
-    echo "Done. New certificate generated: ${CA_CERT}"
-}
-
-generate_legacy_keystore() {
-    echo "Generating legacy JKS keystore..."
-
-    local KEYSTORE="${CERT_HOME}/tc_keystore.jks"
-    local KEYSTORE_PASSWORD="password" # WARNING: This value is hardcoded in update-server-xml.py
-    local KEYSTORE_PASSWORD_FILE="${CERT_HOME}/tc_keystore_pass.txt"
-
-    echo -n $KEYSTORE_PASSWORD > $KEYSTORE_PASSWORD_FILE
-    openssl pkcs12 -export -in $CA_CERT -inkey $CA_KEY -out $KEYSTORE -name tomcat -CAfile $CA_CERT -caname root -chain -password file:$KEYSTORE_PASSWORD_FILE
-    keytool -keystore $KEYSTORE -noprompt -importcert -storepass:file $KEYSTORE_PASSWORD_FILE -alias candlepin_ca -file $CA_CERT
-
-    echo "Done. Keystore generated: ${KEYSTORE}"
-}
-
-# Check that we're running as root
-if [ "$EUID" -ne 0 ]; then
-    >&2 echo "Error: Certificate generation must be performed as root"
-    exit 1
-fi
-
-print_usage() {
-    cat <<USAGE
+USAGE_TEXT="Candlepin development server certificate generator
 usage: ${SCRIPT_NAME} [options]
 
 OPTIONS:
-  -a <addr>   The external address of the Candlepin host that will be using the
-              generated certs; defaults to the first address returned by
-              \"hostname -I\"
-  -H <host>   The hostname of the Candlepin host that will be using the
-              generated certs; defaults to the output of the "hostname" command
-  -b <bits>   The length in bits of the generated keys to use to generate the
-              certificates; defaults to 4096
-  -d <days>   The number of days for which the generated certificates will be
-              valid; defaults to 365
-  -f          Force certificate regeneration, even if the certificates have
-              already been generated
-  -h          Display command usage information
-USAGE
-}
+  --ca_cert <file>  The CA cert to use to sign the generated server cert. If not
+                    provided, the generated certificate will be self-signed.
+  --ca_key <file>   The key of the CA cert to use to sign the generated server
+                    certificate. If not provided, the generated certificate will
+                    be self-signed.
+  --cert_out <file> The output filename for the generated CA key; defaults to
+                    \"${CERT_OUT}\"
+  --key_out <file>  The output filename for the generated CA key; defaults to
+                    \"${KEY_OUT}\"
+  --days <days>     The number of days for which the generated cert will be
+                    valid; defaults to ${CERT_DAYS}
+  --bits <bits>     The size of the generated key in bits; defaults to ${KEY_BITS}
+  --hostname <host> An additional hostname to include in the generated cert's
+                    subjectAltName; may be specified multiple times
+  --hostaddr <addr> An additional IP address to include in the generated cert's
+                    subjectAltName; may be specified multiple times
+  -f | --force      Force regeneration and overwrite existing files when the
+                    cert or key already exists; defaults to false
+  -t | --trust      Add the generated cert to the local CA trust; defaults to
+                    false, requires root
+  -h | --help       Display command usage information
+"
 
-while getopts ":a:H:b:d:fh" opt; do
-    case $opt in
-        a  ) HOST_ADDR="${OPTARG}" ;;
-        H  ) HOSTNAME="${OPTARG}" ;;
-        b  ) CERT_BIT_LENGTH=$OPTARG ;;
-        d  ) CA_CERT_DAYS=$OPTARG ;;
-        f  ) FORCE_REGEN="1" ;;
-        h  ) print_usage; exit 0;;
-        ?  ) print_usage; exit 1;;
+while true; do
+    case "$1" in
+        --ca_cert )
+            CA_CERT=$2
+            shift 2 ;;
+
+        --ca_key )
+            CA_KEY=$2
+            shift 2 ;;
+
+        --cert_out )
+            CERT_OUT=$2
+            shift 2 ;;
+
+        --key_out )
+            KEY_OUT=$2
+            shift 2 ;;
+
+        --days )
+            CERT_DAYS=$2
+            shift 2 ;;
+
+        --bits )
+            KEY_BITS=$2
+            shift 2 ;;
+
+        --hostname )
+            SAN+=("DNS:$2")
+            shift 2 ;;
+
+        --hostaddr )
+            SAN+=("IP:$2")
+            shift 2 ;;
+
+        -f | --force )
+            FORCE_REGEN=1
+            shift ;;
+
+        -t | --trust )
+            TRUST=1
+            shift ;;
+
+        -h | --help )
+            echo "${USAGE_TEXT}"
+            exit 0 ;;
+
+        -- ) shift; break ;;
+        * ) if [ ! -z $1 ]; then
+                echo "Invalid option: $1"
+                echo "${USAGE_TEXT}"
+                exit 1
+            fi
+            break ;;
     esac
 done
 
-if [ -f $CA_KEY ] && [ -f $CA_CERT ] && [ "${FORCE_REGEN}" != "1" ]; then
-    echo "Certificates already generated; using existing certs"
-else
-    generate_certs
+fail() {
+    if [ ! -z "$1" ]; then
+        >&2 echo "$1"
+    fi
 
-    # Check if FIPS tooling is absent or FIPS mode is disabled
-    if ! command -v fips-mode-setup > /dev/null || ! fips-mode-setup --check | grep -q enabled; then
-        generate_legacy_keystore
+    exit 1
+}
+
+check_dependency() {
+    if ! command -v $1 > /dev/null; then
+        fail "Required dependency $1 not detected; aborting..."
+    fi
+}
+
+# Fail on any error
+set -e
+
+# Ensure we have all of our dependencies available
+check_dependency openssl
+
+# If the user has specified that the resultant cert should be trusted, they must also invoke this
+# script as root
+if [ $EUID -ne 0 ] && [ $TRUST -eq 1 ]; then
+    fail "Error: CA trust update must be performed as root"
+fi
+
+# Make sure we're not overwriting existing files by accident
+if [ -f $CERT_OUT ] && [ $FORCE_REGEN -ne 1 ]; then
+    >&2 echo "Warning: Certificate file \"${CERT_OUT}\" already exists; use --force to regenerate"
+
+    exit 0
+fi
+
+# Ensure we can write to the output director[y/ies]
+mkdir -p "$(dirname $CERT_OUT)" "$(dirname $KEY_OUT)"
+
+# Compile openssl config...
+V3_EXT_CONF="""
+    [ v3_ext ]
+    subjectKeyIdentifier = hash
+    authorityKeyIdentifier = keyid:always, issuer:always
+    basicConstraints = critical, CA:true
+    keyUsage = critical, keyCertSign, digitalSignature, cRLSign
+    subjectAltName=$(IFS=, ; echo "${SAN[*]}")
+    """
+
+OPENSSL_CONF="""
+    [ req ]
+    string_mask = utf8only
+    distinguished_name = req_dn
+    prompt = no
+    x509_extensions = v3_ext
+
+    [ req_dn ]
+    CN=Candlepin Server CA
+    OU=Candlepin
+    O=Red Hat
+
+    ${V3_EXT_CONF}
+    """
+
+# Generate certs
+if [ -z $CA_CERT ]; then
+    # No CA cert specified, generate a self-signed cert
+    echo "Generating self-signed certificate: ${CERT_OUT}"
+
+    openssl req -new -x509 -days $CERT_DAYS -out $CERT_OUT \
+        -newkey rsa:$KEY_BITS -nodes -keyout $KEY_OUT \
+        -config <(echo "${OPENSSL_CONF}")
+
+    # Ensure the key and cert are readable
+    chmod +r "${KEY_OUT}" "${CERT_OUT}"
+
+    # Add new cert to CA trust
+    if [ $TRUST -eq 1 ]; then
+        echo "Adding cert to CA trust bundle..."
+
+        # Build the chain from the server CA and root CA
+        cat $CERT_OUT > $CA_CHAIN_BUNDLE
+
+        # Invoke the ca trust update
+        update-ca-trust
+    fi
+else
+    if [ -z $CA_KEY ]; then
+        fail "Error: CA cert provided without a CA key"
+    fi
+
+    echo "Generating server certificate: ${CERT_OUT}"
+
+    # Generate the CSR for the server cert
+    openssl req -new -sha256 -out $TMP_CSR_FILE \
+        -newkey rsa:$KEY_BITS -nodes -keyout $KEY_OUT \
+        -config <(echo "${OPENSSL_CONF}")
+
+    # Ensure we cleanup the CSR on exit
+    trap "rm -f ${TMP_CSR_FILE}" EXIT
+
+    # Create cert from CSR
+    # Impl note: at the time of writing, some of our platforms don't support the -copy_extensions
+    # CLI option, so we have to do it ourselves. :(
+    CERT_SERIAL="${RANDOM}${RANDOM}"
+    openssl x509 -req -in $TMP_CSR_FILE -CA $CA_CERT -CAkey $CA_KEY -set_serial $CERT_SERIAL \
+        -days $CERT_DAYS -out $CERT_OUT \
+        -extensions v3_ext -extfile <(echo "${V3_EXT_CONF}")
+
+    # Ensure the key and cert are readable
+    chmod +r "${KEY_OUT}" "${CERT_OUT}"
+
+    # Add new cert to CA trust
+    if [ $TRUST -eq 1 ]; then
+        echo "Adding cert chain to CA trust bundle..."
+
+        # Build the chain from the server CA and root CA
+        cat $CERT_OUT > $CA_CHAIN_BUNDLE
+        cat $CA_CERT >> $CA_CHAIN_BUNDLE
+
+        # Invoke the ca trust update
+        update-ca-trust
     fi
 fi
+
+echo "Done!"
