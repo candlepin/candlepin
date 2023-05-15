@@ -73,6 +73,7 @@ import org.candlepin.util.Util;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
+import org.apache.commons.io.FileUtils;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,6 +83,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
@@ -176,7 +178,19 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     @AfterEach
     public void cleanup() {
         // cleanup the temp exports
-        TestUtil.cleanupDir("/tmp", "export");
+        File tempDir = new File("/tmp");
+
+        for (File f : tempDir.listFiles()) {
+            if (f.isDirectory() && f.getName().startsWith("export")) {
+                try {
+                    FileUtils.deleteDirectory(f);
+                }
+                catch (IOException e) {
+                    throw new RuntimeException(
+                        "Failed to cleanup directory: " + "/tmp", e);
+                }
+            }
+        }
     }
 
     @Test
