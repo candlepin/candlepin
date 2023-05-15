@@ -6,6 +6,15 @@
 %global selinux_variants mls minimum targeted
 %global modulename candlepin
 
+#if $artifacts
+%global tar_gz_filename $artifacts['.gz'][0]
+%global war_filename $artifacts['.war'][0]
+
+## Remove the '-project-sources.tar.gz' suffix from the tar.gz filename, to get the source dir name
+## e.g. candlepin-x.y.z.redhat-00000 from a file called candlepin-x.y.z.redhat-00000-project-sources.tar.gz
+%global source_top_directory_name %(echo %{tar_gz_filename} | sed s/"-project-sources.tar.gz"// )
+#end if
+
 ## If you follow the Java packaging guidelines, you
 ## only need to run brp-java-repack-jars on packages that include
 ## arch-independent JAR files under /usr/share and that also include
@@ -23,8 +32,8 @@ Summary: Candlepin is an open source entitlement management system
 Group: System Environment/Daemons
 URL: http://www.candlepinproject.org
 License: GPLv2
-Source0: %{name}-%{version}-complete.tar.gz
-Source1: %{name}-%{version}.war
+Source0: %{tar_gz_filename}
+Source1: %{war_filename}
 
 Obsoletes: candlepin-tomcat
 Obsoletes: candlepin-tomcat6
@@ -92,7 +101,7 @@ Requires(postun): /usr/sbin/semanage
 SELinux policy module supporting candlepin
 
 %prep
-%setup -q %{SOURCE0}
+%setup -n %{source_top_directory_name}
 %if 0%{?rhel} == 8 || 0%{?fedora} > 29
 pathfix.py -pni "%{__python3} %{py3_shbang_opts}" bin/scripts/code/setup/cpdb bin/scripts/code/setup/cpsetup
 %endif
