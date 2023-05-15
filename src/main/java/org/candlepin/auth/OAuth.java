@@ -21,6 +21,7 @@ import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.resteasy.filter.AuthUtil;
 import org.candlepin.resteasy.filter.RestEasyOAuthMessage;
+import org.candlepin.util.Util;
 
 import net.oauth.OAuthAccessor;
 import net.oauth.OAuthConsumer;
@@ -40,6 +41,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -51,27 +53,25 @@ import javax.ws.rs.core.Response;
  */
 public class OAuth implements AuthProvider {
 
-    protected static final String HEADER = "cp-user";
-    protected static final OAuthValidator VALIDATOR = new SimpleOAuthValidator();
-    protected static final String SIGNATURE_TYPE = "HMAC-SHA1";
+    private static final Logger log = LoggerFactory.getLogger(OAuth.class);;
+    private static final OAuthValidator VALIDATOR = new SimpleOAuthValidator();
+    private static final String SIGNATURE_TYPE = "HMAC-SHA1";
 
-    private static Logger log = LoggerFactory.getLogger(OAuth.class);;
-    private Configuration config;
-    private TrustedUserAuth userAuth;
-    private TrustedConsumerAuth consumerAuth;
-    private TrustedExternalSystemAuth systemAuth;
-    private Map<String, OAuthAccessor> accessors = new HashMap<>();
-
-    protected Provider<I18n> i18nProvider;
+    private final Configuration config;
+    private final TrustedUserAuth userAuth;
+    private final TrustedConsumerAuth consumerAuth;
+    private final TrustedExternalSystemAuth systemAuth;
+    private final Map<String, OAuthAccessor> accessors = new HashMap<>();
+    private final Provider<I18n> i18nProvider;
 
     @Inject
     OAuth(TrustedConsumerAuth consumerAuth, TrustedUserAuth userAuth,
         TrustedExternalSystemAuth systemAuth, Provider<I18n> i18nProvider, Configuration config) {
-        this.config = config;
-        this.userAuth = userAuth;
-        this.consumerAuth = consumerAuth;
-        this.systemAuth = systemAuth;
-        this.i18nProvider = i18nProvider;
+        this.config = Objects.requireNonNull(config);
+        this.userAuth = Objects.requireNonNull(userAuth);
+        this.consumerAuth = Objects.requireNonNull(consumerAuth);
+        this.systemAuth = Objects.requireNonNull(systemAuth);
+        this.i18nProvider = Objects.requireNonNull(i18nProvider);
         this.setupAccessors();
         this.setupSigners();
     }
@@ -126,10 +126,7 @@ public class OAuth implements AuthProvider {
             String message = i18n.tr("OAuth error encountered. Internal message is: {0}", e.getMessage());
             throw new BadRequestException(message);
         }
-        catch (URISyntaxException e) {
-            throw new IseException(e.getMessage(), e);
-        }
-        catch (IOException e) {
+        catch (URISyntaxException | IOException e) {
             throw new IseException(e.getMessage(), e);
         }
 
@@ -143,7 +140,7 @@ public class OAuth implements AuthProvider {
      * @param msg
      * @return the OAuth accessor for the given message.
      */
-    protected OAuthAccessor getAccessor(OAuthMessage msg) {
+    private OAuthAccessor getAccessor(OAuthMessage msg) {
         I18n i18n = i18nProvider.get();
         try {
             OAuthAccessor accessor = accessors.get(msg.getConsumerKey());
@@ -165,15 +162,18 @@ public class OAuth implements AuthProvider {
      * candlepin.auth.oauth.consumer.CONSUMERNAME.secret = CONSUMERSECRET and
      * create consumers for them.
      */
-    protected void setupAccessors() {
+    private void setupAccessors() {
         String prefix = "candlepin.auth.oauth.consumer.";
-        Configuration oauthConfig = config.strippedSubset(prefix);
-        for (String key : oauthConfig.getKeys()) {
+        Map<String, String> oauthConfig = config.getValuesByPrefix(prefix);
+
+        for (Map.Entry<String, String> oauth : oauthConfig.entrySet()) {
+            String key = Util.stripPrefix(oauth.getKey(), prefix);
             String[] parts = key.split("\\.");
+
             if ((parts.length == 2) && (parts[1].equals("secret"))) {
                 String consumerName = parts[0];
-                String secret = oauthConfig.getString(key);
-                log.debug(String.format("Creating consumer '%s'", consumerName));
+                String secret = oauth.getValue();
+                log.debug("Creating consumer '{}'", consumerName);
 
                 OAuthConsumer consumer = new OAuthConsumer("", consumerName, secret, null);
                 OAuthAccessor accessor = new OAuthAccessor(consumer);
@@ -183,10 +183,10 @@ public class OAuth implements AuthProvider {
     }
 
     /**
-     * Override the built in signer for HMAC-SHA1 so that we can see better
+     * Override the builtin signer for HMAC-SHA1 so that we can see better
      * output.
      */
-    protected void setupSigners() {
+    private void setupSigners() {
         log.debug("Add custom signers");
         OAuthSignatureMethod.registerMethodClass(SIGNATURE_TYPE +
             OAuthSignatureMethod._ACCESSOR,

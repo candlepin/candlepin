@@ -42,7 +42,6 @@ public class RefreshPoolsForProductJob implements AsyncJob {
 
     private static final String LAZY_KEY = "lazy_regen";
     private static final String PRODUCT_KEY = "product_key";
-    private static final String OWNER_KEY = "org";
 
     private final PoolManager poolManager;
     private final ProductCurator productCurator;

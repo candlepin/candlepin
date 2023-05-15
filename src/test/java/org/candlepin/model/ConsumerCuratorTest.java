@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.async.tasks.InactiveConsumerCleanerJob;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
@@ -59,13 +59,10 @@ import javax.inject.Inject;
 import javax.persistence.EntityManager;
 
 
-/**
- * ConsumerCuratorTest JUnit tests for Consumer database code
- */
 public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Inject
-    private Configuration config;
+    private DevConfig config;
     @Inject
     private DeletedConsumerCurator dcc;
     @Inject
@@ -1953,7 +1950,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             consumerCurator.getInactiveConsumerIds(null, nonCheckedInRetention);
         });
 
-        assertTrue(exception.getMessage().equals("Last checked-in retention date cannot be null."));
+        assertEquals("Last checked-in retention date cannot be null.", exception.getMessage());
     }
 
     @Test
@@ -1965,7 +1962,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             consumerCurator.getInactiveConsumerIds(lastCheckedInRetention, null);
         });
 
-        assertTrue(exception.getMessage().equals("Last updated retention date cannot be null."));
+        assertEquals("Last updated retention date cannot be null.", exception.getMessage());
     }
 
     @Test

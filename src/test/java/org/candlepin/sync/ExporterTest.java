@@ -26,9 +26,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.Principal;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.MapConfiguration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
@@ -75,20 +75,17 @@ import org.junit.jupiter.api.Test;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -126,7 +123,7 @@ public class ExporterTest {
     private EntitlementExporter ee;
     private EnvironmentCurator mockEnvironmentCurator;
     private PKIUtility pki;
-    private CandlepinCommonTestConfig config;
+    private DevConfig config;
     private ExportRules exportRules;
     private PrincipalProvider pprov;
     private SyncUtils su;
@@ -151,7 +148,7 @@ public class ExporterTest {
         ec = mock(EntitlementCurator.class);
         ee = new EntitlementExporter(translator);
         pki = mock(PKIUtility.class);
-        config = new CandlepinCommonTestConfig();
+        config = TestConfig.defaults();
         exportRules = mock(ExportRules.class);
         pprov = mock(PrincipalProvider.class);
         dvc = mock(DistributorVersionCurator.class);
@@ -546,8 +543,7 @@ public class ExporterTest {
     }
 
     @Test
-    public void testGetEntitlementExport() throws ExportCreationException,
-        IOException, GeneralSecurityException {
+    public void testGetEntitlementExport() throws ExportCreationException, IOException {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
         // Setup consumer
@@ -607,7 +603,7 @@ public class ExporterTest {
 
     @Test
     public void testGetEntitlementExportWithUnknownSerialId() throws ExportCreationException,
-        IOException, GeneralSecurityException {
+        IOException {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
         // Setup consumer
@@ -669,7 +665,7 @@ public class ExporterTest {
 
     @Test
     public void testGetEntitlementExportWithValidEntitlementCertSerial() throws ExportCreationException,
-        IOException, GeneralSecurityException {
+        IOException {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
         // Setup consumer
@@ -731,7 +727,7 @@ public class ExporterTest {
 
     @Test
     public void testGetEntitlementExportWithValidContentAccessCertSerial() throws ExportCreationException,
-        IOException, GeneralSecurityException {
+        IOException {
         config.setProperty(ConfigProperties.SYNC_WORK_DIR, "/tmp/");
 
         // Setup consumer
@@ -874,9 +870,6 @@ public class ExporterTest {
                 zis.closeEntry();
             }
         }
-        catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
         catch (IOException e) {
             e.printStackTrace();
         }
@@ -912,10 +905,11 @@ public class ExporterTest {
             os.flush();
             os.close();
 
-            Map<String, String> configProps = new HashMap<>();
-            configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+            DevConfig config = TestConfig.custom(Map.of(
+                ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
+            ));
 
-            ObjectMapper mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
+            ObjectMapper mapper = new SyncUtils(config).getObjectMapper();
 
             Meta m = mapper.readValue(new FileInputStream("/tmp/meta.json"), Meta.class);
 
@@ -929,6 +923,7 @@ public class ExporterTest {
 
     public static class VerifyProductCert implements Verify {
         private String filename;
+
         public VerifyProductCert(String filename) {
             this.filename = filename;
         }
@@ -950,6 +945,7 @@ public class ExporterTest {
 
     public static class VerifyIdentityCert implements Verify {
         private String filename;
+
         public VerifyIdentityCert(String filename) {
             this.filename = filename;
         }
@@ -971,6 +967,7 @@ public class ExporterTest {
 
     public static class VerifyKeyPair implements Verify {
         private String filename;
+
         public VerifyKeyPair(String filename) {
             this.filename = filename;
         }
@@ -992,6 +989,7 @@ public class ExporterTest {
 
     public static class VerifyConsumer implements Verify {
         private String filename;
+
         public VerifyConsumer(String filename) {
             this.filename = filename;
         }
@@ -1005,11 +1003,11 @@ public class ExporterTest {
             os.flush();
             os.close();
 
+            DevConfig config = TestConfig.custom(Map.of(
+                ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
+            ));
 
-            Map<String, String> configProps = new HashMap<>();
-            configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
-
-            ObjectMapper mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
+            ObjectMapper mapper = new SyncUtils(config).getObjectMapper();
 
             ConsumerDTO c = mapper.readValue(new FileInputStream("/tmp/" + filename), ConsumerDTO.class);
 
@@ -1041,10 +1039,11 @@ public class ExporterTest {
             os.flush();
             os.close();
 
-            Map<String, String> configProps = new HashMap<>();
-            configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+            DevConfig config = TestConfig.custom(Map.of(
+                ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
+            ));
 
-            ObjectMapper mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
+            ObjectMapper mapper = new SyncUtils(config).getObjectMapper();
 
             DistributorVersion dv = mapper.readValue(
                 new FileInputStream("/tmp/" + filename),

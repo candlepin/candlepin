@@ -27,9 +27,9 @@ import static org.mockito.Mockito.verify;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.async.JobManager;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.model.AsyncJobStatusCurator.AsyncJobStatusQueryArguments;
 
@@ -50,20 +50,16 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
-
-/**
- * JobCleanerTest
- */
 @ExtendWith(MockitoExtension.class)
 public class JobCleanerTest {
 
-    private Configuration config;
+    private DevConfig config;
     private JobManager jobManager;
 
     @BeforeEach
     public void init() {
         this.jobManager = mock(JobManager.class);
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
     }
 
     private JobCleaner createJobInstance() {
@@ -99,9 +95,9 @@ public class JobCleanerTest {
 
     private static Stream<Arguments> maxAgeProvider() {
         return Stream.of(
-            Arguments.of(JobCleaner.CFG_DEFAULT_MAX_TERMINAL_JOB_AGE),
-            Arguments.of(JobCleaner.CFG_DEFAULT_MAX_NONTERMINAL_JOB_AGE),
-            Arguments.of(JobCleaner.CFG_DEFAULT_MAX_RUNNING_JOB_AGE),
+            Arguments.of(10080),
+            Arguments.of(4320),
+            Arguments.of(2880),
             Arguments.of(60),
             Arguments.of(1));
     }

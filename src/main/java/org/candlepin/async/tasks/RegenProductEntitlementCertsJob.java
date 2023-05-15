@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -40,7 +41,7 @@ import javax.inject.Inject;
  * across all orgs using it, as applicable.
  */
 public class RegenProductEntitlementCertsJob implements AsyncJob {
-    private static Logger log = LoggerFactory.getLogger(RegenProductEntitlementCertsJob.class);
+    private static final Logger log = LoggerFactory.getLogger(RegenProductEntitlementCertsJob.class);
 
     public static final String JOB_KEY = "RegenProductEntitlementCertsJob";
     public static final String JOB_NAME = "Regen Product Entitlement Certificates";
@@ -115,8 +116,8 @@ public class RegenProductEntitlementCertsJob implements AsyncJob {
     }
 
 
-    private PoolManager poolManager;
-    private OwnerCurator ownerCurator;
+    private final PoolManager poolManager;
+    private final OwnerCurator ownerCurator;
 
     /**
      * Instantiates a new instance of the RegenProductEntitlementCertsJob
@@ -129,16 +130,8 @@ public class RegenProductEntitlementCertsJob implements AsyncJob {
      */
     @Inject
     public RegenProductEntitlementCertsJob(PoolManager poolManager, OwnerCurator ownerCurator) {
-        if (poolManager == null) {
-            throw new IllegalArgumentException("poolManager is null");
-        }
-
-        if (ownerCurator == null) {
-            throw new IllegalArgumentException("ownerCurator is null");
-        }
-
-        this.poolManager = poolManager;
-        this.ownerCurator = ownerCurator;
+        this.poolManager = Objects.requireNonNull(poolManager);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
     }
 
     /**
@@ -155,7 +148,7 @@ public class RegenProductEntitlementCertsJob implements AsyncJob {
         Set<Owner> owners = this.ownerCurator.getOwnersWithProducts(Collections.singleton(productId));
 
         // Regenerate if we found any...
-        if (owners.size() > 0) {
+        if (!owners.isEmpty()) {
             log.info("Regenerating entitlement certificates for {} owners with product: {}",
                 owners.size(), productId);
 

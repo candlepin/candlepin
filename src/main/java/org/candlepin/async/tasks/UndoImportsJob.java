@@ -32,7 +32,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.UpstreamConsumer;
-import org.candlepin.service.SubscriptionServiceAdapter;
 
 import com.google.inject.persist.Transactional;
 
@@ -42,6 +41,7 @@ import org.xnap.commons.i18n.I18n;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -113,27 +113,24 @@ public class UndoImportsJob implements AsyncJob {
     }
 
 
-    protected I18n i18n;
-    protected OwnerCurator ownerCurator;
-    protected PoolManager poolManager;
-    protected SubscriptionServiceAdapter subAdapter;
-    protected ExporterMetadataCurator exportCurator;
-    protected ImportRecordCurator importRecordCurator;
+    private final I18n i18n;
+    private final OwnerCurator ownerCurator;
+    private final PoolManager poolManager;
+    private final ExporterMetadataCurator exportCurator;
+    private final ImportRecordCurator importRecordCurator;
 
     @Inject
     public UndoImportsJob(I18n i18n,
         OwnerCurator ownerCurator,
         PoolManager poolManager,
-        SubscriptionServiceAdapter subAdapter,
         ExporterMetadataCurator exportCurator,
         ImportRecordCurator importRecordCurator) {
 
-        this.i18n = i18n;
-        this.ownerCurator = ownerCurator;
-        this.poolManager = poolManager;
-        this.subAdapter = subAdapter;
-        this.exportCurator = exportCurator;
-        this.importRecordCurator = importRecordCurator;
+        this.i18n = Objects.requireNonNull(i18n);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.poolManager = Objects.requireNonNull(poolManager);
+        this.exportCurator = Objects.requireNonNull(exportCurator);
+        this.importRecordCurator = Objects.requireNonNull(importRecordCurator);
     }
 
     @Override

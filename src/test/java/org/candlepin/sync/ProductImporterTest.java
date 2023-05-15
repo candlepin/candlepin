@@ -20,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.manifest.v1.BrandingDTO;
 import org.candlepin.dto.manifest.v1.ContentDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
@@ -53,7 +53,7 @@ import java.util.stream.Stream;
 public class ProductImporterTest {
 
     private I18n i18n;
-    private Configuration config;
+    private DevConfig config;
     private File tmpdir;
     private ObjectMapper mapper;
 
@@ -61,7 +61,7 @@ public class ProductImporterTest {
     public void setup() throws Exception {
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
 
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
         this.config.setProperty(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
 
         this.tmpdir = Files.createTempDirectory("product_importer_test").toFile();

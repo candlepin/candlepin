@@ -378,7 +378,7 @@ public class JobResource implements JobsApi {
         if (this.triggerableJobKeys == null) {
             this.triggerableJobKeys = new HashSet<>();
 
-            String jobList = this.config.getString(ConfigProperties.ASYNC_JOBS_TRIGGERABLE_JOBS, null);
+            String jobList = this.config.getString(ConfigProperties.ASYNC_JOBS_TRIGGERABLE_JOBS);
             if (jobList != null) {
                 for (String job : Util.toList(jobList)) {
                     if (job.length() > 0) {

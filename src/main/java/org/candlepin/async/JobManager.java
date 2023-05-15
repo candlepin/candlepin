@@ -74,8 +74,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -346,10 +344,6 @@ public class JobManager implements ModeChangeListener {
     private ThreadLocal<Map<String, String>> mdcState;
     private Set<Object> suspendKeys;
 
-    private boolean clustered;
-    private Map<String, Configuration> jobConfig;
-
-
     /**
      * Creates a new JobManager instance
      */
@@ -383,40 +377,6 @@ public class JobManager implements ModeChangeListener {
         this.suspendKeys = new HashSet<>();
 
         this.synchronizer = new JobMessageSynchronizer(this.dispatcher);
-
-        this.readJobConfiguration(this.configuration);
-    }
-
-    /**
-     * Reads the job configuration from the provided configuration.
-     *
-     * @param config
-     *  The configuration instance from which to read the job config
-     */
-    private void readJobConfiguration(Configuration config) {
-        // Check if our scheduler is running in "clustered" mode
-        this.clustered = config.getBoolean(ConfigProperties.QUARTZ_CLUSTERED_MODE, false);
-
-        // Read the per-job configuration
-        this.jobConfig = new HashMap<>();
-        String prefix = ConfigProperties.ASYNC_JOBS_PREFIX;
-        Pattern regex = Pattern.compile("\\A" + Pattern.quote(prefix) + "(.+)\\.[^.]+\\z");
-
-        Iterable<String> cfgKeys = config.getKeys();
-        if (cfgKeys != null) {
-            for (String key : cfgKeys) {
-                Matcher matcher = regex.matcher(key);
-
-                if (matcher.matches()) {
-                    String job = matcher.group(1);
-
-                    if (!this.jobConfig.containsKey(job)) {
-                        Configuration subset = config.strippedSubset(prefix + job + '.');
-                        this.jobConfig.put(job, subset);
-                    }
-                }
-            }
-        }
     }
 
     /**
@@ -428,7 +388,7 @@ public class JobManager implements ModeChangeListener {
      *  the name of this Candlepin node
      */
     private String getNodeName() {
-        String name = this.configuration.getString(ConfigProperties.ASYNC_JOBS_NODE_NAME, null);
+        String name = this.configuration.getString(ConfigProperties.ASYNC_JOBS_NODE_NAME);
         return name != null ? name : Util.getHostname();
     }
 
@@ -456,7 +416,7 @@ public class JobManager implements ModeChangeListener {
                 if (this.isSchedulerEnabled()) {
                     // Initialize the scheduler factory with the Quartz-specific configuration, if possible
                     if (this.schedulerFactory instanceof StdSchedulerFactory) {
-                        Properties quartzConfig = this.configuration.subset("org.quartz").toProperties();
+                        Properties quartzConfig = this.configuration.toProperties();
                         ((StdSchedulerFactory) this.schedulerFactory).initialize(quartzConfig);
                     }
 
@@ -786,7 +746,7 @@ public class JobManager implements ModeChangeListener {
      *  true if the scheduler is enabled; false otherwise
      */
     public boolean isSchedulerEnabled() {
-        return this.configuration.getBoolean(ConfigProperties.ASYNC_JOBS_SCHEDULER_ENABLED, true);
+        return this.configuration.getBoolean(ConfigProperties.ASYNC_JOBS_SCHEDULER_ENABLED);
     }
 
     /**
@@ -798,79 +758,134 @@ public class JobManager implements ModeChangeListener {
         // minimalistic scheduler, since we only need cron, delay and interval scheduling. Quartz
         // seems pretty heavy considering how we actually use it.
 
-        GroupMatcher<JobKey> cronJobMatcher = GroupMatcher.jobGroupEquals(QRTZ_GROUP_CONFIG);
         Set<JobKey> qrtzJobKeys = this.scheduler.getJobKeys(GroupMatcher.anyJobGroup());
+        log.debug("Checking {} existing scheduled jobs...", qrtzJobKeys.size());
 
-        Set<String> existing = new HashSet<>();
-        Set<JobKey> unschedule = new HashSet<>();
+        Map<String, String> schedules = findJobSchedules();
 
-        if (qrtzJobKeys != null && qrtzJobKeys.size() > 0) {
-            log.debug("Checking {} existing scheduled jobs...", qrtzJobKeys.size());
+        Set<String> existingJobs = findExistingJobs(qrtzJobKeys, schedules);
+        Set<JobKey> unschedule = qrtzJobKeys.stream()
+            .filter(jobKey -> !existingJobs.contains(jobKey.getName()))
+            .collect(Collectors.toSet());
 
-            for (JobKey key : qrtzJobKeys) {
-                // Verify the job exists and is in a valid state by loading its job detail
-                try {
-                    this.scheduler.getJobDetail(key);
-                }
-                catch (JobPersistenceException e) {
-                    log.error("Unable to load job detail for job, removing it from the scheduler: {}",
-                        key.getName(), e);
+        unscheduleBadJobs(unschedule);
 
-                    unschedule.add(key);
-                    continue;
-                }
+        // Schedule new jobs
+        for (Map.Entry<String, String> entry : schedules.entrySet()) {
+            String jobKey = entry.getKey();
+            String schedule = entry.getValue();
 
-                // Continue checking the job schedule if it's one of ours
-                if (cronJobMatcher.isMatch(key)) {
-                    // Impl note: using the key's name as the job key works, but it limits each
-                    // job to exactly one schedule, which may or may not be a good thing.
-                    Configuration config = this.jobConfig.get(key.getName());
+            boolean manual = ConfigProperties.ASYNC_JOBS_MANUAL_SCHEDULE.equalsIgnoreCase(schedule);
 
-                    // Check if the job has any configuration at all
-                    // TODO: this check may not be a good thing -- this only works because of hard-coded
-                    // defaults in ConfigProperties.
-                    if (config == null) {
-                        unschedule.add(key);
-                        continue;
-                    }
+            // If the job is not configured for scheduled execution, or is already scheduled, skip it.
+            if (schedule == null || manual || existingJobs.contains(jobKey)) {
+                continue;
+            }
 
-                    String schedule = config.getString(ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE, null);
-                    boolean manual = ConfigProperties.ASYNC_JOBS_MANUAL_SCHEDULE.equalsIgnoreCase(schedule);
+            try {
+                ScheduleBuilder<CronTrigger> qtzSchedule = CronScheduleBuilder.cronSchedule(schedule)
+                    .withMisfireHandlingInstructionDoNothing();
 
-                    // If the job is no longer configured for scheduled execution, remove it from the
-                    // scheduler
-                    if (schedule == null || manual) {
-                        unschedule.add(key);
-                        continue;
-                    }
+                Trigger trigger = TriggerBuilder.newTrigger()
+                    .withIdentity(jobKey, QRTZ_GROUP_CONFIG)
+                    .withSchedule(qtzSchedule)
+                    .build();
 
-                    Trigger trigger = this.scheduler.getTrigger(
-                        TriggerKey.triggerKey(key.getName(), key.getGroup()));
+                JobDetail detail = org.quartz.JobBuilder.newJob(QuartzJobExecutor.class)
+                    .withIdentity(jobKey, QRTZ_GROUP_CONFIG)
+                    .build();
 
-                    // Check that the job has a trigger, it's a cron trigger, and the schedule matches
-                    // the schedule in the current configuration
-                    if (trigger == null || !(trigger instanceof CronTrigger) ||
-                        !((CronTrigger) trigger).getCronExpression().equals(schedule)) {
+                this.scheduler.scheduleJob(detail, trigger);
 
-                        unschedule.add(key);
-                        continue;
-                    }
-
-                    // Job exists and matches our schedule, we can skip it later
-                    existing.add(key.getName());
-                }
+                log.info("Scheduled job \"{}\" with cron schedule: {}", jobKey, schedule);
+            }
+            catch (Exception e) {
+                log.error("Unable to schedule job \"{}\":", jobKey, e);
+                throw new RuntimeException(e);
             }
         }
+    }
 
-        // Unschedule dead/invalid jobs
+    private Set<String> findExistingJobs(Set<JobKey> qrtzJobKeys, Map<String, String> schedules)
+        throws SchedulerException {
+        Set<String> existing = new HashSet<>();
+        if (qrtzJobKeys == null || qrtzJobKeys.isEmpty()) {
+            return existing;
+        }
+
+        GroupMatcher<JobKey> cronJobMatcher = GroupMatcher.jobGroupEquals(QRTZ_GROUP_CONFIG);
+
+        log.debug("Checking {} existing scheduled jobs...", qrtzJobKeys.size());
+
+        for (JobKey key : qrtzJobKeys) {
+            if (!jobExists(key)) {
+                continue;
+            }
+
+            // Continue checking the job schedule if it's one of ours
+            if (!cronJobMatcher.isMatch(key)) {
+                continue;
+            }
+
+            // Impl note: using the key's name as the job key works, but it limits each
+            // job to exactly one schedule, which may or may not be a good thing.
+            String schedule = schedules.get(key.getName());
+
+            if (!hasValidSchedule(key, schedule)) {
+                continue;
+            }
+
+            // Job exists and matches our schedule, we can skip it later
+            existing.add(key.getName());
+        }
+
+        return existing;
+    }
+
+    private boolean jobExists(JobKey key) throws SchedulerException {
+        // Verify the job exists and is in a valid state by loading its job detail
+        try {
+            this.scheduler.getJobDetail(key);
+            return true;
+        }
+        catch (JobPersistenceException e) {
+            log.error("Unable to load job detail for job, removing it from the scheduler: {}",
+                key.getName(), e);
+            return false;
+        }
+    }
+
+    private boolean hasValidSchedule(JobKey key, String schedule) throws SchedulerException {
+        // Impl note: using the key's name as the job key works, but it limits each
+        // job to exactly one schedule, which may or may not be a good thing.
+
+        boolean manual = ConfigProperties.ASYNC_JOBS_MANUAL_SCHEDULE.equalsIgnoreCase(schedule);
+
+        // If the job is no longer configured for scheduled execution, remove it from the
+        // scheduler
+        if (schedule == null || manual) {
+            return false;
+        }
+
+        Trigger trigger = this.scheduler.getTrigger(
+            TriggerKey.triggerKey(key.getName(), key.getGroup()));
+
+        // Check that the job has a trigger, it's a cron trigger, and the schedule matches
+        // the schedule in the current configuration
+        return trigger instanceof CronTrigger &&
+            ((CronTrigger) trigger).getCronExpression().equals(schedule);
+    }
+
+
+    private void unscheduleBadJobs(Set<JobKey> unschedule) throws SchedulerException {
         for (JobKey key : unschedule) {
-            List<Trigger> jobTriggers = (List<Trigger>) this.scheduler.getTriggersOfJob(key);
+            List<? extends Trigger> jobTriggers = this.scheduler.getTriggersOfJob(key);
 
             if (!jobTriggers.isEmpty()) {
                 this.scheduler.unscheduleJobs(jobTriggers
                     .stream()
                     .map(Trigger::getKey)
-                    .collect(Collectors.toList()));
+                    .toList());
             }
             else {
                 this.scheduler.deleteJob(key);
@@ -878,42 +893,23 @@ public class JobManager implements ModeChangeListener {
 
             log.info("Removed existing schedule for job: {}", key.getName());
         }
+    }
 
-        // Schedule new jobs
-        for (Map.Entry<String, Configuration> entry : this.jobConfig.entrySet()) {
-            String jobName = entry.getKey();
-            try {
-                Configuration config = entry.getValue();
+    private Map<String, String> findJobSchedules() {
+        Map<String, String> config = this.configuration.getValuesByPrefix(ConfigProperties.ASYNC_JOBS_PREFIX);
+        return config.entrySet().stream()
+            .filter(entry -> entry.getKey().endsWith(".schedule"))
+            .collect(Collectors.toMap(
+                this::getJobKey,
+                Map.Entry::getValue
+            ));
 
-                String schedule = config.getString(ConfigProperties.ASYNC_JOBS_JOB_SCHEDULE, null);
-                boolean manual = ConfigProperties.ASYNC_JOBS_MANUAL_SCHEDULE.equalsIgnoreCase(schedule);
+    }
 
-                // If the job is not configured for scheduled execution, or is already scheduled, skip it.
-                if (schedule == null || manual || existing.contains(jobName)) {
-                    continue;
-                }
-
-                ScheduleBuilder qtzSchedule = CronScheduleBuilder.cronSchedule(schedule)
-                    .withMisfireHandlingInstructionDoNothing();
-
-                Trigger trigger = TriggerBuilder.newTrigger()
-                    .withIdentity(jobName, QRTZ_GROUP_CONFIG)
-                    .withSchedule(qtzSchedule)
-                    .build();
-
-                JobDetail detail = org.quartz.JobBuilder.newJob(QuartzJobExecutor.class)
-                    .withIdentity(jobName, QRTZ_GROUP_CONFIG)
-                    .build();
-
-                this.scheduler.scheduleJob(detail, trigger);
-
-                log.info("Scheduled job \"{}\" with cron schedule: {}", jobName, schedule);
-            }
-            catch (Exception e) {
-                log.error("Unable to schedule job \"{}\":", jobName, e);
-                throw new RuntimeException(e);
-            }
-        }
+    private String getJobKey(Map.Entry<String, String> entry) {
+        String[] split = Util.stripPrefix(entry.getKey(), ConfigProperties.ASYNC_JOBS_PREFIX)
+            .split("\\.");
+        return split[0];
     }
 
     /**

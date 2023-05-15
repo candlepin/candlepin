@@ -664,7 +664,7 @@ public class ConsumerResource implements ConsumerApi {
 
             if (idcert != null) {
                 Date expire = idcert.getSerial().getExpiration();
-                int days = config.getInt(ConfigProperties.IDENTITY_CERT_EXPIRY_THRESHOLD, 90);
+                int days = config.getInt(ConfigProperties.IDENTITY_CERT_EXPIRY_THRESHOLD);
                 Date futureExpire = Util.addDaysToDt(days);
                 // if expiration is within 90 days, regenerate it
                 log.debug("Threshold [{}] expires on [{}] futureExpire [{}]", days, expire, futureExpire);
@@ -2335,7 +2335,7 @@ public class ConsumerResource implements ConsumerApi {
 
             if (poolIdString != null) {
                 String cfg = ConfigProperties.jobConfig(EntitlerJob.JOB_KEY, EntitlerJob.CFG_JOB_THROTTLE);
-                int throttle = config.getInt(cfg, EntitlerJob.DEFAULT_THROTTLE);
+                int throttle = config.getInt(cfg);
 
                 jobConfig = EntitlerJob.createConfig(throttle)
                     .setOwner(owner)

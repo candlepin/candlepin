@@ -65,21 +65,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.xnap.commons.i18n.I18n;
-import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Date;
-import java.util.Locale;
 import java.util.Set;
 import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 
 
-
-/**
- * HypervisorUpdateJobTest
- */
 public class HypervisorUpdateJobTest {
 
     private Owner owner;
@@ -92,7 +85,6 @@ public class HypervisorUpdateJobTest {
     private ConsumerResource consumerResource;
     private ConsumerTypeCurator consumerTypeCurator;
     private HypervisorUpdateAction hypervisorUpdateAction;
-    private I18n i18n;
     private SubscriptionServiceAdapter subAdapter;
     private Configuration config;
     private EventSink sink;
@@ -103,11 +95,6 @@ public class HypervisorUpdateJobTest {
 
     @BeforeEach
     public void init() {
-        i18n = I18nFactory.getI18n(
-            getClass(),
-            Locale.US,
-            I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
-        );
         owner = mock(Owner.class);
         principal = mock(Principal.class);
         ownerCurator = mock(OwnerCurator.class);
@@ -202,8 +189,8 @@ public class HypervisorUpdateJobTest {
         when(consumerCurator.getHostConsumersMap(eq(owner), Mockito.<Consumer>anyList()))
             .thenReturn(new VirtConsumerMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            translator, hypervisorUpdateAction, i18n, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator,
+            hypervisorUpdateAction, objectMapper);
         job.execute(ctx);
         verify(consumerCurator).create(any(Consumer.class));
     }
@@ -219,8 +206,8 @@ public class HypervisorUpdateJobTest {
         when(consumerCurator.getHostConsumersMap(eq(owner), Mockito.<Consumer>anyList()))
             .thenReturn(new VirtConsumerMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            translator, hypervisorUpdateAction, i18n, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator,
+            hypervisorUpdateAction, objectMapper);
         job.execute(ctx);
         ArgumentCaptor<Consumer> argument = ArgumentCaptor.forClass(Consumer.class);
         verify(consumerCurator).create(argument.capture());
@@ -245,8 +232,8 @@ public class HypervisorUpdateJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getJobArguments()).thenReturn(config.getJobArguments());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            translator, hypervisorUpdateAction, i18n, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator,
+            hypervisorUpdateAction, objectMapper);
         job.execute(ctx);
         verify(consumerResource).checkForFactsUpdate(any(Consumer.class), any(ConsumerDTO.class));
         verify(consumerCurator, times(1)).update(any(Consumer.class));
@@ -269,8 +256,8 @@ public class HypervisorUpdateJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getJobArguments()).thenReturn(config.getJobArguments());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            translator, hypervisorUpdateAction, i18n, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator,
+            hypervisorUpdateAction, objectMapper);
         job.execute(ctx);
         assertEquals("updateReporterId", hypervisor.getHypervisorId().getReporterId());
     }
@@ -304,8 +291,8 @@ public class HypervisorUpdateJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getJobArguments()).thenReturn(config.getJobArguments());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            translator, hypervisorUpdateAction, i18n, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator,
+            hypervisorUpdateAction, objectMapper);
         job.execute(ctx);
 
         ArgumentCaptor<Consumer> updateCaptor = ArgumentCaptor.forClass(Consumer.class);
@@ -346,8 +333,8 @@ public class HypervisorUpdateJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getJobArguments()).thenReturn(config.getJobArguments());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(
-            ownerCurator, consumerCurator, translator, hypervisorUpdateAction, i18n, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator,
+            hypervisorUpdateAction, objectMapper);
         job.execute(ctx);
 
         ArgumentCaptor<Consumer> createCaptor = ArgumentCaptor.forClass(Consumer.class);
@@ -374,8 +361,8 @@ public class HypervisorUpdateJobTest {
         when(consumerCurator.getHostConsumersMap(eq(owner), Mockito.<Consumer>anyList()))
             .thenReturn(new VirtConsumerMap());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            translator, hypervisorUpdateAction, i18n, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator,
+            hypervisorUpdateAction, objectMapper);
         job.execute(ctx);
         verify(consumerResource, never()).createConsumerFromDTO(any(ConsumerDTO.class),
             any(ConsumerType.class), any(Principal.class), anyString(), any(Owner.class), anyString(),
@@ -402,8 +389,8 @@ public class HypervisorUpdateJobTest {
         when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
             any(String.class))).thenReturn(new Consumer());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            translator, hypervisorUpdateAction, i18n, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator,
+            hypervisorUpdateAction, objectMapper);
         job.execute(ctx);
     }
 
@@ -458,8 +445,8 @@ public class HypervisorUpdateJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getJobArguments()).thenReturn(config.getJobArguments());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            translator, hypervisorUpdateAction, i18n, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator,
+            hypervisorUpdateAction, objectMapper);
         job.execute(ctx);
 
         ArgumentCaptor<Consumer> updateCaptor = ArgumentCaptor.forClass(Consumer.class);
@@ -489,8 +476,8 @@ public class HypervisorUpdateJobTest {
         when(consumerCurator.getExistingConsumerByHypervisorIdOrUuid(any(String.class), any(String.class),
             any(String.class))).thenReturn(new Consumer());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            translator, hypervisorUpdateAction, i18n, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator,
+            hypervisorUpdateAction, objectMapper);
         job.execute(ctx);
 
         ArgumentCaptor<Consumer> updateCaptor = ArgumentCaptor.forClass(Consumer.class);
@@ -536,8 +523,8 @@ public class HypervisorUpdateJobTest {
         JobExecutionContext ctx = mock(JobExecutionContext.class);
         when(ctx.getJobArguments()).thenReturn(config.getJobArguments());
 
-        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator, consumerCurator,
-            translator, hypervisorUpdateAction, i18n, objectMapper);
+        HypervisorUpdateJob job = new HypervisorUpdateJob(ownerCurator,
+            hypervisorUpdateAction, objectMapper);
         job.execute(ctx);
 
         ArgumentCaptor<Consumer> updateCaptor = ArgumentCaptor.forClass(Consumer.class);

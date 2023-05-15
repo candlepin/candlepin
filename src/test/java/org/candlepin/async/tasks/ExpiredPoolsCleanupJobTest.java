@@ -23,9 +23,7 @@ import org.candlepin.controller.PoolManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/**
- * Test suite for the ExpiredPoolsCleanupJob class
- */
+
 public class ExpiredPoolsCleanupJobTest {
 
     private PoolManager poolManager;

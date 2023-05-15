@@ -44,8 +44,8 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.EntitlementCertificateGenerator;
@@ -213,7 +213,7 @@ public class ConsumerResourceTest {
 
     @BeforeEach
     public void setUp() {
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
         this.translator = new StandardTranslator(consumerTypeCurator,
             environmentCurator,
             ownerCurator);

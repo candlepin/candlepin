@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.auth.Principal;
-import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.dto.ModelTranslator;
@@ -119,7 +119,7 @@ public class EventSinkImplTest {
             this.mockEnvironmentCurator, this.mockOwnerCurator);
 
         this.factory = new EventFactory(mockPrincipalProvider, mapper, this.modelTranslator);
-        this.eventFilter = new EventFilter(new CandlepinCommonTestConfig());
+        this.eventFilter = new EventFilter(TestConfig.defaults());
 
         this.eventSinkImpl = createEventSink(mockSessionFactory);
 
@@ -134,7 +134,7 @@ public class EventSinkImplTest {
      */
     private EventSinkImpl createEventSink(final ClientSessionFactory sessionFactory) throws Exception {
         EventSinkImpl sink = new EventSinkImpl(eventFilter, factory, mapper,
-            new CandlepinCommonTestConfig(), this.amqSessionFactory, mockModeManager);
+            TestConfig.defaults(), this.amqSessionFactory, mockModeManager);
         return sink;
     }
 

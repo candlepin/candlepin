@@ -14,60 +14,46 @@
  */
 package org.candlepin.util;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.ContentOverride;
-import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
+import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Stream;
 
 
-
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
-public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
+public class ContentOverrideValidatorTest {
 
-    @Mock private Configuration config;
+    private DevConfig config;
+    private I18n i18n;
     private ContentOverrideValidator validator;
 
     @BeforeEach
     public void setupTest() {
+        this.config = TestConfig.defaults();
+        this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.validator = new ContentOverrideValidator(this.config, this.i18n);
-    }
-
-    private List<ContentOverrideDTO> buildOverridesList(int count) {
-        List<ContentOverrideDTO> overrides = new LinkedList<>();
-
-        for (int i = 0; i < count; ++i) {
-            overrides.add(new ContentOverrideDTO()
-                .contentLabel("test_label-" + i)
-                .name("test_name-" + i)
-                .value("test_value-" + i));
-        }
-
-        return overrides;
     }
 
     @Test
@@ -196,9 +182,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
         // Add our invalid override...
         StringBuilder builder = new StringBuilder();
-        while (builder.length() < ContentOverride.MAX_NAME_AND_LABEL_LENGTH) {
-            builder.append("longstring");
-        }
+        extracted(builder);
 
         ContentOverrideDTO invalid = new ContentOverrideDTO()
             .contentLabel("test_label-x")
@@ -209,6 +193,12 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
         // This should fail now
         assertThrows(BadRequestException.class, () -> this.validator.validate(overrides));
+    }
+
+    private static void extracted(StringBuilder builder) {
+        while (builder.length() < ContentOverride.MAX_NAME_AND_LABEL_LENGTH) {
+            builder.append("longstring");
+        }
     }
 
     /**
@@ -230,10 +220,6 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
     @ParameterizedTest
     @MethodSource("invalidStandaloneProperties")
     public void testValidateWithInvalidPropertyNameStandalone(String property) {
-        // Set our config mock to look like it's in standalone mode
-        when(this.config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(true);
-        when(this.config.getBoolean(eq(ConfigProperties.STANDALONE), anyBoolean())).thenReturn(true);
-
         ContentOverrideValidator validator = new ContentOverrideValidator(this.config, this.i18n);
 
         ContentOverrideDTO invalid = new ContentOverrideDTO()
@@ -242,7 +228,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
             .value("test_value-x");
 
         // This should fail
-        assertThrows(BadRequestException.class, () -> this.validator.validate(Arrays.asList(invalid)));
+        assertThrows(BadRequestException.class, () -> validator.validate(Arrays.asList(invalid)));
     }
 
     /**
@@ -265,8 +251,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
     @MethodSource("invalidHostedProperties")
     public void testValidateWithInvalidPropertyNameHosted(String property) {
         // Set our config mock to look like it's in standalone mode
-        when(this.config.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(false);
-        when(this.config.getBoolean(eq(ConfigProperties.STANDALONE), anyBoolean())).thenReturn(false);
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
         ContentOverrideValidator validator = new ContentOverrideValidator(this.config, this.i18n);
 
@@ -275,8 +260,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
             .name(property)
             .value("test_value-x");
 
-        // This should fail
-        assertThrows(BadRequestException.class, () -> this.validator.validate(Arrays.asList(invalid)));
+        assertThrows(BadRequestException.class, () -> validator.validate(List.of(invalid)));
     }
 
     @Test
@@ -322,7 +306,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
         StringBuilder builder = new StringBuilder();
         String value = "longstring";
         while (builder.length() < ContentOverride.MAX_NAME_AND_LABEL_LENGTH - 100) {
-            builder.append("longstring");
+            builder.append(value);
         }
 
         List<ContentOverrideDTO> overrides = new ArrayList<>();
@@ -333,9 +317,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
 
         overrides.add(contentOverride);
 
-        this.validator.validate(overrides);
-
-        //No assertions. There should be no error thrown for the valid content overrides.
+        assertDoesNotThrow(() -> this.validator.validate(overrides));
     }
 
     @Test
@@ -343,7 +325,7 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
         StringBuilder builder = new StringBuilder();
         String value = "longstring";
         while (builder.length() < ContentOverride.MAX_VALUE_LENGTH + 100) {
-            builder.append("longstring");
+            builder.append(value);
         }
 
         List<ContentOverrideDTO> overrides = new ArrayList<>();
@@ -355,5 +337,18 @@ public class ContentOverrideValidatorTest extends DatabaseTestFixture  {
         overrides.add(contentOverride);
 
         assertThrows(BadRequestException.class, () -> this.validator.validate(overrides));
+    }
+
+    private List<ContentOverrideDTO> buildOverridesList(int count) {
+        List<ContentOverrideDTO> overrides = new LinkedList<>();
+
+        for (int i = 0; i < count; ++i) {
+            overrides.add(new ContentOverrideDTO()
+                .contentLabel("test_label-" + i)
+                .name("test_name-" + i)
+                .value("test_value-" + i));
+        }
+
+        return overrides;
     }
 }

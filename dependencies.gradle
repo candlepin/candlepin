@@ -100,5 +100,7 @@ libraries["resteasyMultipart"] = "org.jboss.resteasy:resteasy-multipart-provider
 libraries["resteasyValidator"] = "org.jboss.resteasy:resteasy-validator-provider:4.7.9.Final"
 libraries["rhino"] = "org.mozilla:rhino:1.7.14"
 libraries["slf4j"] = "org.slf4j:slf4j-api:2.0.7"
+libraries["smallryeConfig"] = "io.smallrye.config:smallrye-config:3.2.1"
 libraries["spotbugs"] = "com.github.spotbugs:spotbugs-annotations:4.7.3"
+libraries["tomcatAnnotations"] = "org.apache.tomcat:tomcat-annotations-api:10.0.0"
 libraries["swagger"] = "io.swagger:swagger-annotations:1.6.11"

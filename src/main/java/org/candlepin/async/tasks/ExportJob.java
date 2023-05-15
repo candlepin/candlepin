@@ -43,7 +43,7 @@ import javax.inject.Inject;
  * @see ExportResult
  */
 public class ExportJob implements AsyncJob {
-    private static Logger log = LoggerFactory.getLogger(ExportJob.class);
+    private static final Logger log = LoggerFactory.getLogger(ExportJob.class);
 
     public static final String JOB_KEY = "ExportJob";
     public static final String JOB_NAME = "Export Manifest";

@@ -243,7 +243,7 @@ public class JobMessageDispatcher {
      *  if the necessary configuration cannot be read or is invalid
      */
     private void configure(Configuration config) throws ConfigurationException {
-        this.dispatchAddress = config.getString(ConfigProperties.ASYNC_JOBS_DISPATCH_ADDRESS, null);
+        this.dispatchAddress = config.getString(ConfigProperties.ASYNC_JOBS_DISPATCH_ADDRESS);
         if (this.dispatchAddress == null || this.dispatchAddress.isEmpty()) {
             throw new ConfigurationException("Invalid job dispatch address: address cannot be null or empty");
         }

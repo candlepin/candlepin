@@ -17,7 +17,8 @@ package org.candlepin.sync;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.MapConfiguration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EnvironmentCurator;
@@ -31,17 +32,17 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.HashMap;
 import java.util.Map;
 
 
 public class ProductExporterTest {
     @Test
     public void testProductExport() throws IOException {
-        Map<String, String> configProps = new HashMap<>();
-        configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+        DevConfig config = TestConfig.custom(Map.of(
+            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
+        ));
 
-        ObjectMapper mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
+        ObjectMapper mapper = new SyncUtils(config).getObjectMapper();
 
         ProductExporter exporter = new ProductExporter(
             new StandardTranslator(new ConsumerTypeCurator(), new EnvironmentCurator(), new OwnerCurator()));

@@ -37,7 +37,8 @@ public class ActiveEntitlementJob implements AsyncJob {
 
     public static final String JOB_KEY = "ActiveEntitlementJob";
     public static final String JOB_NAME = "Active Entitlement";
-    public static final String DEFAULT_SCHEDULE = "0 0 0/1 * * ?"; // Every hour
+    // Every hour
+    public static final String DEFAULT_SCHEDULE = "0 0 0/1 * * ?";
 
     private final ConsumerCurator consumerCurator;
     private final ComplianceRules complianceRules;

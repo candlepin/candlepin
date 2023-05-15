@@ -33,9 +33,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
@@ -117,17 +117,13 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 
-
-/**
- * ImporterTest
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ImporterTest {
 
     @TempDir protected File tmpFolder;
 
-    private Configuration config;
+    private DevConfig config;
     private I18n i18n;
     private ModelTranslator modelTranslator;
     private SyncUtils syncUtils;
@@ -163,7 +159,7 @@ public class ImporterTest {
 
     @BeforeEach
     public void init() throws Exception {
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
         this.config.setProperty(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
 
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);

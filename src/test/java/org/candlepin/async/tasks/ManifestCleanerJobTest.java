@@ -24,9 +24,9 @@ import static org.mockito.Mockito.verify;
 
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ManifestManager;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -41,21 +41,19 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-/**
- * Test suite for the ManifestCleanerJob class
- */
+
 public class ManifestCleanerJobTest {
 
     private Path manifestDir;
     private ManifestManager manifestManager;
-    private Configuration config;
+    private DevConfig config;
 
     @BeforeEach
     public void setUp() throws IOException {
         this.manifestDir = Files.createTempDirectory("test_sync-");
         this.manifestManager = mock(ManifestManager.class);
 
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
         this.config.setProperty(ConfigProperties.SYNC_WORK_DIR, manifestDir.toString());
     }
 

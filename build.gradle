@@ -165,6 +165,10 @@ dependencies {
     implementation libraries["hibernateJpamodelgen"]
     annotationProcessor libraries["hibernateJpamodelgen"]
 
+    // Smallrye Config
+    implementation libraries["smallryeConfig"]
+    implementation libraries["tomcatAnnotations"]
+
     // Use wildcard because this could be called jss4.jar or jss.jar
     // (depending on if we are before Fedora35/RHEL9 or after)
     providedCompile fileTree(dir: '/usr/lib64/jss', include: '*.jar')
@@ -186,6 +190,7 @@ dependencies {
     testImplementation libraries["hamcrest"]
     testImplementation libraries["mockitoJunit"]
     testImplementation libraries["liquibaseSlf4j"]
+    testImplementation libraries["assertj"]
 }
 
 // Copy the resources to the main classes directory so that the

@@ -30,8 +30,8 @@ import org.candlepin.audit.Event;
 import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
@@ -106,7 +106,7 @@ public class GuestIdResourceTest {
 
     @BeforeEach
     public void setUp() {
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
         this.testMigration = spy(new GuestMigration(consumerCurator));
 
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,

@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.activationkey;
 
-import org.candlepin.config.PropertyConverter;
+import org.candlepin.config.ConversionException;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Pool;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -22,9 +22,10 @@ import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.RulesValidationError;
 import org.candlepin.policy.ValidationResult;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.lang3.BooleanUtils;
 import org.xnap.commons.i18n.I18n;
+
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -66,13 +67,11 @@ public class ActivationKeyRules {
         }
     }
 
-    private static Logger log = LoggerFactory.getLogger(ActivationKeyRules.class);
-
-    private I18n i18n;
+    private final I18n i18n;
 
     @Inject
     public ActivationKeyRules(I18n i18n) {
-        this.i18n = i18n;
+        this.i18n = Objects.requireNonNull(i18n);
     }
 
     /**
@@ -94,7 +93,8 @@ public class ActivationKeyRules {
             result.addError(ErrorKeys.INVALID_QUANTITY);
         }
 
-        if (!PropertyConverter.toBoolean(pool.getMergedProductAttribute(Pool.Attributes.MULTI_ENTITLEMENT))) {
+        String mergedProductAttribute = pool.getMergedProductAttribute(Pool.Attributes.MULTI_ENTITLEMENT);
+        if (!toBoolean(mergedProductAttribute)) {
             // If the pool isn't multi-entitlable, we can only accept null quantity and 1
             if (quantity != null && quantity > 1) {
                 result.addError(ErrorKeys.INVALID_NON_MULTIENT_QUANTITY);
@@ -141,4 +141,25 @@ public class ActivationKeyRules {
         }
         return null;
     }
+
+    private boolean toBoolean(Object value) throws ConversionException {
+        if (value == null) {
+            return false;
+        }
+
+        if (value instanceof Boolean bool) {
+            return bool;
+        }
+        else if (value instanceof String str) {
+            if ("1".equalsIgnoreCase(str) || "y".equalsIgnoreCase(str)) {
+                return true;
+            }
+
+            return BooleanUtils.toBoolean((String) value);
+        }
+        else {
+            throw new ConversionException("The value %s can not be converted to a boolean.".formatted(value));
+        }
+    }
+
 }

@@ -29,6 +29,8 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
+import java.util.Objects;
+
 import javax.inject.Inject;
 
 
@@ -44,10 +46,10 @@ public class RefreshPoolsJob implements AsyncJob {
     protected static final String OWNER_KEY = "org";
     protected static final String LAZY_REGEN = "lazy_regen";
 
-    protected OwnerCurator ownerCurator;
-    protected PoolManager poolManager;
-    protected SubscriptionServiceAdapter subAdapter;
-    protected ProductServiceAdapter prodAdapter;
+    private final OwnerCurator ownerCurator;
+    private final PoolManager poolManager;
+    private final SubscriptionServiceAdapter subAdapter;
+    private final ProductServiceAdapter prodAdapter;
 
 
     /**
@@ -129,11 +131,10 @@ public class RefreshPoolsJob implements AsyncJob {
     @Inject
     public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager,
         SubscriptionServiceAdapter subAdapter, ProductServiceAdapter prodAdapter) {
-
-        this.ownerCurator = ownerCurator;
-        this.poolManager = poolManager;
-        this.subAdapter = subAdapter;
-        this.prodAdapter = prodAdapter;
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.poolManager = Objects.requireNonNull(poolManager);
+        this.subAdapter = Objects.requireNonNull(subAdapter);
+        this.prodAdapter = Objects.requireNonNull(prodAdapter);
     }
 
     /**

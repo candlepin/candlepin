@@ -17,7 +17,8 @@ package org.candlepin.sync;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.MapConfiguration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,7 +28,6 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 
@@ -35,10 +35,11 @@ public class MetaExporterTest {
 
     @Test
     public void testMetaExporter() throws IOException {
-        Map<String, String> configProps = new HashMap<>();
-        configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+        DevConfig config = TestConfig.custom(Map.of(
+            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
+        ));
 
-        ObjectMapper mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
+        ObjectMapper mapper = new SyncUtils(config).getObjectMapper();
 
         MetaExporter metaEx = new MetaExporter();
         StringWriter writer = new StringWriter();

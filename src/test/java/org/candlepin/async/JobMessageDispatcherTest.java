@@ -25,10 +25,10 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
 import org.candlepin.config.ConfigurationException;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.messaging.CPMMessage;
 import org.candlepin.messaging.CPMProducer;
 import org.candlepin.messaging.CPMProducerConfig;
@@ -130,7 +130,7 @@ public class JobMessageDispatcherTest {
     }
 
 
-    private Configuration config;
+    private DevConfig config;
     private ObjectMapper mapper;
 
     private CPMSessionFactory sessionFactory;
@@ -140,7 +140,7 @@ public class JobMessageDispatcherTest {
 
     @BeforeEach
     public void init() {
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
         this.mapper = new ObjectMapper();
 
         this.sessionFactory = mock(CPMSessionFactory.class);
@@ -165,7 +165,7 @@ public class JobMessageDispatcherTest {
         return session;
     }
 
-    private CPMMessage mockCPMMessage() throws Exception {
+    private CPMMessage mockCPMMessage() {
         CPMMessage message = mock(CPMMessage.class);
 
         doReturn(message).when(message).setDurable(anyBoolean());
@@ -176,17 +176,17 @@ public class JobMessageDispatcherTest {
     }
 
     @Test
-    public void testDispatchAddressCannotBeNull() throws Exception {
+    public void testDispatchAddressCannotBeNull() {
         this.config.clearProperty(ConfigProperties.ASYNC_JOBS_DISPATCH_ADDRESS);
 
-        assertThrows(ConfigurationException.class, () -> this.buildJobMessageDispatcher());
+        assertThrows(ConfigurationException.class, this::buildJobMessageDispatcher);
     }
 
     @Test
-    public void testDispatchAddressCannotBeEmpty() throws Exception {
+    public void testDispatchAddressCannotBeEmpty() {
         this.config.setProperty(ConfigProperties.ASYNC_JOBS_DISPATCH_ADDRESS, "");
 
-        assertThrows(ConfigurationException.class, () -> this.buildJobMessageDispatcher());
+        assertThrows(ConfigurationException.class, this::buildJobMessageDispatcher);
     }
 
     @Test
@@ -250,8 +250,8 @@ public class JobMessageDispatcherTest {
 
         executor1.execute(() -> dispatcher.postJobMessage(new JobMessage("job_id-1", "job_key-1")));
         executor2.execute(() -> dispatcher.postJobMessage(new JobMessage("job_id-2", "job_key-2")));
-        executor1.execute(() -> dispatcher.commit());
-        executor2.execute(() -> dispatcher.commit());
+        executor1.execute(dispatcher::commit);
+        executor2.execute(dispatcher::commit);
 
         executor1.shutdown();
         executor2.shutdown();

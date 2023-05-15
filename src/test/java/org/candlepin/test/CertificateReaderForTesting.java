@@ -15,7 +15,7 @@
 package org.candlepin.test;
 
 import org.candlepin.config.Configuration;
-import org.candlepin.config.MapConfiguration;
+import org.candlepin.config.DevConfig;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PrivateKeyReader;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
@@ -33,18 +33,16 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-/**
- * CertificateReaderForTesting
- */
+
 public class CertificateReaderForTesting extends CertificateReader {
     static {
         JSSProviderLoader.initialize();
     }
 
     @Inject
-    public CertificateReaderForTesting(Configuration config, PrivateKeyReader reader)
+    public CertificateReaderForTesting()
         throws CertificateException, IOException {
-        super(new MapConfiguration(), new JSSPrivateKeyReader());
+        super(new DevConfig(), new JSSPrivateKeyReader());
     }
 
     @Override

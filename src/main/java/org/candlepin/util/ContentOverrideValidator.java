@@ -22,9 +22,7 @@ import org.candlepin.model.ContentOverride;
 
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -40,11 +38,8 @@ import javax.inject.Inject;
  */
 public class ContentOverrideValidator {
 
-    public static final Set<String> DEFAULT_BLOCKLIST = Collections.<String>unmodifiableSet(
-        new HashSet<String>(Arrays.asList("", "name", "label")));
-    public static final Set<String> HOSTED_BLOCKLIST = Collections.<String>unmodifiableSet(
-        new HashSet<String>(Arrays.asList("", "name", "label", "baseurl")));
-
+    public static final Set<String> DEFAULT_BLOCKLIST = Set.of("", "name", "label");
+    public static final Set<String> HOSTED_BLOCKLIST = Set.of("", "name", "label", "baseurl");
 
     protected final Set<String> blocklist;
 
@@ -56,7 +51,7 @@ public class ContentOverrideValidator {
         this.config = config;
         this.i18n = i18n;
 
-        if (config.getBoolean(ConfigProperties.STANDALONE, true)) {
+        if (config.getBoolean(ConfigProperties.STANDALONE)) {
             this.blocklist = DEFAULT_BLOCKLIST;
         }
         else {
@@ -64,7 +59,6 @@ public class ContentOverrideValidator {
         }
     }
 
-    @SuppressWarnings("checkstyle:JavadocMethod")
     /**
      * Validates the given ContentOverrideDTO instances, checking that the overridden properties
      * aren't protected and both the property name and value are short enough to fit in the
@@ -76,6 +70,7 @@ public class ContentOverrideValidator {
      * @throws BadRequestException
      *  if the collection of overrides contains an invalid override
      */
+    @SuppressWarnings("checkstyle:JavadocMethod")
     public void validate(Collection<? extends ContentOverrideDTO> overrides) {
         if (overrides != null) {
             Set<String> invalidLabels = new HashSet<>();

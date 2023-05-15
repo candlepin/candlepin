@@ -53,15 +53,15 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-/**
- * ActivationKeyResourceTest
- */
+
 public class ActivationKeyResourceTest extends DatabaseTestFixture {
 
     private static int poolid = 0;
 
-    @Inject private ServiceLevelValidator serviceLevelValidator;
-    @Inject private Injector injector;
+    @Inject
+    private ServiceLevelValidator serviceLevelValidator;
+    @Inject
+    private Injector injector;
 
     private ActivationKeyResource activationKeyResource;
     private ActivationKeyRules activationKeyRules;

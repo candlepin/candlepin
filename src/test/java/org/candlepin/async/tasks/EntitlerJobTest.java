@@ -60,9 +60,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * EntitlerJobTest
- */
+
 public class EntitlerJobTest {
 
     private Consumer consumer;

@@ -579,4 +579,21 @@ public class UtilTest {
             }
         }
     }
+
+    @Test
+    void shouldStripPrefix() {
+        String text = "candlepin.async.jobs.org.candlepin.schedule";
+        String result = Util.stripPrefix(text, "candlepin.async.jobs.");
+
+        assertEquals("org.candlepin.schedule", result);
+    }
+
+    @Test
+    void shouldStripPrefixIfPresent() {
+        String text = "candlepin.async.jobs.org.candlepin.schedule";
+        String result = Util.stripPrefix(text, "org.candlepin.async.jobs.");
+
+        assertEquals(text, result);
+    }
+
 }

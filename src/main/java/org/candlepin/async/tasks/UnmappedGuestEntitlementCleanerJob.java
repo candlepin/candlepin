@@ -22,6 +22,8 @@ import org.candlepin.controller.Entitler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
+
 import javax.inject.Inject;
 
 /**
@@ -29,7 +31,7 @@ import javax.inject.Inject;
  * after the entitlement has expired.  Entitlements normally last until a pool expires.
  */
 public class UnmappedGuestEntitlementCleanerJob implements AsyncJob {
-    private static Logger log = LoggerFactory.getLogger(UnmappedGuestEntitlementCleanerJob.class);
+    private static final Logger log = LoggerFactory.getLogger(UnmappedGuestEntitlementCleanerJob.class);
 
     public static final String JOB_KEY = "UnmappedGuestEntitlementCleanerJob";
     public static final String JOB_NAME = "Unmapped Guest Entitlement Cleaner";
@@ -37,11 +39,11 @@ public class UnmappedGuestEntitlementCleanerJob implements AsyncJob {
     // Run at 3 AM and every 12 hours afterwards
     public static final String DEFAULT_SCHEDULE = "0 0 3/12 * * ?";
 
-    private Entitler entitler;
+    private final Entitler entitler;
 
     @Inject
     public UnmappedGuestEntitlementCleanerJob(Entitler entitler) {
-        this.entitler = entitler;
+        this.entitler = Objects.requireNonNull(entitler);
     }
 
     /**

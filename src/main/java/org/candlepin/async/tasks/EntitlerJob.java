@@ -53,18 +53,16 @@ import javax.inject.Inject;
  * EntitlerJob
  */
 public class EntitlerJob implements AsyncJob {
-    private static Logger log = LoggerFactory.getLogger(EntitlerJob.class);
+    private static final Logger log = LoggerFactory.getLogger(EntitlerJob.class);
 
     public static final String JOB_KEY = "EntitlerJob";
     public static final String JOB_NAME = "Entitle by Pool";
 
-    private static final String OWNER_KEY = "org";
     private static final String CONSUMER_UUID_KEY = "consumer_uuid";
     private static final String POOL_ID_KEY = "pool_id";
     private static final String POOL_QUANTITY_KEY = "pool_quantity";
-
     public static final String CFG_JOB_THROTTLE = "throttle";
-    public static final int DEFAULT_THROTTLE = 7;
+    public static final String DEFAULT_THROTTLE = "7";
 
     private final I18n i18n;
     private final Entitler entitler;

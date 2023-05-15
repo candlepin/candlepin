@@ -27,8 +27,9 @@ import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
@@ -131,7 +132,7 @@ public class DatabaseTestFixture {
     private static final String DEFAULT_ACCOUNT = "ACC123";
     private static final String DEFAULT_ORDER = "ORD222";
 
-    protected Configuration config;
+    protected DevConfig config;
 
     @Inject protected ActivationKeyCurator activationKeyCurator;
     @Inject protected ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
@@ -211,7 +212,7 @@ public class DatabaseTestFixture {
     }
 
     public void init(boolean beginTransaction) throws Exception {
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
         Module testingModule = new TestingModules.StandardTest(this.config);
         this.injector = parentInjector.createChildInjector(
             Modules.override(testingModule).with(getGuiceOverrideModule()));
@@ -679,6 +680,6 @@ public class DatabaseTestFixture {
      * @return a Configuration object
      */
     protected Configuration getConfigForParameters() {
-        return new CandlepinCommonTestConfig();
+        return TestConfig.defaults();
     }
 }

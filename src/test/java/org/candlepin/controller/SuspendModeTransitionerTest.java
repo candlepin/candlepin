@@ -17,9 +17,9 @@ package org.candlepin.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.candlepin.audit.ActiveMQStatus;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.controller.mode.ModeChangeReason;
@@ -33,14 +33,14 @@ import java.util.Set;
 
 
 public class SuspendModeTransitionerTest {
-    private Configuration config;
+    private DevConfig config;
 
     private CandlepinModeManager modeManager;
     private SuspendModeTransitioner transitioner;
 
     @BeforeEach
     public void setUp() {
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
         this.config.setProperty(ConfigProperties.SUSPEND_MODE_ENABLED, "true");
 
         this.modeManager = new CandlepinModeManager();

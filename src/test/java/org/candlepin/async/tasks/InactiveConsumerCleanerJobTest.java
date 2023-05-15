@@ -40,7 +40,6 @@ import java.util.Arrays;
 import java.util.Collection;
 
 
-
 public class InactiveConsumerCleanerJobTest extends DatabaseTestFixture {
 
     private InactiveConsumerCleanerJob inactiveConsumerCleanerJob;

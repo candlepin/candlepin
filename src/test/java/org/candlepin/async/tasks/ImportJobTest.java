@@ -51,10 +51,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 
-
-/**
- * Test suite for the ImportJob class
- */
 @ExtendWith(MockitoExtension.class)
 public class ImportJobTest {
     @Mock private ManifestManager manifestManager;

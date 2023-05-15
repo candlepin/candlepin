@@ -681,4 +681,12 @@ public class Util {
         return reorderedList;
     }
 
+    public static String stripPrefix(String text, String prefix) {
+        if (text == null || !text.startsWith(prefix)) {
+            return text;
+        }
+
+        return text.substring(prefix.length());
+    }
+
 }

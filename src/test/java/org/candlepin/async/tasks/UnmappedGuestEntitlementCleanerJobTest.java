@@ -28,10 +28,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 
-
-/**
- * Test suite for the UnmappedGuestEntitlementCleanerJob class
- */
 public class UnmappedGuestEntitlementCleanerJobTest {
 
     private Entitler entitler;

@@ -37,9 +37,7 @@ import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 
-/**
- * TestActiveEntitlementJob
- */
+
 public class ActiveEntitlementJobTest extends DatabaseTestFixture {
 
     @Inject private ActiveEntitlementJob job;

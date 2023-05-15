@@ -18,6 +18,7 @@ import org.candlepin.config.Configuration;
 import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.spi.LinkHeader;
 import org.slf4j.Logger;
@@ -40,7 +41,6 @@ import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.Provider;
 
 
-
 /**
  * LinkHeaderResponseFilter inserts a Link header into the HTTP response to a request that asked for paging.
  * The Link header is defined in RFC 5988 and is used to communicated to the client the URLs for the next
@@ -49,27 +49,23 @@ import javax.ws.rs.ext.Provider;
 @Provider
 @Priority(Priorities.HEADER_DECORATOR)
 public class LinkHeaderResponseFilter implements ContainerResponseFilter {
-    private static Logger log = LoggerFactory.getLogger(LinkHeaderResponseFilter.class);
+    private static final Logger log = LoggerFactory.getLogger(LinkHeaderResponseFilter.class);
 
     // This needs to be low enough that *all* headers can still reasonably fit after putting in
     // all four links. Given that the default header buffer size is 8k, we need to make sure
     // we still leave plenty of space for other headers.
-    public static final int MAX_LINK_LENGTH = 1024;
-
+    private static final int MAX_LINK_LENGTH = 1024;
+    private static final String TOTAL_RECORDS_COUNT = "X-total-count";
+    private static final String LINK_TYPE = MediaType.APPLICATION_JSON;
     public static final String LINK_HEADER = "Link";
-    public static final String TOTAL_RECORDS_COUNT = "X-total-count";
 
-    public static final String LINK_TYPE = MediaType.APPLICATION_JSON;
-
-    private String apiUrlPrefixKey;
-    private Configuration config;
-    private String contextPath;
+    private final String apiUrlPrefix;
 
     @Inject
     public LinkHeaderResponseFilter(Configuration config,
         @Named("PREFIX_APIURL_KEY") String apiUrlPrefixKey) {
-        this.config = config;
-        this.apiUrlPrefixKey = apiUrlPrefixKey;
+
+        this.apiUrlPrefix = config.getString(apiUrlPrefixKey);
     }
 
     @SuppressWarnings("rawtypes")
@@ -153,50 +149,49 @@ public class LinkHeaderResponseFilter implements ContainerResponseFilter {
     }
 
     protected Integer getPrevPage(Page<?> page) {
-        Integer prev = page.getPageRequest().getPage() - 1;
+        int prev = page.getPageRequest().getPage() - 1;
         // if the calculated page is out of bounds, return null
         return (prev < 1 || prev >= getLastPage(page)) ? null : prev;
     }
 
     protected Integer getNextPage(Page<?> page) {
-        Integer next = page.getPageRequest().getPage() + 1;
+        int next = page.getPageRequest().getPage() + 1;
         return (next > getLastPage(page)) ? null : next;
     }
 
     protected UriBuilder buildBaseUrl(ContainerRequestContext reqContext) {
-        if (config.containsKey(this.apiUrlPrefixKey) && !"".equals(config.getString(this.apiUrlPrefixKey))) {
-            ServletContext servletContext = ResteasyContext.getContextData(ServletContext.class);
-            contextPath = servletContext.getContextPath();
+        if (StringUtils.isBlank(this.apiUrlPrefix)) {
+            return reqContext.getUriInfo().getAbsolutePathBuilder();
+        }
 
-            StringBuilder url = new StringBuilder(config.getString(this.apiUrlPrefixKey));
-            // The default value of PREFIX_APIURL doesn't specify a scheme.
-            if (url.indexOf("://") == -1) {
-                url = new StringBuilder("https://").append(url);
-            }
+        ServletContext servletContext = ResteasyContext.getContextData(ServletContext.class);
+        String contextPath = servletContext.getContextPath();
 
-            String requestUri = reqContext.getUriInfo().getRequestUri().toString();
+        StringBuilder url = new StringBuilder(this.apiUrlPrefix);
+        // The default value of PREFIX_APIURL doesn't specify a scheme.
+        if (url.indexOf("://") == -1) {
+            url = new StringBuilder("https://").append(url);
+        }
 
-            int resourceStartOffset = requestUri.lastIndexOf(contextPath);
-            int queryParamsStartOffset = requestUri.lastIndexOf("?");
-            if (resourceStartOffset >= 0) {
-                // Strip off the context and the query parameters
-                url.append(requestUri, resourceStartOffset + contextPath.length(), queryParamsStartOffset);
-            }
-            else {
-                log.warn("Could not find servlet context in {}", requestUri);
-                return null;
-            }
+        String requestUri = reqContext.getUriInfo().getRequestUri().toString();
 
-            try {
-                return UriBuilder.fromUri(url.toString());
-            }
-            catch (IllegalArgumentException e) {
-                log.warn("Couldn't build URI for link header using {}", url, e);
-                return null;
-            }
+        int resourceStartOffset = requestUri.lastIndexOf(contextPath);
+        int queryParamsStartOffset = requestUri.lastIndexOf("?");
+        if (resourceStartOffset >= 0) {
+            // Strip off the context and the query parameters
+            url.append(requestUri, resourceStartOffset + contextPath.length(), queryParamsStartOffset);
         }
         else {
-            return reqContext.getUriInfo().getAbsolutePathBuilder();
+            log.warn("Could not find servlet context in {}", requestUri);
+            return null;
+        }
+
+        try {
+            return UriBuilder.fromUri(url.toString());
+        }
+        catch (IllegalArgumentException e) {
+            log.warn("Couldn't build URI for link header using {}", url, e);
+            return null;
         }
     }
 

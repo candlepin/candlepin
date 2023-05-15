@@ -43,7 +43,7 @@ import javax.persistence.LockModeType;
  * writing) and removes them.
  */
 public class OrphanCleanupJob implements AsyncJob  {
-    private static Logger log = LoggerFactory.getLogger(OrphanCleanupJob.class);
+    private static final Logger log = LoggerFactory.getLogger(OrphanCleanupJob.class);
 
     public static final String JOB_KEY = "OrphanCleanupJob";
     public static final String JOB_NAME = "Orphan Cleanup";

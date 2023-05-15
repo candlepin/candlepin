@@ -44,8 +44,8 @@ import org.candlepin.audit.Event.Type;
 import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
@@ -192,7 +192,7 @@ public class ConsumerResourceUpdateTest {
 
     @BeforeEach
     public void init() throws Exception {
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
 
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.testMigration = new GuestMigration(this.consumerCurator);

@@ -2021,8 +2021,7 @@ public class PoolManagerTest {
         boolean expected) {
 
         Pool pool = TestUtil.createPool(owner, product);
-        when(mockConfig.getBoolean(eq(ConfigProperties.STANDALONE))).thenReturn(!hosted);
-        when(mockConfig.getBoolean(eq(ConfigProperties.STANDALONE), anyBoolean())).thenReturn(!hosted);
+        when(mockConfig.getBoolean(ConfigProperties.STANDALONE)).thenReturn(!hosted);
 
         pool.setSourceSubscription(srcSub);
         pool.setUpstreamPoolId(upstreamPoolId);

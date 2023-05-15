@@ -18,9 +18,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.async.JobException;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
@@ -51,10 +52,6 @@ import java.util.List;
 import javax.inject.Inject;
 
 
-
-/**
- * ConsumerResourceVirtEntitlementTest
- */
 public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
 
     @Inject private ConsumerResource consumerResource;
@@ -251,7 +248,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
     private static class ConsumerResourceVirtEntitlementModule extends AbstractModule {
         @Override
         protected void configure() {
-            Configuration config = new CandlepinCommonTestConfig();
+            DevConfig config = TestConfig.defaults();
             config.setProperty(ConfigProperties.STANDALONE, "false");
             config.setProperty(ConfigProperties.CONSUMER_FACTS_MATCHER, "^virt.*");
             config.setProperty(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN,

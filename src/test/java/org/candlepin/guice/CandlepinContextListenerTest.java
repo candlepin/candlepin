@@ -17,10 +17,10 @@ package org.candlepin.guice;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -28,10 +28,10 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.TestingModules;
 import org.candlepin.audit.ActiveMQContextListener;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.config.ConfigurationException;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.junit.LiquibaseExtension;
 
 import com.google.inject.AbstractModule;
@@ -67,54 +67,27 @@ import javax.servlet.ServletContextEvent;
 
 @ExtendWith(LiquibaseExtension.class)
 public class CandlepinContextListenerTest {
-    private Configuration config;
+    private DevConfig config;
     private CandlepinContextListener listener;
     private ActiveMQContextListener hqlistener;
     private ScheduledExecutorService executorService;
     private ServletContextEvent evt;
     private ServletContext ctx;
     private ResteasyDeployment resteasyDeployment;
-    private VerifyConfigRead configRead;
+    private boolean configRead;
 
     @BeforeEach
     public void init() {
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
 
         // TODO: This shouldn't be necessary for testing to complete. Fix this eventually.
         this.config.setProperty(ConfigProperties.ASYNC_JOBS_THREADS, "0");
 
         hqlistener = mock(ActiveMQContextListener.class);
         executorService = mock(ScheduledExecutorService.class);
-        configRead = mock(VerifyConfigRead.class);
+        configRead = false;
 
-        // for testing we override the getModules and readConfiguration methods
-        // so we can insert our mock versions of listeners to verify
-        // they are getting invoked properly.
-        listener = new CandlepinContextListener() {
-            @Override
-            protected List<Module> getModules(ServletContext context) {
-                List<Module> modules = new LinkedList<>();
-                // tried simply overriding CandlepinModule
-                // but that caused it to read the local config
-                // which means the test becomes non-deterministic.
-                // so just load the items we need to verify the
-                // functionality.
-                modules.add(new TestingModules.JpaModule());
-                modules.add(new TestingModules.StandardTest(config));
-                modules.add(new ContextListenerTestModule());
-                return modules;
-            }
-
-            @Override
-            protected Configuration readConfiguration(ServletContext context) {
-
-                configRead.verify(context);
-                return config;
-            }
-
-            @Override
-            protected void checkDbChangelog() { }
-        };
+        listener = createContextListener();
     }
 
     @Test
@@ -124,8 +97,8 @@ public class CandlepinContextListenerTest {
         prepareForInitialization();
         listener.contextInitialized(evt);
         verify(hqlistener).contextInitialized(any(Injector.class));
-        verify(ctx).setAttribute(eq(CandlepinContextListener.CONFIGURATION_NAME), eq(config));
-        verify(configRead).verify(eq(ctx));
+        verify(ctx).setAttribute(CandlepinContextListener.CONFIGURATION_NAME, config);
+        assertTrue(configRead);
 
         CandlepinCapabilities expected = new CandlepinCapabilities();
         CandlepinCapabilities actual = CandlepinCapabilities.getCapabilities();
@@ -294,23 +267,6 @@ public class CandlepinContextListenerTest {
     }
 
     @Test
-    public void tharSheBlows() {
-        listener = new CandlepinContextListener() {
-            protected List<Module> getModules(ServletContext context) {
-                return new LinkedList<>();
-            }
-
-            protected Configuration readConfiguration(ServletContext context)
-                throws ConfigurationException {
-
-                throw new ConfigurationException("the ship is sinking");
-            }
-        };
-        prepareForInitialization();
-        assertThrows(RuntimeException.class, () -> listener.contextInitialized(evt));
-    }
-
-    @Test
     public void exitStageLeft() {
         assertEquals(Stage.PRODUCTION, listener.getStage(ctx));
     }
@@ -322,9 +278,9 @@ public class CandlepinContextListenerTest {
         Registry registry = mock(Registry.class);
         ResteasyProviderFactory rpfactory = mock(ResteasyProviderFactory.class);
         when(evt.getServletContext()).thenReturn(ctx);
-        when(ctx.getAttribute(eq(ResteasyProviderFactory.class.getName()))).thenReturn(rpfactory);
-        when(ctx.getAttribute(eq(CandlepinContextListener.CONFIGURATION_NAME))).thenReturn(config);
-        when(ctx.getAttribute(eq(ResteasyDeployment.class.getName()))).thenReturn(resteasyDeployment);
+        when(ctx.getAttribute(ResteasyProviderFactory.class.getName())).thenReturn(rpfactory);
+        when(ctx.getAttribute(CandlepinContextListener.CONFIGURATION_NAME)).thenReturn(config);
+        when(ctx.getAttribute(ResteasyDeployment.class.getName())).thenReturn(resteasyDeployment);
         when(resteasyDeployment.getRegistry()).thenReturn(registry);
     }
 
@@ -333,7 +289,7 @@ public class CandlepinContextListenerTest {
         StatusCommandStep statusCommandStep = setupDbWithUnrunSet();
         CandlepinContextListener spy = Mockito.spy(listener);
         Database database = Mockito.mock(Database.class);
-        doReturn(List.of()).when(spy).getUnrunChangeSets(eq(database));
+        doReturn(List.of()).when(spy).getUnrunChangeSets(database);
         doReturn(database).when(spy).getDatabase();
 
         //  no RuntimeException because the db is up-to-date
@@ -352,7 +308,7 @@ public class CandlepinContextListenerTest {
         CandlepinContextListener spy = Mockito.spy(listener);
         Database database = Mockito.mock(Database.class);
         doReturn(statusCommandStep.listUnrunChangeSets(null, null, null, null))
-            .when(spy).getUnrunChangeSets(eq(database));
+            .when(spy).getUnrunChangeSets(database);
         doReturn(database).when(spy).getDatabase();
 
         // does not lookup unchanged sets nor call update
@@ -361,7 +317,7 @@ public class CandlepinContextListenerTest {
         prepareForInitialization();
         spy.contextInitialized(evt);
 
-        Mockito.verify(spy, Mockito.never()).getUnrunChangeSets(eq(database));
+        Mockito.verify(spy, Mockito.never()).getUnrunChangeSets(database);
         Mockito.verify(spy, Mockito.never()).executeUpdate(any());
     }
 
@@ -371,7 +327,7 @@ public class CandlepinContextListenerTest {
         CandlepinContextListener spy = Mockito.spy(listener);
         Database database = Mockito.mock(Database.class);
         doReturn(statusCommandStep.listUnrunChangeSets(null, null, null, null))
-            .when(spy).getUnrunChangeSets(eq(database));
+            .when(spy).getUnrunChangeSets(database);
         doReturn(database).when(spy).getDatabase();
 
         // looks up changesets but does not call update
@@ -390,7 +346,7 @@ public class CandlepinContextListenerTest {
         CandlepinContextListener spy = Mockito.spy(listener);
         Database database = Mockito.mock(Database.class);
         doReturn(statusCommandStep.listUnrunChangeSets(null, null, null, null))
-            .when(spy).getUnrunChangeSets(eq(database));
+            .when(spy).getUnrunChangeSets(database);
         doReturn(database).when(spy).getDatabase();
 
         // looks up unchanged sets and throws runtime exception
@@ -408,9 +364,9 @@ public class CandlepinContextListenerTest {
         CandlepinContextListener spy = Mockito.spy(listener);
         Database database = Mockito.mock(Database.class);
         doReturn(statusCommandStep.listUnrunChangeSets(null, null, null, null))
-            .when(spy).getUnrunChangeSets(eq(database));
+            .when(spy).getUnrunChangeSets(database);
         doReturn(database).when(spy).getDatabase();
-        Mockito.doNothing().when(spy).executeUpdate(eq(database));
+        Mockito.doNothing().when(spy).executeUpdate(database);
 
         // looks up unchanged sets and calls update
         this.config.setProperty(ConfigProperties.DB_MANAGE_ON_START,
@@ -419,7 +375,7 @@ public class CandlepinContextListenerTest {
         spy.contextInitialized(evt);
 
         Mockito.verify(statusCommandStep, Mockito.times(1)).listUnrunChangeSets(any(), any(), any(), any());
-        Mockito.verify(spy, Mockito.times(1)).executeUpdate(eq(database));
+        Mockito.verify(spy, Mockito.times(1)).executeUpdate(database);
     }
 
     private StatusCommandStep setupDbWithUnrunSet() throws Exception {
@@ -435,8 +391,8 @@ public class CandlepinContextListenerTest {
             }
 
             @Override
-            protected Configuration readConfiguration(ServletContext context) {
-                configRead.verify(context);
+            protected Configuration readConfiguration() {
+                configRead = false;
                 return config;
             }
         };
@@ -468,7 +424,26 @@ public class CandlepinContextListenerTest {
         }
     }
 
-    public class ContextListenerTestModule extends AbstractModule {
+    private CandlepinContextListener createContextListener() {
+        return new CandlepinContextListener() {
+            @Override
+            protected List<Module> getModules(ServletContext context) {
+                List<Module> modules = new LinkedList<>();
+                modules.add(new TestingModules.JpaModule());
+                modules.add(new TestingModules.StandardTest(config));
+                modules.add(new ContextListenerTestModule());
+                return modules;
+            }
+
+            @Override
+            protected Configuration readConfiguration() {
+                configRead = true;
+                return config;
+            }
+        };
+    }
+
+    private class ContextListenerTestModule extends AbstractModule {
         @SuppressWarnings("synthetic-access")
         @Override
         protected void configure() {
@@ -477,12 +452,4 @@ public class CandlepinContextListenerTest {
         }
     }
 
-    /**
-     * VerifyConfigRead fake interface to use with mockito's mock and verify
-     * methods to make sure the correct var was passed in and we called a
-     * method we expected.
-     */
-    interface VerifyConfigRead {
-        void verify(ServletContext ctx);
-    }
 }

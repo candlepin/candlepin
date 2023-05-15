@@ -235,7 +235,7 @@ public class ContentAccessManager {
         this.environmentCurator = Objects.requireNonNull(environmentCurator);
         this.contentAccessCertCurator = Objects.requireNonNull(contentAccessCertCurator);
         this.eventSink = Objects.requireNonNull(eventSink);
-        this.standalone = this.config.getBoolean(ConfigProperties.STANDALONE, true);
+        this.standalone = this.config.getBoolean(ConfigProperties.STANDALONE);
     }
 
     /**

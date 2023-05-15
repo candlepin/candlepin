@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.AttributeValidator;
@@ -39,8 +39,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -62,9 +60,8 @@ import javax.validation.ConstraintViolationException;
 
 
 public class ProductCuratorTest extends DatabaseTestFixture {
-    private static Logger log = LoggerFactory.getLogger(ProductCuratorTest.class);
 
-    @Inject private Configuration config;
+    @Inject private DevConfig config;
 
     private Owner owner;
     private Product product;
@@ -889,12 +886,12 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         products.stream()
             .flatMap(product -> product.getProvidedProducts().stream())
-            .forEach(child -> expected.add(child));
+            .forEach(expected::add);
 
         products.stream()
             .map(Product::getDerivedProduct)
             .filter(Objects::nonNull)
-            .forEach(child -> expected.add(child));
+            .forEach(expected::add);
 
         List<String> input = Arrays.asList(product2.getUuid(), "invalid", product3.getUuid(), null);
 
@@ -910,10 +907,10 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         // Create some products just to ensure it doesn't pull random existing things for this case
         Owner owner1 = this.createOwner();
         Owner owner2 = this.createOwner();
-        Product product1 = this.createProduct("p1", "product_1");
-        Product product2 = this.createProduct("p2", "product_2", owner1);
-        Product product3 = this.createProduct("p3", "product_3", owner2);
-        Product product4 = this.createProduct("p4", "product_4", owner2);
+        this.createProduct("p1", "product_1");
+        this.createProduct("p2", "product_2", owner1);
+        this.createProduct("p3", "product_3", owner2);
+        this.createProduct("p4", "product_4", owner2);
 
         Collection<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
         assertNotNull(output);

@@ -47,10 +47,6 @@ import java.util.Collections;
 import java.util.Set;
 
 
-
-/**
- * Test suite for the RegenProductEntitlementCertsJob class
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class RegenProductEntitlementCertsJobTest {

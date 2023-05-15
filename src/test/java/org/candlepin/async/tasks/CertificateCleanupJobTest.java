@@ -35,6 +35,7 @@ import java.util.Date;
 
 import javax.inject.Inject;
 
+
 class CertificateCleanupJobTest extends DatabaseTestFixture {
 
     private static final Date VALID = TestUtil.createDateOffset(2, 0, 0);

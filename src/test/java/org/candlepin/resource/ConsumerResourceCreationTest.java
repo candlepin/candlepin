@@ -38,9 +38,9 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
@@ -211,7 +211,7 @@ public class ConsumerResourceCreationTest {
     private ConsumerResource resource;
     private ConsumerTypeDTO systemDto;
     private ConsumerType system;
-    protected Configuration config;
+    protected DevConfig config;
     protected Owner owner;
     protected Role role;
     private User user;
@@ -304,8 +304,8 @@ public class ConsumerResourceCreationTest {
         return new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
     }
 
-    public Configuration initConfig() {
-        Configuration config = new CandlepinCommonTestConfig();
+    public DevConfig initConfig() {
+        DevConfig config = TestConfig.defaults();
 
         config.setProperty(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN,
             "[\\#\\?\\'\\`\\!@{}()\\[\\]\\?&\\w-\\.]+");
