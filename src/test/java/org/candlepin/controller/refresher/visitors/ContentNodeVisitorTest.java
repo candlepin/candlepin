@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
@@ -246,6 +247,46 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
         visitor.processNode(pnode);
 
         assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
+    }
+
+    @Test
+    public void testProcessNodeFlagsUnchangedNodesCorrectlyWhenNotDirty() {
+        Owner owner = this.createOwner();
+
+        Content existing = this.createContent("test_content", "test content", owner);
+        Content imported = existing.clone();
+
+        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existing.getId())
+            .setExistingEntity(existing)
+            .setImportedEntity(imported)
+            .setDirty(false);
+
+        assertNull(pnode.getNodeState());
+
+        ContentNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
+    }
+
+    @Test
+    public void testProcessNodeFlagsAlwaysUpdatesDirtyNodes() {
+        Owner owner = this.createOwner();
+
+        // The content should be identical to ensure that we still update dirty nodes even when we
+        // have no reason to do so otherwise
+        Content existing = this.createContent("test_content", "test content", owner);
+        Content imported = existing.clone();
+
+        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existing.getId())
+            .setExistingEntity(existing)
+            .setImportedEntity(imported)
+            .setDirty(true);
+
+        ContentNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
     }
 
     @Test
@@ -605,4 +646,92 @@ public class ContentNodeVisitorTest extends DatabaseTestFixture {
         assertNull(existingEntityVersion);
     }
 
+    @Test
+    public void testDirtyNodeCausesUnchangedExistingContentToUpdate() {
+        Owner owner = this.createOwner();
+        Content existing = this.createContent("test_content", "content name", owner);
+
+        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, existing.getId())
+            .setExistingEntity(existing)
+            .setDirty(true);
+
+        ContentNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+        visitor.pruneNode(pnode);
+        visitor.applyChanges(pnode);
+        visitor.complete();
+
+        // Dirty nodes should always be updated
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
+
+        // The merged entity of a dirty node should always be a new version of that entity, even
+        // if one already exists
+        assertNotNull(pnode.getMergedEntity());
+        assertNotEquals(existing.getUuid(), pnode.getMergedEntity().getUuid());
+
+        // but they should still be equal
+        assertEquals(existing, pnode.getMergedEntity());
+    }
+
+    @Test
+    public void testDirtyNodeReplacesMatchingExistingNode() {
+        Owner owner = this.createOwner();
+        Content existing = this.createContent("test_content", "content name", owner);
+        Content replacement = existing.clone()
+            .setUuid("dirty_entity");
+
+        EntityNode<Content, ContentInfo> pnode = new ContentNode(owner, replacement.getId())
+            .setExistingEntity(replacement)
+            .setDirty(true);
+
+        Long existingEntityVersion = this.getEntityManager()
+            .createQuery("SELECT entityVersion FROM Content WHERE uuid = :uuid", Long.class)
+            .setParameter("uuid", existing.getUuid())
+            .getSingleResult();
+
+        assertNotNull(existingEntityVersion);
+
+        ContentNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+        visitor.pruneNode(pnode);
+        visitor.applyChanges(pnode);
+        visitor.complete();
+
+        // Dirty nodes should always be updated
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
+
+        // The merged entity of a dirty node should always be a new version of that entity, even
+        // if one already exists
+        assertNotNull(pnode.getMergedEntity());
+        assertNotEquals(existing.getUuid(), pnode.getMergedEntity().getUuid());
+
+        // the existing node should have its version cleared
+        existingEntityVersion = this.getEntityManager()
+            .createQuery("SELECT entityVersion FROM Content WHERE uuid = :uuid", Long.class)
+            .setParameter("uuid", existing.getUuid())
+            .getSingleResult();
+
+        assertNull(existingEntityVersion);
+    }
+
+    @Test
+    public void testApplyChangesRequiresUUIDOnExistingEntity() {
+        Owner owner = this.createOwner();
+        Content existing = new Content()
+            .setId("test_content")
+            .setName("test content")
+            .setLabel("test content")
+            .setVendor("test vendor")
+            .setType("type");
+
+        Content merged = existing.clone();
+
+        EntityNode<Content, ContentInfo> node = new ContentNode(owner, existing.getId())
+            .setExistingEntity(existing)
+            .setMergedEntity(merged)
+            .setNodeState(NodeState.UPDATED);
+
+        ContentNodeVisitor visitor = this.buildNodeVisitor();
+        assertThrows(IllegalStateException.class, () -> visitor.applyChanges(node));
+    }
 }

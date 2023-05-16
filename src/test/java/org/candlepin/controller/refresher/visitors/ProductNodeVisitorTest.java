@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -100,6 +101,46 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
         visitor.processNode(pnode);
 
         assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
+    }
+
+    @Test
+    public void testProcessNodeFlagsUnchangedNodesCorrectlyWhenNotDirty() {
+        Owner owner = this.createOwner();
+
+        Product existing = this.createProduct("test_product", "test product", owner);
+        Product imported = existing.clone();
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existing.getId())
+            .setExistingEntity(existing)
+            .setImportedEntity(imported)
+            .setDirty(false);
+
+        assertNull(pnode.getNodeState());
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UNCHANGED, pnode.getNodeState());
+    }
+
+    @Test
+    public void testProcessNodeFlagsAlwaysUpdatesDirtyNodes() {
+        Owner owner = this.createOwner();
+
+        // The products should be identical to ensure that we still update dirty nodes even when we
+        // have no reason to do so otherwise
+        Product existing = this.createProduct("test_product", "test product", owner);
+        Product imported = existing.clone();
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existing.getId())
+            .setExistingEntity(existing)
+            .setImportedEntity(imported)
+            .setDirty(true);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
     }
 
     @Test
@@ -1047,6 +1088,92 @@ public class ProductNodeVisitorTest extends DatabaseTestFixture {
             .getSingleResult();
 
         assertNull(existingEntityVersion);
+    }
+
+    @Test
+    public void testDirtyNodeCausesUnchangedExistingProductToUpdate() {
+        Owner owner = this.createOwner();
+        Product existing = this.createProduct("test_product", "product name", owner);
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, existing.getId())
+            .setExistingEntity(existing)
+            .setDirty(true);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+        visitor.pruneNode(pnode);
+        visitor.applyChanges(pnode);
+        visitor.complete();
+
+        // Dirty nodes should always be updated
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
+
+        // The merged entity of a dirty node should always be a new version of that entity, even
+        // if one already exists
+        assertNotNull(pnode.getMergedEntity());
+        assertNotEquals(existing.getUuid(), pnode.getMergedEntity().getUuid());
+
+        // but they should still be equal
+        assertEquals(existing, pnode.getMergedEntity());
+    }
+
+    @Test
+    public void testDirtyNodeReplacesMatchingExistingNode() {
+        Owner owner = this.createOwner();
+        Product existing = this.createProduct("test_product", "product name", owner);
+        Product replacement = existing.clone()
+            .setUuid("dirty_entity");
+
+        EntityNode<Product, ProductInfo> pnode = new ProductNode(owner, replacement.getId())
+            .setExistingEntity(replacement)
+            .setDirty(true);
+
+        Long existingEntityVersion = this.getEntityManager()
+            .createQuery("SELECT entityVersion FROM Product WHERE uuid = :uuid", Long.class)
+            .setParameter("uuid", existing.getUuid())
+            .getSingleResult();
+
+        assertNotNull(existingEntityVersion);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        visitor.processNode(pnode);
+        visitor.pruneNode(pnode);
+        visitor.applyChanges(pnode);
+        visitor.complete();
+
+        // Dirty nodes should always be updated
+        assertEquals(NodeState.UPDATED, pnode.getNodeState());
+
+        // The merged entity of a dirty node should always be a new version of that entity, even
+        // if one already exists
+        assertNotNull(pnode.getMergedEntity());
+        assertNotEquals(existing.getUuid(), pnode.getMergedEntity().getUuid());
+
+        // the existing node should have its version cleared
+        existingEntityVersion = this.getEntityManager()
+            .createQuery("SELECT entityVersion FROM Product WHERE uuid = :uuid", Long.class)
+            .setParameter("uuid", existing.getUuid())
+            .getSingleResult();
+
+        assertNull(existingEntityVersion);
+    }
+
+    @Test
+    public void testApplyChangesRequiresUUIDOnExistingEntity() {
+        Owner owner = this.createOwner();
+        Product existing = new Product()
+            .setId("test_product")
+            .setName("test product");
+
+        Product merged = existing.clone();
+
+        EntityNode<Product, ProductInfo> node = new ProductNode(owner, existing.getId())
+            .setExistingEntity(existing)
+            .setMergedEntity(merged)
+            .setNodeState(NodeState.UPDATED);
+
+        ProductNodeVisitor visitor = this.buildNodeVisitor();
+        assertThrows(IllegalStateException.class, () -> visitor.applyChanges(node));
     }
 
 }

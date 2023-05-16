@@ -44,6 +44,7 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
     private Map<Class<?>, Map<String, EntityNode<?, ?>>> parents;
     private Map<Class<?>, Map<String, EntityNode<?, ?>>> children;
     private NodeState state;
+    private boolean dirty;
 
     private E existingEntity;
     private I importedEntity;
@@ -75,6 +76,7 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
 
         this.parents = new HashMap<>();
         this.children = new HashMap<>();
+        this.dirty = false;
     }
 
     /**
@@ -210,6 +212,23 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
      * {@inheritDoc}
      */
     @Override
+    public boolean isDirty() {
+        return this.dirty;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EntityNode<E, I> setDirty(boolean dirty) {
+        this.dirty = dirty;
+        return this;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public NodeState getNodeState() {
         return this.state;
     }
@@ -279,7 +298,7 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
      */
     @Override
     public String toString() {
-        return String.format("EntityNode [class: %s, entity id: %s, state: %s]",
-            this.getEntityClass(), this.getEntityId(), this.getNodeState());
+        return String.format("EntityNode [class: %s, entity id: %s, state: %s, dirty: %s]",
+            this.getEntityClass(), this.getEntityId(), this.getNodeState(), this.isDirty());
     }
 }

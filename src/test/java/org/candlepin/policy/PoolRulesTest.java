@@ -595,9 +595,10 @@ public class PoolRulesTest {
         derivedProd.addProvidedProduct(derivedProvidedProd2);
 
         when(productCurator.getPoolProvidedProductsCached(p))
-            .thenReturn((Set<Product>) p.getProduct().getProvidedProducts());
+            .thenReturn(new ArrayList<>(p.getProduct().getProvidedProducts()));
         when(productCurator.getPoolDerivedProvidedProductsCached(p))
-            .thenReturn((Set<Product>) p.getDerivedProduct().getProvidedProducts());
+            .thenReturn(new ArrayList<>(p.getDerivedProduct().getProvidedProducts()));
+
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
 
         // Should be virt_only pool for unmapped guests:
@@ -629,13 +630,16 @@ public class PoolRulesTest {
     @Test
     public void standaloneVirtLimitSubCreateDerived() {
         when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
-        Subscription s = createVirtLimitSubWithDerivedProducts("virtLimitProduct",
-            "derivedProd", 10, 10);
-        Pool p = TestUtil.copyFromSub(s);
+
+        Subscription s = createVirtLimitSubWithDerivedProducts("virtLimitProduct", "derivedProd", 10, 10);
+
+        Pool p = TestUtil.copyFromSub(s)
+            .setId("mockVirtLimitSubCreateDerived");
+
         when(poolManager.isManaged(eq(p))).thenReturn(true);
-        p.setId("mockVirtLimitSubCreateDerived");
         when(productCurator.getPoolDerivedProvidedProductsCached(p))
-            .thenReturn((Set<Product>) p.getDerivedProduct().getProvidedProducts());
+            .thenReturn(new ArrayList<>(p.getDerivedProduct().getProvidedProducts()));
+
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
 
         // Should be virt_only pool for unmapped guests:

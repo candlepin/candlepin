@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -95,20 +96,20 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         return this.cpQueryFactory.<Product>buildQuery(this.currentSession(), criteria);
     }
 
-    public Set<Product> getPoolDerivedProvidedProductsCached(Pool pool) {
+    public List<Product> getPoolDerivedProvidedProductsCached(Pool pool) {
         return getPoolDerivedProvidedProductsCached(pool.getId());
     }
 
-    public Set<Product> getPoolDerivedProvidedProductsCached(String poolId) {
+    public List<Product> getPoolDerivedProvidedProductsCached(String poolId) {
         Set<String> uuids = getDerivedPoolProvidedProductUuids(poolId);
         return getProductsByUuidCached(uuids);
     }
 
-    public Set<Product> getPoolProvidedProductsCached(Pool pool) {
+    public List<Product> getPoolProvidedProductsCached(Pool pool) {
         return getPoolProvidedProductsCached(pool.getId());
     }
 
-    public Set<Product> getPoolProvidedProductsCached(String poolId) {
+    public List<Product> getPoolProvidedProductsCached(String poolId) {
         Set<String> providedUuids = getPoolProvidedProductUuids(poolId);
         return getProductsByUuidCached(providedUuids);
     }
@@ -148,18 +149,20 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
     }
 
     /**
-     * Fetches a set consisting of the children products (derived and provided products) of the
-     * products specified by the given UUIDs. If the given products do not have any children
-     * products or no products exist with the provided UUIDs, this method returns an empty set.
+     * Fetches a collection consisting of the children products (derived and provided products) of
+     * the products specified by the given UUIDs. If the given products do not have any children
+     * products or no products exist with the provided UUIDs, this method returns an empty
+     * collection.
      *
      * @param productUuids
      *  a collection of UUIDs of products for which to fetch children products
      *
      * @return
-     *  a set consisting of the children products of the products specified by the given UUIDs
+     *  a collection consisting of the children products of the products specified by the given
+     *  UUIDs
      */
-    public Set<Product> getChildrenProductsOfProductsByUuids(Collection<String> productUuids) {
-        Set<Product> output = new HashSet<>();
+    public Collection<Product> getChildrenProductsOfProductsByUuids(Collection<String> productUuids) {
+        Map<String, Product> productMap = new HashMap<>();
 
         if (productUuids != null && !productUuids.isEmpty()) {
             String ppJpql = "SELECT pp FROM Product p JOIN p.providedProducts pp " +
@@ -174,12 +177,17 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
                 .createQuery(dpJpql, Product.class);
 
             for (List<String> block : this.partition(productUuids)) {
-                output.addAll(ppQuery.setParameter("product_uuids", block).getResultList());
-                output.addAll(dpQuery.setParameter("product_uuids", block).getResultList());
+                ppQuery.setParameter("product_uuids", block)
+                    .getResultList()
+                    .forEach(entity -> productMap.put(entity.getUuid(), entity));
+
+                dpQuery.setParameter("product_uuids", block)
+                    .getResultList()
+                    .forEach(entity -> productMap.put(entity.getUuid(), entity));
             }
         }
 
-        return output;
+        return productMap.values();
     }
 
     /**
@@ -191,16 +199,16 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @param productUuids
      * @return Fully hydrated Product objects
      */
-    public Set<Product> getProductsByUuidCached(Collection<String> productUuids) {
+    public List<Product> getProductsByUuidCached(Collection<String> productUuids) {
         if (productUuids.size() == 0) {
-            return new HashSet<>();
+            return new ArrayList<>();
         }
 
         // Determine what is already in the L2 cache and load it directly. Multiload the remainder.
         // This is because of https://hibernate.atlassian.net/browse/HHH-12944 where multiload ignores the
         // L2 Cache.
-        Set<Product> products = new HashSet<>();
-        Set<String> productsNotInCache = new HashSet<>();
+        List<Product> products = new ArrayList<>();
+        List<String> productsNotInCache = new ArrayList<>();
         Cache cache = currentSession().getSessionFactory().getCache();
         for (String uuid : productUuids) {
             if (cache.contains(this.entityType(), uuid)) {
@@ -214,7 +222,7 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         if (productsNotInCache.size() > 0) {
             log.debug("Loading objects that were not already in the cache: " + productsNotInCache.size());
             Session session = this.currentSession();
-            java.util.List entities = session.byMultipleIds(this.entityType())
+            List entities = session.byMultipleIds(this.entityType())
                 .enableSessionCheck(true)
                 .multiLoad(productsNotInCache.toArray(new String[productsNotInCache.size()]));
             products.addAll(entities);

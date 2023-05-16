@@ -396,7 +396,7 @@ public class RefreshWorker {
         // TODO: This lookup may not be necessary once the native query cache invalidation issue
         // is resolved.
 
-        Set<Product> products = this.productCurator.getProductsByUuidCached(productUuids);
+        List<Product> products = this.productCurator.getProductsByUuidCached(productUuids);
 
         this.mapExistingProducts(products);
     }
@@ -421,12 +421,12 @@ public class RefreshWorker {
         // TODO: These lookups may not be necessary once the native query cache invalidation issue
         // is resolved.
 
-        Set<Product> childrenProducts = this.productCurator
+        Collection<Product> childrenProducts = this.productCurator
             .getChildrenProductsOfProductsByUuids(productUuids);
 
         this.mapExistingProducts(childrenProducts);
 
-        Set<Content> content = this.contentCurator.getChildrenContentOfProductsByUuids(productUuids);
+        Collection<Content> content = this.contentCurator.getChildrenContentOfProductsByUuids(productUuids);
 
         this.mapExistingContent(content);
     }
@@ -540,18 +540,24 @@ public class RefreshWorker {
             // state necessary to finalize everything
             RefreshResult result = nodeProcessor.processNodes();
 
-            // If we had any dirty mappings, rebuild the org's mappings to ensure no leftover shenanigans
-            if (this.productMapper.isDirty() ||
-                !this.productMapper.containsOnlyExistingEntities(ownerProducts)) {
-
-                log.warn("Found one or more dirty product mappings for org {}; remapping products", owner);
+            // Check if we have any unmapped existing entities, indicating the org's entity map is
+            // busted.
+            //
+            // Impl note:
+            // this is an entirely inefficient way of going about this process, but our hands are
+            // somewhat tied by Hibernate lacking a proper way of doing an INSERT IGNORE, and not
+            // having all of the data necessary at the curator level. This code path shouldn't be
+            // hit anyway, so we're erroring on the side of clean + never used vs. complex + part of
+            // the primary code path.
+            if (this.productMapper.containsUnmappedExistingEntities(ownerProducts)) {
+                log.warn("Found one or more unmapped existing products for org {}; remapping products",
+                    owner);
                 this.rebuildOwnerProductMapping(owner, result);
             }
 
-            if (this.contentMapper.isDirty() ||
-                !this.contentMapper.containsOnlyExistingEntities(ownerContent)) {
-
-                log.warn("Found one or more dirty content mappings for org {}; remapping content", owner);
+            if (this.contentMapper.containsUnmappedExistingEntities(ownerContent)) {
+                log.warn("Found one or more unmapped existing content for org {}; remapping content",
+                    owner);
                 this.rebuildOwnerContentMapping(owner, result);
             }
 
