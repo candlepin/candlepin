@@ -123,8 +123,6 @@ jobs:
   build_image:
     name: build image
     runs-on: ubuntu-latest
-    container:
-      image: fedora:38
     steps:
       - name: Mask secrets
         shell: bash
@@ -145,15 +143,13 @@ jobs:
           username: ${{github.actor}}
           password: ${{secrets.GITHUB_TOKEN}}
 
-      - name: build the image
-        run: podman build ./containers/candlepin-base-cs9 -t ghcr.io/candlepin/candlepin-pr-${{ github.event.pull_request.number }}:latest
-
-      # - name: Build and push Docker image
-      #   uses: docker/build-push-action@v4
-      #   with:
-      #     context: ./containers/candlepin-base-cs9
-      #     push: true
-      #     tags: candlepin/pr-${{ github.event.pull_request.number }}:latest
+      - name: Build image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: candlepin-pr-${{ github.event.pull_request.number }}
+          tags: latest
+          containerfiles: |
+            ./containers/candlepin-base-cs9/Containerfile
 
   # https://docs.github.com/en/actions/using-containerized-services/creating-postgresql-service-containers
   # postgres_standalone_spec_tests:
