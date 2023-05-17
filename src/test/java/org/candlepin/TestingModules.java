@@ -123,6 +123,7 @@ import com.google.inject.name.Names;
 import com.google.inject.persist.PersistService;
 import com.google.inject.persist.UnitOfWork;
 import com.google.inject.persist.jpa.JpaPersistModule;
+import com.google.inject.persist.jpa.JpaPersistOptions;
 import com.google.inject.servlet.RequestScoped;
 
 import org.hibernate.Session;
@@ -175,8 +176,14 @@ public class TestingModules {
     public static class JpaModule extends AbstractModule {
         @Override
         public void configure() {
+            // As of Guice 6.0, UnitOfWork is no longer automatically started upon fetching the
+            // EntityManager. This option restores that behavior.
+            JpaPersistOptions jpaOptions = JpaPersistOptions.builder()
+                .setAutoBeginWorkOnEntityManagerCreation(true)
+                .build();
+
             install(new ServletEnvironmentModule());
-            install(new JpaPersistModule("testing"));
+            install(new JpaPersistModule("testing", jpaOptions));
 
             bind(BeanValidationEventListener.class).toProvider(ValidationListenerProvider.class);
             bind(MessageInterpolator.class).to(CandlepinMessageInterpolator.class);
