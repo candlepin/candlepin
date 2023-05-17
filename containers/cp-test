@@ -95,7 +95,7 @@ HELP
 }
 
 JAVA_VERSION=17
-while getopts ":dtRqHskic:a:vj:" opt; do
+while getopts ":dtRqHskicb:a:vj:" opt; do
     case $opt in
         d  ) DEPLOY="1";;
         t  )

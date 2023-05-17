@@ -10,44 +10,129 @@ env:
   JAVA_VERSION: '17'
 
 jobs:
-  bugzilla_check:
-    name: bugzilla reference check
+  # bugzilla_check:
+  #   name: bugzilla reference check
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: fedora:38
+  #   steps:
+  #     - name: Mask secrets
+  #       shell: bash
+  #       run: |
+  #         echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+
+  #     - name: Check out repository
+  #       uses: actions/checkout@v3
+
+  #     - name: Install packages
+  #       shell: bash
+  #       run: dnf --setopt install_weak_deps=False install -y python3 python3-pip python3-requests
+
+  #     - name: Install python dependencies
+  #       run: pip install python-bugzilla
+
+  #     - name: Run bugzilla reference check
+  #       run: ./.github/scripts/bugzilla_reference_check.py
+  #       env:
+  #         GITHUB_TOKEN_PSW: ${{ secrets.GITHUB_TOKEN }}
+  #         PR_NUMBER: ${{ github.event.pull_request.number }}
+
+  # checkstyle:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: fedora:38
+  #   steps:
+  #     - name: Check out repository
+  #       uses: actions/checkout@v3
+
+  #     - name: Install dependencies
+  #       shell: bash
+  #       run: dnf --setopt install_weak_deps=False install -y gettext jss
+
+  #     - name: Set up Java
+  #       uses: actions/setup-java@v3
+  #       with:
+  #         distribution: ${{ env.JAVA_DISTRIBUTION }}
+  #         java-version: ${{ env.JAVA_VERSION }}
+
+  #     - name: Run checkstyle
+  #       uses: gradle/gradle-build-action@v2
+  #       with:
+  #         arguments: checkstyle
+
+  # unit_tests:
+  #   name: unit tests
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: fedora:38
+  #   steps:
+  #     - name: Check out repository
+  #       uses: actions/checkout@v3
+
+  #     - name: Install dependencies
+  #       shell: bash
+  #       run: dnf --setopt install_weak_deps=False install -y gettext jss
+
+  #     - name: Set up Java
+  #       uses: actions/setup-java@v3
+  #       with:
+  #         distribution: ${{ env.JAVA_DISTRIBUTION }}
+  #         java-version: ${{ env.JAVA_VERSION }}
+
+  #     - name: Run unit tests
+  #       uses: gradle/gradle-build-action@v2
+  #       with:
+  #         arguments: test
+
+  # validate_translations:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: fedora:38
+  #   steps:
+  #     - name: Check out repository
+  #       uses: actions/checkout@v3
+
+  #     - name: Install dependencies
+  #       shell: bash
+  #       run: dnf --setopt install_weak_deps=False install -y gettext jss
+
+  #     - name: Set up Java
+  #       uses: actions/setup-java@v3
+  #       with:
+  #         distribution: ${{ env.JAVA_DISTRIBUTION }}
+  #         java-version: ${{ env.JAVA_VERSION }}
+
+  #     - name: Run checkstyle
+  #       uses: gradle/gradle-build-action@v2
+  #       with:
+  #         arguments: validate_translation
+
+  # woke:
+  #   name: woke
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out repository
+  #       uses: actions/checkout@v3
+
+  #     - name: Run woke
+  #       uses: get-woke/woke-action@v0
+  #       with:
+  #         # Cause the check to fail on any broke rules
+  #         fail-on-error: true
+
+  postgres_standalone_spec_tests:
+    name: spec tests for standalone candlepin using postgres
     runs-on: ubuntu-latest
     container:
       image: fedora:38
+      options: --privileged --security-opt seccomp=unconfined -v /sys:/sys
     steps:
-      - name: Mask secrets
-        shell: bash
-        run: |
-          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
-
-      - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Install packages
-        shell: bash
-        run: dnf --setopt install_weak_deps=False install -y python3 python3-pip python3-requests
-
-      - name: Install python dependencies
-        run: pip install python-bugzilla
-
-      - name: Run bugzilla reference check
-        run: ./.github/scripts/bugzilla_reference_check.py
-        env:
-          GITHUB_TOKEN_PSW: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-
-  checkstyle:
-    runs-on: ubuntu-latest
-    container:
-      image: fedora:38
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
       - name: Install dependencies
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext jss
+        run: dnf --setopt install_weak_deps=False install -y git podman gettext jss fuse-overlayfs
+
+      - name: Check out repository
+        uses: actions/checkout@v3
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -55,67 +140,19 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
 
-      - name: Run checkstyle
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: checkstyle
-
-  unit_tests:
-    name: unit tests
-    runs-on: ubuntu-latest
-    container:
-      image: fedora:38
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Install dependencies
+      - name: Podman configurations
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext jss
+        run: podman info --debug
 
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: ${{ env.JAVA_DISTRIBUTION }}
-          java-version: ${{ env.JAVA_VERSION }}
-
-      - name: Run unit tests
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: test
-
-  validate_translations:
-    runs-on: ubuntu-latest
-    container:
-      image: fedora:38
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Install dependencies
+      - name: Setup environment
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext jss
+        run: ./containers/test -p -o cs9 -c "cp-test -d -j 17" 
 
-      - name: Set up Java
-        uses: actions/setup-java@v3
-        with:
-          distribution: ${{ env.JAVA_DISTRIBUTION }}
-          java-version: ${{ env.JAVA_VERSION }}
+      - name: Display running containers
+        shell: bash
+        run: podman pod ls --ctr-ids --ctr-names --ctr-status
 
-      - name: Run checkstyle
+      - name: Run spec tests
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: validate_translation
-
-  woke:
-    name: woke
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Run woke
-        uses: get-woke/woke-action@v0
-        with:
-          # Cause the check to fail on any broke rules
-          fail-on-error: true
+          arguments: spec
