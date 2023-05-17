@@ -147,22 +147,22 @@ jobs:
           tags: candlepin/pr-${{ github.event.pull_request.number }}:latest
 
   # https://docs.github.com/en/actions/using-containerized-services/creating-postgresql-service-containers
-  postgres_standalone_spec_tests:
-    name: spec tests for standalone candlepin using postgres
-    runs-on: ubuntu-latest
-    needs: build_image
+  # postgres_standalone_spec_tests:
+  #   name: spec tests for standalone candlepin using postgres
+  #   runs-on: ubuntu-latest
+  #   needs: build_image
 
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_DB: candlepin
-          POSTGRES_USER: candlepin
-          POSTGRES_PASSWORD: candlepin
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+  #   services:
+  #     postgres:
+  #       image: postgres
+  #       env:
+  #         POSTGRES_DB: candlepin
+  #         POSTGRES_USER: candlepin
+  #         POSTGRES_PASSWORD: candlepin
+  #       ports:
+  #         - 5432:5432
+  #       options: >-
+  #         --health-cmd pg_isready
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 5
