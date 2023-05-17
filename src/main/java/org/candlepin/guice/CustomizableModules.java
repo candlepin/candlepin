@@ -51,6 +51,10 @@ public class CustomizableModules {
             Set<Module> toReturn = new HashSet<>();
 
             for (Map.Entry<String, String> entry : moduleConfig.entrySet()) {
+                if (entry.getValue() == null || entry.getValue().isEmpty()) {
+                    continue;
+                }
+
                 log.info("Found custom module {}", entry.getKey());
                 Class<? extends Module> c = (Class<? extends Module>)
                     Class.forName(entry.getValue());
