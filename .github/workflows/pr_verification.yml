@@ -132,10 +132,6 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Install packages
-        shell: bash
-        run: dnf --setopt install_weak_deps=False install -y podman
-
       - name: Login to GitHub Container Registry
         uses: redhat-actions/podman-login@v1
         with:
