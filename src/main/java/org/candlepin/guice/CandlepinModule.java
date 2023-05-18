@@ -189,6 +189,7 @@ import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
+import com.google.inject.persist.jpa.JpaPersistOptions;
 
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
 import org.hibernate.validator.HibernateValidator;
@@ -377,7 +378,17 @@ public class CandlepinModule extends AbstractModule {
 
     protected void configureJPA() {
         Configuration jpaConfig = config.strippedSubset(ConfigurationPrefixes.JPA_CONFIG_PREFIX);
-        install(new JpaPersistModule("default").properties(jpaConfig.toProperties()));
+
+        // As of Guice 6.0, UnitOfWork is no longer automatically started upon fetching the
+        // EntityManager. This option restores that behavior.
+        JpaPersistOptions jpaOptions = JpaPersistOptions.builder()
+            .setAutoBeginWorkOnEntityManagerCreation(true)
+            .build();
+
+        JpaPersistModule jpaModule = new JpaPersistModule("default", jpaOptions)
+            .properties(jpaConfig.toProperties());
+
+        install(jpaModule);
         bind(JPAInitializer.class).asEagerSingleton();
     }
 
