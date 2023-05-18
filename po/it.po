@@ -1,11 +1,12 @@
 # Ondřej Januš <ojanus@redhat.com>, 2019. #zanata
 # Pino Toscano <toscano.pino@tiscali.it>, 2023.
+# John Sefler <jsefler@redhat.com>, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-02-12 02:04-0500\n"
-"PO-Revision-Date: 2023-05-09 08:20+0000\n"
+"PO-Revision-Date: 2023-05-18 06:21+0000\n"
 "Last-Translator: Pino Toscano <toscano.pino@tiscali.it>\n"
 "Language-Team: Italian <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-2-hotfix/it/>\n"
@@ -14,7 +15,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.15.2\n"
+"X-Generator: Weblate 4.17\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -923,7 +924,7 @@ msgstr ""
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1660
 #, java-format
 msgid "Environment with ID \"{0}\" could not be found."
-msgstr "Non è stato trovato l'ambiente con l'ID \"{0}\"."
+msgstr "Non è stato trovato l''ambiente con l''ID \"{0}\"."
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1669
 #, java-format
