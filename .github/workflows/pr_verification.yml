@@ -44,6 +44,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Install dependencies
         shell: bash
@@ -58,7 +60,7 @@ jobs:
       - name: Run spotless
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: spotlessCheck
+          arguments: spotless
 
   unit_tests:
     name: unit tests
