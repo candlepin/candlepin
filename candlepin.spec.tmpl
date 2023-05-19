@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.3.5
+Version: 4.3.6
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -239,6 +239,42 @@ fi
 
 #raw
 %changelog
+* Fri May 19 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.6-1
+- Add new translations using Weblate (noreply@weblate.org)
+- CP-571: Update cpdb to reflect current use (wpoteat@redhat.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-jsr310
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.core:jackson-databind from 2.15.0 to 2.15.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Updated Guice Persist and Guice Servlet to version 6.0.0 (crog@redhat.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-hibernate5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.dataformat:jackson-dataformat-yaml
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.module:jackson-module-jsonSchema
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-jdk8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.dataformat:jackson-dataformat-xml
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.google.inject.extensions:guice-assistedinject
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump commons-io:commons-io from 2.11.0 to 2.12.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.10.0 to 10.11.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-580: Fixed various remapping issues during refresh
+  (crog@redhat.com)
+- Bump io.swagger:swagger-annotations from 1.6.10 to 1.6.11
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.liquibase:liquibase-core from 4.21.1 to 4.22.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-580: Fixed missing null-as-empty check in content equality test
+  (crog@redhat.com)
+- Fix Bugzilla check for PRs from public forks (ojanus@redhat.com)
+
 * Wed May 10 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.5-1
 - Add new translations using Weblate (noreply@weblate.org)
 - CANDLEPIN-522: Move spec test execution outside of container
