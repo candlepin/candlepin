@@ -42,15 +42,14 @@ jobs:
     container:
       image: fedora:38
     steps:
+      - name: Install dependencies
+        shell: bash
+        run: dnf --setopt install_weak_deps=False install -y git gettext jss
+
       - name: Check out repository
         uses: actions/checkout@v3
         with:
-          submodules: "recursive"
           fetch-depth: 0
-
-      - name: Install dependencies
-        shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext jss
 
       - name: Set up Java
         uses: actions/setup-java@v3
