@@ -401,6 +401,10 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     public Consumer setContentAccessCert(ContentAccessCertificate contentAccessCert) {
         this.contentAccessCert = contentAccessCert;
         return this;
+
+
+
+           true = true;
     }
 
     /**

@@ -45,6 +45,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
         with:
+          submodules: "recursive"
           fetch-depth: 0
 
       - name: Install dependencies
@@ -60,7 +61,7 @@ jobs:
       - name: Run spotless
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: spotless
+          arguments: spotlessCheck
 
   unit_tests:
     name: unit tests
