@@ -39,8 +39,10 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
 
-import liquibase.Liquibase;
 import liquibase.changelog.ChangeSet;
+import liquibase.changelog.DatabaseChangeLog;
+import liquibase.command.core.StatusCommandStep;
+import liquibase.database.Database;
 
 import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResteasyDeployment;
@@ -328,80 +330,99 @@ public class CandlepinContextListenerTest {
 
     @Test
     public void hasAllChangesets() throws Exception {
-        // needs a listener that allows checkDbChangelog()
-        listener = new CandlepinContextListener() {
-            @Override
-            protected List<Module> getModules(ServletContext context) {
-                List<Module> modules = new LinkedList<>();
-                modules.add(new TestingModules.JpaModule());
-                modules.add(new TestingModules.StandardTest(config));
-                modules.add(new ContextListenerTestModule());
-                return modules;
-            }
-
-            @Override
-            protected Configuration readConfiguration(ServletContext context) {
-                configRead.verify(context);
-                return config;
-            }
-        };
-
-        LiquibaseExtension le = new LiquibaseExtension();
-        le.createLiquibaseSchema();
-        le.runUpdate();
-        Liquibase l = le.getLiquibase();
+        StatusCommandStep statusCommandStep = setupDbWithUnrunSet();
         CandlepinContextListener spy = Mockito.spy(listener);
-        doReturn(l).when(spy).getLiquibase();
+        Database database = Mockito.mock(Database.class);
+        doReturn(List.of()).when(spy).getUnrunChangeSets(eq(database));
+        doReturn(database).when(spy).getDatabase();
 
-        //  no RuntimeException because the db is updated
+        //  no RuntimeException because the db is up-to-date
+        this.config.setProperty(ConfigProperties.DB_MANAGE_ON_START,
+            CandlepinContextListener.DBManagementLevel.HALT.getName());
         prepareForInitialization();
         spy.contextInitialized(evt);
+
+        Mockito.verify(spy, Mockito.times(1)).getUnrunChangeSets(any());
+        Mockito.verify(spy, Mockito.never()).executeUpdate(any());
     }
 
     @Test
-    public void hasMissingChangesets() throws Exception {
-        // needs a listener that allows checkDbChangelog()
-        listener = new CandlepinContextListener() {
-            @Override
-            protected List<Module> getModules(ServletContext context) {
-                List<Module> modules = new LinkedList<>();
-                modules.add(new TestingModules.JpaModule());
-                modules.add(new TestingModules.StandardTest(config));
-                modules.add(new ContextListenerTestModule());
-                return modules;
-            }
-
-            @Override
-            protected Configuration readConfiguration(ServletContext context) {
-                configRead.verify(context);
-                return config;
-            }
-        };
-
-        LiquibaseExtension le = new LiquibaseExtension();
-        le.createLiquibaseSchema();
-        le.runUpdate();
-        Liquibase l = le.getLiquibase();
-        ChangeSet cs = new ChangeSet("21220101",
-            "tester",
-            true,
-            true,
-            "db/changelog/21220101-test.xml",
-            null,
-            null,
-            l.getDatabaseChangeLog());
-        l.getDatabaseChangeLog().addChangeSet(cs);
+    public void hasMissingChangesetConfigNone() throws Exception {
+        StatusCommandStep statusCommandStep = setupDbWithUnrunSet();
         CandlepinContextListener spy = Mockito.spy(listener);
-        doReturn(l).when(spy).getLiquibase();
+        Database database = Mockito.mock(Database.class);
+        doReturn(statusCommandStep.listUnrunChangeSets(null, null, null, null))
+            .when(spy).getUnrunChangeSets(eq(database));
+        doReturn(database).when(spy).getDatabase();
 
-        // Runtime exception for changeset that is not in db
+        // does not lookup unchanged sets nor call update
+        this.config.setProperty(ConfigProperties.DB_MANAGE_ON_START,
+            CandlepinContextListener.DBManagementLevel.NONE.getName());
+        prepareForInitialization();
+        spy.contextInitialized(evt);
+
+        Mockito.verify(spy, Mockito.never()).getUnrunChangeSets(eq(database));
+        Mockito.verify(spy, Mockito.never()).executeUpdate(any());
+    }
+
+    @Test
+    public void hasMissingChangesetConfigReport() throws Exception {
+        StatusCommandStep statusCommandStep = setupDbWithUnrunSet();
+        CandlepinContextListener spy = Mockito.spy(listener);
+        Database database = Mockito.mock(Database.class);
+        doReturn(statusCommandStep.listUnrunChangeSets(null, null, null, null))
+            .when(spy).getUnrunChangeSets(eq(database));
+        doReturn(database).when(spy).getDatabase();
+
+        // looks up changesets but does not call update
+        this.config.setProperty(ConfigProperties.DB_MANAGE_ON_START,
+            CandlepinContextListener.DBManagementLevel.REPORT.getName());
+        prepareForInitialization();
+        spy.contextInitialized(evt);
+
+        Mockito.verify(statusCommandStep, Mockito.times(1)).listUnrunChangeSets(any(), any(), any(), any());
+        Mockito.verify(spy, Mockito.never()).executeUpdate(any());
+    }
+
+    @Test
+    public void hasMissingChangesetConfigHalt() throws Exception {
+        StatusCommandStep statusCommandStep = setupDbWithUnrunSet();
+        CandlepinContextListener spy = Mockito.spy(listener);
+        Database database = Mockito.mock(Database.class);
+        doReturn(statusCommandStep.listUnrunChangeSets(null, null, null, null))
+            .when(spy).getUnrunChangeSets(eq(database));
+        doReturn(database).when(spy).getDatabase();
+
+        // looks up unchanged sets and throws runtime exception
+        this.config.setProperty(ConfigProperties.DB_MANAGE_ON_START,
+            CandlepinContextListener.DBManagementLevel.HALT.getName());
         prepareForInitialization();
         RuntimeException re = assertThrows(RuntimeException.class, () -> spy.contextInitialized(evt));
+        Mockito.verify(statusCommandStep, Mockito.times(1)).listUnrunChangeSets(any(), any(), any(), any());
         assertEquals("The database is missing Liquibase changeset(s)", re.getMessage());
     }
 
     @Test
-    public void hasMissingChangesetsConfigFalse() throws Exception {
+    public void hasMissingChangesetConfigManage() throws Exception {
+        StatusCommandStep statusCommandStep = setupDbWithUnrunSet();
+        CandlepinContextListener spy = Mockito.spy(listener);
+        Database database = Mockito.mock(Database.class);
+        doReturn(statusCommandStep.listUnrunChangeSets(null, null, null, null))
+            .when(spy).getUnrunChangeSets(eq(database));
+        doReturn(database).when(spy).getDatabase();
+        Mockito.doNothing().when(spy).executeUpdate(eq(database));
+
+        // looks up unchanged sets and calls update
+        this.config.setProperty(ConfigProperties.DB_MANAGE_ON_START,
+            CandlepinContextListener.DBManagementLevel.MANAGE.getName());
+        prepareForInitialization();
+        spy.contextInitialized(evt);
+
+        Mockito.verify(statusCommandStep, Mockito.times(1)).listUnrunChangeSets(any(), any(), any(), any());
+        Mockito.verify(spy, Mockito.times(1)).executeUpdate(eq(database));
+    }
+
+    private StatusCommandStep setupDbWithUnrunSet() throws Exception {
         // needs a listener that allows checkDbChangelog()
         listener = new CandlepinContextListener() {
             @Override
@@ -420,10 +441,9 @@ public class CandlepinContextListenerTest {
             }
         };
 
-        LiquibaseExtension le = new LiquibaseExtension();
-        le.createLiquibaseSchema();
-        le.runUpdate();
-        Liquibase l = le.getLiquibase();
+        StatusCommandStep statusCommandStep = Mockito.mock(StatusCommandStep.class);
+        DatabaseChangeLog databaseChangeLog = Mockito.mock(DatabaseChangeLog.class);
+
         ChangeSet cs = new ChangeSet("21220101",
             "tester",
             true,
@@ -431,15 +451,9 @@ public class CandlepinContextListenerTest {
             "db/changelog/21220101-test.xml",
             null,
             null,
-            l.getDatabaseChangeLog());
-        l.getDatabaseChangeLog().addChangeSet(cs);
-        CandlepinContextListener spy = Mockito.spy(listener);
-        doReturn(l).when(spy).getLiquibase();
-
-        // no Runtime exception because of config override
-        this.config.setProperty(ConfigProperties.HALT_ON_LIQUIBASE_DESYNC, "false");
-        prepareForInitialization();
-        spy.contextInitialized(evt);
+            databaseChangeLog);
+        doReturn(List.of(cs)).when(statusCommandStep).listUnrunChangeSets(any(), any(), any(), any());
+        return statusCommandStep;
     }
 
     private void registerDrivers(Enumeration<Driver> drivers) {

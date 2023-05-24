@@ -34,7 +34,7 @@ candlepin.pretty_print=true
 candlepin.async.scheduler.enabled=<%= candlepin.async_scheduler_enabled %>
 
 candlepin.hidden_resources=
-candlepin.db.halt_on_liquibase_desync=true
+candlepin.db.database_manage_on_startup=Manage
 
 <% if (candlepin.hidden_capabilities) { %>\
 candlepin.hidden_capabilities=<%= candlepin.hidden_capabilities %>

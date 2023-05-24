@@ -26,7 +26,6 @@ gendb() {
 
     if [ "$GENDB" == "1" ]; then
         MESSAGE="Generating New Database"
-        CHANGELOG="changelog-update.xml"
         if [ "$USE_MYSQL" == "1" ]; then
             recreate_mysql $APP_DB_NAME $DBUSER
         else
@@ -38,32 +37,7 @@ gendb() {
         info_msg "Cleaning hornetq journal"
         $SUDO rm -rf /var/lib/candlepin/hornetq/*
         $SUDO rm -rf /var/lib/candlepin/activemq-artemis/*
-    else
-        MESSAGE="Updating Database"
-        CHANGELOG="changelog-update.xml"
     fi
-
-    info_msg "$MESSAGE"
-    LQCOMMAND="${PROJECT_DIR}/bin/deployment/liquibase.sh --driver=${JDBC_DRIVER} \
-      --classpath=build/classes/java/main/:${JDBC_JAR} --changelog-file=db/changelog/$CHANGELOG \
-      --url=${JDBC_URL} --username=candlepin --hub-mode=OFF "
-
-    if [ -n "$DBPASSWORD" ] ; then
-        LQCOMMAND="$LQCOMMAND --password=$DBPASSWORD "
-    fi
-
-    LQCOMMAND="$LQCOMMAND update -Dcommunity=True"
-
-    # At the time of writing, Liquibase does not respect any log-level parameter for reasons.
-    # So unless we're running with verbose mode set to on, we'll just pipe everything to the void.
-    if [ "$VERBOSE" == "1" ]; then
-        LQOUT=/dev/stdout
-    else
-        LQOUT=/dev/null
-    fi
-
-    (cd $PROJECT_DIR && $LQCOMMAND >$LQOUT 2>&1)
-    evalrc $? "Liquibase command failed"
 }
 
 deploy() {
