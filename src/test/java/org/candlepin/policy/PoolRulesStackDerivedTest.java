@@ -296,7 +296,7 @@ public class PoolRulesStackDerivedTest {
     @Test
     public void addEarlierStartDate() {
         stackedEnts.add(createEntFromPool(pool1));
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null, false);
         assertTrue(update.changed());
         assertTrue(update.getDatesChanged());
         assertEquals(pool1.getStartDate(), stackDerivedPool.getStartDate());
@@ -307,7 +307,7 @@ public class PoolRulesStackDerivedTest {
     public void addLaterEndDate() {
         stackedEnts.add(createEntFromPool(pool1));
         stackedEnts.add(createEntFromPool(pool3));
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null, false);
         assertTrue(update.changed());
         assertTrue(update.getDatesChanged());
         assertEquals(pool1.getStartDate(), stackDerivedPool.getStartDate());
@@ -321,7 +321,7 @@ public class PoolRulesStackDerivedTest {
 
         stackedEnts.add(ent1);
         stackedEnts.add(createEntFromPool(pool3));
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null, false);
         assertTrue(update.changed());
 
         assertTrue(update.getProductAttributesChanged());
@@ -332,11 +332,11 @@ public class PoolRulesStackDerivedTest {
     public void removeEldestEntitlement() {
         stackedEnts.add(createEntFromPool(pool1));
         stackedEnts.add(createEntFromPool(pool3));
-        poolRules.updatePoolFromStack(stackDerivedPool, null);
+        poolRules.updatePoolFromStack(stackDerivedPool, null, false);
 
         // Should change a variety of settings on the pool.
         stackedEnts.remove(0);
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null, false);
         assertTrue(update.changed());
         assertFalse(update.getDatesChanged());
 
@@ -353,11 +353,11 @@ public class PoolRulesStackDerivedTest {
     public void removeEarliestStartingEntitlement() {
         stackedEnts.add(createEntFromPool(pool1));
         stackedEnts.add(createEntFromPool(pool3));
-        poolRules.updatePoolFromStack(stackDerivedPool, null);
+        poolRules.updatePoolFromStack(stackDerivedPool, null, false);
 
         // Should change a variety of settings on the pool.
         stackedEnts.remove(1);
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null, false);
         assertTrue(update.changed());
         assertTrue(update.getDatesChanged());
 
@@ -371,7 +371,7 @@ public class PoolRulesStackDerivedTest {
         stackedEnts.add(createEntFromPool(pool1));
         stackedEnts.add(createEntFromPool(pool3));
 
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null, false);
         assertTrue(update.changed());
         assertTrue(update.getQuantityChanged());
         assertEquals((Long) 2L, stackDerivedPool.getQuantity());
@@ -410,11 +410,11 @@ public class PoolRulesStackDerivedTest {
         stackedEnts.clear();
         stackedEnts.add(createEntFromPool(pool1));
         stackedEnts.add(createEntFromPool(pool2));
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null, false);
         assertEquals((Long) 2L, stackDerivedPool.getQuantity());
 
         stackedEnts.remove(0);
-        update = poolRules.updatePoolFromStack(stackDerivedPool, null);
+        update = poolRules.updatePoolFromStack(stackDerivedPool, null, false);
         assertTrue(update.changed());
         assertTrue(update.getQuantityChanged());
         assertEquals(-1L, stackDerivedPool.getQuantity());
@@ -433,11 +433,11 @@ public class PoolRulesStackDerivedTest {
         stackedEnts.add(createEntFromPool(pool1));
         stackedEnts.add(createEntFromPool(pool2));
 
-        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null);
+        PoolUpdate update = poolRules.updatePoolFromStack(stackDerivedPool, null, false);
         assertEquals(-1L, stackDerivedPool.getQuantity());
 
         stackedEnts.remove(0);
-        update = poolRules.updatePoolFromStack(stackDerivedPool, null);
+        update = poolRules.updatePoolFromStack(stackDerivedPool, null, false);
         assertTrue(update.changed());
         assertTrue(update.getDatesChanged());
         assertFalse(update.getQuantityChanged());

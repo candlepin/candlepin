@@ -117,8 +117,8 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
     Map<String, I> getImportedEntities();
 
     /**
-     * Adds an existing entity to this mapper. Null values will be silently ignored, but the entity
-     * must have a valid, mappable ID.
+     * Adds an existing entity to this mapper. Null values will be silently ignored, but non-null
+     * entities must have a valid, mappable ID.
      *
      * @param entity
      *  the existing entity to add to this mapper
@@ -130,6 +130,25 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
      *  a reference to this entity mapper
      */
     EntityMapper<E, I> addExistingEntity(E entity);
+
+    /**
+     * Adds an existing entity to this mapper as a dirty entity, indicating it has a mapping or
+     * data error. Null values will be silently ignored, but non-null entities must have a valid,
+     * mappable ID.
+     *
+     * @param entity
+     *  the existing entity to add to this mapper
+     *
+     * @param dirty
+     *  whether or not the entity should be mapped as a dirty entity
+     *
+     * @throws IllegalArgumentException
+     *  if the provided entity does not have a valid entity ID
+     *
+     * @return
+     *  a reference to this entity mapper
+     */
+    EntityMapper<E, I> addExistingEntity(E entity, boolean dirty);
 
     /**
      * Adds the collection of existing entities to this mapper. Null values will be silently
@@ -146,6 +165,23 @@ public interface EntityMapper<E extends AbstractHibernateObject, I extends Servi
      *  a reference to this entity mapper
      */
     EntityMapper<E, I> addExistingEntities(Collection<? extends E> entities);
+
+    /**
+     * Adds the collection of existing entities to this mapper as dirty entities, indicating they
+     * have mapping or data errors. Null values will be silently ignored, but all non-null entities
+     * must have a valid, mappable ID.
+     *
+     * @param entities
+     *  a collection of existing entities to add to this mapper
+     *
+     * @throws IllegalArgumentException
+     *  if the collection contains one or more entities which are null or do not have valid entity
+     *  IDs
+     *
+     * @return
+     *  a reference to this entity mapper
+     */
+    EntityMapper<E, I> addExistingEntities(Collection<? extends E> entities, boolean dirty);
 
     /**
      * Adds an imported entity to this mapper. Null values will be silently ignored, but the entity

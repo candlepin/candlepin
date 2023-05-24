@@ -30,6 +30,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 
@@ -38,25 +39,58 @@ import java.util.Set;
  * Refresher
  */
 public class Refresher {
+    private static final Logger log = LoggerFactory.getLogger(Refresher.class);
 
     private CandlepinPoolManager poolManager;
     private SubscriptionServiceAdapter subAdapter;
     private ProductServiceAdapter prodAdapter;
     private OwnerManager ownerManager;
     private boolean lazy;
-    private static Logger log = LoggerFactory.getLogger(Refresher.class);
+    private boolean force;
 
     private Map<String, Owner> owners = new HashMap<>();
     private Set<Product> products = new HashSet<>();
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
-        ProductServiceAdapter prodAdapter, OwnerManager ownerManager, boolean lazy) {
+        ProductServiceAdapter prodAdapter, OwnerManager ownerManager) {
 
-        this.poolManager = poolManager;
-        this.subAdapter = subAdapter;
-        this.prodAdapter = prodAdapter;
-        this.ownerManager = ownerManager;
+        this.poolManager = Objects.requireNonNull(poolManager);
+        this.subAdapter = Objects.requireNonNull(subAdapter);
+        this.prodAdapter = Objects.requireNonNull(prodAdapter);
+        this.ownerManager = Objects.requireNonNull(ownerManager);
+
+        this.lazy = true;
+        this.force = false;
+    }
+
+    /**
+     * Sets whether or not to perform lazy entitlement certificate regeneration when affected pools
+     * are updated as a result of this refresher operation.
+     *
+     * @param lazy
+     *  whether or not to perform lazy certificate regeneration
+     *
+     * @return
+     *  a reference to this refresher
+     */
+    public Refresher setLazyCertificateRegeneration(boolean lazy) {
         this.lazy = lazy;
+        return this;
+    }
+
+    /**
+     * Sets whether or not to perform a forced-update refresh, causing all entities to be fully
+     * updated, even when no changes in data is detected.
+     *
+     * @param force
+     *  whether or not perform a forced-update refresh
+     *
+     * @return
+     *  a reference to this refresher
+     */
+    public Refresher setForceUpdate(boolean force) {
+        this.force = force;
+        return this;
     }
 
     public Refresher add(Owner owner) {
@@ -147,11 +181,14 @@ public class Refresher {
              * dirty, they will never get regenerated
              */
             Pool primaryPool = poolManager.convertToPrimaryPool(subscription);
-            poolManager.refreshPoolsForPrimaryPool(primaryPool, true, lazy, Collections.emptyMap());
+            poolManager.refreshPoolsForPrimaryPool(primaryPool, Collections.emptyMap(), true, this.lazy,
+                this.force);
         }
 
         for (Owner owner : this.owners.values()) {
-            poolManager.refreshPoolsWithRegeneration(this.subAdapter, this.prodAdapter, owner, this.lazy);
+            poolManager.refreshPoolsWithRegeneration(this.subAdapter, this.prodAdapter, owner, this.lazy,
+                this.force);
+
             poolManager.recalculatePoolQuantitiesForOwner(owner);
             ownerManager.updateRefreshDate(owner);
         }

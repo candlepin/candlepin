@@ -1274,7 +1274,7 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public AsyncJobStatusDTO refreshPools(String ownerKey, Boolean autoCreateOwner) {
+    public AsyncJobStatusDTO refreshPools(String ownerKey, Boolean autoCreateOwner, Boolean forceUpdate) {
         Owner owner = ownerCurator.getByKey(ownerKey);
         if (owner == null) {
             if (autoCreateOwner && ownerService.isOwnerKeyValidForCreation(ownerKey)) {
@@ -1292,7 +1292,8 @@ public class OwnerResource implements OwnerApi {
 
         JobConfig config = RefreshPoolsJob.createJobConfig()
             .setOwner(owner)
-            .setLazyRegeneration(true);
+            .setLazyRegeneration(true)
+            .setForceUpdate(forceUpdate != null && forceUpdate);
 
         try {
             AsyncJobStatus job = this.jobManager.queueJob(config);

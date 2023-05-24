@@ -81,7 +81,6 @@ import org.candlepin.util.Traceable;
 import org.candlepin.util.TraceableParam;
 import org.candlepin.util.Util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Iterables;
 import com.google.inject.persist.Transactional;
 
@@ -111,7 +110,6 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import javax.ws.rs.core.MediaType;
 
 
 
@@ -214,35 +212,20 @@ public class CandlepinPoolManager implements PoolManager {
     @SuppressWarnings("checkstyle:methodlength")
     @Traceable
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter,
-        ProductServiceAdapter prodAdapter,
-        @TraceableParam("owner") Owner owner, boolean lazy) {
+        ProductServiceAdapter prodAdapter, @TraceableParam("owner") Owner owner,
+        boolean lazy, boolean force) {
 
         Date now = new Date();
         Owner resolvedOwner = this.resolveOwner(owner);
         log.info("Refreshing pools for owner: {}", resolvedOwner);
 
         RefreshWorker refresher = this.refreshWorkerProvider.get()
-            .setOrphanedEntityGracePeriod(this.config.getInt(ConfigProperties.ORPHANED_ENTITY_GRACE_PERIOD));
+            .setOrphanedEntityGracePeriod(this.config.getInt(ConfigProperties.ORPHANED_ENTITY_GRACE_PERIOD))
+            .setForceUpdate(force);
 
         log.debug("Fetching subscriptions from adapter...");
         refresher.addSubscriptions(subAdapter.getSubscriptions(resolvedOwner.getKey()));
         Map<String, ? extends SubscriptionInfo> subMap = refresher.getSubscriptions();
-
-        // If trace output is enabled, dump some JSON representing the subscriptions we received so
-        // we can simulate this in a testing environment.
-        if (log.isTraceEnabled()) {
-            try {
-                ObjectMapper mapper = this.jsonProvider
-                    .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
-
-                log.trace("Received {} subscriptions from upstream:", subMap.size());
-                log.trace(mapper.writeValueAsString(subMap.values()));
-                log.trace("Finished outputting upstream subscriptions");
-            }
-            catch (Exception e) {
-                log.trace("Exception occurred while outputting upstream subscriptions", e);
-            }
-        }
 
         // Check if there are any dev pools (products) that need refreshing
         List<String> devProdIds = this.ownerProductCurator.getDevProductIds(resolvedOwner.getId());
@@ -252,21 +235,6 @@ public class CandlepinPoolManager implements PoolManager {
 
             Collection<? extends ProductInfo> devProducts = prodAdapter
                 .getProductsByIds(resolvedOwner.getKey(), devProdIds);
-
-            // Dump JSON representing dev products for simulation
-            if (log.isTraceEnabled()) {
-                try {
-                    ObjectMapper mapper = this.jsonProvider
-                        .locateMapper(Object.class, MediaType.APPLICATION_JSON_TYPE);
-
-                    log.trace("Received {} dev products from upstream:", devProducts.size());
-                    log.trace(mapper.writeValueAsString(devProducts));
-                    log.trace("Finished outputting dev products");
-                }
-                catch (Exception e) {
-                    log.trace("Exception occurred while outputting upstream subscriptions", e);
-                }
-            }
 
             refresher.addProducts(devProducts);
         }
@@ -306,7 +274,7 @@ public class CandlepinPoolManager implements PoolManager {
                 pool.setLocked(true);
 
                 List<Pool> subPools = subscriptionPools.getOrDefault(sub.getId(), Collections.emptyList());
-                this.refreshPoolsForPrimaryPool(pool, false, lazy, updatedProducts, subPools);
+                this.refreshPoolsForPrimaryPool(pool, false, lazy, updatedProducts, subPools, force);
                 poolsModified = true;
             }
 
@@ -324,12 +292,12 @@ public class CandlepinPoolManager implements PoolManager {
                 }
             }
 
-            deletePools(poolsToDelete);
+            this.deletePools(poolsToDelete);
 
             // TODO: break this call into smaller pieces. There may be lots of floating pools
             log.debug("Updating floating pools...");
             List<Pool> floatingPools = poolCurator.getOwnersFloatingPools(resolvedOwner);
-            updateFloatingPools(floatingPools, lazy, updatedProducts);
+            this.updateFloatingPools(floatingPools, updatedProducts, lazy, force);
 
             // Check if we've put any pools into a state in which they're referencing a product which no
             // longer belongs to the organization
@@ -399,8 +367,8 @@ public class CandlepinPoolManager implements PoolManager {
         return owner;
     }
 
-    void refreshPoolsForPrimaryPool(Pool pool, boolean updateStackDerived, boolean lazy,
-        Map<String, Product> changedProducts) {
+    void refreshPoolsForPrimaryPool(Pool pool, Map<String, Product> changedProducts,
+        boolean updateStackDerived, boolean lazy, boolean force) {
 
         // These don't all necessarily belong to this owner
         List<Pool> subscriptionPools;
@@ -425,12 +393,13 @@ public class CandlepinPoolManager implements PoolManager {
                 Collections.<Pool>singletonList(pool);
         }
 
-        this.refreshPoolsForPrimaryPool(pool, updateStackDerived, lazy, changedProducts, subscriptionPools);
+        this.refreshPoolsForPrimaryPool(pool, updateStackDerived, lazy, changedProducts,
+            subscriptionPools, force);
     }
 
     @Transactional
     void refreshPoolsForPrimaryPool(Pool pool, boolean updateStackDerived, boolean lazy,
-        Map<String, Product> changedProducts, List<Pool> subscriptionPools) {
+        Map<String, Product> changedProducts, List<Pool> subscriptionPools, boolean force) {
 
         // Update product references on the pools, I guess
         // TODO: Should this be performed by poolRules? Seems like that should be a thing.
@@ -462,7 +431,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // don't update floating here, we'll do that later so we don't update anything twice
         Set<String> updatedPrimaryPools = updatePoolsForPrimaryPool(
-            subscriptionPools, pool, originalQuantity, updateStackDerived, changedProducts);
+            subscriptionPools, pool, originalQuantity, updateStackDerived, changedProducts, force);
 
         regenerateCertificatesByEntIds(updatedPrimaryPools, lazy);
     }
@@ -545,7 +514,7 @@ public class CandlepinPoolManager implements PoolManager {
      *        derived pools
      */
     Set<String> updatePoolsForPrimaryPool(List<Pool> existingPools, Pool pool, Long originalQuantity,
-        boolean updateStackDerived, Map<String, Product> changedProducts) {
+        boolean updateStackDerived, Map<String, Product> changedProducts, boolean force) {
 
         /*
          * Rules need to determine which pools have changed, but the Java must
@@ -569,7 +538,7 @@ public class CandlepinPoolManager implements PoolManager {
 
         // Hand off to rules to determine which pools need updating:
         List<PoolUpdate> updatedPools = poolRules.updatePools(pool, existingPools, originalQuantity,
-            changedProducts);
+            changedProducts, force);
 
         String virtLimit = pool.getProduct().getAttributeValue(Product.Attributes.VIRT_LIMIT);
         boolean createsSubPools = !StringUtils.isBlank(virtLimit) && !"0".equals(virtLimit);
@@ -581,7 +550,7 @@ public class CandlepinPoolManager implements PoolManager {
             List<Pool> subPools = getOwnerSubPoolsForStackId(pool.getOwner(), pool.getStackId());
 
             for (Pool subPool : subPools) {
-                PoolUpdate update = updatePoolFromStack(subPool, changedProducts);
+                PoolUpdate update = updatePoolFromStack(subPool, changedProducts, force);
 
                 if (update.changed()) {
                     updatedPools.add(update);
@@ -723,13 +692,28 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     /**
-     * Update pools which have no subscription attached, if applicable.
+     * Update pools which have no subscription attached, if applicable. Part of the refresh pools
+     * operation.
      *
      * @param floatingPools
-     * @return
+     *  a collection of floating pools to update
+     *
+     * @param changedProducts
+     *  a map consisting of the products changed as part of the refresh. Products are keyed by their
+     *  Red Hat product ID
+     *
+     * @param lazy
+     *  whether or not to flag affected entitlement certificates as dirty rather than immediately
+     *  regenerating them
+     *
+     * @param force
+     *  whether or not to perform a forced-update on the provided floating pools, causing fields to
+     *  be updated, even when an explicit change in data is not detected
      */
     @Transactional
-    void updateFloatingPools(List<Pool> floatingPools, boolean lazy, Map<String, Product> changedProducts) {
+    void updateFloatingPools(List<Pool> floatingPools, Map<String, Product> changedProducts, boolean lazy,
+        boolean force) {
+
         /*
          * Rules need to determine which pools have changed, but the Java must
          * send out the events. Create an event for each pool that could change,
@@ -743,7 +727,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         // Hand off to rules to determine which pools need updating
-        List<PoolUpdate> updatedPools = poolRules.updatePools(floatingPools, changedProducts);
+        List<PoolUpdate> updatedPools = poolRules.updateFloatingPools(floatingPools, changedProducts, force);
 
         Set<String> entIds = processPoolUpdates(poolEvents, updatedPools);
         this.poolCurator.flush();
@@ -869,7 +853,8 @@ public class CandlepinPoolManager implements PoolManager {
             this.deletePoolsForSubscriptions(Collections.<String>singletonList(pool.getSubscriptionId()));
         }
         else {
-            this.refreshPoolsForPrimaryPool(pool, false, true, Collections.<String, Product>emptyMap());
+            this.refreshPoolsForPrimaryPool(pool, Collections.<String, Product>emptyMap(), false,
+                true, false);
         }
     }
 
@@ -2486,14 +2471,7 @@ public class CandlepinPoolManager implements PoolManager {
 
     @Override
     public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, ProductServiceAdapter prodAdapter) {
-        return this.getRefresher(subAdapter, prodAdapter, true);
-    }
-
-    @Override
-    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, ProductServiceAdapter prodAdapter,
-        boolean lazy) {
-
-        return new Refresher(this, subAdapter, prodAdapter, ownerManager, lazy);
+        return new Refresher(this, subAdapter, prodAdapter, this.ownerManager);
     }
 
     @Override
@@ -2573,8 +2551,8 @@ public class CandlepinPoolManager implements PoolManager {
         return poolCurator.listByOwner(owner);
     }
 
-    public PoolUpdate updatePoolFromStack(Pool pool, Map<String, Product> changedProducts) {
-        return poolRules.updatePoolFromStack(pool, changedProducts);
+    public PoolUpdate updatePoolFromStack(Pool pool, Map<String, Product> changedProducts, boolean force) {
+        return poolRules.updatePoolFromStack(pool, changedProducts, force);
     }
 
     @Override

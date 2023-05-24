@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -92,7 +91,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
 
         // Setup common behavior
-        when(this.poolManager.getRefresher(eq(this.subAdapter), eq(this.prodAdapter), anyBoolean()))
+        when(this.poolManager.getRefresher(eq(this.subAdapter), eq(this.prodAdapter)))
             .thenReturn(this.refresher);
 
         when(this.refresher.add(any(Owner.class))).thenReturn(this.refresher);

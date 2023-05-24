@@ -43,6 +43,7 @@ public class RefreshPoolsJob implements AsyncJob {
 
     protected static final String OWNER_KEY = "org";
     protected static final String LAZY_REGEN = "lazy_regen";
+    protected static final String FORCE_UPDATE = "force_update";
 
     protected OwnerCurator ownerCurator;
     protected PoolManager poolManager;
@@ -99,6 +100,22 @@ public class RefreshPoolsJob implements AsyncJob {
             return this;
         }
 
+        /**
+         * Sets the flag for performing a forced-update refresh, causing all entities to be updated
+         * even if no explicit change in data is detected.
+         *
+         * @param force
+         *  whether or not to perform a forced-update refresh
+         *
+         * @return
+         *  a reference to this job config
+         */
+        public RefreshPoolsJobConfig setForceUpdate(boolean force) {
+            this.setJobArgument(FORCE_UPDATE, force);
+
+            return this;
+        }
+
         @Override
         public void validate() throws JobConfigValidationException {
             super.validate();
@@ -147,6 +164,8 @@ public class RefreshPoolsJob implements AsyncJob {
         JobArguments args = context.getJobArguments();
         String ownerKey = args.getAsString(OWNER_KEY);
         boolean lazy = args.getAsBoolean(LAZY_REGEN);
+        boolean force = args.getAsBoolean(FORCE_UPDATE, false);
+
         Owner owner = ownerCurator.getByKey(ownerKey);
 
         if (owner == null) {
@@ -155,7 +174,9 @@ public class RefreshPoolsJob implements AsyncJob {
 
         try {
             // Assume that we verified the request in the resource layer:
-            poolManager.getRefresher(this.subAdapter, this.prodAdapter, lazy)
+            poolManager.getRefresher(this.subAdapter, this.prodAdapter)
+                .setLazyCertificateRegeneration(lazy)
+                .setForceUpdate(force)
                 .add(owner)
                 .run();
         }

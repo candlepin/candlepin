@@ -78,8 +78,10 @@ public class RefreshPoolsForProductJobTest {
         doReturn(product).when(productCurator).get(eq(VALID_ID));
 
         Refresher mockRefresher = mock(Refresher.class);
-        doReturn(mockRefresher).when(poolManager).getRefresher(any(), any(), anyBoolean());
+        doReturn(mockRefresher).when(poolManager).getRefresher(any(), any());
         doReturn(mockRefresher).when(mockRefresher).add(any(Product.class));
+        doReturn(mockRefresher).when(mockRefresher).setLazyCertificateRegeneration(anyBoolean());
+        doReturn(mockRefresher).when(mockRefresher).setForceUpdate(anyBoolean());
 
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
 
