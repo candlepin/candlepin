@@ -28,6 +28,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -54,6 +55,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Responsible for handling activation keys for the Consumer creation in  {@link ConsumerResource}
@@ -66,18 +68,21 @@ public class ConsumerBindUtil {
     private OwnerCurator ownerCurator;
     private QuantityRules quantityRules;
     private ServiceLevelValidator serviceLevelValidator;
+    private PoolCurator poolCurator;
     private static Logger log = LoggerFactory.getLogger(ConsumerBindUtil.class);
 
     @Inject
     public ConsumerBindUtil(Entitler entitler, I18n i18n,
         ConsumerContentOverrideCurator consumerContentOverrideCurator,
-        OwnerCurator ownerCurator, QuantityRules quantityRules, ServiceLevelValidator serviceLevelValidator) {
+        OwnerCurator ownerCurator, QuantityRules quantityRules, ServiceLevelValidator serviceLevelValidator,
+        PoolCurator poolCurator) {
         this.entitler = entitler;
         this.i18n = i18n;
         this.consumerContentOverrideCurator = consumerContentOverrideCurator;
         this.ownerCurator = ownerCurator;
         this.quantityRules = quantityRules;
         this.serviceLevelValidator = serviceLevelValidator;
+        this.poolCurator = poolCurator;
     }
 
     public void handleActivationKeys(Consumer consumer, List<ActivationKey> keys,
@@ -87,6 +92,15 @@ public class ConsumerBindUtil {
         boolean listSuccess = false;
         boolean scaEnabledForAny = false;
         boolean isAutoheal = BooleanUtils.isTrue(consumer.isAutoheal());
+
+        // we need to lock all the pools in id order so that it won't deadlock if there are other
+        // processes in the same space at the same time. Current code sorts and locks
+        // per activation key which can lead to this deadlock when entitlement revocation is
+        // occurring on the same pools
+        Set<Pool> pools = new HashSet();
+        keys.stream().forEach(x -> pools.addAll(
+            x.getPools().stream().map(y -> y.getPool()).collect(Collectors.toSet())));
+        poolCurator.lock(pools);
 
         for (ActivationKey key : keys) {
             boolean keySuccess = true;
