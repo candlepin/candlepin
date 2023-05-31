@@ -11,6 +11,11 @@ env:
   JAVA_DISTRIBUTION: 'temurin'
   JAVA_VERSION: '17'
 
+# Cancel in-progress sonar branch analysis workflows. We only care about analyzing the latest commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   branch_sonar_analysis:
     name: long-lived branch sonar analysis
