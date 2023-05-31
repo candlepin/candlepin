@@ -1,0 +1,47 @@
+---
+name: Sonar analysis for long-lived branches
+
+on:
+  push:
+    branches:
+      - main
+      - candlepin-*-HOTFIX
+
+env:
+  JAVA_DISTRIBUTION: 'temurin'
+  JAVA_VERSION: '17'
+
+jobs:
+  branch_sonar_analysis:
+    name: long-lived branch sonar analysis
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:38
+    steps:
+      - name: Mask secrets
+        shell: bash
+        run: |
+          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+          echo "::add-mask::${{ secrets.SONAR_TOKEN }}"
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        shell: bash
+        run: dnf --setopt install_weak_deps=False install -y gettext jss
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Run unit tests & Analyze
+        uses: gradle/gradle-build-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          arguments: test coverage sonar
+            -Dsonar.branch.name=${{ github.ref_name }}
