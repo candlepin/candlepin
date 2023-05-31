@@ -274,4 +274,46 @@ public class OwnerClient extends OwnerApi {
         return super.listEnvironments(owner.getKey(), name);
     }
 
+    /**
+     * Invokes the refresh pools operation, optionally creating the owner if it doesn't already
+     * exist.
+     *
+     * @param ownerKey
+     *  the key of the owner for which to refresh pools
+     *
+     * @param autoCreateOwner
+     *  whether or not to automatically create the owner if it doesn't already exist
+     *
+     * @return
+     *  the status of the refresh pools job started as a result of this call
+     */
+    public AsyncJobStatusDTO refreshPools(String ownerKey, boolean autoCreateOwner) {
+        return this.refreshPools(ownerKey, autoCreateOwner, false);
+    }
+
+    /**
+     * Invokes the refresh pools operation for the given owner using the default settings.
+     *
+     * @param ownerKey
+     *  the key of the owner for which to refresh pools
+     *
+     * @return
+     *  the status of the refresh pools job started as a result of this call
+     */
+    public AsyncJobStatusDTO refreshPools(String ownerKey) {
+        return this.refreshPools(ownerKey, false, false);
+    }
+
+    /**
+     * Invokes the refresh pools operation for the given owner using the default settings.
+     *
+     * @param owner
+     *  the owner for which to refresh pools
+     *
+     * @return
+     *  the status of the refresh pools job started as a result of this call
+     */
+    public AsyncJobStatusDTO refreshPools(OwnerDTO owner) {
+        return this.refreshPools(owner != null ? owner.getKey() : null);
+    }
 }

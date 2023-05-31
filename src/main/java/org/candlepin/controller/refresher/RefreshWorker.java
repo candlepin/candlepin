@@ -90,6 +90,7 @@ public class RefreshWorker {
     private ContentMapper contentMapper;
 
     private int orphanedEntityGracePeriod;
+    private boolean forceUpdate;
 
 
     /**
@@ -111,6 +112,7 @@ public class RefreshWorker {
         this.contentMapper = new ContentMapper();
 
         this.orphanedEntityGracePeriod = ORPHANED_ENTITY_DEFAULT_GRACE_PERIOD;
+        this.forceUpdate = false;
     }
 
     /**
@@ -148,6 +150,21 @@ public class RefreshWorker {
      */
     public RefreshWorker setOrphanedEntityGracePeriod(int period) {
         this.orphanedEntityGracePeriod = period;
+        return this;
+    }
+
+    /**
+     * Sets the flag for performing a forced-update refresh, causing all entities to be updated
+     * even if no explicit change in data is detected.
+     *
+     * @param force
+     *  whether or not to perform a forced-update refresh
+     *
+     * @return
+     *  a reference to this refresh worker
+     */
+    public RefreshWorker setForceUpdate(boolean force) {
+        this.forceUpdate = force;
         return this;
     }
 
@@ -387,7 +404,7 @@ public class RefreshWorker {
             return;
         }
 
-        this.poolMapper.addExistingEntities(pools);
+        this.poolMapper.addExistingEntities(pools, this.forceUpdate);
 
         Set<String> productUuids = pools.stream()
             .map(Pool::getProductUuid)
@@ -412,7 +429,7 @@ public class RefreshWorker {
             return;
         }
 
-        this.productMapper.addExistingEntities(products);
+        this.productMapper.addExistingEntities(products, this.forceUpdate);
 
         Set<String> productUuids = products.stream()
             .map(Product::getUuid)
@@ -442,7 +459,7 @@ public class RefreshWorker {
             return;
         }
 
-        this.contentMapper.addExistingEntities(content);
+        this.contentMapper.addExistingEntities(content, this.forceUpdate);
     }
 
     /**

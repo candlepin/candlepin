@@ -74,7 +74,8 @@ public class RefreshPoolsForProductJob implements AsyncJob {
         final Product product = this.productCurator.get(productUuid);
 
         if (product != null) {
-            poolManager.getRefresher(this.subAdapter, this.prodAdapter, lazy)
+            poolManager.getRefresher(this.subAdapter, this.prodAdapter)
+                .setLazyCertificateRegeneration(true)
                 .add(product)
                 .run();
 

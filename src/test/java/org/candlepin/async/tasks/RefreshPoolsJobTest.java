@@ -17,6 +17,7 @@ package org.candlepin.async.tasks;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
@@ -135,8 +136,10 @@ public class RefreshPoolsJobTest {
         doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
 
         doReturn(owner).when(ownerCurator).getByKey(eq("my-test-owner"));
-        doReturn(refresher).when(poolManager).getRefresher(eq(subAdapter), eq(prodAdapter), eq(true));
+        doReturn(refresher).when(poolManager).getRefresher(eq(subAdapter), eq(prodAdapter));
         doReturn(refresher).when(refresher).add(eq(owner));
+        doReturn(refresher).when(refresher).setLazyCertificateRegeneration(anyBoolean());
+        doReturn(refresher).when(refresher).setForceUpdate(anyBoolean());
 
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
 
@@ -163,8 +166,10 @@ public class RefreshPoolsJobTest {
         doReturn(jobConfig.getJobArguments()).when(status).getJobArguments();
 
         doReturn(owner).when(ownerCurator).getByKey(eq("my-test-owner"));
-        doReturn(refresher).when(poolManager).getRefresher(eq(subAdapter), eq(prodAdapter), eq(false));
+        doReturn(refresher).when(poolManager).getRefresher(eq(subAdapter), eq(prodAdapter));
         doReturn(refresher).when(refresher).add(eq(owner));
+        doReturn(refresher).when(refresher).setLazyCertificateRegeneration(anyBoolean());
+        doReturn(refresher).when(refresher).setForceUpdate(anyBoolean());
         doThrow(new RuntimeException("something went wrong with refresh")).when(refresher).run();
 
         Exception e = assertThrows(JobExecutionException.class, () -> job.execute(context));
