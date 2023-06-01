@@ -103,30 +103,12 @@ The maximum allowable CVSS  score can be modified by setting the `max_allowed_cv
 between 1.0 and 10.0.  Any CVEs above the maximum allowed CVSS score will cause the build to fail. 
 The reports will be generated automatically under build/reports folder.
 
-### Checkstyle
-* `./gradlew checkstyle` Runs checkstyle for both production, test, and spec test code.
-* `./gradlew checkstyleMain` Runs checkstyle only for production code.
-* `./gradlew checkstyleTest` Runs checkstyle only for test code.
-* `./gradlew checkstyleSpec` Runs checkstyle only for spec test code.
+### Lint
+* `./gradlew spotlessCheck` Runs spotless to verify that the codebase meets our code style requirements.
+* `./gradlew spotlessApply` Runs spotless to apply our code style.
 
-Buildr provides a Checkstyle task, but we have our own that reads from the  
-Eclipse Checkstyle Plugin configuration.  The Eclipse configuration defines  
-several variables that are then passed in to the `project_conf/checks.xml`  
-(which is the actual Checkstyle configuration).  This practice allows us to  
-have slightly different style requirements for tests versus production code.  
-The Eclipse Checkstyle Plugin defaults to reading from a file named  
-`.checkstyle` in the root of the Eclipse project and that file points to the  
-location of `checks.xml`.  Unfortunately, `checks.xml` isn't in the Eclipse  
-project root and the plugin doesn't know how to look outside of the Eclipse  
-project directory except by using an absolute path.
-
-To solve this problem, we generate the `.checkstyle` file programmatically when  
-running the `buildr eclipse` task.  The template is located at  
-`project_conf/.checkstyle` and uses an XML entity to represent the location of  
-`checks.xml`.  When you run `buildr eclipse`, we set the value of the  
-`conf_dir` entity in `project_conf/eclipse-checkstyle.xml` to the absolute  
-path to `checks.xml` and drop the result into `.checkstyle` in your Eclipse  
-project directory.
+Gradle provides spotless tasks. We are using the eclipse formatter and the code style is
+defined in `eclipse-formatter.xml`.  
 
 ### Unit Tests
 * `./gradlew test` runs all of the unit tests.

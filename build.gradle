@@ -19,7 +19,7 @@ plugins {
     id "org.candlepin.gradle.msgfmt"
     id "org.candlepin.gradle.SpecVersion"
     id "org.candlepin.gradle.PomToolkit"
-    id "checkstyle-conventions"
+    id "spotless-conventions"
     id "test-logging-conventions"
 }
 
