@@ -63,11 +63,11 @@ pipeline {
                         }
                     }
                 }
-                stage('checkstyle') {
+                stage('lint') {
                     agent { label 'candlepin' }
                     steps {
                         checkout scm
-                        sh './gradlew checkstyle'
+                        sh './gradlew spotlessCheck'
                     }
                 }
                 stage('bugzilla-reference') {

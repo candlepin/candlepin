@@ -24,6 +24,7 @@ ext {
 // buildSrc/build.gradle adds them to the gradle classpath
 ext.plugins = [
     "com.adarshr:gradle-test-logger-plugin:3.2.0",
+    "com.diffplug.spotless:spotless-plugin-gradle:6.19.0",
     "com.github.ben-manes:gradle-versions-plugin:0.47.0",
     "com.netflix.nebula:gradle-lint-plugin:18.1.0",
     "org.openapitools:openapi-generator-gradle-plugin:6.3.0",
@@ -35,8 +36,6 @@ libraries["artemisServer"] = "org.apache.activemq:artemis-server:2.29.0"
 libraries["artemisStomp"] = "org.apache.activemq:artemis-stomp-protocol:2.29.0"
 libraries["assertj"] = 'org.assertj:assertj-core:3.24.2'
 libraries["awaitility"] = 'org.awaitility:awaitility:4.2.0'
-libraries["checkstyle"] = "com.puppycrawl.tools:checkstyle:10.12.1"
-libraries["checkstyleSevntu"] = "com.github.sevntu-checkstyle:sevntu-checks:1.44.1"
 libraries["commonsCodec"] = "commons-codec:commons-codec:1.16.0"
 libraries["commonsCollections"] = "commons-collections:commons-collections:3.2.2"
 libraries["commonsIo"] = "commons-io:commons-io:2.13.0"

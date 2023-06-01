@@ -1,0 +1,12 @@
+# Organize Import Order
+0=\#
+1=org.candlepin
+2=com.redhat
+3=ch
+4=com
+5=io
+6=liquibase
+7=net
+8=org
+9=java
+10=javax
