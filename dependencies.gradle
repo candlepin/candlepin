@@ -28,7 +28,7 @@ ext.plugins = [
     "com.netflix.nebula:gradle-lint-plugin:18.0.3",
     "org.openapitools:openapi-generator-gradle-plugin:6.3.0",
     "org.owasp:dependency-check-gradle:8.2.1",
-    "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:4.1.0.3113",
+    "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:4.2.0.3129",
 ]
 
 libraries["artemisServer"] = "org.apache.activemq:artemis-server:2.28.0"
