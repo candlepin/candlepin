@@ -50,3 +50,4 @@ jobs:
         with:
           arguments: test coverage sonar
             -Dsonar.branch.name=${{ github.ref_name }}
+            -Dorg.gradle.jvmargs='-Xmx1g -XX:MaxMetaspaceSize=512m'
