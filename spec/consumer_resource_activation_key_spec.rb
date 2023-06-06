@@ -2,6 +2,7 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
 require 'rexml/document'
+require_relative "../bin/scripts/thread_pool"
 
 describe 'Consumer Resource Activation Key' do
 
@@ -28,6 +29,76 @@ describe 'Consumer Resource Activation Key' do
       @owner['key'], ["key1", "key2"])
     consumer.uuid.should_not be_nil
     @cp.get_pool(pool1.id).consumed.should == 3
+  end
+
+  it 'should allow a consumer to register then unregister with activation keys concurrently' do
+    # The order of keys is important. The pool ids of the first key used should be
+    #  sortable by id later than those in the second key in the combined list of pools
+    consumer_count = 3
+    pool_count = 6
+    consumers = []
+    rereg_consumers = []
+    pools = []
+    thread_pool = ThreadPool.new(consumer_count)
+    re_thread_pool = ThreadPool.new(consumer_count)
+
+    # create 6 pools and 2 activation keys
+    key1 = @cp.create_activation_key(@owner['key'], random_string('key'))
+    key2 = @cp.create_activation_key(@owner['key'], random_string('key'))
+    for i in 1..pool_count do
+      prod = create_product(random_string('product'), random_string('product'),
+                             :attributes => { :'multi-entitlement' => 'yes'})
+      pool = create_pool_and_subscription(@owner['key'], prod.id, 10)
+      if i < 3
+        @cp.add_pool_to_key(key1.id, pool['id'], 1)
+      else
+        @cp.add_pool_to_key(key2.id, pool['id'], 1)
+      end
+    end
+    pools = @cp.list_owner_pools(@owner['key'])
+
+    for i in 1..consumer_count do
+      thread_pool.schedule do
+        uuid = random_string('uuid')
+        machine = random_string('machine')
+        consumer = @client.register(machine, :system, nil, {'system.certificate_version' => '3.3', 'dmi.system.uuid' => uuid},
+                    nil, @owner['key'], [key2['name'], key1['name']])
+        consumer.should_not be_nil
+        expect(@cp.list_entitlements(:uuid => consumer["uuid"]).size).to eq(pool_count)
+        consumers << consumer
+      end
+    end
+    # Shutdown & join on the thread pool
+    thread_pool.shutdown
+    expect(consumers.size).to eq(consumer_count)
+    for pool in pools do
+      expect(@cp.get_pool(pool.id).consumed).to eq(consumer_count)
+    end
+
+    consumers.each do |consumer|
+      re_thread_pool.schedule do
+        @cp.unregister(consumer.uuid)
+        rereg_consumer = @client.register(consumer['name'], :system, nil,
+            {'system.certificate_version' => '3.3', 'dmi.system.uuid' => consumer['facts']['system.dmi.uuid']},
+            nil, @owner['key'], [key2['name'], key1['name']])
+        rereg_consumer.should_not be_nil
+        expect(@cp.list_entitlements(:uuid => rereg_consumer["uuid"]).size).to eq(pool_count)
+        rereg_consumers << rereg_consumer
+      end
+    end
+    # Shutdown & join on the thread pool
+    re_thread_pool.shutdown
+    expect(rereg_consumers.size).to eq(consumer_count)
+    for pool in pools do
+      expect(@cp.get_pool(pool.id).consumed).to eq(consumer_count)
+    end
+
+    for rereg_consumer in rereg_consumers do
+      @cp.unregister(rereg_consumer.uuid)
+    end
+    for pool in pools do
+      expect(@cp.get_pool(pool.id).consumed).to eq(0)
+    end
   end
 
   it 'should allow a physical consumer to register with activation keys' do
