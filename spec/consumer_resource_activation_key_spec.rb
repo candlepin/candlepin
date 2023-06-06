@@ -2,6 +2,7 @@
 require 'spec_helper'
 require 'candlepin_scenarios'
 require 'rexml/document'
+require_relative "../bin/scripts/thread_pool"
 
 describe 'Consumer Resource Activation Key' do
 
@@ -28,6 +29,57 @@ describe 'Consumer Resource Activation Key' do
       @owner['key'], ["key1", "key2"])
     consumer.uuid.should_not be_nil
     @cp.get_pool(pool1.id).consumed.should == 3
+  end
+
+  it 'should allow a consumer to register then unregister with activation keys concurrently' do
+    # The order of keys is important. The pool ids of the first key used should be
+    #  sortable by id later than those in the second key in the combined list of pools
+    count = 10
+    consumers = []
+    pools = []
+    thread_pool = ThreadPool.new(count)
+
+    # create 10 pools and 2 activation keys
+    key1 = @cp.create_activation_key(@owner['key'], random_string('key'))
+    key2 = @cp.create_activation_key(@owner['key'], random_string('key'))
+    for i in 0..10 do
+      prod = create_product(random_string('product'), random_string('product'),
+                             :attributes => { :'multi-entitlement' => 'yes'})
+      pools[i] = create_pool_and_subscription(@owner['key'], prod.id, 10)
+      if i < 5
+        @cp.add_pool_to_key(key1.id, pools[i]['id'], 1)
+      else
+        @cp.add_pool_to_key(key2.id, pools[i]['id'], 1)
+      end
+    end
+
+    for i in 0..(count - 1) do
+      thread_pool.schedule do
+        uuid = random_string('uuid')
+        machine = random_string('machine')
+        consumer = @client.register(machine, :system, nil, {'system.certificate_version' => '3.3', 'dmi.system.uuid' => uuid}, nil,
+                    @owner['key'], [key2['name'], key1['name']])
+        size = @cp.list_entitlements(:uuid => consumer.uuid).size
+        @cp.unregister(consumer.uuid)
+        consumer = @client.register(machine, :system, nil, {'system.certificate_version' => '3.3', 'dmi.system.uuid' => uuid}, nil,
+                    @owner['key'], [key2['name'], key1['name']])
+        @cp.list_entitlements(:uuid => consumer.uuid).size.should == size
+        consumers.push(consumer)
+      end
+    end
+    # Shutdown & join on the thread pool
+    thread_pool.shutdown
+
+    for pool in pools do
+      expect(@cp.get_pool(pool.id).consumed).to eq(count)
+    end
+    consumers.each do |consumer|
+      @cp.unregister(consumer.uuid)
+    end
+    for pool in pools do
+      expect(@cp.get_pool(pool.id).consumed).to eq(0)
+    end
+    expect(consumers.size).to eq(count)
   end
 
   it 'should allow a physical consumer to register with activation keys' do
