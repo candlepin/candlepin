@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.util.DateSource;
 
@@ -331,7 +330,6 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
 
     /** {@inheritDoc} */
     @Override
-    @HateoasInclude
     public String getId() {
         return id;
     }

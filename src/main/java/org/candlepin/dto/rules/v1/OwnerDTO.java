@@ -15,7 +15,6 @@
 package org.candlepin.dto.rules.v1;
 
 import org.candlepin.dto.CandlepinDTO;
-import org.candlepin.jackson.HateoasInclude;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,15 +22,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+
 
 /**
  * A DTO representation of the Owner entity as used by the Rules framework.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 public class OwnerDTO extends CandlepinDTO<OwnerDTO> {
     public static final long serialVersionUID = 1L;
 
@@ -56,7 +51,6 @@ public class OwnerDTO extends CandlepinDTO<OwnerDTO> {
         super(source);
     }
 
-    @HateoasInclude
     @JsonProperty
     public String getId() {
         return this.id;

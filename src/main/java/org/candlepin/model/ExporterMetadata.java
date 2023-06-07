@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-
 import org.hibernate.annotations.GenericGenerator;
 
 import java.util.Date;

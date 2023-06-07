@@ -42,6 +42,8 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
+import org.candlepin.dto.manifest.v1.DistributorVersionDTO;
+import org.candlepin.dto.manifest.v1.DistributorVersionDTO.DistributorVersionCapabilityDTO;
 import org.candlepin.dto.manifest.v1.EntitlementDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
@@ -811,11 +813,22 @@ public class ImporterTest {
         return dVersion;
     }
 
+    private DistributorVersionDTO createDistributorVersionDTO() {
+        Set<DistributorVersionCapabilityDTO> capabilities = Set.of(
+            new DistributorVersionCapabilityDTO(null, "capability-1"),
+            new DistributorVersionCapabilityDTO(null, "capability-2"),
+            new DistributorVersionCapabilityDTO(null, "capability-3"));
+
+        return new DistributorVersionDTO()
+            .setName("test-dist-ver")
+            .setCapabilities(capabilities);
+    }
+
     @Test
     public void importDistributorVersionCreate() throws Exception {
         File[] distVer = new File[1];
         distVer[0] = new File(this.tmpFolder, "dist-ver.json");
-        mapper.writeValue(distVer[0], createTestDistributerVersion());
+        mapper.writeValue(distVer[0], this.createDistributorVersionDTO());
 
         Importer importer = this.buildImporter();
         importer.importDistributorVersions(distVer);
@@ -832,7 +845,7 @@ public class ImporterTest {
 
         File[] distVer = new File[1];
         distVer[0] = new File(this.tmpFolder, "dist-ver.json");
-        mapper.writeValue(distVer[0], createTestDistributerVersion());
+        mapper.writeValue(distVer[0], createDistributorVersionDTO());
 
         Importer importer = this.buildImporter();
         importer.importDistributorVersions(distVer);

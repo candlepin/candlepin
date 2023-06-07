@@ -16,9 +16,6 @@ package org.candlepin.model;
 
 import org.candlepin.service.model.CertificateSerialInfo;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import org.hibernate.annotations.GenericGenerator;
 
 import java.math.BigInteger;
@@ -30,6 +27,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+
+
 
 /**
  * CertificateSerial: A simple database sequence used to ensure certificates receive
@@ -132,12 +131,10 @@ public class CertificateSerial extends AbstractHibernateObject<CertificateSerial
         return this.getId() != null ? BigInteger.valueOf(this.getId()) : null;
     }
 
-    @JsonProperty
     public void setSerial(Long serial) {
         this.id = serial;
     }
 
-    @JsonIgnore
     public void setSerial(BigInteger serial) {
         this.setId(serial != null ? serial.longValueExact() : null);
     }

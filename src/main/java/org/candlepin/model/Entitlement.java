@@ -14,10 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasInclude;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import org.hibernate.annotations.BatchSize;
 
 import java.util.Date;
@@ -34,10 +30,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 
 
@@ -57,11 +49,8 @@ import javax.xml.bind.annotation.XmlTransient;
  *  8. Draw-Down (i.e. 100 hours or training classes to be consumed over
  *     some period of time or limited number of support calls)
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = Entitlement.DB_TABLE)
-@JsonFilter("EntitlementFilter")
 public class Entitlement extends AbstractHibernateObject<Entitlement>
     implements Linkable, Owned, Named, ConsumerProperty, Comparable<Entitlement>, Eventful {
 
@@ -147,7 +136,6 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
      * @return the id
      */
     @Override
-    @HateoasInclude
     public String getId() {
         return id;
     }
@@ -166,7 +154,6 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
     /**
      * @return the owner
      */
-    @XmlTransient
     public Owner getOwner() {
         return owner;
     }
@@ -175,7 +162,6 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
      * @return the owner Id of this Entitlement.
      */
     @Override
-    @XmlTransient
     public String getOwnerId() {
         return (owner == null) ? null : owner.getId();
     }
@@ -249,7 +235,6 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
      *
      * @return optional end date override for this entitlement.
      */
-    @XmlTransient
     public Date getEndDateOverride() {
         return endDateOverride;
     }
@@ -322,16 +307,8 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
         return sb.toString();
     }
 
-    @HateoasInclude
     public String getHref() {
         return "/entitlements/" + getId();
-    }
-
-    public void setHref(String href) {
-        /*
-         * No-op, here to aid with updating objects which have nested objects that were
-         * originally sent down to the client in HATEOAS form.
-         */
     }
 
     @Override
@@ -358,7 +335,6 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
         return result;
     }
 
-    @XmlTransient
     public boolean isDirty() {
         return dirty;
     }
@@ -367,7 +343,6 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
         this.dirty = dirty;
     }
 
-    @XmlTransient
     public boolean isValidOnDate(Date date) {
         if (date == null) {
             throw new IllegalArgumentException("date is null");
@@ -377,7 +352,6 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
             (date.before(this.getEndDate()) || date.equals(this.getEndDate()));
     }
 
-    @XmlTransient
     public boolean isValid() {
         return this.isValidOnDate(new Date());
     }
@@ -395,7 +369,6 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
     }
 
     @Override
-    @XmlTransient
     public String getName() {
         if (pool != null) {
             return pool.getProductName();
@@ -403,7 +376,6 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
         return null;
     }
 
-    @XmlTransient
     public boolean isUpdatedOnStart() {
         return updatedOnStart;
     }
@@ -412,7 +384,6 @@ public class Entitlement extends AbstractHibernateObject<Entitlement>
         this.updatedOnStart = updatedOnStart;
     }
 
-    @XmlTransient
     public boolean deletedFromPool() {
         return deletedFromPool;
     }

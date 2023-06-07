@@ -35,7 +35,8 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * A class representing the storage of a manifest file and the meta-data associated
@@ -134,7 +135,6 @@ public class ManifestFileRecord extends AbstractHibernateObject implements Manif
         this.filename = fileName;
     }
 
-    @XmlTransient
     public Blob getFileData() {
         return fileData;
     }

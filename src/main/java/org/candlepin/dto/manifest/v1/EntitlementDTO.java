@@ -15,7 +15,6 @@
 package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.dto.TimestampedCandlepinDTO;
-import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.util.SetView;
 import org.candlepin.util.Util;
 
@@ -31,17 +30,11 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 
 
 /**
  * A DTO representation of the Entitlement entity as used by the manifest import/export framework.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @JsonFilter("EntitlementFilter")
 public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
 
@@ -79,7 +72,6 @@ public class EntitlementDTO extends TimestampedCandlepinDTO<EntitlementDTO> {
      *
      * @return the id field of this EntitlementDTO object.
      */
-    @HateoasInclude
     public String getId() {
         return this.id;
     }

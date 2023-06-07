@@ -28,18 +28,12 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 
 
 /**
  *
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = ImportRecord.DB_TABLE)
 public class ImportRecord extends AbstractHibernateObject {
@@ -109,7 +103,6 @@ public class ImportRecord extends AbstractHibernateObject {
     /**
      * @return the owner
      */
-    @XmlTransient
     public Owner getOwner() {
         return owner;
     }
@@ -165,6 +158,6 @@ public class ImportRecord extends AbstractHibernateObject {
 
     @Override
     public String toString() {
-        return "ImportRecord (owner=" + owner + ", status=" + status + ")";
+        return String.format("ImportRecord [owner: %s, status: %s]", this.getOwner(), this.getStatus());
     }
 }

@@ -15,7 +15,6 @@
 package org.candlepin.dto.manifest.v1;
 
 import org.candlepin.dto.TimestampedCandlepinDTO;
-import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.service.model.OwnerInfo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -26,17 +25,11 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.Date;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 
 
 /**
  * A DTO representation of the Owner entity as used by the manifest import/export mechanism.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements OwnerInfo {
     public static final long serialVersionUID = 1L;
 
@@ -72,7 +65,6 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Owner
         super(source);
     }
 
-    @HateoasInclude
     @JsonProperty
     public String getId() {
         return this.id;
@@ -84,7 +76,6 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Owner
         return this;
     }
 
-    @HateoasInclude
     public String getKey() {
         return key;
     }
@@ -94,7 +85,6 @@ public class OwnerDTO extends TimestampedCandlepinDTO<OwnerDTO> implements Owner
         return this;
     }
 
-    @HateoasInclude
     public String getDisplayName() {
         return displayName;
     }

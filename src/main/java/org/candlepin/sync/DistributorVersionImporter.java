@@ -15,6 +15,7 @@
 package org.candlepin.sync;
 
 import org.candlepin.dto.manifest.v1.DistributorVersionDTO;
+import org.candlepin.dto.manifest.v1.DistributorVersionDTO.DistributorVersionCapabilityDTO;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
@@ -41,15 +42,16 @@ public class DistributorVersionImporter {
         this.curator = curator;
     }
 
-    public DistributorVersionDTO createObject(ObjectMapper mapper, Reader reader)
-        throws IOException {
-        DistributorVersionDTO distributorVersion = mapper.readValue(reader,
-            DistributorVersionDTO.class);
-        distributorVersion.setId(null);
-        for (DistributorVersionDTO.DistributorVersionCapabilityDTO dvc :
-            distributorVersion.getCapabilities()) {
-            dvc.setId(null);
+    public DistributorVersionDTO createObject(ObjectMapper mapper, Reader reader) throws IOException {
+        DistributorVersionDTO distributorVersion = mapper.readValue(reader, DistributorVersionDTO.class);
+
+        if (distributorVersion != null) {
+            distributorVersion.setId(null);
+
+            Set<DistributorVersionCapabilityDTO> capabilities = distributorVersion.getCapabilities();
+            capabilities.forEach(cap -> cap.setId(null));
         }
+
         return distributorVersion;
     }
 

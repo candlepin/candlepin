@@ -24,16 +24,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 /**
  * ProductCertificate
  */
-@XmlRootElement(name = "cert")
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Table(name = ProductCertificate.DB_TABLE)
 @Entity
 public class ProductCertificate extends AbstractCertificate {
@@ -48,7 +42,6 @@ public class ProductCertificate extends AbstractCertificate {
     @NotNull
     private String id;
 
-    @XmlTransient
     public String getId() {
         return id;
     }
@@ -65,7 +58,6 @@ public class ProductCertificate extends AbstractCertificate {
     /**
      * @return the product
      */
-    @XmlTransient
     public Product getProduct() {
         return product;
     }

@@ -35,7 +35,12 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.controller.ManifestManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.StandardTranslator;
+import org.candlepin.dto.api.server.v1.ImportRecordDTO;
 import org.candlepin.model.AsyncJobStatus;
+import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -44,6 +49,7 @@ import org.candlepin.sync.Importer;
 import org.candlepin.sync.ImporterException;
 import org.candlepin.test.TestUtil;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -55,9 +61,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public class ImportJobTest {
     @Mock private ManifestManager manifestManager;
     @Mock private OwnerCurator ownerCurator;
+    @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
+    @Mock private EnvironmentCurator mockEnvironmentCurator;
+
+    private ModelTranslator translator;
+
+    @BeforeEach
+    public void init() {
+        this.translator = new StandardTranslator(this.mockConsumerTypeCurator,
+            this.mockEnvironmentCurator, this.ownerCurator);
+    }
 
     private ImportJob buildImportJob() {
-        return new ImportJob(this.ownerCurator, this.manifestManager);
+        return new ImportJob(this.ownerCurator, this.manifestManager, this.translator);
     }
 
     private Owner createTestOwner(String key, String logLevel) {
@@ -225,7 +241,9 @@ public class ImportJobTest {
         verify(context, times(1)).setJobResult(captor.capture());
         Object actualResult = captor.getValue();
 
-        assertEquals(importRecord, actualResult);
+        ImportRecordDTO importRecordDTO = this.translator.translate(importRecord, ImportRecordDTO.class);
+
+        assertEquals(importRecordDTO, actualResult);
     }
 
     @Test

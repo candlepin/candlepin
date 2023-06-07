@@ -82,8 +82,6 @@ import org.candlepin.exceptions.mappers.RuntimeExceptionMapper;
 import org.candlepin.exceptions.mappers.ValidationExceptionMapper;
 import org.candlepin.exceptions.mappers.WebApplicationExceptionMapper;
 import org.candlepin.exceptions.mappers.WriterExceptionMapper;
-import org.candlepin.jackson.HateoasBeanPropertyFilter;
-import org.candlepin.jackson.PoolEventFilter;
 import org.candlepin.messaging.CPMContextListener;
 import org.candlepin.messaging.CPMSessionFactory;
 import org.candlepin.messaging.impl.artemis.ArtemisContextListener;
@@ -135,7 +133,6 @@ import org.candlepin.resource.StatusResource;
 import org.candlepin.resource.SubscriptionResource;
 import org.candlepin.resource.UserResource;
 import org.candlepin.resource.util.GuestMigration;
-import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.resteasy.MethodLocator;
@@ -179,7 +176,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -234,7 +230,6 @@ public class CandlepinModule extends AbstractModule {
         configureJPA();
         bindPki();
 
-        bind(ResolverUtil.class);
         bind(GuestMigration.class);
 
         // Endpoint resource
@@ -499,20 +494,9 @@ public class CandlepinModule extends AbstractModule {
     private ObjectMapper configureEventFactoryObjectMapper() {
         ObjectMapper mapper = new ObjectMapper();
 
-        // When serializing entity JSON for events, we want to use a reduced number
-        // of fields nested objects, so enable the event and API HATEOAS filters:
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider.setFailOnUnknownId(false);
-        filterProvider = filterProvider.addFilter("PoolFilter", new PoolEventFilter());
-        filterProvider = filterProvider.addFilter("ConsumerFilter", new HateoasBeanPropertyFilter());
-        filterProvider = filterProvider.addFilter("EntitlementFilter", new HateoasBeanPropertyFilter());
-        filterProvider = filterProvider.addFilter("OwnerFilter", new HateoasBeanPropertyFilter());
-        filterProvider = filterProvider.addFilter("IdentityCertificateFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
-        filterProvider = filterProvider.addFilter("EntitlementCertificateFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
-        filterProvider = filterProvider.addFilter("SubscriptionCertificateFilter",
-            SimpleBeanPropertyFilter.serializeAllExcept("cert", "key"));
+
         mapper.setFilterProvider(filterProvider);
 
         Hibernate5Module hbm = new Hibernate5Module();

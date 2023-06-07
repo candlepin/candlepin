@@ -19,8 +19,8 @@ import org.candlepin.service.model.CertificateInfo;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlTransient;
-import javax.xml.bind.annotation.XmlType;
+
+
 
 /**
  * AbstractCertificate is a base class for all certificates within Candlepin.
@@ -30,7 +30,6 @@ import javax.xml.bind.annotation.XmlType;
  *  Entity type extending this class; should be the name of the subclass
  */
 @MappedSuperclass
-@XmlType(name = "Certificate")
 public abstract class AbstractCertificate<T extends AbstractCertificate> extends AbstractHibernateObject<T>
     implements CertificateInfo {
 
@@ -42,12 +41,10 @@ public abstract class AbstractCertificate<T extends AbstractCertificate> extends
     @NotNull
     private byte[] cert;
 
-    @XmlTransient
     public void setKeyAsBytes(byte[] key) {
         this.key = key;
     }
 
-    @XmlTransient
     public byte[] getKeyAsBytes() {
         return key;
     }
@@ -64,12 +61,10 @@ public abstract class AbstractCertificate<T extends AbstractCertificate> extends
         this.key = key.getBytes();
     }
 
-    @XmlTransient
     public void setCertAsBytes(byte[] cert) {
         this.cert = cert;
     }
 
-    @XmlTransient
     public byte[] getCertAsBytes() {
         return cert;
     }

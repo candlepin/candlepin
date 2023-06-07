@@ -15,7 +15,6 @@
 package org.candlepin.dto.rules.v1;
 
 import org.candlepin.dto.CandlepinDTO;
-import org.candlepin.jackson.HateoasInclude;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,17 +24,11 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import java.util.Date;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 
 
 /**
  * A DTO representation of the Entitlement entity
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 public class EntitlementDTO extends CandlepinDTO<EntitlementDTO> {
 
     private static final long serialVersionUID = 1L;
@@ -69,7 +62,6 @@ public class EntitlementDTO extends CandlepinDTO<EntitlementDTO> {
      *
      * @return the id field of this EntitlementDTO object.
      */
-    @HateoasInclude
     public String getId() {
         return this.id;
     }

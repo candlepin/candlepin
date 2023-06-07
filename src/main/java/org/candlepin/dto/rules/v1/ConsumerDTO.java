@@ -15,8 +15,6 @@
 package org.candlepin.dto.rules.v1;
 
 import org.candlepin.dto.TimestampedCandlepinDTO;
-import org.candlepin.jackson.HateoasArrayExclude;
-import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.jackson.SingleValueWrapDeserializer;
 import org.candlepin.jackson.SingleValueWrapSerializer;
 import org.candlepin.util.MapView;
@@ -34,15 +32,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+
 
 /**
  * A DTO representation of the Consumer entity, as used by the Rules framework.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
     public static final long serialVersionUID = 1L;
 
@@ -118,7 +112,6 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
      *
      * @return the uuid of the consumer.
      */
-    @HateoasInclude
     public String getUuid() {
         return this.uuid;
     }
@@ -278,7 +271,6 @@ public class ConsumerDTO extends TimestampedCandlepinDTO<ConsumerDTO> {
      *
      * @return the facts of the consumer, or null if it has not yet been defined
      */
-    @HateoasArrayExclude
     public Map<String, String> getFacts() {
         return this.facts != null ? new MapView<>(facts) : null;
     }
