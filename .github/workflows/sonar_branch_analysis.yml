@@ -6,6 +6,13 @@ on:
     branches:
       - main
       - candlepin-*-HOTFIX
+  workflow_dispatch:
+    inputs:
+      branch-name:
+        description: 'The name of the branch to analyze'
+        required: true
+        default: 'main'
+        type: string
 
 env:
   JAVA_DISTRIBUTION: 'temurin'
@@ -13,7 +20,7 @@ env:
 
 # Cancel in-progress sonar branch analysis workflows. We only care about analyzing the latest commit.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ inputs.branch-name || github.ref_name }}
   cancel-in-progress: true
 
 jobs:
@@ -49,5 +56,5 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           arguments: test coverage sonar
-            -Dsonar.branch.name=${{ github.ref_name }}
-            -Dorg.gradle.jvmargs='-Xmx1g -XX:MaxMetaspaceSize=512m'
+            -Dsonar.branch.name=${{ inputs.branch-name || github.ref_name }}
+            -Dorg.gradle.jvmargs=-Xmx1g
