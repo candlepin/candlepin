@@ -52,6 +52,7 @@ import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.RefresherFactory;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.server.v1.CertificateDTO;
@@ -176,6 +177,7 @@ public class ConsumerResourceTest {
     @Mock private SubscriptionServiceAdapter subscriptionServiceAdapter;
     @Mock private ProductServiceAdapter mockProductServiceAdapter;
     @Mock private PoolManager poolManager;
+    @Mock private RefresherFactory refresherFactory;
     @Mock private EntitlementCurator entitlementCurator;
     @Mock private ComplianceRules complianceRules;
     @Mock private SystemPurposeComplianceRules systemPurposeComplianceRules;
@@ -241,6 +243,7 @@ public class ConsumerResourceTest {
             this.eventFactory,
             this.userServiceAdapter,
             this.poolManager,
+            this.refresherFactory,
             this.consumerRules,
             this.ownerCurator,
             this.activationKeyCurator,
@@ -419,7 +422,7 @@ public class ConsumerResourceTest {
         when(e.getPool()).thenReturn(p);
         when(p.getSubscriptionId()).thenReturn("4444");
 
-        doThrow(RuntimeException.class).when(poolManager)
+        doThrow(RuntimeException.class).when(entCertGenerator)
             .regenerateCertificatesOf(any(Entitlement.class), anyBoolean());
         when(entitlementCurator.get(eq("9999"))).thenReturn(e);
         when(subscriptionServiceAdapter.getSubscription(eq("4444"))).thenReturn(s);
@@ -440,6 +443,7 @@ public class ConsumerResourceTest {
             this.eventFactory,
             this.userServiceAdapter,
             this.poolManager,
+            this.refresherFactory,
             this.consumerRules,
             this.ownerCurator,
             this.activationKeyCurator,
@@ -496,7 +500,7 @@ public class ConsumerResourceTest {
         Consumer consumer = createConsumer(createOwner());
 
         consumerResource.regenerateEntitlementCertificates(consumer.getUuid(), null, true, false);
-        Mockito.verify(poolManager, Mockito.times(1)).regenerateCertificatesOf(eq(consumer), eq(true));
+        Mockito.verify(entCertGenerator, Mockito.times(1)).regenerateCertificatesOf(consumer, true);
     }
 
     /**

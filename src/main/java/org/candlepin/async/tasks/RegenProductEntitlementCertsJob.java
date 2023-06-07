@@ -22,7 +22,7 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 
@@ -48,6 +48,67 @@ public class RegenProductEntitlementCertsJob implements AsyncJob {
 
     private static final String ARG_PRODUCT_ID = "product_id";
     private static final String ARG_LAZY_REGEN = "lazy_regen";
+
+    private final EntitlementCertificateGenerator ecGenerator;
+    private final OwnerCurator ownerCurator;
+
+    /**
+     * Instantiates a new instance of the RegenProductEntitlementCertsJob
+     *
+     * @param ecGenerator
+     *  the generator to use for regenerating entitlement certificates
+     *
+     * @param ownerCurator
+     *  the OwnerCurator instance to use for looking up owners related to the given product
+     */
+    @Inject
+    public RegenProductEntitlementCertsJob(
+        EntitlementCertificateGenerator ecGenerator, OwnerCurator ownerCurator) {
+
+        this.ecGenerator = Objects.requireNonNull(ecGenerator);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void execute(JobExecutionContext context) throws JobExecutionException {
+        JobArguments args = context.getJobArguments();
+
+        String productId = args.getAsString(ARG_PRODUCT_ID);
+        boolean lazyRegen = args.getAsBoolean(ARG_LAZY_REGEN, true);
+
+        // Find a set of owners that actually have the product...
+        Set<Owner> owners = this.ownerCurator.getOwnersWithProducts(Collections.singleton(productId));
+
+        // Regenerate if we found any...
+        if (!owners.isEmpty()) {
+            log.info("Regenerating entitlement certificates for {} owners with product: {}",
+                owners.size(), productId);
+
+            for (Owner owner : owners) {
+                this.ecGenerator.regenerateCertificatesOf(owner, productId, lazyRegen);
+            }
+        }
+        else {
+            log.debug("Nothing to regenerate; no owners currently using product: {}", productId);
+        }
+
+        context.setJobResult("Entitlements regenerated for %d owners using product: %s",
+            owners.size(), productId);
+    }
+
+    /**
+     * Creates a JobConfig configured to execute this job. Callers may further manipulate the
+     * JobConfig as necessary before queuing it.
+     *
+     * @return
+     *  a JobConfig instance configured to execute this job
+     */
+    public static RegenProductEntitlementCertsConfig createJobConfig() {
+        return new RegenProductEntitlementCertsConfig();
+    }
 
     /**
      * Job configuration object
@@ -115,63 +176,4 @@ public class RegenProductEntitlementCertsJob implements AsyncJob {
         }
     }
 
-
-    private final PoolManager poolManager;
-    private final OwnerCurator ownerCurator;
-
-    /**
-     * Instantiates a new instance of the RegenProductEntitlementCertsJob
-     *
-     * @param poolManager
-     *  the PoolManager instance to use for regenerating entitlement certificates
-     *
-     * @param ownerCurator
-     *  the OwnerCurator instance to use for looking up owners related to the given product
-     */
-    @Inject
-    public RegenProductEntitlementCertsJob(PoolManager poolManager, OwnerCurator ownerCurator) {
-        this.poolManager = Objects.requireNonNull(poolManager);
-        this.ownerCurator = Objects.requireNonNull(ownerCurator);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void execute(JobExecutionContext context) throws JobExecutionException {
-        JobArguments args = context.getJobArguments();
-
-        String productId = args.getAsString(ARG_PRODUCT_ID);
-        boolean lazyRegen = args.getAsBoolean(ARG_LAZY_REGEN, true);
-
-        // Find a set of owners that actually have the product...
-        Set<Owner> owners = this.ownerCurator.getOwnersWithProducts(Collections.singleton(productId));
-
-        // Regenerate if we found any...
-        if (!owners.isEmpty()) {
-            log.info("Regenerating entitlement certificates for {} owners with product: {}",
-                owners.size(), productId);
-
-            for (Owner owner : owners) {
-                this.poolManager.regenerateCertificatesOf(owner, productId, lazyRegen);
-            }
-        }
-        else {
-            log.debug("Nothing to regenerate; no owners currently using product: {}", productId);
-        }
-
-        context.setJobResult("Entitlements regenerated for %d owners using product: %s",
-            owners.size(), productId);
-    }
-
-    /**
-     * Creates a JobConfig configured to execute this job. Callers may further manipulate the
-     * JobConfig as necessary before queuing it.
-     *
-     * @return
-     *  a JobConfig instance configured to execute this job
-     */
-    public static RegenProductEntitlementCertsConfig createJobConfig() {
-        return new RegenProductEntitlementCertsConfig();
-    }
 }

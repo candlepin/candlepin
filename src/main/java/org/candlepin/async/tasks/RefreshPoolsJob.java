@@ -22,8 +22,8 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
+import org.candlepin.controller.RefresherFactory;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.ProductServiceAdapter;
@@ -48,7 +48,7 @@ public class RefreshPoolsJob implements AsyncJob {
     protected static final String FORCE_UPDATE = "force_update";
 
     private final OwnerCurator ownerCurator;
-    private final PoolManager poolManager;
+    private final RefresherFactory refresherFactory;
     private final SubscriptionServiceAdapter subAdapter;
     private final ProductServiceAdapter prodAdapter;
 
@@ -146,10 +146,11 @@ public class RefreshPoolsJob implements AsyncJob {
     }
 
     @Inject
-    public RefreshPoolsJob(OwnerCurator ownerCurator, PoolManager poolManager,
+    public RefreshPoolsJob(OwnerCurator ownerCurator, RefresherFactory refresherFactory,
         SubscriptionServiceAdapter subAdapter, ProductServiceAdapter prodAdapter) {
+
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
-        this.poolManager = Objects.requireNonNull(poolManager);
+        this.refresherFactory = Objects.requireNonNull(refresherFactory);
         this.subAdapter = Objects.requireNonNull(subAdapter);
         this.prodAdapter = Objects.requireNonNull(prodAdapter);
     }
@@ -175,7 +176,7 @@ public class RefreshPoolsJob implements AsyncJob {
 
         try {
             // Assume that we verified the request in the resource layer:
-            poolManager.getRefresher(this.subAdapter, this.prodAdapter)
+            this.refresherFactory.getRefresher(this.subAdapter, this.prodAdapter)
                 .setLazyCertificateRegeneration(lazy)
                 .setForceUpdate(force)
                 .add(owner)

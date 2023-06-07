@@ -15,9 +15,7 @@
 package org.candlepin.sync;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.PoolManager;
-import org.candlepin.controller.Refresher;
+import org.candlepin.controller.RefresherFactory;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.manifest.v1.CdnDTO;
 import org.candlepin.dto.manifest.v1.CertificateDTO;
@@ -31,7 +29,6 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DistributorVersionCurator;
-import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.IdentityCertificate;
@@ -41,7 +38,6 @@ import org.candlepin.model.ImportRecordCurator;
 import org.candlepin.model.ImportUpstreamConsumer;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.pki.PKIUtility;
 import org.candlepin.service.ProductServiceAdapter;
@@ -129,13 +125,11 @@ public class Importer {
     }
 
     private final ConsumerTypeCurator consumerTypeCurator;
-    private final EntitlementCurator entitlementCurator;
-    private final ProductCurator productCurator;
     private final ObjectMapper mapper;
     private final RulesImporter rulesImporter;
     private final OwnerCurator ownerCurator;
     private final IdentityCertificateCurator idCertCurator;
-    private final PoolManager poolManager;
+    private final RefresherFactory refresherFactory;
     private final PKIUtility pki;
     private final ExporterMetadataCurator expMetaCurator;
     private final CertificateSerialCurator csCurator;
@@ -147,24 +141,20 @@ public class Importer {
     private final ImportRecordCurator importRecordCurator;
     private final SubscriptionReconciler subscriptionReconciler;
     private final ModelTranslator translator;
-    private final ContentAccessManager contentAccessManager;
-
 
     @Inject
-    public Importer(ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator,
+    public Importer(ConsumerTypeCurator consumerTypeCurator,
         RulesImporter rulesImporter, OwnerCurator ownerCurator, IdentityCertificateCurator idCertCurator,
-        PoolManager pm, PKIUtility pki, ExporterMetadataCurator emc, CertificateSerialCurator csc,
-        EventSink sink, I18n i18n, DistributorVersionCurator distVerCurator, CdnCurator cdnCurator,
-        SyncUtils syncUtils, ImportRecordCurator importRecordCurator,
-        SubscriptionReconciler subscriptionReconciler, EntitlementCurator entitlementCurator,
-        ContentAccessManager contentAccessManager, ModelTranslator translator) {
+        RefresherFactory refresherFactory, PKIUtility pki, ExporterMetadataCurator emc,
+        CertificateSerialCurator csc, EventSink sink, I18n i18n, DistributorVersionCurator distVerCurator,
+        CdnCurator cdnCurator, SyncUtils syncUtils, ImportRecordCurator importRecordCurator,
+        SubscriptionReconciler subscriptionReconciler, ModelTranslator translator) {
 
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
-        this.productCurator = Objects.requireNonNull(productCurator);
         this.rulesImporter = Objects.requireNonNull(rulesImporter);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.idCertCurator = Objects.requireNonNull(idCertCurator);
-        this.poolManager = Objects.requireNonNull(pm);
+        this.refresherFactory = Objects.requireNonNull(refresherFactory);
         this.syncUtils = Objects.requireNonNull(syncUtils);
         this.mapper = Objects.requireNonNull(syncUtils.getObjectMapper());
         this.pki = Objects.requireNonNull(pki);
@@ -176,9 +166,7 @@ public class Importer {
         this.cdnCurator = Objects.requireNonNull(cdnCurator);
         this.importRecordCurator = Objects.requireNonNull(importRecordCurator);
         this.subscriptionReconciler = Objects.requireNonNull(subscriptionReconciler);
-        this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
         this.translator = Objects.requireNonNull(translator);
-        this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
     }
 
     public ImportRecord loadExport(Owner owner, File archive, ConflictOverrides overrides,
@@ -596,9 +584,9 @@ public class Importer {
         ProductServiceAdapter prodAdapter = new ImportProductServiceAdapter(owner.getKey(),
             importedProductsMap);
 
-        Refresher refresher = poolManager.getRefresher(subAdapter, prodAdapter);
-        refresher.add(owner);
-        refresher.run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter)
+            .add(owner)
+            .run();
 
         return importedSubs;
     }
@@ -701,7 +689,7 @@ public class Importer {
     /**
      * Create a tar.gz archive of the exported directory.
      *
-     * @param exportDir Directory where Candlepin data was exported.
+     * @param tempDir Directory where Candlepin data was exported.
      * @return File reference to the new archive tar.gz.
      */
     private File extractArchive(File tempDir, String exportFileName, InputStream exportFileStream)

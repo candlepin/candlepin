@@ -51,6 +51,7 @@ import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.RefresherFactory;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.server.v1.CapabilityDTO;
@@ -154,6 +155,7 @@ public class ConsumerResourceUpdateTest {
     @Mock private EventFactory eventFactory;
     @Mock private ActivationKeyCurator activationKeyCurator;
     @Mock private PoolManager poolManager;
+    @Mock private RefresherFactory refresherFactory;
     @Mock private ComplianceRules complianceRules;
     @Mock private SystemPurposeComplianceRules systemPurposeComplianceRules;
     @Mock private Entitler entitler;
@@ -213,6 +215,7 @@ public class ConsumerResourceUpdateTest {
             this.eventFactory,
             this.userServiceAdapter,
             this.poolManager,
+            this.refresherFactory,
             this.consumerRules,
             this.ownerCurator,
             this.activationKeyCurator,
@@ -897,7 +900,7 @@ public class ConsumerResourceUpdateTest {
 
         resource.updateConsumer(existing.getUuid(), updated);
 
-        verify(poolManager, atMost(1)).regenerateCertificatesOf(existing, true);
+        verify(entCertGenerator, atMost(1)).regenerateCertificatesOf(existing, true);
         verify(sink).queueEvent(any());
     }
 

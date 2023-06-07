@@ -223,6 +223,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
     @Inject
     private CandlepinPoolManager poolManager;
+    @Inject
+    private EntitlementCertificateGenerator certGenerator;
+    @Inject
+    private RefresherFactory refresherFactory;
 
     private Product virtHost;
     private Product virtHostPlatform;
@@ -335,7 +339,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(virtHost, virtHostPlatform,
             virtGuest, monitoring, provisioning);
 
-        poolManager.getRefresher(subAdapter, prodAdapter).add(o).run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(o).run();
 
         this.systemType = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumerTypeCurator.create(systemType);
@@ -493,7 +497,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Test
     public void testRegenerateEntitlementCertificatesWithNoEntitlement() {
         reset(this.eventSink); // pool creation events went out from setup
-        poolManager.regenerateCertificatesOf(childVirtSystem, true);
+        certGenerator.regenerateCertificatesOf(childVirtSystem, true);
         assertEquals(0, collectEntitlementCertIds(this.childVirtSystem).size());
         Mockito.verifyNoInteractions(this.eventSink);
     }
@@ -529,7 +533,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
         ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(modifier);
 
-        poolManager.getRefresher(subAdapter, prodAdapter).add(o).run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(o).run();
 
         // This test simulates https://bugzilla.redhat.com/show_bug.cgi?id=676870
         // where entitling first to the modifier then to the modifiee causes the modifier's
@@ -583,7 +587,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
         ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(product1, product2);
 
-        poolManager.getRefresher(subAdapter, prodAdapter).add(o).run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(o).run();
 
         List<Pool> pools = poolCurator.listByOwnerAndProduct(o, product1.getId());
         assertEquals(1, pools.size());
@@ -592,7 +596,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscription.setProduct(this.modelTranslator.translate(product2, ProductDTO.class));
 
         // set up initial pool
-        poolManager.getRefresher(subAdapter, prodAdapter).add(o).run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(o).run();
 
         pools = poolCurator.listByOwnerAndProduct(o, product2.getId());
         assertEquals(1, pools.size());
@@ -716,7 +720,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private void regenerateECAndAssertNotSameCertificates() {
         Set<EntitlementCertificate> oldsIds =
             collectEntitlementCertIds(this.childVirtSystem);
-        poolManager.regenerateCertificatesOf(childVirtSystem, false);
+        certGenerator.regenerateCertificatesOf(childVirtSystem, false);
         Mockito.verify(this.eventSink, Mockito.times(oldsIds.size()))
             .queueEvent(any(Event.class));
         Set<EntitlementCertificate> newIds =
@@ -1167,7 +1171,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
         ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
 
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
         List<Pool> pools = poolCurator.listByOwnerAndProduct(owner, prod.getId());
         assertEquals(1, pools.size());
         Pool newPool = pools.get(0);
@@ -1209,7 +1213,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
         ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         pool = poolCurator.get(pool.getId());
         assertEquals(sub.getId(), pool.getSubscriptionId());
@@ -1245,7 +1249,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // Trigger the refresh:
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
         ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.listByOwnerAndProduct(owner, prod.getId());
         assertEquals(1, pools.size());
@@ -1258,7 +1262,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // Trigger the refresh:
         subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
         prodAdapter = new MockProductServiceAdapter(prod);
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
         assertNull(poolCurator.get(poolId));
     }
 
@@ -1295,7 +1299,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // Trigger the refresh:
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
         ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod, prod2);
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.listByOwner(owner).list();
         assertEquals(2, pools.size());
@@ -1329,7 +1333,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
         ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
 
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
@@ -1349,7 +1353,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // Trigger the refresh:
         subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
         prodAdapter = new MockProductServiceAdapter(prod);
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         assertNull(poolCurator.get(primaryId), "Original Primary Pool should be gone");
         assertNotNull(poolCurator.get(bonusId), "Bonus Pool should be the same");
@@ -1393,7 +1397,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
         ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
 
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
@@ -1411,7 +1415,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         }
 
         // Trigger the refresh:
-        poolManager.getRefresher(subAdapter, prodAdapter).add(owner).run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(owner).run();
 
         assertNull(poolCurator.get(bonusId), "Original bonus pool should be gone");
         assertNotNull(poolCurator.get(primaryId), "Primary pool should be the same");
@@ -1488,7 +1492,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         SubscriptionServiceAdapter subAdapter = new MockSubscriptionServiceAdapter(subscriptions);
         ProductServiceAdapter prodAdapter = new MockProductServiceAdapter(prod);
 
-        poolManager.getRefresher(subAdapter, prodAdapter).add(retrieved).run();
+        this.refresherFactory.getRefresher(subAdapter, prodAdapter).add(retrieved).run();
         pool = poolCurator.get(pool.getId());
         return pool;
     }

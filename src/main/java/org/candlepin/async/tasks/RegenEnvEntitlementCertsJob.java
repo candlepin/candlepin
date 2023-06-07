@@ -20,7 +20,7 @@ import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.model.Environment;
 
 import java.util.Arrays;
@@ -48,11 +48,11 @@ public class RegenEnvEntitlementCertsJob implements AsyncJob {
     private static final String CONTENT_KEY = "content_ids";
     private static final String LAZY_REGEN_KEY = "lazy_regen";
 
-    private final PoolManager poolManager;
+    private final EntitlementCertificateGenerator certGenerator;
 
     @Inject
-    public RegenEnvEntitlementCertsJob(PoolManager poolManager) {
-        this.poolManager = Objects.requireNonNull(poolManager);
+    public RegenEnvEntitlementCertsJob(EntitlementCertificateGenerator certGenerator) {
+        this.certGenerator = Objects.requireNonNull(certGenerator);
     }
 
     @Override
@@ -63,7 +63,7 @@ public class RegenEnvEntitlementCertsJob implements AsyncJob {
         Set<String> contentIds = new HashSet<>(Arrays.asList(args.getAs(CONTENT_KEY, String[].class)));
         Boolean lazy = args.getAsBoolean(LAZY_REGEN_KEY, true);
 
-        this.poolManager.regenerateCertificatesOf(environmentId, contentIds, lazy);
+        this.certGenerator.regenerateCertificatesOf(environmentId, contentIds, lazy);
 
         context.setJobResult("Successfully regenerated entitlements for environment: %s", environmentId);
     }

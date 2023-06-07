@@ -50,7 +50,6 @@ import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SubscriptionsCertificate;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -69,7 +68,6 @@ import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
-import org.candlepin.resteasy.JsonProvider;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.CdnInfo;
@@ -112,10 +110,6 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 
 
-
-/**
- * PoolManager
- */
 public class CandlepinPoolManager implements PoolManager {
 
     private static final Logger log = LoggerFactory.getLogger(CandlepinPoolManager.class);
@@ -135,23 +129,14 @@ public class CandlepinPoolManager implements PoolManager {
     private final EntitlementCertificateGenerator ecGenerator;
     private final ComplianceRules complianceRules;
     private final SystemPurposeComplianceRules systemPurposeComplianceRules;
-    private final ProductCurator productCurator;
     private final AutobindRules autobindRules;
     private final ActivationKeyRules activationKeyRules;
     private final OwnerCurator ownerCurator;
     private final OwnerProductCurator ownerProductCurator;
     private final CdnCurator cdnCurator;
-    private final OwnerManager ownerManager;
     private final BindChainFactory bindChainFactory;
-    private final JsonProvider jsonProvider;
-    private Provider<RefreshWorker> refreshWorkerProvider;
+    private final Provider<RefreshWorker> refreshWorkerProvider;
 
-    /**
-     * @param poolCurator
-     * @param sink
-     * @param eventFactory
-     * @param config
-     */
     @Inject
     public CandlepinPoolManager(
         PoolCurator poolCurator,
@@ -169,14 +154,11 @@ public class CandlepinPoolManager implements PoolManager {
         SystemPurposeComplianceRules systemPurposeComplianceRules,
         AutobindRules autobindRules,
         ActivationKeyRules activationKeyRules,
-        ProductCurator productCurator,
         OwnerCurator ownerCurator,
         OwnerProductCurator ownerProductCurator,
-        OwnerManager ownerManager,
         CdnCurator cdnCurator,
         I18n i18n,
         BindChainFactory bindChainFactory,
-        JsonProvider jsonProvider,
         Provider<RefreshWorker> refreshWorkerProvider) {
 
         this.poolCurator = Objects.requireNonNull(poolCurator);
@@ -192,16 +174,13 @@ public class CandlepinPoolManager implements PoolManager {
         this.ecGenerator = Objects.requireNonNull(ecGenerator);
         this.complianceRules = Objects.requireNonNull(complianceRules);
         this.systemPurposeComplianceRules = Objects.requireNonNull(systemPurposeComplianceRules);
-        this.productCurator = Objects.requireNonNull(productCurator);
         this.autobindRules = Objects.requireNonNull(autobindRules);
         this.activationKeyRules = Objects.requireNonNull(activationKeyRules);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
-        this.ownerManager = Objects.requireNonNull(ownerManager);
         this.cdnCurator = Objects.requireNonNull(cdnCurator);
         this.i18n = Objects.requireNonNull(i18n);
         this.bindChainFactory = Objects.requireNonNull(bindChainFactory);
-        this.jsonProvider = Objects.requireNonNull(jsonProvider);
         this.refreshWorkerProvider = Objects.requireNonNull(refreshWorkerProvider);
     }
 
@@ -433,7 +412,7 @@ public class CandlepinPoolManager implements PoolManager {
         Set<String> updatedPrimaryPools = updatePoolsForPrimaryPool(
             subscriptionPools, pool, originalQuantity, updateStackDerived, changedProducts, force);
 
-        regenerateCertificatesByEntIds(updatedPrimaryPools, lazy);
+        this.ecGenerator.regenerateCertificatesByEntitlementIds(updatedPrimaryPools, lazy);
     }
 
     private void removeAndDeletePoolsOnOtherOwners(List<Pool> existingPools, Pool pool) {
@@ -732,7 +711,7 @@ public class CandlepinPoolManager implements PoolManager {
         Set<String> entIds = processPoolUpdates(poolEvents, updatedPools);
         this.poolCurator.flush();
 
-        regenerateCertificatesByEntIds(entIds, lazy);
+        this.ecGenerator.regenerateCertificatesByEntitlementIds(entIds, lazy);
     }
 
     /**
@@ -1806,54 +1785,9 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public void regenerateCertificatesOf(Consumer consumer, boolean lazy) {
-        this.ecGenerator.regenerateCertificatesOf(consumer, lazy);
-    }
-
-    @Transactional
-    void regenerateCertificatesByEntIds(Iterable<String> iterable, boolean lazy) {
-        this.ecGenerator.regenerateCertificatesByEntitlementIds(iterable, lazy);
-    }
-
-    /**
-     * Used to regenerate certificates affected by a mass content promotion/demotion.
-     *
-     * WARNING: can be quite expensive, currently we must look up all entitlements in the
-     * environment, all provided products for each entitlement, and check if any product
-     * provides any of the modified content set IDs.
-     *
-     * @param e Id of the environment where the content was promoted/demoted.
-     * @param affectedContent List of content set IDs promoted/demoted.
-     */
-    @Override
-    @Transactional
-    public void regenerateCertificatesOf(String e, Set<String> affectedContent, boolean lazy) {
-        this.ecGenerator.regenerateCertificatesOf(e, affectedContent, lazy);
-    }
-
-    /**
-     * @param e
-     */
-    @Override
-    @Transactional
-    public void regenerateCertificatesOf(Entitlement e, boolean lazy) {
-        this.ecGenerator.regenerateCertificatesOf(e, lazy);
-    }
-
-    @Override
-    @Transactional
-    public void regenerateCertificatesOf(Owner owner, String productId, boolean lazy) {
-        this.ecGenerator.regenerateCertificatesOf(owner, productId, lazy);
-    }
-
-    @Override
     @Transactional
     public Set<Pool> revokeEntitlements(List<Entitlement> entsToRevoke) {
         return revokeEntitlements(entsToRevoke, null, true);
-    }
-
-    public void revokeEntitlements(List<Entitlement> entsToRevoke, Set<String> alreadyDeletedPools) {
-        revokeEntitlements(entsToRevoke, alreadyDeletedPools, true);
     }
 
     /**
@@ -2470,11 +2404,6 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, ProductServiceAdapter prodAdapter) {
-        return new Refresher(this, subAdapter, prodAdapter, this.ownerManager);
-    }
-
-    @Override
     public Page<List<Pool>> listAvailableEntitlementPools(Consumer consumer,
         ActivationKey key, String ownerId, String productId, String subscriptionId, Date activeOn,
         boolean includeWarnings, PoolFilterBuilder filters,
@@ -2539,11 +2468,6 @@ public class CandlepinPoolManager implements PoolManager {
     @Override
     public Set<String> retrieveServiceLevelsForOwner(String ownerId, boolean exempt) {
         return poolCurator.retrieveServiceLevelsForOwner(ownerId, exempt);
-    }
-
-    @Override
-    public List<Entitlement> findEntitlements(Pool pool) {
-        return poolCurator.entitlementsIn(pool);
     }
 
     @Override

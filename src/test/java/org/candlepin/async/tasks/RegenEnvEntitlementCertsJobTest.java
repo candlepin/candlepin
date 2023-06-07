@@ -26,7 +26,7 @@ import static org.mockito.Mockito.verify;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Environment;
 import org.candlepin.model.Owner;
@@ -45,7 +45,7 @@ import java.util.Set;
 public class RegenEnvEntitlementCertsJobTest {
 
     @Mock private Owner owner;
-    @Mock private PoolManager poolManager;
+    @Mock private EntitlementCertificateGenerator certGenerator;
     private Environment environment;
     private Set<String> content;
     private RegenEnvEntitlementCertsJob job;
@@ -56,7 +56,7 @@ public class RegenEnvEntitlementCertsJobTest {
         environment.setId("env_id_1");
         content = new HashSet<>();
         content.add("cont_id_1");
-        job = new RegenEnvEntitlementCertsJob(poolManager);
+        job = new RegenEnvEntitlementCertsJob(certGenerator);
     }
 
     @Test
@@ -116,7 +116,7 @@ public class RegenEnvEntitlementCertsJobTest {
         verify(context, times(1)).setJobResult(captor.capture());
         Object result = captor.getValue();
 
-        verify(poolManager).regenerateCertificatesOf(environment.getId(), content, true);
+        verify(certGenerator).regenerateCertificatesOf(environment.getId(), content, true);
         assertEquals("Successfully regenerated entitlements for environment: " + environment.getId(), result);
     }
 }

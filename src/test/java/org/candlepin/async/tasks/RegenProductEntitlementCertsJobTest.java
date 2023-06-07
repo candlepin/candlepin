@@ -21,7 +21,6 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -31,37 +30,31 @@ import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
 import java.util.Collections;
 import java.util.Set;
 
 
-@ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 public class RegenProductEntitlementCertsJobTest {
 
-    protected PoolManager mockPoolManager;
-    protected OwnerCurator mockOwnerCurator;
+    private EntitlementCertificateGenerator ecGenerator;
+    private OwnerCurator ownerCurator;
 
     @BeforeEach
     public void setUp() {
-        this.mockPoolManager = mock(PoolManager.class);
-        this.mockOwnerCurator = mock(OwnerCurator.class);
+        this.ecGenerator = mock(EntitlementCertificateGenerator.class);
+        this.ownerCurator = mock(OwnerCurator.class);
     }
 
     public RegenProductEntitlementCertsJob buildTestJob() {
-        return new RegenProductEntitlementCertsJob(this.mockPoolManager, this.mockOwnerCurator);
+        return new RegenProductEntitlementCertsJob(this.ecGenerator, this.ownerCurator);
     }
 
     @Test
@@ -128,7 +121,7 @@ public class RegenProductEntitlementCertsJobTest {
         Owner owner3 = new Owner("test_owner_key-3", "test_owner_name-3");
 
         Set<Owner> matchingOwners = Util.asSet(owner1, owner2, owner3);
-        doReturn(matchingOwners).when(this.mockOwnerCurator).getOwnersWithProducts(eq(productIds));
+        doReturn(matchingOwners).when(this.ownerCurator).getOwnersWithProducts(productIds);
 
         JobConfig config = RegenProductEntitlementCertsJob.createJobConfig()
             .setProductId(productId)
@@ -141,13 +134,13 @@ public class RegenProductEntitlementCertsJobTest {
         RegenProductEntitlementCertsJob testJob = this.buildTestJob();
         testJob.execute(context);
 
-        verify(this.mockOwnerCurator, times(1)).getOwnersWithProducts(eq(productIds));
-        verify(this.mockPoolManager, times(1))
-            .regenerateCertificatesOf(eq(owner1), eq(productId), eq(lazyRegen));
-        verify(this.mockPoolManager, times(1))
-            .regenerateCertificatesOf(eq(owner2), eq(productId), eq(lazyRegen));
-        verify(this.mockPoolManager, times(1))
-            .regenerateCertificatesOf(eq(owner3), eq(productId), eq(lazyRegen));
+        verify(this.ownerCurator, times(1)).getOwnersWithProducts(productIds);
+        verify(this.ecGenerator, times(1))
+            .regenerateCertificatesOf(owner1, productId, lazyRegen);
+        verify(this.ecGenerator, times(1))
+            .regenerateCertificatesOf(owner2, productId, lazyRegen);
+        verify(this.ecGenerator, times(1))
+            .regenerateCertificatesOf(owner3, productId, lazyRegen);
     }
 
     @Test
@@ -157,7 +150,7 @@ public class RegenProductEntitlementCertsJobTest {
 
         Set<String> productIds = Collections.singleton(productId);
         Set<Owner> matchingOwners = Util.asSet();
-        doReturn(matchingOwners).when(this.mockOwnerCurator).getOwnersWithProducts(eq(productIds));
+        doReturn(matchingOwners).when(this.ownerCurator).getOwnersWithProducts(productIds);
 
         JobConfig config = RegenProductEntitlementCertsJob.createJobConfig()
             .setProductId(productId)
@@ -169,8 +162,8 @@ public class RegenProductEntitlementCertsJobTest {
         RegenProductEntitlementCertsJob testJob = this.buildTestJob();
         testJob.execute(context);
 
-        verify(this.mockOwnerCurator, times(1)).getOwnersWithProducts(eq(productIds));
-        verify(this.mockPoolManager, never())
+        verify(this.ownerCurator, times(1)).getOwnersWithProducts(productIds);
+        verify(this.ecGenerator, never())
             .regenerateCertificatesOf(any(Owner.class), anyString(), anyBoolean());
     }
 }
