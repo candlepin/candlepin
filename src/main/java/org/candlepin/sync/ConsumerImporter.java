@@ -82,8 +82,8 @@ public class ConsumerImporter {
                 "This subscription management application has already been imported by another owner."));
         }
 
-        if (owner.getUpstreamUuid() != null &&
-            !owner.getUpstreamUuid().equals(consumer.getUuid())) {
+        String upstreamUuid = owner.getUpstreamUuid();
+        if (upstreamUuid != null && !upstreamUuid.equals(consumer.getUuid())) {
             if (!forcedConflicts.isForced(Importer.Conflict.DISTRIBUTOR_CONFLICT)) {
                 throw new ImportConflictException(
                     i18n.tr("Owner has already imported from another subscription management application."),
@@ -123,8 +123,7 @@ public class ConsumerImporter {
             populateEntity(ownerToUse, consumer.getOwner());
         }
 
-        UpstreamConsumer uc = new UpstreamConsumer(consumer.getName(),
-            ownerToUse, type, consumer.getUuid());
+        UpstreamConsumer uc = new UpstreamConsumer(consumer.getName(), ownerToUse, type, consumer.getUuid());
         uc.setWebUrl(consumer.getUrlWeb());
         uc.setApiUrl(consumer.getUrlApi());
         uc.setIdCert(idcert);

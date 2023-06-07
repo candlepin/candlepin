@@ -52,8 +52,12 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
 
     @Test
     public void noRecords() throws Exception {
-        Owner owner = new Owner("owner");
-        Owner another = new Owner("another_owner");
+        Owner owner = new Owner()
+            .setKey("owner")
+            .setDisplayName("owner");
+        Owner another = new Owner()
+            .setKey("another_owner")
+            .setDisplayName("another_owner");
         ownerCurator.create(owner);
         ownerCurator.create(another);
 
@@ -74,7 +78,9 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
 
     @Test
     public void singleOwner() throws Exception {
-        Owner owner = new Owner("owner");
+        Owner owner = new Owner()
+            .setKey("owner")
+            .setDisplayName("owner");
         ownerCurator.create(owner);
 
         for (int i = 0; i < 13; i++) {
@@ -101,7 +107,9 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
 
     @Test
     public void lessThanThreshold() throws Exception {
-        Owner owner = new Owner("owner");
+        Owner owner = new Owner()
+            .setKey("owner")
+            .setDisplayName("owner");
         ownerCurator.create(owner);
 
         for (int i = 0; i < 7; i++) {
@@ -128,8 +136,12 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
 
     @Test
     public void multipleOwners() throws Exception {
-        Owner owner1 = new Owner("owner1");
-        Owner owner2 = new Owner("owner2");
+        Owner owner1 = new Owner()
+            .setKey("owner1")
+            .setDisplayName("owner1");
+        Owner owner2 = new Owner()
+            .setKey("owner2")
+            .setDisplayName("owner2");
         ownerCurator.create(owner1);
         ownerCurator.create(owner2);
 
@@ -181,7 +193,9 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
     @ValueSource(ints = { -1, -50 })
     public void singleOwnerBadKeepConfig(int keep) {
         this.setNumOfRecordsToKeep(keep);
-        Owner owner = new Owner("owner");
+        Owner owner = new Owner()
+            .setKey("owner")
+            .setDisplayName("owner");
         ownerCurator.create(owner);
 
         for (int i = 0; i < 3; i++) {
@@ -199,7 +213,9 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
     @MethodSource("numOfRecordsToKeepProvider")
     public void singleOwnerCustomConfigSettings(int keep) throws Exception {
         this.setNumOfRecordsToKeep(keep);
-        Owner owner = new Owner("owner");
+        Owner owner = new Owner()
+            .setKey("owner")
+            .setDisplayName("owner");
         ownerCurator.create(owner);
 
         int existingRecords = 13;

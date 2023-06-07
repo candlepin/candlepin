@@ -38,8 +38,11 @@ public class UsernameConsumersPermissionTest {
     @BeforeEach
     public void init() {
         User u = new User(username, "dontcare");
-        owner = new Owner("ownerkey", "My Org");
-        owner.setId(TestUtil.randomString());
+        owner = new Owner()
+            .setId(TestUtil.randomString())
+            .setKey("ownerkey")
+            .setDisplayName("My Org");
+
         perm = new UsernameConsumersPermission(u, owner);
     }
 
@@ -91,8 +94,11 @@ public class UsernameConsumersPermissionTest {
 
     @Test
     public void blocksConsumersInOtherOrgDespiteSameUsername() {
-        Owner other = new Owner("ownerkey2", "My Org 2");
-        other.setId(TestUtil.randomString());
+        Owner other = new Owner()
+            .setId(TestUtil.randomString())
+            .setKey("ownerkey2")
+            .setDisplayName("My Org 2");
+
         Consumer c = new Consumer()
             .setName("consumer")
             .setUsername(username)

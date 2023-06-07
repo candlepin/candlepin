@@ -33,7 +33,10 @@ public class AttachPermissionTest {
 
     @BeforeEach
     public void init() {
-        owner = new Owner("ownerkey", "My Org");
+        owner = new Owner()
+            .setKey("ownerkey")
+            .setDisplayName("My Org");
+
         perm = new AttachPermission(owner);
     }
 
@@ -61,7 +64,10 @@ public class AttachPermissionTest {
     @Test
     public void blocksBindToOtherOrgPools() {
         Pool p = new Pool();
-        Owner owner2 = new Owner("someother", "whatever");
+        Owner owner2 = new Owner()
+            .setKey("someother")
+            .setDisplayName("whatever");
+
         p.setOwner(owner2);
         assertFalse(perm.canAccess(p, SubResource.ENTITLEMENTS, Access.CREATE));
     }

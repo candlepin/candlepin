@@ -116,9 +116,15 @@ public class RegenProductEntitlementCertsJobTest {
 
         Set<String> productIds = Collections.singleton(productId);
 
-        Owner owner1 = new Owner("test_owner_key-1", "test_owner_name-1");
-        Owner owner2 = new Owner("test_owner_key-2", "test_owner_name-2");
-        Owner owner3 = new Owner("test_owner_key-3", "test_owner_name-3");
+        Owner owner1 = new Owner()
+            .setKey("test_owner_key-1")
+            .setDisplayName("test_owner_name-1");
+        Owner owner2 = new Owner()
+            .setKey("test_owner_key-2")
+            .setDisplayName("test_owner_name-2");
+        Owner owner3 = new Owner()
+            .setKey("test_owner_key-3")
+            .setDisplayName("test_owner_name-3");
 
         Set<Owner> matchingOwners = Util.asSet(owner1, owner2, owner3);
         doReturn(matchingOwners).when(this.ownerCurator).getOwnersWithProducts(productIds);

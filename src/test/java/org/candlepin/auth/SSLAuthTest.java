@@ -81,8 +81,11 @@ public class SSLAuthTest {
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ctype.setId("test-ctype");
 
-        Owner owner = new Owner("test owner");
-        owner.setId(TestUtil.randomString());
+        Owner owner = new Owner()
+            .setId(TestUtil.randomString())
+            .setKey("test owner")
+            .setDisplayName("test owner");
+
         Consumer consumer = new Consumer()
             .setName("machine_name")
             .setUsername("test user")

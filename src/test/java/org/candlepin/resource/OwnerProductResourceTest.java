@@ -54,10 +54,8 @@ import org.junit.jupiter.api.Test;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -65,8 +63,6 @@ import java.util.Set;
 import javax.inject.Inject;
 
 public class OwnerProductResourceTest extends DatabaseTestFixture {
-
-    private static final String OWNER_NAME = "Jar Jar Binks";
 
     @Inject
     private CandlepinPoolManager poolManager;
@@ -86,16 +82,11 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
     protected ProductManager productManager;
 
     private JobManager jobManager;
-    private Owner owner;
-    private List<Owner> owners;
 
 
     @BeforeEach
     public void setUp() {
         this.jobManager = mock(JobManager.class);
-        owner = ownerCurator.create(new Owner(OWNER_NAME));
-        owners = new ArrayList<>();
-        owners.add(owner);
     }
 
     private ProductDTO buildTestProductDTO() {

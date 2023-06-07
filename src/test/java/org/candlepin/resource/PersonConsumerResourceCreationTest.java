@@ -48,7 +48,9 @@ public class PersonConsumerResourceCreationTest extends ConsumerResourceCreation
 
         // create an owner, a ownerperm, and roles for the user we prodive
         // as coming from userService
-        owner = new Owner("test_owner");
+        owner = new Owner()
+            .setKey("test_owner")
+            .setDisplayName("test_owner");
         PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner, Access.ALL);
 
         User user = new User("anyuser", "");

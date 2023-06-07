@@ -42,7 +42,10 @@ class ActivationKeyCuratorTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
-        owner = new Owner("test-owner", "Test Owner");
+        owner = new Owner()
+            .setKey("test-owner")
+            .setDisplayName("Test Owner");
+
         owner = ownerCurator.create(owner);
     }
 

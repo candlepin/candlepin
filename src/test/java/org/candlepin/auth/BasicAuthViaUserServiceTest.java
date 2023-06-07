@@ -119,7 +119,9 @@ public class BasicAuthViaUserServiceTest {
      */
     @Test
     public void correctPrincipal() throws Exception {
-        Owner owner = new Owner("user", "user");
+        Owner owner = new Owner()
+            .setKey("user")
+            .setDisplayName("user");
 
         setUserAndPassword("user", "redhat");
         when(userService.validateUser("user", "redhat")).thenReturn(true);
@@ -136,7 +138,9 @@ public class BasicAuthViaUserServiceTest {
 
     @Test
     public void correctPrincipalColonPassword() throws Exception {
-        Owner owner = new Owner("user", "user");
+        Owner owner = new Owner()
+            .setKey("user")
+            .setDisplayName("user");
 
         setUserAndPassword("user", "1:2");
         when(userService.validateUser("user", "1:2")).thenReturn(true);
@@ -152,7 +156,9 @@ public class BasicAuthViaUserServiceTest {
 
     @Test
     public void correctPrincipalNoPassword() throws Exception {
-        Owner owner = new Owner("user", "user");
+        Owner owner = new Owner()
+            .setKey("user")
+            .setDisplayName("user");
 
         setUserNoPassword("user");
         when(userService.validateUser("user", null)).thenReturn(true);

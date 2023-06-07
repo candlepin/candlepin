@@ -346,8 +346,10 @@ public class ConsumerResourceTest {
             key = "test-owner-key-" + rand;
         }
 
-        Owner owner = new Owner(key, "Test Owner " + rand);
-        owner.setId("test-owner-" + rand);
+        Owner owner = new Owner()
+            .setId("test-owner-" + rand)
+            .setKey(key)
+            .setDisplayName("Test Owner " + rand);
 
         this.mockOwner(owner);
 

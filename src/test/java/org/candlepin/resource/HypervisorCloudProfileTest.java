@@ -73,12 +73,10 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
-
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
             this.ownerCurator);
 
-        owner = ownerCurator.create(new Owner("test-owner"));
-
+        this.owner = this.createOwner("test-owner");
         someuser = userCurator.create(new User(USER_NAME, "dontcare"));
         ownerAdminRole = createAdminRole(owner);
         ownerAdminRole.addUser(someuser);

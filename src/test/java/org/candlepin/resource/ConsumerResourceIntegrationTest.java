@@ -330,7 +330,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         );
     }
 
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @ParameterizedTest(name = "{displayName} {index}: {0} {1} {2} {3}")
     @MethodSource("manifestConsumerContentAccessModeInputSource")
     public void testManifestConsumerCreationContentAccessMode(String ownerModeList, String ownerMode,
         String providedContentAccessMode, String expectedConsumerMode, boolean validInputs) {
@@ -575,8 +575,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         Consumer evilConsumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(evilConsumer);
 
-        Owner evilOwner = ownerCurator.create(new Owner("another-owner"));
-        ownerCurator.create(evilOwner);
+        Owner evilOwner = this.createOwner("another-owner");
 
         setupPrincipal(evilOwner, Access.ALL);
         securityInterceptor.enable();
@@ -639,8 +638,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumerResource.bind(consumer.getUuid(), pool.getId(),
             null, 1, null, null, false, null, null);
 
-        Owner evilOwner = ownerCurator.create(new Owner("another-owner"));
-        ownerCurator.create(evilOwner);
+        Owner evilOwner = this.createOwner("another-owner");
 
         securityInterceptor.enable();
         setupPrincipal(evilOwner, Access.ALL);

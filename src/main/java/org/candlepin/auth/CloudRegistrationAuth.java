@@ -206,7 +206,9 @@ public class CloudRegistrationAuth implements AuthProvider {
         if (owner == null) {
             // If the owner does not exist, we might be creating it on client registration, so
             // make a fake owner to pass into our permission object
-            owner = new Owner(ownerKey, ownerKey);
+            owner = new Owner()
+                .setKey(ownerKey)
+                .setDisplayName(ownerKey);
         }
 
         List<Permission> permissions = Arrays.asList(

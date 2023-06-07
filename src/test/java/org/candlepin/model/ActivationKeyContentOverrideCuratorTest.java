@@ -50,8 +50,13 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
 
     @BeforeEach
     public void setUp() {
-        owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
+        this.owner = new Owner()
+            .setKey("test-owner")
+            .setDisplayName("Test Owner");
+
+        this.owner = ownerCurator.create(this.owner);
+
+
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);
         key = new ActivationKey("a key", owner);

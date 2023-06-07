@@ -45,8 +45,7 @@ public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
-        owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
+        owner = this.createOwner("test-owner", "Test Owner");
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);
         consumer = new Consumer()

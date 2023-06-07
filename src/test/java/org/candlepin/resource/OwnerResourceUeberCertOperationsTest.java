@@ -68,7 +68,9 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
-        owner = ownerCurator.create(new Owner(OWNER_NAME));
+        owner = ownerCurator.create(new Owner()
+            .setKey(OWNER_NAME)
+            .setDisplayName(OWNER_NAME));
 
         Role ownerAdminRole = createAdminRole(owner);
         roleCurator.create(ownerAdminRole);
@@ -118,7 +120,10 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     public void certificateRetrievalRaisesExceptionIfNoCertificateWasGenerated()
         throws Exception {
         // verify that owner under test doesn't have a certificate
-        Owner anotherOwner = ownerCurator.create(new Owner(OWNER_NAME + "1"));
+        Owner anotherOwner = ownerCurator.create(new Owner()
+            .setKey(OWNER_NAME + "1")
+            .setDisplayName(OWNER_NAME + "1"));
+
         when(this.principalProvider.get()).thenReturn(principal);
         assertThrows(NotFoundException.class, () ->
             or.getUeberCertificate(anotherOwner.getKey())

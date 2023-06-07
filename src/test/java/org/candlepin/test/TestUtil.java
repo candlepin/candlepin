@@ -548,7 +548,7 @@ public class TestUtil {
     }
 
     public static Pool createPool(Product product) {
-        return createPool(new Owner("Test Owner " + randomInt()), product);
+        return createPool(createOwner("Test Owner " + randomInt()), product);
     }
 
     public static Pool createPool(Owner owner, Product product) {
@@ -675,8 +675,13 @@ public class TestUtil {
     }
 
     public static Entitlement createEntitlement() {
-        Owner owner = new Owner("Test Owner |" + randomInt());
-        owner.setId(String.valueOf(RANDOM.nextLong()));
+        int rand = randomInt();
+
+        Owner owner = new Owner()
+            .setId(String.valueOf(rand))
+            .setKey("Test Owner |" + rand)
+            .setDisplayName("Test Owner |" + rand);
+
         return createEntitlement(
             owner,
             createConsumer(owner),

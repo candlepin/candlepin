@@ -53,8 +53,7 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
-        this.owner = new Owner("test-owner", "Test Owner");
-        this.owner = this.ownerCurator.create(owner);
+        this.owner = this.createOwner("test-owner", "Test Owner");
         this.ct = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         this.ct = this.consumerTypeCurator.create(ct);
 

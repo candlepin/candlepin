@@ -97,8 +97,11 @@ public class ConsumerPrincipalTest {
         ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         ctype.setId("test-ctype");
 
-        Owner newOwner = new Owner("o1");
-        newOwner.setId("o1-id");
+        Owner newOwner = new Owner()
+            .setId("o1-id")
+            .setKey("o1")
+            .setDisplayName("o1");
+
         Consumer c = new Consumer()
             .setName("Test Consumer")
             .setUsername("test-consumer")

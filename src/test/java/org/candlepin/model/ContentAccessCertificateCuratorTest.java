@@ -41,10 +41,8 @@ class ContentAccessCertificateCuratorTest extends DatabaseTestFixture {
 
     @BeforeEach
     void setUp() {
-        owner1 = new Owner("owner_1", "Owner 1");
-        owner2 = new Owner("owner_2", "Owner 2");
-        this.ownerCurator.save(owner1);
-        this.ownerCurator.save(owner2);
+        this.owner1 = this.createOwner("owner_1", "Owner 1");
+        this.owner2 = this.createOwner("owner_2", "Owner 2");
 
         ConsumerType cType = new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN);
         this.consumerTypeCurator.save(cType);

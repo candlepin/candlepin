@@ -120,9 +120,12 @@ public class ComplianceRulesTest {
         compliance = new ComplianceRules(provider.get(), entCurator, new StatusReasonMessageGenerator(i18n),
             eventSink, consumerCurator, consumerTypeCurator, new RulesObjectMapper(), translator);
 
-        owner = new Owner("test");
-        owner.setId(TestUtil.randomString());
+        this.owner = new Owner()
+            .setId(TestUtil.randomString())
+            .setKey("test")
+            .setDisplayName("test");
         when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+
         activeGuestAttrs = new HashMap<>();
         activeGuestAttrs.put("virtWhoType", "libvirt");
         activeGuestAttrs.put("active", "1");

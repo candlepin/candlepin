@@ -88,8 +88,10 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN));
         systemType = consumerTypeCurator.create(
             new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM));
-        owner = ownerCurator.create(new Owner("test-owner"));
-        ownerCurator.create(owner);
+
+        this.owner = this.ownerCurator.create(new Owner()
+            .setKey("test-owner")
+            .setDisplayName("test-owner"));
 
         manifestConsumer = TestUtil.createConsumer(manifestType, owner);
         consumerCurator.create(manifestConsumer);

@@ -17,7 +17,6 @@ package org.candlepin.model;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.resteasy.InfoProperty;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.util.Util;
 
@@ -29,6 +28,7 @@ import org.hibernate.annotations.NaturalId;
 import org.slf4j.event.Level;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -134,7 +134,7 @@ public class Owner extends AbstractHibernateObject<Owner>
      * Determines the behavior of the content access.
      */
     @Column(name = "content_access_mode", nullable = false)
-    private String contentAccessMode = ContentAccessMode.getDefault().toDatabaseValue();
+    private String contentAccessMode;
 
     /**
      * Determines the allowable modes of the content access.
@@ -151,34 +151,13 @@ public class Owner extends AbstractHibernateObject<Owner>
      */
     public Owner() {
         this.consumers = new HashSet<>();
-        this.pools = new HashSet<>();
+        this.activationKeys = new HashSet<>();
         this.environments = new HashSet<>();
-        this.autobindDisabled = false;
-        this.autobindHypervisorDisabled = false;
+        this.pools = new HashSet<>();
+
         this.lastContentUpdate = new Date();
         this.contentAccessModeList = ContentAccessManager.getListDefaultDatabaseValue();
-    }
-
-    /**
-     * Constructor with required parameters.
-     *
-     * @param key Owner's unique identifier
-     * @param displayName Owner's name - suitable for UI
-     */
-    public Owner(String key, String displayName) {
-        this();
-
-        this.key = key;
-        this.displayName = displayName;
-    }
-
-    /**
-     * Creates an Owner with only a name
-     *
-     * @param name to be used for both the display name and the key
-     */
-    public Owner(String name) {
-        this(name, name);
+        this.contentAccessMode = ContentAccessMode.getDefault().toDatabaseValue();
     }
 
     /**
@@ -200,7 +179,6 @@ public class Owner extends AbstractHibernateObject<Owner>
         return this;
     }
 
-    @InfoProperty("key")
     public String getKey() {
         return key;
     }
@@ -210,10 +188,6 @@ public class Owner extends AbstractHibernateObject<Owner>
         return this;
     }
 
-    /**
-     * @return the name
-     */
-    @InfoProperty("displayName")
     public String getDisplayName() {
         return this.displayName;
     }
@@ -265,11 +239,8 @@ public class Owner extends AbstractHibernateObject<Owner>
         return this;
     }
 
-    /**
-     * @return the consumers
-     */
     public Set<Consumer> getConsumers() {
-        return consumers;
+        return this.consumers != null ? Collections.unmodifiableSet(this.consumers) : Set.of();
     }
 
     /**
@@ -279,25 +250,15 @@ public class Owner extends AbstractHibernateObject<Owner>
      *  a reference to this Owner instnace
      */
     public Owner setConsumers(Set<Consumer> consumers) {
-        this.consumers = consumers;
-        return this;
-    }
+        if (this.consumers == null) {
+            this.consumers = new HashSet<>();
+        }
+        this.consumers.clear();
 
-    /**
-     * @return the entitlementPools
-     */
-    public Set<Pool> getPools() {
-        return pools;
-    }
+        if (consumers != null) {
+            this.consumers.addAll(consumers);
+        }
 
-    /**
-     * @param entitlementPools the entitlementPools to set
-     *
-     * @return
-     *  a reference to this Owner instnace
-     */
-    public Owner setPools(Set<Pool> entitlementPools) {
-        this.pools = entitlementPools;
         return this;
     }
 
@@ -311,89 +272,45 @@ public class Owner extends AbstractHibernateObject<Owner>
         this.consumers.add(consumer);
     }
 
-    /**
-     * add owner to the pool, and reference to the pool.
-     *
-     * @param pool EntitlementPool for this owner.
-     */
-    public void addEntitlementPool(Pool pool) {
-        pool.setOwner(this);
+    public Set<Pool> getPools() {
+        return this.pools != null ? Collections.unmodifiableSet(this.pools) : Set.of();
+    }
+
+    public Owner setPools(Set<Pool> pools) {
         if (this.pools == null) {
             this.pools = new HashSet<>();
         }
-        this.pools.add(pool);
+        this.pools.clear();
+
+        if (pools != null) {
+            this.pools.addAll(pools);
+        }
+
+        return this;
     }
 
     /**
-     * {@inheritDoc}
+     * Adds the specified pool to this owner, and updates its owner reference. If the provided pool
+     * is null, or has already been added to this owner, this method silently ignores it.
+     *
+     * @param pool
+     *  the pool to add to this owner
+     *
+     * @return
+     *  true if the pool is successfully added to this owner, false if the pool is null or already
+     *  mapped to this owner
      */
-    @Override
-    public String toString() {
-        return String.format("Owner [id: %s, key: %s]", this.getId(), this.getKey());
-    }
-
-    // Generated by Netbeans
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == this) {
-            return true;
+    public boolean addPool(Pool pool) {
+        if (this.pools == null) {
+            this.pools = new HashSet<>();
         }
 
-        // Note: if we update the hierarchy such that the parent class has an equals method, we
-        // should update this line to also likely check the parent's equality bits.
-        if (obj instanceof Owner) {
-            Owner that = (Owner) obj;
-
-            // Pull the parent owner IDs, as we're not interested in verifying that the parent owners
-            // themselves are equal; just so long as they point to the same parent owner.
-            String lpoid = this.getParentOwner() != null ? this.getParentOwner().getId() : null;
-            String rpoid = that.getParentOwner() != null ? that.getParentOwner().getId() : null;
-
-            // Same with the upstream consumer
-            String lucid = this.getUpstreamConsumer() != null ? this.getUpstreamConsumer().getId() : null;
-            String rucid = that.getUpstreamConsumer() != null ? that.getUpstreamConsumer().getId() : null;
-
-            EqualsBuilder builder = new EqualsBuilder()
-                .append(this.getId(), that.getId())
-                .append(this.getKey(), that.getKey())
-                .append(this.getDisplayName(), that.getDisplayName())
-                .append(lpoid, rpoid)
-                .append(this.getContentPrefix(), that.getContentPrefix())
-                .append(this.getDefaultServiceLevel(), that.getDefaultServiceLevel())
-                .append(lucid, rucid)
-                .append(this.getLogLevel(), that.getLogLevel())
-                .append(this.isAutobindDisabled(), that.isAutobindDisabled())
-                .append(this.getContentAccessMode(), that.getContentAccessMode())
-                .append(this.getContentAccessModeList(), that.getContentAccessModeList());
-
-            return builder.isEquals();
+        boolean result = pool != null && this.pools.add(pool);
+        if (result) {
+            pool.setOwner(this);
         }
 
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        // Like with the equals method, we are not interested in hashing nested objects; we're only
-        // concerned with the reference to such an object.
-
-        // Note: if we update the hierarchy such that the parent class has a hashCode method, we
-        // should update this block to also include the parent's hash code
-        HashCodeBuilder builder = new HashCodeBuilder(37, 7)
-            .append(this.getId())
-            .append(this.getKey())
-            .append(this.getDisplayName())
-            .append(this.getParentOwner() != null ? this.getParentOwner().getId() : null)
-            .append(this.getContentPrefix())
-            .append(this.getDefaultServiceLevel())
-            .append(this.getUpstreamConsumer() != null ? this.getUpstreamConsumer().getId() : null)
-            .append(this.getLogLevel())
-            .append(this.isAutobindDisabled())
-            .append(this.isUsingSimpleContentAccess())
-            .append(this.getContentAccessMode())
-            .append(this.getContentAccessModeList());
-
-        return builder.toHashCode();
+        return result;
     }
 
     /**
@@ -404,22 +321,12 @@ public class Owner extends AbstractHibernateObject<Owner>
      */
     public Owner setUpstreamConsumer(UpstreamConsumer upstream) {
         this.upstreamConsumer = upstream;
-        if (upstream != null) {
-            upstream.setOwnerId(id);
+
+        if (this.upstreamConsumer != null) {
+            this.upstreamConsumer.setOwnerId(this.getId());
         }
 
         return this;
-    }
-
-    /**
-     * @return the upstreamUuid
-     */
-    public String getUpstreamUuid() {
-        if (upstreamConsumer == null) {
-            return null;
-        }
-
-        return upstreamConsumer.getUuid();
     }
 
     /**
@@ -429,8 +336,21 @@ public class Owner extends AbstractHibernateObject<Owner>
         return upstreamConsumer;
     }
 
+    /**
+     * Fetches the UUID of the upstream consumer of the manifest that was last imported into this
+     * org. If this org has not imported any manifest, this method returns null.
+     *
+     * @return
+     *  the UUID of the upstream consumer owning the manifest this org last imported, or null if
+     *  this org has never performed a manifest import.
+     */
+    public String getUpstreamUuid() {
+        UpstreamConsumer upstreamConsumer = this.getUpstreamConsumer();
+        return upstreamConsumer != null ? upstreamConsumer.getUuid() : null;
+    }
+
     public String getHref() {
-        return "/owners/" + getKey();
+        return "/owners/" + this.getKey();
     }
 
     public Owner getParentOwner() {
@@ -453,30 +373,37 @@ public class Owner extends AbstractHibernateObject<Owner>
         return id;
     }
 
-    /**
-     * @return the activationKeys
-     */
     public Set<ActivationKey> getActivationKeys() {
-        return activationKeys;
+        return this.activationKeys != null ? Collections.unmodifiableSet(this.activationKeys) : Set.of();
     }
 
-    /**
-     * @param activationKeys the activationKeys to set
-     *
-     * @return
-     *  a reference to this Owner instnace
-     */
     public Owner setActivationKeys(Set<ActivationKey> activationKeys) {
-        this.activationKeys = activationKeys;
+        if (this.activationKeys == null) {
+            this.activationKeys = new HashSet<>();
+        }
+        this.activationKeys.clear();
+
+        if (activationKeys != null) {
+            this.activationKeys.addAll(activationKeys);
+        }
+
         return this;
     }
 
     public Set<Environment> getEnvironments() {
-        return environments;
+        return this.environments != null ? Collections.unmodifiableSet(this.environments) : Set.of();
     }
 
     public Owner setEnvironments(Set<Environment> environments) {
-        this.environments = environments;
+        if (this.environments == null) {
+            this.environments = new HashSet<>();
+        }
+        this.environments.clear();
+
+        if (environments != null) {
+            this.environments.addAll(environments);
+        }
+
         return this;
     }
 
@@ -515,7 +442,7 @@ public class Owner extends AbstractHibernateObject<Owner>
      *  true if autobind is disabled for this owner/organization; false otherwise
      */
     public boolean isAutobindDisabled() {
-        return this.autobindDisabled != null ? this.autobindDisabled.booleanValue() : false;
+        return this.autobindDisabled != null && this.autobindDisabled;
     }
 
     public Owner setAutobindDisabled(boolean autobindDisabled) {
@@ -530,8 +457,7 @@ public class Owner extends AbstractHibernateObject<Owner>
      *  true if autobindHypervisor is disabled for this owner/organization; false otherwise
      */
     public boolean isAutobindHypervisorDisabled() {
-        return this.autobindHypervisorDisabled != null ?
-           this.autobindHypervisorDisabled.booleanValue() : false;
+        return this.autobindHypervisorDisabled != null && this.autobindHypervisorDisabled;
     }
 
     public Owner setAutobindHypervisorDisabled(boolean autobindHypervisorDisabled) {
@@ -578,8 +504,8 @@ public class Owner extends AbstractHibernateObject<Owner>
      *  true if the specified content access mode is available to this owner; false otherwise
      */
     public boolean isAllowedContentAccessMode(String mode) {
-        String[] list = this.contentAccessModeList.split(",");
-        return ArrayUtils.contains(list, mode);
+        String caModeList = this.getContentAccessModeList();
+        return caModeList != null && ArrayUtils.contains(caModeList.split(","), mode);
     }
 
     /**
@@ -652,5 +578,76 @@ public class Owner extends AbstractHibernateObject<Owner>
      */
     public Owner syncLastContentUpdate() {
         return this.setLastContentUpdate(new Date());
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        if (!(obj instanceof Owner)) {
+            return false;
+        }
+
+        // Note: if we update the hierarchy such that the parent class has an equals method, we
+        // should update this line to also likely check the parent's equality bits.
+        Owner that = (Owner) obj;
+
+        // Pull the parent owner IDs, as we're not interested in verifying that the parent owners
+        // themselves are equal; just so long as they point to the same parent owner.
+        String lpoid = this.getParentOwner() != null ? this.getParentOwner().getId() : null;
+        String rpoid = that.getParentOwner() != null ? that.getParentOwner().getId() : null;
+
+        // Same with the upstream consumer
+        String lucid = this.getUpstreamConsumer() != null ? this.getUpstreamConsumer().getId() : null;
+        String rucid = that.getUpstreamConsumer() != null ? that.getUpstreamConsumer().getId() : null;
+
+        EqualsBuilder builder = new EqualsBuilder()
+            .append(this.getId(), that.getId())
+            .append(this.getKey(), that.getKey())
+            .append(this.getDisplayName(), that.getDisplayName())
+            .append(lpoid, rpoid)
+            .append(this.getContentPrefix(), that.getContentPrefix())
+            .append(this.getDefaultServiceLevel(), that.getDefaultServiceLevel())
+            .append(lucid, rucid)
+            .append(this.getLogLevel(), that.getLogLevel())
+            .append(this.isAutobindDisabled(), that.isAutobindDisabled())
+            .append(this.getContentAccessMode(), that.getContentAccessMode())
+            .append(this.getContentAccessModeList(), that.getContentAccessModeList());
+
+        return builder.isEquals();
+    }
+
+    @Override
+    public int hashCode() {
+        // Like with the equals method, we are not interested in hashing nested objects; we're only
+        // concerned with the reference to such an object.
+
+        // Note: if we update the hierarchy such that the parent class has a hashCode method, we
+        // should update this block to also include the parent's hash code
+        HashCodeBuilder builder = new HashCodeBuilder(37, 7)
+            .append(this.getId())
+            .append(this.getKey())
+            .append(this.getDisplayName())
+            .append(this.getParentOwner() != null ? this.getParentOwner().getId() : null)
+            .append(this.getContentPrefix())
+            .append(this.getDefaultServiceLevel())
+            .append(this.getUpstreamConsumer() != null ? this.getUpstreamConsumer().getId() : null)
+            .append(this.getLogLevel())
+            .append(this.isAutobindDisabled())
+            .append(this.isUsingSimpleContentAccess())
+            .append(this.getContentAccessMode())
+            .append(this.getContentAccessModeList());
+
+        return builder.toHashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return String.format("Owner [id: %s, key: %s]", this.getId(), this.getKey());
     }
 }

@@ -31,32 +31,18 @@ import org.candlepin.model.Owner;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import javax.inject.Inject;
 
+
+
 public class OwnerContentResourceTest extends DatabaseTestFixture {
 
-    private static final String OWNER_NAME = "Jar Jar Binks";
-
     @Inject private OwnerContentResource ownerContentResource;
-
-
-    private Owner owner;
-    private List<Owner> owners;
-
-    @BeforeEach
-    public void setUp() {
-        owner = ownerCurator.create(new Owner(OWNER_NAME));
-        owners = new ArrayList<>();
-        owners.add(owner);
-    }
 
     @Test
     public void listOwnerContent() throws Exception {

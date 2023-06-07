@@ -77,8 +77,7 @@ public class DeletedConsumerCuratorTest extends DatabaseTestFixture {
         dc.setConsumerName("consumerName");
         dcc.create(dc);
 
-        owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
+        this.owner = this.createOwner("test-owner", "Test Owner");
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);
     }

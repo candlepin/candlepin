@@ -64,7 +64,9 @@ public class HypervisorHeartbeatUpdateJobTest {
     @Test
     public void testConfigSetOwner() {
         String ownerKey = "test_owner";
-        Owner owner = new Owner(ownerKey, ownerKey);
+        Owner owner = new Owner()
+            .setKey(ownerKey)
+            .setDisplayName(ownerKey);
 
         JobConfig config = HypervisorHeartbeatUpdateJob.createJobConfig()
             .setOwner(owner);
@@ -114,7 +116,9 @@ public class HypervisorHeartbeatUpdateJobTest {
         String ownerKey = "test_owner";
         String reporterId = "test_reporter_id";
 
-        Owner owner = new Owner(ownerKey, "ownerName");
+        Owner owner = new Owner()
+            .setKey(ownerKey)
+            .setDisplayName("ownerName");
 
         JobConfig config = HypervisorHeartbeatUpdateJob.createJobConfig()
             .setOwner(owner)

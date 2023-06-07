@@ -426,12 +426,16 @@ public class JobManagerTest {
     }
 
     public static Stream<Arguments> loggingContextArgProvider() {
-        Owner owner1 = new Owner("test_owner-1", "owner_name-1");
-        owner1.setId("test_owner_id-1");
+        Owner owner1 = new Owner()
+            .setId("test_owner_id-1")
+            .setKey("test_owner-1")
+            .setDisplayName("owner_name-1");
 
-        Owner owner2 = new Owner("test_owner-2", "owner_name-2");
-        owner2.setId("test_owner_id-2");
-        owner2.setLogLevel(Level.DEBUG);
+        Owner owner2 = new Owner()
+            .setId("test_owner_id-2")
+            .setKey("test_owner-2")
+            .setDisplayName("owner_name-2")
+            .setLogLevel(Level.DEBUG);
 
         String jobLogLevel = Level.TRACE.name();
 
@@ -487,8 +491,10 @@ public class JobManagerTest {
 
     @Test
     public void testEnvironmentSetupGracefullyHandlesOwnerLookupFailure() throws JobException {
-        Owner owner = new Owner("test_owner");
-        owner.setId("dead owner id");
+        Owner owner = new Owner()
+            .setId("dead owner id")
+            .setKey("test_owner")
+            .setDisplayName("test_owner");
 
         AsyncJobStatus status = spy(new AsyncJobStatus()
             .setJobKey(TestJob.JOB_KEY)
@@ -1373,8 +1379,11 @@ public class JobManagerTest {
     @Test
     public void jobStatusFound() {
         String jobId = "jobId";
-        Owner owner = new Owner("ownerKey", "owner");
-        owner.setId("test_owner");
+
+        Owner owner = new Owner()
+            .setId("test_owner")
+            .setKey("ownerKey")
+            .setDisplayName("owner");
 
         JobManager manager = this.createJobManager();
 
@@ -1391,11 +1400,12 @@ public class JobManagerTest {
     public void jobStatusFoundWithPermissions() {
         String jobId = "jobId";
 
-        Owner owner = new Owner("ownerKey", "owner");
-        owner.setId("test_owner");
+        Owner owner = new Owner()
+            .setId("test_owner")
+            .setKey("ownerKey")
+            .setDisplayName("owner");
 
-        List<Permission> permissions = Collections
-            .singletonList(new OwnerPermission(owner, Access.READ_ONLY));
+        List<Permission> permissions = List.of(new OwnerPermission(owner, Access.READ_ONLY));
         JobManager manager = this.createJobManager();
 
         doReturn(new UserPrincipal("user", permissions, false)).when(this.principalProvider).get();

@@ -113,7 +113,9 @@ public class HostedTestDataStore {
             throw new IllegalStateException("owner already exists: " + ownerInfo.getKey());
         }
 
-        Owner owner = new Owner(ownerInfo.getKey());
+        Owner owner = new Owner()
+            .setKey(ownerInfo.getKey());
+
         this.ownerMap.put(owner.getKey(), owner);
 
         return owner;
@@ -789,14 +791,7 @@ public class HostedTestDataStore {
             throw new IllegalArgumentException("owner is null or lacks an owner key");
         }
 
-        Owner owner = this.ownerMap.get(oinfo.getKey());
-
-        if (owner == null) {
-            owner = new Owner(oinfo.getKey());
-            this.ownerMap.put(owner.getKey(), owner);
-        }
-
-        return owner;
+        return this.ownerMap.computeIfAbsent(oinfo.getKey(), key -> new Owner().setKey(key));
     }
 
     protected ProductData resolveProduct(ProductInfo pinfo) {
