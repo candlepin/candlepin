@@ -386,6 +386,8 @@ jobs:
 
       - name: Run Spec tests
         uses: gradle/gradle-build-action@v2
+        env:
+          MYSQL_IN_USE: ${{ matrix.database == 'mariadb' }}
         with:
           arguments: spec -Dspec.test.client.host=candlepin
 
