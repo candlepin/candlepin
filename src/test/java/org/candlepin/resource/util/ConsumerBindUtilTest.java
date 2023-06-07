@@ -35,6 +35,7 @@ import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.resource.dto.AutobindData;
@@ -61,10 +62,16 @@ import java.util.Set;
 @ExtendWith(MockitoExtension.class)
 public class ConsumerBindUtilTest {
 
-    @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
-    @Mock private OwnerCurator ownerCurator;
-    @Mock private Entitler entitler;
-    @Mock private ServiceLevelValidator serviceLevelValidator;
+    @Mock
+    private ConsumerContentOverrideCurator consumerContentOverrideCurator;
+    @Mock
+    private OwnerCurator ownerCurator;
+    @Mock
+    private Entitler entitler;
+    @Mock
+    private ServiceLevelValidator serviceLevelValidator;
+    @Mock
+    private PoolCurator poolCurator;
 
     private I18n i18n;
 
@@ -84,7 +91,7 @@ public class ConsumerBindUtilTest {
 
     private ConsumerBindUtil buildConsumerBindUtil() {
         return new ConsumerBindUtil(this.entitler, this.i18n, this.consumerContentOverrideCurator,
-            this.ownerCurator, null, this.serviceLevelValidator);
+            this.ownerCurator, null, this.serviceLevelValidator, this.poolCurator);
     }
 
     private List<ActivationKey> mockActivationKeys() {
