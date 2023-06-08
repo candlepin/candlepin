@@ -74,7 +74,7 @@ public class ActiveMQStatusMonitor implements Closeable, Runnable, CloseListener
 
     // Protected for testing purposes.
     protected void initializeLocator() throws Exception {
-        String brokerUrl = this.config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL);
+        String brokerUrl = this.config.getString(ConfigProperties.ACTIVEMQ_BROKER_URL);
         locator = ActiveMQClient.createServerLocator(brokerUrl);
     }
 

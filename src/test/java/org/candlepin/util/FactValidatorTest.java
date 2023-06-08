@@ -17,9 +17,9 @@ package org.candlepin.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,19 +34,16 @@ import java.util.Locale;
 import javax.inject.Provider;
 
 
-
-/**
- * Test suite for the FactValidator class
- */
 public class FactValidatorTest {
 
-    private static I18n i18n = I18nFactory.getI18n(FactValidatorTest.class, Locale.US, I18nFactory.FALLBACK);
-    private static Provider<I18n> i18nProvider = () -> i18n;
-    private Configuration config;
+    private static final I18n I18N = I18nFactory
+        .getI18n(FactValidatorTest.class, Locale.US, I18nFactory.FALLBACK);
+    private static final Provider<I18n> I18N_PROVIDER = () -> I18N;
+    private DevConfig config;
 
     @BeforeEach
     public void init() {
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
     }
 
     @ParameterizedTest
@@ -57,7 +54,7 @@ public class FactValidatorTest {
             builder.append(i % 10);
         }
 
-        FactValidator validator = new FactValidator(this.config, i18nProvider);
+        FactValidator validator = new FactValidator(this.config, I18N_PROVIDER);
         assertThrows(PropertyValidationException.class, () -> validator.validate(builder.toString(), value));
     }
 
@@ -68,7 +65,7 @@ public class FactValidatorTest {
             builder.append(i % 10);
         }
 
-        FactValidator validator = new FactValidator(this.config, i18nProvider);
+        FactValidator validator = new FactValidator(this.config, I18N_PROVIDER);
         assertThrows(PropertyValidationException.class, () -> validator.validate("key", builder.toString()));
     }
 
@@ -126,7 +123,7 @@ public class FactValidatorTest {
         this.config.setProperty(ConfigProperties.INTEGER_FACTS, "fact1,intfact,fact2");
         this.config.setProperty(ConfigProperties.NON_NEG_INTEGER_FACTS, "nnintfact");
 
-        FactValidator validator = new FactValidator(this.config, i18nProvider);
+        FactValidator validator = new FactValidator(this.config, I18N_PROVIDER);
 
         boolean result;
 

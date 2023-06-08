@@ -22,21 +22,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-/**
- * CustomizableModules
- */
 public class CustomizableModules {
 
-    public static final String MODULE_CONFIG_PREFIX = "module.config";
-    private static Logger log = LoggerFactory.getLogger(CustomizableModules.class);
+    private static final Logger log = LoggerFactory.getLogger(CustomizableModules.class);
+    private static final String MODULE_CONFIG_PREFIX = "module.config";
+
 
     /**
      * @return returns the set of modules to use.
      */
     public Set<Module> load(Configuration config) {
-        Configuration moduleConfig = config.subset(MODULE_CONFIG_PREFIX);
+        Map<String, String> moduleConfig = config.getValuesByPrefix(MODULE_CONFIG_PREFIX);
 
         return customizedConfiguration(moduleConfig);
     }
@@ -47,14 +46,14 @@ public class CustomizableModules {
      * @return Set of configured modules.
      */
     @SuppressWarnings("unchecked")
-    public Set<Module> customizedConfiguration(Configuration moduleConfig) {
+    public Set<Module> customizedConfiguration(Map<String, String> moduleConfig) {
         try {
             Set<Module> toReturn = new HashSet<>();
 
-            for (String key : moduleConfig.getKeys()) {
-                log.info("Found custom module " + key);
+            for (Map.Entry<String, String> entry : moduleConfig.entrySet()) {
+                log.info("Found custom module {}", entry.getKey());
                 Class<? extends Module> c = (Class<? extends Module>)
-                    Class.forName(moduleConfig.getString(key));
+                    Class.forName(entry.getValue());
                 toReturn.add(c.newInstance());
             }
 

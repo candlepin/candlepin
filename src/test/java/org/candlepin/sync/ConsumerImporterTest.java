@@ -24,7 +24,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.MapConfiguration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
 import org.candlepin.dto.manifest.v1.ConsumerTypeDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
@@ -47,7 +48,6 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
@@ -69,10 +69,10 @@ public class ConsumerImporterTest {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         importer = new ConsumerImporter(curator, idCertCurator, i18n, serialCurator);
 
-        Map<String, String> configProps = new HashMap<>();
-        configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
-
-        this.mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
+        DevConfig config = TestConfig.custom(Map.of(
+            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
+        ));
+        this.mapper = new SyncUtils(config).getObjectMapper();
     }
 
     @Test
@@ -86,12 +86,11 @@ public class ConsumerImporterTest {
 
     @Test
     public void importHandlesUnknownPropertiesGracefully() throws Exception {
-
         // Override default config to error out on unknown properties:
-        Map<String, String> configProps = new HashMap<>();
-        configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
-
-        this.mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
+        DevConfig config = TestConfig.custom(Map.of(
+            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
+        ));
+        this.mapper = new SyncUtils(config).getObjectMapper();
 
         ConsumerDTO consumer = importer.createObject(
             mapper, new StringReader("{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}"));
@@ -101,10 +100,10 @@ public class ConsumerImporterTest {
     @Test
     public void importFailsOnUnknownPropertiesWithNonDefaultConfig() {
         // Override default config to error out on unknown properties:
-        Map<String, String> configProps = new HashMap<>();
-        configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "true");
-
-        this.mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
+        DevConfig config = TestConfig.custom(Map.of(
+            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "true"
+        ));
+        this.mapper = new SyncUtils(config).getObjectMapper();
 
         String json = "{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}";
         assertThrows(JsonMappingException.class,

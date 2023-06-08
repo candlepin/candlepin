@@ -30,8 +30,7 @@ import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
-import org.candlepin.config.MapConfiguration;
+import org.candlepin.config.DevConfig;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.ProductCertificateDTO;
@@ -70,7 +69,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     @Inject private ProductResource productResource;
     @Inject private OwnerCurator ownerCurator;
     @Inject private ProductCurator productCurator;
-    @Inject private Configuration config;
+    @Inject private DevConfig config;
     @Inject private I18n i18n;
 
     private JobManager jobManager;
@@ -207,7 +206,6 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsByProduct() {
-        Configuration config = new MapConfiguration(this.config);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
@@ -225,7 +223,6 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsByProductForMultipleProducts() {
-        Configuration config = new MapConfiguration(this.config);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
@@ -243,7 +240,6 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsByProductWithoutLazyOffload() {
-        Configuration config = new MapConfiguration(this.config);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
@@ -261,7 +257,6 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsByProductWithBadProductId() {
-        Configuration config = new MapConfiguration(this.config);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
@@ -285,7 +280,6 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsByProductJobQueueingErrorsShouldBeHandled() throws JobException {
-        Configuration config = new MapConfiguration(this.config);
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         // We want to simulate the first queueJob call succeeds, and the second throws a validation exception

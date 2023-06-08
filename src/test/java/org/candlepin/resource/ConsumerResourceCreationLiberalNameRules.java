@@ -16,9 +16,9 @@ package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,16 +27,12 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 
-
-/**
- * ConsumerResourceCreationLiberalNameRules
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ConsumerResourceCreationLiberalNameRules extends ConsumerResourceCreationTest {
 
-    public Configuration initConfig() {
-        Configuration config = new CandlepinCommonTestConfig();
+    public DevConfig initConfig() {
+        DevConfig config = TestConfig.defaults();
 
         config.setProperty(ConfigProperties.CONSUMER_SYSTEM_NAME_PATTERN, ".+");
         config.setProperty(ConfigProperties.CONSUMER_PERSON_NAME_PATTERN, ".+");

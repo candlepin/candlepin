@@ -19,7 +19,8 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.MapConfiguration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;
@@ -38,30 +39,28 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.HashMap;
 import java.util.Map;
 
 
-
-/**
- * ConsumerExporterTest
- */
 @ExtendWith(MockitoExtension.class)
 public class ConsumerExporterTest {
 
-    @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
-    @Mock private EnvironmentCurator mockEnvironmentCurator;
-    @Mock private OwnerCurator ownerCurator;
-    private ModelTranslator translator;
+    @Mock
+    private ConsumerTypeCurator mockConsumerTypeCurator;
+    @Mock
+    private EnvironmentCurator mockEnvironmentCurator;
+    @Mock
+    private OwnerCurator ownerCurator;
 
     @Test
     public void testConsumerExport() throws IOException {
-        Map<String, String> configProps = new HashMap<>();
-        configProps.put(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false");
+        DevConfig config = TestConfig.custom(Map.of(
+            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
+        ));
+        ObjectMapper mapper = new SyncUtils(config).getObjectMapper();
 
-        ObjectMapper mapper = new SyncUtils(new MapConfiguration(configProps)).getObjectMapper();
-
-        translator = new StandardTranslator(mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator);
+        ModelTranslator translator = new StandardTranslator(
+            mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator);
         ConsumerExporter exporter = new ConsumerExporter(translator);
         ConsumerType ctype = new ConsumerType("candlepin");
         ctype.setId("8888");

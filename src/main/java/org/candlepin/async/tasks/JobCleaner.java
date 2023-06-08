@@ -41,8 +41,9 @@ import javax.inject.Inject;
  * The JobCleaner job deletes terminal jobs older than the max job age (default: 7 days)
  */
 public class JobCleaner implements AsyncJob {
-    private static Logger log = LoggerFactory.getLogger(JobCleaner.class);
+    private static final Logger log = LoggerFactory.getLogger(JobCleaner.class);
 
+    // Every noon
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 
     public static final String JOB_KEY = "JobCleaner";
@@ -51,13 +52,15 @@ public class JobCleaner implements AsyncJob {
     public static final String CFG_MAX_TERMINAL_JOB_AGE = "max_terminal_job_age";
     public static final String CFG_MAX_NONTERMINAL_JOB_AGE = "max_nonterminal_job_age";
     public static final String CFG_MAX_RUNNING_JOB_AGE = "max_running_job_age";
+    // 7 days
+    public static final String DEFAULT_MAX_TERMINAL_AGE = "10080";
+    // 3 days
+    public static final String DEFAULT_MAX_NONTERMINAL_AGE = "4320";
+    // 2 days
+    public static final String DEFAULT_MAX_RUNNING_AGE = "2880";
 
-    public static final int CFG_DEFAULT_MAX_TERMINAL_JOB_AGE = 10080; // 7 days
-    public static final int CFG_DEFAULT_MAX_NONTERMINAL_JOB_AGE = 4320; // 3 days
-    public static final int CFG_DEFAULT_MAX_RUNNING_JOB_AGE = 2880; // 2 days
-
-    private Configuration config;
-    private JobManager jobManager;
+    private final Configuration config;
+    private final JobManager jobManager;
 
     @Inject
     public JobCleaner(Configuration config, JobManager jobManager) {
@@ -67,42 +70,37 @@ public class JobCleaner implements AsyncJob {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        Date terminalCutoff = this.parseMaxJobAgeConfig(CFG_MAX_TERMINAL_JOB_AGE,
-            CFG_DEFAULT_MAX_TERMINAL_JOB_AGE, true);
-
-        Date nonterminalCutoff = this.parseMaxJobAgeConfig(CFG_MAX_NONTERMINAL_JOB_AGE,
-            CFG_DEFAULT_MAX_NONTERMINAL_JOB_AGE, false);
-
-        Date runningCutoff = this.parseMaxJobAgeConfig(CFG_MAX_RUNNING_JOB_AGE,
-            CFG_DEFAULT_MAX_RUNNING_JOB_AGE, false);
+        Date terminalCutoff = this.parseMaxJobAgeConfig(CFG_MAX_TERMINAL_JOB_AGE, true);
+        Date nonterminalCutoff = this.parseMaxJobAgeConfig(CFG_MAX_NONTERMINAL_JOB_AGE, false);
+        Date runningCutoff = this.parseMaxJobAgeConfig(CFG_MAX_RUNNING_JOB_AGE, false);
 
         StringBuilder result = new StringBuilder();
 
         int removed = this.cleanupTerminalJobs(terminalCutoff);
-        result.append(String.format("Removed %1$d terminal jobs older than %2$tF %2$tT%2$tz\n",
+        result.append(String.format("Removed %1$d terminal jobs older than %2$tF %2$tT%2$tz%n",
             removed, terminalCutoff));
 
         if (nonterminalCutoff != null) {
             int aborted = this.abortNonTerminalJobs(nonterminalCutoff);
             result.append(
-                String.format("Aborted %1$d non-running, non-terminal jobs older than %2$tF %2$tT%2$tz\n",
+                String.format("Aborted %1$d non-running, non-terminal jobs older than %2$tF %2$tT%2$tz%n",
                 aborted, nonterminalCutoff));
         }
 
         if (runningCutoff != null) {
             int aborted = this.abortAbandonedRunningJobs(runningCutoff);
-            result.append(String.format("Aborted %1$d running jobs older than %2$tF %2$tT%2$tz\n",
+            result.append(String.format("Aborted %1$d running jobs older than %2$tF %2$tT%2$tz%n",
                 aborted, runningCutoff));
         }
 
         context.setJobResult(result.toString());
     }
 
-    private Date parseMaxJobAgeConfig(String cfgName, int defaultValue, boolean required)
+    private Date parseMaxJobAgeConfig(String cfgName, boolean required)
         throws JobExecutionException {
 
         String fqcn = ConfigProperties.jobConfig(JOB_KEY, cfgName);
-        int value = this.config.getInt(fqcn, defaultValue);
+        int value = this.config.getInt(fqcn);
 
         Date output = null;
 

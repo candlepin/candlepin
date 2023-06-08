@@ -17,16 +17,13 @@ package org.candlepin.guice;
 import static org.candlepin.config.ConfigProperties.ACTIVEMQ_ENABLED;
 import static org.candlepin.config.ConfigProperties.DB_MANAGE_ON_START;
 import static org.candlepin.config.ConfigProperties.ENCRYPTED_PROPERTIES;
-import static org.candlepin.config.ConfigProperties.PASSPHRASE_SECRET_FILE;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.ActiveMQContextListener;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.config.ConfigurationException;
-import org.candlepin.config.DatabaseConfigFactory;
-import org.candlepin.config.EncryptedConfiguration;
-import org.candlepin.config.MapConfiguration;
+import org.candlepin.config.LegacyEncryptedInterceptor;
+import org.candlepin.config.RyeConfig;
 import org.candlepin.logging.LoggerContextListener;
 import org.candlepin.logging.LoggingConfigurator;
 import org.candlepin.messaging.CPMContextListener;
@@ -39,6 +36,9 @@ import com.google.inject.Module;
 import com.google.inject.Stage;
 import com.google.inject.persist.PersistService;
 import com.google.inject.util.Modules;
+
+import io.smallrye.config.PropertiesConfigSource;
+import io.smallrye.config.SmallRyeConfigBuilder;
 
 import liquibase.changelog.ChangeLogParameters;
 import liquibase.changelog.ChangeSet;
@@ -53,9 +53,7 @@ import liquibase.exception.LiquibaseException;
 import liquibase.parser.core.xml.XMLChangeLogSAXParser;
 import liquibase.resource.ClassLoaderResourceAccessor;
 
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.cfg.beanvalidation.BeanValidationEventListener;
-import org.hibernate.dialect.PostgreSQL92Dialect;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.SessionFactoryImpl;
@@ -65,8 +63,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18nManager;
 
-import java.io.File;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
@@ -97,7 +97,9 @@ import javax.servlet.ServletContextEvent;
  */
 public class CandlepinContextListener extends GuiceResteasyBootstrapServletContextListener {
     public static final String CONFIGURATION_NAME = Configuration.class.getName();
-    public static final String CHANGELOG_FILE_NAME = "db/changelog/changelog-update.xml";
+    private static final String CHANGELOG_FILE_NAME = "db/changelog/changelog-update.xml";
+    private static final Path DEFAULT_CONFIG_FILE = Paths.get("/etc/candlepin/candlepin.conf");
+    private static final Path DEFAULT_CONFIG_DIR = Paths.get("/etc/candlepin/conf.d");
 
     /**
      * The (rough) state of this listener's lifecycle, not including transitional states.
@@ -155,14 +157,8 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         I18nManager.getInstance().setDefaultLocale(Locale.US);
         servletContext = sce.getServletContext();
 
-        try {
-            log.info("Candlepin reading configuration.");
-            config = readConfiguration(servletContext);
-        }
-        catch (ConfigurationException e) {
-            log.error("Could not read configuration file.  Aborting initialization.", e);
-            throw new RuntimeException(e);
-        }
+        log.info("Candlepin reading configuration.");
+        config = readConfiguration();
 
         LoggingConfigurator.init(config);
 
@@ -286,70 +282,73 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
         CandlepinCapabilities capabilities = new CandlepinCapabilities();
 
         // Update our capabilities with configurable features
-        if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION, false)) {
+        if (config.getBoolean(ConfigProperties.KEYCLOAK_AUTHENTICATION)) {
             capabilities.add(CandlepinCapabilities.KEYCLOAK_AUTH_CAPABILITY);
             capabilities.add(CandlepinCapabilities.DEVICE_AUTH_CAPABILITY);
         }
 
-        if (config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION, false)) {
+        if (config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION)) {
             capabilities.add(CandlepinCapabilities.CLOUD_REGISTRATION_CAPABILITY);
         }
 
-        if (config.getBoolean(ConfigProperties.SSL_VERIFY, false)) {
+        if (config.getBoolean(ConfigProperties.SSL_VERIFY)) {
             capabilities.add(CandlepinCapabilities.SSL_VERIFY_CAPABILITY);
         }
 
         // Remove hidden capabilities
-        Set<String> hidden = config.getSet(ConfigProperties.HIDDEN_CAPABILITIES, null);
-        if (hidden != null) {
-            capabilities.removeAll(hidden);
-        }
+        Set<String> hidden = config.getSet(ConfigProperties.HIDDEN_CAPABILITIES);
+        capabilities.removeAll(hidden);
 
         log.info("Candlepin will show support for the following capabilities: {}", capabilities);
         CandlepinCapabilities.setCapabilities(capabilities);
     }
 
-    protected Configuration readConfiguration(ServletContext context) throws ConfigurationException {
-        File configFile = new File(ConfigProperties.DEFAULT_CONFIG_FILE);
+    protected Configuration readConfiguration() {
+        SmallRyeConfigBuilder configBuilder = new SmallRyeConfigBuilder()
+            .addDefaultSources()
+            .addDefaultInterceptors()
+            .withInterceptors(new LegacyEncryptedInterceptor(ENCRYPTED_PROPERTIES))
+            .withDefaultValues(ConfigProperties.DEFAULT_PROPERTIES);
 
-        EncryptedConfiguration systemConfig = new EncryptedConfiguration();
-
-        if (configFile.canRead()) {
-            log.debug("Loading system configuration");
-
-            // First, read the system configuration
-            systemConfig.load(configFile, StandardCharsets.UTF_8);
-            log.debug("System configuration: {}", systemConfig);
+        // Read config from /etc/candlepin/candlepin.conf
+        if (Files.exists(DEFAULT_CONFIG_FILE)) {
+            log.info("Loading candlepin.conf configuration!");
+            configBuilder.withSources(externalCandlepinConfig(DEFAULT_CONFIG_FILE, 225));
         }
 
-        systemConfig.use(PASSPHRASE_SECRET_FILE).toDecrypt(ENCRYPTED_PROPERTIES);
+        // Read config files from /etc/candlepin/conf.d
+        if (Files.exists(DEFAULT_CONFIG_DIR)) {
+            log.info("Loading config files in candlepin/conf.d");
+            try (Stream<Path> configFiles = Files.list(DEFAULT_CONFIG_DIR)) {
+                configFiles.forEach(path -> {
+                    log.info("Loading config file {}", path);
+                    configBuilder.withSources(externalCandlepinConfig(path, 250));
+                });
+            }
+            catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
 
-        // load the defaults
-        MapConfiguration defaults = new MapConfiguration(ConfigProperties.DEFAULT_PROPERTIES);
-
-        // Default to Postgresql if jpa.config.hibernate.dialect is unset
-        DatabaseConfigFactory.SupportedDatabase db = determinDatabaseConfiguration(
-            systemConfig.getString("jpa.config.hibernate.dialect", PostgreSQL92Dialect.class.getName()));
-        log.info("Running under {}", db.getLabel());
-        Configuration databaseConfig = DatabaseConfigFactory.fetchConfig(db);
-
-        // merge the defaults with the system configuration. PARAMETER ORDER MATTERS.
-        // systemConfig must be FIRST to override subsequent configs.  This set up allows
-        // the systemConfig to override databaseConfig if necessary, but that's not really something
-        // users should be doing unbidden so it is undocumented.
-        return EncryptedConfiguration.merge(systemConfig, databaseConfig, defaults);
+        return new RyeConfig(configBuilder.build());
     }
 
-    private DatabaseConfigFactory.SupportedDatabase determinDatabaseConfiguration(String dialect) {
-        if (StringUtils.containsIgnoreCase(
-            dialect, DatabaseConfigFactory.SupportedDatabase.MYSQL.getLabel())) {
-            return DatabaseConfigFactory.SupportedDatabase.MYSQL;
+    /**
+     * Creates a custom config source according to the given path and ordinal.
+     *
+     * @param path - a path to the external config
+     * @param ordinal - a priority of the source. Higher ordinals have higher priority.
+     * @return new config source
+     */
+    private PropertiesConfigSource externalCandlepinConfig(Path path, int ordinal) {
+        try {
+            return new PropertiesConfigSource(
+                path.toUri().toURL(), ordinal
+            );
         }
-        if (StringUtils
-            .containsIgnoreCase(dialect, DatabaseConfigFactory.SupportedDatabase.MARIADB.getLabel())) {
-            return DatabaseConfigFactory.SupportedDatabase.MARIADB;
+        catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return DatabaseConfigFactory.SupportedDatabase.POSTGRESQL;
     }
 
     @Override
@@ -429,14 +428,14 @@ public class CandlepinContextListener extends GuiceResteasyBootstrapServletConte
      * @throws RuntimeException if there are missing changesets or a LiqubaseException
      */
     protected void checkDbChangelog() {
-        String configStart = config.getString(DB_MANAGE_ON_START, "none");
+        String configStart = config.getString(DB_MANAGE_ON_START);
         log.info("Liquibase startup management set to {}", configStart);
         DBManagementLevel dbmLevel = null;
         try {
             dbmLevel = DBManagementLevel.valueOf(configStart.toUpperCase());
         }
         catch (IllegalArgumentException iae) {
-            log.error("The value of parameter '{}' is not allowed", configStart, DB_MANAGE_ON_START);
+            log.error("The value {} of parameter '{}' is not allowed", configStart, DB_MANAGE_ON_START);
             throw new RuntimeException(iae.getMessage());
         }
 

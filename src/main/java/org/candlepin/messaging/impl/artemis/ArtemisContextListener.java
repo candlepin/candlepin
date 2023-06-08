@@ -68,7 +68,7 @@ public class ArtemisContextListener implements CPMContextListener {
                 // If the Artemis config file is specified in the config use it. Otherwise
                 // the broker.xml file distributed via the WAR file will be used.
                 String artemisConfigFilePath = this.config
-                    .getProperty(ConfigProperties.ACTIVEMQ_SERVER_CONFIG_PATH);
+                    .getString(ConfigProperties.ACTIVEMQ_SERVER_CONFIG_PATH);
 
                 if (artemisConfigFilePath != null && !artemisConfigFilePath.isEmpty()) {
                     log.info("Loading Artemis config file: {}", artemisConfigFilePath);

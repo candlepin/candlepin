@@ -26,29 +26,25 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockitoAnnotations;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Locale;
 
-/**
- * ActivationKeyRulesTest
- */
+
 public class ActivationKeyRulesTest {
 
     private ActivationKeyRules actKeyRules;
     private static int poolid = 0;
-    private I18n i18n;
-    private Owner owner = TestUtil.createOwner();
+    private Owner owner;
 
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
         Locale locale = new Locale("en_US");
-        i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
+        I18n i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
             I18nFactory.FALLBACK);
-        actKeyRules = new ActivationKeyRules(i18n);
+        this.owner = TestUtil.createOwner();
+        this.actKeyRules = new ActivationKeyRules(i18n);
     }
 
     @Test
@@ -210,7 +206,7 @@ public class ActivationKeyRulesTest {
 
     private Pool genPool() {
         Pool pool = new Pool();
-        pool.setId("" + poolid++);
+        pool.setId(String.valueOf(poolid++));
         pool.setQuantity(10L);
         pool.setConsumed(4L);
         pool.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
@@ -222,12 +218,6 @@ public class ActivationKeyRulesTest {
     private Pool genNonMultiEnt() {
         Pool pool = genPool();
         pool.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "no");
-        return pool;
-    }
-
-    private Pool genVirtOnlyPool() {
-        Pool pool = genPool();
-        pool.setAttribute(Product.Attributes.VIRT_ONLY, "true");
         return pool;
     }
 

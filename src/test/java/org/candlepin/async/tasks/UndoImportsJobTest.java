@@ -64,9 +64,7 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-/**
- * UndoImportsJobTest
- */
+
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class UndoImportsJobTest extends DatabaseTestFixture {
@@ -97,7 +95,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         when(this.refresher.add(any(Owner.class))).thenReturn(this.refresher);
 
         this.undoImportsJob = new UndoImportsJob(
-            this.i18n, this.ownerCurator, this.poolManager, this.subAdapter,
+            this.i18n, this.ownerCurator, this.poolManager,
             this.exportCurator, this.importRecordCurator
         );
         injector.injectMembers(undoImportsJob);
@@ -111,7 +109,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         this.exportCurator = this.exportCuratorBase;
 
         this.undoImportsJob = new UndoImportsJob(
-            this.i18n, this.ownerCurator, this.poolManager, this.subAdapter,
+            this.i18n, this.ownerCurator, this.poolManager,
             this.exportCurator, this.importRecordCurator
         );
 

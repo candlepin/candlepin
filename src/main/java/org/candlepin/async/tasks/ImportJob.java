@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -46,7 +47,7 @@ import javax.inject.Inject;
  * Runs an asynchronous manifest import. This job expects that the manifest file was already uploaded.
  */
 public class ImportJob implements AsyncJob {
-    private static Logger log = LoggerFactory.getLogger(ImportJob.class);
+    private static final Logger log = LoggerFactory.getLogger(ImportJob.class);
 
     public static final String JOB_KEY = "ImportJob";
     public static final String JOB_NAME = "Import Manifest";
@@ -172,7 +173,7 @@ public class ImportJob implements AsyncJob {
      */
     private static class ImportConflictJobException extends JobExecutionException {
 
-        private String message;
+        private final String message;
 
         public ImportConflictJobException(ImportConflictException importConflictException) {
             super(importConflictException.getLocalizedMessage(), true);
@@ -197,13 +198,13 @@ public class ImportJob implements AsyncJob {
     }
 
 
-    private OwnerCurator ownerCurator;
-    private ManifestManager manifestManager;
+    private final OwnerCurator ownerCurator;
+    private final ManifestManager manifestManager;
 
     @Inject
     public ImportJob(OwnerCurator ownerCurator, ManifestManager manifestManager) {
-        this.ownerCurator = ownerCurator;
-        this.manifestManager = manifestManager;
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.manifestManager = Objects.requireNonNull(manifestManager);
     }
 
     @Override

@@ -28,8 +28,8 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.TestingModules;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.KeyPairData;
 import org.candlepin.model.KeyPairDataCurator;
@@ -102,7 +102,7 @@ public class JSSPKIUtilityTest {
     @BeforeEach
     public void setUp() throws Exception {
         JSSProviderLoader.initialize();
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
 
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(4096);

@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -36,31 +37,32 @@ import javax.inject.Inject;
  * for each owner.
  */
 public class ImportRecordCleanerJob implements AsyncJob {
-    private static Logger log = LoggerFactory.getLogger(ImportRecordCleanerJob.class);
+    private static final Logger log = LoggerFactory.getLogger(ImportRecordCleanerJob.class);
 
     public static final String JOB_KEY = "ImportRecordCleanerJob";
     public static final String JOB_NAME = "Import Record Cleaner";
 
+    // Every noon
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 
     public static final String CFG_KEEP = "num_of_records_to_keep";
-    public static final int DEFAULT_KEEP = 10;
+    public static final String DEFAULT_KEEP = "10";
 
-    private OwnerCurator ownerCurator;
-    private ImportRecordCurator importRecordCurator;
-    private Configuration config;
+    private final OwnerCurator ownerCurator;
+    private final ImportRecordCurator importRecordCurator;
+    private final Configuration config;
 
     @Inject
     public ImportRecordCleanerJob(ImportRecordCurator importRecordCurator,
         OwnerCurator ownerCurator, Configuration config) {
-        this.importRecordCurator = importRecordCurator;
-        this.ownerCurator = ownerCurator;
-        this.config = config;
+        this.importRecordCurator = Objects.requireNonNull(importRecordCurator);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.config = Objects.requireNonNull(config);
     }
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        int toKeep = this.config.getInt(ConfigProperties.jobConfig(JOB_KEY, CFG_KEEP), DEFAULT_KEEP);
+        int toKeep = this.config.getInt(ConfigProperties.jobConfig(JOB_KEY, CFG_KEEP));
 
         if (toKeep < 0) {
             String errmsg = String.format(

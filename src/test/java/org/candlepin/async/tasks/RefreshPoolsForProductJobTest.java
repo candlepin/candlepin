@@ -41,10 +41,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 
-
-/**
- * Test suite for the RefreshPoolsForProductJob class
- */
 public class RefreshPoolsForProductJobTest {
 
     private static final String VALID_ID = "valid_id";

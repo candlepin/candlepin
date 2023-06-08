@@ -48,7 +48,7 @@ import org.candlepin.auth.ConsumerPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
@@ -162,16 +162,13 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
 
 
-/**
- * OwnerResourceTest
- */
 public class OwnerResourceTest extends DatabaseTestFixture {
     private static final String OWNER_NAME = "Jar Jar Binks";
     @Inject private CandlepinPoolManager poolManager;
     @Inject private I18n i18n;
     @Inject private OwnerResource ownerResource;
     @Inject private CalculatedAttributesUtil calculatedAttributesUtil;
-    @Inject private Configuration config;
+    @Inject private DevConfig config;
     @Inject private ContentOverrideValidator contentOverrideValidator;
     @Inject private UeberCertificateGenerator ueberCertGenerator;
     @Inject private UeberCertificateCurator ueberCertCurator;

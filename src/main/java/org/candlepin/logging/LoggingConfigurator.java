@@ -16,11 +16,14 @@ package org.candlepin.logging;
 
 import org.candlepin.config.Configuration;
 import org.candlepin.config.ConfigurationPrefixes;
+import org.candlepin.util.Util;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
 
 /**
  * Sets the logback logging levels dynamically based on values from the candlepin.conf file.
@@ -31,17 +34,22 @@ import org.slf4j.LoggerFactory;
  *
  * See http://slf4j.org/faq.html#when
  */
-public class LoggingConfigurator {
+public final class LoggingConfigurator {
     private LoggingConfigurator() {
         // Static methods only
+        throw new UnsupportedOperationException();
     }
 
     public static void init(Configuration config) {
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
-        Configuration logLevels = config.strippedSubset(ConfigurationPrefixes.LOGGING_CONFIG_PREFIX);
+        Map<String, String> logLevels = config.getValuesByPrefix(ConfigurationPrefixes.LOGGING_CONFIG_PREFIX);
 
-        for (String key : logLevels.getKeys()) {
-            lc.getLogger(key).setLevel(Level.toLevel(logLevels.getString(key)));
+        for (Map.Entry<String, String> logLevel : logLevels.entrySet()) {
+            String loggerKey = Util
+                .stripPrefix(logLevel.getKey(), ConfigurationPrefixes.LOGGING_CONFIG_PREFIX);
+
+            lc.getLogger(loggerKey).setLevel(Level.toLevel(logLevel.getValue()));
         }
     }
+
 }

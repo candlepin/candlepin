@@ -43,12 +43,11 @@ import javax.inject.Inject;
  * job of the same Owner to finish before beginning execution
  */
 public class EntitleByProductsJob implements AsyncJob {
-    private static Logger log = LoggerFactory.getLogger(EntitleByProductsJob.class);
+    private static final Logger log = LoggerFactory.getLogger(EntitleByProductsJob.class);
 
     public static final String JOB_KEY = "EntitleByProductsJob";
     public static final String JOB_NAME = "Entitle by Products";
 
-    private static final String OWNER_KEY = "org";
     private static final String CONSUMER_UUID_KEY = "consumer_uuid";
     private static final String ENTITLE_DATE_KEY = "entitle_date";
     private static final String PROD_IDS_KEY = "product_ids";

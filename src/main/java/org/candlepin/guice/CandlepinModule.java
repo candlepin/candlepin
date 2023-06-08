@@ -166,6 +166,7 @@ import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.FactValidator;
+import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.validation.CandlepinMessageInterpolator;
 
@@ -197,6 +198,8 @@ import org.quartz.SchedulerFactory;
 import org.quartz.impl.StdSchedulerFactory;
 import org.xnap.commons.i18n.I18n;
 
+import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -210,14 +213,11 @@ import javax.validation.ValidatorFactory;
 
 
 
-/**
- * CandlepinModule
- */
 public class CandlepinModule extends AbstractModule {
-    private Configuration config;
+    private final Configuration config;
 
     public CandlepinModule(Configuration config) {
-        this.config = config;
+        this.config = Objects.requireNonNull(config);
     }
 
     @Override
@@ -377,7 +377,12 @@ public class CandlepinModule extends AbstractModule {
     }
 
     protected void configureJPA() {
-        Configuration jpaConfig = config.strippedSubset(ConfigurationPrefixes.JPA_CONFIG_PREFIX);
+        Properties jpaProperties = new Properties();
+        Map<String, String> jpaConfig = config.getValuesByPrefix(ConfigurationPrefixes.JPA_CONFIG_PREFIX);
+        for (Map.Entry<String, String> entry : jpaConfig.entrySet()) {
+            String key = Util.stripPrefix(entry.getKey(), ConfigurationPrefixes.JPA_CONFIG_PREFIX);
+            jpaProperties.put(key, entry.getValue());
+        }
 
         // As of Guice 6.0, UnitOfWork is no longer automatically started upon fetching the
         // EntityManager. This option restores that behavior.
@@ -386,7 +391,7 @@ public class CandlepinModule extends AbstractModule {
             .build();
 
         JpaPersistModule jpaModule = new JpaPersistModule("default", jpaOptions)
-            .properties(jpaConfig.toProperties());
+            .properties(jpaProperties);
 
         install(jpaModule);
         bind(JPAInitializer.class).asEagerSingleton();

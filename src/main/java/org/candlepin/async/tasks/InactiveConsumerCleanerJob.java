@@ -22,6 +22,7 @@ import org.candlepin.config.Configuration;
 import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ContentAccessCertificateCurator;
+import org.candlepin.model.DeletedConsumer;
 import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.IdentityCertificateCurator;
 
@@ -47,7 +48,7 @@ import javax.inject.Inject;
  * content access certificate are removed and their serials are revoked.
  */
 public class InactiveConsumerCleanerJob implements AsyncJob {
-    private static Logger log = LoggerFactory.getLogger(InactiveConsumerCleanerJob.class);
+    private static final Logger log = LoggerFactory.getLogger(InactiveConsumerCleanerJob.class);
 
     public static final String JOB_KEY = "InactiveConsumerCleanerJob";
     public static final String JOB_NAME = "Inactive Consumer Cleaner";
@@ -57,16 +58,15 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
 
     public static final String CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS = "last_updated_retention_in_days";
     public static final int DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS = 30;
-
     public static final String CFG_BATCH_SIZE = "batch_size";
-    public static final int DEFAULT_BATCH_SIZE = 1000;
+    public static final String DEFAULT_BATCH_SIZE = "1000";
 
-    private Configuration config;
-    private ConsumerCurator consumerCurator;
-    private DeletedConsumerCurator deletedConsumerCurator;
-    private IdentityCertificateCurator identityCertificateCurator;
-    private ContentAccessCertificateCurator contentAccessCertificateCurator;
-    private CertificateSerialCurator certificateSerialCurator;
+    private final Configuration config;
+    private final ConsumerCurator consumerCurator;
+    private final DeletedConsumerCurator deletedConsumerCurator;
+    private final IdentityCertificateCurator identityCertificateCurator;
+    private final ContentAccessCertificateCurator contentAccessCertificateCurator;
+    private final CertificateSerialCurator certificateSerialCurator;
 
     @Inject
     public InactiveConsumerCleanerJob(Configuration config,
@@ -120,16 +120,14 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        Instant lastCheckedInRetention = getRetentionDate(CFG_LAST_CHECKED_IN_RETENTION_IN_DAYS,
-            DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS);
-        Instant nonCheckedInRetention = getRetentionDate(CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS,
-            DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS);
+        Instant lastCheckedInRetention = getRetentionDate(CFG_LAST_CHECKED_IN_RETENTION_IN_DAYS);
+        Instant nonCheckedInRetention = getRetentionDate(CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS);
 
         List<String> inactiveConsumerIds = consumerCurator
             .getInactiveConsumerIds(lastCheckedInRetention, nonCheckedInRetention);
 
         int deletedCount = 0;
-        int batchSize = getBatchSize(CFG_BATCH_SIZE, DEFAULT_BATCH_SIZE);
+        int batchSize = getBatchSize();
         for (List<String> batch : Iterables.partition(inactiveConsumerIds, batchSize)) {
             log.debug("Cleaning inactive consumers with a batch of ids: {}", batch);
             deletedCount += deleteInactiveConsumers(batch);
@@ -143,14 +141,12 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
      * Retrieves the retention instant based on the provided configuration name and default value.
      *
      * @param configurationName - name of the configuration to retrieve.
-     * @param defaultValue - the default value for the configuration.
      * @return the retention instant based on the provided configuration name and default value.
      * @throws JobExecutionException when there is an invalid retention configuration.
      */
-    private Instant getRetentionDate(String configurationName, int defaultValue)
-        throws JobExecutionException {
+    private Instant getRetentionDate(String configurationName) throws JobExecutionException {
         String configuration = ConfigProperties.jobConfig(JOB_KEY, configurationName);
-        int retentionDays = this.config.getInt(configuration, defaultValue);
+        int retentionDays = this.config.getInt(configuration);
         if (retentionDays > 0) {
             return Instant.now().minus(retentionDays, ChronoUnit.DAYS);
         }
@@ -167,15 +163,12 @@ public class InactiveConsumerCleanerJob implements AsyncJob {
     /**
      * Retrieves the batch size for removing inactive consumers.
      *
-     * @param configurationName - the name of the configuration to retrieve.
-     * @param defaultValue - the default batch size.
      * @return the batch size based on the configuration and default value.
      * @throws JobExecutionException when there is an invalid batch size configuration.
      */
-    private int getBatchSize(String configurationName, int defaultValue)
-        throws JobExecutionException {
-        String configuration = ConfigProperties.jobConfig(JOB_KEY, configurationName);
-        int batchSize = this.config.getInt(configuration, defaultValue);
+    private int getBatchSize() throws JobExecutionException {
+        String configuration = ConfigProperties.jobConfig(JOB_KEY, CFG_BATCH_SIZE);
+        int batchSize = this.config.getInt(configuration);
         if (batchSize <= 0) {
             String errorMessage = String.format(
                 "Invalid value for configuration \"%s\", must be a positive integer: %s", configuration,

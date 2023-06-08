@@ -41,8 +41,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.HashSet;
 import java.util.Set;
 
-
-
 @ExtendWith(MockitoExtension.class)
 public class RegenEnvEntitlementCertsJobTest {
 

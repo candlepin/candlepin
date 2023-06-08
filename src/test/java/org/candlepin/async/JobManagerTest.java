@@ -57,9 +57,10 @@ import org.candlepin.auth.SystemPrincipal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.OwnerPermission;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
 import org.candlepin.guice.CandlepinRequestScope;
@@ -168,7 +169,7 @@ public class JobManagerTest {
 
     private static final String JOB_ID = "jobId";
 
-    private Configuration config;
+    private DevConfig config;
     private SchedulerFactory schedulerFactory;
     private ListenerManager listenerManager;
     private CandlepinModeManager modeManager;
@@ -191,7 +192,7 @@ public class JobManagerTest {
 
         JobManager.registerJob(TestJob.JOB_KEY, TestJob.class);
 
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
         this.schedulerFactory = mock(SchedulerFactory.class);
         this.listenerManager = mock(ListenerManager.class);
         this.modeManager = mock(CandlepinModeManager.class);
@@ -271,11 +272,15 @@ public class JobManagerTest {
     }
 
     private JobManager createJobManager() {
-        return createJobManager(this.dispatcher);
+        return createJobManager(this.dispatcher, this.config);
     }
 
-    private JobManager createJobManager(JobMessageDispatcher dispatcher) {
-        return new JobManager(this.config, this.schedulerFactory, this.modeManager, this.jobCurator,
+    private JobManager createJobManager(Configuration config) {
+        return createJobManager(this.dispatcher, config);
+    }
+
+    private JobManager createJobManager(JobMessageDispatcher dispatcher, Configuration config) {
+        return new JobManager(config, this.schedulerFactory, this.modeManager, this.jobCurator,
             this.ownerCurator, dispatcher, this.receiver, this.principalProvider, this.requestScope,
             this.injector);
     }
@@ -527,9 +532,7 @@ public class JobManagerTest {
 
     @Test
     public void testJobManagerUsesHostnameAsDefaultNodeName() throws JobException {
-        this.config.clearProperty(ConfigProperties.ASYNC_JOBS_NODE_NAME);
-
-        JobManager manager = this.createJobManager();
+        JobManager manager = this.createJobManager(config);
         manager.initialize();
         manager.start();
 
@@ -1130,7 +1133,7 @@ public class JobManagerTest {
         JobMessageDispatcher dispatcher = mock(JobMessageDispatcher.class);
         doThrow(new JobMessageDispatchException()).when(dispatcher).postJobMessage(any());
 
-        JobManager manager = this.createJobManager(dispatcher);
+        JobManager manager = this.createJobManager(dispatcher, this.config);
         manager.initialize();
         manager.start();
 
@@ -1795,7 +1798,7 @@ public class JobManagerTest {
         this.config.setProperty("org.quartz.testcfg1", "val1");
         this.config.setProperty("org.quartz.testcfg2", "val2");
 
-        Properties expected = this.config.subset("org.quartz").toProperties();
+        Properties expected = this.config.toProperties();
 
         JobManager manager = this.createJobManager();
 
@@ -1828,20 +1831,20 @@ public class JobManagerTest {
             .withIdentity("fun-job", "cp_async_config")
             .withSchedule(CronScheduleBuilder.cronSchedule("0 * * ? * *"))
             .build();
-        doReturn(Arrays.asList(dummyTrigger)).when(this.scheduler).getTriggersOfJob(jobkey2);
+        doReturn(List.of(dummyTrigger)).when(this.scheduler).getTriggersOfJob(jobkey2);
         doReturn(new ArrayList<>()).when(this.scheduler).getTriggersOfJob(jobkey4);
 
         JobManager manager = this.createJobManager();
         manager.initialize();
 
-        verify(this.scheduler, times(1)).getJobDetail(eq(jobkey1));
-        verify(this.scheduler, times(1)).getJobDetail(eq(jobkey2));
-        verify(this.scheduler, times(1)).getJobDetail(eq(jobkey3));
-        verify(this.scheduler, times(1)).getJobDetail(eq(jobkey4));
-        verify(this.scheduler, times(1)).getTriggersOfJob(eq(jobkey2));
+        verify(this.scheduler, times(1)).getJobDetail(jobkey1);
+        verify(this.scheduler, times(1)).getJobDetail(jobkey2);
+        verify(this.scheduler, times(1)).getJobDetail(jobkey3);
+        verify(this.scheduler, times(1)).getJobDetail(jobkey4);
+        verify(this.scheduler, times(1)).getTriggersOfJob(jobkey2);
         verify(this.scheduler, times(1))
-            .unscheduleJobs(Arrays.asList(dummyTrigger.getKey()));
-        verify(this.scheduler, times(1)).deleteJob(eq(jobkey4));
+            .unscheduleJobs(List.of(dummyTrigger.getKey()));
+        verify(this.scheduler, times(1)).deleteJob(jobkey4);
     }
 
 

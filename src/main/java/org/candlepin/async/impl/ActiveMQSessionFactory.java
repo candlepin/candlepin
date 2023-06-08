@@ -147,7 +147,7 @@ public class ActiveMQSessionFactory {
             // workaround we need on the receiving side of things. If it looks like the
             // egress configuration, something is probably broken.
 
-            String brokerUrl = this.config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL);
+            String brokerUrl = this.config.getString(ConfigProperties.ACTIVEMQ_BROKER_URL);
             ServerLocator locator = ActiveMQClient.createServerLocator(brokerUrl);
 
             // TODO: Maybe make this a bit more defensive and skip setting the property if it's
@@ -168,7 +168,7 @@ public class ActiveMQSessionFactory {
      */
     protected synchronized SessionManager getEgressSessionManager() throws Exception {
         if (this.egressSessionManager == null) {
-            String brokerUrl = this.config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL);
+            String brokerUrl = this.config.getString(ConfigProperties.ACTIVEMQ_BROKER_URL);
             ServerLocator locator = ActiveMQClient.createServerLocator(brokerUrl);
 
             // TODO: Maybe make this a bit more defensive and skip setting the property if it's

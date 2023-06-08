@@ -23,10 +23,8 @@ import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.auth.Principal;
-import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.HypervisorUpdateResultDTO;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.impl.HypervisorUpdateAction;
@@ -35,7 +33,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -57,7 +54,7 @@ import javax.inject.Named;
  * finish before beginning execution
  */
 public class HypervisorUpdateJob implements AsyncJob {
-    private static Logger log = LoggerFactory.getLogger(HypervisorUpdateJob.class);
+    private static final Logger log = LoggerFactory.getLogger(HypervisorUpdateJob.class);
 
     public static final String JOB_KEY = "HypervisorUpdateJob";
     public static final String JOB_NAME = "Hypervisor Update";
@@ -67,29 +64,19 @@ public class HypervisorUpdateJob implements AsyncJob {
     private static final String REPORTER_ID_KEY = "reporter_id";
     private static final String DATA_KEY = "data";
     private static final String PRINCIPAL_KEY = "principal";
-    private static final int BULK_SIZE = 10;
 
-    private ObjectMapper mapper;
-    private OwnerCurator ownerCurator;
-    private ConsumerCurator consumerCurator;
-    private HypervisorUpdateAction hypervisorUpdateAction;
-    private I18n i18n;
-    private ModelTranslator translator;
+    private final ObjectMapper mapper;
+    private final OwnerCurator ownerCurator;
+    private final HypervisorUpdateAction hypervisorUpdateAction;
 
     @Inject
     public HypervisorUpdateJob(
         final OwnerCurator ownerCurator,
-        final ConsumerCurator consumerCurator,
-        final ModelTranslator translator,
         final HypervisorUpdateAction hypervisorUpdateAction,
-        final I18n i18n,
         @Named("HypervisorUpdateJobObjectMapper") final ObjectMapper objectMapper) {
 
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
-        this.consumerCurator = Objects.requireNonNull(consumerCurator);
-        this.translator = Objects.requireNonNull(translator);
         this.hypervisorUpdateAction = Objects.requireNonNull(hypervisorUpdateAction);
-        this.i18n = Objects.requireNonNull(i18n);
         this.mapper = Objects.requireNonNull(objectMapper);
     }
 

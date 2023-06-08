@@ -41,9 +41,7 @@ import org.mockito.quality.Strictness;
 import java.util.List;
 import java.util.stream.Stream;
 
-/**
- * Test suite for the ImportRecordCleanerJob class
- */
+
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
@@ -172,7 +170,7 @@ public class ImportRecordCleanerJobTest extends DatabaseTestFixture {
 
     private static Stream<Arguments> numOfRecordsToKeepProvider() {
         return Stream.of(
-            Arguments.of(ImportRecordCleanerJob.DEFAULT_KEEP),
+            Arguments.of(Integer.parseInt(ImportRecordCleanerJob.DEFAULT_KEEP)),
             Arguments.of(60),
             Arguments.of(13),
             Arguments.of(1),

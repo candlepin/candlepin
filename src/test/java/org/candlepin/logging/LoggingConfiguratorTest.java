@@ -19,7 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.config.ConfigurationPrefixes;
-import org.candlepin.config.MapConfiguration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -28,24 +29,22 @@ import ch.qos.logback.classic.LoggerContext;
 import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.Map;
 
-/**
- * LoggingConfigTest
- */
+
 public class LoggingConfiguratorTest {
     @Test
     public void configure() {
         LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
         Logger l = context.getLogger(LoggingConfiguratorTest.class);
+        DevConfig config = TestConfig.custom(Map.of(
+            ConfigurationPrefixes.LOGGING_CONFIG_PREFIX + LoggingConfiguratorTest.class.getName(), "DEBUG"
+        ));
         assertNotNull(l);
         assertNull(l.getLevel());
 
-        Map<String, String> logLevels = new HashMap<>();
-        String key = ConfigurationPrefixes.LOGGING_CONFIG_PREFIX + LoggingConfiguratorTest.class.getName();
-        logLevels.put(key, "DEBUG");
-        LoggingConfigurator.init(new MapConfiguration(logLevels));
+        LoggingConfigurator.init(config);
+
         assertNotNull(l.getLevel());
         assertEquals(Level.DEBUG, l.getLevel());
     }

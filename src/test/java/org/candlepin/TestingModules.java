@@ -26,8 +26,8 @@ import org.candlepin.bind.BindContextFactory;
 import org.candlepin.bind.PreEntitlementRulesCheckOpFactory;
 import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.StatusCache;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.mode.CandlepinModeManager;
@@ -261,7 +261,7 @@ public class TestingModules {
         private Configuration config;
 
         public StandardTest() {
-            this.config = new CandlepinCommonTestConfig();
+            this.config = TestConfig.defaults();
         }
 
         public StandardTest(Configuration config) {

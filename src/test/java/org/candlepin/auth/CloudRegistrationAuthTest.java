@@ -29,9 +29,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.pki.CertificateReader;
@@ -69,16 +69,12 @@ import java.util.Map;
 import javax.inject.Provider;
 
 
-
-/**
- * Test suite for the CloudRegistrationAuth class
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class CloudRegistrationAuthTest {
     private static final String TOKEN_TYPE = "CP-Cloud-Registration";
 
-    private Configuration config;
+    private DevConfig config;
     private I18n i18n;
     private Provider<I18n> i18nProvider;
     private CertificateReader certificateReader;
@@ -88,7 +84,7 @@ public class CloudRegistrationAuthTest {
 
     @BeforeEach
     public void init() {
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
         this.i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         this.i18nProvider = () -> i18n;
         this.certificateReader = this.setupCertificateReader();

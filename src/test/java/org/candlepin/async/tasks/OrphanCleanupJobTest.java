@@ -39,9 +39,7 @@ import org.mockito.ArgumentCaptor;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Test suite for the OrphanCleanupJob class
- */
+
 public class OrphanCleanupJobTest extends DatabaseTestFixture {
 
     private OrphanCleanupJob createJobInstance() {

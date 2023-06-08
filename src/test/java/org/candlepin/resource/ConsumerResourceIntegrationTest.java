@@ -32,8 +32,8 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.auth.permissions.PermissionFactory;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.dto.ModelTranslator;
@@ -740,7 +740,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     private static class ProductCertCreationModule extends AbstractModule {
         @Override
         protected void configure() {
-            bind(Configuration.class).to(CandlepinCommonTestConfig.class);
+            bind(Configuration.class).toInstance(TestConfig.defaults());
             bind(CertificateReader.class).asEagerSingleton();
         }
     }

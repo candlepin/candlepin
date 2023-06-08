@@ -18,6 +18,7 @@ import static org.candlepin.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
 
 import org.candlepin.async.tasks.ActiveEntitlementJob;
 import org.candlepin.async.tasks.CertificateCleanupJob;
+import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
 import org.candlepin.async.tasks.ImportRecordCleanerJob;
 import org.candlepin.async.tasks.InactiveConsumerCleanerJob;
@@ -39,8 +40,6 @@ import java.util.Map;
 public class ConfigProperties {
     private ConfigProperties() {
     }
-
-    public static final String DEFAULT_CONFIG_FILE = "/etc/candlepin/candlepin.conf";
 
     public static final String CANDLEPIN_URL = "candlepin.url";
 
@@ -340,7 +339,7 @@ public class ConfigProperties {
 
     public static final String ENTITLER_BULK_SIZE = "entitler.bulk.size";
 
-    public static final Map<String, String> DEFAULT_PROPERTIES = new HashMap<String, String>() {
+    public static final Map<String, String> DEFAULT_PROPERTIES = new HashMap<>() {
         private static final long serialVersionUID = 1L;
 
         {
@@ -477,29 +476,74 @@ public class ConfigProperties {
             this.put(ASYNC_JOBS_RECEIVE_ADDRESS, "jobs");
             this.put(ASYNC_JOBS_RECEIVE_FILTER, "");
 
+            // ActiveEntitlementJob
             this.put(jobConfig(ActiveEntitlementJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ActiveEntitlementJob.DEFAULT_SCHEDULE);
+
+            // CertificateCleanupJob
             this.put(jobConfig(CertificateCleanupJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 CertificateCleanupJob.DEFAULT_SCHEDULE);
+
+            // EntitlerJob
+            this.put(jobConfig(EntitlerJob.JOB_KEY, EntitlerJob.CFG_JOB_THROTTLE),
+                EntitlerJob.DEFAULT_THROTTLE);
+
+            // ExpiredPoolsCleanupJob
             this.put(jobConfig(ExpiredPoolsCleanupJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ExpiredPoolsCleanupJob.DEFAULT_SCHEDULE);
+
+            // ImportRecordCleanerJob
             this.put(jobConfig(ImportRecordCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ImportRecordCleanerJob.DEFAULT_SCHEDULE);
-            this.put(jobConfig(JobCleaner.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
-                JobCleaner.DEFAULT_SCHEDULE);
-            this.put(jobConfig(ManifestCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
-                ManifestCleanerJob.DEFAULT_SCHEDULE);
-            this.put(jobConfig(OrphanCleanupJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
-                OrphanCleanupJob.DEFAULT_SCHEDULE);
-            this.put(jobConfig(UnmappedGuestEntitlementCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
-                UnmappedGuestEntitlementCleanerJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(ImportRecordCleanerJob.JOB_KEY, ImportRecordCleanerJob.CFG_KEEP),
+                ImportRecordCleanerJob.DEFAULT_KEEP);
+
+            // InactiveConsumeCleanerJob
             this.put(jobConfig(InactiveConsumerCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
                 ConfigProperties.ASYNC_JOBS_MANUAL_SCHEDULE);
+            this.put(jobConfig(InactiveConsumerCleanerJob.JOB_KEY, InactiveConsumerCleanerJob.CFG_BATCH_SIZE),
+                InactiveConsumerCleanerJob.DEFAULT_BATCH_SIZE);
+            this.put(jobConfig(InactiveConsumerCleanerJob.JOB_KEY,
+                InactiveConsumerCleanerJob.CFG_LAST_CHECKED_IN_RETENTION_IN_DAYS),
+                Integer.toString(InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS));
+            this.put(jobConfig(InactiveConsumerCleanerJob.JOB_KEY,
+                InactiveConsumerCleanerJob.CFG_LAST_UPDATED_IN_RETENTION_IN_DAYS),
+                Integer.toString(InactiveConsumerCleanerJob.DEFAULT_LAST_UPDATED_IN_RETENTION_IN_DAYS));
+
+            // JobCleaner
+            this.put(jobConfig(JobCleaner.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                JobCleaner.DEFAULT_SCHEDULE);
+            this.put(jobConfig(JobCleaner.JOB_KEY, JobCleaner.CFG_MAX_TERMINAL_JOB_AGE),
+                JobCleaner.DEFAULT_MAX_TERMINAL_AGE);
+            this.put(jobConfig(JobCleaner.JOB_KEY, JobCleaner.CFG_MAX_NONTERMINAL_JOB_AGE),
+                JobCleaner.DEFAULT_MAX_NONTERMINAL_AGE);
+            this.put(jobConfig(JobCleaner.JOB_KEY, JobCleaner.CFG_MAX_RUNNING_JOB_AGE),
+                JobCleaner.DEFAULT_MAX_RUNNING_AGE);
+
+            // ManifestCleanerJob
+            this.put(jobConfig(ManifestCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                ManifestCleanerJob.DEFAULT_SCHEDULE);
+            this.put(jobConfig(ManifestCleanerJob.JOB_KEY, ManifestCleanerJob.CFG_MAX_AGE_IN_MINUTES),
+                Integer.toString(ManifestCleanerJob.DEFAULT_MAX_AGE_IN_MINUTES));
+
+            // OrphanCleanupJob
+            this.put(jobConfig(OrphanCleanupJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                OrphanCleanupJob.DEFAULT_SCHEDULE);
+
+            // UnmappedGuestEntitlementCleanerJob
+            this.put(jobConfig(UnmappedGuestEntitlementCleanerJob.JOB_KEY, ASYNC_JOBS_JOB_SCHEDULE),
+                UnmappedGuestEntitlementCleanerJob.DEFAULT_SCHEDULE);
 
             // Set the triggerable jobs list
             this.put(ASYNC_JOBS_TRIGGERABLE_JOBS, String.join(", ", ASYNC_JOBS_TRIGGERABLE_JOBS_LIST));
 
             this.put(ORPHANED_ENTITY_GRACE_PERIOD, "30");
+
+            // Based on testing with the hypervisor check in process, and going a bit conservative
+            this.put(DatabaseConfigFactory.IN_OPERATOR_BLOCK_SIZE, "15000");
+            this.put(DatabaseConfigFactory.CASE_OPERATOR_BLOCK_SIZE, "100");
+            this.put(DatabaseConfigFactory.BATCH_BLOCK_SIZE, "500");
+            this.put(DatabaseConfigFactory.QUERY_PARAMETER_LIMIT, "32000");
         }
     };
 }

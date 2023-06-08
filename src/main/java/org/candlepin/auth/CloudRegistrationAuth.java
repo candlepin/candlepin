@@ -104,7 +104,7 @@ public class CloudRegistrationAuth implements AuthProvider {
         try {
             this.enabled = this.config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
 
-            this.jwtIssuer = this.config.getProperty(ConfigProperties.JWT_ISSUER);
+            this.jwtIssuer = this.config.getString(ConfigProperties.JWT_ISSUER);
             this.jwtTokenTTL = this.config.getInt(ConfigProperties.JWT_TOKEN_TTL);
         }
         catch (ConversionException e) {

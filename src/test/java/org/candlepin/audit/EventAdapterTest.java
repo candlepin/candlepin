@@ -21,8 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.TestingModules;
 import org.candlepin.auth.PrincipalData;
-import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.MapConfiguration;
+import org.candlepin.config.TestConfig;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -41,7 +40,8 @@ import javax.inject.Inject;
 
 
 public class EventAdapterTest {
-    @Inject private I18n i18n;
+    @Inject
+    private I18n i18n;
 
     @BeforeEach
     public void init() {
@@ -56,7 +56,7 @@ public class EventAdapterTest {
 
     @Test
     public void toFeed() {
-        EventAdapter ea = new EventAdapterImpl(new ConfigForTesting(), i18n);
+        EventAdapter ea = new EventAdapterImpl(TestConfig.defaults(), i18n);
         List<Event> events = new LinkedList<>();
         events.add(mockEvent(Event.Target.CONSUMER, Event.Type.CREATED));
         events.add(mockEvent(Event.Target.ENTITLEMENT, Event.Type.DELETED));
@@ -86,7 +86,7 @@ public class EventAdapterTest {
 
     @Test
     public void nullList() {
-        EventAdapter ea = new EventAdapterImpl(new ConfigForTesting(), i18n);
+        EventAdapter ea = new EventAdapterImpl(TestConfig.defaults(), i18n);
         Feed f = ea.toFeed(null, null);
         assertNotNull(f);
         assertNotNull(f.getEntries());
@@ -95,16 +95,11 @@ public class EventAdapterTest {
 
     @Test
     public void emptyList() {
-        EventAdapter ea = new EventAdapterImpl(new ConfigForTesting(), i18n);
+        EventAdapter ea = new EventAdapterImpl(TestConfig.defaults(), i18n);
         Feed f = ea.toFeed(new LinkedList<>(), "/some/path");
         assertNotNull(f);
         assertNotNull(f.getEntries());
         assertTrue(f.getEntries().isEmpty());
     }
 
-    private static class ConfigForTesting extends MapConfiguration {
-        public ConfigForTesting() {
-            super(ConfigProperties.DEFAULT_PROPERTIES);
-        }
-    }
 }

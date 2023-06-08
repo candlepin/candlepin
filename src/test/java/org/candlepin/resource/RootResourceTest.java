@@ -16,7 +16,7 @@ package org.candlepin.resource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.candlepin.config.CandlepinCommonTestConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.api.server.v1.Link;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -57,7 +57,7 @@ public class RootResourceTest {
 
     @BeforeEach
     public void setUp() {
-        rootResource = new RootResource(new CandlepinCommonTestConfig());
+        rootResource = new RootResource(TestConfig.defaults());
     }
 
     @Test

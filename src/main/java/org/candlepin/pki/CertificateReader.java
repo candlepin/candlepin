@@ -61,7 +61,7 @@ public class CertificateReader {
         this.caCertPath = config.getString(ConfigProperties.CA_CERT);
         this.upstreamCaCertPath = config.getString(ConfigProperties.CA_CERT_UPSTREAM);
         this.caKeyPath = config.getString(ConfigProperties.CA_KEY);
-        this.caKeyPassword = config.getString(ConfigProperties.CA_KEY_PASSWORD, null);
+        this.caKeyPassword = config.getString(ConfigProperties.CA_KEY_PASSWORD);
     }
 
     protected void validateArguments() {

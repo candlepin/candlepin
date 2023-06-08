@@ -44,6 +44,7 @@ public class CertificateCleanupJob implements AsyncJob {
 
     public static final String JOB_KEY = "CertificateCleanupJob";
     public static final String JOB_NAME = "Certificate Cleanup";
+    // Every noon
     public static final String DEFAULT_SCHEDULE = "0 0 12 * * ?";
 
     private final ConsumerCurator consumerCurator;

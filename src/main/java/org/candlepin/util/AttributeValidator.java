@@ -19,8 +19,6 @@ import org.candlepin.config.Configuration;
 
 import org.xnap.commons.i18n.I18n;
 
-import java.util.Set;
-
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
@@ -38,53 +36,36 @@ public class AttributeValidator extends PropertyValidator {
 
     @Inject
     public AttributeValidator(Configuration config, Provider<I18n> i18nProvider) {
-        Set<String> attributes;
-
         // Add integer attributes...
-        attributes = config.getSet(ConfigProperties.INTEGER_ATTRIBUTES, null);
-        if (attributes != null) {
-            for (String key : attributes) {
-                this.validators.put(key, new PropertyValidator.IntegerValidator(i18nProvider, "attribute"));
-            }
+        for (String key : config.getSet(ConfigProperties.INTEGER_ATTRIBUTES)) {
+            this.validators.put(key, new PropertyValidator.IntegerValidator(i18nProvider, "attribute"));
         }
 
         // Add non-negative integer attributes...
-        attributes = config.getSet(ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES, null);
-        if (attributes != null) {
-            for (String key : attributes) {
-                this.validators.put(key,
-                    new PropertyValidator.NonNegativeIntegerValidator(i18nProvider, "attribute"));
-            }
+        for (String key : config.getSet(ConfigProperties.NON_NEG_INTEGER_ATTRIBUTES)) {
+            this.validators
+                .put(key, new PropertyValidator.NonNegativeIntegerValidator(i18nProvider, "attribute"));
         }
 
         // Add long attributes...
-        attributes = config.getSet(ConfigProperties.LONG_ATTRIBUTES, null);
-        if (attributes != null) {
-            for (String key : attributes) {
-                this.validators.put(key, new PropertyValidator.LongValidator(i18nProvider, "attribute"));
-            }
+        for (String key : config.getSet(ConfigProperties.LONG_ATTRIBUTES)) {
+            this.validators.put(key, new PropertyValidator.LongValidator(i18nProvider, "attribute"));
         }
 
         // Add non-negative long attributes...
-        attributes = config.getSet(ConfigProperties.NON_NEG_LONG_ATTRIBUTES, null);
-        if (attributes != null) {
-            for (String key : attributes) {
-                this.validators.put(key, new PropertyValidator.NonNegativeLongValidator(i18nProvider,
-                    "attribute"));
-            }
+        for (String key : config.getSet(ConfigProperties.NON_NEG_LONG_ATTRIBUTES)) {
+            this.validators.put(key, new PropertyValidator.NonNegativeLongValidator(i18nProvider,
+                "attribute"));
         }
 
         // Add boolean attributes...
-        attributes = config.getSet(ConfigProperties.BOOLEAN_ATTRIBUTES, null);
-        if (attributes != null) {
-            for (String key : attributes) {
-                this.validators.put(key, new PropertyValidator.BooleanValidator(i18nProvider, "attribute"));
-            }
+        for (String key : config.getSet(ConfigProperties.BOOLEAN_ATTRIBUTES)) {
+            this.validators.put(key, new PropertyValidator.BooleanValidator(i18nProvider, "attribute"));
         }
 
         // Add global validators...
-        this.globalValidators.add(
-            new PropertyValidator.LengthValidator(i18nProvider, "attribute", ATTRIBUTE_MAX_LENGTH));
+        this.globalValidators
+            .add(new PropertyValidator.LengthValidator(i18nProvider, "attribute", ATTRIBUTE_MAX_LENGTH));
     }
 
 }

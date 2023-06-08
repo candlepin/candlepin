@@ -50,7 +50,7 @@ import javax.inject.Inject;
  * HealEntireOrgJob
  */
 public class HealEntireOrgJob implements AsyncJob {
-    private static Logger log = LoggerFactory.getLogger(HealEntireOrgJob.class);
+    private static final Logger log = LoggerFactory.getLogger(HealEntireOrgJob.class);
 
     public static final String JOB_KEY = "HealEntireOrgJob";
     public static final String JOB_NAME = "Heal Organization";
@@ -58,11 +58,11 @@ public class HealEntireOrgJob implements AsyncJob {
     public static final String OWNER_KEY = "org";
     public static final String ENTITLE_DATE_KEY = "entitle_date";
 
-    private Entitler entitler;
-    private EventSink eventSink;
-    private ConsumerCurator consumerCurator;
-    private OwnerCurator ownerCurator;
-    private I18n i18n;
+    private final Entitler entitler;
+    private final EventSink eventSink;
+    private final ConsumerCurator consumerCurator;
+    private final OwnerCurator ownerCurator;
+    private final I18n i18n;
 
     @Inject
     public HealEntireOrgJob(Entitler entitler, EventSink eventSink, ConsumerCurator consumerCurator,

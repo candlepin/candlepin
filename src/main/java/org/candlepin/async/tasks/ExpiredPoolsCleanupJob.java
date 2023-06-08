@@ -35,9 +35,10 @@ public class ExpiredPoolsCleanupJob implements AsyncJob {
     public static final String JOB_KEY = "ExpiredPoolsCleanupJob";
     public static final String JOB_NAME = "Expired Pools Cleanup";
 
-    public static final String DEFAULT_SCHEDULE = "0 0 0/1 * * ?"; // Every hour
+    // Every hour
+    public static final String DEFAULT_SCHEDULE = "0 0 0/1 * * ?";
 
-    private PoolManager poolManager;
+    private final PoolManager poolManager;
 
     @Inject
     public ExpiredPoolsCleanupJob(PoolManager poolManager) {

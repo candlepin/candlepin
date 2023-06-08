@@ -78,7 +78,4 @@ public class DatabaseConfigFactory {
         }
     }
 
-    public static MapConfiguration fetchConfig(SupportedDatabase db) {
-        return new MapConfiguration(db.getSettings());
-    }
 }

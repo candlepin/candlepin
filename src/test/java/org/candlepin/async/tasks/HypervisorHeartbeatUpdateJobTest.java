@@ -40,9 +40,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Date;
 
-/**
- * Test suite for the HypervisorHeartbeatUpdateJob class
- */
+
 @ExtendWith(MockitoExtension.class)
 public class HypervisorHeartbeatUpdateJobTest {
 

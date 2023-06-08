@@ -104,12 +104,12 @@ public class JobMessageReceiver {
      *  if the necessary configuration cannot be read or is invalid
      */
     private void configure(Configuration config) throws ConfigurationException {
-        this.receiveAddress = config.getString(ConfigProperties.ASYNC_JOBS_RECEIVE_ADDRESS, null);
+        this.receiveAddress = config.getString(ConfigProperties.ASYNC_JOBS_RECEIVE_ADDRESS);
         if (this.receiveAddress == null || this.receiveAddress.isEmpty()) {
             throw new ConfigurationException("Invalid job receive address: address cannot be null or empty");
         }
 
-        this.receiveFilter = config.getString(ConfigProperties.ASYNC_JOBS_RECEIVE_FILTER, null);
+        this.receiveFilter = config.getString(ConfigProperties.ASYNC_JOBS_RECEIVE_FILTER);
     }
 
     /**

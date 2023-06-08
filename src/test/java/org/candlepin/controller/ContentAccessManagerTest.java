@@ -34,9 +34,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.audit.EventSink;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.CandlepinQuery;
@@ -100,17 +100,13 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 
-
-/**
- * Test suite for the ContentAccessManager class
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ContentAccessManagerTest {
 
     private static KeyPair testingKeyPair;
 
-    private Configuration config;
+    private DevConfig config;
 
     @Mock private EventSink mockEventSink;
     @Mock private KeyPairDataCurator mockKeyPairDataCurator;
@@ -147,7 +143,7 @@ public class ContentAccessManagerTest {
 
     @BeforeEach
     public void setup() throws Exception {
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
 
         PrivateKeyReader keyReader = new JSSPrivateKeyReader();
         CertificateReader certReader = new CertificateReader(this.config, keyReader);

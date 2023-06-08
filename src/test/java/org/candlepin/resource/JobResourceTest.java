@@ -36,9 +36,9 @@ import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.JobManager.ManagerState;
 import org.candlepin.async.StateManagementException;
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.server.v1.SchedulerStatusDTO;
 import org.candlepin.exceptions.BadRequestException;
@@ -89,15 +89,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
-
-/**
- * Test suite for the JobResource class
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class JobResourceTest extends DatabaseTestFixture {
 
-    private Configuration config;
+    private DevConfig config;
     private I18n i18n;
 
     private JobManager jobManager;
@@ -108,7 +104,7 @@ public class JobResourceTest extends DatabaseTestFixture {
     public void init() throws Exception {
         super.init();
 
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
         this.jobManager = mock(JobManager.class);
         this.jobCurator = mock(AsyncJobStatusCurator.class);

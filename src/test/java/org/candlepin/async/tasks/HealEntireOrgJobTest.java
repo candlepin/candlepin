@@ -57,10 +57,6 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 
 
-
-/**
- * Test suite for the HealEntireOrgJob class
- */
 public class HealEntireOrgJobTest {
 
     private Entitler entitler;

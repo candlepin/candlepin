@@ -27,10 +27,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import org.candlepin.config.CandlepinCommonTestConfig;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
 import org.candlepin.config.ConfigurationException;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.messaging.CPMConsumer;
 import org.candlepin.messaging.CPMConsumerConfig;
 import org.candlepin.messaging.CPMException;
@@ -55,7 +55,7 @@ import org.mockito.ArgumentCaptor;
 public class JobMessageReceiverTest {
 
     private JobManager jobManager;
-    private Configuration config;
+    private DevConfig config;
     private CPMSessionFactory cpmSessionFactory;
     private ObjectMapper mapper;
     private UnitOfWork unitOfWork;
@@ -67,7 +67,7 @@ public class JobMessageReceiverTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        this.config = new CandlepinCommonTestConfig();
+        this.config = TestConfig.defaults();
         this.jobManager = mock(JobManager.class);
         this.mapper = new ObjectMapper();
         this.unitOfWork = mock(UnitOfWork.class);
@@ -153,7 +153,8 @@ public class JobMessageReceiverTest {
     public void testReceiveAddressCannotBeNull() {
         this.config.clearProperty(ConfigProperties.ASYNC_JOBS_RECEIVE_ADDRESS);
 
-        assertThrows(ConfigurationException.class, this::buildJobMessageReceiver);
+        assertThrows(ConfigurationException.class, () -> new JobMessageReceiver(
+            this.config, this.cpmSessionFactory, this.mapper, this.unitOfWork));
     }
 
     @Test

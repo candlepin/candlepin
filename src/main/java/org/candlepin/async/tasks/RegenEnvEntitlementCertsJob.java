@@ -26,6 +26,7 @@ import org.candlepin.model.Environment;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -47,11 +48,11 @@ public class RegenEnvEntitlementCertsJob implements AsyncJob {
     private static final String CONTENT_KEY = "content_ids";
     private static final String LAZY_REGEN_KEY = "lazy_regen";
 
-    private PoolManager poolManager;
+    private final PoolManager poolManager;
 
     @Inject
     public RegenEnvEntitlementCertsJob(PoolManager poolManager) {
-        this.poolManager = poolManager;
+        this.poolManager = Objects.requireNonNull(poolManager);
     }
 
     @Override

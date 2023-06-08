@@ -166,7 +166,7 @@ public class ArtemisSessionFactory implements CPMSessionFactory {
 
         try {
             // Create server locator
-            String brokerUrl = this.config.getProperty(ConfigProperties.ACTIVEMQ_BROKER_URL);
+            String brokerUrl = this.config.getString(ConfigProperties.ACTIVEMQ_BROKER_URL);
             log.info("Connecting to Artemis server at {}", brokerUrl);
 
             this.locator = ActiveMQClient.createServerLocator(brokerUrl);

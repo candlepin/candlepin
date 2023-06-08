@@ -47,9 +47,6 @@ import org.xnap.commons.i18n.I18nFactory;
 import java.util.Locale;
 
 
-/**
- * Test suite for the CloudRegistrationResource class
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class CloudRegistrationResourceTest {
