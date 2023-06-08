@@ -55,6 +55,7 @@ public class DistributorVersionDTO extends TimestampedCandlepinDTO<DistributorVe
         public DistributorVersionCapabilityDTO(
             @JsonProperty("id") String id,
             @JsonProperty("name") String name) {
+
             if (name == null || name.isEmpty()) {
                 throw new IllegalArgumentException(
                     "The distributor version capability name is null or empty.");
