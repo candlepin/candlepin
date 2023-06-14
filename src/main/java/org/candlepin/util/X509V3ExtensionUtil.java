@@ -291,6 +291,10 @@ public class X509V3ExtensionUtil extends X509Util {
     public org.candlepin.model.dto.Product mapProduct(Product engProduct, Product sku,
         PromotedContent promotedContent, Consumer consumer, Pool pool, Set<String> entitledProductIds) {
 
+        if (sku == null) {
+            System.out.println("sku is null");
+            return null;
+        }
         org.candlepin.model.dto.Product toReturn = new org.candlepin.model.dto.Product();
 
         toReturn.setId(engProduct.getId());

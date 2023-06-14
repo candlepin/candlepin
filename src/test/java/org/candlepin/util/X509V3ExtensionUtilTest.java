@@ -54,6 +54,7 @@ import java.util.Set;
 
 
 
+
 public class X509V3ExtensionUtilTest {
     private X509V3ExtensionUtil util;
     private ObjectMapper mapper;
@@ -273,6 +274,36 @@ public class X509V3ExtensionUtilTest {
         assertEquals(1, certProds.getContent().size());
         assertEquals(1, certProds.getContent().get(0).getArches().size());
         assertEquals("x86_64", certProds.getContent().get(0).getArches().get(0));
+    }
+
+        @Test
+    public void shouldOnlyIncludeContentWithCompatibleArchitecture2() {
+        Owner owner = new Owner()
+            .setId("test-id")
+            .setKey("Test Corporation")
+            .setDisplayName("Test Corporation");
+        Content content1 = new Content()
+            .setId("cont_id1")
+            .setArches("x86_64");
+        Content content2 = new Content()
+            .setId("cont_id2")
+            .setArches("ppc64");
+        Product engProd = new Product()
+            .setId("content_access")
+            .setName("Content Access");
+        engProd.addContent(content1, true);
+        engProd.addContent(content2, true);
+        Product sku = new Product()
+            .setId("content_access")
+            .setName("Content Access");
+        Pool pool = TestUtil.createPool(sku);
+        Consumer consumer = new Consumer()
+            .setOwner(owner)
+            .setFact("uname.machine", "x86_64");
+
+        org.candlepin.model.dto.Product certProds = util.mapProduct(engProd, null,
+            new PromotedContent(emptyPrefix()), consumer, pool,
+            new HashSet<>(Arrays.asList("content_access")));
     }
 
     private ContentPrefix emptyPrefix() {
