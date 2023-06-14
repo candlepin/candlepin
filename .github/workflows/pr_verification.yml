@@ -101,6 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: fedora:38
+      options: --privileged
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
@@ -132,3 +133,119 @@ jobs:
         with:
           # Cause the check to fail on any broke rules
           fail-on-error: true
+
+  build_image:
+    name: build Candlepin image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Install packages
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install \
+            git-core \
+            buildah
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Log in to the registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Candlepin image
+        id: build-image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ghcr.io/candlepin/gha_build
+          tags: pr-${{ github.event.pull_request.number }}
+          containerfiles: ./.github/containers/Dockerfile
+
+      - name: Push to registry
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ghcr.io/candlepin/gha_build
+          tags: pr-${{ github.event.pull_request.number }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+  spec_tests:
+    name: spec tests
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:38
+      options: --privileged
+    permissions:
+      contents: read
+      packages: write
+    needs: build_image
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [postgres, mariadb]
+        mode: [standalone, hosted]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          dnf -y --setopt install_weak_deps=False update
+          dnf --setopt install_weak_deps=False install -y gettext jss docker
+
+      - name: Install docker compose
+        shell: bash
+        run: |
+          DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+          mkdir -p $DOCKER_CONFIG/cli-plugins
+          curl -SL https://github.com/docker/compose/releases/download/v2.18.1/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+          sudo chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+
+      - name: Log in to the registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - if: matrix.mode == 'standalone'
+        name: Add standalone env variable
+        working-directory: ./.github/containers
+        shell: bash
+        run: echo "CANDLEPIN_STANDALONE=true" > .env
+
+      - if: matrix.mode == 'hosted'
+        name: Add hosted env variables
+        working-directory: ./.github/containers
+        shell: bash
+        run: |
+          echo "CANDLEPIN_STANDALONE=false" > .env
+          echo "MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE=org.candlepin.hostedtest.AdapterOverrideModule" >> .env
+
+      - name: Create Candlepin and database containers
+        shell: bash
+        run: |
+          echo "CANDLEPIN_IMAGE=ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}" >> ./.github/containers/.env
+          echo "SOURCE_LOCATION=${{ github.workspace }}" >> ./.github/containers/.env
+          BRIDGE_NETWORK=$(docker network ls --filter=name=github_network_ --format="{{ .Name }}")
+          echo "NETWORK=$BRIDGE_NETWORK" >> ./.github/containers/.env
+          docker image pull ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}
+          docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml --env-file ./.github/containers/.env up -d --wait
+
+      - name: run spec tests
+        shell: bash
+        run: ./gradlew spec -Dspec.test.client.host=candlepin
+
+      - if: always()
+        name: stop containers
+        shell: bash
+        run: docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml down
