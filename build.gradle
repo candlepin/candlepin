@@ -329,8 +329,6 @@ sonar {
         property "sonar.projectKey", "candlepin_candlepin"
         property "sonar.organization", "candlepin"
         property "sonar.host.url", "https://sonarcloud.io"
-        property "sonar.exclusions", "build/**/*.java"
-        property "sonar.coverage.exclusions", "**/*DTO*.*"
     }
 }
 
