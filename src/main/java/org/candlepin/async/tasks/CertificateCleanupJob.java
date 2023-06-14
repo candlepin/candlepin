@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -89,12 +88,15 @@ public class CertificateCleanupJob implements AsyncJob {
         List<String> expiredCertIds = certIdsOf(allExpiredIdCertificates);
         int unlinkedConsumers = this.consumerCurator.unlinkIdCertificates(expiredCertIds);
         log.debug("Unlinked identity certificates of {} consumers.", unlinkedConsumers);
+        log.debug("Unlinked identity certificates of {} consumers.", unlinkedConsumers);
 
         int certsDeleted = this.identCertCurator.deleteByIds(expiredCertIds);
+        log.debug("Deleted {} identity certificates.", certsDeleted);
         log.debug("Deleted {} identity certificates.", certsDeleted);
 
         List<Long> expiredSerials = serialsOf(allExpiredIdCertificates);
         int revokedSerials = this.serialCurator.revokeByIds(expiredSerials);
+        log.debug("Revoked {} identity certificate serials.", revokedSerials);
         log.debug("Revoked {} identity certificate serials.", revokedSerials);
     }
 
@@ -129,13 +131,13 @@ public class CertificateCleanupJob implements AsyncJob {
     private List<String> certIdsOf(List<ExpiredCertificate> expiredCertificates) {
         return expiredCertificates.stream()
             .map(ExpiredCertificate::getCertId)
-            .collect(Collectors.toList());
+            .toList();
     }
 
     private List<Long> serialsOf(List<ExpiredCertificate> expiredCertificates) {
         return expiredCertificates.stream()
             .map(ExpiredCertificate::getSerial)
-            .collect(Collectors.toList());
+            .toList();
     }
 
 }

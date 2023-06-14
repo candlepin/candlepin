@@ -34,7 +34,6 @@ import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -63,7 +62,6 @@ public class PoolRulesInstanceTest {
     private PoolRules poolRules;
 
     @Mock private RulesCurator rulesCuratorMock;
-    @Mock private ProductServiceAdapter productAdapterMock;
     @Mock private PoolManager poolManagerMock;
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;

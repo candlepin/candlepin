@@ -72,6 +72,10 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
         this.uuid = uuid;
         return this;
     }
+    public ConsumerDTO setUuids(String uuid) {
+        this.uuid = uuid;
+        return this;
+    }
 
     /**
      * Retrieves the name field of this ConsumerDTO object.
