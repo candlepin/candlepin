@@ -246,11 +246,10 @@ jobs:
         run: ./gradlew spec -Dspec.test.client.host=candlepin --profile
 
       - name: save gradle profile report
-        working-directory: ./build/reports/profile
         uses: actions/upload-artifact@v3
         with:
-          name: gradle
-          path: .
+          name: profiles
+          path: ./build/reports/profile
 
       - if: always()
         name: stop containers
