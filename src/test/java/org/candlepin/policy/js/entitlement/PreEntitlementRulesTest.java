@@ -43,12 +43,13 @@ import java.util.Map;
 
 
 public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
+
     @Test
     public void testBindForSameProductNotAllowed() {
         Product product = TestUtil.createProduct(productId, "A product for testing");
         Pool pool = createPool(owner, product);
 
-        Entitlement e = new Entitlement(pool, consumer, owner,  1);
+        Entitlement e = new Entitlement(pool, consumer, owner, 1);
         consumer.addEntitlement(e);
 
         ValidationResult result = enforcer.preEntitlement(consumer, pool, 1);
@@ -161,7 +162,8 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
             result.getWarnings().get(0).getResourceKey());
     }
 
-    @Test public void bindWithQuantityNoMultiEntitle() {
+    @Test
+    public void bindWithQuantityNoMultiEntitle() {
         Product product = TestUtil.createProduct(productId, "A product for testing");
         Pool pool = createPool(owner, product);
         pool.setId("TaylorSwift");
@@ -421,6 +423,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
         }
         return poolQuantities;
     }
+
     @Test
     public void missingConsumerSocketsShouldNotGenerateWarning() {
         // non-system consumers do not have socket counts, no warning
@@ -583,7 +586,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void virtOnlyPoolGuestHostDoesNotMatch() {
         ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
-        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
+        this.config.setProperty(ConfigProperties.STANDALONE, "true");
         // Parent consumer of our guest:
         Consumer parent = new Consumer()
             .setUuid(Util.generateUUID())
@@ -619,8 +622,7 @@ public class PreEntitlementRulesTest extends EntitlementRulesTestFixture {
     public void virtOnlyPoolGuestNoHost() {
         ConsumerType ctype = this.mockConsumerType(new ConsumerType(ConsumerTypeEnum.SYSTEM));
 
-        when(config.getBoolean(ConfigProperties.STANDALONE)).thenReturn(true);
-
+        this.config.setProperty(ConfigProperties.STANDALONE, "true");
         // Another parent we'll make a virt only pool for:
         Consumer otherParent = new Consumer()
             .setUuid(Util.generateUUID())

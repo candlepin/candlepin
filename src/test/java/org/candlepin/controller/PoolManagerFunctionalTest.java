@@ -110,10 +110,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
                 .collect(Collectors.toMap(SubscriptionInfo::getId, Function.identity()));
         }
 
-        public MockSubscriptionServiceAdapter(SubscriptionInfo... sinfo) {
-            this(sinfo != null ? List.of(sinfo) : (Collection<SubscriptionInfo>) null);
-        }
-
         @Override
         public Collection<? extends SubscriptionInfo> getSubscriptions() {
             return this.submap.values();
@@ -132,7 +128,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         @Override
         public Collection<String> getSubscriptionIds(String ownerKey) {
             return this.submap.values().stream()
-                .map(sub -> sub.getId())
+                .map(SubscriptionInfo::getId)
                 .collect(Collectors.toList());
         }
 
@@ -203,13 +199,13 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         }
 
         public MockProductServiceAdapter(ProductInfo... pinfo) {
-            this(pinfo != null ? List.of(pinfo) : (Collection<ProductInfo>) null);
+            this(pinfo != null ? List.of(pinfo) : null);
         }
 
         @Override
         public Collection<? extends ProductInfo> getProductsByIds(String ownerKey, Collection<String> ids) {
             return (ids != null ? ids.stream() : Stream.empty())
-                .map(pid -> this.pmap.get(pid))
+                .map(this.pmap::get)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         }
@@ -1422,12 +1418,11 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // primary pool should have been recreated
         pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
-        boolean newBonus = false;
-        for (Pool p : pools) {
-            if (p.getSourceSubscription().getSubscriptionSubKey().equals(DERIVED_POOL_SUB_KEY)) {
-                newBonus = true;
-            }
-        }
+
+        boolean newBonus = pools.stream()
+            .map(Pool::getSourceSubscription)
+            .map(SourceSubscription::getSubscriptionSubKey)
+            .anyMatch(DERIVED_POOL_SUB_KEY::equals);
         assertTrue(newBonus);
     }
 

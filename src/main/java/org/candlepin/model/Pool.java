@@ -1299,6 +1299,34 @@ public class Pool extends AbstractHibernateObject<Pool> implements Owned, Named,
     }
 
     /**
+     * Checks whether or not the given pool is a managed (that is, non-custom) pool.
+     *
+     * @param isStandalone
+     *  Whether the candlepin is running in standalone mode
+     *
+     * @return
+     *  true if the pool is a managed pool; false otherwise
+     */
+    public boolean isManaged(boolean isStandalone) {
+        // BZ 1452694: Don't delete pools for custom subscriptions
+        // We need to verify that we aren't deleting pools that are created via the API.
+        // Unfortunately, we don't have a 100% reliable way of detecting such pools at this point,
+        // so we'll do the next best thing: In standalone, pools with an upstream pool ID are those
+        // we've received from an import (and, thus, are eligible for deletion). In hosted,
+        // however, we *are* the upstream source, so everything is eligible for removal.
+        // This is pretty hacky, so the way we go about doing this check should eventually be
+        // replaced with something more generic and reliable, and not dependent on the config.
+
+        // TODO:
+        // Remove the standalone config check and replace it with a check for whether or not the
+        // pool is non-custom  -- however we decide to implement that in the future.
+
+        return this.getSourceSubscription() != null &&
+            !this.getType().isDerivedType() &&
+            (this.getUpstreamPoolId() != null || !isStandalone);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

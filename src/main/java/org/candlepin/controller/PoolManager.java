@@ -270,15 +270,4 @@ public interface PoolManager {
     void checkBonusPoolQuantities(String ownerId,
         Map<String, Entitlement> entitlements);
 
-    /**
-     * Checks whether or not the given pool is a managed (that is, non-custom) pool.
-     *
-     * @param pool
-     *  The pool to check
-     *
-     * @return
-     *  true if the pool is a managed pool; false otherwise
-     */
-    boolean isManaged(Pool pool);
-
 }

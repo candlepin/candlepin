@@ -119,7 +119,6 @@ public class CandlepinPoolManager implements PoolManager {
     private final PoolCurator poolCurator;
     private final EventSink sink;
     private final EventFactory eventFactory;
-    private final Configuration config;
     private final Enforcer enforcer;
     private final PoolRules poolRules;
     private final EntitlementCurator entitlementCurator;
@@ -136,6 +135,8 @@ public class CandlepinPoolManager implements PoolManager {
     private final CdnCurator cdnCurator;
     private final BindChainFactory bindChainFactory;
     private final Provider<RefreshWorker> refreshWorkerProvider;
+    private final boolean isStandalone;
+    private final int orphanedGracePeriod;
 
     @Inject
     public CandlepinPoolManager(
@@ -164,7 +165,6 @@ public class CandlepinPoolManager implements PoolManager {
         this.poolCurator = Objects.requireNonNull(poolCurator);
         this.sink = Objects.requireNonNull(sink);
         this.eventFactory = Objects.requireNonNull(eventFactory);
-        this.config = Objects.requireNonNull(config);
         this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
@@ -182,6 +182,8 @@ public class CandlepinPoolManager implements PoolManager {
         this.i18n = Objects.requireNonNull(i18n);
         this.bindChainFactory = Objects.requireNonNull(bindChainFactory);
         this.refreshWorkerProvider = Objects.requireNonNull(refreshWorkerProvider);
+        this.isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
+        this.orphanedGracePeriod = config.getInt(ConfigProperties.ORPHANED_ENTITY_GRACE_PERIOD);
     }
 
     /*
@@ -199,7 +201,7 @@ public class CandlepinPoolManager implements PoolManager {
         log.info("Refreshing pools for owner: {}", resolvedOwner);
 
         RefreshWorker refresher = this.refreshWorkerProvider.get()
-            .setOrphanedEntityGracePeriod(this.config.getInt(ConfigProperties.ORPHANED_ENTITY_GRACE_PERIOD))
+            .setOrphanedEntityGracePeriod(this.orphanedGracePeriod)
             .setForceUpdate(force);
 
         log.debug("Fetching subscriptions from adapter...");
@@ -265,7 +267,7 @@ public class CandlepinPoolManager implements PoolManager {
             List<Pool> poolsToDelete = new ArrayList<>();
 
             for (Pool pool : poolCurator.getPoolsFromBadSubs(resolvedOwner, subMap.keySet())) {
-                if (this.isManaged(pool)) {
+                if (pool != null && pool.isManaged(this.isStandalone)) {
                     poolsToDelete.add(pool);
                     poolsModified = true;
                 }
@@ -2517,30 +2519,6 @@ public class CandlepinPoolManager implements PoolManager {
     public void recalculatePoolQuantitiesForOwner(Owner owner) {
         poolCurator.calculateConsumedForOwnersPools(owner);
         poolCurator.calculateExportedForOwnersPools(owner);
-    }
-
-    /**
-     * @{inheritDocs}
-     */
-    @Override
-    public boolean isManaged(Pool pool) {
-        // BZ 1452694: Don't delete pools for custom subscriptions
-        // We need to verify that we aren't deleting pools that are created via the API.
-        // Unfortunately, we don't have a 100% reliable way of detecting such pools at this point,
-        // so we'll do the next best thing: In standalone, pools with an upstream pool ID are those
-        // we've received from an import (and, thus, are eligible for deletion). In hosted,
-        // however, we *are* the upstream source, so everything is eligible for removal.
-        // This is pretty hacky, so the way we go about doing this check should eventually be
-        // replaced with something more generic and reliable, and not dependent on the config.
-
-        // TODO:
-        // Remove the standalone config check and replace it with a check for whether or not the
-        // pool is non-custom  -- however we decide to implement that in the future.
-
-        return pool != null &&
-            pool.getSourceSubscription() != null &&
-            !pool.getType().isDerivedType() &&
-            (pool.getUpstreamPoolId() != null || !this.config.getBoolean(ConfigProperties.STANDALONE));
     }
 
 }
