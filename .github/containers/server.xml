@@ -20,7 +20,9 @@
       scheme="https"
       secure="true"
       SSLEnabled="true"
-      maxThreads="150">
+      maxThreads="150"
+      compression="on"
+      compressableMimeType="application/json,text/html,text/xml">
 
       <SSLHostConfig
         certificateVerification="optional"
