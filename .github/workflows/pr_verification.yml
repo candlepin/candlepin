@@ -243,7 +243,14 @@ jobs:
 
       - name: run spec tests
         shell: bash
-        run: ./gradlew spec -Dspec.test.client.host=candlepin
+        run: ./gradlew spec -Dspec.test.client.host=candlepin --profile
+
+      - name: save gradle profile report
+        working-directory: ./build/reports/profile
+        uses: actions/upload-artifact@v3
+        with:
+          name: gradle
+          path: .
 
       - if: always()
         name: stop containers
