@@ -45,11 +45,11 @@ test {
     enabled = false
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
 }
 
-task spec(type: Test) {
+tasks.register('spec', Test) {
     description = 'Run Java based spec tests'
     group = 'Verification'
     outputs.upToDateWhen { false }
