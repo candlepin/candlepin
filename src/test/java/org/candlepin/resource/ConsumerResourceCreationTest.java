@@ -68,7 +68,6 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
-import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
@@ -95,7 +94,6 @@ import org.candlepin.service.UserServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.FactValidator;
-import org.candlepin.util.ServiceLevelValidator;
 
 import com.google.inject.util.Providers;
 
@@ -167,8 +165,6 @@ public class ConsumerResourceCreationTest {
     @Mock
     protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
     @Mock
-    protected ServiceLevelValidator serviceLevelValidator;
-    @Mock
     protected ConsumerBindUtil consumerBindUtil;
     @Mock
     protected ConsumerEnricher consumerEnricher;
@@ -196,8 +192,6 @@ public class ConsumerResourceCreationTest {
     private CalculatedAttributesUtil calculatedAttributesUtil;
     @Mock
     private DistributorVersionCurator distributorVersionCurator;
-    @Mock
-    private GuestIdCurator guestIdCurator;
     @Mock
     private PrincipalProvider principalProvider;
     @Mock
