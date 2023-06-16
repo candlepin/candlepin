@@ -136,6 +136,7 @@ jobs:
 
   build_image:
     name: build Candlepin image
+    if: false
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -185,7 +186,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    needs: build_image
+    # needs: build_image
     strategy:
       fail-fast: false
       matrix:
@@ -241,15 +242,26 @@ jobs:
           docker image pull ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}
           docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml --env-file ./.github/containers/.env up -d --wait
 
+      - name: docker stats info
+        shell: bash
+        run: |
+          docker stats --no-stream
+          docker info 
+
       - name: run spec tests
         shell: bash
-        run: ./gradlew spec -Dspec.test.client.host=candlepin --profile
+        run: ./gradlew spec -Dspec.test.client.host=candlepin
 
-      - name: save gradle profile report
-        uses: actions/upload-artifact@v3
-        with:
-          name: profiles
-          path: ./build/reports/profile
+      - name: docker stats info
+        shell: bash
+        run: |
+          docker stats --no-stream
+
+      # - name: save gradle profile report
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: profiles
+      #     path: ./build/reports/profile
 
       - if: always()
         name: stop containers
