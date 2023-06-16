@@ -45,11 +45,11 @@ test {
     enabled = false
 }
 
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
 }
 
-task spec(type: Test) {
+tasks.register('spec', Test) {
     description = 'Run Java based spec tests'
     group = 'Verification'
     outputs.upToDateWhen { false }
@@ -59,6 +59,9 @@ task spec(type: Test) {
     }
 
     useJUnitPlatform()
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    reports.html.required = false
+    reports.junitXml.required = false
 
     // We have to propagate the -D params if we want them available in tests
     System.properties.keys().each { key ->
