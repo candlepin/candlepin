@@ -60,6 +60,8 @@ task spec(type: Test) {
 
     useJUnitPlatform()
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    reports.html.required = false
+    reports.junitXml.required = false
 
     // We have to propagate the -D params if we want them available in tests
     System.properties.keys().each { key ->
