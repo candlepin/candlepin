@@ -15,6 +15,7 @@
 package org.candlepin.spec.content;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -33,11 +34,16 @@ import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 @SpecTest
 public class ContentVersioningSpecTest {
     @Test
-    public void shouldCreateOneContentInstanceWhenSharedByMultipleOrgs() throws Exception {
+    public void shouldCreateOneContentInstanceWhenSharedByMultipleOrgs() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
@@ -57,7 +63,7 @@ public class ContentVersioningSpecTest {
     }
 
     @Test
-    public void shouldCreateTwoDistinctContentInstancesWhenDetailsDiffer() throws Exception {
+    public void shouldCreateTwoDistinctContentInstancesWhenDetailsDiffer() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
@@ -81,7 +87,7 @@ public class ContentVersioningSpecTest {
     }
 
     @Test
-    public void shouldCreateANewContentInstanceWhenAnOrgUpdatesASharedInstance() throws Exception {
+    public void shouldCreateANewContentInstanceWhenAnOrgUpdatesASharedInstance() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
@@ -115,7 +121,7 @@ public class ContentVersioningSpecTest {
     }
 
     @Test
-    public void shouldCreateANewInstanceWhenMakingChangesToAnExistingInstance() throws Exception {
+    public void shouldCreateANewInstanceWhenMakingChangesToAnExistingInstance() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         ContentDTO content = adminClient.ownerContent().createContent(owner.getKey(), Contents.random());
@@ -136,7 +142,7 @@ public class ContentVersioningSpecTest {
     }
 
     @Test
-    public void shouldConvergeContentWhenAGivenVersionAlreadyExists() throws Exception {
+    public void shouldConvergeContentWhenAGivenVersionAlreadyExists() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
@@ -176,7 +182,7 @@ public class ContentVersioningSpecTest {
     }
 
     @Test
-    public void shouldDivergeWhenUpdatingSharedContent() throws Exception {
+    public void shouldDivergeWhenUpdatingSharedContent() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
@@ -211,7 +217,7 @@ public class ContentVersioningSpecTest {
     }
 
     @Test
-    public void shouldDeleteContentWithoutAffectingOtherOrgs() throws Exception {
+    public void shouldDeleteContentWithoutAffectingOtherOrgs() {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
         OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
@@ -252,8 +258,6 @@ public class ContentVersioningSpecTest {
         for (int i = 0; i < 10; i++) {
             // Create a bunch of dummy contents
             final int batchOffset = offset;
-            Set<String> owner1CreatedContentUuids = new HashSet<>();
-            Set<String> owner2CreatedContentUuids = new HashSet<>();
             for (int j = batchOffset; j < batchOffset + numberOfContent; j++) {
                 String id = contentIdPrefix + j;
                 adminClient.ownerContent().createContent(owner.getKey(), Contents.random().id(id));
@@ -261,7 +265,8 @@ public class ContentVersioningSpecTest {
 
             // Attempt to update and create new contents to get into some funky race conditions with
             // convergence and orphanization
-            Thread owner1UpdatesThread = new Thread(() -> {
+            Callable<Set<String>> owner1UpdatesThread = () -> {
+                Set<String> owner1CreatedContentUuids = new HashSet<>();
                 for (int j = batchOffset; j < batchOffset + numberOfContent; j++) {
                     try {
                         String id = contentIdPrefix + j;
@@ -270,40 +275,54 @@ public class ContentVersioningSpecTest {
                         owner1CreatedContentUuids.add(createdContent.getUuid());
                     }
                     catch (Exception e) {
-                        // Swollow errors
+                        // Swallow errors
                     }
                 }
-            });
+                return owner1CreatedContentUuids;
+            };
 
-            Thread owner2GenerationThread = new Thread(() -> {
+            Callable<Set<String>> owner2GenerationThread = () -> {
+                Set<String> owner2CreatedContentUuids = new HashSet<>();
                 for (int j = batchOffset; j < batchOffset + numberOfContent; j++) {
                     String id = contentIdPrefix + j;
                     ContentDTO createdContent = adminClient.ownerContent()
                         .createContent(owner2.getKey(), Contents.random().id(id));
                     owner2CreatedContentUuids.add(createdContent.getUuid());
                 }
-            });
+                return owner2CreatedContentUuids;
+            };
 
-            owner1UpdatesThread.start();
-            owner2GenerationThread.start();
+            Future<Set<String>> thread1;
+            Future<Set<String>> thread2;
+            ExecutorService executor = null;
+            try {
+                executor = Executors.newFixedThreadPool(2);
+                thread1 = executor.submit(owner1UpdatesThread);
+                thread2 = executor.submit(owner2GenerationThread);
+            }
+            finally {
+                if (executor != null) {
+                    executor.shutdown();
+                }
+            }
 
             AsyncJobStatusDTO job = adminClient.jobs().scheduleJob("OrphanCleanupJob");
             job = adminClient.jobs().waitForJob(job);
             assertEquals("FINISHED", job.getState());
 
             // Wait for the threads to finish
-            owner1UpdatesThread.join(90000);
-            owner2GenerationThread.join(90000);
+            await().atMost(90, TimeUnit.SECONDS)
+                .until(() -> thread1.isDone() && thread2.isDone());
 
             // Verify the contents created/updated still exist
-            for (String uuid : owner1CreatedContentUuids) {
+            for (String uuid : thread1.get()) {
                 ContentDTO owner1Content = adminClient.content().getContent(uuid);
                 assertThat(owner1Content)
                     .isNotNull()
                     .returns(uuid, ContentDTO::getUuid);
             }
 
-            for (String uuid : owner2CreatedContentUuids) {
+            for (String uuid : thread2.get()) {
                 ContentDTO owner2Content = adminClient.content().getContent(uuid);
                 assertThat(owner2Content)
                     .isNotNull()

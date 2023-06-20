@@ -241,9 +241,16 @@ jobs:
           docker image pull ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}
           docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml --env-file ./.github/containers/.env up -d --wait
 
-      - name: run spec tests
-        shell: bash
-        run: ./gradlew spec -Dspec.test.client.host=candlepin
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Run Spec tests
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: spec -Dspec.test.client.host=candlepin
 
       - if: always()
         name: stop containers
