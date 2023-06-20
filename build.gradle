@@ -309,11 +309,13 @@ jacocoTestReport {
     dependsOn test
 
     reports {
+        csv.required = false
+        html.required = false
         xml.required = true
     }
 
     doLast {
-        println "Generated unit test coverage report at $buildDir/reports/jacoco/test/html/index.html"
+        println "Generated unit test coverage report at $buildDir/reports/jacoco/test/jacocoTestReport.xml"
     }
 }
 
