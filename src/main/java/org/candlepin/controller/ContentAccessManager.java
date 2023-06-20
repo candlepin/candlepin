@@ -488,12 +488,12 @@ public class ContentAccessManager {
     }
 
     private byte[] createContentAccessDataPayload(Owner owner, Consumer consumer) throws IOException {
-        Product container = new Product()
+        Product engProduct = new Product()
             .setId("content_access")
             .setName(" Content Access");
 
         this.ownerContentCurator.getActiveContentByOwner(owner.getId())
-            .forEach(container::addContent);
+            .forEach(engProduct::addContent);
 
         Product skuProduct = new Product()
             .setId("content_access")
@@ -515,7 +515,7 @@ public class ContentAccessManager {
         ContentPrefix contentPrefix = ScaContentPrefix.from(owner, this.standalone, environments);
         PromotedContent promotedContent = new PromotedContent(contentPrefix).withAll(environments);
 
-        org.candlepin.model.dto.Product productModel = v3extensionUtil.mapProduct(container, skuProduct,
+        org.candlepin.model.dto.Product productModel = v3extensionUtil.mapProduct(engProduct, skuProduct,
             promotedContent, consumer, emptyPool, entitledProductIds);
 
         List<org.candlepin.model.dto.Product> productModels = new ArrayList<>();

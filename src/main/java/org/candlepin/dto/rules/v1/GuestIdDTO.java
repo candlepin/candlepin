@@ -15,8 +15,6 @@
 package org.candlepin.dto.rules.v1;
 
 import org.candlepin.dto.CandlepinDTO;
-import org.candlepin.jackson.HateoasArrayExclude;
-import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.util.MapView;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -25,15 +23,11 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+
 
 /**
  * A DTO representation of the GuestId entity for the Rules framework
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 public class GuestIdDTO extends CandlepinDTO<GuestIdDTO> {
     public static final long serialVersionUID = 1L;
 
@@ -64,7 +58,6 @@ public class GuestIdDTO extends CandlepinDTO<GuestIdDTO> {
      *
      * @return the id field of this GuestIdDTO object.
      */
-    @HateoasInclude
     public String getId() {
         return this.id;
     }
@@ -86,7 +79,6 @@ public class GuestIdDTO extends CandlepinDTO<GuestIdDTO> {
      *
      * @return the guestId field of this GuestIdDTO object.
      */
-    @HateoasInclude
     public String getGuestId() {
         return this.guestId;
     }
@@ -108,7 +100,6 @@ public class GuestIdDTO extends CandlepinDTO<GuestIdDTO> {
      *
      * @return the attributes field of this GuestIdDTO object.
      */
-    @HateoasArrayExclude
     public Map<String, String> getAttributes() {
         return this.attributes != null ? new MapView<>(attributes) : null;
     }

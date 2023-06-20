@@ -35,10 +35,6 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 
 
@@ -47,8 +43,6 @@ import javax.xml.bind.annotation.XmlTransient;
  *
  * A user is more akin to an account within an owner. (i.e. organization)
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = User.DB_TABLE)
 public class User extends AbstractHibernateObject implements UserInfo {
@@ -185,7 +179,6 @@ public class User extends AbstractHibernateObject implements UserInfo {
     /**
      * @return the roles
      */
-    @XmlTransient
     public Set<Role> getRoles() {
         return roles;
     }

@@ -25,16 +25,12 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * DistributorVersionCapability
  */
-@XmlRootElement(name = "distributorversioncapability")
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = DistributorVersionCapability.DB_TABLE)
 public class DistributorVersionCapability {
@@ -104,9 +100,7 @@ public class DistributorVersionCapability {
 
     /**
      * @return the distributor version
-     *
      */
-    @XmlTransient
     public DistributorVersion getDistributorVersion() {
         return this.distributorVersion;
     }

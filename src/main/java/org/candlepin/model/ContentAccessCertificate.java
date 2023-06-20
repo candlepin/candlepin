@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
@@ -26,19 +24,14 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * Represents certificate used to entitle a consumer
  */
-@XmlRootElement(name = "cert")
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_cont_access_cert")
-@JsonFilter("ContentAccessCertificateFilter")
 public class ContentAccessCertificate extends RevocableCertificate<ContentAccessCertificate> {
 
     @Id
@@ -63,7 +56,6 @@ public class ContentAccessCertificate extends RevocableCertificate<ContentAccess
         this.id = id;
     }
 
-    @XmlTransient
     public Consumer getConsumer() {
         return consumer;
     }

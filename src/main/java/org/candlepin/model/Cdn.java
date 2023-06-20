@@ -29,17 +29,12 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 
 
 /**
  * Represents an Content Delivery Network
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = Cdn.DB_TABLE, uniqueConstraints = {@UniqueConstraint(columnNames = {"label"})})
 public class Cdn extends AbstractHibernateObject implements CdnInfo {

@@ -115,7 +115,6 @@ import org.candlepin.paging.Page;
 import org.candlepin.paging.PageRequest;
 import org.candlepin.resource.util.CalculatedAttributesUtil;
 import org.candlepin.resource.util.ConsumerTypeValidator;
-import org.candlepin.resource.util.ResolverUtil;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.service.impl.DefaultOwnerServiceAdapter;
@@ -202,7 +201,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     private PoolManager mockPoolManager;
     private JobManager mockJobManager;
 
-    private ResolverUtil resolverUtil;
     private OwnerServiceAdapter ownerServiceAdapter;
     private ServiceLevelValidator serviceLevelValidator;
     private ConsumerTypeValidator consumerTypeValidator;
@@ -253,8 +251,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.mockJobManager = mock(JobManager.class);
         this.principalProvider = mock(PrincipalProvider.class);
 
-        this.resolverUtil = new ResolverUtil(this.i18n, this.mockOwnerCurator, this.mockOwnerProductCurator,
-            this.mockProductCurator);
         this.ownerServiceAdapter = new DefaultOwnerServiceAdapter(this.mockOwnerCurator, this.i18n);
         this.serviceLevelValidator = new ServiceLevelValidator(this.i18n, this.mockPoolManager,
             this.mockOwnerCurator);

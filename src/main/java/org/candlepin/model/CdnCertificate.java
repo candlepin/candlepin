@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
@@ -23,16 +22,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 
 /**
  * CdnCertificate
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = CdnCertificate.DB_TABLE)
 public class CdnCertificate extends RevocableCertificate<CdnCertificate> {

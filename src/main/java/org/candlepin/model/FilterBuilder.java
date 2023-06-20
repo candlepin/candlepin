@@ -41,8 +41,8 @@ import java.util.regex.Pattern;
  * Contains the logic to apply filter Criterion to a base criteria.
  */
 public abstract class FilterBuilder {
+    private static final Logger log = LoggerFactory.getLogger(FilterBuilder.class);
 
-    private static Logger log = LoggerFactory.getLogger(FilterBuilder.class);
     public static final String WILDCARD_REGEX = "((?:[^*?\\\\]*(?:\\\\.?)*)*)([*?]|\\z)";
     public static final Pattern WILDCARD_PATTERN = Pattern.compile(WILDCARD_REGEX);
 

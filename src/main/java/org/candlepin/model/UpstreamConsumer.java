@@ -14,11 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasArrayExclude;
-import org.candlepin.jackson.HateoasInclude;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
@@ -31,18 +26,14 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+
+
 
 /**
  * UpstreamConsumer
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = UpstreamConsumer.DB_TABLE)
-@JsonFilter("ApiHateoas")
 public class UpstreamConsumer extends AbstractHibernateObject<UpstreamConsumer> {
 
     /** Name of the table backing this object in the database */
@@ -115,7 +106,6 @@ public class UpstreamConsumer extends AbstractHibernateObject<UpstreamConsumer> 
     /**
      * @return the Consumer's UUID
      */
-    @HateoasInclude
     public String getUuid() {
         return uuid;
     }
@@ -131,7 +121,6 @@ public class UpstreamConsumer extends AbstractHibernateObject<UpstreamConsumer> 
      * {@inheritDoc}
      */
     @Override
-    @HateoasInclude
     public String getId() {
         return id;
     }
@@ -143,7 +132,6 @@ public class UpstreamConsumer extends AbstractHibernateObject<UpstreamConsumer> 
         this.id = id;
     }
 
-    @HateoasArrayExclude
     public IdentityCertificate getIdCert() {
         return idCert;
     }
@@ -155,7 +143,6 @@ public class UpstreamConsumer extends AbstractHibernateObject<UpstreamConsumer> 
     /**
      * @return the name of this consumer.
      */
-    @HateoasInclude
     public String getName() {
         return name;
     }

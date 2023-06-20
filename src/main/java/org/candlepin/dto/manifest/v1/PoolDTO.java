@@ -17,7 +17,6 @@ package org.candlepin.dto.manifest.v1;
 import org.candlepin.dto.TimestampedCandlepinDTO;
 import org.candlepin.jackson.CandlepinAttributeDeserializer;
 import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
-import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 
@@ -37,15 +36,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+
 
 /**
  * A DTO representation of the Pool entity as used by the manifest import/export framework.
  */
-@XmlRootElement(name = "pool")
-@XmlAccessorType(XmlAccessType.PROPERTY)
 public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
     public static final long serialVersionUID = 1L;
 
@@ -177,7 +172,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
      *
      * @return the db id.
      */
-    @HateoasInclude
     public String getId() {
         return id;
     }
@@ -709,7 +703,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
      * @return the name
      */
     @JsonProperty
-    @HateoasInclude
     public String getProductName() {
         return productName;
     }
@@ -735,7 +728,6 @@ public class PoolDTO extends TimestampedCandlepinDTO<PoolDTO> {
      *
      * @return Top level product ID.
      */
-    @HateoasInclude
     public String getProductId() {
         return productId;
     }

@@ -14,9 +14,6 @@
  */
 package org.candlepin.model;
 
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.CascadeType;
@@ -28,9 +25,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 
 
@@ -38,11 +32,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  * Represents the "upstream" entitlement certificate that sources a downstream on-site
  * subscription. Can be used to fetch content from the upstream CDN.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = SubscriptionsCertificate.DB_TABLE)
-@JsonFilter("SubscriptionCertificateFilter")
 public class SubscriptionsCertificate extends AbstractCertificate<SubscriptionsCertificate>
     implements Certificate<SubscriptionsCertificate> {
 

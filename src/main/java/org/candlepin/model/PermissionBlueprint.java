@@ -30,7 +30,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlTransient;
 
 
 
@@ -102,7 +101,6 @@ public class PermissionBlueprint extends AbstractHibernateObject implements Perm
      * {@inheritDoc}
      */
     @Override
-    @XmlTransient
     public String getAccessLevel() {
         Access access = this.getAccess();
         return access != null ? access.name() : null;
@@ -112,7 +110,6 @@ public class PermissionBlueprint extends AbstractHibernateObject implements Perm
         this.access = access;
     }
 
-    @XmlTransient
     public Role getRole() {
         return this.role;
     }
@@ -132,7 +129,6 @@ public class PermissionBlueprint extends AbstractHibernateObject implements Perm
      * {@inheritDoc}
      */
     @Override
-    @XmlTransient
     public String getTypeName() {
         PermissionType type = this.getType();
         return type != null ? type.name() : null;

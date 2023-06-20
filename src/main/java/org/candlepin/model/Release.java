@@ -14,10 +14,9 @@
  */
 package org.candlepin.model;
 
-
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlTransient;
+
 
 /**
  * Release
@@ -41,16 +40,15 @@ public class Release extends AbstractHibernateObject {
     public void setReleaseVer(String releaseVer) {
         this.releaseVer = releaseVer;
     }
+
     /* (non-Javadoc)
      * @see org.candlepin.model.Persisted#getId()
      */
     @Override
-    @XmlTransient
     public Serializable getId() {
         // TODO Auto-generated method stub
         return null;
     }
-
 
     @Override
     public boolean equals(Object anObject) {

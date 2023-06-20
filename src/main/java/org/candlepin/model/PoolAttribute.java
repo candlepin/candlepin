@@ -14,8 +14,6 @@
  */
 package org.candlepin.model;
 
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import java.io.Serializable;
 
 import javax.persistence.Column;
@@ -23,17 +21,11 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 
 
-@XmlRootElement(name = "pool_attribute")
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = PoolAttribute.DB_TABLE)
-@JsonFilter("PoolFilter")
 public class PoolAttribute implements Serializable {
 
     public static final String DB_TABLE = "cp_pool_attribute";

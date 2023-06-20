@@ -23,17 +23,14 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+
+
 
 /**
  * A debug certificate available for a particular owner. Ueber certificates are used by
  * consumers of the candlepin API to browse content for a specific Owner.
  *
  */
-@XmlRootElement(name = "cert")
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = "cp_ueber_cert")
 public class UeberCertificate extends RevocableCertificate<UeberCertificate> {

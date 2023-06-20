@@ -14,11 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasArrayExclude;
-import org.candlepin.jackson.HateoasInclude;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.GenericGenerator;
@@ -39,10 +34,8 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
+
+
 
 /**
  * Represents a guest ID running on a virt host consumer.
@@ -50,11 +43,8 @@ import javax.xml.bind.annotation.XmlTransient;
  * NOTE: this is a guest ID, not a Candlepin consumer UUID. The guest may not be
  * registered.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = GuestId.DB_TABLE)
-@JsonFilter("GuestFilter")
 public class GuestId extends AbstractHibernateObject implements Owned, Named, ConsumerProperty, Eventful {
 
     /** Name of the table backing this object in the database */
@@ -79,7 +69,6 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
-    @XmlTransient
     @NotNull
     private Consumer consumer;
 
@@ -113,7 +102,6 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
         }
     }
 
-    @HateoasInclude
     public String getGuestId() {
         return guestId;
     }
@@ -129,7 +117,6 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
         }
     }
 
-    @HateoasInclude
     public String getId() {
         return id;
     }
@@ -138,7 +125,6 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
         this.id = id;
     }
 
-    @XmlTransient
     public Consumer getConsumer() {
         return consumer;
     }
@@ -152,7 +138,6 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
         this.attributes = attributes;
     }
 
-    @HateoasArrayExclude
     public Map<String, String> getAttributes() {
         return attributes;
     }
@@ -177,13 +162,11 @@ public class GuestId extends AbstractHibernateObject implements Owned, Named, Co
     }
 
     @Override
-    @XmlTransient
     public String getName() {
         return guestId;
     }
 
     @Override
-    @XmlTransient
     public String getOwnerId() {
         if (consumer != null) {
             return consumer.getOwnerId();

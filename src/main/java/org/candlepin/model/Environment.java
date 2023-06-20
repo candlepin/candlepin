@@ -31,9 +31,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 
 
@@ -44,8 +41,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  * Not all deployments of Candlepin will make use of this table, it will at times
  * be completely empty.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = Environment.DB_TABLE)
 public class Environment extends AbstractHibernateObject implements Serializable, Owned {

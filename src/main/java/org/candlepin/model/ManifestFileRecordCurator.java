@@ -29,7 +29,6 @@ import javax.persistence.Query;
 
 /**
  * Provides DB management for stored manifest archive files.
- *
  */
 @Singleton
 public class ManifestFileRecordCurator extends AbstractHibernateCurator<ManifestFileRecord> {

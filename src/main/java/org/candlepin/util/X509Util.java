@@ -87,6 +87,7 @@ public abstract class X509Util {
     public Set<ProductContent> filterProductContent(Product prod, Consumer consumer,
         PromotedContent promotedContent, boolean filterEnvironment,
         Set<String> entitledProductIds, boolean contentAccessMode) {
+
         Set<ProductContent> filtered = new HashSet<>();
 
         for (ProductContent pc : prod.getProductContent()) {

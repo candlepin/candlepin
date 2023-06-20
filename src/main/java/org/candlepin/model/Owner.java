@@ -16,14 +16,10 @@ package org.candlepin.model;
 
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
-import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.resteasy.InfoProperty;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.util.Util;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -49,10 +45,6 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 
 
 
@@ -60,11 +52,8 @@ import javax.xml.bind.annotation.XmlTransient;
  * Represents the owner of entitlements. This is akin to an organization,
  * whereas a User is an individual account within that organization.
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = Owner.DB_TABLE)
-@JsonFilter("OwnerFilter")
 public class Owner extends AbstractHibernateObject<Owner>
     implements Serializable, Linkable, Owned, Named, Eventful, OwnerInfo {
 
@@ -196,7 +185,6 @@ public class Owner extends AbstractHibernateObject<Owner>
      * @return the id
      */
     @Override
-    @HateoasInclude
     public String getId() {
         return id;
     }
@@ -213,7 +201,6 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     @InfoProperty("key")
-    @HateoasInclude
     public String getKey() {
         return key;
     }
@@ -227,7 +214,6 @@ public class Owner extends AbstractHibernateObject<Owner>
      * @return the name
      */
     @InfoProperty("displayName")
-    @HateoasInclude
     public String getDisplayName() {
         return this.displayName;
     }
@@ -282,7 +268,6 @@ public class Owner extends AbstractHibernateObject<Owner>
     /**
      * @return the consumers
      */
-    @XmlTransient
     public Set<Consumer> getConsumers() {
         return consumers;
     }
@@ -301,7 +286,6 @@ public class Owner extends AbstractHibernateObject<Owner>
     /**
      * @return the entitlementPools
      */
-    @XmlTransient
     public Set<Pool> getPools() {
         return pools;
     }
@@ -430,7 +414,6 @@ public class Owner extends AbstractHibernateObject<Owner>
     /**
      * @return the upstreamUuid
      */
-    @XmlTransient
     public String getUpstreamUuid() {
         if (upstreamConsumer == null) {
             return null;
@@ -446,17 +429,8 @@ public class Owner extends AbstractHibernateObject<Owner>
         return upstreamConsumer;
     }
 
-    @HateoasInclude
     public String getHref() {
         return "/owners/" + getKey();
-    }
-
-    public Owner setHref(String href) {
-        /*
-         * No-op, here to aid with updating objects which have nested objects
-         * that were originally sent down to the client in HATEOAS form.
-         */
-        return this;
     }
 
     public Owner getParentOwner() {
@@ -474,7 +448,6 @@ public class Owner extends AbstractHibernateObject<Owner>
      *
      * @return this
      */
-    @XmlTransient
     @Override
     public String getOwnerId() {
         return id;
@@ -483,7 +456,6 @@ public class Owner extends AbstractHibernateObject<Owner>
     /**
      * @return the activationKeys
      */
-    @XmlTransient
     public Set<ActivationKey> getActivationKeys() {
         return activationKeys;
     }
@@ -499,7 +471,6 @@ public class Owner extends AbstractHibernateObject<Owner>
         return this;
     }
 
-    @XmlTransient
     public Set<Environment> getEnvironments() {
         return environments;
     }
@@ -533,7 +504,6 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     @Override
-    @XmlTransient
     public String getName() {
         return getDisplayName();
     }
@@ -544,7 +514,6 @@ public class Owner extends AbstractHibernateObject<Owner>
      * @return
      *  true if autobind is disabled for this owner/organization; false otherwise
      */
-    @JsonProperty("autobindDisabled")
     public boolean isAutobindDisabled() {
         return this.autobindDisabled != null ? this.autobindDisabled.booleanValue() : false;
     }
@@ -560,7 +529,6 @@ public class Owner extends AbstractHibernateObject<Owner>
      * @return
      *  true if autobindHypervisor is disabled for this owner/organization; false otherwise
      */
-    @JsonProperty("autobindHypervisorDisabled")
     public boolean isAutobindHypervisorDisabled() {
         return this.autobindHypervisorDisabled != null ?
            this.autobindHypervisorDisabled.booleanValue() : false;

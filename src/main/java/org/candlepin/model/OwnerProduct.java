@@ -26,7 +26,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
 
 
 
@@ -40,7 +39,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  * there is nothing that stops us from using standard
  * uuid for the link.
  */
-@XmlRootElement
 @Entity
 @Table(name = OwnerProduct.DB_TABLE)
 @IdClass(OwnerProductKey.class)

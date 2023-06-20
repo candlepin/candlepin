@@ -16,16 +16,12 @@ package org.candlepin.model;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+
 
 /**
  * Represents a pool of products eligible to be consumed (entitled).
  * For every Product there will be a corresponding Pool.
  */
-@XmlRootElement(name = "poolquantity")
-@XmlAccessorType(XmlAccessType.PROPERTY)
 public class PoolQuantity implements Comparable<PoolQuantity> {
 
     private Pool pool;

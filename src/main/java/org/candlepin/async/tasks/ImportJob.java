@@ -23,6 +23,8 @@ import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.controller.ManifestManager;
+import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.api.server.v1.ImportRecordDTO;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ImportRecord;
 import org.candlepin.model.Owner;
@@ -200,11 +202,13 @@ public class ImportJob implements AsyncJob {
 
     private final OwnerCurator ownerCurator;
     private final ManifestManager manifestManager;
+    private final ModelTranslator translator;
 
     @Inject
-    public ImportJob(OwnerCurator ownerCurator, ManifestManager manifestManager) {
+    public ImportJob(OwnerCurator ownerCurator, ManifestManager manifestManager, ModelTranslator translator) {
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.manifestManager = Objects.requireNonNull(manifestManager);
+        this.translator = Objects.requireNonNull(translator);
     }
 
     @Override
@@ -231,7 +235,8 @@ public class ImportJob implements AsyncJob {
                 storedFileId, overrides, uploadedFileName);
 
             log.info("Async import complete.");
-            context.setJobResult(importRecord);
+            ImportRecordDTO importRecordDto = this.translator.translate(importRecord, ImportRecordDTO.class);
+            context.setJobResult(importRecordDto);
 
             return;
         }

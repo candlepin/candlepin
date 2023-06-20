@@ -29,9 +29,8 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+
+
 
 /**
  * DistributorVersion
@@ -41,11 +40,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  * capabilities related to the distributor version
  *
  */
-@XmlRootElement(name = "distributorversion")
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = DistributorVersion.DB_TABLE)
-
 public class DistributorVersion extends AbstractHibernateObject {
 
     /** Name of the table backing this object in the database */

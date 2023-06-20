@@ -17,7 +17,6 @@ package org.candlepin.dto.rules.v1;
 import org.candlepin.dto.CandlepinDTO;
 import org.candlepin.jackson.CandlepinAttributeDeserializer;
 import org.candlepin.jackson.CandlepinLegacyAttributeSerializer;
-import org.candlepin.jackson.HateoasInclude;
 import org.candlepin.util.MapView;
 import org.candlepin.util.SetView;
 
@@ -38,15 +37,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+
 
 /**
  * A DTO representation of the Pool entity as used by the Rules framework.
  */
-@XmlRootElement(name = "pool")
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @JsonFilter("PoolFilter")
 public class PoolDTO extends CandlepinDTO<PoolDTO> {
     public static final long serialVersionUID = 1L;
@@ -147,7 +142,6 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
      *
      * @return the db id.
      */
-    @HateoasInclude
     public String getId() {
         return id;
     }
@@ -367,7 +361,6 @@ public class PoolDTO extends CandlepinDTO<PoolDTO> {
      *
      * @return Top level product ID.
      */
-    @HateoasInclude
     public String getProductId() {
         return productId;
     }

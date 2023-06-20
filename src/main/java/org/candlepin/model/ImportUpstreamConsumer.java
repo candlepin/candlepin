@@ -14,10 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.jackson.HateoasInclude;
-
-import com.fasterxml.jackson.annotation.JsonFilter;
-
 import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.Column;
@@ -29,18 +25,14 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
+
+
 
 /**
  * ImportUpstreamConsumer
  */
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.PROPERTY)
 @Entity
 @Table(name = ImportUpstreamConsumer.DB_TABLE)
-@JsonFilter("ApiHateoas")
 public class ImportUpstreamConsumer extends AbstractHibernateObject {
 
     /** Name of the table backing this object in the database */
@@ -101,7 +93,6 @@ public class ImportUpstreamConsumer extends AbstractHibernateObject {
     /**
      * @return the Consumer's UUID
      */
-    @HateoasInclude
     public String getUuid() {
         return uuid;
     }
@@ -117,7 +108,6 @@ public class ImportUpstreamConsumer extends AbstractHibernateObject {
      * {@inheritDoc}
      */
     @Override
-    @HateoasInclude
     public String getId() {
         return id;
     }
@@ -132,7 +122,6 @@ public class ImportUpstreamConsumer extends AbstractHibernateObject {
     /**
      * @return the name of the consumer.
      */
-    @HateoasInclude
     public String getName() {
         return name;
     }
