@@ -46,6 +46,7 @@ import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.RefresherFactory;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
@@ -180,6 +181,8 @@ public class ConsumerResourceCreationTest {
     @Mock
     private PoolManager poolManager;
     @Mock
+    private RefresherFactory refresherFactory;
+    @Mock
     private EventFactory eventFactory;
     @Mock
     private ContentAccessManager contentAccessManager;
@@ -237,6 +240,7 @@ public class ConsumerResourceCreationTest {
             this.eventFactory,
             this.userService,
             this.poolManager,
+            this.refresherFactory,
             this.consumerRules,
             this.ownerCurator,
             this.activationKeyCurator,

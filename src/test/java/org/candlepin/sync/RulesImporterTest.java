@@ -23,35 +23,28 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
-import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.io.StringReader;
 
-import javax.inject.Inject;
-
 
 
 @ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
-public class RulesImporterTest extends DatabaseTestFixture {
-    @Inject private EventSink sink;
-
+public class RulesImporterTest {
+    @Mock private EventSink sink;
     @Mock private RulesCurator curator;
     @Mock private JsRunnerProvider jsProvider;
     private RulesImporter importer;
 
     @BeforeEach
     public void setUp() {
-        importer = new RulesImporter(curator, sink, jsProvider);
+        this.importer = new RulesImporter(curator, sink, jsProvider);
     }
 
     @Test

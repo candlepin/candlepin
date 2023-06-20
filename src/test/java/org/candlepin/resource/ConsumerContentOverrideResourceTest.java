@@ -32,6 +32,7 @@ import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.RefresherFactory;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
@@ -96,6 +97,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     @Mock private SubscriptionServiceAdapter subscriptionServiceAdapter;
     @Mock private ProductServiceAdapter mockProductServiceAdapter;
     @Mock private PoolManager poolManager;
+    @Mock private RefresherFactory refresherFactory;
     @Mock private EntitlementCurator entitlementCurator;
     @Mock private ComplianceRules complianceRules;
     @Mock private SystemPurposeComplianceRules systemPurposeComplianceRules;
@@ -154,6 +156,7 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             this.eventFactory,
             this.userServiceAdapter,
             this.poolManager,
+            this.refresherFactory,
             this.consumerRules,
             this.ownerCurator,
             this.activationKeyCurator,

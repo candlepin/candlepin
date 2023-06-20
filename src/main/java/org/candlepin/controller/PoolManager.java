@@ -28,8 +28,6 @@ import org.candlepin.paging.PageRequest;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
-import org.candlepin.service.ProductServiceAdapter;
-import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.SubscriptionInfo;
 
 import java.util.Collection;
@@ -130,16 +128,6 @@ public interface PoolManager {
 
     List<Pool> getBySubscriptionIds(String ownerId, Collection<String> id);
 
-    Refresher getRefresher(SubscriptionServiceAdapter subAdapter, ProductServiceAdapter prodAdapter);
-
-    void regenerateCertificatesOf(Entitlement e, boolean lazy);
-
-    void regenerateCertificatesOf(String envId, Set<String> contentIds, boolean lazy);
-
-    void regenerateCertificatesOf(Owner owner, String productId, boolean lazy);
-
-    void regenerateCertificatesOf(Consumer consumer, boolean lazy);
-
     int revokeAllEntitlements(Consumer consumer);
     int revokeAllEntitlements(Consumer consumer, boolean regenCertsAndStatuses);
 
@@ -198,14 +186,6 @@ public interface PoolManager {
      * @return Set of levels based on exempt flag.
      */
     Set<String> retrieveServiceLevelsForOwner(String ownerId, boolean exempt);
-
-    /**
-     * Finds the entitlements for the specified Pool.
-     *
-     * @param pool look for entitlements from this Pool.
-     * @return a list of entitlements
-     */
-    List<Entitlement> findEntitlements(Pool pool);
 
     /**
      * Lists the pools for the specified Owner.

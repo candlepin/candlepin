@@ -58,7 +58,6 @@ import javax.inject.Inject;
 public class PoolRules {
 
     private static final Logger log = LoggerFactory.getLogger(PoolRules.class);
-
     private static final long UNLIMITED_QUANTITY = -1L;
 
     private final PoolManager poolManager;
@@ -103,10 +102,6 @@ public class PoolRules {
         return result;
     }
 
-    public List<Pool> createAndEnrichPools(SubscriptionInfo sub) {
-        return createAndEnrichPools(sub, new LinkedList<>());
-    }
-
     public List<Pool> createAndEnrichPools(SubscriptionInfo sub, List<Pool> existingPools) {
         Pool pool = this.poolManager.convertToPrimaryPool(sub);
         return createAndEnrichPools(pool, existingPools);
@@ -114,11 +109,11 @@ public class PoolRules {
 
     /**
      * Create any pools that need to be created for the given pool.
-     *
+     * <p>
      * In some scenarios, due to attribute changes, pools may need to be created even though
      * pools already exist for the subscription. A list of pre-existing pools for the given
      * sub are provided to help this method determine if something needs to be done or not.
-     *
+     * <p>
      * For a genuine new pool, the existing pools list will be empty.
      *
      * @param primaryPool
@@ -310,7 +305,7 @@ public class PoolRules {
             if (p.getSourceStack() != null) {
                 Consumer c = p.getSourceStack().getSourceConsumer();
                 if (c == null) {
-                    log.error("Stack derived pool has no source consumer: " + p.getId());
+                    log.error("Stack derived pool has no source consumer: {}", p.getId());
                 }
                 else {
                     PoolUpdate update = updatePoolFromStack(p, changedProducts, force);
@@ -326,7 +321,6 @@ public class PoolRules {
 
     public List<PoolUpdate> updatePools(Pool primaryPool, List<Pool> existingPools, Long originalQuantity,
         Map<String, Product> changedProducts, boolean force) {
-        //local.setCertificate(subscription.getCertificate());
 
         log.debug("Refreshing pools for existing primary pool: {}", primaryPool);
         log.debug("  existing pools: {}", existingPools.size());
@@ -670,7 +664,7 @@ public class PoolRules {
         expectedQuantity = processVirtLimitPools(existingPools,
             attributes, existingPool, expectedQuantity);
 
-        boolean quantityChanged = force || !(expectedQuantity == existingPool.getQuantity());
+        boolean quantityChanged = force || expectedQuantity != existingPool.getQuantity();
 
         if (quantityChanged) {
             existingPool.setQuantity(expectedQuantity);
@@ -769,7 +763,6 @@ public class PoolRules {
                     }
                     catch (NumberFormatException nfe) {
                         // Nothing to update if we get here.
-                        // continue;
                     }
                 }
             }

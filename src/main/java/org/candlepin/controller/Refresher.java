@@ -34,22 +34,18 @@ import java.util.Objects;
 import java.util.Set;
 
 
-
-/**
- * Refresher
- */
 public class Refresher {
     private static final Logger log = LoggerFactory.getLogger(Refresher.class);
 
-    private CandlepinPoolManager poolManager;
-    private SubscriptionServiceAdapter subAdapter;
-    private ProductServiceAdapter prodAdapter;
-    private OwnerManager ownerManager;
+    private final CandlepinPoolManager poolManager;
+    private final SubscriptionServiceAdapter subAdapter;
+    private final ProductServiceAdapter prodAdapter;
+    private final OwnerManager ownerManager;
+
+    private final Map<String, Owner> owners = new HashMap<>();
+    private final Set<Product> products = new HashSet<>();
     private boolean lazy;
     private boolean force;
-
-    private Map<String, Owner> owners = new HashMap<>();
-    private Set<Product> products = new HashSet<>();
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
         ProductServiceAdapter prodAdapter, OwnerManager ownerManager) {

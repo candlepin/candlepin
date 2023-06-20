@@ -57,6 +57,7 @@ import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.OwnerManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.RefresherFactory;
 import org.candlepin.controller.ScheduledExecutorServiceProvider;
 import org.candlepin.controller.SuspendModeTransitioner;
 import org.candlepin.controller.mode.CandlepinModeManager;
@@ -243,6 +244,7 @@ public class CandlepinModule extends AbstractModule {
         bind(Enforcer.class).to(EntitlementRules.class);
         bind(EntitlementRulesTranslator.class);
         bind(PoolManager.class).to(CandlepinPoolManager.class);
+        bind(RefresherFactory.class);
         bind(CandlepinModeManager.class).asEagerSingleton();
         bind(SuspendModeTransitioner.class).asEagerSingleton();
         bind(ScheduledExecutorService.class).toProvider(ScheduledExecutorServiceProvider.class);

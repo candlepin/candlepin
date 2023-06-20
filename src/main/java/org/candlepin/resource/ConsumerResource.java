@@ -43,6 +43,7 @@ import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.RefresherFactory;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.server.v1.CertificateDTO;
@@ -204,6 +205,7 @@ public class ConsumerResource implements ConsumerApi {
     private final EventSink sink;
     private final EventFactory eventFactory;
     private final PoolManager poolManager;
+    private final RefresherFactory refresherFactory;
     private final ConsumerRules consumerRules;
     private final OwnerCurator ownerCurator;
     private final ActivationKeyCurator activationKeyCurator;
@@ -247,6 +249,7 @@ public class ConsumerResource implements ConsumerApi {
         EventFactory eventFactory,
         UserServiceAdapter userService,
         PoolManager poolManager,
+        RefresherFactory refresherFactory,
         ConsumerRules consumerRules,
         OwnerCurator ownerCurator,
         ActivationKeyCurator activationKeyCurator,
@@ -286,6 +289,7 @@ public class ConsumerResource implements ConsumerApi {
         this.eventFactory = Objects.requireNonNull(eventFactory);
         this.userService = Objects.requireNonNull(userService);
         this.poolManager = Objects.requireNonNull(poolManager);
+        this.refresherFactory = Objects.requireNonNull(refresherFactory);
         this.consumerRules = Objects.requireNonNull(consumerRules);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
         this.activationKeyCurator = Objects.requireNonNull(activationKeyCurator);
@@ -1444,7 +1448,7 @@ public class ConsumerResource implements ConsumerApi {
 
                 existingOwner = ownerCurator.create(owner);
 
-                poolManager.getRefresher(this.subAdapter, this.prodAdapter)
+                this.refresherFactory.getRefresher(this.subAdapter, this.prodAdapter)
                     .add(existingOwner)
                     .run();
             }
@@ -2638,10 +2642,10 @@ public class ConsumerResource implements ConsumerApi {
             // TODO: This should probably verify that the consumer in the path is related to it,
             // otherwise this belongs in another endpoint.
             Entitlement entitlement = this.verifyAndLookupEntitlement(entitlementId);
-            poolManager.regenerateCertificatesOf(entitlement, lazyRegen);
+            this.entCertGenerator.regenerateCertificatesOf(entitlement, lazyRegen);
         }
         else {
-            poolManager.regenerateCertificatesOf(consumer, lazyRegen);
+            this.entCertGenerator.regenerateCertificatesOf(consumer, lazyRegen);
         }
     }
 

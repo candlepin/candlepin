@@ -36,9 +36,8 @@ import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
-import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.Refresher;
+import org.candlepin.controller.RefresherFactory;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.manifest.v1.ConsumerDTO;
@@ -51,12 +50,10 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.ContentCurator;
 import org.candlepin.model.DistributorVersion;
 import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
@@ -68,7 +65,6 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.pki.PKIUtility;
@@ -77,8 +73,6 @@ import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.Importer.ImportFile;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.hamcrest.core.StringContains;
@@ -96,7 +90,6 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -131,18 +124,12 @@ public class ImporterTest {
     @Mock private CdnCurator mockCdnCurator;
     @Mock private CertificateSerialCurator mockCertSerialCurator;
     @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
-    @Mock private ContentCurator mockContentCurator;
-    @Mock private EntitlementCurator mockEntitlementCurator;
     @Mock private EnvironmentCurator mockEnvironmentCurator;
     @Mock private ExporterMetadataCurator mockExporterMetadataCurator;
     @Mock private IdentityCertificateCurator mockIdentityCertCurator;
     @Mock private ImportRecordCurator mockImportRecordCurator;
     @Mock private OwnerCurator mockOwnerCurator;
-    @Mock private ProductCurator mockProductCurator;
-
-    @Mock private PoolManager mockPoolManager;
-    @Mock private ContentAccessManager mockContentAccessManager;
-
+    @Mock private RefresherFactory refresherFactory;
     @Mock private RulesImporter mockRulesImporter;
     @Mock private PKIUtility mockPKIUtility;
     @Mock private EventSink mockEventSink;
@@ -191,13 +178,12 @@ public class ImporterTest {
     }
 
     private Importer buildImporter() {
-        return new Importer(this.mockConsumerTypeCurator, this.mockProductCurator, this.mockRulesImporter,
-            this.mockOwnerCurator, this.mockIdentityCertCurator,
-            this.mockPoolManager, this.mockPKIUtility, this.mockExporterMetadataCurator,
+        return new Importer(this.mockConsumerTypeCurator, this.mockRulesImporter,
+            this.mockOwnerCurator, this.mockIdentityCertCurator, this.refresherFactory,
+            this.mockPKIUtility, this.mockExporterMetadataCurator,
             this.mockCertSerialCurator, this.mockEventSink, this.i18n, this.mockDistributorVersionCurator,
             this.mockCdnCurator, this.syncUtils, this.mockImportRecordCurator,
-            this.mockSubscriptionReconciler, this.mockEntitlementCurator, this.mockContentAccessManager,
-            this.modelTranslator);
+            this.mockSubscriptionReconciler, this.modelTranslator);
     }
 
     private File createTempDirectory(String prefix) throws IOException {
@@ -208,7 +194,7 @@ public class ImporterTest {
     }
 
     private File createFile(String filename, String version, Date date, String username, String prefix)
-        throws JsonGenerationException, JsonMappingException, IOException {
+        throws IOException {
 
         File file = new File(this.tmpFolder, filename);
         file.deleteOnExit();
@@ -240,8 +226,7 @@ public class ImporterTest {
         return backDate;
     }
 
-    private void addFileToArchive(ZipOutputStream out, File file)
-        throws IOException, FileNotFoundException {
+    private void addFileToArchive(ZipOutputStream out, File file) throws IOException {
         out.putNextEntry(new ZipEntry(file.getName()));
         FileInputStream in = new FileInputStream(file);
 
@@ -437,7 +422,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void nullType() throws ImporterException, IOException {
+    public void nullType() throws IOException {
         File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
 
         Importer importer = this.buildImporter();
@@ -450,7 +435,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void expectOwner() throws ImporterException, IOException {
+    public void expectOwner() throws IOException {
         ConflictOverrides overrides = new ConflictOverrides();
         File actualmeta = createFile("meta.json", "0.0.3", new Date(), "test_user", "prefix");
 
@@ -464,7 +449,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportWithNonZipArchive() throws IOException, ImporterException {
+    public void testImportWithNonZipArchive() throws IOException {
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         File archive = new File(this.tmpFolder, "non_zip_file.zip");
@@ -484,7 +469,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportZipArchiveNoContent() throws IOException, ImporterException {
+    public void testImportZipArchiveNoContent() throws IOException {
         Importer importer = this.buildImporter();
 
         Owner owner = mock(Owner.class);
@@ -503,7 +488,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportBadSignature() throws IOException, ImporterException {
+    public void testImportBadSignature() throws IOException {
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
@@ -588,7 +573,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportNoMeta() throws IOException, ImporterException {
+    public void testImportNoMeta() {
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
@@ -604,7 +589,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportNoConsumerTypesDir() throws IOException, ImporterException {
+    public void testImportNoConsumerTypesDir() {
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = this.getTestImportFiles();
@@ -620,7 +605,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportNoConsumer() throws IOException, ImporterException {
+    public void testImportNoConsumer() {
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = this.getTestImportFiles();
@@ -636,7 +621,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportNoProductDir() throws IOException, ImporterException {
+    public void testImportNoProductDir() throws IOException {
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
 
@@ -677,10 +662,10 @@ public class ImporterTest {
         this.mockConsumerType(stype);
 
         Refresher mockRefresher = mock(Refresher.class);
-
         doReturn(mockRefresher)
-            .when(this.mockPoolManager)
+            .when(this.refresherFactory)
             .getRefresher(any(SubscriptionServiceAdapter.class), any(ProductServiceAdapter.class));
+        doReturn(mockRefresher).when(mockRefresher).add(any(Owner.class));
 
         Map<String, File> importFiles = new HashMap<>();
         File ruleDir = mock(File.class);
@@ -755,7 +740,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportProductNoEntitlementDir() throws IOException, ImporterException {
+    public void testImportProductNoEntitlementDir() {
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
         Map<String, File> importFiles = this.getTestImportFiles();
@@ -857,7 +842,7 @@ public class ImporterTest {
     }
 
     @Test
-    public void testImportNoDistributorVersions() throws IOException, ImporterException {
+    public void testImportNoDistributorVersions() throws IOException {
         doNothing()
             .when(this.mockRulesImporter)
             .importObject(any(Reader.class));
@@ -883,7 +868,7 @@ public class ImporterTest {
     }
 
     private Map<String, File> createAndSetImportFiles()
-        throws IOException, JsonGenerationException, JsonMappingException {
+        throws IOException {
 
         File[] rulesFiles = createMockJsFile(mockJsPath);
         File ruleDir = mock(File.class);

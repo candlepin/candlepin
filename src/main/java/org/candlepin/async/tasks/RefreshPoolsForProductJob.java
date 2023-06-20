@@ -20,7 +20,7 @@ import org.candlepin.async.JobArguments;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.RefresherFactory;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.service.ProductServiceAdapter;
@@ -31,10 +31,6 @@ import java.util.Objects;
 import javax.inject.Inject;
 
 
-
-/**
- * RefreshPoolsForProductJob
- */
 public class RefreshPoolsForProductJob implements AsyncJob {
 
     public static final String JOB_KEY = "RefreshPoolsForProductJob";
@@ -43,23 +39,23 @@ public class RefreshPoolsForProductJob implements AsyncJob {
     private static final String LAZY_KEY = "lazy_regen";
     private static final String PRODUCT_KEY = "product_key";
 
-    private final PoolManager poolManager;
     private final ProductCurator productCurator;
     private final SubscriptionServiceAdapter subAdapter;
     private final ProductServiceAdapter prodAdapter;
+    private final RefresherFactory refresherFactory;
 
 
     @Inject
     public RefreshPoolsForProductJob(
-        final ProductCurator productCurator,
-        final PoolManager poolManager,
-        final SubscriptionServiceAdapter subAdapter,
-        final ProductServiceAdapter prodAdapter) {
+        ProductCurator productCurator,
+        SubscriptionServiceAdapter subAdapter,
+        ProductServiceAdapter prodAdapter,
+        RefresherFactory refresherFactory) {
 
-        this.poolManager = Objects.requireNonNull(poolManager);
         this.productCurator = Objects.requireNonNull(productCurator);
         this.subAdapter = Objects.requireNonNull(subAdapter);
         this.prodAdapter = Objects.requireNonNull(prodAdapter);
+        this.refresherFactory = Objects.requireNonNull(refresherFactory);
     }
 
     @Override
@@ -73,7 +69,7 @@ public class RefreshPoolsForProductJob implements AsyncJob {
         final Product product = this.productCurator.get(productUuid);
 
         if (product != null) {
-            poolManager.getRefresher(this.subAdapter, this.prodAdapter)
+            this.refresherFactory.getRefresher(this.subAdapter, this.prodAdapter)
                 .setLazyCertificateRegeneration(true)
                 .add(product)
                 .run();
