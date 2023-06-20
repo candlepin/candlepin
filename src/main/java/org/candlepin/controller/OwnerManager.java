@@ -54,11 +54,7 @@ public class OwnerManager {
 
     private static Logger log = LoggerFactory.getLogger(OwnerManager.class);
 
-    /* PoolManager is injected separately so that we do not create a circular reference with the
-       PoolManager implementation which has an injection of this class. This method causes
-       the injection to occur after the constructor.
-     */
-    @Inject PoolManager poolManager;
+    private PoolManager poolManager;
     private ConsumerCurator consumerCurator;
     private ActivationKeyCurator activationKeyCurator;
     private EnvironmentCurator envCurator;
@@ -73,7 +69,8 @@ public class OwnerManager {
     private EventSink sink;
 
     @Inject
-    public OwnerManager(ConsumerCurator consumerCurator,
+    public OwnerManager(PoolManager poolManager,
+        ConsumerCurator consumerCurator,
         ActivationKeyCurator activationKeyCurator,
         EnvironmentCurator envCurator,
         ExporterMetadataCurator exportCurator,
@@ -86,6 +83,7 @@ public class OwnerManager {
         OwnerServiceAdapter ownerServiceAdapter,
         EventSink sink) {
 
+        this.poolManager = poolManager;
         this.consumerCurator = consumerCurator;
         this.activationKeyCurator = activationKeyCurator;
         this.envCurator = envCurator;

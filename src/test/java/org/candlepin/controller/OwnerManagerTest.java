@@ -55,6 +55,7 @@ import java.util.Date;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class OwnerManagerTest {
+    @Mock private PoolManager mockPoolManager;
     @Mock private ConsumerCurator mockConsumerCurator;
     @Mock private ActivationKeyCurator mockActivationKeyCurator;
     @Mock private EnvironmentCurator mockEnvironmentCurator;
@@ -70,8 +71,8 @@ public class OwnerManagerTest {
 
     private OwnerManager createManager() {
         return new OwnerManager(
-            this.mockConsumerCurator, this.mockActivationKeyCurator, this.mockEnvironmentCurator,
-            this.mockExporterMetadataCurator, this.mockImportRecordCurator,
+            this.mockPoolManager, this.mockConsumerCurator, this.mockActivationKeyCurator,
+            this.mockEnvironmentCurator, this.mockExporterMetadataCurator, this.mockImportRecordCurator,
             this.mockPermissionBlueprintCurator, this.mockOwnerProductCurator, this.mockOwnerContentCurator,
             this.mockOwnerCurator, this.mockUeberCertificateCurator, this.mockOwnerServiceAdapter,
             this.mockEventSink);
