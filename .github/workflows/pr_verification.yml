@@ -87,14 +87,13 @@ jobs:
       - name: Run unit tests
         uses: gradle/gradle-build-action@v2
         with:
-          arguments: test coverage
+          arguments: test
 
       - name: Archive reports
         uses: actions/upload-artifact@v3
         with:
           name: unit_test_reports
           path: |
-            **/build/test-results/**/*.xml
             **/build/jacoco/test.exec
 
   validate_translations:
