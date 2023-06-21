@@ -267,8 +267,11 @@ public class ConsumerResourceCreationTest {
         this.mockConsumerType(this.system);
         this.systemDto = this.modelTranslator.translate(this.system, ConsumerTypeDTO.class);
 
-        owner = new Owner("test_owner");
-        owner.setId(TestUtil.randomString());
+        this.owner = new Owner()
+            .setId(TestUtil.randomString())
+            .setKey("test_owner")
+            .setDisplayName("test_owner");
+
         user = new User(USER, "");
         PermissionBlueprint p = new PermissionBlueprint(PermissionType.OWNER, owner, Access.ALL);
         role = new Role();

@@ -110,8 +110,10 @@ public class X509V3ExtensionUtilTest {
     public void productWithBrandName() {
         String engProdId = "1000";
         String brandedName = "Branded Eng Product";
-        Owner owner = new Owner("Test Corporation");
-        owner.setId("test-id");
+        Owner owner = new Owner()
+            .setId("test-id")
+            .setKey("Test Corporation")
+            .setDisplayName("Test Corporation");
         Product p = new Product(engProdId, "Eng Product 1000");
         p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
         Set<Product> prods = new HashSet<>(Arrays.asList(p));
@@ -132,8 +134,10 @@ public class X509V3ExtensionUtilTest {
     @Test
     public void shouldFilterContentWithCorrectArches() {
         String expectedArch = "ppc64";
-        Owner owner = new Owner("Test Corporation");
-        owner.setId("test-id");
+        Owner owner = new Owner()
+            .setId("test-id")
+            .setKey("Test Corporation")
+            .setDisplayName("Test Corporation");
         Product product = new Product("mkt", "MKT SKU");
         addContent(product, "x86_64");
         addContent(product, "x86_64");
@@ -157,8 +161,10 @@ public class X509V3ExtensionUtilTest {
     @Test
     public void shouldFilterByProductArchWhenContentHasNoArch() {
         String expectedArch = "ppc64";
-        Owner owner = new Owner("Test Corporation");
-        owner.setId("test-id");
+        Owner owner = new Owner()
+            .setId("test-id")
+            .setKey("Test Corporation")
+            .setDisplayName("Test Corporation");
         Product product = new Product("mkt", "MKT SKU");
         product.setAttribute(Product.Attributes.ARCHITECTURE, "x86_64");
         addContent(product);
@@ -176,8 +182,10 @@ public class X509V3ExtensionUtilTest {
     @Test
     public void shouldNOTFilterContentWithNoSpecifiedArches() {
         String expectedArch = "ppc64";
-        Owner owner = new Owner("Test Corporation");
-        owner.setId("test-id");
+        Owner owner = new Owner()
+            .setId("test-id")
+            .setKey("Test Corporation")
+            .setDisplayName("Test Corporation");
         Product product = new Product("mkt", "MKT SKU");
         addContent(product); // add a content without arches specified
         Consumer consumer = new Consumer();
@@ -212,8 +220,10 @@ public class X509V3ExtensionUtilTest {
     public void productWithMultipleBrandNames() {
         String engProdId = "1000";
         String brandedName = "Branded Eng Product";
-        Owner owner = new Owner("Test Corporation");
-        owner.setId("test-id");
+        Owner owner = new Owner()
+            .setId("test-id")
+            .setKey("Test Corporation")
+            .setDisplayName("Test Corporation");
         Product p = new Product(engProdId, "Eng Product 1000");
         p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
         Set<Product> prods = new HashSet<>(Arrays.asList(p));
@@ -283,7 +293,9 @@ public class X509V3ExtensionUtilTest {
     public void subscriptionWithSysPurposeAttributes() throws JsonProcessingException {
         this.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         this.mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        Owner owner = new Owner("Test Corporation");
+        Owner owner = new Owner()
+            .setKey("Test Corporation")
+            .setDisplayName("Test Corporation");
         Product mktProd = new Product("mkt", "MKT SKU");
         mktProd.setAttribute(Product.Attributes.USAGE, "my_usage");
         mktProd.setAttribute(Product.Attributes.SUPPORT_LEVEL, "my_support_level");

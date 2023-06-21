@@ -207,7 +207,6 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     private JobManager jobManager;
     private Owner owner;
-    private List<Owner> owners;
     private Product product;
     private Set<String> typeLabels;
     private List<String> skus;
@@ -217,9 +216,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @BeforeEach
     public void setUp() {
         this.jobManager = mock(JobManager.class);
-        owner = ownerCurator.create(new Owner(OWNER_NAME));
-        owners = new ArrayList<>();
-        owners.add(owner);
+
+        this.owner = this.ownerCurator.create(new Owner()
+            .setKey(OWNER_NAME)
+            .setDisplayName(OWNER_NAME));
+
         product = this.createProduct(owner);
         typeLabels = null;
         skus = null;
@@ -527,7 +528,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void ownerAdminCannotAccessAnotherOwnersPools() {
-        Owner evilOwner = new Owner("evilowner");
+        Owner evilOwner = new Owner()
+            .setKey("evilowner")
+            .setDisplayName("evilowner");
         ownerCurator.create(evilOwner);
         Principal principal = setupPrincipal(evilOwner, Access.ALL);
 
@@ -604,7 +607,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     public void consumerCannotListConsumersFromAnotherOwner() {
         Consumer c = createConsumer(owner);
 
-        Owner owner2 = ownerCurator.create(new Owner("Owner2"));
+        Owner owner2 = this.createOwner("Owner2");
         Consumer c2 = createConsumer(owner2);
 
         List<String> uuids = new ArrayList<>();
@@ -698,6 +701,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         int rnd = TestUtil.randomInt();
 
         Owner owner = new Owner()
+            .setId("test-owner-" + rnd)
             .setId("test-owner-" + rnd)
             .setKey(ownerKey)
             .setDisplayName("Test Owner " + rnd);
@@ -1146,6 +1150,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerCurator oc = mock(OwnerCurator.class);
         Owner o = new Owner();
         o.setKey("owner-key");
+        o.setKey("owner-key");
 
         when(this.mockOwnerCurator.getByKey(anyString())).thenReturn(o);
 
@@ -1158,6 +1163,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testActivationKeyTooLongRelease() {
         Owner o = new Owner();
+        o.setKey("owner-key");
         o.setKey("owner-key");
 
         when(this.mockOwnerCurator.getByKey(anyString())).thenReturn(o);
@@ -1480,7 +1486,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
     @Test
     public void testUpdateOwner() {
         config.setProperty(ConfigProperties.STANDALONE, "false");
-        Owner owner = new Owner("Test Owner", "test");
+        Owner owner = new Owner()
+            .setKey("Test Owner")
+            .setKey("Test Owner")
+            .setDisplayName("test");
         ownerCurator.create(owner);
 
         Product prod1 = TestUtil.createProduct()
@@ -1507,8 +1516,12 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         this.poolCurator.flush();
 
         owner.setDefaultServiceLevel("premium");
-        Owner parentOwner1 = ownerCurator.create(new Owner("Paren Owner 1", "parentTest1"));
-        Owner parentOwner2 = ownerCurator.create(new Owner("Paren Owner 2", "parentTest2"));
+        Owner parentOwner1 = ownerCurator.create(new Owner()
+            .setKey("Paren Owner 1")
+            .setDisplayName("parentTest1"));
+        Owner parentOwner2 = ownerCurator.create(new Owner()
+            .setKey("Paren Owner 2")
+            .setDisplayName("parentTest2"));
         owner.setParentOwner(parentOwner1);
 
         ownerCurator.merge(owner);
@@ -1605,9 +1618,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         List<String> contDis = new ArrayList<>();
         contDis.add("form-data; name=\"upload\"; filename=\"test_file.zip\"");
         mm.put("Content-Disposition", contDis);
-        Owner owner = new Owner();
-        String ownerKey = "random-owner-key";
-        owner.setKey(ownerKey);
+
+        Owner owner = new Owner()
+            .setKey("random-owner-key");
 
         AsyncJobStatus asyncJobStatus = new AsyncJobStatus();
         asyncJobStatus.setName(ImportJob.JOB_NAME);
@@ -1651,7 +1664,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testSetAndDeleteOwnerLogLevel() {
-        Owner owner = new Owner("Test Owner", "test");
+        Owner owner = new Owner()
+            .setKey("Test Owner")
+            .setKey("Test Owner")
+            .setDisplayName("test");
         ownerCurator.create(owner);
         ownerResource.setLogLevel(owner.getKey(), "ALL");
 
@@ -1665,7 +1681,10 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testSetBadLogLevel() {
-        Owner owner = new Owner("Test Owner", "test");
+        Owner owner = new Owner()
+            .setKey("Test Owner")
+            .setKey("Test Owner")
+            .setDisplayName("test");
         ownerCurator.create(owner);
         assertThrows(BadRequestException.class, () ->
             ownerResource.setLogLevel(owner.getKey(), "THISLEVELISBAD")
@@ -2151,7 +2170,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
         String orgEnvMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
-        Owner owner = this.ownerCurator.create(new Owner("test_owner", "test_owner")
+        Owner owner = this.ownerCurator.create(new Owner()
+            .setKey("test_owner")
+            .setDisplayName("test_owner")
             .setContentAccessModeList(entitlementMode)
             .setContentAccessMode(entitlementMode));
 
@@ -2171,7 +2192,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
         String orgEnvMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
-        Owner owner = this.ownerCurator.create(new Owner("test_owner", "test_owner")
+        Owner owner = this.ownerCurator.create(new Owner()
+            .setKey("test_owner")
+            .setDisplayName("test_owner")
             .setContentAccessModeList(entitlementMode + "," + orgEnvMode)
             .setContentAccessMode(entitlementMode));
 
@@ -2191,7 +2214,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
         String orgEnvMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
-        Owner owner = this.ownerCurator.create(new Owner("test_owner", "test_owner")
+        Owner owner = this.ownerCurator.create(new Owner()
+            .setKey("test_owner")
+            .setDisplayName("test_owner")
             .setContentAccessModeList(entitlementMode)
             .setContentAccessMode(entitlementMode));
 
@@ -2212,7 +2237,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
         String orgEnvMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
-        Owner owner = this.ownerCurator.create(new Owner("test_owner", "test_owner")
+        Owner owner = this.ownerCurator.create(new Owner()
+            .setKey("test_owner")
+            .setDisplayName("test_owner")
             .setContentAccessModeList(entitlementMode)
             .setContentAccessMode(entitlementMode));
 
@@ -2227,7 +2254,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
         String orgEnvMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
-        Owner owner = this.ownerCurator.create(new Owner("test_owner", "test_owner")
+        Owner owner = this.ownerCurator.create(new Owner()
+            .setKey("test_owner")
+            .setDisplayName("test_owner")
             .setContentAccessModeList(entitlementMode)
             .setContentAccessMode(entitlementMode));
 
@@ -2242,7 +2271,9 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
         String orgEnvMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
-        Owner owner = this.ownerCurator.create(new Owner("test_owner", "test_owner")
+        Owner owner = this.ownerCurator.create(new Owner()
+            .setKey("test_owner")
+            .setDisplayName("test_owner")
             .setContentAccessModeList(entitlementMode)
             .setContentAccessMode(entitlementMode));
 

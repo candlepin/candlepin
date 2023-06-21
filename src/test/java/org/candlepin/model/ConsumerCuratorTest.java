@@ -74,8 +74,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() throws Exception {
-        owner = new Owner("test-owner", "Test Owner");
-        owner = ownerCurator.create(owner);
+        this.owner = this.createOwner("test-owner", "Test Owner");
+
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);
 
@@ -758,7 +758,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             .setType(ct);
         consumerCurator.create(host);
 
-        owner = new Owner("test-owner2", "Test Owner2");
+        owner = new Owner()
+            .setKey("test-owner2")
+            .setDisplayName("Test Owner2");
         owner = ownerCurator.create(owner);
 
         Consumer gConsumer1 = new Consumer()
@@ -1166,7 +1168,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
     @Test
     public void deleteTwice() {
         // attempt to create and delete the same consumer uuid twice
-        Owner altOwner = new Owner("test-owner2", "Test Owner2");
+        Owner altOwner = new Owner()
+            .setKey("test-owner2")
+            .setDisplayName("Test Owner2");
 
         altOwner = ownerCurator.create(altOwner);
 
@@ -1365,7 +1369,9 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer.setUuid("1");
         consumer = consumerCurator.create(consumer);
 
-        Owner owner2 = new Owner("test-owner2", "Test Owner2");
+        Owner owner2 = new Owner()
+            .setKey("test-owner2")
+            .setDisplayName("Test Owner2");
         ownerCurator.create(owner2);
 
         Consumer consumer2 = new Consumer()
@@ -1637,7 +1643,10 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetHypervisorWrongOwner() {
-        Owner otherOwner = new Owner("test-owner-other", "Test Other Owner");
+        Owner otherOwner = new Owner()
+            .setKey("test-owner-other")
+            .setDisplayName("Test Other Owner");
+
         otherOwner = ownerCurator.create(otherOwner);
         String hypervisorid = "hypervisor";
         Consumer consumer = new Consumer()
@@ -1833,7 +1842,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             .setHypervisorId(hid);
         consumer = consumerCurator.create(consumer);
 
-        Owner otherOwner = ownerCurator.create(new Owner("other owner"));
+        Owner otherOwner = this.createOwner("other owner");
 
         HypervisorId hid2 = new HypervisorId()
             .setOwner(owner)

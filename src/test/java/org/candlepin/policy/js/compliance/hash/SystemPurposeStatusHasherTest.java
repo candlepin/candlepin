@@ -40,8 +40,11 @@ class SystemPurposeStatusHasherTest {
 
     @BeforeEach
     void setUp() {
-        this.owner = new Owner("test-owner", "Test Owner");
-        this.owner.setId("test-owner-id");
+        this.owner = new Owner()
+            .setId("test-owner-id")
+            .setKey("test-owner")
+            .setDisplayName("Test Owner");
+
         this.consumer = createConsumer(this.owner);
     }
 

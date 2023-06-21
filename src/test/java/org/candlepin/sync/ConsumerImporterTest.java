@@ -168,9 +168,11 @@ public class ConsumerImporterTest {
         ConsumerDTO consumer = new ConsumerDTO();
         consumer.setUuid("test-uuid");
 
-        Owner anotherOwner = new Owner("other", "Other");
-        anotherOwner.setId("blah");
-        anotherOwner.setUpstreamConsumer(uc);
+        Owner anotherOwner = new Owner()
+            .setId("blah")
+            .setKey("other")
+            .setDisplayName("Other")
+            .setUpstreamConsumer(uc);
         when(curator.getByUpstreamUuid(consumer.getUuid())).thenReturn(anotherOwner);
 
         assertThrows(SyncDataFormatException.class,

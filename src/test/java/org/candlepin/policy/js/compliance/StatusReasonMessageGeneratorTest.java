@@ -52,7 +52,11 @@ public class StatusReasonMessageGeneratorTest {
         I18n i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale,
             I18nFactory.FALLBACK);
         generator = new StatusReasonMessageGenerator(i18n);
-        owner = new Owner("test");
+
+        this.owner = new Owner()
+            .setKey("test")
+            .setDisplayName("test");
+
         ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         ctype.setId("test-ctype");
         consumer = new Consumer();
@@ -147,7 +151,6 @@ public class StatusReasonMessageGeneratorTest {
         attrs.put("product_id", "prod1");
         ComplianceReason reason = buildReason("NOTCOVERED", attrs);
 
-        Owner owner = new Owner("test");
         Product product = TestUtil.createProduct("prod1", "NonCovered Product");
         ConsumerInstalledProduct installed = new ConsumerInstalledProduct()
             .setProductId(product.getId())

@@ -57,8 +57,10 @@ public class ComplianceStatusHasherTest {
 
     @BeforeEach
     public void setUp() throws Exception {
-        owner = new Owner("test-owner", "Test Owner");
-        owner.setId("test-owner-id");
+        owner = new Owner()
+            .setId("test-owner-id")
+            .setKey("test-owner")
+            .setDisplayName("Test Owner");
 
         Consumer consumer = createConsumer(owner);
         ComplianceStatus status = createStatusOf(consumer);

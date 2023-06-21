@@ -46,12 +46,9 @@ public class OwnerCuratorPermissionsTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUpTestObjects() {
-        owner1 = new Owner("Example Corporation");
-        owner2 = new Owner("Example Corporation 2");
-        owner3 = new Owner("Example Corporation 3");
-        ownerCurator.create(owner1);
-        ownerCurator.create(owner2);
-        ownerCurator.create(owner3);
+        this.owner1 = this.createOwner("Example Corporation");
+        this.owner2 = this.createOwner("Example Corporation 2");
+        this.owner3 = this.createOwner("Example Corporation 3");
 
         // Setup a principal with access to org 1 and 2, but not 3.
         Set<Permission> perms = new HashSet<>();

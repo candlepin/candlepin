@@ -509,7 +509,7 @@ public class OwnerProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testMapProductToOwnerUnmappedOwner() {
-        Owner owner = new Owner("unmapped");
+        Owner owner = new Owner().setKey("unmapped");
         Product product = this.createProduct();
 
         assertThrows(IllegalStateException.class, () ->

@@ -209,11 +209,11 @@ public class ContentAccessManagerTest {
     }
 
     private Owner mockOwner() {
-        Owner owner = new Owner();
-        owner.setId("test_owner");
-        owner.setKey("test_owner");
-        owner.setContentAccessModeList(entitlementMode + "," + orgEnvironmentMode);
-        owner.setContentAccessMode(orgEnvironmentMode);
+        Owner owner = new Owner()
+            .setId("test_owner")
+            .setKey("test_owner")
+            .setContentAccessModeList(entitlementMode + "," + orgEnvironmentMode)
+            .setContentAccessMode(orgEnvironmentMode);
 
         doReturn(owner).when(this.mockOwnerCurator).findOwnerById(eq(owner.getId()));
 
@@ -429,7 +429,9 @@ public class ContentAccessManagerTest {
         String initialAccessModeList = entitlementMode + "," + orgEnvironmentMode;
         String initialAccessMode = orgEnvironmentMode;
 
-        Owner owner = new Owner("test_owner", "test_owner")
+        Owner owner = new Owner()
+            .setKey("test_owner")
+            .setDisplayName("test_owner")
             .setContentAccessModeList(initialAccessModeList)
             .setContentAccessMode(initialAccessMode);
 
@@ -445,7 +447,9 @@ public class ContentAccessManagerTest {
 
     @Test
     public void testUpdateOwnerContentAccessModeNotOnList() {
-        Owner owner = new Owner("test_owner", "test_owner");
+        Owner owner = new Owner()
+            .setKey("test_owner")
+            .setDisplayName("test_owner");
 
         String updatedAccessModeList = entitlementMode;
         String updatedAccessMode = orgEnvironmentMode;
@@ -461,7 +465,9 @@ public class ContentAccessManagerTest {
         String initialAccessModeList = entitlementMode + "," + orgEnvironmentMode;
         String initialAccessMode = orgEnvironmentMode;
 
-        Owner owner = new Owner("test_owner", "test_owner")
+        Owner owner = new Owner()
+            .setKey("test_owner")
+            .setDisplayName("test_owner")
             .setContentAccessModeList(initialAccessModeList)
             .setContentAccessMode(initialAccessMode);
 
@@ -484,7 +490,9 @@ public class ContentAccessManagerTest {
         String initialAccessModeList = entitlementMode + "," + orgEnvironmentMode;
         String initialAccessMode = entitlementMode;
 
-        Owner owner = new Owner("test_owner", "test_owner")
+        Owner owner = new Owner()
+            .setKey("test_owner")
+            .setDisplayName("test_owner")
             .setContentAccessModeList(initialAccessModeList)
             .setContentAccessMode(initialAccessMode);
 
@@ -507,7 +515,9 @@ public class ContentAccessManagerTest {
         String initialAccessModeList = entitlementMode + "," + orgEnvironmentMode;
         String initialAccessMode = orgEnvironmentMode;
 
-        Owner owner = new Owner("test_owner", "test_owner")
+        Owner owner = new Owner()
+            .setKey("test_owner")
+            .setDisplayName("test_owner")
             .setContentAccessModeList(initialAccessModeList)
             .setContentAccessMode(initialAccessMode);
 
@@ -525,7 +535,9 @@ public class ContentAccessManagerTest {
         String initialAccessModeList = entitlementMode + "," + orgEnvironmentMode;
         String initialAccessMode = orgEnvironmentMode;
 
-        Owner owner = new Owner("test_owner", "test_owner")
+        Owner owner = new Owner()
+            .setKey("test_owner")
+            .setDisplayName("test_owner")
             .setContentAccessModeList(initialAccessModeList)
             .setContentAccessMode(initialAccessMode);
 
@@ -543,7 +555,9 @@ public class ContentAccessManagerTest {
 
     @Test
     public void testUpdateOwnerContentAccessModeNoList() {
-        Owner owner = new Owner("test_owner", "test_owner");
+        Owner owner = new Owner()
+            .setKey("test_owner")
+            .setDisplayName("test_owner");
 
         String contentAccessModeList = "";
         String contentAccessMode = orgEnvironmentMode;

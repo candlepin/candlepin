@@ -208,7 +208,8 @@ public class UserResource implements UsersApi {
 
             Owner owner = this.ownerCurator.getByKey(oinfo.getKey());
             if (owner == null) {
-                owner = new Owner(oinfo.getKey());
+                owner = new Owner()
+                    .setKey(oinfo.getKey());
             }
 
             return owner;

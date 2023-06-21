@@ -208,9 +208,12 @@ public class EntitlerTest {
 
     @Test
     public void bindByProductsString() throws Exception {
-        Owner owner = new Owner("o1");
-        owner.setContentAccessMode("entitlement");
-        owner.setId(TestUtil.randomString());
+        Owner owner = new Owner()
+            .setId(TestUtil.randomString())
+            .setKey("o1")
+            .setDisplayName("o1")
+            .setContentAccessMode("entitlement");
+
         Set<String> pids = Set.of("prod1", "prod2", "prod3");
         when(cc.findByUuid(eq("abcd1234"))).thenReturn(consumer);
         when(consumer.getOwnerId()).thenReturn(owner.getOwnerId());
@@ -409,10 +412,13 @@ public class EntitlerTest {
 
     @Test
     public void testRevokesLapsedUnmappedGuestEntitlementsOnAutoHeal() throws Exception {
-        Owner owner1 = new Owner("o1");
-        owner1.setContentAccessMode("entitlement");
-        owner1.setId(TestUtil.randomString());
+        Owner owner1 = new Owner()
+            .setId(TestUtil.randomString())
+            .setKey("o1")
+            .setDisplayName("o1")
+            .setContentAccessMode("entitlement");
         when(ownerCurator.findOwnerById(eq(owner1.getId()))).thenReturn(owner1);
+
         Product product = TestUtil.createProduct();
 
         Pool p1 = TestUtil.createPool(owner1, product);
@@ -677,8 +683,10 @@ public class EntitlerTest {
     }
 
     public Pool createPool(String id, Date expireAt) {
-        Owner owner = new Owner(id);
-        owner.setId(id + "-id");
+        Owner owner = new Owner()
+            .setId(id + "-id")
+            .setKey(id)
+            .setDisplayName(id);
 
         Product product = TestUtil.createProduct();
         Pool pool = TestUtil.createPool(owner, product);

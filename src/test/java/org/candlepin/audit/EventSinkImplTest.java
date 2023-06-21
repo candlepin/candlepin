@@ -203,7 +203,10 @@ public class EventSinkImplTest {
 
     @Test
     public void importCreatedShouldEmitSuccessfully() throws Exception {
-        Owner owner = new Owner("Import guy");
+        Owner owner = new Owner()
+            .setKey("Import guy")
+            .setDisplayName("Import guy");
+
         eventSinkImpl.emitImportCreated(owner);
         eventSinkImpl.sendEvents();
         verify(mockClientProducer).send(any(ClientMessage.class));

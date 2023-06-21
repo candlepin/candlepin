@@ -18,10 +18,9 @@ import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.inject.Inject;
+
+
 
 public class MembershipTest extends DatabaseTestFixture {
     @Inject private OwnerCurator ownerCurator;
@@ -29,10 +28,7 @@ public class MembershipTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() throws Exception {
-        Owner o = new Owner("testowner");
-        ownerCurator.create(o);
-        Set<Owner> owners = new HashSet<>();
-        owners.add(o);
+        Owner owner = this.createOwner("testowner");
 
         String username = "TESTUSER";
         String password = "sekretpassword";

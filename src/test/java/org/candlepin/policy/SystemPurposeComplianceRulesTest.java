@@ -74,9 +74,12 @@ public class SystemPurposeComplianceRulesTest {
             I18nFactory.FALLBACK);
         complianceRules = new SystemPurposeComplianceRules(eventSink, consumerCurator, consumerTypeCurator,
                 i18n, poolCurator);
-        owner = new Owner("test");
-        owner.setContentAccessMode(String.valueOf(ContentAccessManager.ContentAccessMode.ORG_ENVIRONMENT));
-        owner.setId(TestUtil.randomString());
+
+        this.owner = new Owner()
+            .setId(TestUtil.randomString())
+            .setKey("test")
+            .setDisplayName("test")
+            .setContentAccessMode(String.valueOf(ContentAccessManager.ContentAccessMode.ORG_ENVIRONMENT));
     }
 
     private Entitlement mockEntitlement(Consumer consumer, Product product, Product ... providedProducts) {

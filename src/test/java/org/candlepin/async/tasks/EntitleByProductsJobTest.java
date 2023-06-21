@@ -57,8 +57,11 @@ public class EntitleByProductsJobTest {
 
         final ConsumerType ctype = new ConsumerType("system");
         ctype.setId("test-ctype");
-        owner = new Owner("test-owner");
-        owner.setId("test-owner-id");
+        owner = new Owner()
+            .setId("test-owner-id")
+            .setKey("test-owner")
+            .setDisplayName("test-owner");
+
         consumer = new Consumer()
             .setUuid(consumerUuid)
             .setName("Test Consumer")

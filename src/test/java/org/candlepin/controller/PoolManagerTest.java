@@ -1447,7 +1447,9 @@ public class PoolManagerTest {
     @Test
     public void testRefreshPoolsRemovesOtherOwnerPoolsForSameSub() {
         PreUnbindHelper preHelper = mock(PreUnbindHelper.class);
-        Owner other = new Owner("otherkey", "othername");
+        Owner other = new Owner()
+            .setKey("otherkey")
+            .setDisplayName("othername");
 
         List<Subscription> subscriptions = new ArrayList<>();
 

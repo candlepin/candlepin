@@ -129,9 +129,9 @@ public class ProductResourceTest extends DatabaseTestFixture {
     }
 
     private List<Owner> setupDBForOwnerProdTests() {
-        Owner owner1 = this.ownerCurator.create(new Owner("TestCorp-01"));
-        Owner owner2 = this.ownerCurator.create(new Owner("TestCorp-02"));
-        Owner owner3 = this.ownerCurator.create(new Owner("TestCorp-03"));
+        Owner owner1 = this.ownerCurator.create(new Owner().setKey("testorg-1").setDisplayName("testorg-1"));
+        Owner owner2 = this.ownerCurator.create(new Owner().setKey("testorg-2").setDisplayName("testorg-2"));
+        Owner owner3 = this.ownerCurator.create(new Owner().setKey("testorg-3").setDisplayName("testorg-3"));
 
         Product prod1 = this.createProduct("p1", "p1", owner1, owner2);
         Product prod2 = this.createProduct("p2", "p2", owner2, owner3);

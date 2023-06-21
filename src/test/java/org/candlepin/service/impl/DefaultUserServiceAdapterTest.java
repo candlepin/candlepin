@@ -59,7 +59,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     @Override
     public void init() throws Exception {
         super.init();
-        this.owner = ownerCurator.create(new Owner("default_owner"));
+        this.owner = this.createOwner("default_owner");
         this.service = new DefaultUserServiceAdapter(userCurator, roleCurator, permissionCurator,
             ownerCurator, permissionFactory);
     }
@@ -215,8 +215,8 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     // public void testGetAccessibleOwners() {
     //     String username = "TESTUSER";
     //     String password = "sekretpassword";
-    //     Owner owner1 = new Owner("owner1", "owner one");
-    //     Owner owner2 = new Owner("owner2", "owner two");
+    //     Owner owner1 = new Owner().setKey("owner1").setDisplayName("owner one");
+    //     Owner owner2 = new Owner().setKey("owner2").setDisplayName("owner two");
     //     User user = new User(username, password);
 
     //     Set<Owner> owners = user.getOwners(null, Access.ALL);
@@ -234,8 +234,8 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     // public void testGetAccessibleOwnersCoversCreateConsumers() {
     //     String username = "TESTUSER";
     //     String password = "sekretpassword";
-    //     Owner owner1 = new Owner("owner1", "owner one");
-    //     Owner owner2 = new Owner("owner2", "owner two");
+    //     Owner owner1 = new Owner().setKey("owner1").setDisplayName("owner one");
+    //     Owner owner2 = new Owner().setKey("owner2").setDisplayName("owner two");
     //     User user = new User(username, password);
 
     //     Set<Owner> owners = user.getOwners(null, Access.ALL);
@@ -253,8 +253,8 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     // public void testGetAccessibleOwnersNonOwnerPerm() {
     //     String username = "TESTUSER";
     //     String password = "sekretpassword";
-    //     Owner owner1 = new Owner("owner1", "owner one");
-    //     Owner owner2 = new Owner("owner2", "owner two");
+    //     Owner owner1 = new Owner().setKey("owner1").setDisplayName("owner one");
+    //     Owner owner2 = new Owner().setKey("owner2").setDisplayName("owner two");
     //     User user = new User(username, password);
 
     //     Set<Owner> owners = user.getOwners(null, Access.ALL);

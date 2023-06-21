@@ -49,9 +49,9 @@ public class ConsumerCuratorPermissionsTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUpTestObjects() {
-        owner = new Owner("Example Corporation");
-
-        ownerCurator.create(owner);
+        this.owner = this.ownerCurator.create(new Owner()
+            .setKey("Example Corporation")
+            .setDisplayName("Example Corporation"));
 
         consumerType = new ConsumerType(CONSUMER_TYPE_NAME);
         consumerTypeCurator.create(consumerType);

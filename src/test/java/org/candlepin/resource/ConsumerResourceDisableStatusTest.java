@@ -54,9 +54,11 @@ public class ConsumerResourceDisableStatusTest extends DatabaseTestFixture {
     @BeforeEach
     public void setUp() {
         ConsumerType standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
-        owner = ownerCurator.create(new Owner("test-owner"));
-        owner.setContentAccessMode("org_environment");
-        ownerCurator.create(owner);
+
+        this.owner = this.ownerCurator.create(new Owner()
+            .setKey("test-owner")
+            .setDisplayName("test-owner")
+            .setContentAccessMode("org_environment"));
 
         Product product = this.createProduct(owner);
 

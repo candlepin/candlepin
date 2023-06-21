@@ -60,8 +60,7 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
     @BeforeEach
     public void setUp() {
         standardSystemType = consumerTypeCurator.create(new ConsumerType("system"));
-        owner = ownerCurator.create(new Owner("test-owner"));
-        ownerCurator.create(owner);
+        this.owner = this.createOwner("test-owner");
 
         consumer = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(consumer);

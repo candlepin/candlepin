@@ -96,7 +96,9 @@ public class CloudRegistrationAuthTest {
 
         doAnswer(iom -> {
             String ownerKey = (String) iom.getArguments()[0];
-            return ownerCache.computeIfAbsent(ownerKey, key -> new Owner(key, key)
+            return ownerCache.computeIfAbsent(ownerKey, key -> new Owner()
+                .setKey(key)
+                .setDisplayName(key)
                 .setId(Util.generateUUID()));
         }).when(this.mockOwnerCurator).getByKey(anyString());
 

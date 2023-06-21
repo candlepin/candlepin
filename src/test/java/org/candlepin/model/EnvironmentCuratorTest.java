@@ -41,7 +41,7 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
-        owner = ownerCurator.create(new Owner("test-owner", "Test Owner"));
+        this.owner = this.createOwner("test-owner", "Test Owner");
         environment = envCurator.create(new Environment("env1", "Env 1", owner));
     }
 

@@ -43,8 +43,7 @@ public class ContentTest extends DatabaseTestFixture {
 
     @Test
     public void testContent() {
-        Owner owner = new Owner("Example-Corporation");
-        ownerCurator.create(owner);
+        Owner owner = this.createOwner("Example-Corporation");
 
         Content content = TestUtil.createContent("test-content");
 
@@ -67,8 +66,7 @@ public class ContentTest extends DatabaseTestFixture {
 
     @Test
     public void testContentWithArches() {
-        Owner owner = new Owner("Example-Corporation");
-        ownerCurator.create(owner);
+        Owner owner = this.createOwner("Example-Corporation");
 
         String arches = "x86_64, i386";
         Content content = TestUtil.createContent("test_content");

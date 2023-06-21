@@ -657,7 +657,9 @@ public class ImporterTest {
 
     @Test
     public void testReturnsSubscriptionsFromManifest() throws IOException, ImporterException {
-        Owner owner = new Owner("admin", "Admin Owner");
+        Owner owner = new Owner()
+            .setKey("admin")
+            .setDisplayName("Admin Owner");
 
         ConsumerType stype = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         stype.setId("test-ctype");
@@ -764,7 +766,9 @@ public class ImporterTest {
         this.mockConsumerType(type);
 
         File[] upstream = createUpstreamFiles();
-        Owner owner = new Owner("admin", "Admin Owner");
+        Owner owner = new Owner()
+            .setKey("admin")
+            .setDisplayName("Admin Owner");
 
         ConsumerDTO consumerDTO = new ConsumerDTO();
         consumerDTO.setUuid("eb5e04bf-be27-44cf-abe3-0c0b1edd523e");
@@ -907,7 +911,9 @@ public class ImporterTest {
     @Test
     public void testRecordImportSuccess() {
         String expectedOwnerKey = "TEST_OWNER";
-        Owner owner = new Owner(expectedOwnerKey);
+        Owner owner = new Owner()
+            .setKey(expectedOwnerKey)
+            .setDisplayName(expectedOwnerKey);
         Meta meta = new Meta("1.0", new Date(), "test-user", "candlepin", "testcdn");
 
         List<SubscriptionDTO> subscriptions = new ArrayList<>();
@@ -934,7 +940,9 @@ public class ImporterTest {
     @Test
     public void testRecordImportSetsUpstreamConsumerFromOwner() {
         String expectedOwnerKey = "TEST_OWNER";
-        Owner owner = new Owner(expectedOwnerKey);
+        Owner owner = new Owner()
+            .setKey(expectedOwnerKey)
+            .setDisplayName(expectedOwnerKey);
 
         UpstreamConsumer uc = new UpstreamConsumer("uc", owner,
             new ConsumerType(ConsumerType.ConsumerTypeEnum.CANDLEPIN), "uuid");
@@ -966,7 +974,9 @@ public class ImporterTest {
     @Test
     public void testRecordImportIgnoresUpstreamConsumerIfNotSetOnOwner() {
         String expectedOwnerKey = "TEST_OWNER";
-        Owner owner = new Owner(expectedOwnerKey);
+        Owner owner = new Owner()
+            .setKey(expectedOwnerKey)
+            .setDisplayName(expectedOwnerKey);
 
         Meta meta = new Meta("1.0", new Date(), "test-user", "candlepin", "testcdn");
 
@@ -985,7 +995,9 @@ public class ImporterTest {
     @Test
     public void testRecordImportExpiredSubsFound() {
         String expectedOwnerKey = "TEST_OWNER";
-        Owner owner = new Owner(expectedOwnerKey);
+        Owner owner = new Owner()
+            .setKey(expectedOwnerKey)
+            .setDisplayName(expectedOwnerKey);
 
         Map<String, Object> data = new HashMap<>();
         List<SubscriptionDTO> subscriptions = new ArrayList<>();
@@ -1016,7 +1028,9 @@ public class ImporterTest {
     @Test
     public void testRecordImportNoActiveSubsFound() {
         String expectedOwnerKey = "TEST_OWNER";
-        Owner owner = new Owner(expectedOwnerKey);
+        Owner owner = new Owner()
+            .setKey(expectedOwnerKey)
+            .setDisplayName(expectedOwnerKey);
 
         Map<String, Object> data = new HashMap<>();
         data.put("subscriptions", new ArrayList<SubscriptionDTO>());

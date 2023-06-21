@@ -44,7 +44,9 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void basicImport() {
-        Owner owner = new Owner("testing");
+        Owner owner = new Owner()
+            .setKey("testing")
+            .setDisplayName("testing");
         owner.setId("testing-primary-key");
 
         this.ownerCurator.replicate(owner);
@@ -54,10 +56,14 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void primaryKeyCollision() {
-        Owner owner = new Owner("dude");
+        Owner owner = new Owner()
+            .setKey("dude")
+            .setDisplayName("dude");
         owner = this.ownerCurator.create(owner);
 
-        Owner newOwner = new Owner("someoneElse");
+        Owner newOwner = new Owner()
+            .setKey("someoneElse")
+            .setDisplayName("someoneElse");
         newOwner.setId(owner.getId());
 
         this.ownerCurator.replicate(newOwner);
@@ -68,9 +74,13 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     public void upstreamUuidConstraint() {
         UpstreamConsumer uc = new UpstreamConsumer("sameuuid");
 
-        Owner owner1 = new Owner("owner1");
+        Owner owner1 = new Owner()
+            .setKey("owner1")
+            .setDisplayName("owner1");
         owner1.setUpstreamConsumer(uc);
-        Owner owner2 = new Owner("owner2");
+        Owner owner2 = new Owner()
+            .setKey("owner2")
+            .setDisplayName("owner2");
         owner2.setUpstreamConsumer(uc);
 
         assertThrows(PersistenceException.class, () -> ownerCurator.create(owner1));
@@ -180,7 +190,9 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void getByUpstreamUuid() {
-        Owner owner = new Owner("owner1");
+        Owner owner = new Owner()
+            .setKey("owner1")
+            .setDisplayName("owner1");
         // setup some data
         owner = ownerCurator.create(owner);
         ConsumerType type = new ConsumerType(ConsumerTypeEnum.CANDLEPIN);
@@ -202,8 +214,12 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         ConsumerType type = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         consumerTypeCurator.create(type);
 
-        Owner owner = new Owner("owner");
-        Owner otherOwner = new Owner("other owner");
+        Owner owner = new Owner()
+            .setKey("owner")
+            .setDisplayName("owner");
+        Owner otherOwner = new Owner()
+            .setKey("other owner")
+            .setDisplayName("other owner");
 
         ownerCurator.create(owner);
         ownerCurator.create(otherOwner);
