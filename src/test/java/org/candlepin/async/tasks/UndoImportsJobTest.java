@@ -24,7 +24,6 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.controller.CandlepinPoolManager;
-import org.candlepin.controller.Refresher;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.Entitlement;
@@ -40,17 +39,11 @@ import org.candlepin.model.Product;
 import org.candlepin.model.UeberCertificate;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.UpstreamConsumer;
-import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -62,21 +55,15 @@ import java.util.Locale;
 import javax.inject.Inject;
 
 
-@ExtendWith(MockitoExtension.class)
-@MockitoSettings(strictness = Strictness.LENIENT)
 public class UndoImportsJobTest extends DatabaseTestFixture {
 
     @Inject protected I18n i18n;
-    @Inject protected CandlepinPoolManager poolManagerBase;
     @Inject protected ImportRecordCurator importRecordCurator;
-    @Inject protected ExporterMetadataCurator exportCuratorBase;
     @Inject protected UeberCertificateGenerator ueberCertGenerator;
 
-    @Mock protected CandlepinPoolManager poolManager;
-    @Mock protected OwnerCurator ownerCurator;
-    @Mock protected SubscriptionServiceAdapter subAdapter;
-    @Mock protected Refresher refresher;
-    @Mock protected ExporterMetadataCurator exportCurator;
+    @Inject protected CandlepinPoolManager poolManager;
+    @Inject protected OwnerCurator ownerCurator;
+    @Inject protected ExporterMetadataCurator exportCurator;
 
     private UndoImportsJob undoImportsJob;
 
@@ -85,21 +72,15 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
         this.undoImportsJob = new UndoImportsJob(
             this.i18n, this.ownerCurator, this.poolManager,
-            this.exportCurator, this.importRecordCurator
+            this.exportCurator, this.importRecordCurator, this.config
         );
-        injector.injectMembers(undoImportsJob);
     }
 
     @Test
     public void testUndoImport() throws JobExecutionException {
-        // We need proper curators for this test
-        this.poolManager = this.poolManagerBase;
-        this.ownerCurator = super.ownerCurator;
-        this.exportCurator = this.exportCuratorBase;
-
         this.undoImportsJob = new UndoImportsJob(
-            this.i18n, this.ownerCurator, this.poolManager,
-            this.exportCurator, this.importRecordCurator
+            this.i18n, this.ownerCurator, this.poolManager, this.exportCurator,
+            this.importRecordCurator, this.config
         );
 
         // Create owner w/upstream consumer
@@ -164,7 +145,7 @@ public class UndoImportsJobTest extends DatabaseTestFixture {
         commitTransaction();
 
         // Verify deletions -- Ueber pools should not get deleted.
-        assertEquals(Arrays.asList(pool3, pool4, pool5, pool6),
+        assertEquals(List.of(pool3, pool4, pool5, pool6),
             this.poolManager.listPoolsByOwner(owner1).list());
 
         assertEquals(Arrays.asList(pool7, pool8, pool9), this.poolManager.listPoolsByOwner(owner2).list());

@@ -23,9 +23,9 @@ import static org.mockito.Mockito.when;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;
@@ -43,14 +43,12 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
-import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.pool.PoolRules;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.Util;
@@ -58,24 +56,24 @@ import org.candlepin.util.Util;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.invocation.InvocationOnMock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.mockito.stubbing.Answer;
 import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.InputStream;
 import java.util.Locale;
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class EntitlementRulesTestFixture {
-    protected Enforcer enforcer;
 
     @Mock
     protected RulesCurator rulesCurator;
-    @Mock
-    protected ProductServiceAdapter prodAdapter;
-    @Mock
-    protected Configuration config;
     @Mock
     protected ConsumerCurator consumerCurator;
     @Mock
@@ -97,14 +95,14 @@ public class EntitlementRulesTestFixture {
     @Mock
     private OwnerCurator ownerCurator;
     @Mock
-    protected ProductManager productManager;
-    @Mock
     protected EventSink eventSink;
     @Mock
     protected EventFactory eventFactory;
     @Mock
     protected EnvironmentCurator environmentCurator;
 
+    protected Enforcer enforcer;
+    protected DevConfig config;
     protected Owner owner;
     protected ConsumerType consumerType;
     protected Consumer consumer;
@@ -114,10 +112,8 @@ public class EntitlementRulesTestFixture {
 
     @BeforeEach
     public void createEnforcer() {
-        MockitoAnnotations.initMocks(this);
-
-        when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
-
+        this.config = TestConfig.defaults();
+        this.config.setProperty(ConfigProperties.PRODUCT_CACHE_MAX, "100");
         InputStream is = this.getClass().getResourceAsStream(
             RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
@@ -163,9 +159,9 @@ public class EntitlementRulesTestFixture {
                 ctype.setId("test-ctype-" + ctype.getLabel() + "-" + TestUtil.randomInt());
             }
 
-            when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()))).thenReturn(ctype);
+            when(consumerTypeCurator.getByLabel(ctype.getLabel())).thenReturn(ctype);
             when(consumerTypeCurator.getByLabel(eq(ctype.getLabel()), anyBoolean())).thenReturn(ctype);
-            when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
+            when(consumerTypeCurator.get(ctype.getId())).thenReturn(ctype);
 
             doAnswer(new Answer<ConsumerType>() {
                 @Override
@@ -192,27 +188,10 @@ public class EntitlementRulesTestFixture {
         return ctype;
     }
 
-    protected Subscription createVirtLimitSub(String productId, int quantity, String virtLimit) {
-        Product product = TestUtil.createProduct(productId, productId);
-        product.setAttribute(Product.Attributes.VIRT_LIMIT, virtLimit);
-        when(ownerProductCuratorMock.getProductById(owner, productId)).thenReturn(product);
-        Subscription s = TestUtil.createSubscription(owner, product);
-        s.setQuantity((long) quantity);
-        s.setId("subId");
-        return s;
-    }
-
     protected Pool createPool(Owner owner, Product product) {
         Pool pool = TestUtil.createPool(owner, product);
         pool.setId("fakeid" + TestUtil.randomInt());
         return pool;
     }
 
-    protected Pool setupVirtLimitPool() {
-        Product product = TestUtil.createProduct(productId, "A virt_limit product");
-        Pool pool = TestUtil.createPool(owner, product);
-        pool.setAttribute(Product.Attributes.VIRT_LIMIT, "10");
-        pool.setId("fakeid" + TestUtil.randomInt());
-        return pool;
-    }
 }

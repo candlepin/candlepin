@@ -22,6 +22,8 @@ import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
@@ -42,7 +44,6 @@ import org.xnap.commons.i18n.I18n;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -60,6 +61,119 @@ public class UndoImportsJob implements AsyncJob {
     public static final String JOB_NAME = "Undo Imports";
 
     private static final String OWNER_KEY = "owner_key";
+
+    private final I18n i18n;
+    private final OwnerCurator ownerCurator;
+    private final PoolManager poolManager;
+    private final ExporterMetadataCurator exportCurator;
+    private final ImportRecordCurator importRecordCurator;
+    private final boolean isStandalone;
+
+    @Inject
+    public UndoImportsJob(I18n i18n,
+        OwnerCurator ownerCurator,
+        PoolManager poolManager,
+        ExporterMetadataCurator exportCurator,
+        ImportRecordCurator importRecordCurator,
+        Configuration config) {
+
+        this.i18n = Objects.requireNonNull(i18n);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.poolManager = Objects.requireNonNull(poolManager);
+        this.exportCurator = Objects.requireNonNull(exportCurator);
+        this.importRecordCurator = Objects.requireNonNull(importRecordCurator);
+        this.isStandalone = Objects.requireNonNull(config).getBoolean(ConfigProperties.STANDALONE);
+    }
+
+    @Override
+    @Transactional
+    public void execute(JobExecutionContext context) throws JobExecutionException {
+        JobArguments args = context.getJobArguments();
+        String principalName = context.getPrincipalName();
+
+        String ownerKey = args.getAsString(OWNER_KEY);
+        Owner owner = this.ownerCurator.lockAndLoadByKey(ownerKey);
+
+        if (owner == null) {
+            // Apparently this isn't a failure...?
+            log.debug("Owner no longer exists: {}", ownerKey);
+            context.setJobResult("Nothing to do; owner no longer exists: %s", ownerKey);
+        }
+
+        String displayName = owner.getDisplayName();
+
+        // Remove imports
+        ExporterMetadata metadata = this.exportCurator
+            .getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner);
+
+        if (metadata == null) {
+            log.debug("No imports exist for owner {}", displayName);
+            context.setJobResult("Nothing to do; imports no longer exist for owner: %s", displayName);
+        }
+
+        log.info("Deleting all pools originating from manifests for owner/org: {}", displayName);
+
+        List<Pool> pools = this.poolManager.listPoolsByOwner(owner).list();
+        this.poolManager.deletePools(
+            pools.stream()
+            .filter(pool -> pool.isManaged(this.isStandalone))
+            .toList()
+        );
+
+        // Clear out upstream ID so owner can import from other distributors:
+        UpstreamConsumer uc = owner.getUpstreamConsumer();
+        owner.setUpstreamConsumer(null);
+        owner.syncLastContentUpdate();
+        owner = this.ownerCurator.merge(owner);
+        this.ownerCurator.flush();
+
+        this.exportCurator.delete(metadata);
+        this.recordManifestDeletion(owner, principalName, uc);
+
+        context.setJobResult("Imported pools removed for owner: %s", displayName);
+    }
+
+    private void recordManifestDeletion(Owner owner, String principalName, UpstreamConsumer uc) {
+        ImportRecord importRecord = new ImportRecord(owner);
+        importRecord.setGeneratedBy(principalName);
+        importRecord.setGeneratedDate(new Date());
+        String msg = this.i18n.tr("Subscriptions deleted by {0}", principalName);
+        importRecord.recordStatus(ImportRecord.Status.DELETE, msg);
+        importRecord.setUpstreamConsumer(this.createImportUpstreamConsumer(owner, uc));
+
+        this.importRecordCurator.create(importRecord);
+    }
+
+    private ImportUpstreamConsumer createImportUpstreamConsumer(Owner owner, UpstreamConsumer uc) {
+        ImportUpstreamConsumer iup = null;
+
+        if (uc == null) {
+            uc = owner.getUpstreamConsumer();
+        }
+
+        if (uc != null) {
+            iup = new ImportUpstreamConsumer();
+            iup.setOwnerId(uc.getOwnerId());
+            iup.setName(uc.getName());
+            iup.setUuid(uc.getUuid());
+            iup.setType(uc.getType());
+            iup.setWebUrl(uc.getWebUrl());
+            iup.setApiUrl(uc.getApiUrl());
+        }
+
+        return iup;
+    }
+
+    /**
+     * Creates a JobConfig configured to execute the undo imports job. Callers may further
+     * manipulate the JobConfig as necessary before queuing it.
+     *
+     * @return
+     *  a JobConfig instance configured to execute the undo imports job
+     */
+    public static UndoImportsJobConfig createJobConfig() {
+        return new UndoImportsJobConfig();
+    }
 
     /**
      * Job configuration object for the undo imports job
@@ -110,117 +224,6 @@ public class UndoImportsJob implements AsyncJob {
                 throw new JobConfigValidationException(errmsg, e);
             }
         }
-    }
-
-
-    private final I18n i18n;
-    private final OwnerCurator ownerCurator;
-    private final PoolManager poolManager;
-    private final ExporterMetadataCurator exportCurator;
-    private final ImportRecordCurator importRecordCurator;
-
-    @Inject
-    public UndoImportsJob(I18n i18n,
-        OwnerCurator ownerCurator,
-        PoolManager poolManager,
-        ExporterMetadataCurator exportCurator,
-        ImportRecordCurator importRecordCurator) {
-
-        this.i18n = Objects.requireNonNull(i18n);
-        this.ownerCurator = Objects.requireNonNull(ownerCurator);
-        this.poolManager = Objects.requireNonNull(poolManager);
-        this.exportCurator = Objects.requireNonNull(exportCurator);
-        this.importRecordCurator = Objects.requireNonNull(importRecordCurator);
-    }
-
-    @Override
-    @Transactional
-    public void execute(JobExecutionContext context) throws JobExecutionException {
-        JobArguments args = context.getJobArguments();
-        String principalName = context.getPrincipalName();
-
-        String ownerKey = args.getAsString(OWNER_KEY);
-        Owner owner = this.ownerCurator.lockAndLoadByKey(ownerKey);
-
-        if (owner == null) {
-            // Apparently this isn't a failure...?
-            log.debug("Owner no longer exists: {}", ownerKey);
-            context.setJobResult("Nothing to do; owner no longer exists: %s", ownerKey);
-        }
-
-        String displayName = owner.getDisplayName();
-
-        // Remove imports
-        ExporterMetadata metadata = this.exportCurator
-            .getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner);
-
-        if (metadata == null) {
-            log.debug("No imports exist for owner {}", displayName);
-            context.setJobResult("Nothing to do; imports no longer exist for owner: %s", displayName);
-        }
-
-        log.info("Deleting all pools originating from manifests for owner/org: {}", displayName);
-
-        List<Pool> pools = this.poolManager.listPoolsByOwner(owner).list();
-        this.poolManager.deletePools(
-            pools.stream()
-            .filter(this.poolManager::isManaged)
-            .collect(Collectors.toList())
-        );
-
-        // Clear out upstream ID so owner can import from other distributors:
-        UpstreamConsumer uc = owner.getUpstreamConsumer();
-        owner.setUpstreamConsumer(null);
-        owner.syncLastContentUpdate();
-        owner = this.ownerCurator.merge(owner);
-        this.ownerCurator.flush();
-
-        this.exportCurator.delete(metadata);
-        this.recordManifestDeletion(owner, principalName, uc);
-
-        context.setJobResult("Imported pools removed for owner: %s", displayName);
-    }
-
-    private void recordManifestDeletion(Owner owner, String principalName, UpstreamConsumer uc) {
-        ImportRecord record = new ImportRecord(owner);
-        record.setGeneratedBy(principalName);
-        record.setGeneratedDate(new Date());
-        String msg = this.i18n.tr("Subscriptions deleted by {0}", principalName);
-        record.recordStatus(ImportRecord.Status.DELETE, msg);
-        record.setUpstreamConsumer(this.createImportUpstreamConsumer(owner, uc));
-
-        this.importRecordCurator.create(record);
-    }
-
-    private ImportUpstreamConsumer createImportUpstreamConsumer(Owner owner, UpstreamConsumer uc) {
-        ImportUpstreamConsumer iup = null;
-
-        if (uc == null) {
-            uc = owner.getUpstreamConsumer();
-        }
-
-        if (uc != null) {
-            iup = new ImportUpstreamConsumer();
-            iup.setOwnerId(uc.getOwnerId());
-            iup.setName(uc.getName());
-            iup.setUuid(uc.getUuid());
-            iup.setType(uc.getType());
-            iup.setWebUrl(uc.getWebUrl());
-            iup.setApiUrl(uc.getApiUrl());
-        }
-
-        return iup;
-    }
-
-    /**
-     * Creates a JobConfig configured to execute the undo imports job. Callers may further
-     * manipulate the JobConfig as necessary before queuing it.
-     *
-     * @return
-     *  a JobConfig instance configured to execute the undo imports job
-     */
-    public static UndoImportsJobConfig createJobConfig() {
-        return new UndoImportsJobConfig();
     }
 
 }
