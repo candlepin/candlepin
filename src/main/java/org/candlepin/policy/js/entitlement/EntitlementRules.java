@@ -14,8 +14,6 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
@@ -63,6 +61,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -76,40 +75,35 @@ import javax.inject.Inject;
  */
 public class EntitlementRules implements Enforcer {
     private static final Logger log = LoggerFactory.getLogger(EntitlementRules.class);
-
-    private DateSource dateSource;
-
-    private I18n i18n;
-    private JsRunner jsRules;
-    private Configuration config;
-    private ConsumerCurator consumerCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private ProductCurator productCurator;
-    private RulesObjectMapper objectMapper;
-    private EventSink eventSink;
-    private EventFactory eventFactory;
-    private ModelTranslator translator;
-
     private static final String POST_PREFIX = "post_";
     private static final long UNLIMITED_QUANTITY = -1L;
+
+    private final DateSource dateSource;
+    private final I18n i18n;
+    private final JsRunner jsRules;
+    private final Configuration config;
+    private final ConsumerCurator consumerCurator;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final ProductCurator productCurator;
+    private final RulesObjectMapper objectMapper;
+    private final ModelTranslator translator;
+
 
     @Inject
     public EntitlementRules(DateSource dateSource,
         JsRunner jsRules, I18n i18n, Configuration config, ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, ProductCurator productCurator, RulesObjectMapper mapper,
-        EventSink eventSink, EventFactory eventFactory, ModelTranslator translator) {
+        ModelTranslator translator) {
 
-        this.jsRules = jsRules;
-        this.dateSource = dateSource;
-        this.i18n = i18n;
-        this.config = config;
-        this.consumerCurator = consumerCurator;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.productCurator = productCurator;
-        this.objectMapper = mapper;
-        this.eventSink = eventSink;
-        this.eventFactory = eventFactory;
-        this.translator = translator;
+        this.jsRules = Objects.requireNonNull(jsRules);
+        this.dateSource = Objects.requireNonNull(dateSource);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.config = Objects.requireNonNull(config);
+        this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
+        this.productCurator = Objects.requireNonNull(productCurator);
+        this.objectMapper = Objects.requireNonNull(mapper);
+        this.translator = Objects.requireNonNull(translator);
 
         jsRules.init("entitlement_name_space");
     }

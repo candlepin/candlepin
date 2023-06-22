@@ -20,8 +20,6 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
@@ -95,10 +93,6 @@ public class EntitlementRulesTestFixture {
     @Mock
     private OwnerCurator ownerCurator;
     @Mock
-    protected EventSink eventSink;
-    @Mock
-    protected EventFactory eventFactory;
-    @Mock
     protected EnvironmentCurator environmentCurator;
 
     protected Enforcer enforcer;
@@ -134,8 +128,6 @@ public class EntitlementRulesTestFixture {
             consumerTypeCurator,
             productCurator,
             new RulesObjectMapper(),
-            eventSink,
-            eventFactory,
             translator
         );
 
