@@ -26,8 +26,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.audit.EventFactory;
-import org.candlepin.audit.EventSink;
 import org.candlepin.bind.PoolOperationCallback;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
@@ -104,10 +102,6 @@ public class PostEntitlementRulesTest {
     @Mock
     private OwnerCurator ownerCurator;
     @Mock
-    private EventSink eventSink;
-    @Mock
-    private EventFactory eventFactory;
-    @Mock
     private EnvironmentCurator environmentCurator;
 
     private Enforcer enforcer;
@@ -140,8 +134,6 @@ public class PostEntitlementRulesTest {
             consumerTypeCurator,
             productCurator,
             new RulesObjectMapper(),
-            eventSink,
-            eventFactory,
             translator
         );
 
