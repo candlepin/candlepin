@@ -25,9 +25,9 @@ import org.candlepin.async.JobExecutionException;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.service.CloudRegistrationAdapter;
-import org.candlepin.service.exception.CloudAccountOrgMismatchException;
-import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
-import org.candlepin.service.exception.CouldNotEntitleOrganizationException;
+import org.candlepin.service.exception.cloudregistration.CloudAccountOrgMismatchException;
+import org.candlepin.service.exception.cloudregistration.CouldNotAcquireCloudAccountLockException;
+import org.candlepin.service.exception.cloudregistration.CouldNotEntitleOrganizationException;
 import org.candlepin.service.model.CloudAccountData;
 import org.candlepin.test.TestUtil;
 

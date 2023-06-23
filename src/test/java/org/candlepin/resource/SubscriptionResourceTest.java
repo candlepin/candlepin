@@ -82,7 +82,7 @@ public class SubscriptionResourceTest {
     }
 
     @Test
-    public void testInvalidIdOnDelete() throws Exception {
+    public void testInvalidIdOnDelete() {
         CandlepinQuery<Pool> cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Collections.emptyIterator());
         when(poolManager.getPoolsBySubscriptionId(anyString())).thenReturn(cqmock);

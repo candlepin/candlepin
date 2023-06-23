@@ -68,6 +68,7 @@ import org.candlepin.dto.api.server.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.ConflictException;
+import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
@@ -966,8 +967,7 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     public Consumer createConsumerFromDTO(ConsumerDTO consumer, ConsumerType type, Principal principal,
-        String userName, Owner owner, String activationKeys, boolean identityCertCreation)
-        throws BadRequestException {
+        String userName, Owner owner, String activationKeys, boolean identityCertCreation) {
 
         validateOnKeyStrings(activationKeys, owner.getKey(), userName);
         List<ActivationKey> keys = findActivationKeysInOrder(owner, activationKeys);
@@ -2247,7 +2247,6 @@ public class ConsumerResource implements ConsumerApi {
 
         Date date = since != null ? Util.toDate(since) : new Date(0);
         if (!this.contentAccessManager.hasCertChangedSince(consumer, date)) {
-
             return Response.status(Response.Status.NOT_MODIFIED)
                 .entity("Not modified since date supplied.")
                 .build();
@@ -2421,7 +2420,11 @@ public class ConsumerResource implements ConsumerApi {
             long subTermsStart = System.currentTimeMillis();
 
             if (subAdapter.hasUnacceptedSubscriptionTerms(owner.getKey())) {
-                return Response.serverError().build();
+                ExceptionMessage message = new ExceptionMessage(
+                    i18n.tr("You must first accept Red Hat''s Terms and conditions. Please visit {0}",
+                    "https://www.redhat.com/wapps/tnc/ackrequired?site=candlepin" +
+                    "&event=attachSubscription"));
+                return Response.serverError().entity(message).build();
             }
 
             log.debug("Checked if consumer has unaccepted subscription terms in {}ms",

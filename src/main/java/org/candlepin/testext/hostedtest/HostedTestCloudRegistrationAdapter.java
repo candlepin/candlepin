@@ -15,13 +15,12 @@
 package org.candlepin.testext.hostedtest;
 
 import org.candlepin.service.CloudRegistrationAdapter;
-import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
-import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingException;
-import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
-import org.candlepin.service.exception.CouldNotEntitleOrganizationException;
-import org.candlepin.service.exception.MalformedCloudRegistrationException;
-import org.candlepin.service.exception.OrgForCloudAccountNotCreatedYetException;
-import org.candlepin.service.exception.OrgForCloudAccountNotEntitledYetException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationMalformedDataException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationNotSupportedForOfferingException;
+import org.candlepin.service.exception.cloudregistration.CouldNotAcquireCloudAccountLockException;
+import org.candlepin.service.exception.cloudregistration.CouldNotEntitleOrganizationException;
+import org.candlepin.service.exception.cloudregistration.OrgForCloudAccountNotCreatedYetException;
+import org.candlepin.service.exception.cloudregistration.OrgForCloudAccountNotEntitledYetException;
 import org.candlepin.service.model.CloudAccountData;
 import org.candlepin.service.model.CloudAuthenticationResult;
 import org.candlepin.service.model.CloudRegistrationInfo;
@@ -73,15 +72,14 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
      * {@inheritDoc}
      */
     @Override
-    public String resolveCloudRegistrationData(CloudRegistrationInfo cloudRegInfo)
-        throws CloudRegistrationAuthorizationException, MalformedCloudRegistrationException {
+    public String resolveCloudRegistrationData(CloudRegistrationInfo cloudRegInfo) {
 
         if (cloudRegInfo == null) {
-            throw new MalformedCloudRegistrationException("No cloud registration information provided");
+            throw new CloudRegistrationMalformedDataException("No cloud registration information provided");
         }
 
         if (cloudRegInfo.getMetadata() == null) {
-            throw new MalformedCloudRegistrationException(
+            throw new CloudRegistrationMalformedDataException(
                 "No metadata provided with the cloud registration info");
         }
 
@@ -95,15 +93,14 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
      * {@inheritDoc}
      */
     @Override
-    public CloudAuthenticationResult resolveCloudRegistrationDataV2(CloudRegistrationInfo cloudRegInfo)
-        throws CloudRegistrationAuthorizationException, MalformedCloudRegistrationException {
+    public CloudAuthenticationResult resolveCloudRegistrationDataV2(CloudRegistrationInfo cloudRegInfo) {
 
         if (cloudRegInfo == null) {
-            throw new MalformedCloudRegistrationException("No cloud registration information provided");
+            throw new CloudRegistrationMalformedDataException("No cloud registration information provided");
         }
 
         if (cloudRegInfo.getMetadata() == null) {
-            throw new MalformedCloudRegistrationException(
+            throw new CloudRegistrationMalformedDataException(
                 "No metadata provided with the cloud registration info");
         }
 
@@ -112,25 +109,25 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
             metadata = OBJ_MAPPER.readValue(cloudRegInfo.getMetadata(), Map.class);
         }
         catch (JsonProcessingException e) {
-            throw new MalformedCloudRegistrationException(
+            throw new CloudRegistrationMalformedDataException(
                 "unable to parse cloud registration information metadata");
         }
 
         String accountId = metadata.get(ACCOUNT_ID_FIELD_NAME);
         if (accountId == null || accountId.isBlank()) {
-            throw new MalformedCloudRegistrationException(
+            throw new CloudRegistrationMalformedDataException(
                 "missing cloud account ID in registration information metadata");
         }
 
         String instanceId = metadata.get(INSTANCE_ID_FIELD_NAME);
         if (instanceId == null || instanceId.isBlank()) {
-            throw new MalformedCloudRegistrationException(
+            throw new CloudRegistrationMalformedDataException(
                 "missing instance ID in registration information metadata");
         }
 
         String offerId = metadata.get(OFFERING_ID_FIELD_NAME);
         if (offerId == null || offerId.isBlank()) {
-            throw new MalformedCloudRegistrationException(
+            throw new CloudRegistrationMalformedDataException(
                 "missing offer ID in registration information metadata");
         }
 

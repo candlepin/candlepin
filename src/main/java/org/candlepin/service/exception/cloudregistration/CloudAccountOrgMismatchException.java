@@ -13,19 +13,21 @@
  * in this software or its documentation.
  */
 
-package org.candlepin.service.exception;
+package org.candlepin.service.exception.cloudregistration;
+
 
 /**
- * The OrgForCloudAccountNotEntitledYetException is used when organization for cloud account is not
- * entitled
+ * The CloudAccountOrgMismatchException indicates that there was a conflict (HTTP status code 409)
+ * regarding the cloud account's organization key upstream of Candlepin, when trying to entitle that
+ * organization. Candlepin should retry to entitle it until that conflict is resolved.
  */
-public class OrgForCloudAccountNotEntitledYetException extends RuntimeException {
+public class CloudAccountOrgMismatchException extends RuntimeException {
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized, and may
      * subsequently be initialized by a call to initCause(java.lang.Throwable).
      */
-    public OrgForCloudAccountNotEntitledYetException() {
+    public CloudAccountOrgMismatchException() {
         super();
     }
 
@@ -37,7 +39,7 @@ public class OrgForCloudAccountNotEntitledYetException extends RuntimeException 
      *     the detail message. The detail message is saved for later retrieval by the getMessage()
      *     method.
      */
-    public OrgForCloudAccountNotEntitledYetException(String message) {
+    public CloudAccountOrgMismatchException(String message) {
         super(message);
     }
 
@@ -51,7 +53,7 @@ public class OrgForCloudAccountNotEntitledYetException extends RuntimeException 
      *     the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *     value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public OrgForCloudAccountNotEntitledYetException(Throwable cause) {
+    public CloudAccountOrgMismatchException(Throwable cause) {
         super(cause);
     }
 
@@ -70,7 +72,7 @@ public class OrgForCloudAccountNotEntitledYetException extends RuntimeException 
      *     the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *     value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public OrgForCloudAccountNotEntitledYetException(String message, Throwable cause) {
+    public CloudAccountOrgMismatchException(String message, Throwable cause) {
         super(message, cause);
     }
 }

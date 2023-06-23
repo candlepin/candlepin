@@ -58,6 +58,7 @@ public class TrustedUserAuthTest {
     private Provider<I18n> mockI18n;
     @Mock
     private PermissionFactory mockPermissionFactory;
+
     private TrustedUserAuth auth;
 
     private static final String USERNAME = "myusername";

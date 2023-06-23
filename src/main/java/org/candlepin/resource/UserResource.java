@@ -147,7 +147,7 @@ public class UserResource implements UsersApi {
         return this.modelTranslator.translate(
             // Translating UserDTO to User Info because UserDTO is no longer supporting UserInfo
             userService.createUser(InfoAdapter.userInfoAdapter(dto)),
-                UserDTO.class);
+            UserDTO.class);
     }
 
     @Override
@@ -159,13 +159,12 @@ public class UserResource implements UsersApi {
 
         return this.modelTranslator.translate(
             userService.updateUser(username, InfoAdapter.userInfoAdapter(dto)),
-                UserDTO.class);
+            UserDTO.class);
     }
 
     @Override
     public void deleteUser(String username) {
         UserInfo user = this.fetchUserByUsername(username);
-
         userService.deleteUser(username);
     }
 
@@ -184,8 +183,7 @@ public class UserResource implements UsersApi {
         // Fetch the user for a simple existence check. We don't actually need it.
         UserInfo user = this.fetchUserByUsername(username);
 
-        Collection<? extends OwnerInfo> owners = this.userService.getAccessibleOwners(username);
-
+        Collection<? extends OwnerInfo> owners =  this.userService.getAccessibleOwners(username);
         if (owners != null) {
             // If this ends up being a bottleneck, change this to do a bulk owner lookup
 

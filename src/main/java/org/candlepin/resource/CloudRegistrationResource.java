@@ -36,9 +36,7 @@ import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.resource.server.v1.CloudRegistrationApi;
 import org.candlepin.service.CloudRegistrationAdapter;
-import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
-import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingException;
-import org.candlepin.service.exception.MalformedCloudRegistrationException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationNotSupportedForOfferingException;
 import org.candlepin.service.model.CloudAuthenticationResult;
 
 import org.jboss.resteasy.core.ResteasyContext;
@@ -95,6 +93,11 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             throw new BadRequestException(this.i18n.tr("No cloud registration information provided"));
         }
 
+        if (cloudRegistrationDTO.getType().isEmpty()) {
+            throw new BadRequestException(i18n.tr(
+                "Request is missing cloud provider type (e.g. amazon, gcp, azure)"));
+        }
+
         Principal principal = ResteasyContext.getContextData(Principal.class);
         try {
             if (!this.enabled) {
@@ -110,7 +113,7 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
                     String errmsg = this.i18n
                         .tr("cloud provider or account details could not be resolved to an organization");
 
-                    throw new CloudRegistrationAuthorizationException(errmsg);
+                    throw new NotAuthorizedException(errmsg);
                 }
 
                 String token = tokenGenerator.buildStandardRegistrationToken(principal, ownerKey);
@@ -144,12 +147,6 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             String errmsg = this.i18n.tr("Cloud registration is not supported for the type of " +
                 "offering the client is using");
             throw new NotImplementedException(errmsg, e);
-        }
-        catch (CloudRegistrationAuthorizationException e) {
-            throw new NotAuthorizedException(e.getMessage());
-        }
-        catch (MalformedCloudRegistrationException e) {
-            throw new BadRequestException(e.getMessage(), e);
         }
     }
 
@@ -254,44 +251,41 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
      *
      * @param result
      *  the {@link CloudAuthenticationResult} to validate
-     *
-     * @throws CloudRegistrationAuthorizationException
-     *  if a required field does no meet the validation requirements
      */
     private void validateCloudAuthenticationResult(CloudAuthenticationResult result) {
         String cloudAccountId = result.getCloudAccountId();
         if (cloudAccountId == null || cloudAccountId.isBlank()) {
             String errmsg = this.i18n.tr("cloud account ID could not be resolved");
 
-            throw new CloudRegistrationAuthorizationException(errmsg);
+            throw new NotAuthorizedException(errmsg);
         }
 
         String cloudInstanceId = result.getCloudInstanceId();
         if (cloudInstanceId == null || cloudInstanceId.isBlank()) {
             String errmsg = this.i18n.tr("cloud instance ID could not be resolved");
 
-            throw new CloudRegistrationAuthorizationException(errmsg);
+            throw new NotAuthorizedException(errmsg);
         }
 
         String cloudProvider = result.getCloudProvider();
         if (cloudProvider == null || cloudProvider.isBlank()) {
             String errmsg = this.i18n.tr("cloud provider could not be resolved");
 
-            throw new CloudRegistrationAuthorizationException(errmsg);
+            throw new NotAuthorizedException(errmsg);
         }
 
         String offerId = result.getOfferId();
         if (offerId == null || offerId.isBlank()) {
             String errmsg = this.i18n.tr("offer ID could not be resolved");
 
-            throw new CloudRegistrationAuthorizationException(errmsg);
+            throw new NotAuthorizedException(errmsg);
         }
 
         Set<String> productIds = result.getProductIds();
         if (productIds == null || productIds.isEmpty()) {
             String errmsg = this.i18n.tr("product IDs could not be resolved");
 
-            throw new CloudRegistrationAuthorizationException(errmsg);
+            throw new NotAuthorizedException(errmsg);
         }
     }
 }

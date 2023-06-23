@@ -24,8 +24,8 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.service.CloudRegistrationAdapter;
-import org.candlepin.service.exception.OrgForCloudAccountNotCreatedYetException;
-import org.candlepin.service.exception.OrgForCloudAccountNotEntitledYetException;
+import org.candlepin.service.exception.cloudregistration.OrgForCloudAccountNotCreatedYetException;
+import org.candlepin.service.exception.cloudregistration.OrgForCloudAccountNotEntitledYetException;
 
 import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;

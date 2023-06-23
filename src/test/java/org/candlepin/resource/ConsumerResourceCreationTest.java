@@ -207,7 +207,6 @@ public class ConsumerResourceCreationTest {
     private AnonymousCloudConsumerCurator anonymousConsumerCurator;
     @Mock
     private AnonymousContentAccessCertificateCurator anonymousCertCurator;
-
     protected ModelTranslator modelTranslator;
 
     private I18n i18n;

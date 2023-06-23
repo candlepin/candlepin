@@ -12,19 +12,19 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.service.exception;
+package org.candlepin.service.exception.cloudregistration;
 
 /**
- * The CouldNotAcquireCloudAccountLockException is used when organization already being created
- * and/or entitled
+ * The CloudRegistrationNotSupportedForOfferingException is used to reject a registration attempt for a
+ * cloud system when that system is using a type of offering that is not supported (e.g. 1P offerings).
  */
-public class CouldNotAcquireCloudAccountLockException extends Exception {
+public class CloudRegistrationNotSupportedForOfferingException extends RuntimeException {
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized, and may
      * subsequently be initialized by a call to initCause(java.lang.Throwable).
      */
-    public CouldNotAcquireCloudAccountLockException() {
+    public CloudRegistrationNotSupportedForOfferingException() {
         super();
     }
 
@@ -36,7 +36,7 @@ public class CouldNotAcquireCloudAccountLockException extends Exception {
      *     the detail message. The detail message is saved for later retrieval by the getMessage()
      *     method.
      */
-    public CouldNotAcquireCloudAccountLockException(String message) {
+    public CloudRegistrationNotSupportedForOfferingException(String message) {
         super(message);
     }
 
@@ -50,7 +50,7 @@ public class CouldNotAcquireCloudAccountLockException extends Exception {
      *     the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *     value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public CouldNotAcquireCloudAccountLockException(Throwable cause) {
+    public CloudRegistrationNotSupportedForOfferingException(Throwable cause) {
         super(cause);
     }
 
@@ -69,7 +69,7 @@ public class CouldNotAcquireCloudAccountLockException extends Exception {
      *     the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *     value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public CouldNotAcquireCloudAccountLockException(String message, Throwable cause) {
+    public CloudRegistrationNotSupportedForOfferingException(String message, Throwable cause) {
         super(message, cause);
     }
 }

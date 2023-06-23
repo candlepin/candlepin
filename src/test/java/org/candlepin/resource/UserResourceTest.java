@@ -20,18 +20,24 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.permissions.PermissionFactory.PermissionType;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.UserDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.user.UserDisabledException;
+import org.candlepin.service.exception.user.UserInvalidException;
 import org.candlepin.service.impl.DefaultUserServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -358,5 +364,32 @@ public class UserResourceTest extends DatabaseTestFixture {
             .password("password");
 
         assertThrows(NotFoundException.class, () -> this.userResource.updateUser("JarJarIsMyCopilot", dto));
+    }
+
+    @Test
+    public void testFetchByUsernameUserServiceException() {
+        UserServiceAdapter adapter = mock(UserServiceAdapter.class);
+        UserResource resource = new UserResource(adapter, this.i18n, this.ownerCurator,
+            this.modelTranslator);
+        doThrow(new UserInvalidException("test_user")).when(adapter).findByLogin(eq("test_user"));
+        assertThrows(UserInvalidException.class, () -> resource.getUserInfo("test_user"));
+    }
+
+    @Test
+    public void testCreateUserServiceException() {
+        UserServiceAdapter adapter = mock(UserServiceAdapter.class);
+        UserResource resource = new UserResource(adapter, this.i18n, this.ownerCurator,
+            this.modelTranslator);
+        doThrow(new UserDisabledException("test_user")).when(adapter).findByLogin(eq("test_user"));
+        assertThrows(UserDisabledException.class, () -> resource.getUserInfo("test_user"));
+    }
+
+    @Test
+    public void testListUserOwnersUserServiceException() {
+        UserServiceAdapter adapter = mock(UserServiceAdapter.class);
+        UserResource resource = new UserResource(adapter, this.i18n, this.ownerCurator,
+            this.modelTranslator);
+        doThrow(new UserInvalidException("test_user")).when(adapter).getAccessibleOwners(eq("test_user"));
+        assertThrows(CandlepinException.class, () -> resource.getUserInfo("test_user"));
     }
 }

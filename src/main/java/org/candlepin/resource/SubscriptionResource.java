@@ -23,6 +23,7 @@ import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.SubscriptionDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.exceptions.ServiceUnavailableException;
 import org.candlepin.model.Consumer;
@@ -106,10 +107,14 @@ public class SubscriptionResource implements SubscriptionApi {
         }
 
         this.subService.activateSubscription(consumer, email, emailLocale);
-
+        String message = i18n.tr(
+            "Your subscription redemption is being processed and should be available soon. " +
+                "You will be notified via email once it is available. If you have any questions, " +
+                "additional information can be found here: " +
+                "https://access.redhat.com/kb/docs/DOC-53864.");
         // setting response status to 202 because subscription does not
         // exist yet, but is currently being processed
-        return Response.status(Status.ACCEPTED).build();
+        return Response.status(Status.ACCEPTED).entity(new ExceptionMessage(message)).build();
     }
 
     @Override

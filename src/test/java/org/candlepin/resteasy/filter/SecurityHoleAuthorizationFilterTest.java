@@ -31,8 +31,8 @@ import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.service.CloudRegistrationAdapter;
-import org.candlepin.service.exception.OrgForCloudAccountNotCreatedYetException;
-import org.candlepin.service.exception.OrgForCloudAccountNotEntitledYetException;
+import org.candlepin.service.exception.cloudregistration.OrgForCloudAccountNotCreatedYetException;
+import org.candlepin.service.exception.cloudregistration.OrgForCloudAccountNotEntitledYetException;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 

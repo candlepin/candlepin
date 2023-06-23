@@ -12,19 +12,19 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.service.exception;
+package org.candlepin.service.exception.cloudregistration;
 
 /**
- * The CloudRegistrationAuthorizationException is used to reject a registration attempt for a cloud
- * provider or account holder.
+ * The CouldNotAcquireCloudAccountLockException is used when organization already being created
+ * and/or entitled
  */
-public class CloudRegistrationAuthorizationException extends RuntimeException {
+public class CouldNotAcquireCloudAccountLockException extends Exception {
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized, and may
      * subsequently be initialized by a call to initCause(java.lang.Throwable).
      */
-    public CloudRegistrationAuthorizationException() {
+    public CouldNotAcquireCloudAccountLockException() {
         super();
     }
 
@@ -36,7 +36,7 @@ public class CloudRegistrationAuthorizationException extends RuntimeException {
      *     the detail message. The detail message is saved for later retrieval by the getMessage()
      *     method.
      */
-    public CloudRegistrationAuthorizationException(String message) {
+    public CouldNotAcquireCloudAccountLockException(String message) {
         super(message);
     }
 
@@ -50,7 +50,7 @@ public class CloudRegistrationAuthorizationException extends RuntimeException {
      *     the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *     value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public CloudRegistrationAuthorizationException(Throwable cause) {
+    public CouldNotAcquireCloudAccountLockException(Throwable cause) {
         super(cause);
     }
 
@@ -69,7 +69,7 @@ public class CloudRegistrationAuthorizationException extends RuntimeException {
      *     the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *     value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public CloudRegistrationAuthorizationException(String message, Throwable cause) {
+    public CouldNotAcquireCloudAccountLockException(String message, Throwable cause) {
         super(message, cause);
     }
 }

@@ -43,9 +43,10 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.service.CloudRegistrationAdapter;
-import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationNotSupportedForOfferingException;
 import org.candlepin.service.model.CloudAuthenticationResult;
 import org.candlepin.test.TestUtil;
+
 
 import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
@@ -121,7 +122,7 @@ public class CloudRegistrationResourceTest {
             this.mockJobManager, this.mockTokenGenerator);
 
         assertThrows(NotImplementedException.class,
-            () -> cloudRegResource.cloudAuthorize(new CloudRegistrationDTO(), 1));
+            () -> cloudRegResource.cloudAuthorize(new CloudRegistrationDTO().type("test_type"), 1));
     }
 
     @Test
@@ -159,8 +160,7 @@ public class CloudRegistrationResourceTest {
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @NullAndEmptySource
     @ValueSource(strings = { "  " })
-    public void testCloudAuthorizeWithInvalidCloudAccountIdUsingV2Auth(String cloudAccountId)
-        throws Exception {
+    public void testCloudAuthorizeWithInvalidCloudAccountIdUsingV2Auth(String cloudAccountId) {
         CloudRegistrationDTO dto = new CloudRegistrationDTO()
             .type("test-type")
             .metadata("test-metadata")
@@ -178,8 +178,7 @@ public class CloudRegistrationResourceTest {
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @NullAndEmptySource
     @ValueSource(strings = { "  " })
-    public void testCloudAuthorizeWithInvalidCloudInstanceIdUsingV2Auth(String instanceId)
-        throws Exception {
+    public void testCloudAuthorizeWithInvalidCloudInstanceIdUsingV2Auth(String instanceId) {
         CloudRegistrationDTO dto = new CloudRegistrationDTO()
             .type("test-type")
             .metadata("test-metadata")
@@ -212,7 +211,7 @@ public class CloudRegistrationResourceTest {
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @NullAndEmptySource
     @ValueSource(strings = { "  " })
-    public void testCloudAuthorizeWithInvalidOfferIdUsingV2Auth(String offerId) throws Exception {
+    public void testCloudAuthorizeWithInvalidOfferIdUsingV2Auth(String offerId) {
         CloudRegistrationDTO dto = new CloudRegistrationDTO()
             .type("test-type")
             .metadata("test-metadata")
@@ -228,7 +227,7 @@ public class CloudRegistrationResourceTest {
     }
 
     @Test
-    public void testCloudAuthorizeWithNullProductIdsUsingV2Auth() throws Exception {
+    public void testCloudAuthorizeWithNullProductIdsUsingV2Auth() {
         CloudRegistrationDTO dto = new CloudRegistrationDTO()
             .type("test-type")
             .metadata("test-metadata")
@@ -238,12 +237,11 @@ public class CloudRegistrationResourceTest {
             TestUtil.randomString(), "ownerKey", "offerId", null, true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
-
         assertThrows(NotAuthorizedException.class, () -> cloudRegResource.cloudAuthorize(dto, 2));
     }
 
     @Test
-    public void testCloudAuthorizeWithEmptyProductIdsUsingV2Auth() throws Exception {
+    public void testCloudAuthorizeWithEmptyProductIdsUsingV2Auth() {
         CloudRegistrationDTO dto = new CloudRegistrationDTO()
             .type("test-type")
             .metadata("test-metadata")
@@ -574,7 +572,7 @@ public class CloudRegistrationResourceTest {
     @Test
     public void testAuthorizeWithUnknownVersion() {
         assertThrows(BadRequestException.class,
-            () -> cloudRegResource.cloudAuthorize(new CloudRegistrationDTO(), 100));
+            () -> cloudRegResource.cloudAuthorize(new CloudRegistrationDTO().type("test_type"), 100));
     }
 
     @Test
