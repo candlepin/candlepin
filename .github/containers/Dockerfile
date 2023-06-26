@@ -25,19 +25,16 @@ WORKDIR /app/build
 RUN jar xf $(find . -name 'candlepin*.war' | head -n 1); \
     sed -i 's/jss4.jar/jss.jar/g' ./META-INF/context.xml
 
-FROM quay.io/centos/centos:stream9
+FROM registry.access.redhat.com/ubi9-minimal:9.2-691
 LABEL author="Josh Albrecht <jalbrech@redhat.com>"
-
-RUN dnf install -y glibc-langpack-en
-ENV LANG en_US.UTF-8
 
 USER root
 
 # Update and install dependencies
-RUN dnf -y --setopt install_weak_deps=False update && \
-    dnf update ca-certificates && \
-    dnf -y --setopt install_weak_deps=False install epel-release java-17-openjdk openssl tomcatjss initscripts wget tar && \
-    dnf clean all
+RUN microdnf -y update && \
+    microdnf -y update ca-certificates && \
+    microdnf install -y java-17-openjdk-headless openssl jss initscripts wget tar && \
+    microdnf clean all
 
 ENV JAVA_HOME=/usr/lib/jvm/jre-17-openjdk
 ENV JRE_HOME=/usr/lib/jvm/jre-17-openjdk
@@ -52,8 +49,8 @@ RUN wget https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.76/bin/apache-tomc
     rm -R apache-tomcat-9.0.76; \
     mkdir -p /etc/candlepin/certs; \
     mkdir -p /var/cache/candlepin/sync; \
-    usermod -u 10001 tomcat; \
-    groupmod -g 10000 tomcat; \
+    groupadd -g 10000 tomcat; \
+    useradd -g tomcat -u 10001 tomcat; \
     chown -R tomcat.tomcat /opt/tomcat; \
     chown -R tomcat.tomcat /var/log/; \
     chown -R tomcat.tomcat /var/lib/; \
