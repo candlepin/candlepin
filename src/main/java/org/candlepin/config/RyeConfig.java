@@ -47,7 +47,12 @@ public class RyeConfig implements Configuration {
     @Override
     public Properties toProperties() {
         Properties result = new Properties();
-        this.config.getPropertyNames().forEach(x -> result.put(x, this.config.getRawValue(x)));
+        this.config.getPropertyNames().forEach(x -> {
+            if (this.config.getRawValue(x) != null) {
+                result.put(x, this.config.getRawValue(x));
+            }
+        });
+
         return  result;
     }
 
