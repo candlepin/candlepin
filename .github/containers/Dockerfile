@@ -25,7 +25,7 @@ WORKDIR /app/build
 RUN jar xf $(find . -name 'candlepin*.war' | head -n 1); \
     sed -i 's/jss4.jar/jss.jar/g' ./META-INF/context.xml
 
-FROM registry.access.redhat.com/ubi9/openjdk-17-runtime:1.15-1
+FROM registry.access.redhat.com/ubi9-minimal:9.2-691
 LABEL author="Josh Albrecht <jalbrech@redhat.com>"
 
 USER root
@@ -33,9 +33,11 @@ USER root
 # Update and install dependencies
 RUN microdnf -y update && \
     microdnf -y update ca-certificates && \
-    microdnf install -y openssl jss initscripts wget tar && \
+    microdnf install -y java-17-openjdk-headless openssl jss initscripts wget tar && \
     microdnf clean all
 
+ENV JAVA_HOME=/usr/lib/jvm/jre-17-openjdk
+ENV JRE_HOME=/usr/lib/jvm/jre-17-openjdk
 ENV CATALINA_OPTS=-Djavax.net.ssl.trustStore=$JAVA_HOME/lib/security/cacerts
 
 # Tomcat Setup
