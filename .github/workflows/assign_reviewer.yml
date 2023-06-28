@@ -2,7 +2,7 @@ name: AutoAssignReviewer
 
 on:
   pull_request:
-    types: [opened]
+    types: [opened, reopened]
 
 jobs:
   auto-assign-reviewer:
