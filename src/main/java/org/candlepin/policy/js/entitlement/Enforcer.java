@@ -14,11 +14,9 @@
  */
 package org.candlepin.policy.js.entitlement;
 
-import org.candlepin.bind.PoolOperationCallback;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.bind.PoolOperations;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.ValidationResult;
@@ -136,23 +134,21 @@ public interface Enforcer {
 
     /**
      * Run post-entitlement actions.
+     *
      * @param c consumer
      * @param ents The entitlement that was just granted.
      * @param subPoolsForStackIds
      * @return the delayedPoolOp encapsulating all the computed operations to perform later
      */
-    PoolOperationCallback postEntitlement(PoolManager poolManager, Consumer c, Owner owner, Map<String,
-        Entitlement> ents, List<Pool> subPoolsForStackIds, boolean isUpdate, Map<String,
-        PoolQuantity> poolQuantityMap);
+    PoolOperations postEntitlement(Consumer c, Map<String, Entitlement> ents, List<Pool> subPoolsForStackIds,
+        boolean isUpdate, Map<String, PoolQuantity> poolQuantityMap);
 
     /**
      * Run post-entitlement actions.
      *
-     * @param c the consumer to unbind on
-     * @param poolManager
      * @param ent The entitlement that needs to be revoked
      */
-    void postUnbind(Consumer c, PoolManager poolManager, Entitlement ent);
+    void postUnbind(Entitlement ent);
 
     ValidationResult update(Consumer consumer, Entitlement entitlement, Integer change);
 

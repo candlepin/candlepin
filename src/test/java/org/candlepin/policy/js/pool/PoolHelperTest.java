@@ -18,15 +18,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.bind.PoolOperationCallback;
+import org.candlepin.bind.PoolOperations;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.PoolManager;
@@ -163,10 +160,9 @@ public class PoolHelperTest {
         attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
         attributes.put(targetPool2.getId(), PoolHelper.getFlattenedAttributes(targetPool2));
 
-        doAnswer(returnsFirstArg()).when(pm).createPools(anyList());
-        PoolOperationCallback poolOperationCallback = PoolHelper.createHostRestrictedPools(pm,
-            cons, targetPools, entitlements, attributes, productCurator);
-        List<Pool> pools = poolOperationCallback.getPoolCreates();
+        PoolOperations poolOperations = PoolHelper.createHostRestrictedPools(pm,
+            cons, targetPools, entitlements, attributes);
+        List<Pool> pools = poolOperations.creations();
 
         assertEquals(2, pools.size());
         Pool first = null, second = null;
@@ -221,11 +217,10 @@ public class PoolHelperTest {
         Map<String, Map<String, String>> attributes = new HashMap<>();
         attributes.put(targetPool.getId(), PoolHelper.getFlattenedAttributes(targetPool));
 
-        doAnswer(returnsFirstArg()).when(pm).createPools(anyList());
-        PoolOperationCallback poolOperationCallback = PoolHelper.createHostRestrictedPools(pm,
-            consumer, targetPools, entitlements, attributes, productCurator);
+        PoolOperations poolOperations = PoolHelper.createHostRestrictedPools(pm,
+            consumer, targetPools, entitlements, attributes);
 
-        List<Pool> hostRestrictedPools = poolOperationCallback.getPoolCreates();
+        List<Pool> hostRestrictedPools = poolOperations.creations();
         assertEquals(1, hostRestrictedPools.size());
         Pool hostRestrictedPool = hostRestrictedPools.get(0);
         assertEquals(targetPool.getId(), hostRestrictedPool.getAttributeValue("source_pool_id"));
@@ -256,8 +251,8 @@ public class PoolHelperTest {
         product2.setBranding(Arrays.asList(branding));
         Pool pool = TestUtil.createPool(owner, product);
         String quant = "unlimited";
-        Pool clone = PoolHelper.clonePool(pool, product2, quant, attributes, "TaylorSwift", null,
-            ent, TestUtil.createConsumer(), productCurator);
+        Pool clone = PoolHelper.clonePool(pool, product2, quant, attributes, "TaylorSwift",
+            ent, TestUtil.createConsumer());
         assertEquals(owner, clone.getOwner());
         assertEquals(-1L, clone.getQuantity());
         assertEquals(product2, clone.getProduct());

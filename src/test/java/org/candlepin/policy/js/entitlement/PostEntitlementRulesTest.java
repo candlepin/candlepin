@@ -15,8 +15,8 @@
 package org.candlepin.policy.js.entitlement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.bind.PoolOperationCallback;
+import org.candlepin.bind.PoolOperations;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
@@ -45,7 +45,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunner;
@@ -92,13 +91,11 @@ public class PostEntitlementRulesTest {
     @Mock
     private ConsumerTypeCurator consumerTypeCurator;
     @Mock
-    private PoolManager poolManagerMock;
+    private PoolManager poolManager;
     @Mock
     private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock
     private JsRunnerRequestCache cache;
-    @Mock
-    private ProductCurator productCurator;
     @Mock
     private OwnerCurator ownerCurator;
     @Mock
@@ -132,9 +129,9 @@ public class PostEntitlementRulesTest {
             config,
             consumerCurator,
             consumerTypeCurator,
-            productCurator,
             new RulesObjectMapper(),
-            translator
+            translator,
+            poolManager
         );
 
         owner = TestUtil.createOwner();
@@ -159,10 +156,10 @@ public class PostEntitlementRulesTest {
         Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
         poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 5));
         // Pool quantity should be virt_limit:
-        PoolOperationCallback poolOperationCallback = enforcer.postEntitlement(poolManagerMock,
-            consumer, owner, entitlements, null, false, poolQuantityMap);
+        PoolOperations poolOperations = enforcer.postEntitlement(
+            consumer, entitlements, null, false, poolQuantityMap);
 
-        List<Pool> pools = poolOperationCallback.getPoolCreates();
+        List<Pool> pools = poolOperations.creations();
         assertEquals(1, pools.size());
         assertEquals(10L, pools.get(0).getQuantity().longValue());
     }
@@ -186,10 +183,10 @@ public class PostEntitlementRulesTest {
         poolQuantityMap.put(pool2.getId(), new PoolQuantity(pool2, 5));
 
         // Pool quantity should be virt_limit:
-        PoolOperationCallback poolOperationCallback = enforcer.postEntitlement(poolManagerMock,
-            consumer, owner, entitlements, null, false, poolQuantityMap);
+        PoolOperations poolOperations = enforcer.postEntitlement(
+            consumer, entitlements, null, false, poolQuantityMap);
 
-        List<Pool> pools = poolOperationCallback.getPoolCreates();
+        List<Pool> pools = poolOperations.creations();
         assertEquals(2, pools.size());
         assertEquals(10L, pools.get(0).getQuantity().longValue());
         assertEquals(10L, pools.get(1).getQuantity().longValue());
@@ -207,11 +204,11 @@ public class PostEntitlementRulesTest {
         Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
         poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 5));
 
-        PoolOperationCallback poolOperationCallback = enforcer.postEntitlement(poolManagerMock,
-            consumer, owner, entitlements, null, false, poolQuantityMap);
+        PoolOperations poolOperations = enforcer.postEntitlement(
+            consumer, entitlements, null, false, poolQuantityMap);
 
         // Pool quantity should be virt_limit:
-        List<Pool> pools = poolOperationCallback.getPoolCreates();
+        List<Pool> pools = poolOperations.creations();
         assertEquals(1, pools.size());
         assertEquals(-1L, pools.get(0).getQuantity().longValue());
     }
@@ -234,11 +231,11 @@ public class PostEntitlementRulesTest {
         poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 5));
         poolQuantityMap.put(pool2.getId(), new PoolQuantity(pool2, 5));
 
-        PoolOperationCallback poolOperationCallback = enforcer.postEntitlement(poolManagerMock,
-            consumer, owner, entitlements, null, false, poolQuantityMap);
+        PoolOperations poolOperations = enforcer.postEntitlement(
+            consumer, entitlements, null, false, poolQuantityMap);
 
         // Pool quantity should be virt_limit:
-        List<Pool> pools = poolOperationCallback.getPoolCreates();
+        List<Pool> pools = poolOperations.creations();
         assertEquals(2, pools.size());
         assertEquals(-1L, pools.get(0).getQuantity().longValue());
         assertEquals(-1L, pools.get(1).getQuantity().longValue());
@@ -257,15 +254,15 @@ public class PostEntitlementRulesTest {
         entitlements.put(pool.getId(), e);
         Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
         poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 1));
-        enforcer.postEntitlement(poolManagerMock, consumer, owner, entitlements, null, false,
-            poolQuantityMap);
+        PoolOperations poolOperations = enforcer.postEntitlement(
+            consumer, entitlements, null, false, poolQuantityMap);
 
-        verify(poolManagerMock, never()).createPools(anyList());
-        verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyInt());
+        assertTrue(poolOperations.creations().isEmpty());
+        verify(poolManager, never()).setPoolQuantity(any(Pool.class), anyInt());
 
-        enforcer.postUnbind(consumer, poolManagerMock, e);
-        verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyInt());
-        verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyLong());
+        enforcer.postUnbind(e);
+        verify(poolManager, never()).setPoolQuantity(any(Pool.class), anyInt());
+        verify(poolManager, never()).setPoolQuantity(any(Pool.class), anyLong());
     }
 
     // Sub-pools should not be created when guests bind:
@@ -280,14 +277,15 @@ public class PostEntitlementRulesTest {
         entitlements.put(pool.getId(), e);
         Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
         poolQuantityMap.put(pool.getId(), new PoolQuantity(pool, 1));
-        enforcer.postEntitlement(poolManagerMock, consumer, owner, entitlements, null, false,
-            poolQuantityMap);
-        verify(poolManagerMock, never()).createPools(anyList());
-        verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyInt());
+        PoolOperations poolOperations = enforcer.postEntitlement(
+            consumer, entitlements, null, false, poolQuantityMap);
 
-        enforcer.postUnbind(consumer, poolManagerMock, e);
-        verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyInt());
-        verify(poolManagerMock, never()).setPoolQuantity(any(Pool.class), anyLong());
+        assertTrue(poolOperations.creations().isEmpty());
+        verify(poolManager, never()).setPoolQuantity(any(Pool.class), anyInt());
+
+        enforcer.postUnbind(e);
+        verify(poolManager, never()).setPoolQuantity(any(Pool.class), anyInt());
+        verify(poolManager, never()).setPoolQuantity(any(Pool.class), anyLong());
     }
 
     private ConsumerType mockConsumerType(ConsumerType ctype) {

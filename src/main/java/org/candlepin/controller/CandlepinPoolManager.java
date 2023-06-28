@@ -23,7 +23,8 @@ import org.candlepin.audit.EventBuilder;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.bind.BindChainFactory;
-import org.candlepin.bind.PoolOperationCallback;
+import org.candlepin.bind.PoolOpProcessor;
+import org.candlepin.bind.PoolOperations;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.refresher.RefreshResult;
@@ -135,6 +136,7 @@ public class CandlepinPoolManager implements PoolManager {
     private final CdnCurator cdnCurator;
     private final BindChainFactory bindChainFactory;
     private final Provider<RefreshWorker> refreshWorkerProvider;
+    private final PoolOpProcessor poolOpProcessor;
     private final boolean isStandalone;
     private final int orphanedGracePeriod;
 
@@ -160,7 +162,8 @@ public class CandlepinPoolManager implements PoolManager {
         CdnCurator cdnCurator,
         I18n i18n,
         BindChainFactory bindChainFactory,
-        Provider<RefreshWorker> refreshWorkerProvider) {
+        Provider<RefreshWorker> refreshWorkerProvider,
+        PoolOpProcessor poolOpProcessor) {
 
         this.poolCurator = Objects.requireNonNull(poolCurator);
         this.sink = Objects.requireNonNull(sink);
@@ -182,6 +185,7 @@ public class CandlepinPoolManager implements PoolManager {
         this.i18n = Objects.requireNonNull(i18n);
         this.bindChainFactory = Objects.requireNonNull(bindChainFactory);
         this.refreshWorkerProvider = Objects.requireNonNull(refreshWorkerProvider);
+        this.poolOpProcessor = Objects.requireNonNull(poolOpProcessor);
         this.isStandalone = config.getBoolean(ConfigProperties.STANDALONE);
         this.orphanedGracePeriod = config.getInt(ConfigProperties.ORPHANED_ENTITY_GRACE_PERIOD);
     }
@@ -796,34 +800,6 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Override
-    public List<Pool> createPools(List<Pool> pools) {
-        if (CollectionUtils.isNotEmpty(pools)) {
-            Set<String> updatedPoolIds = new HashSet<>();
-
-            for (Pool pool : pools) {
-                // We're assuming that net-new pools will not yet have an ID here.
-                if (pool.getId() != null) {
-                    updatedPoolIds.add(pool.getId());
-                }
-            }
-
-            poolCurator.saveOrUpdateAll(pools, false, false);
-
-            for (Pool pool : pools) {
-                if (pool != null && !updatedPoolIds.contains(pool.getId())) {
-                    log.debug("  created pool: {}", pool);
-                    sink.emitPoolCreated(pool);
-                }
-                else {
-                    log.debug("  updated pool: {}", pool);
-                }
-            }
-        }
-
-        return pools;
-    }
-
-    @Override
     public void updatePrimaryPool(Pool pool) {
         if (pool == null) {
             throw new IllegalArgumentException("pool is null");
@@ -1370,7 +1346,7 @@ public class CandlepinPoolManager implements PoolManager {
         if (log.isDebugEnabled()) {
             log.debug("Host selectBestPools returned {} pools: ", enforced.size());
             for (PoolQuantity poolQuantity : enforced) {
-                log.debug("  " + poolQuantity.getPool());
+                log.debug("  {}", poolQuantity.getPool());
             }
         }
 
@@ -1694,9 +1670,9 @@ public class CandlepinPoolManager implements PoolManager {
         Owner owner = ownerCurator.get(consumer.getOwnerId());
 
         // the only thing we do here is decrement bonus pool quantity
-        PoolOperationCallback poolOperationCallback = enforcer.postEntitlement(this,
-            consumer, owner, entMap, new ArrayList<>(), true, poolQuantityMap);
-        poolOperationCallback.apply(this);
+        PoolOperations poolOperations = enforcer.postEntitlement(
+            consumer, entMap, new ArrayList<>(), true, poolQuantityMap);
+        this.poolOpProcessor.process(poolOperations);
 
         // we might have changed the bonus pool quantities, revoke ents if needed.
         checkBonusPoolQuantities(consumer.getOwnerId(), entMap);
@@ -1711,7 +1687,7 @@ public class CandlepinPoolManager implements PoolManager {
          */
         complianceRules.getStatus(consumer, null, false, false);
         // Note: a quantity change should *not* need a system purpose compliance recalculation. if that is
-        // not true any more, we should update that here.
+        // not true anymore, we should update that here.
         consumerCurator.update(consumer);
         poolCurator.flush();
 
@@ -1923,15 +1899,13 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     private void firePoolDeletedEvents(Set<Pool> poolsToDelete) {
-        for (Pool pool : poolsToDelete) {
-            this.sink.queueEvent(this.eventFactory.poolDeleted(pool));
-        }
+        poolsToDelete.stream()
+            .map(this.eventFactory::poolDeleted)
+            .forEach(this.sink::queueEvent);
     }
 
-    private void postUnbind(List<Entitlement> entsToRevoke) {
-        for (Entitlement ent : entsToRevoke) {
-            enforcer.postUnbind(ent.getConsumer(), this, ent);
-        }
+    private void postUnbind(Collection<Entitlement> entitlements) {
+        entitlements.forEach(this.enforcer::postUnbind);
     }
 
     private void recomputeStatusForConsumers(Set<Consumer> consumers) {
@@ -1992,7 +1966,7 @@ public class CandlepinPoolManager implements PoolManager {
     private List<String> getPoolIds(Collection<Pool> pools) {
         return pools.stream()
             .map(Pool::getId)
-            .collect(Collectors.toList());
+            .toList();
     }
 
     /**
@@ -2305,9 +2279,7 @@ public class CandlepinPoolManager implements PoolManager {
 
                 // Fire post-unbind events for revoked entitlements
                 log.info("Firing post-unbind events for {} entitlements...", entitlements.size());
-                for (Entitlement entitlement : entitlements) {
-                    this.enforcer.postUnbind(entitlement.getConsumer(), this, entitlement);
-                }
+                postUnbind(entitlements);
 
                 log.info("Recomputing status for {} consumers", consumerStackedEnts.keySet().size());
 
@@ -2362,21 +2334,6 @@ public class CandlepinPoolManager implements PoolManager {
         this.poolCurator.lock(pool);
         pool.setQuantity(set);
         return poolCurator.merge(pool);
-    }
-
-    /**
-     * Set the count of pools. The caller sets the absolute quantity.
-     *   Current use is setting unlimited bonus pool to -1 or 0.
-     */
-    @Override
-    public void setPoolQuantity(Map<Pool, Long> poolQuantities) {
-        if (poolQuantities != null) {
-            poolCurator.lock(poolQuantities.keySet());
-            for (Entry<Pool, Long> entry : poolQuantities.entrySet()) {
-                entry.getKey().setQuantity(entry.getValue());
-            }
-            poolCurator.mergeAll(poolQuantities.keySet(), false);
-        }
     }
 
     @Override

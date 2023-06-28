@@ -45,7 +45,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @SpecTest
 public class PoolUnlimitedPrimarySpecTest {
@@ -69,7 +68,6 @@ public class PoolUnlimitedPrimarySpecTest {
     private ProductDTO productVirtProductMuliplier;
     private PoolDTO poolNoVirt;
     private PoolDTO poolUnlimitedVirt;
-    private PoolDTO poolVirt;
     private PoolDTO poolVirtHostDep;
     private PoolDTO poolVirtInstanceMuliplier;
     private PoolDTO poolVirtProductMuliplier;
@@ -120,7 +118,7 @@ public class PoolUnlimitedPrimarySpecTest {
         // primary pool quantity expected to be -1
         PoolDTO primaryPool = pools.stream()
             .filter(x -> x.getId().equals(poolVirtProductMuliplier.getId()))
-            .collect(Collectors.toList()).get(0);
+            .toList().get(0);
         assertEquals(-1L, primaryPool.getQuantity());
 
         // consume primary pool with physical client in any quantity
@@ -128,13 +126,13 @@ public class PoolUnlimitedPrimarySpecTest {
         pools = ownerApi.listOwnerPools(owner.getKey());
         primaryPool = pools.stream()
             .filter(x -> x.getId().equals(poolVirtProductMuliplier.getId()))
-            .collect(Collectors.toList()).get(0);
+            .toList().get(0);
         assertEquals(-1L, primaryPool.getQuantity());
 
         PoolDTO subPool = pools.stream()
             .filter(x -> x.getSubscriptionId().equals(poolVirtProductMuliplier.getSubscriptionId()) &&
             ("UNMAPPED_GUEST".equals(x.getType()) || "BONUS".equals(x.getType())))
-            .collect(Collectors.toList()).get(0);
+            .toList().get(0);
         assertEquals(-1L, subPool.getQuantity());
     }
 
@@ -147,7 +145,7 @@ public class PoolUnlimitedPrimarySpecTest {
         // primary pool quantity expected to be -1
         PoolDTO primaryPool = pools.stream()
             .filter(x -> x.getId().equals(poolId))
-            .collect(Collectors.toList()).get(0);
+            .toList().get(0);
         assertEquals(-1L, primaryPool.getQuantity());
 
         // consume primary pool with physical client in any quantity
@@ -155,19 +153,19 @@ public class PoolUnlimitedPrimarySpecTest {
         pools = ownerApi.listOwnerPools(owner.getKey());
         primaryPool = pools.stream()
             .filter(x -> x.getId().equals(poolId))
-            .collect(Collectors.toList()).get(0);
+            .toList().get(0);
         assertEquals(-1L, primaryPool.getQuantity());
 
         final String subId = poolVirtInstanceMuliplier.getSubscriptionId();
         PoolDTO subPool = pools.stream()
             .filter(x -> x.getSubscriptionId().equals(subId) &&
             ("UNMAPPED_GUEST".equals(x.getType()) || "BONUS".equals(x.getType())))
-            .collect(Collectors.toList()).get(0);
+            .toList().get(0);
         assertEquals(-1L, subPool.getQuantity());
     }
 
     @Test
-    public void shouldAlwaysHaveUnlimitedPrimaryPoolQuantityEqualtoNegOne() throws Exception {
+    public void shouldAlwaysHaveUnlimitedPrimaryPoolQuantityEqualtoNegOne() {
         setupConsumersAndClients();
         ProductDTO product = Products.randomSKU()
             .addAttributesItem(new AttributeDTO().name("virt_limit").value("4"))
@@ -186,14 +184,14 @@ public class PoolUnlimitedPrimarySpecTest {
         // primary pool quantity expected to be -1
         PoolDTO primaryPool = pools.stream()
             .filter(x -> x.getId().equals(poolId))
-            .collect(Collectors.toList()).get(0);
+            .toList().get(0);
         assertEquals(-1L, primaryPool.getQuantity());
 
         physicalClient.consumers().bindPool(physicalSystem.getUuid(), primaryPool.getId(), 1000);
         pools = ownerApi.listOwnerPools(owner.getKey());
         primaryPool = pools.stream()
             .filter(x -> x.getId().equals(poolId))
-            .collect(Collectors.toList()).get(0);
+            .toList().get(0);
         assertEquals(-1L, primaryPool.getQuantity());
     }
 
@@ -206,7 +204,7 @@ public class PoolUnlimitedPrimarySpecTest {
         PoolDTO guestPool = pools.stream()
             .filter(x -> "true".equals(getAttributeValue("pool_derived", x.getAttributes())) &&
             "UNMAPPED_GUEST".equals(x.getType()))
-            .collect(Collectors.toList()).get(0);
+            .toList().get(0);
         guestUnmappedClient.consumers().bindPool(guestUnmapped.getUuid(), guestPool.getId(), 4000);
         List<EntitlementDTO> ents = guestUnmappedClient.consumers().listEntitlements(guestUnmapped.getUuid());
         assertThat(ents).hasSize(1);
@@ -224,7 +222,7 @@ public class PoolUnlimitedPrimarySpecTest {
         PoolDTO guestPool = pools.stream()
             .filter(x -> "true".equals(getAttributeValue("pool_derived", x.getAttributes())) &&
             "ENTITLEMENT_DERIVED".equals(x.getType()))
-            .collect(Collectors.toList()).get(0);
+            .toList().get(0);
 
         guestClient.consumers().bindPool(guest.getUuid(), guestPool.getId(), 5000);
         List<EntitlementDTO> ents = guestClient.consumers().listEntitlements(guest.getUuid());
@@ -243,7 +241,7 @@ public class PoolUnlimitedPrimarySpecTest {
         PoolDTO guestPool = pools.stream()
             .filter(x -> "true".equals(getAttributeValue("pool_derived", x.getAttributes())) &&
             "ENTITLEMENT_DERIVED".equals(x.getType()))
-            .collect(Collectors.toList()).get(0);
+            .toList().get(0);
 
         guestClient.consumers().bindPool(guest.getUuid(), guestPool.getId(), 4);
         List<EntitlementDTO> ents = guestClient.consumers().listEntitlements(guest.getUuid());
@@ -261,7 +259,7 @@ public class PoolUnlimitedPrimarySpecTest {
         PoolDTO guestPool = pools.stream()
             .filter(x -> "true".equals(getAttributeValue("pool_derived", x.getAttributes())) &&
             "UNMAPPED_GUEST".equals(x.getType()))
-            .collect(Collectors.toList()).get(0);
+            .toList().get(0);
 
         guestUnmappedClient.consumers().bindPool(guestUnmapped.getUuid(), guestPool.getId(), 600);
         List<EntitlementDTO> ents = guestUnmappedClient.consumers().listEntitlements(guestUnmapped.getUuid());
@@ -281,7 +279,7 @@ public class PoolUnlimitedPrimarySpecTest {
     private String getAttributeValue(String name, List<AttributeDTO> attributes) {
         List<AttributeDTO> matches = attributes.stream()
             .filter(x -> name.equals(x.getName()))
-            .collect(Collectors.toList());
+            .toList();
         if (matches.size() > 0) {
             return matches.get(0).getValue();
         }
@@ -311,21 +309,13 @@ public class PoolUnlimitedPrimarySpecTest {
         guestUnmappedClient = ApiClients.ssl(guestUnmapped);
 
     }
+
     /**
      * We don't want to create everything for all tests
      *  This allows needed granularity
-     *
-     * @param noVirt
-     * @param unlimitedVirt
-     * @param virt
-     * @param virtHostDep
-     * @param virtInstanceMultiplier
-     * @param virtProductMultiplier
-     * @throws InterruptedException
      */
     private void setupProductsAndPools(boolean noVirt, boolean unlimitedVirt, boolean virt,
-        boolean virtHostDep, boolean virtInstanceMultiplier, boolean virtProductMultiplier)
-        throws InterruptedException {
+        boolean virtHostDep, boolean virtInstanceMultiplier, boolean virtProductMultiplier) {
 
         if (noVirt) {
             productNoVirt = Products.randomSKU()
@@ -345,7 +335,7 @@ public class PoolUnlimitedPrimarySpecTest {
                 .addAttributesItem(new AttributeDTO().name("virt_limit").value("5"))
                 .addAttributesItem(new AttributeDTO().name("multi-entitlement").value("yes"));
             productVirt = ownerProductApi.createProductByOwner(owner.getKey(), productVirt);
-            poolVirt = createUnlimitedPool(productVirt);
+            PoolDTO poolVirt = createUnlimitedPool(productVirt);
         }
         if (virtHostDep) {
             proudctVirtHostDep = Products.randomSKU()

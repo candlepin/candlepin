@@ -17,7 +17,6 @@ package org.candlepin.policy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
@@ -25,16 +24,13 @@ import org.candlepin.config.Configuration;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.policy.js.pool.PoolUpdate;
-import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
@@ -63,12 +59,9 @@ public class PoolRulesInstanceTest {
     private PoolRules poolRules;
 
     @Mock private RulesCurator rulesCuratorMock;
-    @Mock private ProductServiceAdapter productAdapterMock;
     @Mock private PoolManager poolManagerMock;
     @Mock private Configuration configMock;
     @Mock private EntitlementCurator entCurMock;
-    @Mock private OwnerProductCurator ownerProdCuratorMock;
-    @Mock private ProductCurator productCurator;
 
     @BeforeEach
     public void setUp() {
@@ -78,10 +71,9 @@ public class PoolRulesInstanceTest {
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
 
-        when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
+        when(configMock.getInt(ConfigProperties.PRODUCT_CACHE_MAX)).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProdCuratorMock,
-            productCurator);
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock);
     }
 
     @Test
