@@ -135,46 +135,6 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
     protected abstract String getEntityId(I entity);
 
     /**
-     * Called when remapping an local entity to determine whether or not the current entity is
-     * different than the inbound entity. If this method returns false, the mapping will be flagged
-     * as "dirty," triggering a rebuild of the entity tree later in the refresh process.
-     *
-     * @param current
-     *  the current local entity
-     *
-     * @param inbound
-     *  the inbound local entity to test
-     *
-     * @throws IllegalArgumentException
-     *  if either current or inbound are null
-     *
-     * @return
-     *  true if the current and inbound entities are equal and represent the same mapping; false
-     *  if they are not equal or otherwise indicate a mapping error
-     */
-    protected abstract boolean entitiesMatch(E current, E inbound);
-
-    /**
-     * Called when remapping an upstream entity to determine whether or not the current entity is
-     * different than the inbound entity. If this method returns false, the mapping will be flagged
-     * as "dirty," triggering a rebuild of the entity tree later in the refresh process.
-     *
-     * @param current
-     *  the current upstream entity
-     *
-     * @param inbound
-     *  the inbound upstream entity to test
-     *
-     * @throws IllegalArgumentException
-     *  if either current or inbound are null
-     *
-     * @return
-     *  true if the current and inbound entities are equal and represent the same mapping; false
-     *  if they are not equal or otherwise indicate a mapping error
-     */
-    protected abstract boolean entitiesMatch(I current, I inbound);
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -183,11 +143,10 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
             String eid = this.getEntityId(entity);
 
             this.existingEntities.compute(eid, (id, existing) -> {
-                if (existing != null && !this.entitiesMatch(existing, entity)) {
+                if (existing != null && !existing.equals(entity)) {
+                    this.dirtyEntityRefs.add(id);
                     log.warn("Remapping existing entity with a different entity version; " +
                         "discarding previous... {} -> {} != {}", id, existing, entity);
-
-                    this.dirtyEntityRefs.add(id);
                 }
 
                 return entity;
@@ -218,7 +177,7 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
             String eid = this.getEntityId(entity);
 
             this.importedEntities.compute(eid, (id, existing) -> {
-                if (existing != null && !this.entitiesMatch(existing, entity)) {
+                if (existing != null && !existing.equals(entity)) {
                     log.warn("Remapping imported entity with a different entity version; " +
                         "discarding previous... {} -> {} != {}", id, existing, entity);
                 }
@@ -262,26 +221,26 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
      * {@inheritDoc}
      */
     @Override
-    public boolean containsUnmappedExistingEntityIds(Collection<String> ids) {
+    public boolean containsOnlyExistingEntityIds(Collection<String> ids) {
         return ids != null ?
-            !ids.containsAll(this.existingEntities.keySet()) :
-            !this.existingEntities.isEmpty();
+            ids.containsAll(this.existingEntities.keySet()) :
+            this.existingEntities.isEmpty();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean containsUnmappedExistingEntities(Collection<? extends E> entities) {
-        if (entities == null || entities.isEmpty()) {
-            return !this.existingEntities.isEmpty();
+    public boolean containsOnlyExistingEntities(Collection<? extends E> entities) {
+        if (entities != null && !entities.isEmpty()) {
+            Collection<String> ids = entities.stream()
+                .map(this::getEntityId)
+                .collect(Collectors.toSet());
+
+            return this.containsOnlyExistingEntityIds(ids);
         }
 
-        Collection<String> ids = entities.stream()
-            .map(this::getEntityId)
-            .collect(Collectors.toSet());
-
-        return this.containsUnmappedExistingEntityIds(ids);
+        return this.existingEntities.isEmpty();
     }
 
     /**

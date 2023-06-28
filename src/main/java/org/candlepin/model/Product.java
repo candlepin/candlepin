@@ -1287,9 +1287,10 @@ public class Product extends AbstractHibernateObject implements SharedEntity, Li
 
     @Override
     public int hashCode() {
-        return new HashCodeBuilder(7, 17)
-            .append(this.getId())
-            .toHashCode();
+        HashCodeBuilder builder = new HashCodeBuilder(7, 17)
+            .append(this.id);
+
+        return builder.toHashCode();
     }
 
     /**

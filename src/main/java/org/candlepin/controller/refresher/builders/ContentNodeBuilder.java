@@ -59,8 +59,7 @@ public class ContentNodeBuilder implements NodeBuilder<Content, ContentInfo> {
 
         EntityNode<Content, ContentInfo> node = new ContentNode(owner, id)
             .setExistingEntity(existingEntity)
-            .setImportedEntity(importedEntity)
-            .setDirty(mapper.isDirty(id));
+            .setImportedEntity(importedEntity);
 
         return node;
     }

@@ -410,34 +410,4 @@ public abstract class AbstractNodeTest<E extends AbstractHibernateObject, I exte
         // Verify the entity was cleared
         assertNull(node.getMergedEntity());
     }
-
-    @Test
-    public void testDirtyFlag() {
-        Owner owner = TestUtil.createOwner();
-        EntityNode<E, I> node = this.buildEntityNode(owner, "test_id");
-        EntityNode<E, I> output = null;
-
-        // Initial state should always be false
-        assertFalse(node.isDirty());
-
-        // no change call, false => false
-        output = node.setDirty(false);
-        assertFalse(node.isDirty());
-        assertSame(node, output);
-
-        // false => true should result in the obvious change
-        output = node.setDirty(true);
-        assertTrue(node.isDirty());
-        assertSame(node, output);
-
-        // no change call, true => true
-        output = node.setDirty(true);
-        assertTrue(node.isDirty());
-        assertSame(node, output);
-
-        // true => false should also result with the obvious expectation
-        output = node.setDirty(false);
-        assertFalse(node.isDirty());
-        assertSame(node, output);
-    }
 }

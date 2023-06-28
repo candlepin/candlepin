@@ -17,7 +17,6 @@ package org.candlepin.controller.refresher.builders;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -31,14 +30,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import org.candlepin.controller.refresher.mappers.ProductMapper;
-import org.candlepin.controller.refresher.nodes.ContentNode;
 import org.candlepin.controller.refresher.nodes.EntityNode;
-import org.candlepin.controller.refresher.nodes.ProductNode;
 import org.candlepin.model.AbstractHibernateObject;
 import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
-import org.candlepin.service.model.ContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.ServiceAdapterModel;
 import org.candlepin.test.TestUtil;
@@ -140,9 +136,6 @@ public class ProductNodeBuilderTest {
         // Its pseudo-state getters should match our expectations
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
-
-        // The node should not be flagged dirty
-        assertFalse(output.isDirty());
     }
 
     @Test
@@ -187,9 +180,6 @@ public class ProductNodeBuilderTest {
         // Its pseudo-state getters should match our expectations
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
-
-        // The node should not be flagged dirty
-        assertFalse(output.isDirty());
     }
 
     @Test
@@ -233,73 +223,6 @@ public class ProductNodeBuilderTest {
         // Its pseudo-state getters should match our expectations
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
-
-        // The node should not be flagged dirty
-        assertFalse(output.isDirty());
-    }
-
-    @Test
-    public void testBuildNodeWithOnlyExistingEntityUsingDirtyMappingCreatesDirtyNode() {
-        String id = "test_id";
-
-        Owner owner = TestUtil.createOwner();
-        Product existing = TestUtil.createProduct(id, "existing");
-        ProductInfo imported = TestUtil.createProduct(id, "imported");
-
-        ProductMapper mapper = spy(new ProductMapper());
-
-        mapper.addExistingEntity(existing);
-        doReturn(true).when(mapper).isDirty(eq(id));
-
-        ProductNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, mapper, owner, id);
-
-        assertNotNull(output);
-        assertEquals(id, output.getEntityId());
-        assertTrue(output.isDirty());
-    }
-
-    @Test
-    public void testBuildNodeWithOnlyImportedEntityUsingDirtyMappingCreatesDirtyNode() {
-        String id = "test_id";
-
-        Owner owner = TestUtil.createOwner();
-        Product existing = TestUtil.createProduct(id, "existing");
-        ProductInfo imported = TestUtil.createProduct(id, "imported");
-
-        ProductMapper mapper = spy(new ProductMapper());
-
-        mapper.addImportedEntity(imported);
-        doReturn(true).when(mapper).isDirty(eq(id));
-
-        ProductNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, mapper, owner, id);
-
-        assertNotNull(output);
-        assertEquals(id, output.getEntityId());
-        assertTrue(output.isDirty());
-    }
-
-    @Test
-    public void testBuildNodeWithOnlyExistingAndImportedEntitiesUsingDirtyMappingCreatesDirtyNode() {
-        String id = "test_id";
-
-        Owner owner = TestUtil.createOwner();
-        Product existing = TestUtil.createProduct(id, "existing");
-        ProductInfo imported = TestUtil.createProduct(id, "imported");
-
-        ProductMapper mapper = spy(new ProductMapper());
-
-        mapper.addExistingEntity(existing);
-        mapper.addImportedEntity(imported);
-        doReturn(true).when(mapper).isDirty(eq(id));
-
-        ProductNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, mapper, owner, id);
-
-        assertNotNull(output);
-        assertEquals(id, output.getEntityId());
-        assertTrue(output.isDirty());
     }
 
     @Test
@@ -859,99 +782,6 @@ public class ProductNodeBuilderTest {
         // Ensure that the children were created using the node factory and not an internal method
         verify(this.mockNodeFactory, times(2)).buildNode(eq(owner), eq(Product.class), anyString());
         verify(this.mockNodeFactory, times(2)).buildNode(eq(owner), eq(Content.class), anyString());
-    }
-
-    @Test
-    public void testBuildNodeCreatesDirtyNodeWhenAChildContentIsDirty() {
-        Owner owner = TestUtil.createOwner();
-        Product product = TestUtil.createProduct("p1", "product");
-        Content content = TestUtil.createContent("content");
-
-        product.addContent(content, true);
-
-        EntityNode<Content, ContentInfo> childNode = new ContentNode(owner, content.getId())
-            .setExistingEntity(content)
-            .setDirty(true);
-
-        doReturn(childNode).when(this.mockNodeFactory)
-            .buildNode(eq(owner), eq(childNode.getEntityClass()), eq(childNode.getEntityId()));
-
-        ProductMapper mapper = new ProductMapper();
-        mapper.addExistingEntity(product);
-
-        ProductNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, mapper, owner,
-            product.getId());
-
-        assertNotNull(output);
-
-        // Verify the mapping itself is not dirty
-        assertFalse(mapper.isDirty(product.getId()));
-
-        // ...but the node is
-        assertTrue(output.isDirty());
-    }
-
-    @Test
-    public void testBuildNodeCreatesDirtyNodeWhenAProvidedProductIsDirty() {
-        Owner owner = TestUtil.createOwner();
-        Product product = TestUtil.createProduct("p1", "product");
-        Product provided = TestUtil.createProduct("pp1", "provided_product");
-
-        product.addProvidedProduct(provided);
-
-        EntityNode<Product, ProductInfo> childNode = new ProductNode(owner, provided.getId())
-            .setExistingEntity(provided)
-            .setDirty(true);
-
-        doReturn(childNode).when(this.mockNodeFactory)
-            .buildNode(eq(owner), eq(childNode.getEntityClass()), eq(childNode.getEntityId()));
-
-        ProductMapper mapper = new ProductMapper();
-        mapper.addExistingEntity(product);
-
-        ProductNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, mapper, owner,
-            product.getId());
-
-        assertNotNull(output);
-
-        // Verify the mapping itself is not dirty
-        assertFalse(mapper.isDirty(product.getId()));
-
-        // ...but the node is
-        assertTrue(output.isDirty());
-    }
-
-    @Test
-    public void testBuildNodeCreatesDirtyNodeWhenTheDerivedProductIsDirty() {
-        Owner owner = TestUtil.createOwner();
-        Product product = TestUtil.createProduct("p1", "product");
-        Product derived = TestUtil.createProduct("dp1", "derived_product");
-
-        product.setDerivedProduct(derived);
-
-        EntityNode<Product, ProductInfo> childNode = new ProductNode(owner, derived.getId())
-            .setExistingEntity(derived)
-            .setDirty(true);
-
-        doReturn(childNode).when(this.mockNodeFactory)
-            .buildNode(eq(owner), eq(childNode.getEntityClass()), eq(childNode.getEntityId()));
-
-        ProductMapper mapper = new ProductMapper();
-        mapper.addExistingEntity(product);
-
-        ProductNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Product, ProductInfo> output = builder.buildNode(this.mockNodeFactory, mapper, owner,
-            product.getId());
-
-        assertNotNull(output);
-
-        // Verify the mapping itself is not dirty
-        assertFalse(mapper.isDirty(product.getId()));
-
-        // ...but the node is
-        assertTrue(output.isDirty());
     }
 
     @Test

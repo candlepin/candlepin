@@ -15,15 +15,11 @@
 package org.candlepin.controller.refresher.builders;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 
 import org.candlepin.controller.refresher.mappers.ContentMapper;
 import org.candlepin.controller.refresher.nodes.EntityNode;
@@ -109,9 +105,6 @@ public class ContentNodeBuilderTest {
         // Its pseudo-state getters should match our expectations
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
-
-        // The node should not be flagged dirty
-        assertFalse(output.isDirty());
     }
 
     @Test
@@ -153,9 +146,6 @@ public class ContentNodeBuilderTest {
         // Its pseudo-state getters should match our expectations
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
-
-        // The node should not be flagged dirty
-        assertFalse(output.isDirty());
     }
 
     @Test
@@ -196,73 +186,6 @@ public class ContentNodeBuilderTest {
         // Its pseudo-state getters should match our expectations
         assertTrue(output.isRootNode());
         assertTrue(output.isLeafNode());
-
-        // The node should not be flagged dirty
-        assertFalse(output.isDirty());
-    }
-
-    @Test
-    public void testBuildNodeWithOnlyExistingEntityUsingDirtyMappingCreatesDirtyNode() {
-        String id = "test_id";
-
-        Owner owner = TestUtil.createOwner();
-        Content existing = TestUtil.createContent(id, "existing");
-        ContentInfo imported = TestUtil.createContent(id, "imported");
-
-        ContentMapper mapper = spy(new ContentMapper());
-
-        mapper.addExistingEntity(existing);
-        doReturn(true).when(mapper).isDirty(eq(id));
-
-        ContentNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Content, ContentInfo> output = builder.buildNode(this.mockNodeFactory, mapper, owner, id);
-
-        assertNotNull(output);
-        assertEquals(id, output.getEntityId());
-        assertTrue(output.isDirty());
-    }
-
-    @Test
-    public void testBuildNodeWithOnlyImportedEntityUsingDirtyMappingCreatesDirtyNode() {
-        String id = "test_id";
-
-        Owner owner = TestUtil.createOwner();
-        Content existing = TestUtil.createContent(id, "existing");
-        ContentInfo imported = TestUtil.createContent(id, "imported");
-
-        ContentMapper mapper = spy(new ContentMapper());
-
-        mapper.addImportedEntity(imported);
-        doReturn(true).when(mapper).isDirty(eq(id));
-
-        ContentNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Content, ContentInfo> output = builder.buildNode(this.mockNodeFactory, mapper, owner, id);
-
-        assertNotNull(output);
-        assertEquals(id, output.getEntityId());
-        assertTrue(output.isDirty());
-    }
-
-    @Test
-    public void testBuildNodeWithOnlyExistingAndImportedEntitiesUsingDirtyMappingCreatesDirtyNode() {
-        String id = "test_id";
-
-        Owner owner = TestUtil.createOwner();
-        Content existing = TestUtil.createContent(id, "existing");
-        ContentInfo imported = TestUtil.createContent(id, "imported");
-
-        ContentMapper mapper = spy(new ContentMapper());
-
-        mapper.addExistingEntity(existing);
-        mapper.addImportedEntity(imported);
-        doReturn(true).when(mapper).isDirty(eq(id));
-
-        ContentNodeBuilder builder = this.buildNodeBuilder();
-        EntityNode<Content, ContentInfo> output = builder.buildNode(this.mockNodeFactory, mapper, owner, id);
-
-        assertNotNull(output);
-        assertEquals(id, output.getEntityId());
-        assertTrue(output.isDirty());
     }
 
     @Test

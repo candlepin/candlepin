@@ -129,6 +129,12 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
             return;
         }
 
+        boolean nodeChanged = false;
+
+        // Check if we need to make reference updates on this entity due to children updates
+        boolean childrenUpdated = node.getChildrenNodes()
+            .anyMatch(EntityNode::changed);
+
         Product existingEntity = node.getExistingEntity();
         ProductInfo importedEntity = node.getImportedEntity();
 
@@ -140,17 +146,11 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
             this.ownerOrphanEntityIdPrecache.computeIfAbsent(node.getOwner(), key -> new HashSet<>())
                 .add(node.getEntityId());
 
-            // Check if the node is dirty or has changed any...
-            boolean nodeChanged = node.isDirty();
+            if (importedEntity != null) {
+                nodeChanged = ProductManager.isChangedBy(existingEntity, importedEntity);
+            }
 
-            // Check if we need to make reference updates on this entity due to children updates
-            nodeChanged = nodeChanged || (node.getChildrenNodes().anyMatch(EntityNode::changed));
-
-            // Check if the node has changed upstream
-            nodeChanged = nodeChanged || (importedEntity != null &&
-                ProductManager.isChangedBy(existingEntity, importedEntity));
-
-            if (nodeChanged) {
+            if (nodeChanged || childrenUpdated) {
                 Product mergedEntity = this.createEntity(node);
                 node.setMergedEntity(mergedEntity);
 
@@ -301,19 +301,8 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
             Product existingEntity = node.getExistingEntity();
             Product mergedEntity = node.getMergedEntity();
 
-            String existingEntityUuid = existingEntity.getUuid();
-            if (existingEntityUuid == null) {
-                throw new IllegalStateException("Existing entity lacks a UUID: " + existingEntity);
-            }
-
-            if (!existingEntityUuid.equals(mergedEntity.getUuid())) {
-                this.ownerProductUuidMap.computeIfAbsent(node.getOwner(), key -> new HashMap<>())
-                    .put(existingEntity.getUuid(), mergedEntity.getUuid());
-            }
-            else {
-                log.warn("Entity update resolved to itself; omitting from update: {}", node);
-                node.setNodeState(NodeState.UNCHANGED);
-            }
+            this.ownerProductUuidMap.computeIfAbsent(node.getOwner(), key -> new HashMap<>())
+                .put(existingEntity.getUuid(), mergedEntity.getUuid());
         }
         else if (node.getNodeState() == NodeState.CREATED) {
             node.setMergedEntity(this.resolveEntityVersion(node));
@@ -351,15 +340,9 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
 
         for (Product candidate : entityMap.getOrDefault(entity.getId(), Collections.emptyList())) {
             if (entityVersion == candidate.getEntityVersion()) {
-                // If the node is dirty, we don't want to resolve to a matching version -- that'll
-                // just perpetuate the issue. Clear the candidate's entity version and rebuild a
-                // new instance of it.
-                if (node.isDirty()) {
-                    log.warn("Dirty entity matching an existing entity; discarding existing and " +
-                        "rebuilding...\nExisting entity: {}", candidate);
-
-                    this.ownerProductCurator.clearProductEntityVersion(candidate);
-                    break;
+                if (entity.equals(candidate)) {
+                    // We found a match! Map to the candidate entity
+                    return candidate;
                 }
 
                 // If we have a version collision, and the entity IDs are the same, there's likely
@@ -371,17 +354,11 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
                 // Impl note:
                 // We've already implicitly checked the ID above by how we're pulling candidate
                 // entities from the map
-                if (!entity.equals(candidate)) {
-                    log.error("Entity version collision detected; attempting resolution..." +
-                        "\nConflicting entities:\n{}\n{}", entity, candidate);
+                log.error("Entity version collision detected; attempting resolution..." +
+                    "\nConflicting entities:\n{}\n{}", entity, candidate);
 
-                    this.ownerProductCurator.clearProductEntityVersion(candidate);
-                    break;
-                }
-
-                // We found a match! Map to the candidate entity
-                log.trace("Matched updated entity to candidate entity: {} => {}", entity, candidate);
-                return candidate;
+                this.ownerProductCurator.clearProductEntityVersion(candidate);
+                break;
             }
         }
 
