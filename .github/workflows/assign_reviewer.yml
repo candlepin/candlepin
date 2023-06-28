@@ -32,4 +32,4 @@ jobs:
           body: |
             team_reviewers: candlepin-server
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.AutoAssignReviewerSecret }}
