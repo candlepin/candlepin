@@ -1,4 +1,4 @@
-name: AutoAssignReviewer
+name: AutoAssignReviewerAndApprove
 
 on:
   pull_request:
@@ -13,3 +13,11 @@ jobs:
         with:
           githubToken: ${{ secrets.AutoAssignReviewerSecret }}
           teamName: 'candlepin-server'
+  manual-approval:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Manual approval
+        uses: ./.github/manual-approval
+        with:
+          githubToken: ${{ secrets.AutoAssignReviewerSecret }}
+          organisation: 'candlepin'

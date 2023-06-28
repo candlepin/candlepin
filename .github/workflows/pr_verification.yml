@@ -2,6 +2,10 @@
 name: Pull request verification
 
 on:
+  workflow_run:
+    workflows: [ "AutoAssignReviewerAndApprove" ]
+    types:
+      - completed
   pull_request:
   workflow_dispatch:
 

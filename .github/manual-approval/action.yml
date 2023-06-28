@@ -1,0 +1,12 @@
+name: 'ManualApproval'
+description: 'Approval of PR for people who do not belong to the organisation'
+inputs:
+  githubToken:
+    description: 'The token to use'
+    required: true
+  organization:
+    description: 'The name of the organization'
+    required: true
+runs:
+  using: 'node16'
+  main: 'dist/index.js'
