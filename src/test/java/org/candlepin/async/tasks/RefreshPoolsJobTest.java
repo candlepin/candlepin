@@ -138,7 +138,6 @@ public class RefreshPoolsJobTest {
         doReturn(refresher).when(refresherFactory).getRefresher(subAdapter, prodAdapter);
         doReturn(refresher).when(refresher).add(owner);
         doReturn(refresher).when(refresher).setLazyCertificateRegeneration(anyBoolean());
-        doReturn(refresher).when(refresher).setForceUpdate(anyBoolean());
 
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
 
@@ -168,7 +167,6 @@ public class RefreshPoolsJobTest {
         doReturn(refresher).when(refresherFactory).getRefresher(subAdapter, prodAdapter);
         doReturn(refresher).when(refresher).add(owner);
         doReturn(refresher).when(refresher).setLazyCertificateRegeneration(anyBoolean());
-        doReturn(refresher).when(refresher).setForceUpdate(anyBoolean());
         doThrow(new RuntimeException("something went wrong with refresh")).when(refresher).run();
 
         Exception e = assertThrows(JobExecutionException.class, () -> job.execute(context));

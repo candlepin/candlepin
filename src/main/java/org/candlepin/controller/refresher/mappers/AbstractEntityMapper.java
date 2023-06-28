@@ -179,29 +179,14 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
      */
     @Override
     public EntityMapper<E, I> addExistingEntity(E entity) {
-        return this.addExistingEntity(entity, false);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityMapper<E, I> addExistingEntity(E entity, boolean dirty) {
         if (entity != null) {
             String eid = this.getEntityId(entity);
 
             this.existingEntities.compute(eid, (id, existing) -> {
-                // Necessary workaround since we're operating in a lambda
-                boolean flag = dirty;
-
                 if (existing != null && !this.entitiesMatch(existing, entity)) {
                     log.warn("Remapping existing entity with a different entity version; " +
                         "discarding previous... {} -> {} != {}", id, existing, entity);
 
-                    flag = true;
-                }
-
-                if (flag) {
                     this.dirtyEntityRefs.add(id);
                 }
 
@@ -217,16 +202,8 @@ public abstract class AbstractEntityMapper<E extends AbstractHibernateObject, I 
      */
     @Override
     public EntityMapper<E, I> addExistingEntities(Collection<? extends E> entities) {
-        return this.addExistingEntities(entities, false);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EntityMapper<E, I> addExistingEntities(Collection<? extends E> entities, boolean dirty) {
         if (entities != null) {
-            entities.forEach(entity -> this.addExistingEntity(entity, dirty));
+            entities.forEach(this::addExistingEntity);
         }
 
         return this;

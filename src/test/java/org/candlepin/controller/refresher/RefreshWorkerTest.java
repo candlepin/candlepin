@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.AdditionalAnswers.returnsFirstArg;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.doAnswer;
@@ -33,7 +32,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.controller.refresher.RefreshResult.EntityState;
 import org.candlepin.controller.util.EntityVersioningRetryWrapper;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Content;
@@ -1142,7 +1140,8 @@ public class RefreshWorkerTest {
         doReturn(Collections.emptyList()).when(this.mockOwnerProductCurator).getProductsByOwner(eq(owner));
         doReturn(Collections.emptyList()).when(this.mockOwnerContentCurator).getContentByOwner(eq(owner));
 
-        // Throw the constraint violation exception on the first invocation, triggering a retry
+        // Throw the constraint violation exception on the first invocation, triggering
+        // a retry
         Exception exception = this.buildVersioningConstraintViolationException();
 
         doThrow(exception).doAnswer(returnsFirstArg())
@@ -1176,7 +1175,8 @@ public class RefreshWorkerTest {
         doReturn(Collections.emptyList()).when(this.mockOwnerProductCurator).getProductsByOwner(eq(owner));
         doReturn(Collections.emptyList()).when(this.mockOwnerContentCurator).getContentByOwner(eq(owner));
 
-        // Throw the constraint violation exception on the first invocation, triggering a retry
+        // Throw the constraint violation exception on the first invocation, triggering
+        // a retry
         Exception exception = this.buildVersioningConstraintViolationException();
 
         doThrow(exception).doAnswer(returnsFirstArg())
@@ -1274,97 +1274,4 @@ public class RefreshWorkerTest {
             .rebuildOwnerContentMapping(eq(owner), Mockito.any(Map.class));
     }
 
-    @Test
-    public void testUnchangedEntitiesUpdatedWhenForced() {
-        Owner owner = new Owner();
-        Product prod1 = new Product()
-            .setId("pid-1")
-            .setUuid("product1");
-        Content content1 = new Content()
-            .setId("cid-1")
-            .setUuid("content1")
-            .setName("content-1");
-
-        prod1.addContent(content1, true);
-
-        this.mockChildrenContentLookup(List.of(prod1));
-        doReturn(List.of(prod1)).when(this.mockOwnerProductCurator)
-            .getProductsByOwner(eq(owner));
-        doReturn(List.of(content1)).when(this.mockOwnerContentCurator)
-            .getContentByOwner(eq(owner));
-
-        RefreshWorker worker = this.buildRefreshWorker()
-            .setForceUpdate(true);
-
-        RefreshResult result = worker.execute(owner);
-
-        assertNotNull(result);
-
-        Map<String, Content> unchangedContent = result.getEntities(Content.class, EntityState.UNCHANGED);
-        assertNotNull(unchangedContent);
-        assertTrue(unchangedContent.isEmpty());
-
-        Map<String, Content> updatedContent = result.getEntities(Content.class, EntityState.UPDATED);
-        assertNotNull(updatedContent);
-        assertEquals(1, updatedContent.size());
-        assertTrue(updatedContent.containsKey(content1.getId()));
-        assertEquals(content1, updatedContent.get(content1.getId()));
-
-        Map<String, Product> unchangedProducts = result.getEntities(Product.class, EntityState.UNCHANGED);
-        assertNotNull(unchangedProducts);
-        assertTrue(unchangedProducts.isEmpty());
-
-        Map<String, Product> updatedProducts = result.getEntities(Product.class, EntityState.UPDATED);
-        assertNotNull(updatedProducts);
-        assertEquals(1, updatedProducts.size());
-        assertTrue(updatedProducts.containsKey(prod1.getId()));
-        assertEquals(prod1, updatedProducts.get(prod1.getId()));
-    }
-
-    @Test
-    public void testUnchangedEntitiesIgnoredWhenNotForced() {
-        Owner owner = new Owner();
-        Product prod1 = new Product()
-            .setId("pid-1")
-            .setUuid("product1");
-        Content content1 = new Content()
-            .setId("cid-1")
-            .setUuid("content1")
-            .setName("content-1");
-
-        prod1.addContent(content1, true);
-
-        this.mockChildrenContentLookup(List.of(prod1));
-        doReturn(List.of(prod1)).when(this.mockOwnerProductCurator)
-            .getProductsByOwner(eq(owner));
-        doReturn(List.of(content1)).when(this.mockOwnerContentCurator)
-            .getContentByOwner(eq(owner));
-
-        RefreshWorker worker = this.buildRefreshWorker()
-            .setForceUpdate(false);
-
-        RefreshResult result = worker.execute(owner);
-
-        assertNotNull(result);
-
-        Map<String, Content> unchangedContent = result.getEntities(Content.class, EntityState.UNCHANGED);
-        assertNotNull(unchangedContent);
-        assertEquals(1, unchangedContent.size());
-        assertTrue(unchangedContent.containsKey(content1.getId()));
-        assertEquals(content1, unchangedContent.get(content1.getId()));
-
-        Map<String, Content> updatedContent = result.getEntities(Content.class, EntityState.UPDATED);
-        assertNotNull(updatedContent);
-        assertTrue(updatedContent.isEmpty());
-
-        Map<String, Product> unchangedProducts = result.getEntities(Product.class, EntityState.UNCHANGED);
-        assertNotNull(unchangedProducts);
-        assertEquals(1, unchangedProducts.size());
-        assertTrue(unchangedProducts.containsKey(prod1.getId()));
-        assertEquals(prod1, unchangedProducts.get(prod1.getId()));
-
-        Map<String, Product> updatedProducts = result.getEntities(Product.class, EntityState.UPDATED);
-        assertNotNull(updatedProducts);
-        assertTrue(updatedProducts.isEmpty());
-    }
 }

@@ -197,16 +197,12 @@ public interface PoolManager {
 
     /**
      * Updates the pool based on the entitlements in the specified stack.
-     *
      * @param pool
      * @param changedProducts
-     * @param force
-     *  whether or not to apply the update even in cases where an explicit data change is not
-     *  detected
      *
      * @return pool update specifics
      */
-    PoolUpdate updatePoolFromStack(Pool pool, Map<String, Product> changedProducts, boolean force);
+    PoolUpdate updatePoolFromStack(Pool pool, Map<String, Product> changedProducts);
 
     /**
      * Updates the pools based on the entitlements in the specified stack.

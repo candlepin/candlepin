@@ -77,7 +77,6 @@ public class RefreshPoolsForProductJobTest {
         doReturn(mockRefresher).when(this.refresherFactory).getRefresher(any(), any());
         doReturn(mockRefresher).when(mockRefresher).add(any(Product.class));
         doReturn(mockRefresher).when(mockRefresher).setLazyCertificateRegeneration(anyBoolean());
-        doReturn(mockRefresher).when(mockRefresher).setForceUpdate(anyBoolean());
 
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
 

@@ -129,7 +129,7 @@ public class PoolRulesInstanceTest {
         List<Pool> existingPools = new LinkedList<>();
         existingPools.add(pool);
         List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
-            TestUtil.stubChangedProducts(p.getProduct()), false);
+            TestUtil.stubChangedProducts(p.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -154,7 +154,7 @@ public class PoolRulesInstanceTest {
         List<Pool> existingPools = new LinkedList<>();
         existingPools.add(pool);
         List<PoolUpdate> updates = poolRules.updatePools(primaryPool, existingPools, s.getQuantity(),
-            TestUtil.stubChangedProducts(primaryPool.getProduct()), false);
+            TestUtil.stubChangedProducts(primaryPool.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -180,7 +180,7 @@ public class PoolRulesInstanceTest {
         List<Pool> existingPools = new LinkedList<>();
         existingPools.add(pool);
         List<PoolUpdate> updates = poolRules.updatePools(primaryPool, existingPools,
-            primaryPool.getQuantity(), TestUtil.stubChangedProducts(primaryPool.getProduct()), false);
+            primaryPool.getQuantity(), TestUtil.stubChangedProducts(primaryPool.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
