@@ -11,5 +11,5 @@ jobs:
       - name: Run assignment of reviewer team
         uses: nikosmoum/auto-assign-reviewer-team@v0.5
         with:
-          githubToken: ${{ secrets.AutoAssignReviewerSecret }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
           teamName: 'candlepin-server'
