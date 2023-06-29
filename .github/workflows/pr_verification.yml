@@ -45,6 +45,7 @@ jobs:
         run: echo '$MATRIX_CONTEXT'
 
   bugzilla_check:
+    if: ${{ ! github.event.pull_request.head.repo.fork }}
     name: bugzilla reference check
     runs-on: ubuntu-latest
     container:
@@ -163,7 +164,7 @@ jobs:
           fail-on-error: true
 
   sonarqube:
-    if: ${{ github.event.pull_request.head.repo.full_name == 'candlepin/candlepin' }}
+    if: ${{ ! github.event.pull_request.head.repo.fork }}
     needs: unit_tests
     name: sonarqube
     runs-on: ubuntu-latest
