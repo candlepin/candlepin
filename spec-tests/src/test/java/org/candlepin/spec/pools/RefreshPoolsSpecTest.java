@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.assertj.core.api.Assertions.from;
 import static org.assertj.core.api.InstanceOfAssertFactories.collection;
-import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -38,7 +37,6 @@ import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ProvidedProductDTO;
 import org.candlepin.dto.api.client.v1.SubscriptionDTO;
-import org.candlepin.resource.HostedTestApi;
 import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
 import org.candlepin.spec.bootstrap.client.ApiClient;
@@ -57,7 +55,6 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -68,7 +65,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @SpecTest
@@ -1715,140 +1711,17 @@ public class RefreshPoolsSpecTest {
             .containsExactlyInAnyOrder(provProd1.getUuid(), provProd2.getUuid(), provProd3.getUuid());
     }
 
-    @Test
-    @OnlyInHosted
-    public void shouldUpdateUnchangedDataWhenForced() {
-        HostedTestApi hostedApi = this.adminClient.hosted();
-
-        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
-
-        // create a bunch of data for upstream
-        ContentDTO content1 = hostedApi.createContent(Contents.random());
-        ContentDTO content2 = hostedApi.createContent(Contents.random());
-        ContentDTO content3 = hostedApi.createContent(Contents.random());
-        ContentDTO content4 = hostedApi.createContent(Contents.random());
-        ContentDTO content5 = hostedApi.createContent(Contents.random());
-
-        ProductDTO provProduct1 = Products.random()
-            .addProductContentItem(Contents.toProductContent(content1, true));
-        ProductDTO provProduct2 = Products.random()
-            .addProductContentItem(Contents.toProductContent(content2, true));
-        ProductDTO provProduct3 = Products.random()
-            .addProductContentItem(Contents.toProductContent(content3, true));
-        ProductDTO provProduct4 = Products.random()
-            .addProductContentItem(Contents.toProductContent(content4, true));
-        ProductDTO provProduct5 = Products.random()
-            .addProductContentItem(Contents.toProductContent(content5, true));
-
-        ProductDTO derivedProduct = Products.random()
-            .addProvidedProductsItem(provProduct1);
-
-        ProductDTO product1 = Products.random()
-            .addProvidedProductsItem(provProduct2)
-            .addProvidedProductsItem(provProduct3);
-
-        ProductDTO product2 = Products.random()
-            .derivedProduct(derivedProduct)
-            .addProvidedProductsItem(provProduct4)
-            .addProvidedProductsItem(provProduct5);
-
-        // register all the data upstream
-        hostedApi.createProduct(provProduct1);
-        hostedApi.createProduct(provProduct2);
-        hostedApi.createProduct(provProduct3);
-        hostedApi.createProduct(provProduct4);
-        hostedApi.createProduct(provProduct5);
-        hostedApi.createProduct(derivedProduct);
-        hostedApi.createProduct(product1);
-        hostedApi.createProduct(product2);
-        hostedApi.createSubscription(Subscriptions.random(owner, product1));
-        hostedApi.createSubscription(Subscriptions.random(owner, product2));
-
-        // Perform a refresh, and then fetch the initial refreshed state
-        this.refreshPools(this.adminClient, owner.getKey(), false);
-
-        // Fetch our list of products, content, and pools, and store them in maps for later comparison.
-        Map<String, ContentDTO> contentMap = this.adminClient.ownerContent()
-            .listOwnerContent(owner.getKey())
-            .stream()
-            .collect(Collectors.toMap(ContentDTO::getId, Function.identity()));
-
-        Map<String, ProductDTO> productMap = this.adminClient.ownerProducts()
-            .getProductsByOwner(owner.getKey(), List.of())
-            .stream()
-            .collect(Collectors.toMap(ProductDTO::getId, Function.identity()));
-
-        Map<String, PoolDTO> poolMap = this.adminClient.owners()
-            .listOwnerPools(owner.getKey())
-            .stream()
-            .collect(Collectors.toMap(PoolDTO::getId, Function.identity()));
-
-        // Refresh again, but with a forced update. We should end up with the same set of entities,
-        // but with new UUIDs and a newer updated timestamp, indicating they've been re-rolled even
-        // though nothing changed.
-        this.refreshPools(this.adminClient, owner.getKey(), true);
-
-        List<ContentDTO> contentList = this.adminClient.ownerContent().listOwnerContent(owner.getKey());
-        assertThat(contentList)
-            .isNotNull()
-            .hasSize(contentMap.size())
-            .allSatisfy(entity -> {
-                assertThat(contentMap)
-                    .containsKey(entity.getId())
-                    .extractingByKey(entity.getId())
-                    .doesNotReturn(entity.getUuid(), ContentDTO::getUuid)
-                    .extracting(ContentDTO::getUpdated, as(InstanceOfAssertFactories.OFFSET_DATE_TIME))
-                    .isBefore(entity.getUpdated());
-            });
-
-        List<ProductDTO> productList = this.adminClient.ownerProducts()
-            .getProductsByOwner(owner.getKey(), List.of());
-        assertThat(productList)
-            .isNotNull()
-            .hasSize(productMap.size())
-            .allSatisfy(entity -> {
-                assertThat(productMap)
-                    .containsKey(entity.getId())
-                    .extractingByKey(entity.getId())
-                    .doesNotReturn(entity.getUuid(), ProductDTO::getUuid)
-                    .extracting(ProductDTO::getUpdated, as(InstanceOfAssertFactories.OFFSET_DATE_TIME))
-                    .isBefore(entity.getUpdated());
-            });
-
-        List<PoolDTO> poolList = this.adminClient.owners().listOwnerPools(owner.getKey());
-        assertThat(poolList)
-            .isNotNull()
-            .hasSize(poolList.size())
-            .allSatisfy(entity -> {
-                assertThat(poolMap)
-                    .containsKey(entity.getId())
-                    .extractingByKey(entity.getId())
-                    .extracting(PoolDTO::getUpdated, as(InstanceOfAssertFactories.OFFSET_DATE_TIME))
-                    .isBefore(entity.getUpdated());
-            });
-    }
-
-    private AsyncJobStatusDTO refreshPools(ApiClient client, String ownerKey, boolean force) {
-        AsyncJobStatusDTO job = adminClient.owners().refreshPools(ownerKey, true, force);
-
-        // When running in standalone mode, the refresh pools op will still create the org when
-        // the "autoCreateOwner" flag is set, but it will not create the job to actually refresh.
-        // As a consequence of this design, this method will always send up the request and then
-        // perform the hosted-mode check afterward.
+    private AsyncJobStatusDTO refreshPools(ApiClient client, String ownerKey) {
+        AsyncJobStatusDTO job = adminClient.owners().refreshPools(ownerKey, true);
         if (!CandlepinMode.isHosted()) {
             return null;
         }
 
         assertNotNull(job);
-
         job = adminClient.jobs().waitForJob(job);
-        assertThatJob(job).isFinished();
+        assertEquals("FINISHED", job.getState());
 
         return job;
-    }
-
-    private AsyncJobStatusDTO refreshPools(ApiClient client, String ownerKey) {
-        return this.refreshPools(client, ownerKey, false);
     }
 
     private ProductDTO createProductWithContent() {

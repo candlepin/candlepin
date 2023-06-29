@@ -6438,14 +6438,6 @@ paths:
           schema:
             type: boolean
             default: false
-        - name: force
-          in: query
-          description: |
-            Specifies whether or not to perform a forced-update refresh, which will update all
-            refreshed entities, even in cases where an explicit change in data is not detected.
-          schema:
-            type: boolean
-            default: false
       responses:
         200:
           description: A successful operation

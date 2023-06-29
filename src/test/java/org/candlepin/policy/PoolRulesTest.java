@@ -18,7 +18,6 @@ import static org.candlepin.model.SourceSubscription.DERIVED_POOL_SUB_KEY;
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,7 +37,6 @@ import org.candlepin.config.DevConfig;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.Content;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
@@ -70,7 +68,6 @@ import org.mockito.quality.Strictness;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedList;
@@ -148,56 +145,6 @@ public class PoolRulesTest {
     }
 
     @Test
-    public void testUnchangedPoolIgnoredWhenNotForced() {
-        PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
-        Branding branding1 = new Branding(null, "8000", "Awesome OS Branded", "OS");
-        Branding branding2 = new Branding(null, "8001", "Awesome OS Branded 2", "OS");
-
-        Content content1 = TestUtil.createContent();
-        Content content2 = TestUtil.createContent();
-        Content content3 = TestUtil.createContent();
-        Content content4 = TestUtil.createContent();
-
-        Product provProd1 = TestUtil.createProduct();
-        provProd1.addContent(content1, true);
-        provProd1.setAttributes(Map.of("attr1", "val1", "attr2", "val2"));
-
-        Product provProd2 = TestUtil.createProduct();
-        provProd2.addContent(content2, false);
-        provProd2.setAttributes(Map.of("attrA", "valA", "attrB", "valB"));
-
-        Product provProd3 = TestUtil.createProduct();
-        provProd3.addContent(content3, true);
-        provProd3.setAttributes(Map.of("attr1", "val1", "attr2", "val2"));
-
-        Product provProd4 = TestUtil.createProduct();
-        provProd4.addContent(content4, false);
-        provProd4.setAttributes(Map.of("attrA", "valA", "attrB", "valB"));
-
-        Product derivedProduct = TestUtil.createProduct();
-        derivedProduct.addProvidedProduct(provProd3);
-        derivedProduct.addProvidedProduct(provProd4);
-        derivedProduct.setAttributes(Map.of("attr1", "val1", "attr2", "val2"));
-
-        Product product = TestUtil.createProduct();
-        product.setDerivedProduct(derivedProduct);
-        product.addProvidedProduct(provProd1);
-        product.addProvidedProduct(provProd2);
-        product.addBranding(branding1);
-        product.addBranding(branding2);
-        product.setAttributes(Map.of("attrX", "valX", "attrY", "valY"));
-
-        Pool existingPool = TestUtil.createPool(this.owner, TestUtil.createProduct());
-        Pool upstreamPool = this.clonePool(existingPool);
-
-        List<PoolUpdate> updates = poolRules.updatePools(upstreamPool, List.of(existingPool),
-            existingPool.getQuantity(), Map.of(), false);
-
-        assertNotNull(updates);
-        assertEquals(0, updates.size());
-    }
-
-    @Test
     public void providedProductsChanged() {
         PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
         // Pool with two provided products:
@@ -213,42 +160,14 @@ public class PoolRulesTest {
         p1.getProduct().getProvidedProducts().clear();
         p1.getProduct().addProvidedProduct(product3);
 
-        List<Pool> existingPools = new LinkedList<>();
-        existingPools.add(p1);
-        List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
-            TestUtil.stubChangedProducts(p.getProduct()), false);
+        List<PoolUpdate> updates = poolRules.updatePools(p, List.of(p1), p.getQuantity(),
+            TestUtil.stubChangedProducts(p.getProduct()));
         assertEquals(1, updates.size());
+
         PoolUpdate update = updates.get(0);
         assertTrue(update.getProductsChanged());
         assertFalse(update.getDatesChanged());
         assertFalse(update.getQuantityChanged());
-    }
-
-    @Test
-    public void testUnchangedProvidedProductsMarkedAsChangedWhenForced() {
-        PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
-        Product prov1 = TestUtil.createProduct();
-        Product prov2 = TestUtil.createProduct();
-
-        Product product = TestUtil.createProduct();
-        product.addProvidedProduct(prov1);
-        product.addProvidedProduct(prov2);
-
-        Pool existingPool = TestUtil.createPool(owner, product);
-        Pool upstreamPool = this.clonePool(existingPool);
-        Collection<Product> providedProducts = existingPool.getProduct().getProvidedProducts();
-
-        List<PoolUpdate> updates = poolRules.updatePools(upstreamPool, List.of(existingPool),
-            existingPool.getQuantity(), Map.of(), true);
-
-        assertNotNull(updates);
-        assertEquals(1, updates.size());
-
-        PoolUpdate update = updates.get(0);
-        assertNotNull(update);
-        assertTrue(update.getProductsChanged());
-        assertEquals(providedProducts, existingPool.getProduct().getProvidedProducts());
-        assertEquals(providedProducts, upstreamPool.getProduct().getProvidedProducts());
     }
 
     @Test
@@ -261,33 +180,14 @@ public class PoolRulesTest {
         p1.getProduct().setName("somethingelse");
 
         List<PoolUpdate> updates = poolRules.updatePools(p, List.of(p1), p.getQuantity(),
-            TestUtil.stubChangedProducts(p.getProduct()), false);
-
+            TestUtil.stubChangedProducts(p.getProduct()));
         assertEquals(1, updates.size());
+
         PoolUpdate update = updates.get(0);
         assertTrue(update.getProductsChanged());
         assertFalse(update.getDatesChanged());
         assertFalse(update.getQuantityChanged());
         assertEquals(p.getProduct().getName(), update.getPool().getProductName());
-    }
-
-    @Test
-    public void testUnchangedProductNameMarkedAsChangedWhenForced() {
-        PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
-        Pool existingPool = TestUtil.createPool(this.owner, TestUtil.createProduct());
-        Pool upstreamPool = this.clonePool(existingPool);
-        String productName = existingPool.getProduct().getName();
-
-        List<PoolUpdate> updates = poolRules.updatePools(upstreamPool, List.of(existingPool),
-            existingPool.getQuantity(), Map.of(), true);
-
-        assertNotNull(updates);
-        assertEquals(1, updates.size());
-
-        PoolUpdate update = updates.get(0);
-        assertTrue(update.getProductsChanged());
-        assertEquals(productName, existingPool.getProduct().getName());
-        assertEquals(productName, upstreamPool.getProduct().getName());
     }
 
     @Test
@@ -300,8 +200,8 @@ public class PoolRulesTest {
         p1.setEndDate(new Date());
 
         List<Pool> existingPools = List.of(p1);
-        List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
-            Collections.emptyMap(), false);
+        List<PoolUpdate> updates = poolRules.updatePools(p, List.of(p1), p.getQuantity(),
+            Collections.emptyMap());
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -309,28 +209,6 @@ public class PoolRulesTest {
         assertTrue(update.getDatesChanged());
         assertFalse(update.getQuantityChanged());
         assertEquals(p.getEndDate(), update.getPool().getEndDate());
-    }
-
-    @Test
-    public void testUnchangedDatesMarkedAsChangedWhenForced() {
-        PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
-        Pool existingPool = TestUtil.createPool(this.owner, TestUtil.createProduct());
-        Pool upstreamPool = this.clonePool(existingPool);
-        Date startDate = existingPool.getStartDate();
-        Date endDate = existingPool.getEndDate();
-
-        List<PoolUpdate> updates = poolRules.updatePools(upstreamPool, List.of(existingPool),
-            existingPool.getQuantity(), Map.of(), true);
-
-        assertNotNull(updates);
-        assertEquals(1, updates.size());
-
-        PoolUpdate update = updates.get(0);
-        assertTrue(update.getDatesChanged());
-        assertEquals(startDate, existingPool.getStartDate());
-        assertEquals(startDate, upstreamPool.getStartDate());
-        assertEquals(endDate, existingPool.getEndDate());
-        assertEquals(endDate, upstreamPool.getEndDate());
     }
 
     @Test
@@ -342,9 +220,8 @@ public class PoolRulesTest {
         Pool p1 = this.clonePool(p);
         p1.setQuantity(2000L);
 
-        List<Pool> existingPools = List.of(p1);
-        List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
-            Collections.emptyMap(), false);
+        List<PoolUpdate> updates = poolRules.updatePools(p, List.of(p1), p.getQuantity(),
+            Collections.emptyMap());
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -352,25 +229,6 @@ public class PoolRulesTest {
         assertFalse(update.getDatesChanged());
         assertTrue(update.getQuantityChanged());
         assertEquals(p.getQuantity(), update.getPool().getQuantity());
-    }
-
-    @Test
-    public void testUnchangedPoolQuantityMarkedAsChangedWhenForced() {
-        PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
-        Pool existingPool = TestUtil.createPool(this.owner, TestUtil.createProduct());
-        Pool upstreamPool = this.clonePool(existingPool);
-        Long quantity = existingPool.getQuantity();
-
-        List<PoolUpdate> updates = poolRules.updatePools(upstreamPool, List.of(existingPool),
-            existingPool.getQuantity(), Map.of(), true);
-
-        assertNotNull(updates);
-        assertEquals(1, updates.size());
-
-        PoolUpdate update = updates.get(0);
-        assertTrue(update.getQuantityChanged());
-        assertEquals(quantity, existingPool.getQuantity());
-        assertEquals(quantity, upstreamPool.getQuantity());
     }
 
     @Test
@@ -386,9 +244,8 @@ public class PoolRulesTest {
         p.getProduct().addBranding(b1);
         p.getProduct().addBranding(b2);
 
-        List<Pool> existingPools = Collections.singletonList(p1);
-        List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
-            TestUtil.stubChangedProducts(p.getProduct()), false);
+        List<PoolUpdate> updates = poolRules.updatePools(p, List.of(p1), p.getQuantity(),
+            TestUtil.stubChangedProducts(p.getProduct()));
 
         assertEquals(1, updates.size());
         PoolUpdate update = updates.get(0);
@@ -413,37 +270,10 @@ public class PoolRulesTest {
         // Copy the pool with the branding to begin with:
         Pool p1 = this.clonePool(p);
 
-        List<Pool> existingPools = Collections.singletonList(p1);
-        List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
-            Collections.emptyMap(), false);
+        List<PoolUpdate> updates = poolRules.updatePools(p, List.of(p1), p.getQuantity(),
+            Collections.emptyMap());
 
         assertEquals(0, updates.size());
-    }
-
-    @Test
-    public void testUnchangedProductBrandingMarkedAsChangedWhenForced() {
-        PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
-        Branding branding1 = new Branding(null, "8000", "Awesome OS Branded", "OS");
-        Branding branding2 = new Branding(null, "8001", "Awesome OS Branded 2", "OS");
-
-        Product product = TestUtil.createProduct();
-        product.addBranding(branding1);
-        product.addBranding(branding2);
-
-        Pool existingPool = TestUtil.createPool(this.owner, product);
-        Pool upstreamPool = this.clonePool(existingPool);
-        Collection<Branding> branding = product.getBranding();
-
-        List<PoolUpdate> updates = poolRules.updatePools(upstreamPool, List.of(existingPool),
-            existingPool.getQuantity(), Map.of(), true);
-
-        assertNotNull(updates);
-        assertEquals(1, updates.size());
-
-        PoolUpdate update = updates.get(0);
-        assertTrue(update.getProductsChanged());
-        assertEquals(branding, existingPool.getProduct().getBranding());
-        assertEquals(branding, upstreamPool.getProduct().getBranding());
     }
 
     @Test
@@ -459,10 +289,9 @@ public class PoolRulesTest {
         p1.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         p1.setQuantity(40L);
 
-        List<Pool> existingPools = List.of(p1);
-        List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(), null, false);
-
+        List<PoolUpdate> updates = poolRules.updatePools(p, List.of(p1), p.getQuantity(), null);
         assertEquals(1, updates.size());
+
         PoolUpdate update = updates.get(0);
         assertFalse(update.getProductsChanged());
         assertFalse(update.getDatesChanged());
@@ -470,63 +299,6 @@ public class PoolRulesTest {
         assertTrue(update.getQuantityChanged());
         assertEquals(50L, update.getPool().getQuantity());
     }
-
-    @Test
-    public void testUnchangedVirtOnlyQuantityMarkedAsChangedWhenForced() {
-        PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
-        Product product = TestUtil.createProduct();
-        product.setAttribute(Product.Attributes.VIRT_ONLY, "true");
-        product.setAttribute(Product.Attributes.VIRT_LIMIT, "5");
-
-        Pool existingPool = TestUtil.createPool(this.owner, product);
-        existingPool.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
-
-        Pool upstreamPool = this.clonePool(existingPool);
-        Long quantity = existingPool.getQuantity();
-
-        List<PoolUpdate> updates = poolRules.updatePools(upstreamPool, List.of(existingPool),
-            existingPool.getQuantity(), Map.of(), true);
-
-        assertNotNull(updates);
-        assertEquals(1, updates.size());
-
-        PoolUpdate update = updates.get(0);
-        assertTrue(update.getQuantityChanged());
-        assertEquals(quantity, existingPool.getQuantity());
-        assertEquals(quantity, upstreamPool.getQuantity());
-    }
-
-    @Test
-    public void testUnchangedOrderDetailsMarkedAsChangedWhenForced() {
-        PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
-        Pool existingPool = TestUtil.createPool(this.owner, TestUtil.createProduct());
-        existingPool.setAccountNumber("acc123");
-        existingPool.setContractNumber("con123");
-        existingPool.setOrderNumber("ord123");
-
-        Pool upstreamPool = this.clonePool(existingPool);
-
-        String accNumber = existingPool.getAccountNumber();
-        String conNumber = existingPool.getContractNumber();
-        String ordNumber = existingPool.getOrderNumber();
-
-        List<PoolUpdate> updates = poolRules.updatePools(upstreamPool, List.of(existingPool),
-            existingPool.getQuantity(), Map.of(), true);
-
-        assertNotNull(updates);
-        assertEquals(1, updates.size());
-
-        PoolUpdate update = updates.get(0);
-        assertTrue(update.getOrderChanged());
-
-        assertEquals(accNumber, existingPool.getAccountNumber());
-        assertEquals(conNumber, existingPool.getContractNumber());
-        assertEquals(ordNumber, existingPool.getOrderNumber());
-        assertEquals(accNumber, upstreamPool.getAccountNumber());
-        assertEquals(conNumber, upstreamPool.getContractNumber());
-        assertEquals(ordNumber, upstreamPool.getOrderNumber());
-    }
-
 
     @Test
     public void updatePoolSubProvidedProductsChanged() {
@@ -556,9 +328,8 @@ public class PoolRulesTest {
         Pool pool2 = this.clonePool(pool1)
             .setProduct(mktProduct2);
 
-        List<Pool> existingPools = Collections.singletonList(pool2);
-        List<PoolUpdate> updates = poolRules.updatePools(pool1, existingPools, pool1.getQuantity(),
-            TestUtil.stubChangedProducts(mktProduct1, subProduct1), false);
+        List<PoolUpdate> updates = poolRules.updatePools(pool1, List.of(pool2), pool1.getQuantity(),
+            TestUtil.stubChangedProducts(mktProduct1, subProduct1));
 
         assertEquals(1, updates.size());
         assertEquals(2, updates.get(0).getPool().getDerivedProduct().getProvidedProducts().size());
@@ -646,7 +417,7 @@ public class PoolRulesTest {
         // Now we update the sub and see if that unlimited pool gets adjusted:
         p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "10");
         List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
-            TestUtil.stubChangedProducts(p.getProduct()), false);
+            TestUtil.stubChangedProducts(p.getProduct()));
         assertEquals(2, updates.size());
 
         PoolUpdate virtUpdate = updates.get(1);
@@ -665,7 +436,7 @@ public class PoolRulesTest {
         // the unlimited pool gets adjusted and flagged for cleanup:
         p.setProduct(TestUtil.createProduct(p.getProduct().getId(), p.getProduct().getName()));
         List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
-            TestUtil.stubChangedProducts(p.getProduct()), false);
+            TestUtil.stubChangedProducts(p.getProduct()));
         assertEquals(2, updates.size());
 
         // Regular pool should be in a sane state:
@@ -696,7 +467,7 @@ public class PoolRulesTest {
         // the unlimited pool gets adjusted and flagged for cleanup:
         p.setProduct(TestUtil.createProduct(p.getProduct().getId(), p.getProduct().getName()));
         List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
-            TestUtil.stubChangedProducts(p.getProduct()), false);
+            TestUtil.stubChangedProducts(p.getProduct()));
         assertEquals(2, updates.size());
 
         // Regular pool should be in a sane state:
@@ -855,8 +626,8 @@ public class PoolRulesTest {
 
         p = createVirtLimitPool("virtLimitProduct", 10, 10);
         p.setQuantity(50L);
-        List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
-            Collections.emptyMap(), false);
+
+        List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(), Map.of());
         assertEquals(2, updates.size());
         physicalPool = updates.get(0).getPool();
         assertEquals(50L, physicalPool.getQuantity());
@@ -983,7 +754,7 @@ public class PoolRulesTest {
 
         p = createVirtOnlyPool("virtOnlyProduct", 20);
         List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
-            Collections.emptyMap(), false);
+            Collections.emptyMap());
         assertEquals(1, updates.size());
         Pool updated = updates.get(0).getPool();
         assertEquals(20L, updated.getQuantity());
@@ -1009,7 +780,7 @@ public class PoolRulesTest {
         pools.add(consumerSpecificPool);
 
         List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
-            Collections.emptyMap(), false);
+            Collections.emptyMap());
         assertEquals(0, updates.size());
     }
 
@@ -1035,7 +806,7 @@ public class PoolRulesTest {
 
         p.getProduct().setAttribute(Product.Attributes.VIRT_LIMIT, "40");
         List<PoolUpdate> updates = poolRules.updatePools(p, pools, p.getQuantity(),
-            TestUtil.stubChangedProducts(p.getProduct()), false);
+            TestUtil.stubChangedProducts(p.getProduct()));
         assertEquals(3, updates.size());
         Pool regular = updates.get(0).getPool();
         Pool unmappedSubPool = updates.get(1).getPool();
@@ -1057,11 +828,8 @@ public class PoolRulesTest {
         p1.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         p1.setQuantity(10L);
 
-        List<Pool> existingPools = new LinkedList<>();
-        existingPools.add(p1);
-
-        List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
-            Collections.emptyMap(), false);
+        List<PoolUpdate> updates = poolRules.updatePools(p, List.of(p1), p.getQuantity(),
+            Collections.emptyMap());
         assertEquals(0, updates.size());
     }
 
@@ -1077,12 +845,10 @@ public class PoolRulesTest {
         p1.setAttribute(Pool.Attributes.DERIVED_POOL, "true");
         p1.setQuantity(20L);
 
-        List<Pool> existingPools = new LinkedList<>();
-        existingPools.add(p1);
-        List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
-            Collections.emptyMap(), false);
-
+        List<PoolUpdate> updates = poolRules.updatePools(p, List.of(p1), p.getQuantity(),
+            Collections.emptyMap());
         assertEquals(1, updates.size());
+
         PoolUpdate update = updates.get(0);
         assertFalse(update.getProductsChanged());
         assertFalse(update.getDatesChanged());
@@ -1101,12 +867,10 @@ public class PoolRulesTest {
         p1.setQuantity(2000L);
         p1.setContractNumber("ABC");
 
-        List<Pool> existingPools = new LinkedList<>();
-        existingPools.add(p1);
-        List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
-            Collections.emptyMap(), false);
-
+        List<PoolUpdate> updates = poolRules.updatePools(p, List.of(p1), p.getQuantity(),
+            Collections.emptyMap());
         assertEquals(1, updates.size());
+
         PoolUpdate update = updates.get(0);
         assertTrue(update.getOrderChanged());
         assertEquals("123", update.getPool().getContractNumber());
@@ -1123,12 +887,10 @@ public class PoolRulesTest {
         p1.setQuantity(2000L);
         p1.setOrderNumber("ABC");
 
-        List<Pool> existingPools = new LinkedList<>();
-        existingPools.add(p1);
-        List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
-            Collections.emptyMap(), false);
-
+        List<PoolUpdate> updates = poolRules.updatePools(p, List.of(p1), p.getQuantity(),
+            Collections.emptyMap());
         assertEquals(1, updates.size());
+
         PoolUpdate update = updates.get(0);
         assertTrue(update.getOrderChanged());
         assertEquals("123", update.getPool().getOrderNumber());
@@ -1145,12 +907,10 @@ public class PoolRulesTest {
         p1.setQuantity(2000L);
         p1.setAccountNumber("ABC");
 
-        List<Pool> existingPools = new LinkedList<>();
-        existingPools.add(p1);
-        List<PoolUpdate> updates = poolRules.updatePools(p, existingPools, p.getQuantity(),
-            Collections.emptyMap(), false);
-
+        List<PoolUpdate> updates = poolRules.updatePools(p, List.of(p1), p.getQuantity(),
+            Collections.emptyMap());
         assertEquals(1, updates.size());
+
         PoolUpdate update = updates.get(0);
         assertTrue(update.getOrderChanged());
         assertEquals("123", update.getPool().getAccountNumber());
@@ -1168,8 +928,9 @@ public class PoolRulesTest {
         Product changed = p.getProduct();
         changed.setName("somethingelse");
 
-        List<PoolUpdate> updates = poolRules.updateFloatingPools(floatingPools,
-            TestUtil.stubChangedProducts(changed), false);
+        List<PoolUpdate> updates = poolRules.updatePools(floatingPools,
+            TestUtil.stubChangedProducts(changed));
+
         assertEquals(0, updates.size());
     }
 

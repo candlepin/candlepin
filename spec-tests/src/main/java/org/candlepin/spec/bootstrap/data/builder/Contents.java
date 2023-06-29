@@ -15,7 +15,6 @@
 package org.candlepin.spec.bootstrap.data.builder;
 
 import org.candlepin.dto.api.client.v1.ContentDTO;
-import org.candlepin.dto.api.client.v1.ProductContentDTO;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 import java.util.Collection;
@@ -109,28 +108,5 @@ public final class Contents {
         }
 
         return content.stream().collect(Collectors.toMap(ContentDTO::getId, Function.identity()));
-    }
-
-    /**
-     * Utility method to convert a content DTO to a ProductContentDTO instance for attaching to a
-     * product DTO. If the given content is null, this method returns null.
-     *
-     * @param content
-     *  the content instance to convert
-     *
-     * @param enabled
-     *  whether or not the enabled flag should be set on the generated product-content join object
-     *
-     * @return
-     *  a new ProductContentDTO containing the given content instance and enabled flag
-     */
-    public static ProductContentDTO toProductContent(ContentDTO content, boolean enabled) {
-        if (content == null) {
-            return null;
-        }
-
-        return new ProductContentDTO()
-            .content(content)
-            .enabled(enabled);
     }
 }

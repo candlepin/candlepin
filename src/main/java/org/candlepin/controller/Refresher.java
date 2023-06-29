@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.Set;
 
 
+
 public class Refresher {
     private static final Logger log = LoggerFactory.getLogger(Refresher.class);
 
@@ -45,7 +46,6 @@ public class Refresher {
     private final Map<String, Owner> owners = new HashMap<>();
     private final Set<Product> products = new HashSet<>();
     private boolean lazy;
-    private boolean force;
 
     Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
         ProductServiceAdapter prodAdapter, OwnerManager ownerManager) {
@@ -56,7 +56,6 @@ public class Refresher {
         this.ownerManager = Objects.requireNonNull(ownerManager);
 
         this.lazy = true;
-        this.force = false;
     }
 
     /**
@@ -71,21 +70,6 @@ public class Refresher {
      */
     public Refresher setLazyCertificateRegeneration(boolean lazy) {
         this.lazy = lazy;
-        return this;
-    }
-
-    /**
-     * Sets whether or not to perform a forced-update refresh, causing all entities to be fully
-     * updated, even when no changes in data is detected.
-     *
-     * @param force
-     *  whether or not perform a forced-update refresh
-     *
-     * @return
-     *  a reference to this refresher
-     */
-    public Refresher setForceUpdate(boolean force) {
-        this.force = force;
         return this;
     }
 
@@ -177,14 +161,11 @@ public class Refresher {
              * dirty, they will never get regenerated
              */
             Pool primaryPool = poolManager.convertToPrimaryPool(subscription);
-            poolManager.refreshPoolsForPrimaryPool(primaryPool, Collections.emptyMap(), true, this.lazy,
-                this.force);
+            poolManager.refreshPoolsForPrimaryPool(primaryPool, true, lazy, Collections.emptyMap());
         }
 
         for (Owner owner : this.owners.values()) {
-            poolManager.refreshPoolsWithRegeneration(this.subAdapter, this.prodAdapter, owner, this.lazy,
-                this.force);
-
+            poolManager.refreshPoolsWithRegeneration(this.subAdapter, this.prodAdapter, owner, this.lazy);
             poolManager.recalculatePoolQuantitiesForOwner(owner);
             ownerManager.updateRefreshDate(owner);
         }

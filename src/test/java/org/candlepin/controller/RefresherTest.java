@@ -16,7 +16,6 @@ package org.candlepin.controller;
 
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.anyMap;
 import static org.mockito.Mockito.doAnswer;
@@ -39,8 +38,6 @@ import org.candlepin.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -71,53 +68,20 @@ public class RefresherTest {
         prodAdapter = mock(ProductServiceAdapter.class);
         ownerManager = mock(OwnerManager.class);
 
-        refresher = new Refresher(poolManager, subAdapter, prodAdapter, ownerManager);
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"false", "true"})
-    public void testLazyCertFlagIsPassedThrough(boolean lazy) {
-        // this test is incredibly brittle and only verifies that the refresher delegates to its
-        // backing method properly
-
-        Owner owner = TestUtil.createOwner();
-
-        refresher.add(owner)
-            .setLazyCertificateRegeneration(lazy)
-            .add(owner)
-            .run();
-
-        verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(subAdapter), eq(prodAdapter), eq(owner),
-            eq(lazy), anyBoolean());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"false", "true"})
-    public void testForceFlagIsPassedThrough(boolean force) {
-        // this test is incredibly brittle and only verifies that the refresher delegates to its
-        // backing method properly
-
-        Owner owner = TestUtil.createOwner();
-
-        refresher.add(owner)
-            .setForceUpdate(force)
-            .add(owner)
-            .run();
-
-        verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(subAdapter), eq(prodAdapter), eq(owner),
-            anyBoolean(), eq(force));
+        refresher = new Refresher(poolManager, subAdapter, prodAdapter, ownerManager)
+            .setLazyCertificateRegeneration(false);
     }
 
     @Test
     public void testOwnerOnlyExaminedOnce() {
         Owner owner = TestUtil.createOwner();
 
-        refresher.add(owner)
-            .add(owner)
-            .run();
+        refresher.add(owner);
+        refresher.add(owner);
+        refresher.run();
 
-        verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(subAdapter), eq(prodAdapter),
-            eq(owner), anyBoolean(), anyBoolean());
+        verify(poolManager, times(1))
+            .refreshPoolsWithRegeneration(eq(subAdapter), eq(prodAdapter), eq(owner), eq(false));
     }
 
     @Test
@@ -134,9 +98,9 @@ public class RefresherTest {
     public void testProductOnlyExaminedOnce() {
         Product product = TestUtil.createProduct();
 
-        refresher.add(product)
-            .add(product)
-            .run();
+        refresher.add(product);
+        refresher.add(product);
+        refresher.run();
 
         verify(subAdapter, times(1)).getSubscriptionsByProductId(eq(product.getId()));
     }
@@ -163,14 +127,14 @@ public class RefresherTest {
 
         when(poolManager.getBySubscriptionId(owner, "subId")).thenReturn(pools);
 
-        refresher.add(owner)
-            .add(product)
-            .run();
+        refresher.add(owner);
+        refresher.add(product);
+        refresher.run();
 
-        verify(poolManager, times(1)).refreshPoolsWithRegeneration(eq(subAdapter), eq(prodAdapter), eq(owner),
-            anyBoolean(), anyBoolean());
+        verify(poolManager, times(1))
+            .refreshPoolsWithRegeneration(eq(subAdapter), eq(prodAdapter), eq(owner), eq(false));
         verify(poolManager, times(0)).updatePoolsForPrimaryPool(anyList(),
-            any(Pool.class), eq(pool.getQuantity()), eq(false), anyMap(), eq(false));
+            any(Pool.class), eq(pool.getQuantity()), eq(false), anyMap());
     }
 
     @Test
@@ -201,8 +165,8 @@ public class RefresherTest {
         refresher.add(product2);
         refresher.run();
 
-        verify(poolManager, times(1))
-            .refreshPoolsForPrimaryPool(eq(mainPool), anyMap(), eq(true), anyBoolean(), anyBoolean());
+        verify(poolManager, times(1)).refreshPoolsForPrimaryPool(eq(mainPool), eq(true), eq(false),
+            anyMap());
     }
 
     protected void mockAdapterSubs(String input, Collection<? extends SubscriptionInfo> output) {
