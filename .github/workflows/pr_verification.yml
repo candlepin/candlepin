@@ -134,7 +134,7 @@ jobs:
           fail-on-error: true
 
   sonarqube:
-    if: ${{ github.event.pull_request.head.repo.full_name == 'candlepin/candlepin' }}
+    if: ${{ ! github.event.pull_request.head.repo.fork && github.actor != 'dependabot[bot]' }}
     needs: unit_tests
     name: sonarqube
     runs-on: ubuntu-latest
@@ -187,7 +187,7 @@ jobs:
 
     steps:
       - name: Install packages
-        if: ${{ github.event.pull_request.head.repo.full_name == 'candlepin/candlepin' }}
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
         run: |
           sudo apt-get update
           sudo apt-get -y install \
@@ -198,7 +198,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Log in to the registry
-        if: ${{ github.event.pull_request.head.repo.full_name == 'candlepin/candlepin' }}
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
@@ -206,7 +206,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Candlepin image
-        if: ${{ github.event.pull_request.head.repo.full_name == 'candlepin/candlepin' }}
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
         id: build-image
         uses: redhat-actions/buildah-build@v2
         with:
@@ -215,7 +215,7 @@ jobs:
           containerfiles: ./.github/containers/Dockerfile
 
       - name: Push to registry
-        if: ${{ github.event.pull_request.head.repo.full_name == 'candlepin/candlepin' }}
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
         uses: redhat-actions/push-to-registry@v2
         with:
           image: ghcr.io/candlepin/gha_build
@@ -225,11 +225,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker Buildx
-        if: ${{ github.event.pull_request.head.repo.full_name != 'candlepin/candlepin' }}
+        if: ${{ github.event.pull_request.head.repo.fork }}
         uses: docker/setup-buildx-action@v2
 
       - name: Build and export
-        if: ${{ github.event.pull_request.head.repo.full_name != 'candlepin/candlepin' }}
+        if: ${{ github.event.pull_request.head.repo.fork }}
         uses: docker/build-push-action@v4
         with:
           file: ./.github/containers/Dockerfile
@@ -237,7 +237,7 @@ jobs:
           outputs: type=docker,dest=/tmp/gha_build.tar
 
       - name: Upload artifact
-        if: ${{ github.event.pull_request.head.repo.full_name != 'candlepin/candlepin' }}
+        if: ${{ github.event.pull_request.head.repo.fork }}
         uses: actions/upload-artifact@v3
         with:
           name: gha_build
@@ -278,7 +278,7 @@ jobs:
           sudo chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 
       - name: Log in to the registry
-        if: ${{ github.event.pull_request.head.repo.full_name == 'candlepin/candlepin' }}
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
@@ -286,23 +286,23 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Pull candlepin image
-        if: ${{ github.event.pull_request.head.repo.full_name == 'candlepin/candlepin' }}
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
         shell: bash
         run: docker image pull ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}
 
       - name: Set up Docker Buildx
-        if: ${{ github.event.pull_request.head.repo.full_name != 'candlepin/candlepin' }}
+        if: ${{ github.event.pull_request.head.repo.fork }}
         uses: docker/setup-buildx-action@v2
 
       - name: Download artifact
-        if: ${{ github.event.pull_request.head.repo.full_name != 'candlepin/candlepin' }}
+        if: ${{ github.event.pull_request.head.repo.fork }}
         uses: actions/download-artifact@v3
         with:
           name: gha_build
           path: /tmp
 
       - name: Load image
-        if: ${{ github.event.pull_request.head.repo.full_name != 'candlepin/candlepin' }}
+        if: ${{ github.event.pull_request.head.repo.fork }}
         run: docker load --input /tmp/gha_build.tar
 
       - if: matrix.mode == 'standalone'
