@@ -20,6 +20,13 @@ dependencies {
     for (pluginDependency in project.ext.plugins) {
         implementation pluginDependency
     }
+
+    // Fix for transitive dependency conflict between openapi and owasp
+    configurations.configureEach {
+        resolutionStrategy {
+            force 'org.yaml:snakeyaml:1.33'
+        }
+    }
 }
 
 gradlePlugin {
