@@ -24,7 +24,7 @@ dependencies {
     // Fix for transitive dependency conflict between openapi and owasp
     configurations.configureEach {
         resolutionStrategy {
-            force 'org.yaml:snakeyaml:1.33'
+            force 'org.yaml:snakeyaml:2.0'
         }
     }
 }
