@@ -51,9 +51,8 @@ BuildRequires: /usr/bin/pathfix.py
 
 Requires: java-11 >= 1:11.0.0
 Requires: wget
-## tomcatjss itself depends on jss and tomcat/pki-servlet-container/pki-servlet-engine
-## without having to worry about about the renaming of those packages.
-Requires: tomcatjss >= 7.2.1-7.1
+Requires: tomcat < 10
+Requires: jss
 Requires: javapackages-tools
 
 %description
