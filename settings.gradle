@@ -1,3 +1,19 @@
+plugins {
+    id "com.gradle.enterprise" version "3.13.3"
+}
+
+def runsOnCI = System.getenv("CI") == 'true'
+
+gradleEnterprise {
+    buildScan {
+        termsOfServiceUrl = "https://gradle.com/terms-of-service"
+        termsOfServiceAgree = "yes"
+
+        publishAlwaysIf(runsOnCI)
+    }
+}
+
 rootProject.name = "candlepin"
+
 include 'client'
 include 'spec-tests'

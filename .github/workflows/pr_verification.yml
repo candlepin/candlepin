@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 env:
+  CI: 'true'
   JAVA_DISTRIBUTION: 'temurin'
   JAVA_VERSION: '17'
 
