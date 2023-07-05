@@ -158,18 +158,18 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
     }
 
     /**
-     * Fetches a collection consisting of the content of the products specified by the given UUIDs.
-     * If the given products do not have any content or no products exist with the provided UUIDs,
-     * this method returns an empty collection.
+     * Fetches a set consisting of the content of the  products specified by the given UUIDs. If the
+     * given products do not have any content or no products exist with the provided UUIDs, this
+     * method returns an empty set.
      *
      * @param productUuids
      *  a collection of UUIDs of products for which to fetch children content
      *
      * @return
-     *  a collection consisting of the content of the products specified by the given UUIDs
+     *  a set consisting of the content of the products specified by the given UUIDs
      */
-    public Collection<Content> getChildrenContentOfProductsByUuids(Collection<String> productUuids) {
-        Map<String, Content> contentMap = new HashMap<>();
+    public Set<Content> getChildrenContentOfProductsByUuids(Collection<String> productUuids) {
+        Set<Content> output = new HashSet<>();
 
         if (productUuids != null && !productUuids.isEmpty()) {
             String jpql = "SELECT pc.content FROM Product p JOIN p.productContent pc " +
@@ -179,12 +179,10 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
                 .createQuery(jpql, Content.class);
 
             for (List<String> block : this.partition(productUuids)) {
-                query.setParameter("product_uuids", block)
-                    .getResultList()
-                    .forEach(entity -> contentMap.put(entity.getUuid(), entity));
+                output.addAll(query.setParameter("product_uuids", block).getResultList());
             }
         }
 
-        return contentMap.values();
+        return output;
     }
 }

@@ -52,7 +52,6 @@ import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.TransactionExecutionException;
-import org.candlepin.util.Util;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
@@ -109,21 +108,17 @@ public class RefreshWorkerTest {
             this.mockProductCurator, this.mockOwnerProductCurator, this.mockContentCurator,
             this.mockOwnerContentCurator);
 
-        // TODO: This is a pretty clear sign that we're using mocks incorrectly. Replace this with
-        // an actual database mock or test database
-        doAnswer(iom -> {
-            Product entity = iom.getArgument(0);
-            return entity.setUuid(Util.generateDbUUID());
-        }).when(this.mockProductCurator).create(Mockito.any(Product.class), anyBoolean());
+        doAnswer(returnsFirstArg())
+            .when(this.mockProductCurator)
+            .create(Mockito.any(Product.class), anyBoolean());
 
         doAnswer(returnsFirstArg())
             .when(this.mockOwnerProductCurator)
             .create(Mockito.any(OwnerProduct.class), anyBoolean());
 
-        doAnswer(iom -> {
-            Content entity = iom.getArgument(0);
-            return entity.setUuid(Util.generateDbUUID());
-        }).when(this.mockContentCurator).create(Mockito.any(Content.class), anyBoolean());
+        doAnswer(returnsFirstArg())
+            .when(this.mockContentCurator)
+            .create(Mockito.any(Content.class), anyBoolean());
 
         doAnswer(returnsFirstArg())
             .when(this.mockOwnerContentCurator)
@@ -1039,34 +1034,19 @@ public class RefreshWorkerTest {
         ProductInfo pinfo1 = this.mockProductInfo("pid-1", "product-1");
         ProductInfo pinfo2 = this.mockProductInfo("pid-2", "product-2");
         ProductInfo pinfo3 = this.mockProductInfo("pid-3a", "imported_product");
-        Product product1 = new Product()
-            .setUuid("product_uuid-1")
-            .setId("pid-1")
-            .setName("product-1");
-        Product product2 = new Product()
-            .setUuid("product_uuid-2")
-            .setId("pid-2")
-            .setName("product-2");
-        Product product3 = new Product()
-            .setUuid("product_uuid-3")
-            .setId("pid-3b")
-            .setName("existing_product");
+        Product product1 = new Product("pid-1", "product-1");
+        Product product2 = new Product("pid-2", "product-2");
+        Product product3 = new Product("pid-3b", "existing_product");
 
         ContentInfo cinfo1 = this.mockContentInfo("cid-1", "content-1");
         ContentInfo cinfo2 = this.mockContentInfo("cid-2", "content-2");
         ContentInfo cinfo3 = this.mockContentInfo("cid-3a", "imported_content");
-        Content content1 = new Content()
-            .setUuid("content_uuid-1")
-            .setId("cid-1")
-            .setName("content-1");
-        Content content2 = new Content()
-            .setUuid("content_uuid-2")
-            .setId("cid-2")
-            .setName("content-2");
-        Content content3 = new Content()
-            .setUuid("content_uuid-3")
-            .setId("cid-3b")
-            .setName("existing_content");
+        Content content1 = new Content("cid-1");
+        content1.setName("content-1");
+        Content content2 = new Content("cid-2");
+        content2.setName("content-2");
+        Content content3 = new Content("cid-3b");
+        content3.setName("existing_content");
 
         doReturn(Arrays.asList(product1, product2, product3)).when(this.mockOwnerProductCurator)
             .getProductsByOwner(eq(owner));
@@ -1201,6 +1181,45 @@ public class RefreshWorkerTest {
     // resultant state instead of probing for specific code paths.
 
     @Test
+    public void testRemapperInvokedOnDuplicateExistingProductReference() {
+        Owner owner = new Owner();
+
+        Product prod1 = new Product()
+            .setId("pid-1")
+            .setUuid("product1");
+        Product prod2 = new Product()
+            .setId("pid-2")
+            .setUuid("product2");
+
+        Product child1a = new Product()
+            .setId("child-1")
+            .setName("provided product v1")
+            .setUuid("child_product-v1");
+        Product child1b = new Product()
+            .setId("child-1")
+            .setName("provided product v2")
+            .setUuid("child_product-v2");
+
+        // Set these up as different versions of a provided product so we can trigger
+        // detection of two different versions of the same product ID
+        prod1.addProvidedProduct(child1a);
+        prod2.addProvidedProduct(child1b);
+
+        this.mockChildrenProductLookup(List.of(prod1, prod2));
+
+        doReturn(Arrays.asList(prod1, prod2, child1a, child1b)).when(this.mockOwnerProductCurator)
+            .getProductsByOwner(eq(owner));
+        doReturn(Collections.emptyList()).when(this.mockOwnerContentCurator)
+            .getContentByOwner(eq(owner));
+
+        RefreshWorker worker = this.buildRefreshWorker();
+        worker.execute(owner);
+
+        verify(mockOwnerProductCurator, times(1))
+            .rebuildOwnerProductMapping(eq(owner), Mockito.any(Map.class));
+    }
+
+    @Test
     public void testRemapperInvokedOnExtraneousExistingProductReference() {
         Owner owner = new Owner();
 
@@ -1234,6 +1253,45 @@ public class RefreshWorkerTest {
 
         verify(mockOwnerProductCurator, times(1))
             .rebuildOwnerProductMapping(eq(owner), Mockito.any(Map.class));
+    }
+
+    @Test
+    public void testRemapperInvokedOnDuplicateExistingContentReference() {
+        Owner owner = new Owner();
+
+        Product prod1 = new Product()
+            .setId("pid-1")
+            .setUuid("product1");
+        Product prod2 = new Product()
+            .setId("pid-2")
+            .setUuid("product2");
+
+        Content child1a = new Content()
+            .setId("cid-1")
+            .setUuid("content1v1")
+            .setName("content-1 v1");
+        Content child1b = new Content()
+            .setId("cid-1")
+            .setUuid("content1v2")
+            .setName("content-1 v2");
+
+        // Set these up as different versions of a provided product so we can trigger
+        // detection of two different versions of the same product ID
+        prod1.addContent(child1a, true);
+        prod2.addContent(child1b, true);
+
+        this.mockChildrenContentLookup(List.of(prod1, prod2));
+
+        doReturn(Arrays.asList(prod1, prod2)).when(this.mockOwnerProductCurator)
+            .getProductsByOwner(eq(owner));
+        doReturn(Arrays.asList(child1a, child1b)).when(this.mockOwnerContentCurator)
+            .getContentByOwner(eq(owner));
+
+        RefreshWorker worker = this.buildRefreshWorker();
+        worker.execute(owner);
+
+        verify(mockOwnerContentCurator, times(1))
+            .rebuildOwnerContentMapping(eq(owner), Mockito.any(Map.class));
     }
 
     @Test

@@ -29,7 +29,6 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.AttributeValidator;
 import org.candlepin.util.PropertyValidationException;
-import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,7 +41,6 @@ import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -829,7 +827,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         List<Product> products = List.of(product1, product2, product3, product4);
 
-        Collection<Product> expected = products.stream()
+        Set<Product> expected = products.stream()
             .flatMap(product -> product.getProvidedProducts().stream())
             .collect(Collectors.toSet());
 
@@ -837,10 +835,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             .map(Product::getUuid)
             .collect(Collectors.toList());
 
-        Collection<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
+        Set<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
         assertNotNull(output);
-        assertTrue(Util.collectionsAreEqual(expected, output),
-            String.format("Collections are not equal.\n  Expected: %s\n  Actual: %s", expected, output));
+        assertEquals(expected, output);
     }
 
     @Test
@@ -855,7 +852,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         List<Product> products = List.of(product1, product2, product3, product4);
 
-        Collection<Product> expected = products.stream()
+        Set<Product> expected = products.stream()
             .map(Product::getDerivedProduct)
             .filter(Objects::nonNull)
             .collect(Collectors.toSet());
@@ -864,10 +861,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
             .map(Product::getUuid)
             .collect(Collectors.toList());
 
-        Collection<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
+        Set<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
         assertNotNull(output);
-        assertTrue(Util.collectionsAreEqual(expected, output),
-            String.format("Collections are not equal.\n  Expected: %s\n  Actual: %s", expected, output));
+        assertEquals(expected, output);
     }
 
     @Test
@@ -882,7 +878,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         List<Product> products = List.of(product2, product3);
 
-        Collection<Product> expected = new HashSet<>();
+        Set<Product> expected = new HashSet<>();
 
         products.stream()
             .flatMap(product -> product.getProvidedProducts().stream())
@@ -895,10 +891,9 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         List<String> input = Arrays.asList(product2.getUuid(), "invalid", product3.getUuid(), null);
 
-        Collection<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
+        Set<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
         assertNotNull(output);
-        assertTrue(Util.collectionsAreEqual(expected, output),
-            String.format("Collections are not equal.\n  Expected: %s\n  Actual: %s", expected, output));
+        assertEquals(expected, output);
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
@@ -912,7 +907,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         this.createProduct("p3", "product_3", owner2);
         this.createProduct("p4", "product_4", owner2);
 
-        Collection<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
+        Set<Product> output = this.productCurator.getChildrenProductsOfProductsByUuids(input);
         assertNotNull(output);
         assertTrue(output.isEmpty());
     }

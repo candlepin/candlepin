@@ -547,10 +547,9 @@ public class PoolRulesTest {
         derivedProd.addProvidedProduct(derivedProvidedProd2);
 
         when(productCurator.getPoolProvidedProductsCached(p))
-            .thenReturn(new ArrayList<>(p.getProduct().getProvidedProducts()));
+            .thenReturn((Set<Product>) p.getProduct().getProvidedProducts());
         when(productCurator.getPoolDerivedProvidedProductsCached(p))
-            .thenReturn(new ArrayList<>(p.getDerivedProduct().getProvidedProducts()));
-
+            .thenReturn((Set<Product>) p.getDerivedProduct().getProvidedProducts());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
 
         // Should be virt_only pool for unmapped guests:
@@ -590,8 +589,7 @@ public class PoolRulesTest {
             .setUpstreamPoolId("upstream_pool_id");
 
         when(productCurator.getPoolDerivedProvidedProductsCached(p))
-            .thenReturn(new ArrayList<>(p.getDerivedProduct().getProvidedProducts()));
-
+            .thenReturn((Set<Product>) p.getDerivedProduct().getProvidedProducts());
         List<Pool> pools = poolRules.createAndEnrichPools(p, new LinkedList<>());
 
         // Should be virt_only pool for unmapped guests:

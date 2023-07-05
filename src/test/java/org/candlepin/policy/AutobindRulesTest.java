@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
@@ -3567,12 +3566,13 @@ public class AutobindRulesTest {
     }
 
     private List<Pool> createDerivedPool(String derivedEngPid) {
-        Product derivedProvidedProduct = TestUtil.createProduct(derivedEngPid, derivedEngPid);
+        Set<Product> derivedProvided = new HashSet<>();
+        derivedProvided.add(TestUtil.createProduct(derivedEngPid, derivedEngPid));
 
         Product derivedProduct = TestUtil.createProduct("derivedProd", "A derived test product");
         derivedProduct.setAttribute(Product.Attributes.STACKING_ID, "1");
         derivedProduct.setAttribute(Pool.Attributes.MULTI_ENTITLEMENT, "yes");
-        derivedProduct.setProvidedProducts(List.of(derivedProvidedProduct));
+        derivedProduct.setProvidedProducts(derivedProvided);
 
         Product product = TestUtil.createProduct(productId, "A test product");
         product.setUuid("FAKE_DB_ID");
@@ -3587,16 +3587,12 @@ public class AutobindRulesTest {
             .setProduct(product)
             .setQuantity(100L);
 
-        doAnswer(iom -> {
-            // Curator methods generally return mutable collections, so we can't use List.of without
-            // risking making this mock non-representative
-            List<Product> output = new ArrayList<>();
-            output.add(derivedProvidedProduct);
+        when(mockProductCurator.getPoolDerivedProvidedProductsCached(pool.getId()))
+            .thenReturn(derivedProvided);
 
-            return output;
-        }).when(this.mockProductCurator).getPoolDerivedProvidedProductsCached(eq(pool.getId()));
-
-        return List.of(pool);
+        List<Pool> pools = new LinkedList<>();
+        pools.add(pool);
+        return pools;
     }
 
     /*

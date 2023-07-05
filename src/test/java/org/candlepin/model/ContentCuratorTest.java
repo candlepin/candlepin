@@ -23,14 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
-import org.candlepin.util.Util;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -361,7 +359,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
         List<Product> products = List.of(product1, product2, product3, product4);
 
-        Collection<Content> expected = products.stream()
+        Set<Content> expected = products.stream()
             .flatMap(product -> product.getProductContent().stream())
             .map(ProductContent::getContent)
             .collect(Collectors.toSet());
@@ -370,10 +368,9 @@ public class ContentCuratorTest extends DatabaseTestFixture {
             .map(Product::getUuid)
             .collect(Collectors.toList());
 
-        Collection<Content> output = this.contentCurator.getChildrenContentOfProductsByUuids(input);
+        Set<Content> output = this.contentCurator.getChildrenContentOfProductsByUuids(input);
         assertNotNull(output);
-        assertTrue(Util.collectionsAreEqual(expected, output),
-            String.format("Collections are not equal.\n  Expected: %s\n  Actual: %s", expected, output));
+        assertEquals(expected, output);
     }
 
     @Test
@@ -388,17 +385,16 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
         List<Product> products = List.of(product2, product3);
 
-        Collection<Content> expected = products.stream()
+        Set<Content> expected = products.stream()
             .flatMap(product -> product.getProductContent().stream())
             .map(ProductContent::getContent)
             .collect(Collectors.toSet());
 
         List<String> input = Arrays.asList(product2.getUuid(), "invalid", product3.getUuid(), null);
 
-        Collection<Content> output = this.contentCurator.getChildrenContentOfProductsByUuids(input);
+        Set<Content> output = this.contentCurator.getChildrenContentOfProductsByUuids(input);
         assertNotNull(output);
-        assertTrue(Util.collectionsAreEqual(expected, output),
-            String.format("Collections are not equal.\n  Expected: %s\n  Actual: %s", expected, output));
+        assertEquals(expected, output);
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
@@ -413,7 +409,7 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         Product product3 = this.createProductWithContent("p3", 3, owner2);
         Product product4 = this.createProductWithContent("p4", 4, owner1, owner2);
 
-        Collection<Content> output = this.contentCurator.getChildrenContentOfProductsByUuids(input);
+        Set<Content> output = this.contentCurator.getChildrenContentOfProductsByUuids(input);
         assertNotNull(output);
         assertTrue(output.isEmpty());
     }
