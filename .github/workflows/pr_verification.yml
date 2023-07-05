@@ -381,7 +381,6 @@ jobs:
         shell: bash
         run: |
           echo "CANDLEPIN_IMAGE=ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}" >> ./.github/containers/.env
-          echo "SOURCE_LOCATION=${{ github.workspace }}" >> ./.github/containers/.env
           BRIDGE_NETWORK=$(docker network ls --filter=name=github_network_ --format="{{ .Name }}")
           echo "NETWORK=$BRIDGE_NETWORK" >> ./.github/containers/.env
           docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml --env-file ./.github/containers/.env up -d --wait
