@@ -90,18 +90,19 @@ public class CloudRegistrationResourceTest {
         this.mockConfig = mock(Configuration.class);
         this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
         this.mockCloudRegistrationAdapter = mock(CloudRegistrationAdapter.class);
-        this.mockOwnerCurator = mock(OwnerCurator.class);
         this.mockAnonCloudConsumerCurator = mock(AnonymousCloudConsumerCurator.class);
         this.mockPoolCurator = mock(PoolCurator.class);
         this.mockJobManager = mock(JobManager.class);
         this.mockTokenGenerator = mock(CloudAuthTokenGenerator.class);
+        this.mockTokenGenerator = mock(CloudAuthTokenGenerator.class);
+        this.mockOwnerCurator = mock(OwnerCurator.class);
 
         doReturn(true).when(mockConfig).getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
         this.principal = new UserPrincipal("test_user", null, false);
         ResteasyContext.pushContext(Principal.class, this.principal);
 
         cloudRegResource = new CloudRegistrationResource(this.mockConfig, this.i18n,
-            this.mockCloudRegistrationAdapter, this.mockOwnerCurator,
+            this.mockCloudRegistrationAdapter,
             this.mockAnonCloudConsumerCurator, this.mockPoolCurator, this.mockJobManager,
             this.mockTokenGenerator);
     }
@@ -116,9 +117,8 @@ public class CloudRegistrationResourceTest {
         doReturn(false).when(mockConfig).getBoolean(ConfigProperties.CLOUD_AUTHENTICATION);
 
         cloudRegResource = new CloudRegistrationResource(this.mockConfig, this.i18n,
-            this.mockCloudRegistrationAdapter, this.mockOwnerCurator,
-            this.mockAnonCloudConsumerCurator, this.mockPoolCurator, this.mockJobManager,
-            this.mockTokenGenerator);
+            this.mockCloudRegistrationAdapter, this.mockAnonCloudConsumerCurator, this.mockPoolCurator,
+            this.mockJobManager, this.mockTokenGenerator);
 
         assertThrows(NotImplementedException.class,
             () -> cloudRegResource.cloudAuthorize(new CloudRegistrationDTO(), 1));
@@ -315,7 +315,7 @@ public class CloudRegistrationResourceTest {
         AnonymousCloudConsumer anonConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId(accountId)
             .setCloudInstanceId("instanceId")
-            .setCloudProviderShortName(CloudProvider.AWS.shortName())
+            .setCloudProviderShortName(CloudProvider.AWS)
             .setProductIds(prodIds);
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
@@ -362,7 +362,7 @@ public class CloudRegistrationResourceTest {
         AnonymousCloudConsumer anonConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId(accountId)
             .setCloudInstanceId("instanceId")
-            .setCloudProviderShortName(CloudProvider.AWS.shortName())
+            .setCloudProviderShortName(CloudProvider.AWS)
             .setProductIds(Set.of(prodId));
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
@@ -406,7 +406,7 @@ public class CloudRegistrationResourceTest {
         AnonymousCloudConsumer anonConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId(accountId)
             .setCloudInstanceId("instanceId")
-            .setCloudProviderShortName(CloudProvider.AWS.shortName())
+            .setCloudProviderShortName(CloudProvider.AWS)
             .setProductIds(prodIds);
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
@@ -453,7 +453,7 @@ public class CloudRegistrationResourceTest {
         AnonymousCloudConsumer anonConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId(accountId)
             .setCloudInstanceId("instanceId")
-            .setCloudProviderShortName(CloudProvider.AWS.shortName())
+            .setCloudProviderShortName(CloudProvider.AWS)
             .setProductIds(Set.of(prodId));
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
@@ -501,7 +501,7 @@ public class CloudRegistrationResourceTest {
         AnonymousCloudConsumer anonConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId(accountId)
             .setCloudInstanceId(instanceId)
-            .setCloudProviderShortName(CloudProvider.AWS.shortName())
+            .setCloudProviderShortName(CloudProvider.AWS)
             .setProductIds(Set.of(prodId));
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).getByCloudInstanceId(instanceId);
 

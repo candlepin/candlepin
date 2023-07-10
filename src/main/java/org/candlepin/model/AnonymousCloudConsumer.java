@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.service.CloudProvider;
 import org.candlepin.util.Util;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -25,6 +26,8 @@ import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -56,8 +59,7 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     public static final int CLOUD_INSTANCE_ID_MAX_LENGTH = 170;
     /** Max length for a value in the cloud offering ID field */
     public static final int CLOUD_OFFERING_ID_MAX_LENGTH = 170;
-    /** Max length for a value in the cloud provider short name field */
-    public static final int CLOUD_PROVIDER_SHORT_NAME_MAX_LENGTH = 15;
+
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -82,8 +84,9 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     private String cloudOfferingId;
 
     @Column(name = "cloud_provider_short_name")
+    @Enumerated(EnumType.STRING)
     @NotNull
-    private String cloudProviderShortName;
+    private CloudProvider cloudProviderShortName;
 
     @Column(name = "product_ids")
     @NotNull
@@ -92,6 +95,9 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cont_acc_cert_id")
     private AnonymousContentAccessCertificate contentAccessCert;
+
+    @Column(name = "owner_key")
+    private String ownerKey;
 
     public AnonymousCloudConsumer() {
         this.uuid = Util.generateUUID();
@@ -231,7 +237,7 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     /**
      * @return the cloud provider short name for this anonymous cloud consumer
      */
-    public String getCloudProviderShortName() {
+    public CloudProvider getCloudProviderShortName() {
         return this.cloudProviderShortName;
     }
 
@@ -241,13 +247,9 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
      *
      * @return a reference to this AnonymousCloudConsumer instance
      */
-    public AnonymousCloudConsumer setCloudProviderShortName(String cloudProviderShortName) {
+    public AnonymousCloudConsumer setCloudProviderShortName(CloudProvider cloudProviderShortName) {
         if (cloudProviderShortName == null) {
             throw new IllegalArgumentException("cloudProviderShortName is null");
-        }
-
-        if (cloudProviderShortName.length() > CLOUD_PROVIDER_SHORT_NAME_MAX_LENGTH) {
-            throw new IllegalArgumentException("cloudProviderShortName exceeds the max length");
         }
 
         this.cloudProviderShortName = cloudProviderShortName;
@@ -310,6 +312,24 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
      */
     public AnonymousCloudConsumer setContentAccessCert(AnonymousContentAccessCertificate contentAccessCert) {
         this.contentAccessCert = contentAccessCert;
+        return this;
+    }
+
+    /**
+     * @return the owner key for this anonymous cloud consumer
+     */
+    public String getOwnerKey() {
+        return ownerKey;
+    }
+
+    /**
+     * @param ownerKey
+     *     the owner key from adapter for given anonymous consumer
+     *
+     * @return a reference to this AnonymousCloudConsumer instance
+     */
+    public AnonymousCloudConsumer setOwnerKey(String ownerKey) {
+        this.ownerKey = ownerKey;
         return this;
     }
 

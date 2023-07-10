@@ -75,6 +75,12 @@ public final class StatusCodeAssertions {
         return assertReturnCode(410, exception);
     }
 
+    public static AbstractThrowableAssert<?, ? extends Throwable> assertTooManyRequests(
+        ThrowableAssert.ThrowingCallable callable) {
+        ApiException exception = catchApiException(callable);
+        return assertReturnCode(429, exception);
+    }
+
     public static AbstractThrowableAssert<?, ? extends Throwable> assertUnavailable(
         ThrowableAssert.ThrowingCallable callable) {
         ApiException exception = catchApiException(callable);
