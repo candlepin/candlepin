@@ -14,12 +14,9 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventFactory;
@@ -38,6 +35,7 @@ import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverride;
 import org.candlepin.model.ConsumerCurator;
@@ -49,6 +47,7 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.policy.SystemPurposeComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceRules;
@@ -59,6 +58,7 @@ import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -160,6 +160,12 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
     private EnvironmentContentCurator environmentContentCurator;
     @Mock
     private EntitlementCertificateGenerator entCertGenerator;
+    @Mock
+    private CloudRegistrationAdapter cloudAdapter;
+    @Mock
+    private PoolCurator poolCurator;
+    @Mock
+    private AnonymousCloudConsumerCurator anonymousConsumerCurator;
 
     private Consumer consumer;
     private ContentOverrideValidator contentOverrideValidator;
@@ -218,7 +224,11 @@ public class ConsumerContentOverrideResourceTest extends DatabaseTestFixture {
             this.consumerContentOverrideCurator,
             this.entCertGenerator,
             this.poolService,
-            this.environmentContentCurator);
+            this.environmentContentCurator,
+            this.cloudAdapter,
+            this.poolCurator,
+            this.anonymousConsumerCurator
+        );
     }
 
     private List<ConsumerContentOverride> createOverrides(Consumer consumer, int offset, int count) {

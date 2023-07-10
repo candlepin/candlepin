@@ -20,11 +20,11 @@ import org.candlepin.service.exception.CloudRegistrationNotSupportedForOfferingE
 import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
 import org.candlepin.service.exception.CouldNotEntitleOrganizationException;
 import org.candlepin.service.exception.MalformedCloudRegistrationException;
+import org.candlepin.service.exception.OrgForCloudAccountNotCreatedYetException;
+import org.candlepin.service.exception.OrgForCloudAccountNotEntitledYetException;
 import org.candlepin.service.model.CloudAccountData;
 import org.candlepin.service.model.CloudAuthenticationResult;
 import org.candlepin.service.model.CloudRegistrationInfo;
-
-
 
 /**
  * The Cloud Registration Adapter provides the interface for verifying and resolving cloud
@@ -99,5 +99,29 @@ public interface CloudRegistrationAdapter {
         CloudProvider cloudProviderShortName, String ownerKey)
         throws CouldNotAcquireCloudAccountLockException, CouldNotEntitleOrganizationException,
             CloudAccountOrgMismatchException;
+
+    /**
+     * Verify that cloud account have organization and have entitlements
+     *
+     * @param cloudAccountID
+     *     Identifier for cloud account that needs access to Red Hat content
+     *
+     * @param cloudProviderShortName
+     *     Shortcut of the cloud provider from which the offering came
+     *
+     * @param cloudOfferingID
+     *     Identifier for a Red Hat cloud offering that the owner needs to be entitled for
+     *
+     * @throws OrgForCloudAccountNotCreatedYetException
+     *     Organization does not exist yet
+     *
+     * @throws OrgForCloudAccountNotEntitledYetException
+     *     Organization is not entitled yet
+     *
+     * @return key of the organization
+     */
+    String checkCloudAccountOrgIsReady(String cloudAccountID, CloudProvider cloudProviderShortName,
+        String cloudOfferingID) throws OrgForCloudAccountNotCreatedYetException,
+        OrgForCloudAccountNotEntitledYetException;
 
 }

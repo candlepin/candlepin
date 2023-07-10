@@ -40,6 +40,9 @@
             <column name="product_ids" type="TEXT">
                 <constraints nullable="false"/>
             </column>
+            <column name="owner_key" type="VARCHAR(250)">
+                <constraints nullable="true" />
+            </column>
         </createTable>
     </changeSet>
 

@@ -51,4 +51,10 @@ public @interface SecurityHole {
      */
     boolean activationKey() default false;
 
+    /**
+     * @return true if the method allows anonymous consumer principals (e.g.
+     * {@link AnonymousCloudConsumerPrincipal}).
+     */
+    boolean anonConsumer() default false;
+
 }

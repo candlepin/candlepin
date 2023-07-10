@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.AnonymousCloudConsumer;
+import org.candlepin.service.CloudProvider;
 
 import org.hibernate.criterion.Criterion;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,7 @@ public class AnonymousCloudConsumerPermissionTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName("shortName");
+            .setCloudProviderShortName(CloudProvider.AWS);
 
         AnonymousCloudConsumerPermission permission = new AnonymousCloudConsumerPermission(consumer);
 
@@ -78,7 +79,7 @@ public class AnonymousCloudConsumerPermissionTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName("shortName");
+            .setCloudProviderShortName(CloudProvider.AWS);
 
         AnonymousCloudConsumerPermission permission = new AnonymousCloudConsumerPermission(consumer);
 
@@ -93,7 +94,7 @@ public class AnonymousCloudConsumerPermissionTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName("shortName");
+            .setCloudProviderShortName(CloudProvider.AWS);
 
         AnonymousCloudConsumer consumer2 = new AnonymousCloudConsumer()
             .setId("id2")
@@ -101,7 +102,7 @@ public class AnonymousCloudConsumerPermissionTest {
             .setCloudAccountId("cloudAccountId2")
             .setCloudInstanceId("instanceId2")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName("shortName");
+            .setCloudProviderShortName(CloudProvider.AWS);
 
         AnonymousCloudConsumerPermission permission = new AnonymousCloudConsumerPermission(consumer1);
 
@@ -116,7 +117,7 @@ public class AnonymousCloudConsumerPermissionTest {
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
             .setProductIds(List.of("productId"))
-            .setCloudProviderShortName("shortName");
+            .setCloudProviderShortName(CloudProvider.AWS);
 
         AnonymousCloudConsumerPermission permission = new AnonymousCloudConsumerPermission(consumer);
 

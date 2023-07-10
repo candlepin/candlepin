@@ -74,6 +74,7 @@ import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
 import org.candlepin.model.AnonymousCloudConsumer;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AnonymousContentAccessCertificate;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
@@ -107,6 +108,7 @@ import org.candlepin.model.InvalidOrderKeyException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Release;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -131,6 +133,7 @@ import org.candlepin.resource.util.EnvironmentUpdates;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.util.KeyValueStringParser;
 import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -192,6 +195,7 @@ import javax.ws.rs.core.Response;
  * API Gateway for Consumers
  */
 public class ConsumerResource implements ConsumerApi {
+
     private static final Logger log = LoggerFactory.getLogger(ConsumerResource.class);
 
     /** The maximum number of consumers to return per list or find request */
@@ -236,6 +240,10 @@ public class ConsumerResource implements ConsumerApi {
     private final ContentOverrideValidator coValidator;
     private final ConsumerContentOverrideCurator ccoCurator;
     private final EntitlementCertificateGenerator entCertGenerator;
+    private final CloudRegistrationAdapter cloudAdapter;
+    private final PoolCurator poolCurator;
+    private final AnonymousCloudConsumerCurator anonymousConsumerCurator;
+
 
     private final EntitlementEnvironmentFilter entitlementEnvironmentFilter;
     private final Pattern consumerSystemNamePattern;
@@ -282,7 +290,10 @@ public class ConsumerResource implements ConsumerApi {
         ConsumerContentOverrideCurator ccoCurator,
         EntitlementCertificateGenerator entCertGenerator,
         PoolService poolService,
-        EnvironmentContentCurator environmentContentCurator) {
+        EnvironmentContentCurator environmentContentCurator,
+        CloudRegistrationAdapter cloudAdapter,
+        PoolCurator poolCurator,
+        AnonymousCloudConsumerCurator anonymousConsumerCurator) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
@@ -323,6 +334,9 @@ public class ConsumerResource implements ConsumerApi {
         this.ccoCurator = Objects.requireNonNull(ccoCurator);
         this.entCertGenerator = Objects.requireNonNull(entCertGenerator);
         this.poolService = Objects.requireNonNull(poolService);
+        this.cloudAdapter = Objects.requireNonNull(cloudAdapter);
+        this.poolCurator = Objects.requireNonNull(poolCurator);
+        this.anonymousConsumerCurator = Objects.requireNonNull(anonymousConsumerCurator);
 
         this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(
             entitlementCurator, environmentContentCurator);
@@ -901,7 +915,7 @@ public class ConsumerResource implements ConsumerApi {
 
     @Override
     @Transactional
-    @SecurityHole(activationKey = true)
+    @SecurityHole(activationKey = true, anonConsumer = true)
     public ConsumerDTO createConsumer(ConsumerDTO dto, String userName, String ownerKey,
         String activationKeys, Boolean identityCertCreation) {
 
@@ -938,6 +952,10 @@ public class ConsumerResource implements ConsumerApi {
 
         Consumer created = createConsumerFromDTO(dto, ctype, principal, userName, owner, activationKeys,
             identityCertCreation);
+        if (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal) {
+            // TODO: Revoke anonymous cert
+            anonymousConsumerCurator.delete(anonymPrincipal.getAnonymousCloudConsumer());
+        }
 
         return this.translator.translate(created, ConsumerDTO.class);
     }
@@ -1360,7 +1378,8 @@ public class ConsumerResource implements ConsumerApi {
         // If no owner was specified, try to assume based on which owners the principal has admin rights for.
         // If more than one, we have to error out.
 
-        if (ownerKey == null && !(principal instanceof UserPrincipal)) {
+        if (ownerKey == null && !(principal instanceof UserPrincipal) &&
+            !(principal instanceof AnonymousCloudConsumerPrincipal)) {
             // There's no resolution we can perform here.
             log.warn("Cannot determine organization with which to register client: {}", principal);
             String errmsg = i18n.tr("Client is not authorized to register with any organization");
@@ -1382,6 +1401,10 @@ public class ConsumerResource implements ConsumerApi {
             else {
                 ownerKey = ownerKeys.get(0);
             }
+        }
+
+        if (ownerKey == null && (principal instanceof AnonymousCloudConsumerPrincipal anonymPrincipal)) {
+            ownerKey = anonymPrincipal.getAnonymousCloudConsumer().getOwnerKey();
         }
 
         createOwnerIfNeeded(principal);

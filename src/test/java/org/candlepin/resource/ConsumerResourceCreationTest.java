@@ -14,18 +14,9 @@
  */
 package org.candlepin.resource;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyBoolean;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventFactory;
@@ -58,6 +49,7 @@ import org.candlepin.dto.api.server.v1.EnvironmentDTO;
 import org.candlepin.dto.api.server.v1.ReleaseVerDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerContentOverrideCurator;
@@ -75,6 +67,7 @@ import org.candlepin.model.IdentityCertificate;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.PermissionBlueprint;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
@@ -89,6 +82,7 @@ import org.candlepin.resource.util.ConsumerEnricher;
 import org.candlepin.resource.util.ConsumerTypeValidator;
 import org.candlepin.resource.util.GuestMigration;
 import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
@@ -157,8 +151,6 @@ public class ConsumerResourceCreationTest {
     @Mock
     protected EventSink sink;
     @Mock
-    protected EventFactory factory;
-    @Mock
     protected ActivationKeyCurator activationKeyCurator;
     @Mock
     protected ComplianceRules complianceRules;
@@ -206,6 +198,12 @@ public class ConsumerResourceCreationTest {
     private EntitlementCertificateGenerator entCertGenerator;
     @Mock
     private PoolService poolService;
+    @Mock
+    private PoolCurator poolCurator;
+    @Mock
+    private CloudRegistrationAdapter cloudRegistrationAdapter;
+    @Mock
+    private AnonymousCloudConsumerCurator anonymousConsumerCurator;
 
     protected ModelTranslator modelTranslator;
 
@@ -267,7 +265,12 @@ public class ConsumerResourceCreationTest {
             this.consumerContentOverrideCurator,
             this.entCertGenerator,
             this.poolService,
-            this.environmentContentCurator);
+            this.environmentContentCurator,
+            this.cloudRegistrationAdapter,
+            this.poolCurator,
+            this.anonymousConsumerCurator
+
+        );
 
         this.system = this.initConsumerType();
         this.mockConsumerType(this.system);
@@ -472,7 +475,7 @@ public class ConsumerResourceCreationTest {
     @Test
     public void oauthRegistrationSupported() {
         // Should be able to register successfully with as a trusted user principal:
-        Principal p = new TrustedUserPrincipal("anyuser");
+        Principal p = new TrustedUserPrincipal(USER);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
         resource.createConsumer(consumer, null, owner.getKey(), null, true);
