@@ -310,7 +310,9 @@ jobs:
         name: Add standalone env variable
         working-directory: ./.github/containers
         shell: bash
-        run: echo "CANDLEPIN_STANDALONE=true" > .env
+        run: |
+          echo "CANDLEPIN_STANDALONE=true" > .env
+          echo "CANDLEPIN_AUTH_CLOUD_ENABLE=false" >> .env
 
       - if: matrix.mode == 'hosted'
         name: Add hosted env variables
@@ -319,6 +321,7 @@ jobs:
         run: |
           echo "CANDLEPIN_STANDALONE=false" > .env
           echo "MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE=org.candlepin.hostedtest.AdapterOverrideModule" >> .env
+          echo "CANDLEPIN_AUTH_CLOUD_ENABLE=true" >> .env
 
       - name: Create Candlepin and database containers
         shell: bash
