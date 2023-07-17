@@ -23,7 +23,7 @@ PACKAGES=(
     jss
     mariadb
     openssl
-    pki-servlet-engine
+    tomcat
     postgresql
     procps
     python3-pip
