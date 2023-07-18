@@ -19,13 +19,11 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.AdditionalAnswers.returnsFirstArg;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.UserPrincipal;
-import org.candlepin.bind.PoolOperationCallback;
+import org.candlepin.bind.PoolOperations;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.PoolManager;
@@ -130,8 +128,7 @@ public class PoolRulesStackDerivedTest {
 
         when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock, ownerProductCuratorMock,
-            productCurator);
+        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
 
@@ -204,10 +201,9 @@ public class PoolRulesStackDerivedTest {
         entitlements.put(pool2.getId(), stackedEnts.get(0));
         Map<String, Map<String, String>> attributes = new HashMap<>();
         attributes.put(pool2.getId(), PoolHelper.getFlattenedAttributes(pool2));
-        when(poolManagerMock.createPools(anyList())).then(returnsFirstArg());
-        PoolOperationCallback poolOperationCallback = PoolHelper.createHostRestrictedPools(poolManagerMock,
-            consumer, reqPools, entitlements, attributes, productCurator);
-        stackDerivedPool = poolOperationCallback.getPoolCreates().get(0);
+        PoolOperations poolOperations = PoolHelper.createHostRestrictedPools(poolManagerMock,
+            consumer, reqPools, entitlements, attributes);
+        stackDerivedPool = poolOperations.creations().get(0);
 
         reqPools.clear();
         reqPools.add(pool4);
@@ -215,8 +211,9 @@ public class PoolRulesStackDerivedTest {
         entitlements.put(pool4.getId(), createEntFromPool(pool4));
         attributes.clear();
         attributes.put(pool4.getId(), PoolHelper.getFlattenedAttributes(pool4));
-        stackDerivedPool2 = PoolHelper.createHostRestrictedPools(poolManagerMock, consumer, reqPools,
-            entitlements, attributes, productCurator).getPoolCreates().get(0);
+        PoolOperations poolOperations1 = PoolHelper.createHostRestrictedPools(
+            poolManagerMock, consumer, reqPools, entitlements, attributes);
+        stackDerivedPool2 = poolOperations1.creations().get(0);
     }
 
     private static int lastPoolId = 1;

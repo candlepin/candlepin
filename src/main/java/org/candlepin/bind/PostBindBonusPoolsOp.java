@@ -41,21 +41,23 @@ import javax.inject.Inject;
  */
 public class PostBindBonusPoolsOp implements BindOperation {
 
-    private PoolManager poolManager;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private PoolCurator poolCurator;
-    private Enforcer enforcer;
+    private final PoolManager poolManager;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final PoolCurator poolCurator;
+    private final Enforcer enforcer;
+    private final PoolOpProcessor poolOpProcessor;
+    private final PoolOperations poolOperations = new PoolOperations();
     private List<Pool> subPoolsForStackIds = null;
-    PoolOperationCallback poolOperationCallback = new PoolOperationCallback();
 
     @Inject
     public PostBindBonusPoolsOp(PoolManager poolManager, ConsumerTypeCurator consumerTypeCurator,
-        PoolCurator poolCurator, Enforcer enforcer) {
+        PoolCurator poolCurator, Enforcer enforcer, PoolOpProcessor poolOpProcessor) {
 
         this.poolManager = poolManager;
         this.consumerTypeCurator = consumerTypeCurator;
         this.poolCurator = poolCurator;
         this.enforcer = enforcer;
+        this.poolOpProcessor = poolOpProcessor;
     }
 
     @Override
@@ -96,9 +98,8 @@ public class PostBindBonusPoolsOp implements BindOperation {
             subPoolsForStackIds = new ArrayList<>();
         }
 
-        poolOperationCallback.appendCallback(enforcer.postEntitlement(poolManager,
+        poolOperations.append(enforcer.postEntitlement(
             consumer,
-            context.getOwner(),
             entitlements,
             subPoolsForStackIds,
             false,
@@ -117,7 +118,8 @@ public class PostBindBonusPoolsOp implements BindOperation {
     public boolean execute(BindContext context) {
 
         poolCurator.mergeAll(subPoolsForStackIds, false);
-        poolOperationCallback.apply(poolManager);
+        this.poolOpProcessor.process(poolOperations);
+
         return true;
     }
 

@@ -14,22 +14,18 @@
  */
 package org.candlepin.policy.js.pool;
 
-import org.candlepin.bind.PoolOperationCallback;
+import org.candlepin.bind.PoolOperations;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceStack;
 import org.candlepin.model.SourceSubscription;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -42,7 +38,6 @@ import java.util.Map.Entry;
  * Post Entitlement Helper, and some attribute utility methods.
  */
 public class PoolHelper {
-    private static Logger log = LoggerFactory.getLogger(PoolHelper.class);
 
     private PoolHelper() {
         // Intentionally left empty
@@ -75,11 +70,11 @@ public class PoolHelper {
      * @param pools Pools these host restricted pools are being derived from.
      * @return pools the created pools
      */
-    public static PoolOperationCallback createHostRestrictedPools(PoolManager poolManager, Consumer consumer,
+    public static PoolOperations createHostRestrictedPools(PoolManager poolManager, Consumer consumer,
         List<Pool> pools, Map<String, Entitlement> sourceEntitlements,
-        Map<String, Map<String, String>> attributeMaps, ProductCurator productCurator) {
+        Map<String, Map<String, String>> attributeMaps) {
 
-        PoolOperationCallback poolOperationCallback = new PoolOperationCallback();
+        PoolOperations poolOperations = new PoolOperations();
         List<Pool> poolsToUpdateFromStack = new ArrayList<>();
         for (Pool pool : pools) {
             Product product = pool.getProduct();
@@ -89,6 +84,7 @@ public class PoolHelper {
 
             Pool consumerSpecificPool = null;
 
+            Entitlement entitlement = sourceEntitlements.get(pool.getId());
             if (derivedProduct == null) {
                 consumerSpecificPool = createPool(
                     product,
@@ -99,7 +95,7 @@ public class PoolHelper {
                     pool.getContractNumber(),
                     pool.getAccountNumber(),
                     pool.getOrderNumber(),
-                    sourceEntitlements.get(pool.getId()),
+                    entitlement,
                     consumer,
                     pool);
             }
@@ -116,7 +112,7 @@ public class PoolHelper {
                     pool.getContractNumber(),
                     pool.getAccountNumber(),
                     pool.getOrderNumber(),
-                    sourceEntitlements.get(pool.getId()),
+                    entitlement,
                     consumer,
                     pool);
             }
@@ -138,23 +134,23 @@ public class PoolHelper {
 
                 String subscriptionId = pool.getSubscriptionId();
                 if (subscriptionId != null && !subscriptionId.isEmpty()) {
-                    poolOperationCallback.createSourceSubscription(consumerSpecificPool, subscriptionId,
-                        sourceEntitlements.get(pool.getId()));
+                    consumerSpecificPool.setSourceSubscription(
+                        new SourceSubscription(subscriptionId, entitlement.getId()));
                 }
             }
-            poolOperationCallback.addPoolToCreate(consumerSpecificPool);
+            poolOperations.createPool(consumerSpecificPool);
         }
 
         if (CollectionUtils.isNotEmpty(poolsToUpdateFromStack)) {
             poolManager.updatePoolsFromStackWithoutDeletingStack(consumer, poolsToUpdateFromStack, null);
         }
 
-        return poolOperationCallback;
+        return poolOperations;
     }
 
     public static Pool clonePool(Pool sourcePool, Product product, String quantity,
-        Map<String, String> attributes, String subKey, OwnerProductCurator curator,
-        Entitlement sourceEntitlement, Consumer sourceConsumer, ProductCurator productCurator) {
+        Map<String, String> attributes, String subKey,
+        Entitlement sourceEntitlement, Consumer sourceConsumer) {
 
         Pool pool = createPool(product, sourcePool.getOwner(), quantity,
             sourcePool.getStartDate(), sourcePool.getEndDate(),

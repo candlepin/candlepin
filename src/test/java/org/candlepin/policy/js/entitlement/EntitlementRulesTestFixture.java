@@ -35,10 +35,8 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunner;
@@ -79,17 +77,13 @@ public class EntitlementRulesTestFixture {
     @Mock
     protected ComplianceStatus compliance;
     @Mock
-    protected PoolManager poolManagerMock;
+    protected PoolManager poolManager;
     @Mock
     protected EntitlementCurator entCurMock;
-    @Mock
-    protected OwnerProductCurator ownerProductCuratorMock;
     @Mock
     private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock
     private JsRunnerRequestCache cache;
-    @Mock
-    private ProductCurator productCurator;
     @Mock
     private OwnerCurator ownerCurator;
     @Mock
@@ -126,9 +120,9 @@ public class EntitlementRulesTestFixture {
             config,
             consumerCurator,
             consumerTypeCurator,
-            productCurator,
             new RulesObjectMapper(),
-            translator
+            translator,
+            poolManager
         );
 
         owner = TestUtil.createOwner();
@@ -140,8 +134,7 @@ public class EntitlementRulesTestFixture {
             .setOwner(owner)
             .setType(consumerType);
 
-        poolRules = new PoolRules(poolManagerMock, config, entCurMock, ownerProductCuratorMock,
-            productCurator);
+        poolRules = new PoolRules(poolManager, config, entCurMock);
     }
 
     protected ConsumerType mockConsumerType(ConsumerType ctype) {

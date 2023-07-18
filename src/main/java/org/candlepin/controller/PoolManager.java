@@ -36,14 +36,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- *
- */
+
 public interface PoolManager {
 
     Pool createPool(Pool p);
-
-    List<Pool> createPools(List<Pool> pools);
 
     /**
      * @param sub
@@ -135,8 +131,6 @@ public interface PoolManager {
     void revokeEntitlement(Entitlement entitlement);
 
     Pool setPoolQuantity(Pool pool, long set);
-
-    void setPoolQuantity(Map<Pool, Long> poolQuantities);
 
     void regenerateDirtyEntitlements(Consumer consumer);
 

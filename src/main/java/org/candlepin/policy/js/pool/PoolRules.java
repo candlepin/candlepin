@@ -23,11 +23,9 @@ import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.service.model.SubscriptionInfo;
 
@@ -64,18 +62,13 @@ public class PoolRules {
     private final PoolManager poolManager;
     private final Configuration config;
     private final EntitlementCurator entCurator;
-    private final OwnerProductCurator ownerProductCurator;
-    private final ProductCurator productCurator;
 
     @Inject
-    public PoolRules(PoolManager poolManager, Configuration config, EntitlementCurator entCurator,
-        OwnerProductCurator ownerProductCurator, ProductCurator productCurator) {
+    public PoolRules(PoolManager poolManager, Configuration config, EntitlementCurator entCurator) {
 
         this.poolManager = Objects.requireNonNull(poolManager);
         this.config = Objects.requireNonNull(config);
         this.entCurator = Objects.requireNonNull(entCurator);
-        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
-        this.productCurator = Objects.requireNonNull(productCurator);
     }
 
     private long calculateQuantity(long quantity, Product product, String upstreamPoolId) {
@@ -214,7 +207,7 @@ public class PoolRules {
             // Using derived here because only one derived pool is created for
             // this subscription
             Pool bonusPool = PoolHelper.clonePool(primaryPool, sku, virtQuantity, virtAttributes,
-                DERIVED_POOL_SUB_KEY, ownerProductCurator, null, null, productCurator);
+                DERIVED_POOL_SUB_KEY, null, null);
 
             log.info("Creating new derived pool: {}", bonusPool);
             return bonusPool;

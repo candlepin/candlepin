@@ -1111,7 +1111,7 @@ public class PoolRulesTest {
     }
 
     private PoolRules createRules(Configuration config) {
-        return new PoolRules(poolManager, config, entitlementCurator, ownerProdCurator, productCurator);
+        return new PoolRules(poolManager, config, entitlementCurator);
     }
 
     /**

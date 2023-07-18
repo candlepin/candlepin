@@ -17,13 +17,12 @@ package org.candlepin.policy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.ProductManager;
+import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;
@@ -31,10 +30,8 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.model.OwnerProductCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunner;
@@ -53,60 +50,68 @@ import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.inject.Inject;
 
+
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class EnforcerTest extends DatabaseTestFixture {
-    @Inject private I18n i18n;
+    @Inject
+    private I18n i18n;
 
-    @Mock private RulesCurator rulesCurator;
-    @Mock private Configuration config;
-    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
-    @Mock private JsRunnerRequestCache cache;
-    @Mock private ProductCurator mockProductCurator;
-    @Mock private OwnerCurator mockOwnerCurator;
-    @Mock private OwnerProductCurator mockOwnerProductCurator;
-    @Mock private EnvironmentCurator mockEnvironmentCurator;
-    @Mock private ProductManager mockProductManager;
+    @Mock
+    private RulesCurator rulesCurator;
+    @Mock
+    private Configuration config;
+    @Mock
+    private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock
+    private JsRunnerRequestCache cache;
+    @Mock
+    private OwnerCurator mockOwnerCurator;
+    @Mock
+    private EnvironmentCurator mockEnvironmentCurator;
+    @Mock
+    private PoolManager poolManager;
 
-    @Inject private ModelTranslator translator;
+    @Inject
+    private ModelTranslator translator;
     private Enforcer enforcer;
     private Owner owner;
-    private Consumer consumer;
 
     private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
 
     @BeforeEach
     public void createEnforcer() throws Exception {
-        MockitoAnnotations.initMocks(this);
-
-        when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
+        when(config.getInt(ConfigProperties.PRODUCT_CACHE_MAX)).thenReturn(100);
 
         owner = createOwner();
         ownerCurator.create(owner);
 
-        consumer = this.createConsumer(owner);
+        Consumer consumer = this.createConsumer(owner);
 
         BufferedReader reader = new BufferedReader(
             new InputStreamReader(getClass().getResourceAsStream("/rules/test-rules.js")));
         StringBuilder builder = new StringBuilder();
         String line = null;
         while ((line = reader.readLine()) != null) {
-            builder.append(line + "\n");
+            builder.append(line).append("\n");
         }
         reader.close();
 
@@ -122,17 +127,15 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         enforcer = new EntitlementRules(
             new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, consumerTypeCurator,
-            mockProductCurator, new RulesObjectMapper(), translator);
+            new RulesObjectMapper(), translator, poolManager);
     }
 
     @Test
     public void shouldParseValidMapping() {
-        Rule func1rule = new EntitlementRules.Rule(
-            "func1", 1, new HashSet<String>() { { add("attr1"); add("attr2"); add("attr3"); } });
-        assertEquals(func1rule,
-            ((EntitlementRules) enforcer).parseRule("func1:1:attr1:attr2:attr3"));
+        Rule func1rule = new EntitlementRules.Rule("func1", 1, Set.of("attr1", "attr2", "attr3"));
+        assertEquals(func1rule, ((EntitlementRules) enforcer).parseRule("func1:1:attr1:attr2:attr3"));
 
-        assertEquals(new EntitlementRules.Rule("func3", 3, new HashSet<String>() { { add("attr4"); } }),
+        assertEquals(new EntitlementRules.Rule("func3", 3, Set.of("attr4")),
             ((EntitlementRules) enforcer).parseRule("func3:3:attr4"));
     }
 
@@ -168,56 +171,41 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void shouldSelectAllRulesMappedToSingleAttribute() {
-        Map<String, Set<EntitlementRules.Rule>> rules =
-            new HashMap<String, Set<EntitlementRules.Rule>>() {
-                {
-                    put("attr1", rules(rule("func5", 5, "attr1"), rule("func1", 2,
-                        "attr1")));
-                    put("attr3", rules(rule("func3", 2, "attr3")));
-                }
-            };
+        Map<String, Set<EntitlementRules.Rule>> rules = Map.of(
+            "attr1", rules(rule("func5", 5, "attr1"), rule("func1", 2, "attr1")),
+            "attr3", rules(rule("func3", 2, "attr3"))
+        );
 
         List<EntitlementRules.Rule> orderedAndFilteredRules = ((EntitlementRules) enforcer)
-            .rulesForAttributes(new HashSet<String>() { { add("attr1"); } }, rules);
+            .rulesForAttributes(Set.of("attr1"), rules);
 
-        assertEquals(
-            new LinkedList<EntitlementRules.Rule>() {
-                {
-                    add(rule("func5", 5, "attr1"));
-                    add(rule("func1", 2, "attr1"));
-                    add(rule("global", 0, new String[0]));
-                }
-            },
+        assertEquals(List.of(
+            rule("func5", 5, "attr1"),
+            rule("func1", 2, "attr1"),
+            rule("global", 0)),
             orderedAndFilteredRules
         );
     }
 
     @Test
     public void shouldSelectAllRulesMappedToMultipleAttributes() {
-        Map<String, Set<EntitlementRules.Rule>> rules = new HashMap<String, Set<EntitlementRules.Rule>>() {
-            {
-                put("attr1", rules(
-                    rule("func5", 5, "attr1", "attr2", "attr3"),
-                    rule("func1", 2, "attr1", "attr2"),
-                    rule("func6", 4, "attr1", "attr2", "attr3", "attr4"))
-                );
-                put("attr3", rules(rule("func3", 3, "attr3")));
-            }
-        };
+        Map<String, Set<EntitlementRules.Rule>> rules = Map.of(
+            "attr1", rules(
+            rule("func5", 5, "attr1", "attr2", "attr3"),
+            rule("func1", 2, "attr1", "attr2"),
+            rule("func6", 4, "attr1", "attr2", "attr3", "attr4")),
+            "attr3", rules(rule("func3", 3, "attr3"))
+        );
 
         List<EntitlementRules.Rule> orderedAndFilteredRules = ((EntitlementRules) enforcer)
-            .rulesForAttributes(new HashSet<String>() {
-                {
-                    add("attr1"); add("attr2"); add("attr3");
-                }}, rules);
+            .rulesForAttributes(Set.of("attr1", "attr2", "attr3"), rules);
 
-        assertEquals(new LinkedList<EntitlementRules.Rule>() {
-            {
-                add(rule("func5", 5, "attr1", "attr2", "attr3"));
-                add(rule("func3", 3, "attr3"));
-                add(rule("func1", 2, "attr1", "attr2"));
-                add(rule("global", 0, new String[0]));
-            }}, orderedAndFilteredRules);
+        assertEquals(List.of(
+            rule("func5", 5, "attr1", "attr2", "attr3"),
+            rule("func3", 3, "attr3"),
+            rule("func1", 2, "attr1", "attr2"),
+            rule("global", 0)
+        ), orderedAndFilteredRules);
     }
 
     // This exception should mention wrapping a MissingFactException
@@ -239,10 +227,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     }
 
     private EntitlementRules.Rule rule(String name, int priority, String... attrs) {
-        Set<String> attributes = new HashSet<>();
-        for (String attr : attrs) {
-            attributes.add(attr);
-        }
+        Set<String> attributes = new HashSet<>(Arrays.asList(attrs));
         return new EntitlementRules.Rule(name, priority, attributes);
     }
 
@@ -257,7 +242,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     private Pool entitlementPoolWithMembersAndExpiration(Owner theOwner, Product product,
         final int currentMembers, final int maxMembers, Date expiry) {
         Pool p = createPool(theOwner, product,
-            Long.valueOf(maxMembers), new Date(), expiry);
+            (long) maxMembers, new Date(), expiry);
 
         for (int i = 0; i < currentMembers; i++) {
             Consumer c = createConsumer(theOwner);

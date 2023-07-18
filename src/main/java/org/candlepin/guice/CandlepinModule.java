@@ -48,6 +48,7 @@ import org.candlepin.audit.NoopEventSinkImpl;
 import org.candlepin.auth.Principal;
 import org.candlepin.bind.BindChainFactory;
 import org.candlepin.bind.BindContextFactory;
+import org.candlepin.bind.PoolOpProcessor;
 import org.candlepin.bind.PreEntitlementRulesCheckOpFactory;
 import org.candlepin.cache.JCacheManagerProvider;
 import org.candlepin.config.ConfigProperties;
@@ -246,6 +247,7 @@ public class CandlepinModule extends AbstractModule {
         bind(HypervisorUpdateAction.class);
         bind(OwnerManager.class);
         bind(PoolRules.class);
+        bind(PoolOpProcessor.class);
         bind(CriteriaRules.class);
         bind(Entitler.class);
         bind(NotSupportedExceptionMapper.class);

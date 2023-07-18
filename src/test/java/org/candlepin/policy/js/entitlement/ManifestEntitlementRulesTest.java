@@ -76,7 +76,7 @@ public class ManifestEntitlementRulesTest extends EntitlementRulesTestFixture {
         entitlements.put("pool", e);
         Map<String, PoolQuantity> poolQuantityMap = new HashMap<>();
         poolQuantityMap.put("pool", new PoolQuantity(pool, 1));
-        enforcer.postEntitlement(pm, c, o, entitlements, null, false, poolQuantityMap);
+        enforcer.postEntitlement(c, entitlements, null, false, poolQuantityMap);
     }
 
     @Test

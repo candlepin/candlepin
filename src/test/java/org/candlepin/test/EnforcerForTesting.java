@@ -14,16 +14,13 @@
  */
 package org.candlepin.test;
 
-import org.candlepin.bind.PoolOperationCallback;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.bind.PoolOperations;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
-import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
-import org.candlepin.policy.js.entitlement.PreUnbindHelper;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -31,16 +28,13 @@ import java.util.List;
 import java.util.Map;
 
 
-/**
- * EnforcerForTesting
- */
 public class EnforcerForTesting implements Enforcer {
 
     @Override
-    public PoolOperationCallback postEntitlement(PoolManager manager, Consumer consumer, Owner owner,
+    public PoolOperations postEntitlement(Consumer consumer,
         Map<String, Entitlement> ent, List<Pool> subPoolsForStackIds, boolean isUpdate,
         Map<String, PoolQuantity> poolQuantityMap) {
-        return new PoolOperationCallback();
+        return new PoolOperations();
     }
 
     @Override
@@ -55,13 +49,8 @@ public class EnforcerForTesting implements Enforcer {
         return new ValidationResult();
     }
 
-    public PreUnbindHelper preUnbind(Consumer consumer, Pool entitlementPool) {
-        return new PreUnbindHelper(null);
-    }
-
     @Override
-    public void postUnbind(Consumer consumer, PoolManager poolManager,
-        Entitlement ent) {
+    public void postUnbind(Entitlement ent) {
     }
 
     @Override
