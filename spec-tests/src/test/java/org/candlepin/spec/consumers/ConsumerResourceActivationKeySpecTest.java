@@ -15,6 +15,7 @@
 package org.candlepin.spec.consumers;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -47,10 +48,17 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 @SpecTest
@@ -103,11 +111,8 @@ public class ConsumerResourceActivationKeySpecTest {
         int consumerCount = 3;
         int poolCount = 6;
         List<ConsumerDTO> consumers = Collections.synchronizedList(new ArrayList<>());
-        List<ConsumerDTO> reregConsumers = Collections.synchronizedList(new ArrayList<>());
-        List<Exception> exceptions = new ArrayList<>();
         List<PoolDTO> pools;
         List<Thread> threads = new ArrayList<>();
-        List<Thread> reThreads = new ArrayList<>();
 
         // create 6 pools and 2 activation keys
         ActivationKeyDTO key1 = ownerClient.createActivationKey(owner.getKey(),
@@ -131,6 +136,7 @@ public class ConsumerResourceActivationKeySpecTest {
         assertThat(pools).hasSize(poolCount);
 
         // register new systems
+        List<Exception> exceptions = new ArrayList<>();
         IntStream.range(0, consumerCount).forEach(entry -> {
             threads.add(new Thread(() -> {
                 try {
@@ -156,20 +162,23 @@ public class ConsumerResourceActivationKeySpecTest {
                 thread.join();
             }
         }
-        assertThat(exceptions).hasSize(0);
+        assertThat(exceptions).isEmpty();
         assertThat(consumers).hasSize(consumerCount);
         pools.forEach(pool -> assertThat(
             client.pools().getPool(pool.getId(), null, null).getConsumed()).isEqualTo(consumerCount));
 
         // force reregister
-        consumers.forEach(consumer -> {
-            reThreads.add(new Thread(() -> {
+//        List<ConsumerDTO> reregConsumers = Collections.synchronizedList(new ArrayList<>());
+        List<Callable<Result>> callables = consumers.stream()
+            .map(consumer -> (Callable<Result>) () -> {
+                List<ConsumerDTO> reregConsumers = Collections.synchronizedList(new ArrayList<>());
+                List<Exception> exceptions1 = new ArrayList<>();
                 try {
                     ConsumerDTO originalConsumer = consumerClient.getConsumer(consumer.getUuid());
                     consumerClient.deleteConsumer(consumer.getUuid());
                     ConsumerDTO reregConsumer = Consumers.random(owner)
                         .facts(Map.of("system.certificate_version", "3.3",
-                        "dmi.system.uuid", originalConsumer.getFacts().get("dmi.system.uuid")));
+                            "dmi.system.uuid", originalConsumer.getFacts().get("dmi.system.uuid")));
                     reregConsumer = consumerClient.createConsumer(reregConsumer, null,
                         owner.getKey(),
                         key2.getName() + "," + key1.getName(), true);
@@ -177,28 +186,53 @@ public class ConsumerResourceActivationKeySpecTest {
                     reregConsumer = consumerClient.getConsumer(reregConsumer.getUuid());
                     assertThat(reregConsumer).isNotNull();
                     assertThat(reregConsumer.getEntitlementCount()).isEqualTo(poolCount);
-                    reregConsumers.add(reregConsumer);
+                    return new Result(reregConsumer, null);
                 }
                 catch (Exception e) {
-                    exceptions.add(e);
+                    return new Result(null, e);
                 }
-            }));
-        });
-        reThreads.forEach(Thread::start);
-        for (Thread reThread : reThreads) {
-            while (reThread.isAlive()) {
-                reThread.join();
+            }).toList();
+
+
+        List<Future<Result>> results;
+        ExecutorService executor = null;
+        try {
+            executor = Executors.newFixedThreadPool(2);
+            results = executor.invokeAll(callables);
+        }
+        finally {
+            if (executor != null) {
+                executor.shutdown();
             }
         }
-        assertThat(exceptions).hasSize(0);
+
+        // Wait for the threads to finish
+        await().atMost(90, TimeUnit.SECONDS)
+            .until(() -> results.stream().allMatch(Future::isDone));
+
+        List<ConsumerDTO> reregConsumers = results.stream()
+            .map(future -> {
+                try {
+                    return future.get();
+                }
+                catch (InterruptedException | ExecutionException e) {
+                    throw new RuntimeException(e);
+                }
+            })
+            .map(Result::consumer)
+            .toList();
+
+        assertThat(exceptions).isEmpty();
         assertThat(reregConsumers).hasSize(consumerCount);
         pools.forEach(pool -> assertThat(
             client.pools().getPool(pool.getId(), null, null).getConsumed()).isEqualTo(consumerCount));
 
         reregConsumers.forEach(consumer -> consumerClient.deleteConsumer(consumer.getUuid()));
         pools.forEach(pool -> assertThat(
-            client.pools().getPool(pool.getId(), null, null).getConsumed()).isEqualTo(0));
+            client.pools().getPool(pool.getId(), null, null).getConsumed()).isZero());
     }
+
+    record Result(ConsumerDTO consumer, Exception exception) {}
 
     @Test
     public void shouldAllowConsumerToRegisterWithActivationKeyAuth() {
@@ -500,7 +534,7 @@ public class ConsumerResourceActivationKeySpecTest {
         ActivationKeyDTO key2 = ActivationKeys.random(owner).contentOverrides(Set.of(override2));
         key2 = ownerClient.createActivationKey(owner.getKey(), key2);
 
-        ConsumerDTO consumer1 =  consumerClient.createConsumer(Consumers.random(owner), null,
+        ConsumerDTO consumer1 = consumerClient.createConsumer(Consumers.random(owner), null,
             owner.getKey(), key1.getName() + "," + key2.getName(), true);
         assertThat(consumerClient.listConsumerContentOverrides(consumer1.getUuid()))
             .singleElement()
