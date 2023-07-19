@@ -67,10 +67,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
 import javax.persistence.PersistenceException;
-
-
 
 /**
  * Test suite for the PoolCurator object
@@ -79,8 +76,8 @@ import javax.persistence.PersistenceException;
 @TestInstance(Lifecycle.PER_CLASS)
 public class PoolCuratorTest extends DatabaseTestFixture {
 
-    @Inject private CandlepinPoolManager poolManager;
-    @Inject private UeberCertificateGenerator ueberCertGenerator;
+    private CandlepinPoolManager poolManager;
+    private UeberCertificateGenerator ueberCertGenerator;
 
     private Owner owner;
     private Product product;
@@ -93,6 +90,9 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
+        poolManager = injector.getInstance(CandlepinPoolManager.class);
+        ueberCertGenerator = injector.getInstance(UeberCertificateGenerator.class);
+
         owner = createOwner();
         ownerCurator.create(owner);
 
@@ -479,7 +479,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool2.setAttribute(Pool.Attributes.REQUIRES_HOST, "poolForSomeOtherHost");
         poolCurator.create(pool2);
 
-
         PageRequest req = new PageRequest();
         req.setPage(1);
         req.setPerPage(10);
@@ -495,18 +494,17 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     }
 
     /**
-     * When filtering pools by product/pool attributes, filters specified with
-     * the same attribute name are ORed, and different attributes are ANDed.
+     * When filtering pools by product/pool attributes, filters specified with the same attribute name
+     * are ORed, and different attributes are ANDed.
      *
      * For example applying the following filters:
      *
      * A1:foo, A1:bar, A2:biz
      *
-     * will result in matches on the values of:
-     * (A1 == foo OR A1 == bar) AND A2 == biz
+     * will result in matches on the values of: (A1 == foo OR A1 == bar) AND A2 == biz
      *
-     * Another important note is that product attributes are
-     * ORed with Pool attributes for each attribute specified.
+     * Another important note is that product attributes are ORed with Pool attributes for each
+     * attribute specified.
      */
     @Test
     public void testAttributeFilterLogic() {
@@ -629,8 +627,8 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertTrue(pool.getProduct().getProvidedProducts().size() > 0);
     }
 
-    // Note:  This simply tests that the multiplier is read and used in pool creation.
-    //        All of the null/negative multiplier test cases are in ProductTest
+    // Note: This simply tests that the multiplier is read and used in pool creation.
+    // All of the null/negative multiplier test cases are in ProductTest
     @Test
     public void testMultiplierCreation() {
         Product product = new Product("someProduct", "An Extremely Great Product", 10L);
@@ -887,7 +885,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         notOverConsumedPool.setConsumed(notOverConsumedPool.getConsumed() + 1);
         poolCurator.merge(notOverConsumedPool);
 
-
         Pool overConsumedPool = createPool(owner, product, 1L, TestUtil.createDate(2050, 3, 2),
             TestUtil.createDate(2055, 3, 2));
         poolCurator.create(overConsumedPool);
@@ -931,7 +928,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             .setSourceEntitlement(sourceEnt)
             .setSourceSubscription(new SourceSubscription(subid, DERIVED_POOL_SUB_KEY));
 
-
         poolCurator.create(derivedPool);
 
         Map<String, Entitlement> subMap = new HashMap<>();
@@ -944,7 +940,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         entitlementCurator.create(derivedEnt);
         derivedPool.setConsumed(derivedPool.getConsumed() + 3);
         poolCurator.merge(derivedPool);
-
 
         // Passing the source entitlement should find the oversubscribed derived pool:
         assertEquals(1, poolCurator.getOversubscribedBySubscriptionIds(owner.getId(), subMap).size());
@@ -1698,7 +1693,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertThat(results, Matchers.hasItems(p1Attributes, p2Attributes));
     }
 
-
     @Test
     public void testGetPoolsOrderedByProductNameAscending() {
         Owner owner1 = this.createOwner();
@@ -1736,7 +1730,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetPoolsOrderedByProductNameDescending() {
-        //Checking for Descending
+        // Checking for Descending
         Owner owner1 = this.createOwner();
         this.ownerCurator.create(owner1);
 
@@ -1781,7 +1775,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         product1.setDerivedProduct(dProduct1);
 
         Pool p1 = TestUtil.createPool(owner1, product1);
-
 
         Product product2 = this.generateProduct(owner2, "p2", "p2");
         product2.setProvidedProducts(this.generateProductCollection(owner2, "pp-b-", 3));
@@ -1986,9 +1979,10 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void testUpdateQuantityColumnsOnPool() {
         Consumer consumer = createMockConsumer(owner, true);
 
-        Pool pool = createPool(owner, product, 20L,
-            TestUtil.createDate(2010, 3, 2), TestUtil.createDate(
-            Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
+        Pool pool = createPool(owner, product)
+            .setQuantity(10L)
+            .setStartDate(TestUtil.createDate(2010, 3, 2))
+            .setEndDate(TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
         poolCurator.create(pool);
         Entitlement e = new Entitlement(pool, consumer, owner, 5);
         e.setId(Util.generateDbUUID());
@@ -2008,9 +2002,10 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     public void testUpdateQuantityColumnsOnPoolNotManifest() {
         Consumer consumer = this.createConsumer(owner);
 
-        Pool pool = createPool(owner, product, 20L,
-            TestUtil.createDate(2010, 3, 2), TestUtil.createDate(
-            Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
+        Pool pool = createPool(owner, product)
+            .setQuantity(20L)
+            .setStartDate(TestUtil.createDate(2010, 3, 2))
+            .setEndDate(TestUtil.createDate(Calendar.getInstance().get(Calendar.YEAR) + 1, 3, 2));
         poolCurator.create(pool);
         Entitlement e = new Entitlement(pool, consumer, owner, 5);
         e.setId(Util.generateDbUUID());
@@ -2322,8 +2317,7 @@ public class PoolCuratorTest extends DatabaseTestFixture {
             new Object[] { 3 * inBlockSize },
             new Object[] { 3 * inBlockSize + 1 },
             new Object[] { 3 * inBlockSize + 10 },
-            new Object[] { 3 * inBlockSize + halfBlockSize }
-        );
+            new Object[] { 3 * inBlockSize + halfBlockSize });
     }
 
     @ParameterizedTest
@@ -2421,7 +2415,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertSame(e, pool2.getSourceEntitlement());
     }
 
-
     @Test
     public void testClearPoolSourceEntitlementRefsWorksOnMultiplePools() {
         Date startDate = TestUtil.createDate(2010, 3, 2);
@@ -2445,7 +2438,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         Pool pool4 = createPool(owner, product, 20L, startDate, endDate);
         pool4.setSourceEntitlement(e);
         poolCurator.create(pool4);
-
 
         this.poolCurator.clearPoolSourceEntitlementRefs(Arrays.asList(pool2.getId(), pool3.getId()));
 
@@ -2553,7 +2545,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         pool6.setSourceStack(new SourceStack(consumer3, stackId3));
         pool6.setAttribute(Pool.Attributes.REQUIRES_HOST, consumer3.getUuid());
         poolCurator.create(pool6);
-
 
         Map<String, Set<String>> output;
 

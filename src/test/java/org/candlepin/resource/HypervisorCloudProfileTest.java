@@ -20,17 +20,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
-import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.server.v1.GuestIdDTO;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
-import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.GuestId;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
 import org.candlepin.test.DatabaseTestFixture;
@@ -44,25 +39,15 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.inject.Inject;
-
 /**
- * Test suite for the HypervisorResource and
- * GuestIdResource update methods. This validates the
+ * Test suite for the HypervisorResource and GuestIdResource update methods. This validates the
  * Subscription profile time-stamp updates
  */
 public class HypervisorCloudProfileTest extends DatabaseTestFixture {
 
     private static final String USER_NAME = "testing user";
 
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private GuestIdResource guestIdResource;
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private EnvironmentCurator environmentCurator;
-    @Inject private PermissionFactory permFactory;
-    @Inject private HypervisorResource hypervisorResource;
-
+    private GuestIdResource guestIdResource;
     private ConsumerType hypervisorType;
 
     private UserPrincipal principal;
@@ -73,6 +58,9 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
+        this.guestIdResource = injector.getInstance(GuestIdResource.class);
+        injector.getInstance(HypervisorResource.class);
+
         this.modelTranslator = new StandardTranslator(this.consumerTypeCurator, this.environmentCurator,
             this.ownerCurator);
 
@@ -82,7 +70,7 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
         ownerAdminRole.addUser(someuser);
         roleCurator.create(ownerAdminRole);
 
-        Collection<Permission> perms = permFactory.createPermissions(someuser,
+        Collection<Permission> perms = permissionFactory.createPermissions(someuser,
             ownerAdminRole.getPermissions());
 
         principal = new UserPrincipal(USER_NAME, perms, false);
@@ -148,7 +136,7 @@ public class HypervisorCloudProfileTest extends DatabaseTestFixture {
 
         assertNotEquals(beforeUpdateTimestamp, afterUpdateTimestamp);
 
-        //Updating the same Guests
+        // Updating the same Guests
         beforeUpdateTimestamp = consumerCurator.findByUuid(consumer.getUuid())
             .getRHCloudProfileModified();
 

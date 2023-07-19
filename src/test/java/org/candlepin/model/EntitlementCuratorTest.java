@@ -45,20 +45,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-
-
 /**
  * EntitlementCuratorTest
  */
 public class EntitlementCuratorTest extends DatabaseTestFixture {
-    @Inject private ModifierTestDataGenerator modifierData;
-
+    private ModifierTestDataGenerator modifierData;
     private Entitlement secondEntitlement;
     private Entitlement firstEntitlement;
     private EntitlementCertificate firstCertificate;
     private EntitlementCertificate secondCertificate;
-    //Owner for modifying tests
+    // Owner for modifying tests
     private Owner modifyOwner;
     private Owner owner;
     private Consumer consumer;
@@ -75,6 +71,8 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     @Override
     public void init() throws Exception {
         super.init();
+
+        modifierData = injector.getInstance(ModifierTestDataGenerator.class);
 
         modifyOwner = createOwner();
         modifierData.createTestData(modifyOwner);
@@ -133,7 +131,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
      * collection and at the same time it is cascading CREATE.
      * The most important lines in this method are:
      *     (1) ent.getPool().getEntitlements().remove(ent);
-     *     (2) Hibernate.initialize(ent.getPool().getEntitlements());
+     *     (2)Hibernate.initialize(ent.getPool().getEntitlements());
      * The problem is that remove() in (1) will not initialize the collection because
      * it is EXTRA LAZY. Then (2) will initialize without removed entitlement
      * Then when owning consumer c is being deleted, hibernate will recreate
@@ -419,8 +417,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
     }
 
     /*
-     * should be enough to test a single filtering criterion.
-     * other tests are covered in consumer tests
+     * should be enough to test a single filtering criterion. other tests are covered in consumer tests
      */
     @Test
     public void listByOwnerWithPagingAndFiltering() {
@@ -612,7 +609,6 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
         Entitlement e1 = createEntitlement(owner, consumer, p1Attributes,
             createEntitlementCertificate("key", "certificate"));
         entitlementCurator.create(e1);
-
 
         Entitlement e2 = createEntitlement(owner, consumer, p2Attributes,
             createEntitlementCertificate("key", "certificate"));
@@ -996,7 +992,7 @@ public class EntitlementCuratorTest extends DatabaseTestFixture {
 
         int count = this.entitlementCurator.markDependentEntitlementsDirty(
             Arrays.asList(reqPool1AEnt.getId(), reqPool2AEnt.getId(), reqPool1BEnt.getId(),
-            reqPool2BEnt.getId()));
+                reqPool2BEnt.getId()));
         assertEquals(2, count);
 
         this.entitlementCurator.refresh(reqPool1AEnt, reqPool2AEnt, depPoolAEnt, reqPool1BEnt, reqPool2BEnt,

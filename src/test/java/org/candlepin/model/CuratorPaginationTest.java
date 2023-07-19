@@ -30,23 +30,18 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
-
 /**
- * This class is used to test the pagination capabilities of the AbstractHibernateCurator.
- * Ideally, this class would create its own entity object and curator for that
- * entity object.  However, Hibernate makes it difficult (if not impossible) to
- * auto-detect entities that reside on a classpath different from the one containing
- * persistence.xml.  The solution would therefore be to create an EntityManagerFactory with
- * a custom Ejb3Configuration and use addAnnotatedClass to add the test entity object.
- * Unfortunately, since our entity manager is injected by Guice, that would require
- * significant work to create a Guice module to create the EntityManagerFactory using
- * our custom Ejb3Configuration.  Ultimately, the most expedient thing to do is
- * to reuse an entity object that Hibernate will pick up automatically.
+ * This class is used to test the pagination capabilities of the AbstractHibernateCurator. Ideally,
+ * this class would create its own entity object and curator for that entity object. However,
+ * Hibernate makes it difficult (if not impossible) to auto-detect entities that reside on a
+ * classpath different from the one containing persistence.xml. The solution would therefore be to
+ * create an EntityManagerFactory with a custom Ejb3Configuration and use addAnnotatedClass to add
+ * the test entity object. Unfortunately, since our entity manager is injected by Guice, that would
+ * require significant work to create a Guice module to create the EntityManagerFactory using our
+ * custom Ejb3Configuration. Ultimately, the most expedient thing to do is to reuse an entity object
+ * that Hibernate will pick up automatically.
  */
 public class CuratorPaginationTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-
     private Session session;
 
     @BeforeEach
@@ -101,8 +96,7 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
         pageRequest.setPage(1);
         pageRequest.setPerPage(2);
 
-        Criteria criteria = session.createCriteria(Owner.class).
-            add(Restrictions.gt("key", "5"));
+        Criteria criteria = session.createCriteria(Owner.class).add(Restrictions.gt("key", "5"));
 
         Page<List<Owner>> p = ownerCurator.listByCriteria(criteria, pageRequest);
         assertEquals(Integer.valueOf(4), p.getMaxRecords());
@@ -117,8 +111,7 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
 
     @Test
     public void testNoPagingWithCriteria() {
-        Criteria criteria = session.createCriteria(Owner.class).
-            add(Restrictions.gt("key", "5"));
+        Criteria criteria = session.createCriteria(Owner.class).add(Restrictions.gt("key", "5"));
 
         Page<List<Owner>> p = ownerCurator.listByCriteria(criteria, null);
         List<Owner> ownerList = p.getPageData();
@@ -147,12 +140,11 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
         pageRequest.setPage(1);
         pageRequest.setPerPage(2);
 
-        Criteria criteria = session.createCriteria(Owner.class).
-            add(Restrictions.gt("key", "5"));
+        Criteria criteria = session.createCriteria(Owner.class).add(Restrictions.gt("key", "5"));
 
-        /* Since we are telling listByCriteria that we are doing post-filtering
-         * it should return us all results, but ordered and sorted by what we
-         * provide
+        /*
+         * Since we are telling listByCriteria that we are doing post-filtering it should return us all
+         * results, but ordered and sorted by what we provide
          */
         Page<List<Owner>> p = ownerCurator.listByCriteria(criteria, pageRequest, true);
         assertEquals(Integer.valueOf(4), p.getMaxRecords());
@@ -173,9 +165,9 @@ public class CuratorPaginationTest extends DatabaseTestFixture {
         pageRequest.setPage(1);
         pageRequest.setPerPage(2);
 
-        /* Since we are telling listByCriteria that we are doing post-filtering
-         * it should return us all results, but ordered and sorted by what we
-         * provide
+        /*
+         * Since we are telling listByCriteria that we are doing post-filtering it should return us all
+         * results, but ordered and sorted by what we provide
          */
         Page<List<Owner>> p = ownerCurator.listAll(pageRequest, true);
         assertEquals(Integer.valueOf(10), p.getMaxRecords());

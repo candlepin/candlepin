@@ -37,6 +37,7 @@ import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.SubjectKeyIdentifierWriter;
 import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
+import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.util.OIDUtil;
 
 import com.google.inject.Guice;
@@ -84,20 +85,16 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Set;
 
-import javax.inject.Inject;
-
-
 public class JSSPKIUtilityTest {
 
     private Injector injector;
     private KeyPair subjectKeyPair;
     private Configuration config;
 
-    @Inject private CertificateReader certificateReader;
-    @Inject private SubjectKeyIdentifierWriter skiWriter;
+    private CertificateReader certificateReader;
+    private SubjectKeyIdentifierWriter skiWriter;
 
     private KeyPairDataCurator mockKeyPairDataCurator;
-
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -111,9 +108,10 @@ public class JSSPKIUtilityTest {
         this.injector = Guice.createInjector(
             new TestingModules.MockJpaModule(),
             new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule()
-        );
-        this.injector.injectMembers(this);
+            new TestingModules.ServletEnvironmentModule());
+
+        certificateReader = injector.getInstance(CertificateReaderForTesting.class);
+        skiWriter = injector.getInstance(SubjectKeyIdentifierWriter.class);
 
         this.mockKeyPairDataCurator = mock(KeyPairDataCurator.class);
         doAnswer(returnsFirstArg()).when(this.mockKeyPairDataCurator).merge(any());
@@ -157,13 +155,12 @@ public class JSSPKIUtilityTest {
             NetscapeCertType.sslClient | NetscapeCertType.smime);
 
         NetscapeCertType actual = new NetscapeCertType(
-            (DERBitString) bcExtensions.getExtension(MiscObjectIdentifiers.netscapeCertType).getParsedValue()
-        );
+            (DERBitString) bcExtensions.getExtension(MiscObjectIdentifiers.netscapeCertType)
+                .getParsedValue());
 
         assertArrayEquals(
             new JcaX509ExtensionUtils().createSubjectKeyIdentifier(subjectKeyPair.getPublic()).getEncoded(),
-            SubjectKeyIdentifier.fromExtensions(bcExtensions).getEncoded()
-        );
+            SubjectKeyIdentifier.fromExtensions(bcExtensions).getEncoded());
 
         CertificateReader reader = injector.getInstance(CertificateReader.class);
         PrivateKey key = reader.getCaKey();
@@ -173,8 +170,7 @@ public class JSSPKIUtilityTest {
         PublicKey pubKey = kf.generatePublic(pubKs);
         assertArrayEquals(
             new JcaX509ExtensionUtils().createAuthorityKeyIdentifier(pubKey).getEncoded(),
-            AuthorityKeyIdentifier.fromExtensions(bcExtensions).getEncoded()
-        );
+            AuthorityKeyIdentifier.fromExtensions(bcExtensions).getEncoded());
 
         assertEquals(expected, actual);
     }
@@ -186,13 +182,13 @@ public class JSSPKIUtilityTest {
         Date start = new Date();
         Date end = Date.from(LocalDate.now().plusDays(365).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
-        String extOid =
-            OIDUtil.REDHAT_OID + "." + OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY);
+        String extOid = OIDUtil.REDHAT_OID + "." +
+            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_TYPE_KEY);
         X509ExtensionWrapper typeExtension = new X509ExtensionWrapper(extOid, false, "OrgLevel");
         Set<X509ExtensionWrapper> exts = Set.of(typeExtension);
 
-        String byteExtOid =
-            OIDUtil.REDHAT_OID + "." + OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY);
+        String byteExtOid = OIDUtil.REDHAT_OID + "." +
+            OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY);
         byte[] someBytes = new byte[] { 0xd, 0xe, 0xf, 0xa, 0xc, 0xe, 0xa, 0xc, 0xe };
         X509ByteExtensionWrapper byteExtension = new X509ByteExtensionWrapper(byteExtOid, false, someBytes);
         Set<X509ByteExtensionWrapper> byteExtensions = Set.of(byteExtension);
@@ -202,8 +198,8 @@ public class JSSPKIUtilityTest {
 
         assertNotNull(cert.getExtensionValue(extOid));
 
-        ASN1OctetString value =
-            (ASN1OctetString) ASN1OctetString.fromByteArray(cert.getExtensionValue(extOid));
+        ASN1OctetString value = (ASN1OctetString) ASN1OctetString
+            .fromByteArray(cert.getExtensionValue(extOid));
         DERUTF8String actual = DERUTF8String.getInstance(value.getOctets());
         assertEquals("OrgLevel", actual.getString());
 

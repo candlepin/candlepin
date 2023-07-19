@@ -27,14 +27,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-
-
-
 public class EnvironmentCuratorTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private EnvironmentContentCurator envContentCurator;
-    @Inject private EnvironmentCurator envCurator;
 
     private Owner owner;
     private Environment environment;
@@ -42,25 +35,25 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
     @BeforeEach
     public void setUp() {
         this.owner = this.createOwner("test-owner", "Test Owner");
-        environment = envCurator.create(new Environment("env1", "Env 1", owner));
+        environment = environmentCurator.create(new Environment("env1", "Env 1", owner));
     }
 
     @Test
     public void create() {
-        assertEquals(1, envCurator.listAll().list().size());
-        Environment e = envCurator.get("env1");
+        assertEquals(1, environmentCurator.listAll().list().size());
+        Environment e = environmentCurator.get("env1");
         assertEquals(owner, e.getOwner());
     }
 
     @Test
     public void delete() {
-        envCurator.delete(environment);
-        assertEquals(0, envCurator.listAll().list().size());
+        environmentCurator.delete(environment);
+        assertEquals(0, environmentCurator.listAll().list().size());
     }
 
     @Test
     public void listForOwner() {
-        List<Environment> envs = envCurator.listForOwner(owner).list();
+        List<Environment> envs = environmentCurator.listForOwner(owner).list();
         assertEquals(1, envs.size());
         assertEquals(envs.get(0), environment);
     }
@@ -72,9 +65,9 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
             .setName("Another Env")
             .setOwner(owner);
 
-        this.envCurator.create(environment);
+        this.environmentCurator.create(environment);
 
-        List<Environment> envs = envCurator.listForOwnerByName(owner, "Another Env").list();
+        List<Environment> envs = environmentCurator.listForOwnerByName(owner, "Another Env").list();
         assertNotNull(envs);
         assertEquals(1, envs.size());
         assertEquals(environment, envs.get(0));
@@ -121,12 +114,12 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         Owner owner = this.createOwner("owner1");
         Environment environment = this.createEnvironment(owner,
             "SomeId", "fooBar", null, null, null);
-        String envName = this.envCurator.getEnvironmentIdByName(owner.getId(), environment.getName());
+        String envName = this.environmentCurator.getEnvironmentIdByName(owner.getId(), environment.getName());
 
         assertEquals("SomeId", envName);
 
-        String envNameWhenEnvIdNull = this.envCurator.getEnvironmentIdByName(owner.getId(), null);
-        String envNameWhenOwnerIdNull = this.envCurator
+        String envNameWhenEnvIdNull = this.environmentCurator.getEnvironmentIdByName(owner.getId(), null);
+        String envNameWhenOwnerIdNull = this.environmentCurator
             .getEnvironmentIdByName(null, environment.getName());
 
         assertNull(envNameWhenOwnerIdNull);
@@ -142,11 +135,9 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         Content content1 = this.createContent("c1", "c1", owner1);
         Content content2 = this.createContent("c3", "c3", owner2);
         Environment environment1 = this.createEnvironment(
-            owner1, "test_env-1", "test_env-1", null, null, List.of(content1)
-        );
+            owner1, "test_env-1", "test_env-1", null, null, List.of(content1));
         Environment environment2 = this.createEnvironment(
-            owner1, "test_env-2", "test_env-2", null, null, List.of(content2)
-        );
+            owner1, "test_env-2", "test_env-2", null, null, List.of(content2));
         consumer1.addEnvironment(environment1);
         consumer1.addEnvironment(environment2);
         consumer2.addEnvironment(environment1);
@@ -168,14 +159,11 @@ public class EnvironmentCuratorTest extends DatabaseTestFixture {
         Content content2 = this.createContent("c2", "c2", owner1);
         Content content3 = this.createContent("c3", "c3", owner1);
         Environment environment1 = this.createEnvironment(
-            owner1, "test_env-1", "test_env-1", null, null, List.of(content1)
-        );
+            owner1, "test_env-1", "test_env-1", null, null, List.of(content1));
         Environment environment2 = this.createEnvironment(
-            owner1, "test_env-2", "test_env-2", null, null, List.of(content2)
-        );
+            owner1, "test_env-2", "test_env-2", null, null, List.of(content2));
         Environment environment3 = this.createEnvironment(
-            owner1, "test_env-3", "test_env-3", null, null, List.of(content3)
-        );
+            owner1, "test_env-3", "test_env-3", null, null, List.of(content3));
         consumer1.addEnvironment(environment1);
         consumer1.addEnvironment(environment2);
         consumer1.addEnvironment(environment3);

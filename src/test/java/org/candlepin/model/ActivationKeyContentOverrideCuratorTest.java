@@ -22,8 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
-import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
-import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -31,18 +29,12 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 /**
  * ActivationKeyContentOverrideCuratorTest
  *
  * Slightly modified from ConsumerContentOverrideCuratorTest
  */
 public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private ActivationKeyCurator activationKeyCurator;
-    @Inject private ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
 
     private Owner owner;
     private ConsumerType ct;
@@ -55,7 +47,6 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
             .setDisplayName("Test Owner");
 
         this.owner = ownerCurator.create(this.owner);
-
 
         ct = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ct = consumerTypeCurator.create(ct);
@@ -84,8 +75,8 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
         cco.setValue("value-update");
         activationKeyContentOverrideCurator.merge(cco);
 
-        ActivationKeyContentOverride cco2 =
-            activationKeyContentOverrideCurator.retrieve(key, "test-content", "name");
+        ActivationKeyContentOverride cco2 = activationKeyContentOverrideCurator.retrieve(key, "test-content",
+            "name");
         assert (cco2 != null);
         assertEquals("value-update", cco2.getValue());
     }
@@ -168,8 +159,7 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
     public void testCreateOverrideForcesLowercaseName() {
         ActivationKeyContentOverride override = new ActivationKeyContentOverride(key,
             "test-repo", "GpGCheck", "1");
-        ActivationKeyContentOverride created =
-            this.activationKeyContentOverrideCurator.create(override);
+        ActivationKeyContentOverride created = this.activationKeyContentOverrideCurator.create(override);
         assertEquals("gpgcheck", created.getName());
     }
 
@@ -211,8 +201,8 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
     public void testRetrieveByNameIsCaseInsensitive() {
         activationKeyContentOverrideCurator.create(new ActivationKeyContentOverride(key,
             "test-repo", "gpgcheck", "1"));
-        ActivationKeyContentOverride found =
-            activationKeyContentOverrideCurator.retrieve(key, "test-repo", "GPGCheck");
+        ActivationKeyContentOverride found = activationKeyContentOverrideCurator.retrieve(key, "test-repo",
+            "GPGCheck");
         assertNotNull(found);
         assertEquals(key, found.getKey());
         assertEquals("test-repo", found.getContentLabel());
@@ -222,8 +212,8 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
 
     @Test
     public void testRetrieveByNameDoesntExist() {
-        ActivationKeyContentOverride found =
-            activationKeyContentOverrideCurator.retrieve(key, "not-a-repo", "gpgcheck");
+        ActivationKeyContentOverride found = activationKeyContentOverrideCurator.retrieve(key, "not-a-repo",
+            "gpgcheck");
         assertNull(found);
     }
 
@@ -234,8 +224,8 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
         activationKeyContentOverrideCurator.create(new ActivationKeyContentOverride(key,
             "test-repo", "remaining-override", "remaining"));
         activationKeyContentOverrideCurator.removeByName(key, "test-repo", "gpgcheck");
-        List<ActivationKeyContentOverride> remaining =
-            activationKeyContentOverrideCurator.getList(key).list();
+        List<ActivationKeyContentOverride> remaining = activationKeyContentOverrideCurator.getList(key)
+            .list();
         assertEquals(1, remaining.size());
         assertEquals("remaining-override", remaining.get(0).getName());
     }
@@ -247,8 +237,8 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
         activationKeyContentOverrideCurator.create(new ActivationKeyContentOverride(key,
             "test-repo", "remaining-override", "remaining"));
         activationKeyContentOverrideCurator.removeByName(key, "test-repo", "GpGChecK");
-        List<ActivationKeyContentOverride> remaining =
-            activationKeyContentOverrideCurator.getList(key).list();
+        List<ActivationKeyContentOverride> remaining = activationKeyContentOverrideCurator.getList(key)
+            .list();
         assertEquals(1, remaining.size());
         assertEquals("remaining-override", remaining.get(0).getName());
     }
@@ -262,8 +252,8 @@ public class ActivationKeyContentOverrideCuratorTest extends DatabaseTestFixture
         activationKeyContentOverrideCurator.create(new ActivationKeyContentOverride(key,
             "should-remain", "remaining", "true"));
         activationKeyContentOverrideCurator.removeByContentLabel(key, "test-repo");
-        List<ActivationKeyContentOverride> remaining =
-            activationKeyContentOverrideCurator.getList(key).list();
+        List<ActivationKeyContentOverride> remaining = activationKeyContentOverrideCurator.getList(key)
+            .list();
         assertEquals(1, remaining.size());
         assertEquals("should-remain", remaining.get(0).getContentLabel());
         assertEquals("remaining", remaining.get(0).getName());

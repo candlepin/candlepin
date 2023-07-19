@@ -22,21 +22,28 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import org.apache.commons.codec.binary.Base64;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import javax.inject.Inject;
 
 /**
  * RulesResourceTest
  */
 public class RulesResourceTest extends DatabaseTestFixture {
-    @Inject private RulesCurator rulesCurator;
-    @Inject private RulesResource rulesResource;
+    private RulesCurator rulesCurator;
+    private RulesResource rulesResource;
+
+    @BeforeEach
+    @Override
+    public void init() throws Exception {
+        super.init();
+        rulesCurator = injector.getInstance(RulesCurator.class);
+        rulesResource = injector.getInstance(RulesResource.class);
+    }
 
     @Test
     public void testUpload() {
-        String rulesBuffer = new String(Base64.encodeBase64String((
-            TestUtil.createRulesBlob(10000).getBytes())));
+        String rulesBuffer = new String(
+            Base64.encodeBase64String((TestUtil.createRulesBlob(10000).getBytes())));
         rulesResource.uploadRules(rulesBuffer);
         Rules rules = rulesCurator.getRules();
         String expected = "" + RulesCurator.RULES_API_VERSION + "." + 10000;
@@ -45,8 +52,8 @@ public class RulesResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testGet() {
-        String rulesBuffer = new String(Base64.encodeBase64String((
-            TestUtil.createRulesBlob(10000).getBytes())));
+        String rulesBuffer = new String(
+            Base64.encodeBase64String((TestUtil.createRulesBlob(10000).getBytes())));
         rulesResource.uploadRules(rulesBuffer);
         String rulesBlob = rulesResource.getRules();
         assertEquals(rulesBlob, rulesBuffer);
@@ -55,8 +62,8 @@ public class RulesResourceTest extends DatabaseTestFixture {
     @Test
     public void testDelete() {
         String origRules = rulesResource.getRules();
-        String rulesBuffer = new String(Base64.encodeBase64String((
-            TestUtil.createRulesBlob(10000).getBytes())));
+        String rulesBuffer = new String(
+            Base64.encodeBase64String((TestUtil.createRulesBlob(10000).getBytes())));
         rulesResource.uploadRules(rulesBuffer);
         rulesResource.deleteRules();
         String rulesAfterDelete = rulesResource.getRules();

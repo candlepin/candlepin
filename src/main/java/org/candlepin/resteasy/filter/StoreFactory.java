@@ -48,29 +48,23 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-
 /**
  * This class should be bound to an instance
  */
 public class StoreFactory {
-    private final Map<Class<? extends Persisted>, EntityStore<? extends Persisted>> storeMap =
-        new HashMap<>();
+    private final Map<Class<? extends Persisted>, EntityStore<? extends Persisted>> storeMap = new HashMap<>();
 
     @Inject
     public StoreFactory(Injector injector) {
-        storeMap.put(Owner.class, new OwnerStore());
-        storeMap.put(Environment.class, new EnvironmentStore());
-        storeMap.put(Consumer.class, new ConsumerStore());
-        storeMap.put(Entitlement.class, new EntitlementStore());
-        storeMap.put(Pool.class, new PoolStore());
+        storeMap.put(Owner.class, injector.getInstance(OwnerStore.class));
+        storeMap.put(Environment.class, injector.getInstance(EnvironmentStore.class));
+        storeMap.put(Consumer.class, injector.getInstance(ConsumerStore.class));
+        storeMap.put(Entitlement.class, injector.getInstance(EntitlementStore.class));
+        storeMap.put(Pool.class, injector.getInstance(PoolStore.class));
         storeMap.put(User.class, new UserStore());
-        storeMap.put(ActivationKey.class, new ActivationKeyStore());
-        storeMap.put(Product.class, new ProductStore());
-        storeMap.put(AsyncJobStatus.class, new AsyncJobStatusStore());
-
-        for (EntityStore<? extends Persisted> store : storeMap.values()) {
-            injector.injectMembers(store);
-        }
+        storeMap.put(ActivationKey.class, injector.getInstance(ActivationKeyStore.class));
+        storeMap.put(Product.class, injector.getInstance(ProductStore.class));
+        storeMap.put(AsyncJobStatus.class, injector.getInstance(AsyncJobStatusStore.class));
     }
 
     public EntityStore<? extends Persisted> getFor(Class<? extends Persisted> clazz) {
@@ -88,7 +82,12 @@ public class StoreFactory {
     }
 
     private static class OwnerStore implements EntityStore<Owner> {
-        @Inject private OwnerCurator ownerCurator;
+        private OwnerCurator ownerCurator;
+
+        @Inject
+        public OwnerStore(OwnerCurator ownerCurator) {
+            this.ownerCurator = ownerCurator;
+        }
 
         @Override
         public Owner lookup(String key) {
@@ -106,8 +105,13 @@ public class StoreFactory {
         }
     }
 
-    private class EnvironmentStore implements EntityStore<Environment> {
-        @Inject private EnvironmentCurator envCurator;
+    private static class EnvironmentStore implements EntityStore<Environment> {
+        private EnvironmentCurator envCurator;
+
+        @Inject
+        public EnvironmentStore(EnvironmentCurator environmentCurator) {
+            this.envCurator = environmentCurator;
+        }
 
         @Override
         public Environment lookup(String key) {
@@ -125,11 +129,21 @@ public class StoreFactory {
         }
     }
 
-    private class ConsumerStore implements EntityStore<Consumer> {
-        @Inject private ConsumerCurator consumerCurator;
-        @Inject private DeletedConsumerCurator deletedConsumerCurator;
-        @Inject private Provider<I18n> i18nProvider;
-        @Inject private OwnerCurator ownerCurator;
+    private static class ConsumerStore implements EntityStore<Consumer> {
+        private ConsumerCurator consumerCurator;
+        private DeletedConsumerCurator deletedConsumerCurator;
+        private Provider<I18n> i18nProvider;
+        private OwnerCurator ownerCurator;
+
+        @Inject
+        public ConsumerStore(ConsumerCurator consumerCurator,
+            DeletedConsumerCurator deletedConsumerCurator, Provider<I18n> i18nProvider,
+            OwnerCurator ownerCurator) {
+            this.consumerCurator = consumerCurator;
+            this.deletedConsumerCurator = deletedConsumerCurator;
+            this.i18nProvider = i18nProvider;
+            this.ownerCurator = ownerCurator;
+        }
 
         @Override
         public Consumer lookup(final String consumerUuid) {
@@ -162,8 +176,13 @@ public class StoreFactory {
         }
     }
 
-    private class EntitlementStore implements EntityStore<Entitlement> {
-        @Inject private EntitlementCurator entitlementCurator;
+    private static class EntitlementStore implements EntityStore<Entitlement> {
+        private EntitlementCurator entitlementCurator;
+
+        @Inject
+        public EntitlementStore(EntitlementCurator entitlementCurator) {
+            this.entitlementCurator = entitlementCurator;
+        }
 
         @Override
         public Entitlement lookup(String key) {
@@ -181,8 +200,13 @@ public class StoreFactory {
         }
     }
 
-    private class PoolStore implements EntityStore<Pool> {
-        @Inject private PoolCurator poolCurator;
+    private static class PoolStore implements EntityStore<Pool> {
+        private PoolCurator poolCurator;
+
+        @Inject
+        public PoolStore(PoolCurator poolCurator) {
+            this.poolCurator = poolCurator;
+        }
 
         @Override
         public Pool lookup(String key) {
@@ -200,8 +224,13 @@ public class StoreFactory {
         }
     }
 
-    private class ActivationKeyStore implements EntityStore<ActivationKey> {
-        @Inject private ActivationKeyCurator activationKeyCurator;
+    private static class ActivationKeyStore implements EntityStore<ActivationKey> {
+        private ActivationKeyCurator activationKeyCurator;
+
+        @Inject
+        public ActivationKeyStore(ActivationKeyCurator activationKeyCurator) {
+            this.activationKeyCurator = activationKeyCurator;
+        }
 
         @Override
         public ActivationKey lookup(String key) {
@@ -219,8 +248,13 @@ public class StoreFactory {
         }
     }
 
-    private class ProductStore implements EntityStore<Product> {
-        @Inject private ProductCurator productCurator;
+    private static class ProductStore implements EntityStore<Product> {
+        private ProductCurator productCurator;
+
+        @Inject
+        public ProductStore(ProductCurator productCurator) {
+            this.productCurator = productCurator;
+        }
 
         @Override
         public Product lookup(String key) {
@@ -238,8 +272,13 @@ public class StoreFactory {
         }
     }
 
-    private class AsyncJobStatusStore implements EntityStore<AsyncJobStatus> {
-        @Inject private AsyncJobStatusCurator jobCurator;
+    private static class AsyncJobStatusStore implements EntityStore<AsyncJobStatus> {
+        private AsyncJobStatusCurator jobCurator;
+
+        @Inject
+        public AsyncJobStatusStore(AsyncJobStatusCurator jobCurator) {
+            this.jobCurator = jobCurator;
+        }
 
         @Override
         public AsyncJobStatus lookup(String jobId) {
@@ -260,8 +299,9 @@ public class StoreFactory {
     private static class UserStore implements EntityStore<User> {
         @Override
         public User lookup(String key) {
-            /* WARNING: Semi-risky business here, we need a user object for the security
-             * code to validate, but in this area we seem to only need the username.
+            /*
+             * WARNING: Semi-risky business here, we need a user object for the security code to validate, but
+             * in this area we seem to only need the username.
              */
             return new User(key, null);
         }

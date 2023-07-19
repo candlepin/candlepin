@@ -56,8 +56,12 @@ import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Environment;
 import org.candlepin.model.EnvironmentContentCurator;
 import org.candlepin.model.EnvironmentCurator;
+import org.candlepin.model.ExporterMetadataCurator;
+import org.candlepin.model.GuestIdCurator;
 import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.ImportRecordCurator;
+import org.candlepin.model.KeyPairDataCurator;
+import org.candlepin.model.ManifestFileRecordCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
@@ -72,7 +76,10 @@ import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Role;
 import org.candlepin.model.RoleCurator;
+import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
+import org.candlepin.model.SubscriptionsCertificateCurator;
+import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.UserCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverrideCurator;
@@ -111,15 +118,12 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
 
-import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-
 
 /**
  * Test fixture for test classes requiring access to the database.
@@ -134,36 +138,44 @@ public class DatabaseTestFixture {
 
     protected DevConfig config;
 
-    @Inject protected ActivationKeyCurator activationKeyCurator;
-    @Inject protected ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
-    @Inject protected AsyncJobStatusCurator asyncJobCurator;
-    @Inject protected CdnCurator cdnCurator;
-    @Inject protected ConsumerCurator consumerCurator;
-    @Inject protected ConsumerTypeCurator consumerTypeCurator;
-    @Inject protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
-    @Inject protected CertificateSerialCurator certSerialCurator;
-    @Inject protected ContentCurator contentCurator;
-    @Inject protected DeletedConsumerCurator deletedConsumerCurator;
-    @Inject protected EntitlementCurator entitlementCurator;
-    @Inject protected EntitlementCertificateCurator entitlementCertificateCurator;
-    @Inject protected EnvironmentCurator environmentCurator;
-    @Inject protected EnvironmentContentCurator environmentContentCurator;
-    @Inject protected IdentityCertificateCurator identityCertificateCurator;
-    @Inject protected ImportRecordCurator importRecordCurator;
-    @Inject protected OwnerContentCurator ownerContentCurator;
-    @Inject protected OwnerCurator ownerCurator;
-    @Inject protected OwnerInfoCurator ownerInfoCurator;
-    @Inject protected OwnerProductCurator ownerProductCurator;
-    @Inject protected PermissionBlueprintCurator permissionBlueprintCurator;
-    @Inject protected ProductCertificateCurator productCertificateCurator;
-    @Inject protected ProductCurator productCurator;
-    @Inject protected ContentAccessCertificateCurator caCertCurator;
-    @Inject protected PoolCurator poolCurator;
-    @Inject protected RoleCurator roleCurator;
-    @Inject protected UserCurator userCurator;
-    @Inject protected PermissionFactory permissionFactory;
-    @Inject protected ModelTranslator modelTranslator;
+    protected ActivationKeyCurator activationKeyCurator;
+    protected ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
+    protected AsyncJobStatusCurator asyncJobCurator;
+    protected CdnCurator cdnCurator;
+    protected CertificateSerialCurator certSerialCurator;
 
+    protected ConsumerCurator consumerCurator;
+    protected ConsumerTypeCurator consumerTypeCurator;
+    protected ConsumerContentOverrideCurator consumerContentOverrideCurator;
+    protected ContentAccessCertificateCurator caCertCurator;
+    protected ContentCurator contentCurator;
+    protected DeletedConsumerCurator deletedConsumerCurator;
+    protected EntitlementCurator entitlementCurator;
+    protected EntitlementCertificateCurator entitlementCertificateCurator;
+    protected EnvironmentCurator environmentCurator;
+    protected EnvironmentContentCurator environmentContentCurator;
+    protected ExporterMetadataCurator exporterMetadataCurator;
+    protected GuestIdCurator guestIdCurator;
+    protected IdentityCertificateCurator identityCertificateCurator;
+    protected ImportRecordCurator importRecordCurator;
+    protected KeyPairDataCurator keyPairDataCurator;
+    protected ManifestFileRecordCurator manifestFileRecordCurator;
+    protected OwnerContentCurator ownerContentCurator;
+    protected OwnerCurator ownerCurator;
+    protected OwnerInfoCurator ownerInfoCurator;
+    protected OwnerProductCurator ownerProductCurator;
+    protected PermissionBlueprintCurator permissionBlueprintCurator;
+    protected ProductCertificateCurator productCertificateCurator;
+    protected ProductCurator productCurator;
+    protected PoolCurator poolCurator;
+    protected RoleCurator roleCurator;
+    protected RulesCurator rulesCurator;
+    protected SubscriptionsCertificateCurator subscriptionsCertificateCurator;
+    protected UeberCertificateCurator ueberCertificateCurator;
+    protected UserCurator userCurator;
+
+    protected PermissionFactory permissionFactory;
+    protected ModelTranslator modelTranslator;
     protected ResourceLocatorMap locatorMap;
     protected MethodLocator methodLocator;
     protected AnnotationLocator annotationLocator;
@@ -185,9 +197,10 @@ public class DatabaseTestFixture {
     }
 
     /**
-     * There's no way to really get Guice to perform injections on stuff that
-     * the JpaPersistModule is creating, so we resort to grabbing the EntityManagerFactory
-     * after the fact and adding the Validation EventListener ourselves.
+     * There's no way to really get Guice to perform injections on stuff that the JpaPersistModule is
+     * creating, so we resort to grabbing the EntityManagerFactory after the fact and adding the
+     * Validation EventListener ourselves.
+     *
      * @param inj
      */
     private static void insertValidationEventListeners(Injector inj) {
@@ -197,8 +210,8 @@ public class DatabaseTestFixture {
             .getServiceRegistry()
             .getService(EventListenerRegistry.class);
 
-        Provider<BeanValidationEventListener> listenerProvider =
-            inj.getProvider(BeanValidationEventListener.class);
+        Provider<BeanValidationEventListener> listenerProvider = inj
+            .getProvider(BeanValidationEventListener.class);
 
         registry.getEventListenerGroup(EventType.PRE_INSERT).appendListener(listenerProvider.get());
         registry.getEventListenerGroup(EventType.PRE_UPDATE).appendListener(listenerProvider.get());
@@ -224,10 +237,8 @@ public class DatabaseTestFixture {
         locatorMap.init();
 
         annotationLocator = new AnnotationLocator(methodLocator);
+        loadFromInjector();
 
-        securityInterceptor = this.injector.getInstance(TestingInterceptor.class);
-
-        cpRequestScope = injector.getInstance(CandlepinRequestScope.class);
         this.validator = new DTOValidator();
 
         // Because all candlepin operations are running in the CandlepinRequestScope
@@ -248,6 +259,48 @@ public class DatabaseTestFixture {
         if (beginTransaction) {
             this.beginTransaction();
         }
+    }
+
+    private void loadFromInjector() {
+        securityInterceptor = this.injector.getInstance(TestingInterceptor.class);
+        permissionFactory = this.injector.getInstance(PermissionFactory.class);
+        modelTranslator = this.injector.getInstance(ModelTranslator.class);
+        cpRequestScope = this.injector.getInstance(CandlepinRequestScope.class);
+        activationKeyCurator = this.injector.getInstance(ActivationKeyCurator.class);
+        activationKeyContentOverrideCurator = this.injector
+            .getInstance(ActivationKeyContentOverrideCurator.class);
+        asyncJobCurator = this.injector.getInstance(AsyncJobStatusCurator.class);
+        cdnCurator = this.injector.getInstance(CdnCurator.class);
+        certSerialCurator = this.injector.getInstance(CertificateSerialCurator.class);
+        consumerCurator = this.injector.getInstance(ConsumerCurator.class);
+        consumerTypeCurator = this.injector.getInstance(ConsumerTypeCurator.class);
+        consumerContentOverrideCurator = this.injector.getInstance(ConsumerContentOverrideCurator.class);
+        caCertCurator = this.injector.getInstance(ContentAccessCertificateCurator.class);
+        contentCurator = this.injector.getInstance(ContentCurator.class);
+        deletedConsumerCurator = this.injector.getInstance(DeletedConsumerCurator.class);
+        entitlementCurator = this.injector.getInstance(EntitlementCurator.class);
+        entitlementCertificateCurator = this.injector.getInstance(EntitlementCertificateCurator.class);
+        environmentCurator = this.injector.getInstance(EnvironmentCurator.class);
+        environmentContentCurator = this.injector.getInstance(EnvironmentContentCurator.class);
+        exporterMetadataCurator = this.injector.getInstance(ExporterMetadataCurator.class);
+        guestIdCurator = this.injector.getInstance(GuestIdCurator.class);
+        identityCertificateCurator = this.injector.getInstance(IdentityCertificateCurator.class);
+        importRecordCurator = this.injector.getInstance(ImportRecordCurator.class);
+        keyPairDataCurator = injector.getInstance(KeyPairDataCurator.class);
+        manifestFileRecordCurator = this.injector.getInstance(ManifestFileRecordCurator.class);
+        ownerContentCurator = this.injector.getInstance(OwnerContentCurator.class);
+        ownerCurator = this.injector.getInstance(OwnerCurator.class);
+        ownerInfoCurator = this.injector.getInstance(OwnerInfoCurator.class);
+        ownerProductCurator = this.injector.getInstance(OwnerProductCurator.class);
+        permissionBlueprintCurator = this.injector.getInstance(PermissionBlueprintCurator.class);
+        productCertificateCurator = this.injector.getInstance(ProductCertificateCurator.class);
+        productCurator = this.injector.getInstance(ProductCurator.class);
+        poolCurator = this.injector.getInstance(PoolCurator.class);
+        roleCurator = this.injector.getInstance(RoleCurator.class);
+        rulesCurator = this.injector.getInstance(RulesCurator.class);
+        subscriptionsCertificateCurator = this.injector.getInstance(SubscriptionsCertificateCurator.class);
+        ueberCertificateCurator = this.injector.getInstance(UeberCertificateCurator.class);
+        userCurator = this.injector.getInstance(UserCurator.class);
     }
 
     @AfterEach
@@ -305,7 +358,7 @@ public class DatabaseTestFixture {
      * annotation.
      *
      * @param object
-     *  The object to populate
+     *     The object to populate
      */
     protected void injectMembers(Object object) {
         this.injector.injectMembers(object);
@@ -324,9 +377,8 @@ public class DatabaseTestFixture {
     }
 
     /**
-     * Opens a new transaction if a transaction has not already been opened. If a transaction is
-     * already open, this method does nothing; repeated calls are safe within the context of a
-     * single thread.
+     * Opens a new transaction if a transaction has not already been opened. If a transaction is already
+     * open, this method does nothing; repeated calls are safe within the context of a single thread.
      */
     protected void beginTransaction() {
         EntityTransaction transaction = this.getEntityManager().getTransaction();
@@ -340,9 +392,9 @@ public class DatabaseTestFixture {
     }
 
     /**
-     * Commits the current transaction, flushing pending writes as necessary. If a transaction has
-     * not yet been opened, this method does nothing; repeated calls are safe within the context of
-     * a single thread.
+     * Commits the current transaction, flushing pending writes as necessary. If a transaction has not
+     * yet been opened, this method does nothing; repeated calls are safe within the context of a single
+     * thread.
      */
     protected void commitTransaction() {
         EntityTransaction transaction = this.getEntityManager().getTransaction();
@@ -356,9 +408,9 @@ public class DatabaseTestFixture {
     }
 
     /**
-     * Rolls back the current transaction, discarding any pending writes. If a transaction has not
-     * yet been opened, this method does nothing; repeated calls are safe within the context of a
-     * single thread.
+     * Rolls back the current transaction, discarding any pending writes. If a transaction has not yet
+     * been opened, this method does nothing; repeated calls are safe within the context of a single
+     * thread.
      */
     protected void rollbackTransaction() {
         EntityTransaction transaction = this.getEntityManager().getTransaction();
@@ -655,7 +707,7 @@ public class DatabaseTestFixture {
     protected Principal setupPrincipal(String username, Owner owner, Access verb) {
         OwnerPermission p = new OwnerPermission(owner, verb);
         // Only need a detached owner permission here:
-        Principal ownerAdmin = new UserPrincipal(username, Arrays.asList(new Permission[] {p}), false);
+        Principal ownerAdmin = new UserPrincipal(username, Arrays.asList(new Permission[] { p }), false);
         setupPrincipal(ownerAdmin);
         return ownerAdmin;
     }
@@ -673,10 +725,11 @@ public class DatabaseTestFixture {
     }
 
     /**
-     * For parameterized tests, the method called to provide the parameter values is called before the @Before
-     * methods are called.  Our Guice injection occurs in the @Before methods and therefore injection isn't
-     * a possibility in parameter providers.  Thus we need a special method to return a Configuration object
-     * when required by parameter providers.
+     * For parameterized tests, the method called to provide the parameter values is called before
+     * the @Before methods are called. Our Guice injection occurs in the @Before methods and therefore
+     * injection isn't a possibility in parameter providers. Thus we need a special method to return a
+     * Configuration object when required by parameter providers.
+     *
      * @return a Configuration object
      */
     protected Configuration getConfigForParameters() {

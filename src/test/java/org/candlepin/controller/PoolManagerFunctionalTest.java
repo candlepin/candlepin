@@ -89,9 +89,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.inject.Inject;
 import javax.persistence.EntityNotFoundException;
-
 
 public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private static final String PRODUCT_MONITORING = "monitoring";
@@ -99,7 +97,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private static final String PRODUCT_VIRT_HOST = "virtualization_host";
     private static final String PRODUCT_VIRT_HOST_PLATFORM = "virtualization_host_platform";
     private static final String PRODUCT_VIRT_GUEST = "virt_guest";
-
 
     private static class MockSubscriptionServiceAdapter implements SubscriptionServiceAdapter {
         private Map<String, SubscriptionInfo> submap;
@@ -216,12 +213,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         }
     }
 
-
-    @Inject
     private CandlepinPoolManager poolManager;
-    @Inject
     private EntitlementCertificateGenerator certGenerator;
-    @Inject
     private RefresherFactory refresherFactory;
 
     private Product virtHost;
@@ -244,6 +237,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     @Override
     public void init() throws Exception {
         super.init();
+
+        poolManager = injector.getInstance(CandlepinPoolManager.class);
+        certGenerator = injector.getInstance(EntitlementCertificateGenerator.class);
+        refresherFactory = injector.getInstance(RefresherFactory.class);
 
         o = createOwner();
         ownerCurator.create(o);
@@ -714,13 +711,11 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     }
 
     private void regenerateECAndAssertNotSameCertificates() {
-        Set<EntitlementCertificate> oldsIds =
-            collectEntitlementCertIds(this.childVirtSystem);
+        Set<EntitlementCertificate> oldsIds = collectEntitlementCertIds(this.childVirtSystem);
         certGenerator.regenerateCertificatesOf(childVirtSystem, false);
         Mockito.verify(this.eventSink, Mockito.times(oldsIds.size()))
             .queueEvent(any(Event.class));
-        Set<EntitlementCertificate> newIds =
-            collectEntitlementCertIds(this.childVirtSystem);
+        Set<EntitlementCertificate> newIds = collectEntitlementCertIds(this.childVirtSystem);
         assertFalse(containsAny(
             transform(oldsIds, EntitlementCertificate::getId),
             transform(newIds, EntitlementCertificate::getId)));
@@ -1051,11 +1046,11 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         this.poolManager.cleanupExpiredPools();
 
         assertNotNull(this.poolCurator.get(pools.get(0).getId())); // Active pool, no ent
-        assertNull(this.poolCurator.get(pools.get(1).getId()));    // Expired pool, no ent
+        assertNull(this.poolCurator.get(pools.get(1).getId())); // Expired pool, no ent
         assertNotNull(this.poolCurator.get(pools.get(2).getId())); // Active pool, active ent
         assertNotNull(this.poolCurator.get(pools.get(3).getId())); // Expired pool, active ent
         assertNotNull(this.poolCurator.get(pools.get(4).getId())); // Active pool, expired ent
-        assertNull(this.poolCurator.get(pools.get(5).getId()));    // Expired pool, expired ent
+        assertNull(this.poolCurator.get(pools.get(5).getId())); // Expired pool, expired ent
     }
 
     @Test
@@ -1081,10 +1076,10 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         this.poolManager.cleanupExpiredPools();
 
-        assertNotNull(this.poolCurator.get(pool1.getId()));        // Active pool, no attrib
-        assertNull(this.poolCurator.get(pool2.getId()));           // Expired pool, no attrib
-        assertNotNull(this.poolCurator.get(pool3.getId()));        // Active pool, derived attrib
-        assertNull(this.poolCurator.get(pool4.getId()));           // Expired pool, derived attrib
+        assertNotNull(this.poolCurator.get(pool1.getId())); // Active pool, no attrib
+        assertNull(this.poolCurator.get(pool2.getId())); // Expired pool, no attrib
+        assertNotNull(this.poolCurator.get(pool3.getId())); // Active pool, derived attrib
+        assertNull(this.poolCurator.get(pool4.getId())); // Expired pool, derived attrib
     }
 
     private Pool createPool(Owner owner, Product product, long quantity, Date startDate, Date endDate,
@@ -1150,8 +1145,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Product prod = this.createProduct(owner);
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto = this.modelTranslator.translate(owner,
+            org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
         SubscriptionDTO sub = new SubscriptionDTO();
         sub.setId(Util.generateDbUUID());
@@ -1187,8 +1182,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
             TestUtil.createDate(2015, 11, 30));
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto = this.modelTranslator.translate(owner,
+            org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
         SubscriptionDTO sub = new SubscriptionDTO();
         sub.setId(Util.generateDbUUID());
@@ -1224,8 +1219,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Product prod = this.createProduct(owner);
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto = this.modelTranslator.translate(owner,
+            org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
         SubscriptionDTO sub = new SubscriptionDTO();
         sub.setId(Util.generateDbUUID());
@@ -1269,8 +1264,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         Product prod2 = this.createProduct(owner);
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto = this.modelTranslator.translate(owner,
+            org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
         SubscriptionDTO sub = new SubscriptionDTO();
         sub.setId(Util.generateDbUUID());
@@ -1312,8 +1307,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto = this.modelTranslator.translate(owner,
+            org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
         SubscriptionDTO sub = new SubscriptionDTO();
         sub.setId(Util.generateDbUUID());
@@ -1333,7 +1328,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
-        String bonusId =  "";
+        String bonusId = "";
         String primaryId = "";
 
         for (Pool p : pools) {
@@ -1376,8 +1371,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto = this.modelTranslator.translate(owner,
+            org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
         SubscriptionDTO sub = new SubscriptionDTO();
         sub.setId(Util.generateDbUUID());
@@ -1397,7 +1392,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         List<Pool> pools = poolCurator.getBySubscriptionId(owner, sub.getId());
         assertEquals(2, pools.size());
-        String bonusId =  "";
+        String bonusId = "";
         String primaryId = "";
 
         for (Pool p : pools) {
@@ -1456,8 +1451,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
 
         List<SubscriptionDTO> subscriptions = new LinkedList<>();
 
-        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto =
-            this.modelTranslator.translate(owner, org.candlepin.dto.manifest.v1.OwnerDTO.class);
+        org.candlepin.dto.manifest.v1.OwnerDTO ownerDto = this.modelTranslator.translate(owner,
+            org.candlepin.dto.manifest.v1.OwnerDTO.class);
 
         SubscriptionDTO sub = new SubscriptionDTO();
         sub.setId(Util.generateDbUUID());

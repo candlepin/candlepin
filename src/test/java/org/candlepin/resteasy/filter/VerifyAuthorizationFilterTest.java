@@ -47,13 +47,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.slf4j.LoggerFactory;
-import org.xnap.commons.i18n.I18n;
 
 import java.lang.reflect.Method;
 import java.security.cert.X509Certificate;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
 import javax.security.auth.x500.X500Principal;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -63,17 +60,16 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.UriInfo;
 
-
-
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
-    @Inject private Provider<I18n> i18nProvider;
-    @Inject private StoreFactory storeFactory;
-    @Inject private SSLAuth sslAuth;
+    private StoreFactory storeFactory;
+    private SSLAuth sslAuth;
 
-    @Mock private CandlepinSecurityContext mockSecurityContext;
-    @Mock private ContainerRequestContext mockRequestContext;
+    @Mock
+    private CandlepinSecurityContext mockSecurityContext;
+    @Mock
+    private ContainerRequestContext mockRequestContext;
 
     private VerifyAuthorizationFilter interceptor;
     private MockHttpRequest mockReq;
@@ -83,13 +79,15 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
     private MultivaluedHashMap<String, String> mockQueryParameters;
     private MultivaluedHashMap<String, String> mockHeaders;
 
-
     protected Module getGuiceOverrideModule() {
         return new AuthInterceptorTestModule();
     }
 
     @BeforeEach
     public void setUp() throws NoSuchMethodException, SecurityException {
+        storeFactory = injector.getInstance(StoreFactory.class);
+        sslAuth = injector.getInstance(SSLAuth.class);
+
         // Turn logger to INFO level to disable HttpServletRequest logging.
         LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
         Logger logger = lc.getLogger(AbstractAuthorizationFilter.class);
@@ -195,8 +193,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
     }
 
     /**
-     * FakeResource simply to create a Method object to pass down into
-     * the interceptor.
+     * FakeResource simply to create a Method object to pass down into the interceptor.
      */
     @Path("fake")
     public static class FakeResource {

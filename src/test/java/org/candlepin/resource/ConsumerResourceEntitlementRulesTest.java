@@ -19,13 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.candlepin.async.JobException;
 import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
@@ -38,18 +34,11 @@ import com.google.inject.Module;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
-
 /**
  * ConsumerResourceEntitlementRulesTest
  */
 public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private PoolCurator poolCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private ConsumerResource consumerResource;
-
+    private ConsumerResource consumerResource;
     private ConsumerType standardSystemType;
     private Consumer consumer;
     private Product product;
@@ -59,6 +48,7 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
+        consumerResource = injector.getInstance(ConsumerResource.class);
         standardSystemType = consumerTypeCurator.create(new ConsumerType("system"));
         this.owner = this.createOwner("test-owner");
 
@@ -85,17 +75,15 @@ public class ConsumerResourceEntitlementRulesTest extends DatabaseTestFixture {
         // Now for the 11th:
         Consumer c = TestUtil.createConsumer(standardSystemType, owner);
         consumerCurator.create(c);
-        assertThrows(ForbiddenException.class, () ->
-            consumerResource.bind(c.getUuid(), pool.getId(), null, 1, null, null, false, null, null)
-        );
+        assertThrows(ForbiddenException.class,
+            () -> consumerResource.bind(c.getUuid(), pool.getId(), null, 1, null, null, false, null, null));
     }
 
     @Test
     public void testEntitlementsHaveExpired() {
         dateSource.currentDate(TestUtil.createDate(2030, 1, 13));
         assertThrows(ForbiddenException.class, () -> consumerResource.bind(consumer.getUuid(), pool.getId(),
-            null, null, null, null, false, null, null)
-        );
+            null, null, null, null, false, null, null));
     }
 
     @Override

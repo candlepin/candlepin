@@ -20,18 +20,18 @@ import org.hibernate.criterion.Restrictions;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-
-
 /**
  * PermissionBlueprintCurator
  */
 @Singleton
 public class PermissionBlueprintCurator extends AbstractHibernateCurator<PermissionBlueprint> {
 
-    @Inject private CandlepinQueryFactory cpQueryFactory;
+    private CandlepinQueryFactory cpQueryFactory;
 
-    public PermissionBlueprintCurator() {
+    @Inject
+    public PermissionBlueprintCurator(CandlepinQueryFactory cpQueryFactory) {
         super(PermissionBlueprint.class);
+        this.cpQueryFactory = cpQueryFactory;
     }
 
     public CandlepinQuery<PermissionBlueprint> findByOwner(Owner owner) {

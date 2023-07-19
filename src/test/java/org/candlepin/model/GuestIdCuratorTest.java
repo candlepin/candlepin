@@ -26,17 +26,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 /**
  * GuestIdCuratorTest
  */
 public class GuestIdCuratorTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private GuestIdCurator curator;
-
     private Owner owner;
     private ConsumerType ct;
 
@@ -64,7 +57,7 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
 
         consumerCurator.create(consumer);
 
-        List<GuestId> result = curator.listByConsumer(consumer).list();
+        List<GuestId> result = guestIdCurator.listByConsumer(consumer).list();
         assertEquals(5, result.size());
         for (int i = 0; i < 5; i++) {
             assertTrue(result.contains(new GuestId("" + i)));
@@ -80,7 +73,7 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
             .setType(ct);
         consumerCurator.create(consumer);
 
-        List<GuestId> result = curator.listByConsumer(consumer).list();
+        List<GuestId> result = guestIdCurator.listByConsumer(consumer).list();
         assertEquals(0, result.size());
     }
 
@@ -94,7 +87,7 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
         consumer.addGuestId(new GuestId("1"));
         consumerCurator.create(consumer);
 
-        GuestId result = curator.findByConsumerAndId(consumer, "2");
+        GuestId result = guestIdCurator.findByConsumerAndId(consumer, "2");
         assertNull(result);
     }
 
@@ -116,7 +109,7 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
         other.addGuestId(new GuestId("2"));
         consumerCurator.create(other);
 
-        GuestId result = curator.findByConsumerAndId(consumer, "2");
+        GuestId result = guestIdCurator.findByConsumerAndId(consumer, "2");
         assertNull(result);
     }
 
@@ -130,7 +123,7 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
         consumer.addGuestId(new GuestId("1"));
         consumerCurator.create(consumer);
 
-        GuestId result = curator.findByConsumerAndId(consumer, "1");
+        GuestId result = guestIdCurator.findByConsumerAndId(consumer, "1");
         assertEquals(new GuestId("1"), result);
     }
 
@@ -145,14 +138,12 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
         consumer.addGuestId(new GuestId(guestId));
         consumerCurator.create(consumer);
 
-        GuestId result = curator.findByConsumerAndId(consumer, guestId.toUpperCase());
+        GuestId result = guestIdCurator.findByConsumerAndId(consumer, guestId.toUpperCase());
         /**
-         * Note that we keep the original case of the guestId, we only search
-         * in case insensitive way
+         * Note that we keep the original case of the guestId, we only search in case insensitive way
          */
         assertEquals(new GuestId(guestId), result);
     }
-
 
     @Test
     public void findByGuestIdAndOrgCaseInsensitive() {
@@ -165,10 +156,9 @@ public class GuestIdCuratorTest extends DatabaseTestFixture {
         consumer.addGuestId(new GuestId(guestId));
         consumerCurator.create(consumer);
 
-        GuestId result = curator.findByGuestIdAndOrg(guestId.toUpperCase(), owner.getId());
+        GuestId result = guestIdCurator.findByGuestIdAndOrg(guestId.toUpperCase(), owner.getId());
         /**
-         * Note that we keep the original case of the guestId, we only search
-         * in case insensitive way
+         * Note that we keep the original case of the guestId, we only search in case insensitive way
          */
         assertEquals(new GuestId(guestId), result);
     }

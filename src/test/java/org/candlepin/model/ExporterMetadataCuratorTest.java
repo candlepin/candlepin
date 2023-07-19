@@ -24,13 +24,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
-import javax.inject.Inject;
-
 /**
  * ExporterMetadataCuratorTest
  */
 public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
-    @Inject private ExporterMetadataCurator emc;
 
     @Test
     public void testCreation() {
@@ -38,7 +35,7 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         em.setExported(new Date());
         assertNull(em.getId());
-        ExporterMetadata emdb = emc.create(em);
+        ExporterMetadata emdb = exporterMetadataCurator.create(em);
         assertNotNull(emdb);
         assertNotNull(emdb.getId());
         assertNull(emdb.getOwner());
@@ -50,8 +47,8 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         em.setExported(new Date());
         assertNull(em.getId());
-        ExporterMetadata emdb = emc.create(em);
-        ExporterMetadata emfound = emc.get(emdb.getId());
+        ExporterMetadata emdb = exporterMetadataCurator.create(em);
+        ExporterMetadata emfound = exporterMetadataCurator.get(emdb.getId());
         assertNotNull(emfound);
         assertNotNull(emfound.getId());
         assertEquals(emdb.getId(), emfound.getId());
@@ -63,10 +60,10 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
         em.setType(ExporterMetadata.TYPE_SYSTEM);
         em.setExported(new Date());
         assertNull(em.getId());
-        ExporterMetadata emdb = emc.create(em);
+        ExporterMetadata emdb = exporterMetadataCurator.create(em);
 
-        assertNull(emc.getByType(ExporterMetadata.TYPE_PER_USER));
-        assertEquals(emdb, emc.getByType(ExporterMetadata.TYPE_SYSTEM));
+        assertNull(exporterMetadataCurator.getByType(ExporterMetadata.TYPE_PER_USER));
+        assertEquals(emdb, exporterMetadataCurator.getByType(ExporterMetadata.TYPE_SYSTEM));
     }
 
     @Test
@@ -75,7 +72,7 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
         em.setType(ExporterMetadata.TYPE_PER_USER);
         em.setExported(new Date());
         em.setOwner(createOwner());
-        ExporterMetadata emdb = emc.create(em);
+        ExporterMetadata emdb = exporterMetadataCurator.create(em);
         assertNotNull(emdb);
         assertNotNull(emdb.getOwner());
         assertNotNull(emdb.getOwner().getId());
@@ -88,9 +85,9 @@ public class ExporterMetadataCuratorTest extends DatabaseTestFixture {
         em.setType(ExporterMetadata.TYPE_PER_USER);
         em.setExported(new Date());
         em.setOwner(owner);
-        ExporterMetadata emdb = emc.create(em);
+        ExporterMetadata emdb = exporterMetadataCurator.create(em);
 
-        assertEquals(emdb, emc.getByTypeAndOwner(
+        assertEquals(emdb, exporterMetadataCurator.getByTypeAndOwner(
             ExporterMetadata.TYPE_PER_USER, owner));
     }
 }

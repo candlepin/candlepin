@@ -53,17 +53,13 @@ import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.List;
 
-import javax.inject.Inject;
-
-
 public class PoolResourceTest extends DatabaseTestFixture {
-    //    private static final OffsetDateTime START_DATE = OffsetDateTime.now().minusYears(5);
+    // private static final OffsetDateTime START_DATE = OffsetDateTime.now().minusYears(5);
     private static final OffsetDateTime START_DATE = OffsetDateTime
         .of(LocalDate.of(2000, 1, 1), LocalTime.MIDNIGHT, ZoneOffset.UTC);
     private static final OffsetDateTime END_DATE = START_DATE.plusYears(1000);
     private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
 
-    @Inject
     private CandlepinPoolManager poolManager;
 
     private Owner owner1;
@@ -86,6 +82,7 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
+        poolManager = this.injector.getInstance(CandlepinPoolManager.class);
         MockitoAnnotations.initMocks(this);
 
         owner1 = createOwner();
@@ -267,9 +264,8 @@ public class PoolResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         when(this.principalProvider.get()).thenReturn(
             setupPrincipal(new ConsumerPrincipal(foreignConsumer, owner2)));
-        assertThrows(NotFoundException.class, () ->
-            poolResource.listPools(null, passConsumer.getUuid(), null, false, null, null, null, null, null)
-        );
+        assertThrows(NotFoundException.class, () -> poolResource.listPools(null, passConsumer.getUuid(), null,
+            false, null, null, null, null, null));
     }
 
     @Test
@@ -277,9 +273,8 @@ public class PoolResourceTest extends DatabaseTestFixture {
         securityInterceptor.enable();
         when(this.principalProvider.get()).thenReturn(
             setupPrincipal(new ConsumerPrincipal(foreignConsumer, owner2)));
-        assertThrows(NotFoundException.class, () ->
-            poolResource.listPools(owner1.getId(), null, null, false, null, null, null, null, null)
-        );
+        assertThrows(NotFoundException.class,
+            () -> poolResource.listPools(owner1.getId(), null, null, false, null, null, null, null, null));
     }
 
     @Test
@@ -322,10 +317,9 @@ public class PoolResourceTest extends DatabaseTestFixture {
 
         when(this.principalProvider.get()).thenReturn(setupPrincipal(owner2, Access.NONE));
 
-        assertThrows(NotFoundException.class, () ->
-            poolResource.getPool(pool1.getId(), passConsumer.getUuid(),
-            null)
-        );
+        assertThrows(NotFoundException.class,
+            () -> poolResource.getPool(pool1.getId(), passConsumer.getUuid(),
+                null));
     }
 
     @Test

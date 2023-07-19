@@ -36,11 +36,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.inject.Inject;
-
-
 public class EventAdapterTest {
-    @Inject
     private I18n i18n;
 
     @BeforeEach
@@ -48,10 +44,8 @@ public class EventAdapterTest {
         Injector injector = Guice.createInjector(
             new TestingModules.MockJpaModule(),
             new TestingModules.ServletEnvironmentModule(),
-            new TestingModules.StandardTest()
-        );
-
-        injector.injectMembers(this);
+            new TestingModules.StandardTest());
+        i18n = injector.getInstance(I18n.class);
     }
 
     @Test

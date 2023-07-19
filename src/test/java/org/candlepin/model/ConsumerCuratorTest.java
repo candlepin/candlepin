@@ -27,7 +27,6 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.async.tasks.InactiveConsumerCleanerJob;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.DevConfig;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.test.DatabaseTestFixture;
@@ -55,18 +54,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Inject;
 import javax.persistence.EntityManager;
 
-
 public class ConsumerCuratorTest extends DatabaseTestFixture {
-
-    @Inject
-    private DevConfig config;
-    @Inject
-    private DeletedConsumerCurator dcc;
-    @Inject
-    private EntityManager em;
 
     private Owner owner;
     private ConsumerType ct;
@@ -1157,8 +1147,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         String cid = consumer.getUuid();
 
         consumerCurator.delete(consumer);
-        assertEquals(1, dcc.countByConsumerUuid(cid));
-        DeletedConsumer dc = dcc.findByConsumerUuid(cid);
+        assertEquals(1, deletedConsumerCurator.countByConsumerUuid(cid));
+        DeletedConsumer dc = deletedConsumerCurator.findByConsumerUuid(cid);
 
         assertEquals(cid, dc.getConsumerUuid());
         assertEquals(consumer.getName(), dc.getConsumerName());
@@ -1183,7 +1173,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer = consumerCurator.create(consumer);
 
         consumerCurator.delete(consumer);
-        DeletedConsumer dc = dcc.findByConsumerUuid("Doppelganger");
+        DeletedConsumer dc = deletedConsumerCurator.findByConsumerUuid("Doppelganger");
         Date deletionDate1 = dc.getUpdated();
 
         consumer = new Consumer()
@@ -1194,7 +1184,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         consumer.setUuid("Doppelganger");
         consumer = consumerCurator.create(consumer);
         consumerCurator.delete(consumer);
-        dc = dcc.findByConsumerUuid("Doppelganger");
+        dc = deletedConsumerCurator.findByConsumerUuid("Doppelganger");
         Date deletionDate2 = dc.getUpdated();
         assertEquals(-1, deletionDate1.compareTo(deletionDate2));
         assertEquals(altOwner.getId(), dc.getOwnerId());
@@ -1218,7 +1208,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         Consumer fetched = this.consumerCurator.get(consumer.getUuid());
         assertNull(fetched);
 
-        DeletedConsumer deletionRecord = this.dcc.findByConsumerUuid(consumer.getUuid());
+        DeletedConsumer deletionRecord = this.deletedConsumerCurator.findByConsumerUuid(consumer.getUuid());
         assertNotNull(deletionRecord);
         assertEquals(principalName, deletionRecord.getPrincipalName());
     }
@@ -1573,9 +1563,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testVerifyAndLookupConsumerDoesntMatch() {
-        assertThrows(NotFoundException.class, () ->
-            consumerCurator.verifyAndLookupConsumer("1")
-        );
+        assertThrows(NotFoundException.class, () -> consumerCurator.verifyAndLookupConsumer("1"));
     }
 
     @Test
@@ -1805,7 +1793,6 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         assertEquals(consumer, results.get(0));
     }
 
-
     @Test
     public void testGetHypervisorsBulkEmpty() {
         String hypervisorid = "hypervisor";
@@ -1999,8 +1986,8 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
         activeConsumer.setLastCheckin(Date.from(activeLastCheckedIn));
         consumerCurator.create(activeConsumer);
 
-        List<String> actual =
-            consumerCurator.getInactiveConsumerIds(lastCheckedInRetention, nonCheckedInRetention);
+        List<String> actual = consumerCurator.getInactiveConsumerIds(lastCheckedInRetention,
+            nonCheckedInRetention);
 
         assertEquals(1, actual.size());
         assertEquals(inactiveConsumer.getId(), actual.get(0));
@@ -2021,7 +2008,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         Instant lastCheckedIn = Instant.now()
             .minus(InactiveConsumerCleanerJob.DEFAULT_LAST_CHECKED_IN_RETENTION_IN_DAYS + 10,
-            ChronoUnit.DAYS);
+                ChronoUnit.DAYS);
 
         consumer.setLastCheckin(Date.from(lastCheckedIn));
         consumerCurator.create(consumer);
@@ -2107,6 +2094,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
             .setOwner(owner)
             .setType(ct);
         c.setContentTags(new HashSet<>(Arrays.asList("t1", "t2")));
+        EntityManager em = this.getEntityManager();
 
         String countQuery = "SELECT COUNT(*) FROM cp_consumer_content_tags";
 
@@ -2140,8 +2128,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         int unlinkedConsumers = consumerCurator.unlinkIdCertificates(List.of(
             idCert1.getId(),
-            idCert2.getId()
-        ));
+            idCert2.getId()));
         this.consumerCurator.flush();
         this.consumerCurator.clear();
 
@@ -2179,8 +2166,7 @@ public class ConsumerCuratorTest extends DatabaseTestFixture {
 
         int unlinkedConsumers = consumerCurator.unlinkCaCertificates(List.of(
             caCert1.getId(),
-            caCert2.getId()
-        ));
+            caCert2.getId()));
         this.consumerCurator.flush();
         this.consumerCurator.clear();
 

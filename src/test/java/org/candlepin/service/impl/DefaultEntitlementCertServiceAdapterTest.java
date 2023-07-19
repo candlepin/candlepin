@@ -76,6 +76,8 @@ import org.candlepin.util.X509V3ExtensionUtil.PathNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
@@ -118,11 +120,6 @@ import java.util.StringTokenizer;
 import java.util.stream.Stream;
 import java.util.zip.InflaterOutputStream;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-
-
-
 @SuppressWarnings("unchecked")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -150,20 +147,29 @@ public class DefaultEntitlementCertServiceAdapterTest {
     private DefaultEntitlementCertServiceAdapter certServiceAdapter;
     private X509V3ExtensionUtil v3extensionUtil;
 
-    @Inject private PKIUtility realPKI;
-    @Inject private Configuration config;
-    @Inject private X509ExtensionUtil extensionUtil;
-    @Inject @Named("X509V3ExtensionUtilObjectMapper") private ObjectMapper mapper;
+    private PKIUtility realPKI;
+    private Configuration config;
+    private X509ExtensionUtil extensionUtil;
+    private ObjectMapper mapper;
 
-    @Mock private Configuration mockConfig;
-    @Mock private X509V3ExtensionUtil mockV3extensionUtil;
-    @Mock private X509ExtensionUtil mockExtensionUtil;
-    @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
-    @Mock private CertificateSerialCurator serialCurator;
-    @Mock private EntitlementCurator entCurator;
-    @Mock private OwnerCurator ownerCurator;
-    @Mock private PKIUtility mockedPKI;
-    @Mock private EnvironmentCurator mockEnvironmentCurator;
+    @Mock
+    private Configuration mockConfig;
+    @Mock
+    private X509V3ExtensionUtil mockV3extensionUtil;
+    @Mock
+    private X509ExtensionUtil mockExtensionUtil;
+    @Mock
+    private ConsumerTypeCurator mockConsumerTypeCurator;
+    @Mock
+    private CertificateSerialCurator serialCurator;
+    @Mock
+    private EntitlementCurator entCurator;
+    @Mock
+    private OwnerCurator ownerCurator;
+    @Mock
+    private PKIUtility mockedPKI;
+    @Mock
+    private EnvironmentCurator mockEnvironmentCurator;
 
     private Consumer consumer;
     private Product product;
@@ -214,9 +220,12 @@ public class DefaultEntitlementCertServiceAdapterTest {
         Injector injector = Guice.createInjector(
             new TestingModules.MockJpaModule(),
             new TestingModules.ServletEnvironmentModule(),
-            new TestingModules.StandardTest()
-        );
-        injector.injectMembers(this);
+            new TestingModules.StandardTest());
+        realPKI = injector.getInstance(PKIUtility.class);
+        config = injector.getInstance(Configuration.class);
+        extensionUtil = injector.getInstance(X509ExtensionUtil.class);
+        mapper = injector.getInstance(Key.get(ObjectMapper.class,
+            Names.named("X509V3ExtensionUtilObjectMapper")));
 
         v3extensionUtil = new X509V3ExtensionUtil(config, entCurator, mapper);
         certServiceAdapter = new DefaultEntitlementCertServiceAdapter(
@@ -316,15 +325,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
         when(this.mockConsumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(type);
         when(this.mockConsumerTypeCurator.get(eq(type.getId()))).thenReturn(type);
 
-        entitlement = new Entitlement();
-        entitlement.setQuantity(Integer.valueOf(ENTITLEMENT_QUANTITY));
+        entitlement = new Entitlement().setPool(pool)
+            .setQuantity(Integer.valueOf(ENTITLEMENT_QUANTITY));
         entitlement.setConsumer(consumer);
-        entitlement.setPool(pool);
         entitlement.setOwner(owner);
-        largeContentEntitlement = new Entitlement();
-        largeContentEntitlement.setQuantity(Integer.valueOf(ENTITLEMENT_QUANTITY));
+        largeContentEntitlement = new Entitlement().setPool(largeContentPool)
+            .setQuantity(Integer.valueOf(ENTITLEMENT_QUANTITY));
         largeContentEntitlement.setConsumer(consumer);
-        largeContentEntitlement.setPool(largeContentPool);
         largeContentEntitlement.setOwner(owner);
 
         product.addContent(content, false);
@@ -474,10 +481,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         List<org.candlepin.model.dto.Product> productModels = getProductModels(product, providedProducts,
             promotedContent, entitlement);
-        assertThrows(CertificateSizeException.class, () ->  certServiceAdapter.createX509Certificate(consumer,
+        assertThrows(CertificateSizeException.class, () -> certServiceAdapter.createX509Certificate(consumer,
             owner, pool, entitlement, product, providedProducts, productModels,
-            new BigInteger("1234"), keyPair, promotedContent, new HashSet<>())
-        );
+            new BigInteger("1234"), keyPair, promotedContent, new HashSet<>()));
     }
 
     private Set<Content> generateContent(int numberToGenerate, String prefix) {
@@ -506,8 +512,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         assertThrows(CertificateSizeException.class, () -> certServiceAdapter.createX509Certificate(consumer,
             owner, pool, entitlement, product, new HashSet<>(), getProductModels(product, new HashSet<>(),
-            promotedContent, entitlement), new BigInteger("1234"), keyPair, promotedContent, new HashSet<>())
-        );
+                promotedContent, entitlement),
+            new BigInteger("1234"), keyPair, promotedContent, new HashSet<>()));
     }
 
     @Test
@@ -575,7 +581,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
     }
 
     @Test
-    public void testContentRequiredTagsExtension()  throws CertificateSizeException {
+    public void testContentRequiredTagsExtension() throws CertificateSizeException {
         PromotedContent promotedContent = new PromotedContent(prefix(""));
         Set<X509ExtensionWrapper> contentExtensions = extensionUtil.contentExtensions(
             product.getProductContent(), promotedContent,
@@ -759,9 +765,10 @@ public class DefaultEntitlementCertServiceAdapterTest {
             any(Date.class), any(KeyPair.class), any(BigInteger.class),
             nullable(String.class));
     }
+
     @Test
     public void virtOnlyByAttribute() throws Exception {
-        //note that "true" gets recoded to "1" to match other bools in the cert
+        // note that "true" gets recoded to "1" to match other bools in the cert
         entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "true");
 
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
@@ -778,7 +785,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void orderNumberAttribute() throws Exception {
-        //note that "true" gets recoded to "1" to match other bools in the cert
+        // note that "true" gets recoded to "1" to match other bools in the cert
         pool.setOrderNumber("this_order");
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         certServiceAdapter.createX509Certificate(consumer, owner, pool, entitlement,
@@ -973,8 +980,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         products.add(product);
         setupEntitlements(ARCH_LABEL, "1.0");
 
-        Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV1Extensions(products, pool, consumer,
+        Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV1Extensions(products, pool,
+            consumer,
             entitlement.getQuantity(), new PromotedContent(prefix("")), new HashSet<>());
         Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
         Map<String, String> extMap = getEncodedContentMap(extensions);
@@ -995,9 +1002,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         products.add(product);
         setupEntitlements(ARCH_LABEL, "1.0");
 
-        Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV1Extensions(products, pool, consumer,
-            entitlement.getQuantity(), new PromotedContent(prefix("")), new HashSet<>());
+        Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV1Extensions(
+            products, pool, consumer, entitlement.getQuantity(),
+            new PromotedContent(prefix("")), new HashSet<>());
         Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
         Map<String, String> extMap = getEncodedContentMap(extensions);
 
@@ -1027,8 +1034,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         products.add(wrongArchProduct);
         setupEntitlements(ARCH_LABEL, "1.0");
 
-        Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV1Extensions(products, pool, consumer,
+        Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV1Extensions(products, pool,
+            consumer,
             entitlement.getQuantity(), new PromotedContent(prefix("")), new HashSet<>());
         Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
         Map<String, String> extMap = getEncodedContentMap(extensions);
@@ -1055,8 +1062,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         products.add(kickstartProduct);
         setupEntitlements(ARCH_LABEL, "1.0");
 
-        Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV1Extensions(products, pool, consumer,
+        Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV1Extensions(products, pool,
+            consumer,
             entitlement.getQuantity(), new PromotedContent(prefix("")), new HashSet<>());
         Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
         Map<String, String> extMap = getEncodedContentMap(extensions);
@@ -1088,8 +1095,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         products.add(fileProduct);
         setupEntitlements(ARCH_LABEL, "1.0");
 
-        Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV1Extensions(products, pool, consumer,
+        Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV1Extensions(products, pool,
+            consumer,
             entitlement.getQuantity(), new PromotedContent(prefix("")), new HashSet<>());
         Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
         Map<String, String> extMap = getEncodedContentMap(extensions);
@@ -1104,7 +1111,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
         // make sure we don't set content type to "null"
         assertFalse(extMapHasContentType(fileContent, extMap, "null"));
     }
-
 
     @Test
     public void testPrepareV1ExtensionsFileUnknownContentType() {
@@ -1122,8 +1128,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         products.add(unknownContentTypeProduct);
         setupEntitlements(ARCH_LABEL, "1.0");
 
-        Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV1Extensions(products, pool, consumer,
+        Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV1Extensions(products, pool,
+            consumer,
             entitlement.getQuantity(), new PromotedContent(prefix("")), new HashSet<>());
         Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
         Map<String, String> extMap = getEncodedContentMap(extensions);
@@ -1160,9 +1166,9 @@ public class DefaultEntitlementCertServiceAdapterTest {
         products.add(product);
         setupEntitlements(ARCH_LABEL, "1.0");
 
-        Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV1Extensions(products, pool, consumer, entitlement.getQuantity(),
-                new PromotedContent(prefix("")), new HashSet<>());
+        Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV1Extensions(products, pool,
+            consumer, entitlement.getQuantity(),
+            new PromotedContent(prefix("")), new HashSet<>());
         Map<String, X509ExtensionWrapper> map = getEncodedContent(extensions);
         Map<String, String> extMap = getEncodedContentMap(extensions);
 
@@ -1224,8 +1230,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
             pc.setEnabled(false);
         }
 
-        Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV3Extensions();
+        Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions();
         Map<String, X509ExtensionWrapper> map = new HashMap<>();
         for (X509ExtensionWrapper ext : extensions) {
             map.put(ext.getOid(), ext);
@@ -1235,8 +1240,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         PromotedContent promotedContent = new PromotedContent(prefix("prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
-                getProductModels(product, products, promotedContent, entitlement),
-                consumer, pool, entitlement.getQuantity());
+            getProductModels(product, products, promotedContent, entitlement),
+            consumer, pool, entitlement.getQuantity());
         String stringValue;
         try {
             stringValue = processPayload(payload);
@@ -1244,8 +1249,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-        Map<String, Object> data = (Map<String, Object>)
-            Util.fromJson(stringValue , Map.class);
+        Map<String, Object> data = (Map<String, Object>) Util.fromJson(stringValue, Map.class);
         assertEquals(data.get("consumer"), "test-consumer");
         assertEquals(data.get("quantity"), 10);
 
@@ -1268,8 +1272,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
         assertEquals(((Integer) order.get("quantity")).intValue(), (long) subscription.getQuantity());
         assertNotNull(order.get("start"));
         assertNotNull(order.get("end"));
-//        assertEquals(order.get("contract"), subscription.getContractNumber());
-//        assertEquals(order.get("account"), subscription.getAccountNumber());
+        // assertEquals(order.get("contract"), subscription.getContractNumber());
+        // assertEquals(order.get("account"), subscription.getAccountNumber());
 
         List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
         List<Map<String, Object>> contents;
@@ -1278,7 +1282,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
             assertEquals(prod.get("name"), product.getName());
             assertEquals(prod.get("version"), product.getAttributeValue(Product.Attributes.VERSION));
             String arch = product.hasAttribute(Product.Attributes.ARCHITECTURE) ?
-                product.getAttributeValue(Product.Attributes.ARCHITECTURE) : "";
+                product.getAttributeValue(Product.Attributes.ARCHITECTURE) :
+                "";
             StringTokenizer st = new StringTokenizer(arch, ",");
             while (st.hasMoreElements()) {
                 assertTrue(((List) prod.get("architectures")).contains(st.nextElement()));
@@ -1352,8 +1357,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         PromotedContent promotedContent = new PromotedContent(prefix("prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
-                getProductModels(product, products, promotedContent, entitlement),
-                consumer, pool, entitlement.getQuantity());
+            getProductModels(product, products, promotedContent, entitlement),
+            consumer, pool, entitlement.getQuantity());
         String stringValue;
         try {
             stringValue = processPayload(payload);
@@ -1361,13 +1366,14 @@ public class DefaultEntitlementCertServiceAdapterTest {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-        Map<String, Object> data = (Map<String, Object>) Util.fromJson(stringValue , Map.class);
+        Map<String, Object> data = (Map<String, Object>) Util.fromJson(stringValue, Map.class);
 
         List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
         List<Map<String, Object>> contents;
         for (Map<String, Object> prod : prods) {
             String arch = product.hasAttribute(Product.Attributes.ARCHITECTURE) ?
-                product.getAttributeValue(Product.Attributes.ARCHITECTURE) : "";
+                product.getAttributeValue(Product.Attributes.ARCHITECTURE) :
+                "";
             StringTokenizer st = new StringTokenizer(arch, ",");
             while (st.hasMoreElements()) {
                 assertTrue(((List) prod.get("architectures")).contains(st.nextElement()));
@@ -1413,8 +1419,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
-                getProductModels(product, products, promotedContent, entitlement),
-                consumer, pool, entitlement.getQuantity());
+            getProductModels(product, products, promotedContent, entitlement),
+            consumer, pool, entitlement.getQuantity());
         String stringValue;
         try {
             stringValue = processPayload(payload);
@@ -1423,15 +1429,15 @@ public class DefaultEntitlementCertServiceAdapterTest {
             throw new RuntimeException(e);
         }
 
-        Map<String, Object> data = (Map<String, Object>)
-            Util.fromJson(stringValue , Map.class);
+        Map<String, Object> data = (Map<String, Object>) Util.fromJson(stringValue, Map.class);
 
         List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
         List<Map<String, Object>> contents;
         for (Map<String, Object> prod : prods) {
 
             String arch = product.hasAttribute(Product.Attributes.ARCHITECTURE) ?
-                product.getAttributeValue(Product.Attributes.ARCHITECTURE) : "";
+                product.getAttributeValue(Product.Attributes.ARCHITECTURE) :
+                "";
             StringTokenizer st = new StringTokenizer(arch, ",");
             while (st.hasMoreElements()) {
                 assertTrue(((List) prod.get("architectures")).contains(st.nextElement()));
@@ -1482,8 +1488,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
-                getProductModels(product, products, promotedContent, entitlement),
-                consumer, pool, entitlement.getQuantity());
+            getProductModels(product, products, promotedContent, entitlement),
+            consumer, pool, entitlement.getQuantity());
         String stringValue;
         try {
             stringValue = processPayload(payload);
@@ -1492,15 +1498,15 @@ public class DefaultEntitlementCertServiceAdapterTest {
             throw new RuntimeException(e);
         }
 
-        Map<String, Object> data = (Map<String, Object>)
-            Util.fromJson(stringValue , Map.class);
+        Map<String, Object> data = (Map<String, Object>) Util.fromJson(stringValue, Map.class);
 
         List<Map<String, Object>> prods = (List<Map<String, Object>>) data.get("products");
         List<Map<String, Object>> contents;
         for (Map<String, Object> prod : prods) {
 
             String arch = wrongArchProduct.hasAttribute(Product.Attributes.ARCHITECTURE) ?
-                wrongArchProduct.getAttributeValue(Product.Attributes.ARCHITECTURE) : "";
+                wrongArchProduct.getAttributeValue(Product.Attributes.ARCHITECTURE) :
+                "";
             StringTokenizer st = new StringTokenizer(arch, ",");
             while (st.hasMoreElements()) {
                 assertTrue(((List) prod.get("architectures")).contains(st.nextElement()));
@@ -1510,7 +1516,6 @@ public class DefaultEntitlementCertServiceAdapterTest {
             assertTrue(contents.isEmpty());
         }
     }
-
 
     @Test
     public void testPrepareV3EntitlementDataForDefaults() throws IOException {
@@ -1537,8 +1542,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
-                getProductModels(product, products, promotedContent, entitlement),
-                consumer, pool, entitlement.getQuantity());
+            getProductModels(product, products, promotedContent, entitlement),
+            consumer, pool, entitlement.getQuantity());
         String stringValue;
         try {
             stringValue = processPayload(payload);
@@ -1546,7 +1551,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-        Map<String, Object> data = (Map<String, Object>) Util.fromJson(stringValue , Map.class);
+        Map<String, Object> data = (Map<String, Object>) Util.fromJson(stringValue, Map.class);
         assertEquals(data.get("consumer"), "test-consumer");
 
         // each has been set to the default and should not be populated in the cert
@@ -1576,8 +1581,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         pool.getProduct().setAttribute(Product.Attributes.MANAGEMENT_ENABLED, "1");
         entitlement.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "1");
 
-        Set<X509ExtensionWrapper> extensions =
-            certServiceAdapter.prepareV3Extensions();
+        Set<X509ExtensionWrapper> extensions = certServiceAdapter.prepareV3Extensions();
         Map<String, X509ExtensionWrapper> map = new HashMap<>();
         for (X509ExtensionWrapper ext : extensions) {
             map.put(ext.getOid(), ext);
@@ -1587,8 +1591,8 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
         PromotedContent promotedContent = new PromotedContent(prefix("/prefix"));
         byte[] payload = v3extensionUtil.createEntitlementDataPayload(
-                getProductModels(product, products, promotedContent, entitlement),
-                consumer, pool, entitlement.getQuantity());
+            getProductModels(product, products, promotedContent, entitlement),
+            consumer, pool, entitlement.getQuantity());
         String stringValue;
         try {
             stringValue = processPayload(payload);
@@ -1596,7 +1600,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
         catch (Exception e) {
             throw new RuntimeException(e);
         }
-        Map<String, Object> data = (Map<String, Object>) Util.fromJson(stringValue , Map.class);
+        Map<String, Object> data = (Map<String, Object>) Util.fromJson(stringValue, Map.class);
         assertEquals(data.get("consumer"), "test-consumer");
 
         // each has been set to the default and should not be populated in the cert
@@ -1959,7 +1963,7 @@ public class DefaultEntitlementCertServiceAdapterTest {
 
     @Test
     public void testHuffNodeTrieCreationAndTreeSearch() {
-        String[] paths = {"01110", "01111", "0110", "1110", "1111", "010", "100", "101", "110", "00"};
+        String[] paths = { "01110", "01111", "0110", "1110", "1111", "010", "100", "101", "110", "00" };
         List<HuffNode> huffNodes = new ArrayList<>();
         List<Object> members = new ArrayList<>();
         for (int i = 1; i <= 10; i++) {
@@ -2144,11 +2148,13 @@ public class DefaultEntitlementCertServiceAdapterTest {
             super(value, "1.3.6.1.4.1.2312.9.4.17");
         }
     }
+
     static class ListContainsVirtOnlyKey extends OidMatcher {
         public ListContainsVirtOnlyKey(String value) {
             super(value, "1.3.6.1.4.1.2312.9.4.18");
         }
     }
+
     static class ListContainsOrderNumberKey extends OidMatcher {
         public ListContainsOrderNumberKey(String value) {
             super(value, "1.3.6.1.4.1.2312.9.4.2");

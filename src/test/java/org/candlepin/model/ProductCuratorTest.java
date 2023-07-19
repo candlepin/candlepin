@@ -24,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.DevConfig;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.AttributeValidator;
@@ -51,15 +50,10 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 import javax.validation.ConstraintViolationException;
 
-
-
 public class ProductCuratorTest extends DatabaseTestFixture {
-
-    @Inject private DevConfig config;
 
     private Owner owner;
     private Product product;
@@ -178,7 +172,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertEquals(jsonData, lookedUp.getAttributeValue("content_sets"));
 
         data = mapper.readValue(lookedUp.getAttributeValue("content_sets"),
-            new TypeReference<Map<String, String>>(){});
+            new TypeReference<Map<String, String>>() {});
         assertEquals("1", data.get("a"));
         assertEquals("2", data.get("b"));
     }
@@ -208,7 +202,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertEquals(jsonData, lookedUp.getAttributeValue("content_sets"));
 
         data = mapper.readValue(lookedUp.getAttributeValue("content_sets"),
-            new TypeReference<List<Map<String, String>>>(){});
+            new TypeReference<List<Map<String, String>>>() {});
         Map<String, String> cs1 = data.get(0);
         assertEquals("cs1", cs1.get("name"));
 
@@ -217,8 +211,8 @@ public class ProductCuratorTest extends DatabaseTestFixture {
     }
 
     /**
-     *Test whether the creation date of the product variable is set properly
-     *when persisted for the first time.
+     * Test whether the creation date of the product variable is set properly when persisted for the
+     * first time.
      */
     @Test
     public void testCreationDate() {

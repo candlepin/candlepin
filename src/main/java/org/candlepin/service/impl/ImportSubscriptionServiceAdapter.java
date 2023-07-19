@@ -31,8 +31,6 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-
-
 /**
  * @author mstead
  */
@@ -40,9 +38,10 @@ public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdap
 
     private List<SubscriptionDTO> subscriptions;
     private Map<String, SubscriptionDTO> subsBySubId = new HashMap<>();
-    @Inject private I18n i18n;
+    private I18n i18n;
 
-    public ImportSubscriptionServiceAdapter() {
+    @Inject
+    public ImportSubscriptionServiceAdapter(I18n i18n) {
         this(new LinkedList<>());
     }
 

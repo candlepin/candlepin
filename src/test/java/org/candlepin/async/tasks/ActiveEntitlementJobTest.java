@@ -35,12 +35,9 @@ import org.candlepin.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
-
-
 public class ActiveEntitlementJobTest extends DatabaseTestFixture {
 
-    @Inject private ActiveEntitlementJob job;
+    private ActiveEntitlementJob job;
 
     private Owner owner;
     private ConsumerType ct;
@@ -51,6 +48,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
     public void init() throws Exception {
         super.init(false);
 
+        job = this.injector.getInstance(ActiveEntitlementJob.class);
         this.owner = this.ownerCurator.create(new Owner()
             .setKey("test-owner")
             .setDisplayName("Test Owner")
@@ -128,7 +126,7 @@ public class ActiveEntitlementJobTest extends DatabaseTestFixture {
         JobExecutionContext context = mock(JobExecutionContext.class);
         job.execute(context);
         consumerCurator.refresh(consumer);
-        // still not valid.  Probably not even set, but that doesn't matter
+        // still not valid. Probably not even set, but that doesn't matter
         assertNotEquals("valid", consumer.getEntitlementStatus());
 
         // Should not have changed

@@ -21,13 +21,10 @@ import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
-
 /**
  * RulesCuratorTest
  */
 public class RulesCuratorTest extends DatabaseTestFixture {
-    @Inject private RulesCurator rulesCurator;
 
     @Test
     public void deleteRules() {
@@ -48,9 +45,9 @@ public class RulesCuratorTest extends DatabaseTestFixture {
     }
 
     /*
-     * While this is a little unorthodox, we need to make sure we stop slipping in use
-     * of "for each", which is not a part of standard Javascript and thus a problem for
-     * those who are using our rules with other interpreters.
+     * While this is a little unorthodox, we need to make sure we stop slipping in use of "for each",
+     * which is not a part of standard Javascript and thus a problem for those who are using our rules
+     * with other interpreters.
      */
     @Test
     public void noForEachInRules() throws Exception {

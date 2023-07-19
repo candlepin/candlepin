@@ -24,9 +24,7 @@ import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ContentAccessCertificate;
-import org.candlepin.model.ContentAccessCertificateCurator;
 import org.candlepin.model.Environment;
-import org.candlepin.model.KeyPairDataCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.PKIUtility;
@@ -48,10 +46,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-import javax.inject.Inject;
-
-
-
 /**
  * Test suite for the ContentAccessManager backed by the testing database infrastructure
  */
@@ -62,15 +56,11 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
     private static final String ENTITLEMENT_MODE = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
     private static final String ORG_ENVIRONMENT_MODE = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
-    @Inject private ContentAccessCertificateCurator caCertCurator;
-    @Inject private KeyPairDataCurator keyPairDataCurator;
-
     private PKIUtility pkiUtility;
     private ObjectMapper objMapper;
     private X509V3ExtensionUtil x509V3ExtensionUtil;
 
     private EventSink mockEventSink;
-
 
     @BeforeEach
     public void setup() throws Exception {
@@ -111,7 +101,6 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
 
         return this.consumerCurator.merge(consumer);
     }
-
 
     private void scaCertGenerationTest(Consumer consumer) throws Exception {
         ContentAccessManager manager = this.createManager();

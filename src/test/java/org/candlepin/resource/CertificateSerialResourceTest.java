@@ -31,22 +31,18 @@ import com.google.inject.Injector;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
-
-
 public class CertificateSerialResourceTest {
 
-    @Inject protected ModelTranslator modelTranslator;
+    protected ModelTranslator modelTranslator;
 
     @BeforeEach
     public void init() {
         Injector injector = Guice.createInjector(
             new TestingModules.MockJpaModule(),
             new TestingModules.ServletEnvironmentModule(),
-            new TestingModules.StandardTest()
-        );
-
+            new TestingModules.StandardTest());
         injector.injectMembers(this);
+        modelTranslator = injector.getInstance(ModelTranslator.class);
     }
 
     @Test

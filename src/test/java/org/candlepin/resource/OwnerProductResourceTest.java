@@ -25,11 +25,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
-import org.candlepin.config.Configuration;
-import org.candlepin.controller.CandlepinPoolManager;
-import org.candlepin.controller.ContentAccessManager;
-import org.candlepin.controller.ContentManager;
-import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.api.server.v1.AttributeDTO;
 import org.candlepin.dto.api.server.v1.ContentDTO;
 import org.candlepin.dto.api.server.v1.ProductCertificateDTO;
@@ -45,7 +40,6 @@ import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCurator;
 import org.candlepin.model.dto.Subscription;
-import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -60,32 +54,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Inject;
-
 public class OwnerProductResourceTest extends DatabaseTestFixture {
 
-    @Inject
-    private CandlepinPoolManager poolManager;
-    @Inject
-    private I18n i18n;
-    @Inject
     private OwnerProductResource ownerProductResource;
-    @Inject
-    private DTOValidator dtoValidator;
-    @Inject
-    protected ContentAccessManager contentAccessManager;
-    @Inject
-    private Configuration config;
-    @Inject
-    protected ContentManager contentManager;
-    @Inject
-    protected ProductManager productManager;
-
     private JobManager jobManager;
-
 
     @BeforeEach
     public void setUp() {
+        ownerProductResource = this.injector.getInstance(OwnerProductResource.class);
         this.jobManager = mock(JobManager.class);
     }
 
@@ -332,9 +308,8 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         ProductDTO update = this.buildTestProductDTO();
         update.setId("TaylorSwift");
 
-        assertThrows(BadRequestException.class, () ->
-            this.ownerProductResource.updateProductByOwner(owner.getKey(), product.getId(), update)
-        );
+        assertThrows(BadRequestException.class,
+            () -> this.ownerProductResource.updateProductByOwner(owner.getKey(), product.getId(), update));
     }
 
     @Test
@@ -372,9 +347,8 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
         assertNotNull(this.ownerProductCurator.getProductById(owner, pdto.getId()));
 
-        assertThrows(ForbiddenException.class, () ->
-            this.ownerProductResource.updateProductByOwner(owner.getKey(), pdto.getId(), pdto)
-        );
+        assertThrows(ForbiddenException.class,
+            () -> this.ownerProductResource.updateProductByOwner(owner.getKey(), pdto.getId(), pdto));
         Product entity = this.ownerProductCurator.getProductById(owner, pdto.getId());
         ProductDTO expected = this.modelTranslator.translate(entity,
             ProductDTO.class);
@@ -392,9 +366,8 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
 
         assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
 
-        assertThrows(ForbiddenException.class, () ->
-            this.ownerProductResource.deleteProductByOwner(owner.getKey(), product.getId())
-        );
+        assertThrows(ForbiddenException.class,
+            () -> this.ownerProductResource.deleteProductByOwner(owner.getKey(), product.getId()));
         assertNotNull(this.ownerProductCurator.getProductById(owner, product.getId()));
     }
 
@@ -440,8 +413,7 @@ public class OwnerProductResourceTest extends DatabaseTestFixture {
         Product entity = this.createProduct("MCT123", "AwesomeOS", owner);
         securityInterceptor.enable();
 
-        assertThrows(BadRequestException.class, () ->
-            ownerProductResource.getProductCertificateByOwner(owner.getKey(), entity.getId())
-        );
+        assertThrows(BadRequestException.class,
+            () -> ownerProductResource.getProductCertificateByOwner(owner.getKey(), entity.getId()));
     }
 }

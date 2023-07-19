@@ -28,7 +28,6 @@ import org.candlepin.resteasy.MethodLocator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import org.jboss.resteasy.core.ResteasyContext;
@@ -42,22 +41,21 @@ import org.mockito.MockitoAnnotations;
 import java.lang.reflect.Method;
 import java.util.Date;
 
-import javax.inject.Inject;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
-
-
 
 /**
  * AuthInterceptorTest
  */
 public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
-    @Inject private Injector injector;
 
-    @Mock private ContainerRequestContext mockRequestContext;
-    @Mock private CandlepinSecurityContext mockSecurityContext;
-    @Mock private ResourceInfo mockInfo;
+    @Mock
+    private ContainerRequestContext mockRequestContext;
+    @Mock
+    private CandlepinSecurityContext mockSecurityContext;
+    @Mock
+    private ResourceInfo mockInfo;
 
     private ConsumerCheckInFilter interceptor;
     private MockHttpRequest mockReq;
@@ -154,8 +152,7 @@ public class ConsumerCheckInFilterTest extends DatabaseTestFixture {
     }
 
     /**
-     * FakeResource simply to create a Method object to pass down into
-     * the interceptor.
+     * FakeResource simply to create a Method object to pass down into the interceptor.
      */
     public static class FakeResource {
         public String someMethod(String str) {

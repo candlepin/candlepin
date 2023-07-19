@@ -32,12 +32,8 @@ import org.junit.jupiter.api.Test;
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.inject.Inject;
-
-
-
 public class CPRestrictionsTest {
-    @Inject private Configuration config;
+    private Configuration config;
 
     @BeforeEach
     public void init() {
@@ -45,7 +41,7 @@ public class CPRestrictionsTest {
             new TestingModules.MockJpaModule(),
             new TestingModules.ServletEnvironmentModule(),
             new TestingModules.StandardTest());
-        injector.injectMembers(this);
+        config = injector.getInstance(Configuration.class);
     }
 
     @Test

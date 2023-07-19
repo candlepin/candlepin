@@ -22,6 +22,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
+import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.RefresherFactory;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
@@ -50,16 +51,13 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.inject.Inject;
-
-
 public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
 
-    @Inject private ConsumerResource consumerResource;
-    @Inject private PoolManager poolManager;
-    @Inject private RefresherFactory refresherFactory;
-    @Inject private SubscriptionServiceAdapter subAdapter;
-    @Inject private ProductServiceAdapter prodAdapter;
+    private ConsumerResource consumerResource;
+    private PoolManager poolManager;
+    private RefresherFactory refresherFactory;
+    private SubscriptionServiceAdapter subAdapter;
+    private ProductServiceAdapter prodAdapter;
 
     private ConsumerType manifestType;
     private ConsumerType systemType;
@@ -78,8 +76,15 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
     }
 
     @BeforeEach
+    @Override
     public void init() throws Exception {
         super.init(false);
+
+        consumerResource = injector.getInstance(ConsumerResource.class);
+        poolManager = injector.getInstance(CandlepinPoolManager.class);
+        refresherFactory = injector.getInstance(RefresherFactory.class);
+        subAdapter = injector.getInstance(SubscriptionServiceAdapter.class);
+        prodAdapter = injector.getInstance(ProductServiceAdapter.class);
 
         List<SubscriptionDTO> subscriptions = new ArrayList<>();
         subAdapter = new ImportSubscriptionServiceAdapter(subscriptions);
@@ -177,7 +182,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             assertEquals(30L, p.getQuantity());
         }
         // manifest consume from the physical pool and then check bonus pool quantities.
-        //   Should result in a revocation of one of the 10 count entitlements.
+        // Should result in a revocation of one of the 10 count entitlements.
         consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 2, null,
             null, false, null, null);
         for (Pool p : subscribedTo) {
@@ -186,7 +191,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             assertEquals(10L, p.getQuantity());
         }
         // system consume from the physical pool and then check bonus pool quantities.
-        //   Should result in no change in the entitlements for the guest.
+        // Should result in no change in the entitlements for the guest.
         consumerResource.bind(systemConsumer.getUuid(), parentPool.getId(), null, 1, null,
             null, false, null, null);
         for (Pool p : subscribedTo) {
@@ -239,7 +244,7 @@ public class ConsumerResourceVirtEntitlementTest extends DatabaseTestFixture {
             assertEquals(-1L, p.getQuantity());
         }
         // Full consumption of physical pool causes revocation of bonus pool entitlements
-        //   and quantity change to 0
+        // and quantity change to 0
         consumerResource.bind(manifestConsumer.getUuid(), parentPool.getId(), null, 3, null,
             null, false, null, null);
         for (Pool p : subscribedTo) {

@@ -38,12 +38,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
 import javax.validation.ConstraintViolationException;
 
 public class ConsumerTest extends DatabaseTestFixture {
 
-    @Inject private ConsumerResource consumerResource;
+    private ConsumerResource consumerResource;
 
     private Owner owner;
     private Product rhel;
@@ -69,7 +68,7 @@ public class ConsumerTest extends DatabaseTestFixture {
             .setType(consumerType)
             .setFact("foo", "bar")
             .setFact("foo1", "bar1");
-
+        consumerResource = injector.getInstance(ConsumerResource.class);
         consumerCurator.create(consumer);
     }
 
@@ -560,7 +559,7 @@ public class ConsumerTest extends DatabaseTestFixture {
         newFacts.put(Consumer.Facts.DMI_BIOS_VENDOR, "vendorA");
         newFacts.put("lscpu.model", "100");
 
-        // this should return false because the only cloud fact  the consumer has did not change
+        // this should return false because the only cloud fact the consumer has did not change
         assertFalse(consumer.checkForCloudProfileFacts(newFacts));
     }
 

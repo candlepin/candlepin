@@ -31,14 +31,11 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
-
 /**
  * OwnerAccessTest
  */
 public class OwnerAccessControlTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private OwnerResource resource;
+    private OwnerResource resource;
     private PrincipalProvider principalProvider;
 
     private Owner owner;
@@ -49,6 +46,7 @@ public class OwnerAccessControlTest extends DatabaseTestFixture {
         super.init();
         this.owner = createOwner();
         this.principalProvider = mock(PrincipalProvider.class);
+        resource = this.injector.getInstance(OwnerResource.class);
     }
 
     @Test

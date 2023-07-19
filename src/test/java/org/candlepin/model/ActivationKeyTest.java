@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -29,16 +28,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
-import javax.inject.Inject;
-
 /**
  * ActivationKeyTest
  */
 public class ActivationKeyTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private PoolCurator poolCurator;
-    @Inject private ActivationKeyCurator activationKeyCurator;
 
     private Owner owner;
 
@@ -110,8 +103,7 @@ public class ActivationKeyTest extends DatabaseTestFixture {
             prod,
             12L,
             new Date(),
-            new Date(System.currentTimeMillis() + (365 * 24 * 60 * 60 * 1000))
-        );
+            new Date(System.currentTimeMillis() + (365 * 24 * 60 * 60 * 1000)));
 
         assertTrue(!key.hasPool(pool));
 
