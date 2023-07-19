@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.3.6
+Version: 4.3.7
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -240,6 +240,143 @@ fi
 
 #raw
 %changelog
+* Wed Jul 19 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.7-1
+- Bump com.gradle.enterprise from 3.13.4 to 3.14
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.3.1 to 3.3.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 22.0.0 to 22.0.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.sonarsource.scanner.gradle:sonarqube-gradle-plugin
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-600: Stop passing pool manager as param (ojanus@redhat.com)
+- CANDLEPIN-531: Update RHEL dependency from pki-servlet-engine to tomcat
+  (sbakaj@redhat.com)
+- CANDLEPIN-631: CloudRegistrationSpecTest not running in GH actions
+  (joshmalbrecht@gmail.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 21.1.2 to 22.0.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.10 to 10.1.11
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.3.0 to 3.3.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.google.jimfs:jimfs from 1.2 to 1.3.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.gradle.enterprise from 3.13.3 to 3.13.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.google.guava:guava from 32.1.0-jre to 32.1.1-jre
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.owasp:dependency-check-gradle from 8.2.1 to 8.3.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.google.guava:guava from 32.0.1-jre to 32.1.0-jre
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Fix snakeyaml version conflict (ojanus@redhat.com)
+- Fix fork checks for dependabot (ojanus@redhat.com)
+- Remove assign reviewer workflow (ojanus@redhat.com)
+- Revert "CANDLEPIN-580: Fixed various remapping issues during refresh"
+  (crog@redhat.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 21.1.1 to 21.1.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump commons-codec:commons-codec from 1.15 to 1.16.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Revert "CANDLEPIN-589: Added support for forced-update owner refresh"
+  (crog@redhat.com)
+- Bump org.liquibase:liquibase-core from 4.22.0 to 4.23.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.12.0 to 10.12.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-610: Allow spec tests to run for forked PRs - updated postgres
+  docker-compose health check - updated spec test Dockerfile to use UBI 9 base
+  image (joshmalbrecht@gmail.com)
+- Move sonar scan to PR workflow (ojanus@redhat.com)
+- Updated pom.xml to reflect recent changes to build.gradle (crog@redhat.com)
+- Bump com.netflix.nebula:gradle-lint-plugin from 18.0.3 to 18.1.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-600: Move isManaged check to pool (ojanus@redhat.com)
+- CANDLEPIN-485: Normalized the Owner model object (crog@redhat.com)
+- CANDLEPIN-601: Resolve circular dependency: PoolManager -> OwnerManager
+  (wpoteat@redhat.com)
+- Revert concurrency limit (ojanus@redhat.com)
+- CANDLEPIN-411: Removed obsolete serialization filters (crog@redhat.com)
+- Fix test coverage in Sonar scan (ojanus@redhat.com)
+- Bump org.apache.activemq:artemis-stomp-protocol from 2.28.0 to 2.29.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Minor spec test optimization (ojanus@redhat.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.3.1 to 5.4.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump net.logstash.logback:logstash-logback-encoder from 7.3 to 7.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.activemq:artemis-server from 2.28.0 to 2.29.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Enable Gradle Build Scan on GH Actions (ojanus@redhat.com)
+- CANDLEPIN-603: Update Java version in build images (wpoteat@redhat.com)
+- Bump com.sun.xml.bind:jaxb-core from 4.0.2 to 4.0.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-600: PoolManager cleanup (ojanus@redhat.com)
+- Install unzip before extracting test reports (ojanus@redhat.com)
+- CANDLEPIN-504: Migrated spec tests to GH Actions (joshmalbrecht@gmail.com)
+- Remove sonar exclusions from gradle in favor of sonarcloud config
+  (ojanus@redhat.com)
+- Run Sonar scan as a separate workflow (ojanus@redhat.com)
+- Bump com.sun.xml.bind:jaxb-impl from 4.0.2 to 4.0.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.sonarsource.scanner.gradle:sonarqube-gradle-plugin
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.2.1 to 3.3.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.9 to 10.1.10
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.4.7 to 1.4.8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.google.guava:guava from 32.0.0-jre to 32.0.1-jre
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.ben-manes:gradle-versions-plugin from 0.46.0 to 0.47.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump commons-io:commons-io from 2.12.0 to 2.13.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.0.0 to 10.1.9
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Update sonar exclusions to prevent misleading QG failures (ojanus@redhat.com)
+- 2090316: Migrate Candlepin config to smallrye-config (ojanus@redhat.com)
+- Fix 'Invalid maximum heap size' for gradle sonar (nmoumoul@redhat.com)
+- Bump info.picocli:picocli from 4.7.3 to 4.7.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Increase gradle memory for sonar analysis reports (nmoumoul@redhat.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-jsr310
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.sonarsource.scanner.gradle:sonarqube-gradle-plugin
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.dataformat:jackson-dataformat-xml
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-jdk8
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.datatype:jackson-datatype-hibernate5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-505: Migrate sonar to GH Actions (sbakaj@redhat.com)
+- CANDLEPIN-589: Added support for forced-update owner refresh
+  (crog@redhat.com)
+- Cancel outdated GH Actions workflows on new commits (nmoumoul@redhat.com)
+- Bump com.fasterxml.jackson.module:jackson-module-jsonSchema
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.hsqldb:hsqldb from 2.7.1 to 2.7.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.dataformat:jackson-dataformat-yaml
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.fasterxml.jackson.core:jackson-databind from 2.15.1 to 2.15.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Add Sonarcloud long-lived branch analysis GH Action (nmoumoul@redhat.com)
+- Bump com.google.guava:guava from 31.1-jre to 32.0.0-jre
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.11.0 to 10.12.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.sonarsource.scanner.gradle:sonarqube-gradle-plugin
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-569: Run liquibase update on startup (wpoteat@redhat.com)
+- CANDLEPIN-565: Updated dev environment cert generation script
+  (crog@redhat.com)
+
 * Fri May 19 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.6-1
 - Add new translations using Weblate (noreply@weblate.org)
 - CP-571: Update cpdb to reflect current use (wpoteat@redhat.com)

@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.candlepin</groupId>
   <artifactId>candlepin</artifactId>
-  <version>4.3.6</version>
+  <version>4.3.7</version>
   <packaging>war</packaging>
   <description>The Candlepin Entitlement Engine</description>
   <licenses>
@@ -292,7 +292,7 @@
     <dependency>
       <groupId>org.keycloak</groupId>
       <artifactId>keycloak-servlet-filter-adapter</artifactId>
-      <version>22.0.0</version>
+      <version>22.0.1</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
@@ -304,7 +304,7 @@
     <dependency>
       <groupId>io.smallrye.config</groupId>
       <artifactId>smallrye-config</artifactId>
-      <version>3.3.1</version>
+      <version>3.3.2</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
