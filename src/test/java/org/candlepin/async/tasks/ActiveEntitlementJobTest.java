@@ -35,6 +35,8 @@ import org.candlepin.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+
+
 public class ActiveEntitlementJobTest extends DatabaseTestFixture {
 
     private ActiveEntitlementJob job;

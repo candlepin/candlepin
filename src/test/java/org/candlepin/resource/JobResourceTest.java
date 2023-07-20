@@ -90,6 +90,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
+
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class JobResourceTest extends DatabaseTestFixture {
@@ -99,7 +100,6 @@ public class JobResourceTest extends DatabaseTestFixture {
 
     private JobManager jobManager;
     private AsyncJobStatusCurator jobCurator;
-
 
     @BeforeEach
     public void init() throws Exception {
@@ -299,8 +299,8 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(ids, null, null, null, null,
@@ -342,8 +342,8 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, values, null, null, null,
@@ -375,12 +375,11 @@ public class JobResourceTest extends DatabaseTestFixture {
         // to bother checking that we got the exact ones we're expecting.
     }
 
-
     @ParameterizedTest
     @MethodSource("targetJobStatusesWithJobStatesProvider")
     public void testListJobStatusesWithJobStates(Set<String> stateNames, Set<JobState> expected) {
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, stateNames, null, null,
@@ -413,8 +412,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         Set<String> stateNames = Util.asSet(badStateName);
 
         JobResource resource = this.buildJobResource();
-        assertThrows(NotFoundException.class, () ->
-            resource.listJobStatuses(null, null, stateNames, null, null, null, null, null, null));
+        assertThrows(NotFoundException.class,
+            () -> resource.listJobStatuses(null, null, stateNames, null, null, null, null, null, null));
     }
 
     @Test
@@ -425,8 +424,8 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         Set<String> keys = Util.asSet(owner1.getKey(), owner2.getKey(), owner3.getKey());
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, keys, null,
@@ -464,8 +463,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         Set<String> keys = Util.asSet("", owner1.getKey(), "bad_key", owner2.getKey(), null);
         Set<String> expected = Util.asSet("", owner1.getId(), "bad_key", owner2.getId(), null);
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, keys, null,
@@ -504,8 +503,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         Set<String> keys = Util.asSet(owner1.getKey(), "null", owner2.getKey());
         Set<String> expected = Util.asSet(owner1.getId(), null, owner2.getId());
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, keys, null,
@@ -546,8 +545,8 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, values,
@@ -589,8 +588,8 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, null,
@@ -632,8 +631,8 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, null,
@@ -675,8 +674,8 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, null,
@@ -718,8 +717,8 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, null,
@@ -767,8 +766,8 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, null,
@@ -820,8 +819,8 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         doReturn(expected).when(this.jobManager).findJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         Stream<AsyncJobStatusDTO> result = resource.listJobStatuses(null, null, null, null, null,
@@ -866,8 +865,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         OffsetDateTime end = Util.addDaysToDt(2).toInstant().atOffset(ZoneOffset.UTC);
 
         JobResource resource = this.buildJobResource();
-        assertThrows(BadRequestException.class, () ->
-            resource.listJobStatuses(null, null, null, null, null, null, null, end, start));
+        assertThrows(BadRequestException.class,
+            () -> resource.listJobStatuses(null, null, null, null, null, null, null, end, start));
     }
 
     @Test
@@ -882,8 +881,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         doThrow(new InvalidOrderKeyException()).when(this.jobManager).findJobs(any());
 
         JobResource resource = this.buildJobResource();
-        assertThrows(BadRequestException.class, () ->
-            resource.listJobStatuses(null, null, null, null, null, null, null, null, null));
+        assertThrows(BadRequestException.class,
+            () -> resource.listJobStatuses(null, null, null, null, null, null, null, null, null));
     }
 
     @Test
@@ -891,8 +890,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         doReturn(10001L).when(this.jobCurator).getJobCount(any(AsyncJobStatusQueryArguments.class));
 
         JobResource resource = this.buildJobResource();
-        assertThrows(BadRequestException.class, () ->
-            resource.listJobStatuses(null, null, null, null, null, null, null, null, null));
+        assertThrows(BadRequestException.class,
+            () -> resource.listJobStatuses(null, null, null, null, null, null, null, null, null));
     }
 
     @Test
@@ -900,8 +899,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         doReturn(10000L).when(this.jobCurator).getJobCount(any(AsyncJobStatusQueryArguments.class));
 
         JobResource resource = this.buildJobResource();
-        assertDoesNotThrow(() ->
-            resource.listJobStatuses(null, null, null, null, null, null, null, null, null));
+        assertDoesNotThrow(
+            () -> resource.listJobStatuses(null, null, null, null, null, null, null, null, null));
     }
 
     @Test
@@ -989,8 +988,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         doReturn(expected).when(this.jobManager).cleanupJobs(any(AsyncJobStatusQueryArguments.class));
         doReturn(expected).when(this.jobCurator).deleteJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         int result = resource.cleanupTerminalJobs(values, null, null, null, null,
@@ -1034,8 +1033,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         doReturn(expected).when(this.jobManager).cleanupJobs(any(AsyncJobStatusQueryArguments.class));
         doReturn(expected).when(this.jobCurator).deleteJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         int result = resource.cleanupTerminalJobs(null, values, null, null, null,
@@ -1077,8 +1076,8 @@ public class JobResourceTest extends DatabaseTestFixture {
     public void testCleanupTerminalJobsWithJobStates(Set<String> stateNames, Set<JobState> expected,
         boolean force) {
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         int result = resource.cleanupTerminalJobs(null, null, stateNames, null, null, null, null,
@@ -1116,8 +1115,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         stateNames.add(badStateName);
 
         JobResource resource = this.buildJobResource();
-        assertThrows(NotFoundException.class, () ->
-            resource.cleanupTerminalJobs(null, null, stateNames, null, null, null, null, null, null, false));
+        assertThrows(NotFoundException.class, () -> resource.cleanupTerminalJobs(null, null, stateNames, null,
+            null, null, null, null, null, false));
     }
 
     @ParameterizedTest
@@ -1127,8 +1126,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         stateNames.add(badStateName);
 
         JobResource resource = this.buildJobResource();
-        assertThrows(NotFoundException.class, () ->
-            resource.cleanupTerminalJobs(null, null, stateNames, null, null, null, null, null, null, true));
+        assertThrows(NotFoundException.class, () -> resource.cleanupTerminalJobs(null, null, stateNames, null,
+            null, null, null, null, null, true));
     }
 
     @ParameterizedTest
@@ -1140,8 +1139,8 @@ public class JobResourceTest extends DatabaseTestFixture {
 
         Set<String> keys = Util.asSet(owner1.getKey(), owner2.getKey(), owner3.getKey());
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         int result = resource.cleanupTerminalJobs(null, null, null, keys, null, null,
@@ -1184,8 +1183,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         Set<String> keys = Util.asSet("", owner1.getKey(), "key", owner2.getKey(), null);
         Set<String> expected = Util.asSet("", owner1.getId(), "key", owner2.getId(), null);
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         int result = resource.cleanupTerminalJobs(null, null, null, keys, null, null,
@@ -1229,8 +1228,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         Set<String> keys = Util.asSet(owner1.getKey(), "null", owner2.getKey());
         Set<String> expected = Util.asSet(owner1.getId(), null, owner2.getId());
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         int result = resource.cleanupTerminalJobs(null, null, null, keys, null, null,
@@ -1279,8 +1278,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         doReturn(expected).when(this.jobManager).cleanupJobs(any(AsyncJobStatusQueryArguments.class));
         doReturn(expected).when(this.jobCurator).deleteJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         int result = resource.cleanupTerminalJobs(null, null, null, null, values,
@@ -1324,8 +1323,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         doReturn(expected).when(this.jobManager).cleanupJobs(any(AsyncJobStatusQueryArguments.class));
         doReturn(expected).when(this.jobCurator).deleteJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         int result = resource.cleanupTerminalJobs(null, null, null, null, null,
@@ -1369,8 +1368,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         doReturn(expected).when(this.jobManager).cleanupJobs(any(AsyncJobStatusQueryArguments.class));
         doReturn(expected).when(this.jobCurator).deleteJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         int result = resource.cleanupTerminalJobs(null, null, null, null, null,
@@ -1414,8 +1413,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         doReturn(expected).when(this.jobManager).cleanupJobs(any(AsyncJobStatusQueryArguments.class));
         doReturn(expected).when(this.jobCurator).deleteJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         int result = resource.cleanupTerminalJobs(null, null, null, null, null,
@@ -1459,8 +1458,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         doReturn(expected).when(this.jobManager).cleanupJobs(any(AsyncJobStatusQueryArguments.class));
         doReturn(expected).when(this.jobCurator).deleteJobs(any(AsyncJobStatusQueryArguments.class));
 
-        ArgumentCaptor<AsyncJobStatusQueryArguments> captor =
-            ArgumentCaptor.forClass(AsyncJobStatusQueryArguments.class);
+        ArgumentCaptor<AsyncJobStatusQueryArguments> captor = ArgumentCaptor
+            .forClass(AsyncJobStatusQueryArguments.class);
 
         JobResource resource = this.buildJobResource();
         int result = resource.cleanupTerminalJobs(null, null, null, null, null,
@@ -1498,8 +1497,8 @@ public class JobResourceTest extends DatabaseTestFixture {
         OffsetDateTime end = Util.addDaysToDt(2).toInstant().atOffset(ZoneOffset.UTC);
 
         JobResource resource = this.buildJobResource();
-        assertThrows(BadRequestException.class, () ->
-            resource.cleanupTerminalJobs(null, null, null, null, null, null, null, end, start, force));
+        assertThrows(BadRequestException.class,
+            () -> resource.cleanupTerminalJobs(null, null, null, null, null, null, null, end, start, force));
     }
 
     private void setTriggerableJobs(String... jobs) {

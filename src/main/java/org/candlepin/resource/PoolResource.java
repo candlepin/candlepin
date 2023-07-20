@@ -20,6 +20,7 @@ import org.candlepin.auth.SecurityHole;
 import org.candlepin.auth.SubResource;
 import org.candlepin.auth.Verify;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.CdnDTO;
 import org.candlepin.dto.api.server.v1.CertificateDTO;
@@ -60,10 +61,11 @@ import java.util.Objects;
 import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
 
+
+
 /**
  * API gateway for the EntitlementPool
  */
-
 public class PoolResource implements PoolsApi {
     private static final Logger log = LoggerFactory.getLogger(PoolResource.class);
 
@@ -71,6 +73,7 @@ public class PoolResource implements PoolsApi {
     private final OwnerCurator ownerCurator;
     private final I18n i18n;
     private final PoolManager poolManager;
+    private final PoolService poolService;
     private final CalculatedAttributesUtil calculatedAttributesUtil;
     private final ModelTranslator translator;
     private final PrincipalProvider principalProvider;
@@ -78,7 +81,7 @@ public class PoolResource implements PoolsApi {
     @Inject
     public PoolResource(ConsumerCurator consumerCurator, OwnerCurator ownerCurator,
         I18n i18n, PoolManager poolManager, CalculatedAttributesUtil calculatedAttributesUtil,
-        ModelTranslator translator, PrincipalProvider principalProvider) {
+        ModelTranslator translator, PrincipalProvider principalProvider, PoolService poolService) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
@@ -87,6 +90,7 @@ public class PoolResource implements PoolsApi {
         this.calculatedAttributesUtil = Objects.requireNonNull(calculatedAttributesUtil);
         this.translator = Objects.requireNonNull(translator);
         this.principalProvider = Objects.requireNonNull(principalProvider);
+        this.poolService = Objects.requireNonNull(poolService);
     }
 
     @Override
@@ -176,7 +180,7 @@ public class PoolResource implements PoolsApi {
     public PoolDTO getPool(@Verify(Pool.class) String id, String consumerUuid, OffsetDateTime activeOn) {
 
         Principal principal = this.principalProvider.get();
-        Pool toReturn = poolManager.get(id);
+        Pool toReturn = this.poolService.get(id);
 
         Consumer c = null;
         if (consumerUuid != null) {
@@ -210,7 +214,7 @@ public class PoolResource implements PoolsApi {
 
     @Override
     public void deletePool(String id) {
-        Pool pool = poolManager.get(id);
+        Pool pool = this.poolService.get(id);
         if (pool == null) {
             throw new NotFoundException(i18n.tr("Entitlement Pool with ID \"{0}\" could not be found.", id));
         }
@@ -219,7 +223,7 @@ public class PoolResource implements PoolsApi {
             throw new BadRequestException(i18n.tr("Cannot delete bonus pools, as they are auto generated"));
         }
 
-        poolManager.deletePools(Collections.singleton(pool));
+        this.poolService.deletePools(Collections.singleton(pool));
 
         Owner owner = pool.getOwner();
         log.debug("Synchronizing last content update for org: {}", owner);
@@ -229,8 +233,7 @@ public class PoolResource implements PoolsApi {
 
     @Override
     public CdnDTO getPoolCdn(@Verify(Pool.class) String id) {
-
-        Pool pool = poolManager.get(id);
+        Pool pool = this.poolService.get(id);
 
         if (pool == null) {
             throw new NotFoundException(i18n.tr("Subscription Pool with ID \"{0}\" could not be found.", id));
@@ -248,7 +251,7 @@ public class PoolResource implements PoolsApi {
     public List<EntitlementDTO> getPoolEntitlements(
         @Verify(value = Pool.class, subResource = SubResource.ENTITLEMENTS) String id) {
 
-        Pool pool = poolManager.get(id);
+        Pool pool = this.poolService.get(id);
 
         if (pool == null) {
             throw new NotFoundException(i18n.tr("Subscription Pool with ID \"{0}\" could not be found.", id));
@@ -276,7 +279,7 @@ public class PoolResource implements PoolsApi {
      *  the certificate associated with the specified pool
      */
     protected SubscriptionsCertificate getPoolCertificate(String poolId) {
-        Pool pool = poolManager.get(poolId);
+        Pool pool = this.poolService.get(poolId);
 
         if (pool == null) {
             throw new NotFoundException(i18n.tr(
@@ -285,8 +288,7 @@ public class PoolResource implements PoolsApi {
 
         if (pool.getCertificate() == null) {
             throw new NotFoundException(
-                i18n.tr("A certificate was not found for pool \"{0}\"", poolId)
-            );
+                i18n.tr("A certificate was not found for pool \"{0}\"", poolId));
         }
 
         return pool.getCertificate();

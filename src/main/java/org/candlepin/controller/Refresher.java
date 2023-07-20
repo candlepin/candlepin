@@ -15,7 +15,9 @@
 package org.candlepin.controller;
 
 import org.candlepin.model.Owner;
+import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
@@ -27,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -38,22 +41,27 @@ import java.util.Set;
 public class Refresher {
     private static final Logger log = LoggerFactory.getLogger(Refresher.class);
 
-    private final CandlepinPoolManager poolManager;
+    private final PoolManager poolManager;
     private final SubscriptionServiceAdapter subAdapter;
     private final ProductServiceAdapter prodAdapter;
-    private final OwnerManager ownerManager;
+    private final OwnerCurator ownerCurator;
+    private final PoolCurator poolCurator;
+    private final PoolConverter poolConverter;
 
     private final Map<String, Owner> owners = new HashMap<>();
     private final Set<Product> products = new HashSet<>();
     private boolean lazy;
 
-    Refresher(CandlepinPoolManager poolManager, SubscriptionServiceAdapter subAdapter,
-        ProductServiceAdapter prodAdapter, OwnerManager ownerManager) {
+    public Refresher(PoolManager poolManager, SubscriptionServiceAdapter subAdapter,
+        ProductServiceAdapter prodAdapter, OwnerCurator ownerCurator, PoolCurator poolCurator,
+        PoolConverter poolConverter) {
 
         this.poolManager = Objects.requireNonNull(poolManager);
         this.subAdapter = Objects.requireNonNull(subAdapter);
         this.prodAdapter = Objects.requireNonNull(prodAdapter);
-        this.ownerManager = Objects.requireNonNull(ownerManager);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.poolCurator = Objects.requireNonNull(poolCurator);
+        this.poolConverter = Objects.requireNonNull(poolConverter);
 
         this.lazy = true;
     }
@@ -160,15 +168,29 @@ public class Refresher {
              * thing rolls back. We don't want to refresh without marking ents
              * dirty, they will never get regenerated
              */
-            Pool primaryPool = poolManager.convertToPrimaryPool(subscription);
+            Pool primaryPool = this.poolConverter.convertToPrimaryPool(subscription);
             poolManager.refreshPoolsForPrimaryPool(primaryPool, true, lazy, Collections.emptyMap());
         }
 
         for (Owner owner : this.owners.values()) {
             poolManager.refreshPoolsWithRegeneration(this.subAdapter, this.prodAdapter, owner, this.lazy);
-            poolManager.recalculatePoolQuantitiesForOwner(owner);
-            ownerManager.updateRefreshDate(owner);
+            recalculatePoolQuantitiesForOwner(owner);
+            updateRefreshDate(owner);
         }
+    }
+
+    private Owner updateRefreshDate(Owner owner) {
+        owner.setLastRefreshed(new Date());
+        return this.ownerCurator.merge(owner);
+    }
+
+    private void recalculatePoolQuantitiesForOwner(Owner owner) {
+        this.poolCurator.transactional().allowExistingTransactions().execute((args -> {
+            this.poolCurator.calculateConsumedForOwnersPools(owner);
+            this.poolCurator.calculateExportedForOwnersPools(owner);
+
+            return String.format("Successfully recalculated quantities for owner: %s %n", owner.getKey());
+        }));
     }
 
 }

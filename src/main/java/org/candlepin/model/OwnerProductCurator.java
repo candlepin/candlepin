@@ -409,8 +409,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             return getBaseSyspurposeMap();
         }
 
-        String sql =
-            "SELECT DISTINCT a.name, a.value  " +
+        String sql = "SELECT DISTINCT a.name, a.value  " +
             "FROM cp2_product_attributes a " +
             "JOIN cp_pool b ON a.product_uuid=b.product_uuid " +
             "AND a.name IN ('usage','roles','addons','support_type') " +
@@ -422,8 +421,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             .setParameter("owner_id", ownerId)
             .getResultList();
 
-        sql =
-            "SELECT DISTINCT a.name, a.value " +
+        sql = "SELECT DISTINCT a.name, a.value " +
             "FROM cp2_product_attributes a " +
             "JOIN cp_pool b ON a.product_uuid=b.product_uuid " +
             "AND name = 'support_level' " +
@@ -451,8 +449,7 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
             "roles", new HashSet<>(),
             "addons", new HashSet<>(),
             "support_type", new HashSet<>(),
-            "support_level", new HashSet<>()
-        );
+            "support_level", new HashSet<>());
     }
 
     @Transactional
@@ -970,7 +967,6 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
 
         log.debug("{} pools updated", count);
     }
-
 
     /**
      * Removes the product references currently pointing to the specified product for the given

@@ -30,7 +30,7 @@ import javax.transaction.Status;
  * The Transactional class represents a simple transaction wrapper around a given method or closure,
  * as well as providing an interface for performing supplemental action upon completion of the
  * transaction.
- * <p></p>
+ * <p>
  * The wrapper can be reused within the context of a given operation if it is an operation that
  * needs to be performed several times, perhaps with different inputs. To facilitate this, the
  * arguments to pass into the action are provided on execution, rather than during configuration.
@@ -50,7 +50,7 @@ import javax.transaction.Status;
  *  The output type of the action wrapped by this instance
  */
 public class Transactional<O> {
-    private static Logger log = LoggerFactory.getLogger(Transactional.class);
+    private static final Logger log = LoggerFactory.getLogger(Transactional.class);
 
     /**
      * An interface to execute an action within the bounds of a transaction
@@ -102,7 +102,7 @@ public class Transactional<O> {
         /**
          * Called when the transaction action completes, and can be used to determine whether or
          * not the transaction should be committed or rolled back based on the value.
-         * <p></p>
+         * <p>
          * When a validator is provided to the <tt>rollbackWhen</tt> method, the transaction will
          * be rolled back if this method returns true and committed if it returns false. When
          * provided to the <tt>commitWhen</tt> method, the transaction will be committed if this
@@ -116,7 +116,6 @@ public class Transactional<O> {
          */
         boolean validate(O output);
     }
-
 
     private final EntityManager entityManager;
     private final List<Listener> commitListeners;
@@ -344,7 +343,6 @@ public class Transactional<O> {
             listener.transactionComplete(Status.STATUS_ROLLEDBACK);
         }
     }
-
 
     /**
      * Executes the given action within the context of an existing transaction.

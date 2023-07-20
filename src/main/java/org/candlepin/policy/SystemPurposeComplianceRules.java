@@ -37,6 +37,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -51,23 +52,23 @@ import javax.inject.Inject;
  * A class used to check consumer compliance status.
  */
 public class SystemPurposeComplianceRules {
-    private static Logger log = LoggerFactory.getLogger(SystemPurposeComplianceRules.class);
+    private static final Logger log = LoggerFactory.getLogger(SystemPurposeComplianceRules.class);
 
-    private EventSink eventSink;
-    private ConsumerCurator consumerCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private I18n i18n;
-    private PoolCurator poolCurator;
+    private final EventSink eventSink;
+    private final ConsumerCurator consumerCurator;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final I18n i18n;
+    private final PoolCurator poolCurator;
 
     @Inject
     public SystemPurposeComplianceRules(EventSink eventSink, ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator, I18n i18n, PoolCurator poolCurator) {
 
-        this.eventSink = eventSink;
-        this.consumerCurator = consumerCurator;
-        this.consumerTypeCurator = consumerTypeCurator;
-        this.i18n = i18n;
-        this.poolCurator = poolCurator;
+        this.eventSink = Objects.requireNonNull(eventSink);
+        this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.poolCurator = Objects.requireNonNull(poolCurator);
     }
 
     /**
@@ -99,7 +100,7 @@ public class SystemPurposeComplianceRules {
      *
      * @return The system purpose compliance status for the given date.
      */
-    @SuppressWarnings({"checkstyle:indentation", "checkstyle:methodlength"})
+    @SuppressWarnings({ "checkstyle:indentation", "checkstyle:methodlength" })
     public SystemPurposeComplianceStatus getStatus(Consumer consumer,
         Collection<Entitlement> existingEntitlements, Collection<Entitlement> newEntitlements,
         Date date, boolean updateConsumer) {
@@ -144,13 +145,13 @@ public class SystemPurposeComplianceRules {
         entitlements.removeIf(element -> finalDate.compareTo(element.getStartDate()) < 0 ||
             finalDate.compareTo(element.getEndDate()) > 0);
 
-        //fetch SLA of the Owner
+        // fetch SLA of the Owner
         Set<String> levels = poolCurator.retrieveServiceLevelsForOwner(consumer.getOwner(), true);
         boolean slaExempted = false;
         if (!levels.isEmpty() && !StringUtils.isBlank(consumer.getServiceLevel()) &&
             levels.contains(consumer.getServiceLevel())) {
-                log.debug("Ignoring due to SLA is layered and exempted true");
-                slaExempted = true;
+            log.debug("Ignoring due to SLA is layered and exempted true");
+            slaExempted = true;
         }
 
         for (Entitlement entitlement : entitlements) {
@@ -203,7 +204,7 @@ public class SystemPurposeComplianceRules {
                 if (CollectionUtils.isNotEmpty(unsatisfiedAddons) &&
                     product.hasAttribute(Product.Attributes.ADDONS)) {
                     List<String> addOns = Util.toList(product.getAttributeValue(Product.Attributes.ADDONS));
-                    for (String addOn: unsatisfiedAddons) {
+                    for (String addOn : unsatisfiedAddons) {
                         if (addOns.stream().anyMatch(str -> str.equalsIgnoreCase(addOn.trim()))) {
                             status.addCompliantAddOn(addOn, entitlement);
                             addonsFound.add(addOn);
@@ -295,6 +296,5 @@ public class SystemPurposeComplianceRules {
         ComplianceStatusHasher hasher = new ComplianceStatusHasher(consumer, status);
         return hasher.hash();
     }
-
 
 }

@@ -28,7 +28,6 @@ import org.candlepin.cache.CandlepinCache;
 import org.candlepin.cache.StatusCache;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
-import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.dto.ModelTranslator;
@@ -324,7 +323,7 @@ public class TestingModules {
             bind(IdentityCertServiceAdapter.class).to(DefaultIdentityCertServiceAdapter.class);
             bind(PoolRules.class);
             bind(CriteriaRules.class);
-            bind(PoolManager.class).to(CandlepinPoolManager.class);
+            bind(PoolManager.class);
             bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
 
             bind(Function.class).annotatedWith(Names.named("endDateGenerator"))

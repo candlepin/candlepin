@@ -12,27 +12,38 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.controller;
 
+import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.PoolCurator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
+import java.util.Objects;
+
 import javax.inject.Inject;
+
+
 
 public class RefresherFactory {
 
-    private final OwnerManager ownerManager;
-    private final CandlepinPoolManager poolManager;
+    private final OwnerCurator ownerCurator;
+    private final PoolCurator poolCurator;
+    private final PoolManager poolManager;
+    private final PoolConverter poolConverter;
 
     @Inject
-    public RefresherFactory(OwnerManager ownerManager, CandlepinPoolManager poolManager) {
-        this.ownerManager = ownerManager;
-        this.poolManager = poolManager;
+    public RefresherFactory(OwnerCurator ownerCurator, PoolManager poolManager,
+        PoolCurator poolCurator, PoolConverter poolConverter) {
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.poolCurator = Objects.requireNonNull(poolCurator);
+        this.poolManager = Objects.requireNonNull(poolManager);
+        this.poolConverter = Objects.requireNonNull(poolConverter);
     }
 
     public Refresher getRefresher(SubscriptionServiceAdapter subAdapter, ProductServiceAdapter prodAdapter) {
-        return new Refresher(this.poolManager, subAdapter, prodAdapter, this.ownerManager);
+        return new Refresher(this.poolManager, subAdapter, prodAdapter, this.ownerCurator, this.poolCurator,
+            this.poolConverter);
     }
 
 }

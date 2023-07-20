@@ -32,8 +32,8 @@ import org.candlepin.auth.UserPrincipal;
 import org.candlepin.auth.permissions.Permission;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
-import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
+import org.candlepin.controller.PoolService;
 import org.candlepin.dto.api.server.v1.CertificateDTO;
 import org.candlepin.dto.api.server.v1.CertificateSerialDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTO;
@@ -94,13 +94,15 @@ import java.util.stream.Stream;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Response;
 
+
+
 public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
     private static final String METADATA_VALUE = "jsontestname";
     private static final String METADATA_NAME = "name";
     private static final String CONSUMER_NAME = "consumer_name";
     private static final String USER_NAME = "testing user";
 
-    private CandlepinPoolManager poolManager;
+    private PoolService poolService;
     private ConsumerResource consumerResource;
     private IdentityCertServiceAdapter icsa;
 
@@ -130,7 +132,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
-        poolManager = injector.getInstance(CandlepinPoolManager.class);
+        poolService = injector.getInstance(PoolService.class);
         consumerResource = injector.getInstance(ConsumerResource.class);
         icsa = injector.getInstance(IdentityCertServiceAdapter.class);
 
@@ -429,7 +431,7 @@ public class ConsumerResourceIntegrationTest extends DatabaseTestFixture {
         consumer = consumerCurator.findByUuid(consumer.getUuid());
         assertEquals(1, consumer.getEntitlements().size());
 
-        pool = poolManager.get(pool.getId());
+        pool = poolService.get(pool.getId());
         assertEquals(Long.valueOf(1), pool.getConsumed());
         assertEquals(1, resultList.size());
         assertEquals(pool.getId(), resultList.get(0).getPool().getId());

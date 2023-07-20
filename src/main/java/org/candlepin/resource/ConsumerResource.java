@@ -43,6 +43,7 @@ import org.candlepin.controller.EntitlementCertificateGenerator;
 import org.candlepin.controller.Entitler;
 import org.candlepin.controller.ManifestManager;
 import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.controller.RefresherFactory;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
@@ -183,6 +184,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 
+
 /**
  * API Gateway for Consumers
  */
@@ -205,6 +207,7 @@ public class ConsumerResource implements ConsumerApi {
     private final EventSink sink;
     private final EventFactory eventFactory;
     private final PoolManager poolManager;
+    private final PoolService poolService;
     private final RefresherFactory refresherFactory;
     private final ConsumerRules consumerRules;
     private final OwnerCurator ownerCurator;
@@ -236,7 +239,7 @@ public class ConsumerResource implements ConsumerApi {
     private final Pattern consumerPersonNamePattern;
 
     @Inject
-    @SuppressWarnings({"checkstyle:parameternumber"})
+    @SuppressWarnings({ "checkstyle:parameternumber" })
     public ConsumerResource(ConsumerCurator consumerCurator,
         ConsumerTypeCurator consumerTypeCurator,
         SubscriptionServiceAdapter subAdapter,
@@ -275,6 +278,7 @@ public class ConsumerResource implements ConsumerApi {
         ContentOverrideValidator coValidator,
         ConsumerContentOverrideCurator ccoCurator,
         EntitlementCertificateGenerator entCertGenerator,
+        PoolService poolService,
         EnvironmentContentCurator environmentContentCurator) {
 
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
@@ -315,6 +319,7 @@ public class ConsumerResource implements ConsumerApi {
         this.coValidator = Objects.requireNonNull(coValidator);
         this.ccoCurator = Objects.requireNonNull(ccoCurator);
         this.entCertGenerator = Objects.requireNonNull(entCertGenerator);
+        this.poolService = Objects.requireNonNull(poolService);
 
         this.entitlementEnvironmentFilter = new EntitlementEnvironmentFilter(
             entitlementCurator, environmentContentCurator);
@@ -698,13 +703,11 @@ public class ConsumerResource implements ConsumerApi {
         String caMode = Util.firstOf(predicate,
             consumer.getContentAccessMode(),
             consumer.getOwner().getContentAccessMode(),
-            ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
-        );
+            ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue());
 
         String caList = Util.firstOf(predicate,
             consumer.getOwner().getContentAccessModeList(),
-            ContentAccessManager.getListDefaultDatabaseValue()
-        );
+            ContentAccessManager.getListDefaultDatabaseValue());
 
         return new ContentAccessDTO()
             .contentAccessMode(caMode)
@@ -1542,7 +1545,8 @@ public class ConsumerResource implements ConsumerApi {
 
         if (updated.getReleaseVer() != null && updated.getReleaseVer().getReleaseVer() != null) {
             String releaseVer = toUpdate.getReleaseVer() == null ?
-                null : toUpdate.getReleaseVer().getReleaseVer();
+                null :
+                toUpdate.getReleaseVer().getReleaseVer();
             if (!updated.getReleaseVer().getReleaseVer().equals(releaseVer)) {
                 log.info("   Updating consumer releaseVer setting.");
                 toUpdate.setReleaseVer(new Release(updated.getReleaseVer().getReleaseVer()));
@@ -1963,7 +1967,7 @@ public class ConsumerResource implements ConsumerApi {
 
         // perform the entitlement revocation
         for (Entitlement entitlement : deletableGuestEntitlements) {
-            poolManager.revokeEntitlement(entitlement);
+            this.poolService.revokeEntitlement(entitlement);
         }
 
         if (deletableGuestEntitlements.size() > 0) {
@@ -2030,7 +2034,7 @@ public class ConsumerResource implements ConsumerApi {
         try {
             // We're about to delete this consumer; no need to regen/dirty its dependent
             // entitlements or recalculate status.
-            this.poolManager.revokeAllEntitlements(toDelete, false);
+            this.poolService.revokeAllEntitlements(toDelete, false);
         }
         catch (ForbiddenException e) {
             ConsumerType ctype = this.consumerTypeCurator.get(toDelete.getTypeId());
@@ -2276,11 +2280,11 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
-    @SuppressWarnings({"checkstyle:indentation", "checkstyle:methodlength"})
+    @SuppressWarnings({ "checkstyle:indentation", "checkstyle:methodlength" })
     public Response bind(
         @Verify(Consumer.class) String consumerUuid,
-        @Verify(value = Pool.class, nullable = true, subResource = SubResource.ENTITLEMENTS)
-        String poolIdString,
+        @Verify(value = Pool.class, nullable = true,
+            subResource = SubResource.ENTITLEMENTS) String poolIdString,
         List<String> productIds,
         Integer quantity,
         String email,
@@ -2326,7 +2330,7 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         if (poolIdString != null && quantity == null) {
-            Pool pool = poolManager.get(poolIdString);
+            Pool pool = this.poolService.get(poolIdString);
             quantity = pool != null ? consumerBindUtil.getQuantityToBind(pool, consumer) : 1;
         }
 
@@ -2395,20 +2399,18 @@ public class ConsumerResource implements ConsumerApi {
                 if (owner.isUsingSimpleContentAccess()) {
                     log.debug("Ignoring request to auto-attach. " +
                         "Attaching subscriptions is disabled for org \"{}\" " +
-                        "because simple content access is enabled."
-                        , owner.getKey(), e);
+                        "because simple content access is enabled.", owner.getKey(), e);
                     return Response.status(Response.Status.OK).build();
                 }
                 else {
                     throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                        "It is disabled for org \"{0}\"."
-                        , owner.getKey()), e);
+                        "It is disabled for org \"{0}\".", owner.getKey()), e);
                 }
             }
             catch (AutobindHypervisorDisabledException e) {
                 throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                        "It is disabled for org \"{0}\" because of the hypervisor autobind setting."
-                    , owner.getKey()), e);
+                    "It is disabled for org \"{0}\" because of the hypervisor autobind setting.",
+                    owner.getKey()), e);
             }
         }
 
@@ -2545,7 +2547,7 @@ public class ConsumerResource implements ConsumerApi {
         // CertificateCurator) to lookup by serialNumber
         Consumer consumer = consumerCurator.verifyAndLookupConsumer(consumerUuid);
 
-        int total = poolManager.revokeAllEntitlements(consumer, true);
+        int total = this.poolService.revokeAllEntitlements(consumer, true);
         log.debug("Revoked {} entitlements from {}", total, consumerUuid);
         DeleteResult dr = new DeleteResult();
         dr.setDeletedRecords(total);
@@ -2565,13 +2567,12 @@ public class ConsumerResource implements ConsumerApi {
         consumerCurator.verifyAndLookupConsumer(consumerUuid);
         Entitlement toDelete = entitlementCurator.get(dbid);
         if (toDelete != null) {
-            poolManager.revokeEntitlement(toDelete);
+            this.poolService.revokeEntitlement(toDelete);
             return;
         }
 
         throw new NotFoundException(i18n.tr(
-            "Entitlement with ID \"{0}\" could not be found.", dbid
-        ));
+            "Entitlement with ID \"{0}\" could not be found.", dbid));
     }
 
     @Override
@@ -2581,7 +2582,7 @@ public class ConsumerResource implements ConsumerApi {
             .findByCertificateSerial(serial);
 
         if (toDelete != null) {
-            poolManager.revokeEntitlement(toDelete);
+            this.poolService.revokeEntitlement(toDelete);
             return;
         }
         throw new NotFoundException(i18n.tr(
@@ -2596,7 +2597,7 @@ public class ConsumerResource implements ConsumerApi {
             .listByConsumerAndPoolId(consumer, poolId);
         if (!entitlementsToDelete.isEmpty()) {
             for (Entitlement toDelete : entitlementsToDelete) {
-                poolManager.revokeEntitlement(toDelete);
+                this.poolService.revokeEntitlement(toDelete);
             }
         }
         else {
@@ -2634,7 +2635,7 @@ public class ConsumerResource implements ConsumerApi {
             // omits consumer status calculation anyway. As a result, we can save some time by
             // skipping the recalculation during revocation.
             log.info("Cleaning up entitlements for consumer: {}", consumer);
-            this.poolManager.revokeAllEntitlements(consumer, false);
+            this.poolService.revokeAllEntitlements(consumer, false);
         }
 
         if (entitlementId != null) {
@@ -2943,11 +2944,10 @@ public class ConsumerResource implements ConsumerApi {
         deletedConsumerCurator.delete(dc);
     }
 
-
     private void addCalculatedAttributes(Entitlement ent) {
         // With no consumer/date, this will not build suggested quantity
-        Map<String, String> calculatedAttributes =
-            calculatedAttributesUtil.buildCalculatedAttributes(ent.getPool(), null);
+        Map<String, String> calculatedAttributes = calculatedAttributesUtil
+            .buildCalculatedAttributes(ent.getPool(), null);
         ent.getPool().setCalculatedAttributes(calculatedAttributes);
     }
 
@@ -2957,8 +2957,6 @@ public class ConsumerResource implements ConsumerApi {
         }
         return null;
     }
-
-
 
     /**
      * Populates the specified entities with data from the provided guestIds.

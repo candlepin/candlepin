@@ -25,6 +25,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+
+
 /**
  * Enforces the entitlement rules definitions.
  */
@@ -142,13 +144,6 @@ public interface Enforcer {
      */
     PoolOperations postEntitlement(Consumer c, Map<String, Entitlement> ents, List<Pool> subPoolsForStackIds,
         boolean isUpdate, Map<String, PoolQuantity> poolQuantityMap);
-
-    /**
-     * Run post-entitlement actions.
-     *
-     * @param ent The entitlement that needs to be revoked
-     */
-    void postUnbind(Entitlement ent);
 
     ValidationResult update(Consumer consumer, Entitlement entitlement, Integer change);
 

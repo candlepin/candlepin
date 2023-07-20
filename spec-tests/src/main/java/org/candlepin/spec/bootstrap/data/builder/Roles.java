@@ -21,6 +21,8 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
 
 import java.util.List;
 
+
+
 public final class Roles {
 
     private Roles() {
@@ -40,6 +42,5 @@ public final class Roles {
             .name(StringUtil.random("test-role"))
             .permissions(List.of(permissions));
     }
-
 
 }

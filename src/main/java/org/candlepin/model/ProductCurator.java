@@ -14,7 +14,6 @@
  */
 package org.candlepin.model;
 
-import org.candlepin.config.Configuration;
 import org.candlepin.util.AttributeValidator;
 
 import com.google.inject.persist.Transactional;
@@ -33,6 +32,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -42,26 +42,22 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
 
-
 /**
  * interact with Products.
  */
 @Singleton
 public class ProductCurator extends AbstractHibernateCurator<Product> {
-    private static Logger log = LoggerFactory.getLogger(ProductCurator.class);
+    private static final Logger log = LoggerFactory.getLogger(ProductCurator.class);
 
-    private Configuration config;
-    private AttributeValidator attributeValidator;
+    private final AttributeValidator attributeValidator;
 
     /**
      * default ctor
      */
     @Inject
-    public ProductCurator(Configuration config, AttributeValidator attributeValidator) {
+    public ProductCurator(AttributeValidator attributeValidator) {
         super(Product.class);
-
-        this.config = config;
-        this.attributeValidator = attributeValidator;
+        this.attributeValidator = Objects.requireNonNull(attributeValidator);
     }
 
     /**
@@ -120,11 +116,15 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * @return Set of UUIDs
      */
     public Set<String> getPoolProvidedProductUuids(String poolId) {
-        TypedQuery<String> query = getEntityManager().createQuery(
-            "SELECT product.uuid FROM Pool p INNER JOIN p.product.providedProducts product " +
-            "where p.id = :poolid",
-            String.class);
-        query.setParameter("poolid", poolId);
+        String jpql = """
+            SELECT product.uuid \
+            FROM Pool p INNER JOIN p.product.providedProducts product \
+            where p.id = :poolid""";
+
+        TypedQuery<String> query = getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("poolid", poolId);
+
         return new HashSet<>(query.getResultList());
     }
 

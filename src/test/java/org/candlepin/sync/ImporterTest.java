@@ -26,7 +26,6 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -53,7 +52,6 @@ import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.DistributorVersion;
-import org.candlepin.model.DistributorVersionCapability;
 import org.candlepin.model.DistributorVersionCurator;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EnvironmentCurator;
@@ -103,7 +101,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -279,13 +276,13 @@ public class ImporterTest {
         if (mock.getLabel() != null) {
             doReturn(mock)
                 .when(this.mockConsumerTypeCurator)
-                .getByLabel(eq(mock.getLabel()));
+                .getByLabel(mock.getLabel());
         }
 
         if (mock.getId() != null) {
             doReturn(mock)
                 .when(this.mockConsumerTypeCurator)
-                .get(eq(mock.getId()));
+                .get(mock.getId());
         }
 
         return mock;
@@ -311,7 +308,7 @@ public class ImporterTest {
 
         doReturn(em)
             .when(this.mockExporterMetadataCurator)
-            .getByType(eq(ExporterMetadata.TYPE_SYSTEM));
+            .getByType(ExporterMetadata.TYPE_SYSTEM);
 
         Importer importer = this.buildImporter();
         importer.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actual, new ConflictOverrides());
@@ -352,7 +349,7 @@ public class ImporterTest {
 
         doReturn(em)
             .when(this.mockExporterMetadataCurator)
-            .getByType(eq(ExporterMetadata.TYPE_SYSTEM));
+            .getByType(ExporterMetadata.TYPE_SYSTEM);
 
         Importer importer = this.buildImporter();
 
@@ -382,7 +379,7 @@ public class ImporterTest {
 
         doReturn(em)
             .when(this.mockExporterMetadataCurator)
-            .getByType(eq(ExporterMetadata.TYPE_SYSTEM));
+            .getByType(ExporterMetadata.TYPE_SYSTEM);
 
         Importer importer = this.buildImporter();
 
@@ -432,7 +429,7 @@ public class ImporterTest {
 
         doReturn(em)
             .when(this.mockExporterMetadataCurator)
-            .getByType(eq(ExporterMetadata.TYPE_SYSTEM));
+            .getByType(ExporterMetadata.TYPE_SYSTEM);
 
         Importer importer = this.buildImporter();
         importer.validateMetadata(ExporterMetadata.TYPE_SYSTEM, null, actualmeta, new ConflictOverrides());
@@ -812,7 +809,7 @@ public class ImporterTest {
         Importer importer = this.buildImporter();
         importer.importConsumer(owner, consumerfile, upstream, forcedConflicts, meta);
 
-        verify(this.mockOwnerCurator).merge(eq(owner));
+        verify(this.mockOwnerCurator).merge(owner);
     }
 
     private File[] createUpstreamFiles() throws URISyntaxException {
@@ -822,16 +819,6 @@ public class ImporterTest {
         upstream[0] = idcertfile;
         upstream[1] = kpfile;
         return upstream;
-    }
-
-    private DistributorVersion createTestDistributerVersion() {
-        DistributorVersion dVersion = new DistributorVersion("test-dist-ver");
-        Set<DistributorVersionCapability> capabilities = new HashSet<>();
-        capabilities.add(new DistributorVersionCapability(null, "capability-1"));
-        capabilities.add(new DistributorVersionCapability(null, "capability-2"));
-        capabilities.add(new DistributorVersionCapability(null, "capability-3"));
-        dVersion.setCapabilities(capabilities);
-        return dVersion;
     }
 
     private DistributorVersionDTO createDistributorVersionDTO() {
@@ -862,7 +849,7 @@ public class ImporterTest {
     public void importDistributorVersionUpdate() throws Exception {
         doReturn(new DistributorVersion("test-dist-ver"))
             .when(this.mockDistributorVersionCurator)
-            .findByName(eq("test-dist-ver"));
+            .findByName("test-dist-ver");
 
         File[] distVer = new File[1];
         distVer[0] = new File(this.tmpFolder, "dist-ver.json");
@@ -946,11 +933,11 @@ public class ImporterTest {
 
         assertEquals(record.getGeneratedBy(), meta.getPrincipalName());
         assertEquals(record.getGeneratedDate(), meta.getCreated());
-        assertEquals(record.getStatus(), ImportRecord.Status.SUCCESS);
+        assertEquals(ImportRecord.Status.SUCCESS, record.getStatus());
         assertEquals(record.getStatusMessage(), owner.getKey() + " file imported successfully.");
-        assertEquals(record.getFileName(), "test.zip");
+        assertEquals("test.zip", record.getFileName());
 
-        verify(this.mockImportRecordCurator).create(eq(record));
+        verify(this.mockImportRecordCurator).create(record);
         verify(this.mockEventSink, never()).emitSubscriptionExpired(subscription);
     }
 
@@ -985,7 +972,7 @@ public class ImporterTest {
         assertEquals(iuc.getApiUrl(), uc.getApiUrl());
         assertEquals(iuc.getContentAccessMode(), uc.getContentAccessMode());
 
-        verify(this.mockImportRecordCurator).create(eq(record));
+        verify(this.mockImportRecordCurator).create(record);
     }
 
     @Test
@@ -1006,7 +993,7 @@ public class ImporterTest {
 
         assertNull(record.getUpstreamConsumer());
 
-        verify(this.mockImportRecordCurator).create(eq(record));
+        verify(this.mockImportRecordCurator).create(record);
     }
 
     @Test
@@ -1033,13 +1020,13 @@ public class ImporterTest {
         Importer importer = this.buildImporter();
         ImportRecord record = importer.recordImportSuccess(owner, data, new ConflictOverrides(), "test.zip");
 
-        assertEquals(record.getStatus(), ImportRecord.Status.SUCCESS_WITH_WARNING);
+        assertEquals(ImportRecord.Status.SUCCESS_WITH_WARNING, record.getStatus());
         assertEquals(record.getStatusMessage(), owner.getKey() + " file imported successfully." +
-            "One or more inactive subscriptions found in the file.");
+            " One or more inactive subscriptions found in the file.");
 
         verify(this.mockEventSink, never()).emitSubscriptionExpired(subscription1);
         verify(this.mockEventSink).emitSubscriptionExpired(subscription2);
-        verify(this.mockImportRecordCurator).create(eq(record));
+        verify(this.mockImportRecordCurator).create(record);
     }
 
     @Test
@@ -1057,10 +1044,10 @@ public class ImporterTest {
 
         assertEquals(ImportRecord.Status.SUCCESS_WITH_WARNING, record.getStatus());
         assertEquals(owner.getKey() + " file imported successfully." +
-            "No active subscriptions found in the file.", record.getStatusMessage());
+            " No active subscriptions found in the file.", record.getStatusMessage());
 
         verify(this.mockEventSink, never()).emitSubscriptionExpired(any(SubscriptionDTO.class));
-        verify(this.mockImportRecordCurator).create(eq(record));
+        verify(this.mockImportRecordCurator).create(record);
     }
 
 }

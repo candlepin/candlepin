@@ -33,6 +33,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+
+
 public class ConsumerCuratorPermissionsTest extends DatabaseTestFixture {
     private Owner owner;
     private ConsumerType consumerType;

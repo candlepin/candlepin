@@ -40,6 +40,8 @@ import java.util.Map;
 
 import javax.validation.ConstraintViolationException;
 
+
+
 public class ConsumerTest extends DatabaseTestFixture {
 
     private ConsumerResource consumerResource;

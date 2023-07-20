@@ -91,7 +91,6 @@ public class RefreshWorker {
 
     private int orphanedEntityGracePeriod;
 
-
     /**
      * Creates a new RefreshWorker
      */

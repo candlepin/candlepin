@@ -12,7 +12,6 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.config;
 
 import io.smallrye.config.SmallRyeConfig;
@@ -29,6 +28,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
+
 
 public class RyeConfig implements Configuration {
     private final SmallRyeConfig config;
@@ -53,7 +54,7 @@ public class RyeConfig implements Configuration {
             }
         });
 
-        return  result;
+        return result;
     }
 
     @Override

@@ -22,21 +22,17 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.ArgumentMatchers.anyCollection;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.DevConfig;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolConverter;
+import org.candlepin.controller.PoolService;
 import org.candlepin.model.Branding;
-import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
@@ -74,8 +70,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 
 
 /**
@@ -90,13 +86,15 @@ public class PoolRulesTest {
     @Mock
     private RulesCurator rulesCurator;
     @Mock
-    private PoolManager poolManager;
+    private PoolService poolService;
     @Mock
     private EntitlementCurator entitlementCurator;
     @Mock
     private OwnerProductCurator ownerProdCurator;
     @Mock
     private ProductCurator productCurator;
+    @Mock
+    private PoolConverter poolConverter;
 
     private UserPrincipal principal;
     private Owner owner;
@@ -132,8 +130,7 @@ public class PoolRulesTest {
         catch (Exception e) {
             fail(
                 "Create pools should not have thrown an exception on bad value for virt_limit: " +
-                e.getMessage()
-            );
+                    e.getMessage());
         }
         assertEquals(1, pools.size());
 
@@ -336,10 +333,9 @@ public class PoolRulesTest {
     }
 
     /*
-     * Bonus pools should be created at pool creation time if the
-     * host_limited attribute is present on the product.  A tag will
-     * be added to the created pool. Host specific bonus pools will
-     * still be created during binding.
+     * Bonus pools should be created at pool creation time if the host_limited attribute is present on
+     * the product. A tag will be added to the created pool. Host specific bonus pools will still be
+     * created during binding.
      */
     @Test
     public void virtLimitWithHostLimitedCreatesTaggedBonusPool() {
@@ -979,37 +975,6 @@ public class PoolRulesTest {
             () -> poolRules.createAndEnrichPools(primaryPool, existingPools));
     }
 
-    @Test
-    public void bulkUpdateDoesNotDeletesPoolsWithoutStackingEntitlements() {
-        PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
-        Consumer consumer = TestUtil.createConsumer(owner);
-        Set<Consumer> consumers = Collections.singleton(consumer);
-        List<Pool> pools = createPools();
-        List<Entitlement> stackingEntitlements = createEntitlements(consumer, pools);
-        when(entitlementCurator.findByStackIds(isNull(), anyCollection()))
-            .thenReturn(stackingEntitlements);
-
-        poolRules.bulkUpdatePoolsFromStack(consumers, pools, new ArrayList<>(), false);
-
-        verify(poolManager, never()).deletePools(anyCollection(), anyCollection());
-    }
-
-    @Test
-    public void bulkUpdateDeletesPoolsWithoutStackingEntitlements() {
-        PoolRules poolRules = createRules(new DevConfig(Map.of(ConfigProperties.STANDALONE, "true")));
-        Consumer consumer = TestUtil.createConsumer(owner);
-        Set<Consumer> consumers = Collections.singleton(consumer);
-        List<Pool> pools = createPools();
-        List<Entitlement> stackingEntitlements = createEntitlements(consumer, pools);
-        pools.add(createPool());
-        when(entitlementCurator.findByStackIds(isNull(), anyCollection()))
-            .thenReturn(stackingEntitlements);
-
-        poolRules.bulkUpdatePoolsFromStack(consumers, pools, new ArrayList<>(), true);
-
-        verify(poolManager).deletePools(anyCollection(), anyCollection());
-    }
-
     // TODO:
     // Refactor these tests when isManaged is refactored to not be reliant upon the config
     public static Stream<Object[]> getParametersForIsManagedTests() {
@@ -1072,8 +1037,7 @@ public class PoolRulesTest {
             new Object[] { Pool.PoolType.STACK_DERIVED, srcSub, "upstream_pool_id", true, false },
             new Object[] { Pool.PoolType.BONUS, srcSub, "upstream_pool_id", true, true },
             new Object[] { Pool.PoolType.UNMAPPED_GUEST, srcSub, "upstream_pool_id", true, true },
-            new Object[] { Pool.PoolType.DEVELOPMENT, srcSub, "upstream_pool_id", true, true }
-        );
+            new Object[] { Pool.PoolType.DEVELOPMENT, srcSub, "upstream_pool_id", true, true });
     }
 
     @ParameterizedTest
@@ -1111,17 +1075,16 @@ public class PoolRulesTest {
     }
 
     private PoolRules createRules(Configuration config) {
-        return new PoolRules(poolManager, config, entitlementCurator);
+        return new PoolRules(config, entitlementCurator, poolConverter);
     }
 
     /**
      * Creates a copy of the input pool
      *
      * @param pool
-     *  the pool to clone
+     *     the pool to clone
      *
-     * @return
-     *  a deep copy of the input pool
+     * @return a deep copy of the input pool
      */
     private Pool clonePool(Pool pool) {
         Pool copy = new Pool()
@@ -1148,40 +1111,6 @@ public class PoolRulesTest {
         }
 
         return copy;
-    }
-
-    private List<Entitlement> createEntitlements(Consumer consumer, List<Pool> pools) {
-        return pools.stream()
-            .map(pool -> createEntitlement(pool, consumer))
-            .collect(Collectors.toList());
-    }
-
-    private List<Pool> createPools() {
-        ArrayList<Pool> pools = new ArrayList<>();
-        pools.add(createStackingPool());
-        pools.add(createStackingPool());
-        pools.add(createStackingPool());
-        return pools;
-    }
-
-    private Pool createStackingPool() {
-        Product product = TestUtil.createProduct();
-        product.setAttribute(Product.Attributes.STACKING_ID, "RH001");
-        Pool pool = TestUtil.createPool(owner, product);
-        SourceStack sourceStack = new SourceStack();
-        sourceStack.setSourceStackId("RH001");
-        pool.setSourceStack(sourceStack);
-        return pool;
-    }
-
-    private Pool createPool() {
-        return TestUtil.createPool(owner, TestUtil.createProduct());
-    }
-
-    private Entitlement createEntitlement(Pool pool, Consumer consumer) {
-        Entitlement entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
-        entitlement.setCreated(new Date());
-        return entitlement;
     }
 
 }

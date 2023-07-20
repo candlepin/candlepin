@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 
+
 public class EnforcerForTesting implements Enforcer {
 
     @Override
@@ -47,10 +48,6 @@ public class EnforcerForTesting implements Enforcer {
     public ValidationResult preEntitlement(Consumer consumer, Pool enitlementPool,
         Integer quantity, CallerType caller) {
         return new ValidationResult();
-    }
-
-    @Override
-    public void postUnbind(Entitlement ent) {
     }
 
     @Override

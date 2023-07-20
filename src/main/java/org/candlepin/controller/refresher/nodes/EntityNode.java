@@ -162,7 +162,7 @@ public interface EntityNode<E extends AbstractHibernateObject, I extends Service
      * @return
      *  the child node with the specified entity class and ID, or null if no such node exists
      */
-    <T extends AbstractHibernateObject, D extends ServiceAdapterModel> EntityNode<T, D>  getChildNode(
+    <T extends AbstractHibernateObject, D extends ServiceAdapterModel> EntityNode<T, D> getChildNode(
         Class<T> entityClass, String entityId);
 
     /**

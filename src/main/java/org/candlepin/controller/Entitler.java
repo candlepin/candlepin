@@ -66,6 +66,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.SortedSet;
 
 import javax.inject.Inject;
@@ -73,48 +74,47 @@ import javax.inject.Provider;
 
 
 
-/**
- * entitler
- */
 public class Entitler {
 
     private static final Logger log = LoggerFactory.getLogger(Entitler.class);
     private static final int MAX_DEV_LIFE_DAYS = 90;
 
-    private Configuration config;
-    private ConsumerCurator consumerCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private EventFactory evtFactory;
-    private EventSink sink;
-    private EntitlementRulesTranslator messageTranslator;
-    private EntitlementCurator entitlementCurator;
-    private I18n i18n;
-    private OwnerCurator ownerCurator;
-    private PoolCurator poolCurator;
-    private PoolManager poolManager;
-    private ProductServiceAdapter productAdapter;
-    private Provider<RefreshWorker> refreshWorkerProvider;
+    private final Configuration config;
+    private final ConsumerCurator consumerCurator;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final EventFactory evtFactory;
+    private final EventSink sink;
+    private final EntitlementRulesTranslator messageTranslator;
+    private final EntitlementCurator entitlementCurator;
+    private final I18n i18n;
+    private final OwnerCurator ownerCurator;
+    private final PoolCurator poolCurator;
+    private final PoolManager poolManager;
+    private final PoolService poolService;
+    private final ProductServiceAdapter productAdapter;
+    private final Provider<RefreshWorker> refreshWorkerProvider;
 
     @Inject
-    public Entitler(PoolManager pm, ConsumerCurator cc, I18n i18n, EventFactory evtFactory,
-        EventSink sink, EntitlementRulesTranslator messageTranslator,
+    public Entitler(PoolManager pm, PoolService poolService, ConsumerCurator cc, I18n i18n,
+        EventFactory evtFactory, EventSink sink, EntitlementRulesTranslator messageTranslator,
         EntitlementCurator entitlementCurator, Configuration config,
         OwnerCurator ownerCurator, PoolCurator poolCurator, ProductServiceAdapter productAdapter,
         ConsumerTypeCurator ctc, Provider<RefreshWorker> refreshWorkerProvider) {
 
-        this.poolManager = pm;
-        this.i18n = i18n;
-        this.evtFactory = evtFactory;
-        this.sink = sink;
-        this.consumerCurator = cc;
-        this.messageTranslator = messageTranslator;
-        this.entitlementCurator = entitlementCurator;
-        this.config = config;
-        this.ownerCurator = ownerCurator;
-        this.poolCurator = poolCurator;
-        this.productAdapter = productAdapter;
-        this.consumerTypeCurator = ctc;
-        this.refreshWorkerProvider = refreshWorkerProvider;
+        this.poolManager = Objects.requireNonNull(pm);
+        this.poolService = Objects.requireNonNull(poolService);
+        this.i18n = Objects.requireNonNull(i18n);
+        this.evtFactory = Objects.requireNonNull(evtFactory);
+        this.sink = Objects.requireNonNull(sink);
+        this.consumerCurator = Objects.requireNonNull(cc);
+        this.messageTranslator = Objects.requireNonNull(messageTranslator);
+        this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
+        this.config = Objects.requireNonNull(config);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.poolCurator = Objects.requireNonNull(poolCurator);
+        this.productAdapter = Objects.requireNonNull(productAdapter);
+        this.consumerTypeCurator = Objects.requireNonNull(ctc);
+        this.refreshWorkerProvider = Objects.requireNonNull(refreshWorkerProvider);
     }
 
     public List<Entitlement> bindByPoolQuantity(Consumer consumer, String poolId, Integer quantity) {
@@ -162,8 +162,7 @@ public class Entitler {
         catch (EntitlementRefusedException e) {
             // TODO: Could be multiple errors, but we'll just report the first one for now:
             throw new ForbiddenException(messageTranslator.entitlementErrorToMessage(
-                ent, e.getResults().values().iterator().next().getErrors().get(0)), e
-            );
+                ent, e.getResults().values().iterator().next().getErrors().get(0)), e);
         }
     }
 
@@ -275,7 +274,7 @@ public class Entitler {
                     sendEvents(hostEntitlements);
                 }
                 catch (Exception e) {
-                    //log and continue, this should NEVER block
+                    // log and continue, this should NEVER block
                     log.debug("Healing failed for host UUID {} with message: {}",
                         host.getUuid(), e.getMessage(), e);
                 }
@@ -291,7 +290,7 @@ public class Entitler {
                 // Revoke host specific entitlements
                 EntitlementFilterBuilder filter = new EntitlementFilterBuilder();
                 filter.addAttributeFilter(Pool.Attributes.REQUIRES_HOST);
-                poolManager.revokeEntitlements(entitlementCurator.listByConsumer(consumer, filter));
+                this.poolService.revokeEntitlements(entitlementCurator.listByConsumer(consumer, filter));
             }
         }
 
@@ -299,10 +298,8 @@ public class Entitler {
             if (config.getBoolean(ConfigProperties.STANDALONE) ||
                 !poolCurator.hasActiveEntitlementPools(consumer.getOwnerId(), null)) {
 
-                throw new ForbiddenException(i18n.tr(
-                    "Development units may only be used on hosted servers" +
-                    " and with orgs that have active subscriptions."
-                ));
+                throw new ForbiddenException(i18n.tr("Development units may only be used on hosted servers" +
+                    " and with orgs that have active subscriptions."));
             }
 
             // Look up the dev pool for this consumer, and if not found
@@ -311,9 +308,9 @@ public class Entitler {
             String sku = consumer.getFact(Consumer.Facts.DEV_SKU);
             Pool devPool = poolCurator.findDevPool(consumer);
             if (devPool != null) {
-                poolManager.deletePool(devPool);
+                this.poolService.deletePool(devPool);
             }
-            devPool = poolManager.createPool(assembleDevPool(consumer, owner, sku));
+            devPool = this.poolService.createPool(assembleDevPool(consumer, owner, sku));
 
             data.setPossiblePools(Arrays.asList(devPool.getId()))
                 .setProductIds(Arrays.asList(sku));
@@ -342,7 +339,7 @@ public class Entitler {
         int interval = MAX_DEV_LIFE_DAYS;
         String prodExp = prod.getAttributeValue(Product.Attributes.TTL);
 
-        if (prodExp != null &&  Integer.parseInt(prodExp) < MAX_DEV_LIFE_DAYS) {
+        if (prodExp != null && Integer.parseInt(prodExp) < MAX_DEV_LIFE_DAYS) {
             interval = Integer.parseInt(prodExp);
         }
 
@@ -500,10 +497,8 @@ public class Entitler {
             if (consumer.isDev()) {
                 if (config.getBoolean(ConfigProperties.STANDALONE) ||
                     !poolCurator.hasActiveEntitlementPools(consumer.getOwnerId(), null)) {
-                    throw new ForbiddenException(i18n.tr(
-                        "Development units may only be used on hosted servers" +
-                        " and with orgs that have active subscriptions."
-                    ));
+                    throw new ForbiddenException(i18n.tr("Development units may only be used on" +
+                        " hosted servers and with orgs that have active subscriptions."));
                 }
 
                 // Look up the dev pool for this consumer, and if not found
@@ -512,9 +507,9 @@ public class Entitler {
                 String sku = consumer.getFact(Consumer.Facts.DEV_SKU);
                 Pool devPool = poolCurator.findDevPool(consumer);
                 if (devPool != null) {
-                    poolManager.deletePool(devPool);
+                    this.poolService.deletePool(devPool);
                 }
-                devPool = poolManager.createPool(assembleDevPool(consumer, owner, sku));
+                devPool = this.poolService.createPool(assembleDevPool(consumer, owner, sku));
                 result.add(new PoolQuantity(devPool, 1));
             }
             else {
@@ -559,7 +554,7 @@ public class Entitler {
 
         if (!entsToDelete.isEmpty()) {
             for (List<Entitlement> ents : this.partition(entsToDelete)) {
-                poolManager.revokeEntitlements(ents);
+                this.poolService.revokeEntitlements(ents);
             }
         }
 
@@ -582,7 +577,6 @@ public class Entitler {
             }
         }
     }
-
 
     /**
      * A private sub class that encapsulates the products obtained from the

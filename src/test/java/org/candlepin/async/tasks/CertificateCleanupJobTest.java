@@ -33,6 +33,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
+
+
 class CertificateCleanupJobTest extends DatabaseTestFixture {
 
     private static final Date VALID = TestUtil.createDateOffset(2, 0, 0);

@@ -14,7 +14,7 @@
  */
 package org.candlepin.policy.js.consumer;
 
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -28,20 +28,17 @@ import javax.inject.Inject;
 
 
 
-/**
- * ConsumerRules
- */
 public class ConsumerRules {
 
-    private PoolCurator poolCurator;
-    private PoolManager poolManager;
-    private ConsumerTypeCurator consumerTypeCurator;
+    private final PoolCurator poolCurator;
+    private final PoolService poolService;
+    private final ConsumerTypeCurator consumerTypeCurator;
 
     @Inject
-    public ConsumerRules(PoolManager poolManager, PoolCurator poolCurator,
+    public ConsumerRules(PoolService poolService, PoolCurator poolCurator,
         ConsumerTypeCurator consumerTypeCurator) {
 
-        this.poolManager = poolManager;
+        this.poolService = poolService;
         this.poolCurator = poolCurator;
         this.consumerTypeCurator = consumerTypeCurator;
     }
@@ -55,7 +52,7 @@ public class ConsumerRules {
                 .listPoolsRestrictedToUser(consumer.getUsername());
 
             for (Pool pool : userRestrictedPools) {
-                poolManager.deletePool(pool);
+                this.poolService.deletePool(pool);
             }
         }
     }

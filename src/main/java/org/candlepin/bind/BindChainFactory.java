@@ -21,42 +21,46 @@ import java.util.Map;
 import java.util.Objects;
 
 import javax.inject.Inject;
-
+import javax.inject.Provider;
 
 
 public class BindChainFactory {
 
     private final BindContextFactory bindContextFactory;
     private final PreEntitlementRulesCheckOpFactory rulesCheckOpFactory;
-    private final HandleEntitlementsOp handleEntitlementsOp;
-    private final PostBindBonusPoolsOp postBindBonusPoolsOp;
-    private final CheckBonusPoolQuantitiesOp checkBonusPoolQuantitiesOp;
-    private final HandleCertificatesOp handleCertificatesOp;
-    private final ComplianceOp complianceOp;
+
+    private final Provider<HandleEntitlementsOp> handleEntitlementsOpProvider;
+    private final Provider<PostBindBonusPoolsOp> postBindBonusPoolsOpProvider;
+    private final Provider<CheckBonusPoolQuantitiesOp> checkBonusPoolQuantitiesOpProvider;
+    private final Provider<HandleCertificatesOp> handleCertificatesOpProvider;
+    private final Provider<ComplianceOp> complianceOpProvider;
 
     @Inject
     public BindChainFactory(BindContextFactory bindContextFactory,
-        PreEntitlementRulesCheckOpFactory rulesCheckOpFactory, HandleEntitlementsOp handleEntitlementsOp,
-        PostBindBonusPoolsOp postBindBonusPoolsOp, CheckBonusPoolQuantitiesOp checkBonusPoolQuantitiesOp,
-        HandleCertificatesOp handleCertificatesOp, ComplianceOp complianceOp) {
+        PreEntitlementRulesCheckOpFactory rulesCheckOpFactory,
+        Provider<HandleEntitlementsOp> handleEntitlementsOpProvider,
+        Provider<PostBindBonusPoolsOp> postBindBonusPoolsOpProvider,
+        Provider<CheckBonusPoolQuantitiesOp> checkBonusPoolQuantitiesOpProvider,
+        Provider<HandleCertificatesOp> handleCertificatesOpProvider,
+        Provider<ComplianceOp> complianceOpProvider) {
         this.bindContextFactory = Objects.requireNonNull(bindContextFactory);
         this.rulesCheckOpFactory = Objects.requireNonNull(rulesCheckOpFactory);
-        this.handleEntitlementsOp = Objects.requireNonNull(handleEntitlementsOp);
-        this.postBindBonusPoolsOp = Objects.requireNonNull(postBindBonusPoolsOp);
-        this.checkBonusPoolQuantitiesOp = Objects.requireNonNull(checkBonusPoolQuantitiesOp);
-        this.handleCertificatesOp = Objects.requireNonNull(handleCertificatesOp);
-        this.complianceOp = Objects.requireNonNull(complianceOp);
+        this.handleEntitlementsOpProvider = Objects.requireNonNull(handleEntitlementsOpProvider);
+        this.postBindBonusPoolsOpProvider = Objects.requireNonNull(postBindBonusPoolsOpProvider);
+        this.checkBonusPoolQuantitiesOpProvider = Objects.requireNonNull(checkBonusPoolQuantitiesOpProvider);
+        this.handleCertificatesOpProvider = Objects.requireNonNull(handleCertificatesOpProvider);
+        this.complianceOpProvider = Objects.requireNonNull(complianceOpProvider);
     }
 
     public BindChain create(Consumer consumer, Map<String, Integer> quantities, Enforcer.CallerType caller) {
         return new BindChain(
             this.bindContextFactory,
             this.rulesCheckOpFactory,
-            this.handleEntitlementsOp,
-            this.postBindBonusPoolsOp,
-            this.checkBonusPoolQuantitiesOp,
-            this.handleCertificatesOp,
-            this.complianceOp,
+            this.handleEntitlementsOpProvider.get(),
+            this.postBindBonusPoolsOpProvider.get(),
+            this.checkBonusPoolQuantitiesOpProvider.get(),
+            this.handleCertificatesOpProvider.get(),
+            this.complianceOpProvider.get(),
             consumer, quantities, caller);
     }
 }

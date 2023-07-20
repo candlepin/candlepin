@@ -19,7 +19,7 @@ import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolConverter;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
 import org.candlepin.model.EntitlementCurator;
@@ -35,20 +35,16 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
+
 
 
 /**
@@ -59,16 +55,15 @@ public class PoolRules {
     private static final Logger log = LoggerFactory.getLogger(PoolRules.class);
     private static final long UNLIMITED_QUANTITY = -1L;
 
-    private final PoolManager poolManager;
     private final Configuration config;
     private final EntitlementCurator entCurator;
+    private final PoolConverter poolConverter;
 
     @Inject
-    public PoolRules(PoolManager poolManager, Configuration config, EntitlementCurator entCurator) {
-
-        this.poolManager = Objects.requireNonNull(poolManager);
+    public PoolRules(Configuration config, EntitlementCurator entCurator, PoolConverter poolConverter) {
         this.config = Objects.requireNonNull(config);
         this.entCurator = Objects.requireNonNull(entCurator);
+        this.poolConverter = Objects.requireNonNull(poolConverter);
     }
 
     private long calculateQuantity(long quantity, Product product, String upstreamPoolId) {
@@ -97,7 +92,7 @@ public class PoolRules {
     }
 
     public List<Pool> createAndEnrichPools(SubscriptionInfo sub, List<Pool> existingPools) {
-        Pool pool = this.poolManager.convertToPrimaryPool(sub);
+        Pool pool = this.poolConverter.convertToPrimaryPool(sub);
         return createAndEnrichPools(pool, existingPools);
     }
 
@@ -372,148 +367,6 @@ public class PoolRules {
         return this.updatePoolFromStackedEntitlements(pool, stackedEnts, changedProducts);
     }
 
-    /**
-     * Updates the pool based on the entitlements in the specified stack.
-     *
-     * @param pools
-     * @param consumer
-     * @return updates
-     */
-    public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, Collection<Pool> pools,
-        Collection<Entitlement> entitlements, boolean deleteIfNoStackedEnts) {
-        return updatePoolsFromStack(consumer, pools, entitlements, null, deleteIfNoStackedEnts);
-    }
-
-    /**
-     * Updates the pool based on the entitlements in the specified stack.
-     *
-     * @param pools
-     * @param consumer
-     * @return updates
-     */
-    public List<PoolUpdate> updatePoolsFromStack(Consumer consumer, Collection<Pool> pools,
-        Collection<Entitlement> newEntitlements, Collection<String> alreadyDeletedPools,
-        boolean deleteIfNoStackedEnts) {
-
-        Map<String, List<Entitlement>> entitlementMap = new HashMap<>();
-        Set<String> sourceStackIds = new HashSet<>();
-        List<PoolUpdate> result = new ArrayList<>();
-
-        for (Pool pool : pools) {
-            sourceStackIds.add(pool.getSourceStackId());
-        }
-
-        List<Entitlement> allEntitlements = this.entCurator.findByStackIds(consumer, sourceStackIds);
-        if (CollectionUtils.isNotEmpty(newEntitlements)) {
-            allEntitlements.addAll(newEntitlements);
-        }
-
-        for (Entitlement entitlement : allEntitlements) {
-            List<Entitlement> ents = entitlementMap
-                .computeIfAbsent(entitlement.getPool().getStackId(), k -> new ArrayList<>());
-            ents.add(entitlement);
-        }
-
-        List<Pool> poolsToDelete = new ArrayList<>();
-        for (Pool pool : pools) {
-            List<Entitlement> entitlements = entitlementMap.get(pool.getSourceStackId());
-            if (CollectionUtils.isNotEmpty(entitlements)) {
-                result.add(this.updatePoolFromStackedEntitlements(pool, entitlements,
-                    Collections.emptyMap()));
-            }
-            else if (deleteIfNoStackedEnts) {
-                poolsToDelete.add(pool);
-            }
-        }
-
-        if (!poolsToDelete.isEmpty()) {
-            this.poolManager.deletePools(poolsToDelete, alreadyDeletedPools);
-        }
-
-        return result;
-    }
-
-    public void bulkUpdatePoolsFromStack(Set<Consumer> consumers, List<Pool> pools,
-        Collection<String> alreadyDeletedPools, boolean deleteIfNoStackedEnts) {
-
-        log.debug("Bulk updating {} pools for {} consumers.", pools.size(), consumers.size());
-        List<Entitlement> stackingEntitlements = findStackingEntitlementsOf(pools);
-        log.debug("found {} stacking entitlements.", stackingEntitlements.size());
-        List<Entitlement> filteredEntitlements = filterByConsumers(consumers, stackingEntitlements);
-        Map<String, List<Entitlement>> entitlementsByStackingId = groupByStackingId(filteredEntitlements);
-
-        updatePoolsWithStackingEntitlements(pools, entitlementsByStackingId);
-
-        if (deleteIfNoStackedEnts) {
-            List<Pool> poolsToDelete = filterPoolsWithoutStackingEntitlements(pools,
-                entitlementsByStackingId);
-
-            if (!poolsToDelete.isEmpty()) {
-                this.poolManager.deletePools(poolsToDelete, alreadyDeletedPools);
-            }
-        }
-    }
-
-    private List<Entitlement> findStackingEntitlementsOf(List<Pool> pools) {
-        Set<String> sourceStackIds = stackIdsOf(pools);
-        log.debug("Found {} source stacks", sourceStackIds.size());
-        return this.entCurator.findByStackIds(null, sourceStackIds);
-    }
-
-    private Set<String> stackIdsOf(List<Pool> pools) {
-        return pools.stream()
-            .map(Pool::getSourceStackId)
-            .collect(Collectors.toSet());
-    }
-
-    private List<Pool> filterPoolsWithoutStackingEntitlements(
-        List<Pool> pools, Map<String, List<Entitlement>> entitlementsByStackingId) {
-        List<Pool> poolsToDelete = new ArrayList<>();
-        for (Pool pool : pools) {
-            List<Entitlement> entitlements = entitlementsByStackingId.get(pool.getSourceStackId());
-            if (CollectionUtils.isEmpty(entitlements)) {
-                poolsToDelete.add(pool);
-            }
-        }
-        return poolsToDelete;
-    }
-
-    private void updatePoolsWithStackingEntitlements(List<Pool> pools, Map<String,
-        List<Entitlement>> entitlementsByStackingId) {
-        for (Pool pool : pools) {
-            List<Entitlement> entitlements = entitlementsByStackingId.get(pool.getSourceStackId());
-            if (CollectionUtils.isNotEmpty(entitlements)) {
-                this.updatePoolFromStackedEntitlements(pool, entitlements,
-                    Collections.emptyMap());
-            }
-        }
-    }
-
-    private List<Entitlement> filterByConsumers(Set<Consumer> consumers, List<Entitlement> entitlements) {
-        Map<String, List<Entitlement>> entitlementsByConsumerUuid = groupByConsumerUuid(entitlements);
-        List<Entitlement> filteredEntitlements = new ArrayList<>(consumers.size());
-        for (Consumer consumer : consumers) {
-            if (entitlementsByConsumerUuid.containsKey(consumer.getUuid())) {
-                final List<Entitlement> foundEntitlements = entitlementsByConsumerUuid
-                    .get(consumer.getUuid());
-                log.debug("Found {} entitlements for consumer: {}", foundEntitlements.size(),
-                    consumer.getUuid());
-                filteredEntitlements.addAll(foundEntitlements);
-            }
-        }
-        return filteredEntitlements;
-    }
-
-    private Map<String, List<Entitlement>> groupByConsumerUuid(List<Entitlement> entitlements) {
-        return entitlements.stream()
-            .collect(Collectors.groupingBy(e -> e.getConsumer().getUuid()));
-    }
-
-    private Map<String, List<Entitlement>> groupByStackingId(List<Entitlement> entitlements) {
-        return entitlements.stream()
-            .collect(Collectors.groupingBy(entitlement -> entitlement.getPool().getStackId()));
-    }
-
     public PoolUpdate updatePoolFromStackedEntitlements(Pool pool, Collection<Entitlement> stackedEnts,
         Map<String, Product> changedProducts) {
         PoolUpdate update = new PoolUpdate(pool);
@@ -662,10 +515,12 @@ public class PoolRules {
          * derived products on the subscription are graduated to be the pool products and
          * derived products aren't going to have a virt_limit attribute
          */
-        if (existingPool.hasAttribute(Pool.Attributes.DERIVED_POOL) &&
-            "true".equalsIgnoreCase(existingPool.getAttributeValue(Pool.Attributes.VIRT_ONLY)) &&
-            (existingPool.hasAttribute(Product.Attributes.VIRT_LIMIT) ||
-            existingPool.getProduct().hasAttribute(Product.Attributes.VIRT_LIMIT))) {
+        boolean isVirtOnly = "true".equalsIgnoreCase(
+            existingPool.getAttributeValue(Pool.Attributes.VIRT_ONLY));
+        boolean hasVirtLimit = existingPool.hasAttribute(Product.Attributes.VIRT_LIMIT) ||
+            existingPool.getProduct().hasAttribute(Product.Attributes.VIRT_LIMIT);
+
+        if (existingPool.hasAttribute(Pool.Attributes.DERIVED_POOL) && isVirtOnly && hasVirtLimit) {
 
             if (!attributes.containsKey(Product.Attributes.VIRT_LIMIT)) {
                 log.warn("virt_limit attribute has been removed from subscription, " +
@@ -684,8 +539,7 @@ public class PoolRules {
                 if ("unlimited".equals(virtLimitStr)) {
                     // 0 will only happen if the rules set it to be 0 -- don't modify
                     // -1 for pretty much all the rest
-                    expectedQuantity = existingPool.getQuantity() == 0 ?
-                        0 : -1;
+                    expectedQuantity = existingPool.getQuantity() == 0 ? 0 : -1;
                 }
                 else {
                     try {
@@ -711,8 +565,8 @@ public class PoolRules {
                             boolean isPrimaryUnlimited = false;
 
                             for (Pool derivedPool : existingPools) {
-                                String isDerived =
-                                    derivedPool.getAttributeValue(Pool.Attributes.DERIVED_POOL);
+                                String isDerived = derivedPool
+                                    .getAttributeValue(Pool.Attributes.DERIVED_POOL);
 
                                 if (isDerived == null) {
                                     adjust = derivedPool.getExported();

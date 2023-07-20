@@ -56,6 +56,8 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
+
+
 public class ConsumerCuratorTest extends DatabaseTestFixture {
 
     private Owner owner;

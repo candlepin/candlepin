@@ -14,7 +14,6 @@
  */
 package org.candlepin.spec.pools;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -45,6 +44,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
+
+
 
 @SpecTest
 public class PoolUnlimitedPrimarySpecTest {
@@ -131,7 +132,7 @@ public class PoolUnlimitedPrimarySpecTest {
 
         PoolDTO subPool = pools.stream()
             .filter(x -> x.getSubscriptionId().equals(poolVirtProductMuliplier.getSubscriptionId()) &&
-            ("UNMAPPED_GUEST".equals(x.getType()) || "BONUS".equals(x.getType())))
+                ("UNMAPPED_GUEST".equals(x.getType()) || "BONUS".equals(x.getType())))
             .toList().get(0);
         assertEquals(-1L, subPool.getQuantity());
     }
@@ -159,7 +160,7 @@ public class PoolUnlimitedPrimarySpecTest {
         final String subId = poolVirtInstanceMuliplier.getSubscriptionId();
         PoolDTO subPool = pools.stream()
             .filter(x -> x.getSubscriptionId().equals(subId) &&
-            ("UNMAPPED_GUEST".equals(x.getType()) || "BONUS".equals(x.getType())))
+                ("UNMAPPED_GUEST".equals(x.getType()) || "BONUS".equals(x.getType())))
             .toList().get(0);
         assertEquals(-1L, subPool.getQuantity());
     }
@@ -203,7 +204,7 @@ public class PoolUnlimitedPrimarySpecTest {
         List<PoolDTO> pools = client.pools().listPoolsByOwnerAndProduct(owner.getId(), productVirt.getId());
         PoolDTO guestPool = pools.stream()
             .filter(x -> "true".equals(getAttributeValue("pool_derived", x.getAttributes())) &&
-            "UNMAPPED_GUEST".equals(x.getType()))
+                "UNMAPPED_GUEST".equals(x.getType()))
             .toList().get(0);
         guestUnmappedClient.consumers().bindPool(guestUnmapped.getUuid(), guestPool.getId(), 4000);
         List<EntitlementDTO> ents = guestUnmappedClient.consumers().listEntitlements(guestUnmapped.getUuid());
@@ -221,7 +222,7 @@ public class PoolUnlimitedPrimarySpecTest {
             productUnlimitedVirt.getId());
         PoolDTO guestPool = pools.stream()
             .filter(x -> "true".equals(getAttributeValue("pool_derived", x.getAttributes())) &&
-            "ENTITLEMENT_DERIVED".equals(x.getType()))
+                "ENTITLEMENT_DERIVED".equals(x.getType()))
             .toList().get(0);
 
         guestClient.consumers().bindPool(guest.getUuid(), guestPool.getId(), 5000);
@@ -240,7 +241,7 @@ public class PoolUnlimitedPrimarySpecTest {
             proudctVirtHostDep.getId());
         PoolDTO guestPool = pools.stream()
             .filter(x -> "true".equals(getAttributeValue("pool_derived", x.getAttributes())) &&
-            "ENTITLEMENT_DERIVED".equals(x.getType()))
+                "ENTITLEMENT_DERIVED".equals(x.getType()))
             .toList().get(0);
 
         guestClient.consumers().bindPool(guest.getUuid(), guestPool.getId(), 4);
@@ -258,7 +259,7 @@ public class PoolUnlimitedPrimarySpecTest {
             productUnlimitedVirt.getId());
         PoolDTO guestPool = pools.stream()
             .filter(x -> "true".equals(getAttributeValue("pool_derived", x.getAttributes())) &&
-            "UNMAPPED_GUEST".equals(x.getType()))
+                "UNMAPPED_GUEST".equals(x.getType()))
             .toList().get(0);
 
         guestUnmappedClient.consumers().bindPool(guestUnmapped.getUuid(), guestPool.getId(), 600);

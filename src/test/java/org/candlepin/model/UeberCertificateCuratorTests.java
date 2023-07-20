@@ -27,6 +27,8 @@ import org.junit.jupiter.api.Test;
 
 import javax.persistence.PersistenceException;
 
+
+
 /**
  * UeberCertificateCuratorTests
  */

@@ -76,9 +76,9 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-
 // FIXME: Rewrite this class to not mock the DB-level operations and just use the mock DB as a whole.
 // Mocking DB functionality is nonsense and makes maintaining and adding new tests incredibly painful.
+
 
 
 /**

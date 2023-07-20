@@ -22,16 +22,29 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
+import org.candlepin.audit.EventFactory;
+import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.UserPrincipal;
-import org.candlepin.controller.CandlepinPoolManager;
+import org.candlepin.auth.permissions.PermissionFactory;
+import org.candlepin.controller.ContentAccessManager;
+import org.candlepin.controller.ManifestManager;
+import org.candlepin.controller.OwnerManager;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.dto.api.server.v1.UeberCertificateDTO;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Role;
+import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.UeberCertificateGenerator;
 import org.candlepin.model.User;
+import org.candlepin.resource.util.CalculatedAttributesUtil;
+import org.candlepin.resource.util.ConsumerTypeValidator;
+import org.candlepin.resource.validation.DTOValidator;
+import org.candlepin.service.OwnerServiceAdapter;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.ServiceLevelValidator;
@@ -41,16 +54,28 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 
-/**
- * OwnerResourceUeberCertOperationsTest
- */
+
+
 public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     private static final String OWNER_NAME = "Jar_Jar_Binks";
 
-    private CandlepinPoolManager poolManager;
+    private PoolManager poolManager;
     private UeberCertificateGenerator ueberCertGenerator;
+    private UeberCertificateCurator ueberCertCurator;
+    private PermissionFactory permFactory;
     private ServiceLevelValidator serviceLevelValidator;
     private ContentOverrideValidator contentOverrideValidator;
+    private PoolService poolService;
+    private EventSink sink;
+    private EventFactory eventFactory;
+    private ContentAccessManager contentAccessManager;
+    private ManifestManager manifestManager;
+    private OwnerManager ownerManager;
+    private ExporterMetadataCurator exportCurator;
+    private OwnerServiceAdapter ownerService;
+    private CalculatedAttributesUtil calculatedAttributesUtil;
+    private ConsumerTypeValidator consumerTypeValdator;
+    private DTOValidator dtoValidator;
 
     private PrincipalProvider principalProvider;
     private JobManager jobManager;
@@ -62,10 +87,23 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
-        poolManager = this.injector.getInstance(CandlepinPoolManager.class);
+        poolManager = this.injector.getInstance(PoolManager.class);
         ueberCertGenerator = this.injector.getInstance(UeberCertificateGenerator.class);
+        ueberCertCurator = this.injector.getInstance(UeberCertificateCurator.class);
+        permFactory = this.injector.getInstance(PermissionFactory.class);
         serviceLevelValidator = this.injector.getInstance(ServiceLevelValidator.class);
         contentOverrideValidator = this.injector.getInstance(ContentOverrideValidator.class);
+        poolService = this.injector.getInstance(PoolService.class);
+        sink = this.injector.getInstance(EventSink.class);
+        eventFactory = this.injector.getInstance(EventFactory.class);
+        contentAccessManager = this.injector.getInstance(ContentAccessManager.class);
+        manifestManager = this.injector.getInstance(ManifestManager.class);
+        ownerManager = this.injector.getInstance(OwnerManager.class);
+        exportCurator = this.injector.getInstance(ExporterMetadataCurator.class);
+        ownerService = this.injector.getInstance(OwnerServiceAdapter.class);
+        calculatedAttributesUtil = this.injector.getInstance(CalculatedAttributesUtil.class);
+        consumerTypeValdator = this.injector.getInstance(ConsumerTypeValidator.class);
+        dtoValidator = this.injector.getInstance(DTOValidator.class);
 
         owner = ownerCurator.create(new Owner()
             .setKey(OWNER_NAME)
@@ -84,16 +122,16 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
         this.principalProvider = mock(PrincipalProvider.class);
 
         or = new OwnerResource(
-            ownerCurator, null, consumerCurator, i18n, null, null, null,
-            null, poolManager, null, null,
-            null, null, entitlementCurator,
-            ueberCertificateCurator, ueberCertGenerator, null, null, contentOverrideValidator,
-            serviceLevelValidator, null, null, null, null, this.modelTranslator, this.jobManager,
-            null, this.principalProvider);
+            ownerCurator, activationKeyCurator, consumerCurator, i18n, sink, eventFactory,
+            contentAccessManager, manifestManager, poolManager, ownerManager, exportCurator,
+            ownerInfoCurator, importRecordCurator, entitlementCurator, ueberCertCurator, ueberCertGenerator,
+            environmentCurator, calculatedAttributesUtil, contentOverrideValidator, serviceLevelValidator,
+            ownerService, config, consumerTypeValdator, ownerProductCurator, this.modelTranslator,
+            this.jobManager, dtoValidator, this.poolService, this.principalProvider);
     }
 
     @Test
-    public void testUeberCertIsRegeneratedOnNextInvocation() throws Exception {
+    public void testUeberCertIsRegeneratedOnNextInvocation() {
         when(this.principalProvider.get()).thenReturn(principal);
         UeberCertificateDTO firstCert = or.createUeberCertificate(owner.getKey());
         UeberCertificateDTO secondCert = or.createUeberCertificate(owner.getKey());
@@ -101,7 +139,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void certificateGenerationRaisesExceptionIfOwnerNotFound() throws Exception {
+    public void certificateGenerationRaisesExceptionIfOwnerNotFound() {
         when(this.principalProvider.get()).thenReturn(principal);
         assertThrows(NotFoundException.class, () ->
             or.createUeberCertificate("non-existant")
@@ -109,7 +147,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void certificateRetrievalRaisesExceptionIfOwnerNotFound() throws Exception {
+    public void certificateRetrievalRaisesExceptionIfOwnerNotFound() {
         when(this.principalProvider.get()).thenReturn(principal);
         assertThrows(NotFoundException.class, () ->
             or.getUeberCertificate("non-existant")
@@ -117,8 +155,7 @@ public class OwnerResourceUeberCertOperationsTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void certificateRetrievalRaisesExceptionIfNoCertificateWasGenerated()
-        throws Exception {
+    public void certificateRetrievalRaisesExceptionIfNoCertificateWasGenerated() {
         // verify that owner under test doesn't have a certificate
         Owner anotherOwner = ownerCurator.create(new Owner()
             .setKey(OWNER_NAME + "1")

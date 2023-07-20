@@ -67,7 +67,6 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
     private Map<Owner, Set<String>> ownerOrphanedEntities;
     private Map<Owner, Set<String>> ownerUnorphanedEntities;
 
-
     /**
      * Creates a new ProductNodeVisitor that uses the provided curators for performing database
      * operations.
@@ -570,8 +569,7 @@ public class ProductNodeVisitor implements NodeVisitor<Product, ProductInfo> {
                                 updatedEntity,
                                 binfo.getProductId(),
                                 binfo.getName(),
-                                binfo.getType()
-                            ));
+                                binfo.getType()));
                         }
                     }
 

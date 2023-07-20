@@ -14,19 +14,17 @@
  */
 package org.candlepin.policy;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItems;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.bind.PoolOperations;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolConverter;
+import org.candlepin.controller.PoolService;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerType.ConsumerTypeEnum;
@@ -49,7 +47,6 @@ import org.candlepin.util.Util;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -57,14 +54,13 @@ import org.mockito.quality.Strictness;
 
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 
 
 /**
@@ -77,12 +73,20 @@ public class PoolRulesStackDerivedTest {
     private PoolRules poolRules;
     private Consumer consumer;
 
-    @Mock private RulesCurator rulesCuratorMock;
-    @Mock private OwnerProductCurator ownerProductCuratorMock;
-    @Mock private PoolManager poolManagerMock;
-    @Mock private Configuration configMock;
-    @Mock private EntitlementCurator entCurMock;
-    @Mock private ProductCurator productCurator;
+    @Mock
+    private RulesCurator rulesCuratorMock;
+    @Mock
+    private OwnerProductCurator ownerProductCuratorMock;
+    @Mock
+    private PoolService poolService;
+    @Mock
+    private Configuration configMock;
+    @Mock
+    private EntitlementCurator entCurMock;
+    @Mock
+    private ProductCurator productCurator;
+    @Mock
+    private PoolConverter poolConverter;
 
     private UserPrincipal principal;
     private Owner owner;
@@ -111,7 +115,6 @@ public class PoolRulesStackDerivedTest {
     private List<Entitlement> stackedEnts = new LinkedList<>();
 
     private Pool stackDerivedPool;
-    private Pool stackDerivedPool2;
 
     private static final String STACK = "a-stack";
 
@@ -126,9 +129,9 @@ public class PoolRulesStackDerivedTest {
         when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
         when(rulesCuratorMock.getRules()).thenReturn(rules);
 
-        when(configMock.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
+        when(configMock.getInt(ConfigProperties.PRODUCT_CACHE_MAX)).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock);
+        poolRules = new PoolRules(configMock, entCurMock, poolConverter);
         principal = TestUtil.createOwnerPrincipal();
         owner = principal.getOwners().get(0);
 
@@ -201,7 +204,7 @@ public class PoolRulesStackDerivedTest {
         entitlements.put(pool2.getId(), stackedEnts.get(0));
         Map<String, Map<String, String>> attributes = new HashMap<>();
         attributes.put(pool2.getId(), PoolHelper.getFlattenedAttributes(pool2));
-        PoolOperations poolOperations = PoolHelper.createHostRestrictedPools(poolManagerMock,
+        PoolOperations poolOperations = PoolHelper.createHostRestrictedPools(poolService,
             consumer, reqPools, entitlements, attributes);
         stackDerivedPool = poolOperations.creations().get(0);
 
@@ -211,15 +214,13 @@ public class PoolRulesStackDerivedTest {
         entitlements.put(pool4.getId(), createEntFromPool(pool4));
         attributes.clear();
         attributes.put(pool4.getId(), PoolHelper.getFlattenedAttributes(pool4));
-        PoolOperations poolOperations1 = PoolHelper.createHostRestrictedPools(
-            poolManagerMock, consumer, reqPools, entitlements, attributes);
-        stackDerivedPool2 = poolOperations1.creations().get(0);
     }
 
     private static int lastPoolId = 1;
 
     /**
      * Creates a Pool and caches stuff
+     *
      * @param sub
      * @return
      */
@@ -370,34 +371,6 @@ public class PoolRulesStackDerivedTest {
         assertTrue(update.changed());
         assertTrue(update.getQuantityChanged());
         assertEquals((Long) 2L, stackDerivedPool.getQuantity());
-    }
-
-    @Test
-    public void virtLimitFromFirstVirtLimitEntBatch() {
-        stackedEnts.clear();
-        Entitlement e1 = createEntFromPool(pool1);
-        e1.setQuantity(4);
-        stackedEnts.add(e1);
-        Entitlement e2 = createEntFromPool(pool4);
-        e2.setQuantity(16);
-        stackedEnts.add(e2);
-        Class<Set<String>> listClass = (Class<Set<String>>) (Class) HashSet.class;
-        ArgumentCaptor<Set<String>> arg = ArgumentCaptor.forClass(listClass);
-
-        when(entCurMock.findByStackIds(eq(consumer), arg.capture())).thenReturn(stackedEnts);
-
-        List<PoolUpdate> updates = poolRules.updatePoolsFromStack(consumer,
-            Arrays.asList(stackDerivedPool, stackDerivedPool2), null, false);
-        Set<String> stackIds = arg.getValue();
-        assertEquals(2, stackIds.size());
-        assertThat(stackIds, hasItems(STACK, STACK + "3"));
-
-        for (PoolUpdate update : updates) {
-            assertTrue(update.changed());
-            assertTrue(update.getQuantityChanged());
-        }
-        assertEquals((Long) 2L, stackDerivedPool.getQuantity());
-        assertEquals((Long) 9L, stackDerivedPool2.getQuantity());
     }
 
     @Test

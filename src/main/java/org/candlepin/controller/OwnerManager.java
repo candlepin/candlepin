@@ -14,7 +14,6 @@
  */
 package org.candlepin.controller;
 
-import org.candlepin.audit.EventSink;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.EnvironmentCurator;
@@ -32,7 +31,6 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.UeberCertificateCurator;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
-import org.candlepin.service.OwnerServiceAdapter;
 
 import com.google.inject.persist.Transactional;
 
@@ -40,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.Date;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -52,24 +50,22 @@ import javax.inject.Inject;
  */
 public class OwnerManager {
 
-    private static Logger log = LoggerFactory.getLogger(OwnerManager.class);
+    private static final Logger log = LoggerFactory.getLogger(OwnerManager.class);
 
-    private PoolManager poolManager;
-    private ConsumerCurator consumerCurator;
-    private ActivationKeyCurator activationKeyCurator;
-    private EnvironmentCurator envCurator;
-    private ExporterMetadataCurator exportCurator;
-    private ImportRecordCurator importRecordCurator;
-    private PermissionBlueprintCurator permissionCurator;
-    private OwnerProductCurator ownerProductCurator;
-    private OwnerContentCurator ownerContentCurator;
-    private OwnerCurator ownerCurator;
-    private UeberCertificateCurator uberCertificateCurator;
-    private OwnerServiceAdapter ownerServiceAdapter;
-    private EventSink sink;
+    private final PoolService poolService;
+    private final ConsumerCurator consumerCurator;
+    private final ActivationKeyCurator activationKeyCurator;
+    private final EnvironmentCurator envCurator;
+    private final ExporterMetadataCurator exportCurator;
+    private final ImportRecordCurator importRecordCurator;
+    private final PermissionBlueprintCurator permissionCurator;
+    private final OwnerProductCurator ownerProductCurator;
+    private final OwnerContentCurator ownerContentCurator;
+    private final OwnerCurator ownerCurator;
+    private final UeberCertificateCurator uberCertificateCurator;
 
     @Inject
-    public OwnerManager(PoolManager poolManager,
+    public OwnerManager(PoolService poolService,
         ConsumerCurator consumerCurator,
         ActivationKeyCurator activationKeyCurator,
         EnvironmentCurator envCurator,
@@ -79,23 +75,19 @@ public class OwnerManager {
         OwnerProductCurator ownerProductCurator,
         OwnerContentCurator ownerContentCurator,
         OwnerCurator ownerCurator,
-        UeberCertificateCurator uberCertificateCurator,
-        OwnerServiceAdapter ownerServiceAdapter,
-        EventSink sink) {
+        UeberCertificateCurator uberCertificateCurator) {
 
-        this.poolManager = poolManager;
-        this.consumerCurator = consumerCurator;
-        this.activationKeyCurator = activationKeyCurator;
-        this.envCurator = envCurator;
-        this.exportCurator = exportCurator;
-        this.importRecordCurator = importRecordCurator;
-        this.permissionCurator = permissionCurator;
-        this.ownerProductCurator = ownerProductCurator;
-        this.ownerContentCurator = ownerContentCurator;
-        this.ownerCurator = ownerCurator;
-        this.uberCertificateCurator = uberCertificateCurator;
-        this.ownerServiceAdapter = ownerServiceAdapter;
-        this.sink = sink;
+        this.poolService = Objects.requireNonNull(poolService);
+        this.consumerCurator = Objects.requireNonNull(consumerCurator);
+        this.activationKeyCurator = Objects.requireNonNull(activationKeyCurator);
+        this.envCurator = Objects.requireNonNull(envCurator);
+        this.exportCurator = Objects.requireNonNull(exportCurator);
+        this.importRecordCurator = Objects.requireNonNull(importRecordCurator);
+        this.permissionCurator = Objects.requireNonNull(permissionCurator);
+        this.ownerProductCurator = Objects.requireNonNull(ownerProductCurator);
+        this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.uberCertificateCurator = Objects.requireNonNull(uberCertificateCurator);
     }
 
     @Transactional
@@ -110,7 +102,7 @@ public class OwnerManager {
 
             // We're about to delete these consumers; no need to regen/dirty their dependent
             // entitlements or recalculate status.
-            poolManager.revokeAllEntitlements(consumer, false);
+            this.poolService.revokeAllEntitlements(consumer, false);
         }
 
         // Actual consumer deletion is done out of the loop above since all
@@ -142,9 +134,9 @@ public class OwnerManager {
         log.debug("Deleting uber certificate for owner: {}", owner);
         this.uberCertificateCurator.deleteForOwner(owner);
 
-        for (Pool p : poolManager.listPoolsByOwner(owner)) {
+        for (Pool p : this.poolService.listPoolsByOwner(owner)) {
             log.info("Deleting pool: {}", p);
-            poolManager.deletePool(p);
+            this.poolService.deletePool(p);
         }
 
         ExporterMetadata m = exportCurator.getByTypeAndOwner(ExporterMetadata.TYPE_PER_USER, owner);
@@ -174,11 +166,6 @@ public class OwnerManager {
         ownerCurator.delete(owner);
 
         ownerCurator.flush();
-    }
-
-    public Owner updateRefreshDate(Owner owner) {
-        owner.setLastRefreshed(new Date());
-        return ownerCurator.merge(owner);
     }
 
     /**

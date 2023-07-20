@@ -21,7 +21,8 @@ import static org.mockito.Mockito.when;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolConverter;
+import org.candlepin.controller.PoolService;
 import org.candlepin.model.EntitlementCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
@@ -58,22 +59,28 @@ public class PoolRulesInstanceTest {
 
     private PoolRules poolRules;
 
-    @Mock private RulesCurator rulesCuratorMock;
-    @Mock private PoolManager poolManagerMock;
-    @Mock private Configuration configMock;
-    @Mock private EntitlementCurator entCurMock;
+    @Mock
+    private RulesCurator rulesCurator;
+    @Mock
+    private PoolService poolService;
+    @Mock
+    private Configuration config;
+    @Mock
+    private EntitlementCurator entCurator;
+    @Mock
+    private PoolConverter poolConverter;
 
     @BeforeEach
     public void setUp() {
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
 
-        when(rulesCuratorMock.getUpdated()).thenReturn(new Date());
-        when(rulesCuratorMock.getRules()).thenReturn(rules);
+        when(rulesCurator.getUpdated()).thenReturn(new Date());
+        when(rulesCurator.getRules()).thenReturn(rules);
 
-        when(configMock.getInt(ConfigProperties.PRODUCT_CACHE_MAX)).thenReturn(100);
+        when(config.getInt(ConfigProperties.PRODUCT_CACHE_MAX)).thenReturn(100);
 
-        poolRules = new PoolRules(poolManagerMock, configMock, entCurMock);
+        poolRules = new PoolRules(config, entCurator, poolConverter);
     }
 
     @Test

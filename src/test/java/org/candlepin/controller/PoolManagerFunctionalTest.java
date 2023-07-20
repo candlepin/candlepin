@@ -20,6 +20,7 @@ import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -33,7 +34,6 @@ import org.candlepin.dto.manifest.v1.BrandingDTO;
 import org.candlepin.dto.manifest.v1.OwnerDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
-import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
@@ -55,10 +55,6 @@ import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
-import org.candlepin.service.model.CertificateInfo;
-import org.candlepin.service.model.ConsumerInfo;
-import org.candlepin.service.model.ProductInfo;
-import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
@@ -73,9 +69,7 @@ import org.mockito.Mockito;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -83,13 +77,13 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.persistence.EntityNotFoundException;
+
+
 
 public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private static final String PRODUCT_MONITORING = "monitoring";
@@ -98,122 +92,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     private static final String PRODUCT_VIRT_HOST_PLATFORM = "virtualization_host_platform";
     private static final String PRODUCT_VIRT_GUEST = "virt_guest";
 
-    private static class MockSubscriptionServiceAdapter implements SubscriptionServiceAdapter {
-        private Map<String, SubscriptionInfo> submap;
-
-        public MockSubscriptionServiceAdapter(Collection<? extends SubscriptionInfo> sinfo) {
-            this.submap = (sinfo != null ? sinfo.stream() : Stream.<SubscriptionInfo>empty())
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(SubscriptionInfo::getId, Function.identity()));
-        }
-
-        @Override
-        public Collection<? extends SubscriptionInfo> getSubscriptions() {
-            return this.submap.values();
-        }
-
-        @Override
-        public SubscriptionInfo getSubscription(String subscriptionId) {
-            return this.submap.get(subscriptionId);
-        }
-
-        @Override
-        public Collection<? extends SubscriptionInfo> getSubscriptions(String ownerKey) {
-            return this.submap.values();
-        }
-
-        @Override
-        public Collection<String> getSubscriptionIds(String ownerKey) {
-            return this.submap.values().stream()
-                .map(SubscriptionInfo::getId)
-                .collect(Collectors.toList());
-        }
-
-        private boolean productUsesProductId(ProductInfo pinfo, String productId) {
-            if (pinfo == null || productId == null) {
-                return false;
-            }
-
-            if (productId.equals(pinfo.getId())) {
-                return true;
-            }
-
-            Collection<? extends ProductInfo> providedProducts = pinfo.getProvidedProducts();
-            if (providedProducts != null) {
-                for (ProductInfo ppinfo : providedProducts) {
-                    if (ppinfo != null && productId.equals(ppinfo.getId())) {
-                        return true;
-                    }
-                }
-            }
-
-            // TODO: if we need to factor in derived products, recursively call this function
-            // with the derived product ref.
-
-            return false;
-        }
-
-        @Override
-        public Collection<? extends SubscriptionInfo> getSubscriptionsByProductId(String productId) {
-            return this.submap.values().stream()
-                .filter(sub -> this.productUsesProductId(sub.getProduct(), productId))
-                .collect(Collectors.toList());
-        }
-
-        @Override
-        public boolean hasUnacceptedSubscriptionTerms(String ownerKey) {
-            return false;
-        }
-
-        @Override
-        public void sendActivationEmail(String subscriptionId) {
-            // intentionally left empty
-        }
-
-        @Override
-        public boolean canActivateSubscription(ConsumerInfo consumer) {
-            return true;
-        }
-
-        @Override
-        public void activateSubscription(ConsumerInfo consumer, String email, String emailLocale) {
-            // intentionally left empty
-        }
-
-        @Override
-        public boolean isReadOnly() {
-            return false;
-        }
-    }
-
-    private static class MockProductServiceAdapter implements ProductServiceAdapter {
-        private Map<String, ProductInfo> pmap;
-
-        public MockProductServiceAdapter(Collection<? extends ProductInfo> pinfo) {
-            this.pmap = (pinfo != null ? pinfo.stream() : Stream.<ProductInfo>empty())
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(ProductInfo::getId, Function.identity()));
-        }
-
-        public MockProductServiceAdapter(ProductInfo... pinfo) {
-            this(pinfo != null ? List.of(pinfo) : null);
-        }
-
-        @Override
-        public Collection<? extends ProductInfo> getProductsByIds(String ownerKey, Collection<String> ids) {
-            return (ids != null ? ids.stream() : Stream.empty())
-                .map(this.pmap::get)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        }
-
-        @Override
-        public CertificateInfo getProductCertificate(String ownerKey, String productId) {
-            return null;
-        }
-    }
-
-    private CandlepinPoolManager poolManager;
+    private PoolManager poolManager;
     private EntitlementCertificateGenerator certGenerator;
     private RefresherFactory refresherFactory;
 
@@ -238,7 +117,7 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     public void init() throws Exception {
         super.init();
 
-        poolManager = injector.getInstance(CandlepinPoolManager.class);
+        poolManager = injector.getInstance(PoolManager.class);
         certGenerator = injector.getInstance(EntitlementCertificateGenerator.class);
         refresherFactory = injector.getInstance(RefresherFactory.class);
 
@@ -379,58 +258,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         // The cert should specify 5 monitoring entitlements, taking a 6th should fail:
         assertEquals(0, poolManager.entitleByProducts(data).size());
         assertEquals(Long.valueOf(5), monitoringPool.getConsumed());
-    }
-
-    @Test
-    public void testDeletePool() {
-        Pool pool = createPool(o, socketLimitedProduct, 100L,
-            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-
-        List<Pool> pools = poolCurator.listByOwner(o).list();
-        assertEquals(5, poolCurator.listByOwner(o).list().size());
-
-        poolManager.deletePools(Arrays.asList(pool, pools.get(0)));
-
-        pools = poolCurator.listByOwner(o).list();
-        assertEquals(3, pools.size());
-
-        poolManager.deletePools(pools);
-
-        pools = poolCurator.listByOwner(o).list();
-        assertTrue(pools.isEmpty());
-    }
-
-    @Test
-    public void testRevocation() throws Exception {
-        AutobindData data = new AutobindData(parentSystem, o)
-            .on(new Date())
-            .forProducts(Set.of(monitoring.getId()));
-
-        Entitlement e = poolManager.entitleByProducts(data).get(0);
-        poolManager.revokeEntitlement(e);
-
-        List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
-        assertTrue(entitlements.isEmpty());
-    }
-
-    @Test
-    public void testConsumeQuantity() throws Exception {
-        Pool monitoringPool = poolCurator.listByOwnerAndProduct(o,
-            monitoring.getId()).get(0);
-        assertEquals(Long.valueOf(5), monitoringPool.getQuantity());
-
-        Map<String, Integer> poolQuantities = new HashMap<>();
-        poolQuantities.put(monitoringPool.getId(), 3);
-        List<Entitlement> eList = poolManager.entitleByPools(parentSystem, poolQuantities);
-        assertEquals(1, eList.size());
-        assertEquals(Long.valueOf(3), monitoringPool.getConsumed());
-        consumerCurator.get(parentSystem.getId());
-        assertEquals(3, parentSystem.getEntitlementCount());
-
-        poolManager.revokeEntitlement(eList.get(0));
-        assertEquals(Long.valueOf(0), monitoringPool.getConsumed());
-        consumerCurator.get(parentSystem.getId());
-        assertEquals(0, parentSystem.getEntitlementCount());
     }
 
     @Test
@@ -798,46 +625,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testDevPoolRemovalAtUnbind() throws EntitlementRefusedException {
-        Owner owner = createOwner();
-        Product p = TestUtil.createProduct("test-product", "Test Product");
-        productCurator.create(p);
-
-        Consumer devSystem = new Consumer()
-            .setName("dev")
-            .setUsername("user")
-            .setOwner(owner)
-            .setType(systemType)
-            .setFact(Consumer.Facts.DEV_SKU, p.getId());
-        devSystem.addInstalledProduct(new ConsumerInstalledProduct()
-            .setProductId(p.getId())
-            .setProductName(p.getName()));
-        consumerCurator.create(devSystem);
-
-        Pool pool1 = createPool(owner, p, 10L,
-            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        pool1.setAttribute(Pool.Attributes.DEVELOPMENT_POOL, "true");
-        pool1.setAttribute(Pool.Attributes.REQUIRES_CONSUMER, devSystem.getUuid());
-        poolCurator.create(pool1);
-        Pool pool2 = createPool(owner, p, 10L,
-            TestUtil.createDate(2000, 3, 2), TestUtil.createDate(2050, 3, 2));
-        poolCurator.create(pool2);
-        List<String> possPools = new ArrayList<>();
-        possPools.add(pool1.getId());
-
-        AutobindData ad = new AutobindData(devSystem, owner);
-        ad.setPossiblePools(possPools);
-        List<Entitlement> results = poolManager.entitleByProducts(ad);
-        assertEquals(1, results.size());
-        assertEquals(results.get(0).getPool(), pool1);
-
-        Entitlement e = entitlementCurator.get(results.get(0).getId());
-        poolManager.revokeEntitlement(e);
-        assertNull(poolCurator.get(pool1.getId()));
-        assertNotNull(poolCurator.get(pool2.getId()));
-    }
-
-    @Test
     public void testDevPoolBatchBind() throws EntitlementRefusedException {
         Owner owner = createOwner();
         Product p = TestUtil.createProduct("test-product", "Test Product");
@@ -1123,23 +910,6 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testRevocationRevokesEntitlementCertSerial() throws Exception {
-        AutobindData data = new AutobindData(parentSystem, o)
-            .on(new Date())
-            .forProducts(Set.of(monitoring.getId()));
-
-        Entitlement e = poolManager.entitleByProducts(data).get(0);
-        CertificateSerial serial = e.getCertificates().iterator().next().getSerial();
-        poolManager.revokeEntitlement(e);
-
-        List<Entitlement> entitlements = entitlementCurator.listByConsumer(parentSystem);
-        assertTrue(entitlements.isEmpty());
-
-        CertificateSerial revoked = certSerialCurator.get(serial.getId());
-        assertTrue(revoked.isRevoked(), "cert serial should be marked as revoked once deleted!");
-    }
-
-    @Test
     public void testRefreshPoolsWithNewSubscriptions() {
         Owner owner = this.createOwner();
         Product prod = this.createProduct(owner);
@@ -1196,8 +966,8 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         subscriptions.add(sub);
 
         assertTrue(pool.getQuantity() < sub.getQuantity());
-        assertTrue(pool.getStartDate() != sub.getStartDate());
-        assertTrue(pool.getEndDate() != sub.getEndDate());
+        assertNotSame(pool.getStartDate(), sub.getStartDate());
+        assertNotSame(pool.getEndDate(), sub.getEndDate());
 
         pool.getSourceSubscription().setSubscriptionId(sub.getId());
         poolCurator.merge(pool);
@@ -1560,14 +1330,15 @@ public class PoolManagerFunctionalTest extends DatabaseTestFixture {
         List<Entitlement> entitlements = poolManager.entitleByPools(consumer, poolQuantities);
 
         Entitlement ent = entitlements.get(0);
-        assertTrue(ent.getQuantity() == 3);
+        assertEquals(3, (int) ent.getQuantity());
 
         poolManager.adjustEntitlementQuantity(consumer, ent, 5);
         Entitlement ent2 = entitlementCurator.get(ent.getId());
-        assertTrue(ent2.getQuantity() == 5);
+        assertEquals(5, (int) ent2.getQuantity());
 
         Pool pool2 = poolCurator.get(consumerPool.getId());
-        assertTrue(pool2.getConsumed() == 5);
-        assertTrue(pool2.getEntitlements().size() == 1);
+        assertEquals(5, (long) pool2.getConsumed());
+        assertEquals(1, pool2.getEntitlements().size());
     }
+
 }

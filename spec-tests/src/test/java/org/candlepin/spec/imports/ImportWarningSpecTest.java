@@ -43,10 +43,12 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
+
+
 @OnlyInStandalone
 public class ImportWarningSpecTest {
 
-    private static final String ENTITILEMENTS_PATH = "export/entitlements/";
+    private static final String ENTITLEMENTS_PATH = "export/entitlements/";
 
     @Test
     public void shouldWarnAboutInactiveSubscriptions() throws Exception, IOException {
@@ -60,7 +62,8 @@ public class ImportWarningSpecTest {
 
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        AsyncJobStatusDTO importJob = adminClient.owners().importManifestAsync(owner.getKey(), List.of(), export.file());
+        AsyncJobStatusDTO importJob = adminClient.owners().importManifestAsync(owner.getKey(), List.of(),
+            export.file());
         importJob = adminClient.jobs().waitForJob(importJob);
         assertThatJob(importJob).isFinished();
 
@@ -97,18 +100,21 @@ public class ImportWarningSpecTest {
         }
 
         // verify we get a warning
-        importJob = adminClient.owners().importManifestAsync(owner.getKey(), List.of("SIGNATURE_CONFLICT", "MANIFEST_SAME"), modifiedExport);
+        importJob = adminClient.owners().importManifestAsync(owner.getKey(),
+            List.of("SIGNATURE_CONFLICT", "MANIFEST_SAME"), modifiedExport);
         importJob = adminClient.jobs().waitForJob(importJob);
+
         assertThat(importJob)
             .returns("FINISHED", AsyncJobStatusDTO::getState)
             .extracting(AsyncJobStatusDTO::getResultData)
             .asString()
             .contains("SUCCESS_WITH_WARNING")
-            .contains(owner.getKey() + " file imported forcibly.One or more inactive subscriptions found in the file.");
+            .contains("%s file imported forcibly. One or more inactive subscriptions found in the file."
+                .formatted(owner.getKey()));
     }
 
     @Test
-    public void shouldWarnAboutNoActiveSubscriptions() throws Exception {
+    public void shouldWarnAboutNoActiveSubscriptions() {
         ApiClient adminClient = ApiClients.admin();
         Export export = new ExportGenerator(adminClient)
             .minimal()
@@ -116,14 +122,16 @@ public class ImportWarningSpecTest {
 
         OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
 
-        AsyncJobStatusDTO importJob = adminClient.owners().importManifestAsync(owner.getKey(), List.of(), export.file());
+        AsyncJobStatusDTO importJob = adminClient.owners().importManifestAsync(owner.getKey(), List.of(),
+            export.file());
         importJob = adminClient.jobs().waitForJob(importJob);
         assertThat(importJob)
             .returns("FINISHED", AsyncJobStatusDTO::getState)
             .extracting(AsyncJobStatusDTO::getResultData)
             .asString()
             .contains("SUCCESS_WITH_WARNING")
-            .contains(owner.getKey() + " file imported successfully.No active subscriptions found in the file.");
+            .contains("%s file imported successfully. No active subscriptions found in the file."
+                .formatted(owner.getKey()));
     }
 
     private void transfer(ZipFile zipFile, ZipEntry entry, ZipOutputStream os) {
@@ -170,7 +178,7 @@ public class ImportWarningSpecTest {
         }
 
         // Create a copy of the consumer_export.zip with the modified entitlement
-        String entToModify = ENTITILEMENTS_PATH + ent.getId() + ".json";
+        String entToModify = ENTITLEMENTS_PATH + ent.getId() + ".json";
         try (ZipOutputStream zosTemp = new ZipOutputStream(new FileOutputStream(temp))) {
             ZipFile originalConsumerExport = ExportUtil.getExportArchive(export.file());
             originalConsumerExport.stream().forEach(archiveEntry -> {

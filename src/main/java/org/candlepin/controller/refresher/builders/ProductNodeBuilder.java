@@ -81,8 +81,8 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
 
         if (providedProducts != null) {
             for (ProductInfo provided : providedProducts) {
-                EntityNode<Product, ProductInfo> child = factory.
-                    <Product, ProductInfo>buildNode(owner, Product.class, provided.getId());
+                EntityNode<Product, ProductInfo> child = factory.<Product, ProductInfo>buildNode(owner,
+                    Product.class, provided.getId());
 
                 node.addChildNode(child);
             }
@@ -122,8 +122,8 @@ public class ProductNodeBuilder implements NodeBuilder<Product, ProductInfo> {
                     throw new IllegalStateException("Product content references a null or invalid content");
                 }
 
-                EntityNode<Content, ContentInfo> child = factory.
-                    <Content, ContentInfo>buildNode(owner, Content.class, content.getId());
+                EntityNode<Content, ContentInfo> child = factory.<Content, ContentInfo>buildNode(owner,
+                    Content.class, content.getId());
 
                 node.addChildNode(child);
             }

@@ -29,6 +29,8 @@ import org.candlepin.model.CertificateSerialCurator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+
+
 public class CertificateSerialResourceTest {
 
     private ModelTranslator modelTranslator;

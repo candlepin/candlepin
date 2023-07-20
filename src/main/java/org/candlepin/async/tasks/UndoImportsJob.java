@@ -24,7 +24,7 @@ import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
-import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.model.ExporterMetadata;
 import org.candlepin.model.ExporterMetadataCurator;
 import org.candlepin.model.ImportRecord;
@@ -64,7 +64,7 @@ public class UndoImportsJob implements AsyncJob {
 
     private final I18n i18n;
     private final OwnerCurator ownerCurator;
-    private final PoolManager poolManager;
+    private final PoolService poolService;
     private final ExporterMetadataCurator exportCurator;
     private final ImportRecordCurator importRecordCurator;
     private final boolean isStandalone;
@@ -72,14 +72,14 @@ public class UndoImportsJob implements AsyncJob {
     @Inject
     public UndoImportsJob(I18n i18n,
         OwnerCurator ownerCurator,
-        PoolManager poolManager,
+        PoolService poolService,
         ExporterMetadataCurator exportCurator,
         ImportRecordCurator importRecordCurator,
         Configuration config) {
 
         this.i18n = Objects.requireNonNull(i18n);
         this.ownerCurator = Objects.requireNonNull(ownerCurator);
-        this.poolManager = Objects.requireNonNull(poolManager);
+        this.poolService = Objects.requireNonNull(poolService);
         this.exportCurator = Objects.requireNonNull(exportCurator);
         this.importRecordCurator = Objects.requireNonNull(importRecordCurator);
         this.isStandalone = Objects.requireNonNull(config).getBoolean(ConfigProperties.STANDALONE);
@@ -113,12 +113,11 @@ public class UndoImportsJob implements AsyncJob {
 
         log.info("Deleting all pools originating from manifests for owner/org: {}", displayName);
 
-        List<Pool> pools = this.poolManager.listPoolsByOwner(owner).list();
-        this.poolManager.deletePools(
+        List<Pool> pools = this.poolService.listPoolsByOwner(owner).list();
+        this.poolService.deletePools(
             pools.stream()
-            .filter(pool -> pool.isManaged(this.isStandalone))
-            .toList()
-        );
+                .filter(pool -> pool.isManaged(this.isStandalone))
+                .toList());
 
         // Clear out upstream ID so owner can import from other distributors:
         UpstreamConsumer uc = owner.getUpstreamConsumer();

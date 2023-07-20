@@ -28,8 +28,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.candlepin.async.JobManager;
-import org.candlepin.controller.CandlepinPoolManager;
 import org.candlepin.controller.Entitler;
+import org.candlepin.controller.PoolManager;
+import org.candlepin.controller.PoolService;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.EntitlementDTO;
 import org.candlepin.exceptions.BadRequestException;
@@ -80,15 +81,26 @@ public class EntitlementResourceTest {
     private I18n i18n;
     private Consumer consumer;
     private Owner owner;
-    @Mock private EntitlementCurator entitlementCurator;
-    @Mock private ConsumerCurator consumerCurator;
-    @Mock private ConsumerTypeCurator consumerTypeCurator;
-    @Mock private CandlepinPoolManager poolManager;
-    @Mock private Entitler entitler;
-    @Mock private EntitlementRules entRules;
-    @Mock private EntitlementRulesTranslator messageTranslator;
-    @Mock private JobManager jobManager;
-    @Mock protected ModelTranslator modelTranslator;
+    @Mock
+    private EntitlementCurator entitlementCurator;
+    @Mock
+    private ConsumerCurator consumerCurator;
+    @Mock
+    private ConsumerTypeCurator consumerTypeCurator;
+    @Mock
+    private PoolManager poolManager;
+    @Mock
+    private PoolService poolService;
+    @Mock
+    private Entitler entitler;
+    @Mock
+    private EntitlementRules entRules;
+    @Mock
+    private EntitlementRulesTranslator messageTranslator;
+    @Mock
+    private JobManager jobManager;
+    @Mock
+    protected ModelTranslator modelTranslator;
 
     private EntitlementResource entResource;
 
@@ -96,7 +108,8 @@ public class EntitlementResourceTest {
     public void before() {
         i18n = I18nFactory.getI18n(getClass(), Locale.US, I18nFactory.FALLBACK);
         entResource = new EntitlementResource(entitlementCurator, consumerCurator, consumerTypeCurator,
-            poolManager, i18n, entitler, entRules, messageTranslator, jobManager, modelTranslator);
+            poolManager, i18n, entitler, entRules, messageTranslator, jobManager, poolService,
+            modelTranslator);
 
         owner = new Owner()
             .setId("admin-id")
@@ -249,9 +262,8 @@ public class EntitlementResourceTest {
         when(consumerCurator.verifyAndLookupConsumer(eq(destConsumer.getUuid())))
             .thenReturn(destConsumer);
 
-        assertThrows(BadRequestException.class, () ->
-            entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 30)
-        );
+        assertThrows(BadRequestException.class,
+            () -> entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 30));
     }
 
     @Test
@@ -274,9 +286,8 @@ public class EntitlementResourceTest {
         when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
         when(consumerCurator.verifyAndLookupConsumer(eq(destConsumer.getUuid()))).thenReturn(destConsumer);
 
-        assertThrows(BadRequestException.class, () ->
-            entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 15)
-        );
+        assertThrows(BadRequestException.class,
+            () -> entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 15));
     }
 
     @Test
@@ -299,9 +310,8 @@ public class EntitlementResourceTest {
         when(entitlementCurator.get(eq(e.getId()))).thenReturn(e);
         when(consumerCurator.verifyAndLookupConsumer(eq(consumer.getUuid()))).thenReturn(consumer);
 
-        assertThrows(BadRequestException.class, () ->
-            entResource.migrateEntitlement(e.getId(), consumer.getUuid(), 15)
-        );
+        assertThrows(BadRequestException.class,
+            () -> entResource.migrateEntitlement(e.getId(), consumer.getUuid(), 15));
     }
 
     @Test
@@ -339,9 +349,8 @@ public class EntitlementResourceTest {
         when(consumerCurator.verifyAndLookupConsumer(eq(destConsumer.getUuid())))
             .thenReturn(destConsumer);
 
-        assertThrows(BadRequestException.class, () ->
-            entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 15)
-        );
+        assertThrows(BadRequestException.class,
+            () -> entResource.migrateEntitlement(e.getId(), destConsumer.getUuid(), 15));
     }
 
     @Test
@@ -357,9 +366,9 @@ public class EntitlementResourceTest {
         entitlementDTO.setId("getEntitlementList");
 
         when(entitlementCurator.listAll(isA(EntitlementFilterBuilder.class), isA(PageRequest.class)))
-                .thenReturn(page);
+            .thenReturn(page);
         when(modelTranslator.translate(isA(Entitlement.class),
-                eq(EntitlementDTO.class))).thenReturn(entitlementDTO);
+            eq(EntitlementDTO.class))).thenReturn(entitlementDTO);
 
         List<EntitlementDTO> result = entResource
             .listAllForConsumer(null, null, null, null, null, null, null);
@@ -429,9 +438,8 @@ public class EntitlementResourceTest {
 
         doReturn(entitlement).when(entitlementCurator).get(eq(entitlementId));
 
-        assertThrows(BadRequestException.class, () ->
-            entResource.updateEntitlement(entitlementId, entitlementDTO)
-        );
+        assertThrows(BadRequestException.class,
+            () -> entResource.updateEntitlement(entitlementId, entitlementDTO));
 
         verify(entitler, never())
             .adjustEntitlementQuantity(any(Consumer.class), any(Entitlement.class), any(Integer.class));
@@ -450,9 +458,8 @@ public class EntitlementResourceTest {
 
         doReturn(entitlement).when(entitlementCurator).get(eq(entitlementId));
 
-        assertThrows(BadRequestException.class, () ->
-            entResource.updateEntitlement(entitlementId, entitlementDTO)
-        );
+        assertThrows(BadRequestException.class,
+            () -> entResource.updateEntitlement(entitlementId, entitlementDTO));
 
         verify(entitler, never())
             .adjustEntitlementQuantity(any(Consumer.class), any(Entitlement.class), any(Integer.class));
@@ -503,8 +510,7 @@ public class EntitlementResourceTest {
         entitlementDTO.setId(entitlementId);
         entitlementDTO.setQuantity(4);
 
-        assertThrows(NotFoundException.class, () ->
-            entResource.updateEntitlement(entitlementId, entitlementDTO)
-        );
+        assertThrows(NotFoundException.class,
+            () -> entResource.updateEntitlement(entitlementId, entitlementDTO));
     }
 }
