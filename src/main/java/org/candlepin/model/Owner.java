@@ -46,11 +46,9 @@ import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-
-
 /**
- * Represents the owner of entitlements. This is akin to an organization,
- * whereas a User is an individual account within that organization.
+ * Represents the owner of entitlements. This is akin to an organization, whereas a User is an
+ * individual account within that organization.
  */
 @Entity
 @Table(name = Owner.DB_TABLE)
@@ -118,8 +116,8 @@ public class Owner extends AbstractHibernateObject<Owner>
     /**
      * When set, autobind will be disabled no matter if it is set on the Consumer or not.
      *
-     * Impl note:
-     *  This needs to allow null values due to pre-existing nulls which may come from the database.
+     * Impl note: This needs to allow null values due to pre-existing nulls which may come from the
+     * database.
      */
     @Column(name = "autobind_disabled")
     private Boolean autobindDisabled;
@@ -146,6 +144,12 @@ public class Owner extends AbstractHibernateObject<Owner>
     @Column(name = "last_content_update", nullable = true)
     private Date lastContentUpdate;
 
+    @Column(name = "anonymous", nullable = true)
+    private Boolean anonymous;
+
+    @Column(name = "claimed", nullable = true)
+    private Boolean claimed;
+
     /**
      * Default constructor
      */
@@ -169,10 +173,10 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     /**
-     * @param id the id to set
+     * @param id
+     *     the id to set
      *
-     * @return
-     *  a reference to this Owner instnace
+     * @return a reference to this Owner instnace
      */
     public Owner setId(String id) {
         this.id = id;
@@ -193,10 +197,10 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     /**
-     * @param displayName the name to set
+     * @param displayName
+     *     the name to set
      *
-     * @return
-     *  a reference to this Owner instnace
+     * @return a reference to this Owner instnace
      */
     public Owner setDisplayName(String displayName) {
         this.displayName = displayName;
@@ -211,10 +215,10 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     /**
-     * @param contentPrefix the prefix to set
+     * @param contentPrefix
+     *     the prefix to set
      *
-     * @return
-     *  a reference to this Owner instnace
+     * @return a reference to this Owner instnace
      */
     public Owner setContentPrefix(String contentPrefix) {
         this.contentPrefix = contentPrefix;
@@ -229,10 +233,10 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     /**
-     * @param lastRefreshed the date to set the lastRefreshed value to
+     * @param lastRefreshed
+     *     the date to set the lastRefreshed value to
      *
-     * @return
-     *  a reference to this Owner instnace
+     * @return a reference to this Owner instnace
      */
     public Owner setLastRefreshed(Date lastRefreshed) {
         this.lastRefreshed = lastRefreshed;
@@ -244,10 +248,10 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     /**
-     * @param consumers the consumers to set
+     * @param consumers
+     *     the consumers to set
      *
-     * @return
-     *  a reference to this Owner instnace
+     * @return a reference to this Owner instnace
      */
     public Owner setConsumers(Set<Consumer> consumers) {
         if (this.consumers == null) {
@@ -265,7 +269,8 @@ public class Owner extends AbstractHibernateObject<Owner>
     /**
      * Add a consumer to this owner
      *
-     * @param consumer consumer for this owner.
+     * @param consumer
+     *     consumer for this owner.
      */
     public void addConsumer(Consumer consumer) {
         consumer.setOwner(this);
@@ -290,15 +295,14 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     /**
-     * Adds the specified pool to this owner, and updates its owner reference. If the provided pool
-     * is null, or has already been added to this owner, this method silently ignores it.
+     * Adds the specified pool to this owner, and updates its owner reference. If the provided pool is
+     * null, or has already been added to this owner, this method silently ignores it.
      *
      * @param pool
-     *  the pool to add to this owner
+     *     the pool to add to this owner
      *
-     * @return
-     *  true if the pool is successfully added to this owner, false if the pool is null or already
-     *  mapped to this owner
+     * @return true if the pool is successfully added to this owner, false if the pool is null or
+     * already mapped to this owner
      */
     public boolean addPool(Pool pool) {
         if (this.pools == null) {
@@ -314,10 +318,10 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     /**
-     * @param upstream the upstream consumer to set
+     * @param upstream
+     *     the upstream consumer to set
      *
-     * @return
-     *  a reference to this Owner instnace
+     * @return a reference to this Owner instnace
      */
     public Owner setUpstreamConsumer(UpstreamConsumer upstream) {
         this.upstreamConsumer = upstream;
@@ -337,12 +341,11 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     /**
-     * Fetches the UUID of the upstream consumer of the manifest that was last imported into this
-     * org. If this org has not imported any manifest, this method returns null.
+     * Fetches the UUID of the upstream consumer of the manifest that was last imported into this org.
+     * If this org has not imported any manifest, this method returns null.
      *
-     * @return
-     *  the UUID of the upstream consumer owning the manifest this org last imported, or null if
-     *  this org has never performed a manifest import.
+     * @return the UUID of the upstream consumer owning the manifest this org last imported, or null if
+     * this org has never performed a manifest import.
      */
     public String getUpstreamUuid() {
         UpstreamConsumer upstreamConsumer = this.getUpstreamConsumer();
@@ -363,8 +366,7 @@ public class Owner extends AbstractHibernateObject<Owner>
     }
 
     /**
-     * Redundant method so that the OwnerPermissions
-     * will work properly when Owner is the target.
+     * Redundant method so that the OwnerPermissions will work properly when Owner is the target.
      *
      * @return this
      */
@@ -438,8 +440,7 @@ public class Owner extends AbstractHibernateObject<Owner>
     /**
      * Checks if autobind is disabled for consumers of this owner/organization.
      *
-     * @return
-     *  true if autobind is disabled for this owner/organization; false otherwise
+     * @return true if autobind is disabled for this owner/organization; false otherwise
      */
     public boolean isAutobindDisabled() {
         return this.autobindDisabled != null && this.autobindDisabled;
@@ -453,8 +454,7 @@ public class Owner extends AbstractHibernateObject<Owner>
     /**
      * Checks if autobindHypervisor is disabled for consumers of this owner/organization.
      *
-     * @return
-     *  true if autobindHypervisor is disabled for this owner/organization; false otherwise
+     * @return true if autobindHypervisor is disabled for this owner/organization; false otherwise
      */
     public boolean isAutobindHypervisorDisabled() {
         return this.autobindHypervisorDisabled != null && this.autobindHypervisorDisabled;
@@ -498,10 +498,9 @@ public class Owner extends AbstractHibernateObject<Owner>
      * Checks whether or not this owner is able to use the specified content access mode
      *
      * @param mode
-     *  the mode to check
+     *     the mode to check
      *
-     * @return
-     *  true if the specified content access mode is available to this owner; false otherwise
+     * @return true if the specified content access mode is available to this owner; false otherwise
      */
     public boolean isAllowedContentAccessMode(String mode) {
         String caModeList = this.getContentAccessModeList();
@@ -512,10 +511,9 @@ public class Owner extends AbstractHibernateObject<Owner>
      * Checks whether or not this owner is able to use the specified content access mode
      *
      * @param mode
-     *  the mode to check
+     *     the mode to check
      *
-     * @return
-     *  true if the specified content access mode is available to this owner; false otherwise
+     * @return true if the specified content access mode is available to this owner; false otherwise
      */
     public boolean isAllowedContentAccessMode(ContentAccessMode mode) {
         return mode != null && this.isAllowedContentAccessMode(mode.toDatabaseValue());
@@ -524,24 +522,21 @@ public class Owner extends AbstractHibernateObject<Owner>
     /**
      * Checks if this org is operating in Simple Content Access (SCA) mode.
      *
-     * @return
-     *  true if this org is operating in SCA mode; false otherwise
+     * @return true if this org is operating in SCA mode; false otherwise
      */
     public boolean isUsingSimpleContentAccess() {
         return ContentAccessMode.ORG_ENVIRONMENT.matches(this.getContentAccessMode());
     }
 
     /**
-     * Fetches the time of the last content update for this organization. A content update could
-     * include a direct content change, or something indirect such as a product or environment
-     * change which affects content visibility.
-     * If this org has not yet had any content changes, this method returns the time the org was
-     * created. If the org has not yet been persisted, it returns the time the Owner instance was
-     * instantiated. All else failing, this method returns the invocation time. This method should
-     * never return null.
+     * Fetches the time of the last content update for this organization. A content update could include
+     * a direct content change, or something indirect such as a product or environment change which
+     * affects content visibility. If this org has not yet had any content changes, this method returns
+     * the time the org was created. If the org has not yet been persisted, it returns the time the
+     * Owner instance was instantiated. All else failing, this method returns the invocation time. This
+     * method should never return null.
      *
-     * @return
-     *  the time of the last content update for this organization
+     * @return the time of the last content update for this organization
      */
     public Date getLastContentUpdate() {
         // If we don't have a content update date yet, return this org's creation date. Never
@@ -553,13 +548,12 @@ public class Owner extends AbstractHibernateObject<Owner>
      * Sets the date of the last content update for this organization.
      *
      * @param date
-     *  The date to use for the last content update for this organization
+     *     The date to use for the last content update for this organization
      *
      * @throws IllegalArgumentException
-     *  if date is null
+     *     if date is null
      *
-     * @return
-     *  a reference to this Owner
+     * @return a reference to this Owner
      */
     public Owner setLastContentUpdate(Date date) {
         if (date == null) {
@@ -573,11 +567,28 @@ public class Owner extends AbstractHibernateObject<Owner>
     /**
      * Sets the date of the last content update for this organization to the current date/time.
      *
-     * @return
-     *  a reference to this Owner
+     * @return a reference to this Owner
      */
     public Owner syncLastContentUpdate() {
         return this.setLastContentUpdate(new Date());
+    }
+
+    public Boolean getAnonymous() {
+        return anonymous;
+    }
+
+    public Owner setAnonymous(Boolean anonymous) {
+        this.anonymous = anonymous;
+        return this;
+    }
+
+    public Boolean getClaimed() {
+        return claimed;
+    }
+
+    public Owner setClaimed(Boolean claimed) {
+        this.claimed = claimed;
+        return this;
     }
 
     @Override
@@ -614,7 +625,9 @@ public class Owner extends AbstractHibernateObject<Owner>
             .append(this.getLogLevel(), that.getLogLevel())
             .append(this.isAutobindDisabled(), that.isAutobindDisabled())
             .append(this.getContentAccessMode(), that.getContentAccessMode())
-            .append(this.getContentAccessModeList(), that.getContentAccessModeList());
+            .append(this.getContentAccessModeList(), that.getContentAccessModeList())
+            .append(this.getAnonymous(), that.getAnonymous())
+            .append(this.getClaimed(), that.getClaimed());
 
         return builder.isEquals();
     }
@@ -638,7 +651,9 @@ public class Owner extends AbstractHibernateObject<Owner>
             .append(this.isAutobindDisabled())
             .append(this.isUsingSimpleContentAccess())
             .append(this.getContentAccessMode())
-            .append(this.getContentAccessModeList());
+            .append(this.getContentAccessModeList())
+            .append(this.getAnonymous())
+            .append(this.getClaimed());
 
         return builder.toHashCode();
     }
