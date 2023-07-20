@@ -77,4 +77,4 @@ USER tomcat
 # Expose ports for tomcat, candlepin, postgres and mariadb
 EXPOSE 8080 8443 5432 3306
 
-CMD ["/opt/tomcat/bin/catalina.sh", "run"]
+ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]
