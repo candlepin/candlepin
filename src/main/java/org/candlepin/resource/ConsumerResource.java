@@ -71,6 +71,7 @@ import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Certificate;
@@ -181,6 +182,7 @@ import javax.persistence.OptimisticLockException;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 
 
 /**
@@ -698,13 +700,11 @@ public class ConsumerResource implements ConsumerApi {
         String caMode = Util.firstOf(predicate,
             consumer.getContentAccessMode(),
             consumer.getOwner().getContentAccessMode(),
-            ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue()
-        );
+            ContentAccessManager.ContentAccessMode.getDefault().toDatabaseValue());
 
         String caList = Util.firstOf(predicate,
             consumer.getOwner().getContentAccessModeList(),
-            ContentAccessManager.getListDefaultDatabaseValue()
-        );
+            ContentAccessManager.getListDefaultDatabaseValue());
 
         return new ContentAccessDTO()
             .contentAccessMode(caMode)
@@ -1542,7 +1542,8 @@ public class ConsumerResource implements ConsumerApi {
 
         if (updated.getReleaseVer() != null && updated.getReleaseVer().getReleaseVer() != null) {
             String releaseVer = toUpdate.getReleaseVer() == null ?
-                null : toUpdate.getReleaseVer().getReleaseVer();
+                null :
+                toUpdate.getReleaseVer().getReleaseVer();
             if (!updated.getReleaseVer().getReleaseVer().equals(releaseVer)) {
                 log.info("   Updating consumer releaseVer setting.");
                 toUpdate.setReleaseVer(new Release(updated.getReleaseVer().getReleaseVer()));
@@ -2142,9 +2143,9 @@ public class ConsumerResource implements ConsumerApi {
             since = zonedDateTime.toOffsetDateTime();
         }
 
-
         if (!this.contentAccessManager.hasCertChangedSince(consumer, since != null ?
-            Util.toDate(since) : new Date(0))) {
+            Util.toDate(since) :
+            new Date(0))) {
 
             return Response.status(Response.Status.NOT_MODIFIED)
                 .entity("Not modified since date supplied.")
@@ -2172,7 +2173,9 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
-    public Object exportCertificates(@Verify(Consumer.class) String consumerUuid, String serials) {
+    public Object exportCertificates(
+        @Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid,
+        String serials) {
         HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);
 
         if (httpRequest.getHttpHeaders().getRequestHeader("accept").contains("application/json")) {
@@ -2280,8 +2283,7 @@ public class ConsumerResource implements ConsumerApi {
     @SuppressWarnings({"checkstyle:indentation", "checkstyle:methodlength"})
     public Response bind(
         @Verify(Consumer.class) String consumerUuid,
-        @Verify(value = Pool.class, nullable = true, subResource = SubResource.ENTITLEMENTS)
-        String poolIdString,
+        @Verify(value = Pool.class, nullable = true, subResource = SubResource.ENTITLEMENTS) String poolId,
         List<String> productIds,
         Integer quantity,
         String email,
@@ -2304,7 +2306,7 @@ public class ConsumerResource implements ConsumerApi {
         log.debug("Consumer (post verify): {}", consumer);
 
         // Check that only one query param was set, and some other validations
-        validateBindArguments(poolIdString, quantity, productIds, fromPools,
+        validateBindArguments(poolId, quantity, productIds, fromPools,
             entitleDate, consumer, async);
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
@@ -2326,8 +2328,8 @@ public class ConsumerResource implements ConsumerApi {
             throw e;
         }
 
-        if (poolIdString != null && quantity == null) {
-            Pool pool = poolManager.get(poolIdString);
+        if (poolId != null && quantity == null) {
+            Pool pool = poolManager.get(poolId);
             quantity = pool != null ? consumerBindUtil.getQuantityToBind(pool, consumer) : 1;
         }
 
@@ -2337,14 +2339,14 @@ public class ConsumerResource implements ConsumerApi {
         if (async) {
             JobConfig jobConfig;
 
-            if (poolIdString != null) {
+            if (poolId != null) {
                 String cfg = ConfigProperties.jobConfig(EntitlerJob.JOB_KEY, EntitlerJob.CFG_JOB_THROTTLE);
                 int throttle = config.getInt(cfg);
 
                 jobConfig = EntitlerJob.createConfig(throttle)
                     .setOwner(owner)
                     .setConsumer(consumer)
-                    .setPoolQuantity(poolIdString, quantity);
+                    .setPoolQuantity(poolId, quantity);
             }
             else {
                 jobConfig = EntitleByProductsJob.createConfig()
@@ -2380,8 +2382,9 @@ public class ConsumerResource implements ConsumerApi {
         //
         List<Entitlement> entitlements = null;
 
-        if (poolIdString != null) {
-            entitlements = entitler.bindByPoolQuantity(consumer, poolIdString, quantity);
+        if (poolId != null) {
+            entitlements = entitler.bindByPoolQuantity(consumer, poolId,
+                quantity);
         }
         else {
             try {
@@ -2396,20 +2399,18 @@ public class ConsumerResource implements ConsumerApi {
                 if (owner.isUsingSimpleContentAccess()) {
                     log.debug("Ignoring request to auto-attach. " +
                         "Attaching subscriptions is disabled for org \"{}\" " +
-                        "because simple content access is enabled."
-                        , owner.getKey(), e);
+                        "because simple content access is enabled.", owner.getKey(), e);
                     return Response.status(Response.Status.OK).build();
                 }
                 else {
                     throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                        "It is disabled for org \"{0}\"."
-                        , owner.getKey()), e);
+                        "It is disabled for org \"{0}\".", owner.getKey()), e);
                 }
             }
             catch (AutobindHypervisorDisabledException e) {
                 throw new BadRequestException(i18n.tr("Ignoring request to auto-attach. " +
-                        "It is disabled for org \"{0}\" because of the hypervisor autobind setting."
-                    , owner.getKey()), e);
+                    "It is disabled for org \"{0}\" because of the hypervisor autobind setting.",
+                    owner.getKey()), e);
             }
         }
 
@@ -2571,8 +2572,7 @@ public class ConsumerResource implements ConsumerApi {
         }
 
         throw new NotFoundException(i18n.tr(
-            "Entitlement with ID \"{0}\" could not be found.", dbid
-        ));
+            "Entitlement with ID \"{0}\" could not be found.", dbid));
     }
 
     @Override
@@ -2944,11 +2944,10 @@ public class ConsumerResource implements ConsumerApi {
         deletedConsumerCurator.delete(dc);
     }
 
-
     private void addCalculatedAttributes(Entitlement ent) {
         // With no consumer/date, this will not build suggested quantity
-        Map<String, String> calculatedAttributes =
-            calculatedAttributesUtil.buildCalculatedAttributes(ent.getPool(), null);
+        Map<String, String> calculatedAttributes = calculatedAttributesUtil
+            .buildCalculatedAttributes(ent.getPool(), null);
         ent.getPool().setCalculatedAttributes(calculatedAttributes);
     }
 
@@ -2958,8 +2957,6 @@ public class ConsumerResource implements ConsumerApi {
         }
         return null;
     }
-
-
 
     /**
      * Populates the specified entities with data from the provided guestIds.

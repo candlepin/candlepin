@@ -16,6 +16,7 @@ package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertUnauthorized;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -379,6 +380,69 @@ class CloudRegistrationSpecTest {
 
         assertUnauthorized(() -> adminClient.cloudAuthorization()
             .cloudAuthorizeV2(generateToken(metadata, "test-type", "")));
+    }
+
+    @Test
+    public void shouldExportCertificatesWithAnonymousToken() throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        adminClient.hosted().createOwner(owner);
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        associateProductIdToCloudOffer(adminClient, offerId, StringUtil.random("prod-"));
+        associateOwnerToCloudAccount(adminClient, accountId, owner.getKey());
+
+        String metadata = buildMetadataJson(adminClient.MAPPER, accountId, instanceId, offerId);
+
+        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+                .cloudAuthorizeV2(generateToken(metadata, "test-type", ""));
+
+        assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+        assertThat(result)
+            .isNotNull()
+            .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
+            .doesNotReturn(null, CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
+            .returns(ANON_TOKEN_TYPE, CloudAuthenticationResultDTO::getTokenType);
+
+        // TODO: As part of CANDLEPIN-626 this test should be updated to return a content access certificate.
+        // As for now, this test verifies that the failure does not occur in the VerifyAuthorizationFilter,
+        // but inside of the ConsumerResource.exportCertificates method. Asserting that the annonymous
+        // bearer token has allowed access to the endpoint.
+        assertNotFound(() -> ApiClients.bearerToken(result.getToken()).consumers()
+            .exportCertificates(result.getAnonymousConsumerUuid(), null))
+            .hasMessageContaining("Unit with ID", result.getAnonymousConsumerUuid(),
+                "could not be found.");
+    }
+
+    @Test
+    public void shouldNotExportCertificatesWithAnonymousTokenForUnknownAnonCloudConsumer()
+            throws Exception {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = adminClient.owners().createOwner(Owners.random());
+        adminClient.hosted().createOwner(owner);
+        String accountId = StringUtil.random("cloud-account-id-");
+        String instanceId = StringUtil.random("cloud-instance-id-");
+        String offerId = StringUtil.random("cloud-offer-");
+
+        associateProductIdToCloudOffer(adminClient, offerId, StringUtil.random("prod-"));
+        associateOwnerToCloudAccount(adminClient, accountId, owner.getKey());
+
+        String metadata = buildMetadataJson(adminClient.MAPPER, accountId, instanceId, offerId);
+
+        CloudAuthenticationResultDTO result = adminClient.cloudAuthorization()
+            .cloudAuthorizeV2(generateToken(metadata, "test-type", ""));
+
+        assertTokenType(adminClient.MAPPER, result.getToken(), ANON_TOKEN_TYPE);
+        assertThat(result)
+            .isNotNull()
+            .returns(owner.getKey(), CloudAuthenticationResultDTO::getOwnerKey)
+            .doesNotReturn(null, CloudAuthenticationResultDTO::getAnonymousConsumerUuid)
+            .returns(ANON_TOKEN_TYPE, CloudAuthenticationResultDTO::getTokenType);
+
+        assertNotFound(() -> ApiClients.bearerToken(result.getToken()).consumers()
+            .exportCertificates(StringUtil.random("unknown"), null));
     }
 
     /**
