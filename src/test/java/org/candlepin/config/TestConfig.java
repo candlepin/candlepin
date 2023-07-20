@@ -12,12 +12,13 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-
 package org.candlepin.config;
 
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+
+
 
 public final class TestConfig {
 

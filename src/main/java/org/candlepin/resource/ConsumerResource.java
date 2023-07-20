@@ -72,6 +72,7 @@ import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.IseException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
+import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Certificate;
@@ -2175,7 +2176,9 @@ public class ConsumerResource implements ConsumerApi {
     }
 
     @Override
-    public Object exportCertificates(@Verify(Consumer.class) String consumerUuid, String serials) {
+    public Object exportCertificates(
+        @Verify({AnonymousCloudConsumer.class, Consumer.class}) String consumerUuid,
+        String serials) {
         HttpRequest httpRequest = ResteasyContext.getContextData(HttpRequest.class);
 
         if (httpRequest.getHttpHeaders().getRequestHeader("accept").contains("application/json")) {
@@ -2283,8 +2286,7 @@ public class ConsumerResource implements ConsumerApi {
     @SuppressWarnings({ "checkstyle:indentation", "checkstyle:methodlength" })
     public Response bind(
         @Verify(Consumer.class) String consumerUuid,
-        @Verify(value = Pool.class, nullable = true,
-            subResource = SubResource.ENTITLEMENTS) String poolIdString,
+        @Verify(value = Pool.class, nullable = true, subResource = SubResource.ENTITLEMENTS) String poolId,
         List<String> productIds,
         Integer quantity,
         String email,
@@ -2307,7 +2309,7 @@ public class ConsumerResource implements ConsumerApi {
         log.debug("Consumer (post verify): {}", consumer);
 
         // Check that only one query param was set, and some other validations
-        validateBindArguments(poolIdString, quantity, productIds, fromPools,
+        validateBindArguments(poolId, quantity, productIds, fromPools,
             entitleDate, consumer, async);
 
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
@@ -2329,8 +2331,8 @@ public class ConsumerResource implements ConsumerApi {
             throw e;
         }
 
-        if (poolIdString != null && quantity == null) {
-            Pool pool = this.poolService.get(poolIdString);
+        if (poolId != null && quantity == null) {
+            Pool pool = poolService.get(poolId);
             quantity = pool != null ? consumerBindUtil.getQuantityToBind(pool, consumer) : 1;
         }
 
@@ -2340,14 +2342,14 @@ public class ConsumerResource implements ConsumerApi {
         if (async) {
             JobConfig jobConfig;
 
-            if (poolIdString != null) {
+            if (poolId != null) {
                 String cfg = ConfigProperties.jobConfig(EntitlerJob.JOB_KEY, EntitlerJob.CFG_JOB_THROTTLE);
                 int throttle = config.getInt(cfg);
 
                 jobConfig = EntitlerJob.createConfig(throttle)
                     .setOwner(owner)
                     .setConsumer(consumer)
-                    .setPoolQuantity(poolIdString, quantity);
+                    .setPoolQuantity(poolId, quantity);
             }
             else {
                 jobConfig = EntitleByProductsJob.createConfig()
@@ -2383,8 +2385,9 @@ public class ConsumerResource implements ConsumerApi {
         //
         List<Entitlement> entitlements = null;
 
-        if (poolIdString != null) {
-            entitlements = entitler.bindByPoolQuantity(consumer, poolIdString, quantity);
+        if (poolId != null) {
+            entitlements = entitler.bindByPoolQuantity(consumer, poolId,
+                quantity);
         }
         else {
             try {

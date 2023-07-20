@@ -27,6 +27,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.auth.AnonymousCloudRegistrationAuth;
 import org.candlepin.auth.AuthProvider;
 import org.candlepin.auth.CandlepinKeycloakRequestAuthenticator;
 import org.candlepin.auth.CloudRegistrationAuth;
@@ -448,7 +449,8 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
 
         Principal principal = ResteasyContext.getContextData(Principal.class);
 
-        verify(mockInjector, times(1)).getInstance(eq(CloudRegistrationAuth.class));
+        verify(mockInjector).getInstance(CloudRegistrationAuth.class);
+        verify(mockInjector).getInstance(AnonymousCloudRegistrationAuth.class);
         assertEquals(mockPrincipal, principal);
     }
 

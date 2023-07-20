@@ -17,6 +17,10 @@ package org.candlepin.model;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import javax.inject.Singleton;
 
 
@@ -46,6 +50,30 @@ public class AnonymousCloudConsumerCurator extends AbstractHibernateCurator<Anon
             .add(Restrictions.eq("uuid", uuid));
 
         return (AnonymousCloudConsumer) criteria.uniqueResult();
+    }
+
+    /**
+     * Retrieves anonymous cloud consumers based on the provided UUIDs.
+     *
+     * @param uuids
+     *  the UUIDs that corresponds to anonymous consumers
+     *
+     * @return the anonymous consumers based on the provided UUIDs, or empty list if none are found
+     */
+    public List<AnonymousCloudConsumer> getByUuids(Collection<String> uuids) {
+        List<AnonymousCloudConsumer> consumers = new ArrayList<>();
+        if (uuids == null || uuids.isEmpty()) {
+            return consumers;
+        }
+
+        for (List<String> block : this.partition(uuids)) {
+            Criteria criteria = this.createSecureCriteria()
+                .add(Restrictions.in("uuid", block));
+
+            consumers.addAll(criteria.list());
+        }
+
+        return consumers;
     }
 
     /**

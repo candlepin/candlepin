@@ -22,6 +22,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+
+
 /**
  * Annotation for specifying RESTful parameters that represent some protected
  * entity, such as a Consumer or Owner.
@@ -30,8 +32,11 @@ import java.lang.annotation.Target;
 @Target({ElementType.PARAMETER})
 @Documented
 public @interface Verify {
-    Class<? extends Persisted> value();
+    Class<? extends Persisted>[] value();
+
     Access require() default Access.NONE;
+
     boolean nullable() default false;
+
     SubResource subResource() default SubResource.NONE;
 }

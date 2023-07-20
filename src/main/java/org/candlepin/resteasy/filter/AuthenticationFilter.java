@@ -15,6 +15,7 @@
 package org.candlepin.resteasy.filter;
 
 import org.candlepin.auth.ActivationKeyAuth;
+import org.candlepin.auth.AnonymousCloudRegistrationAuth;
 import org.candlepin.auth.AuthProvider;
 import org.candlepin.auth.BasicAuth;
 import org.candlepin.auth.CloudRegistrationAuth;
@@ -56,6 +57,7 @@ import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.ext.Provider;
+
 
 
 /**
@@ -103,6 +105,7 @@ public class AuthenticationFilter implements ContainerRequestFilter {
         // Check if the cloud provider/jwt auth should be enabled
         if (config.getBoolean(ConfigProperties.CLOUD_AUTHENTICATION)) {
             providers.add(injector.getInstance(CloudRegistrationAuth.class));
+            providers.add(injector.getInstance(AnonymousCloudRegistrationAuth.class));
         }
 
         // use oauth

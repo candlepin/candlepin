@@ -109,6 +109,53 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .returns(expected.getProductId(), AnonymousCloudConsumer::getProductId);
     }
 
+    @Test
+    public void testGetByUuidsWithNullUuids() {
+        List<AnonymousCloudConsumer> actual = this.anonymousCloudConsumerCurator.getByUuids(null);
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetByUuidsWithEmptyUuids() {
+        List<AnonymousCloudConsumer> actual = this.anonymousCloudConsumerCurator.getByUuids(List.of());
+
+        assertThat(actual)
+            .isNotNull()
+            .isEmpty();
+    }
+
+    @Test
+    public void testGetByUuidsWithExistingAnonymousCloudConsumer() {
+        AnonymousCloudConsumer expected = new AnonymousCloudConsumer()
+            .setCloudAccountId("cloudAccountId")
+            .setCloudInstanceId("instanceId")
+            .setProductId("productId")
+            .setCloudProviderShortName("shortName");
+        expected = this.anonymousCloudConsumerCurator.create(expected);
+
+        AnonymousCloudConsumer other = new AnonymousCloudConsumer()
+            .setCloudAccountId("otherCloudAccountId")
+            .setCloudInstanceId("otherInstanceId")
+            .setProductId("otherProductId")
+            .setCloudProviderShortName("shortName");
+        other = this.anonymousCloudConsumerCurator.create(other);
+
+        List<AnonymousCloudConsumer> actual = this.anonymousCloudConsumerCurator
+            .getByUuids(List.of(expected.getUuid()));
+
+        assertThat(actual)
+            .singleElement()
+            .returns(expected.getId(), AnonymousCloudConsumer::getId)
+            .returns(expected.getUuid(), AnonymousCloudConsumer::getUuid)
+            .returns(expected.getCloudAccountId(), AnonymousCloudConsumer::getCloudAccountId)
+            .returns(expected.getCloudInstanceId(), AnonymousCloudConsumer::getCloudInstanceId)
+            .returns(expected.getCloudProviderShortName(), AnonymousCloudConsumer::getCloudProviderShortName)
+            .returns(expected.getProductId(), AnonymousCloudConsumer::getProductId);
+    }
+
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @NullAndEmptySource
     @ValueSource(strings = { "  " })
