@@ -14,16 +14,18 @@
  */
 package org.candlepin.hostedtest;
 
+import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
 import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
+import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
+import org.candlepin.service.exception.CouldNotEntitleOrganizationException;
 import org.candlepin.service.exception.MalformedCloudRegistrationException;
+import org.candlepin.service.model.CloudAccountData;
 import org.candlepin.service.model.CloudRegistrationInfo;
 import org.candlepin.service.model.OwnerInfo;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-
-
 
 /**
  * The HostedTestProductServiceAdapter is a CloudRegistrationAdapter implementation backed by the
@@ -64,6 +66,16 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
         // owner key
         OwnerInfo owner = this.datastore.getOwner(cloudRegInfo.getMetadata());
         return owner != null ? owner.getKey() : null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CloudAccountData setupCloudAccountOrg(String cloudAccountID, String cloudOfferingID,
+        CloudProvider cloudProviderShortName, String ownerKey)
+        throws CouldNotAcquireCloudAccountLockException, CouldNotEntitleOrganizationException {
+        return new CloudAccountData("owner_key", false);
     }
 
 }
