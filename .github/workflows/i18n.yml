@@ -1,0 +1,64 @@
+---
+name: I18n
+on:
+  schedule:
+    - cron: '0 7 * * 0,4'
+  workflow_dispatch:
+
+env:
+  JAVA_DISTRIBUTION: 'temurin'
+
+jobs:
+  i18n:
+    name: i18n
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:38
+    strategy:
+      fail-fast: false
+      matrix:
+        branch: [main, candlepin-4.1-HOTFIX, candlepin-4.2-HOTFIX]
+        include:
+          - branch: main
+            java-version: 17
+          - branch: candlepin-4.1-HOTFIX
+            java-version: 11
+          - branch: candlepin-4.2-HOTFIX
+            java-version: 11
+
+    steps:
+      - name: Mask secrets
+        shell: bash
+        run: |
+          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Install dependencies
+        shell: bash
+        run: dnf --setopt install_weak_deps=False install -y gettext jss git
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ matrix.branch }}
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ matrix.java-version }}
+
+      - name: Add safe directory
+        shell: bash
+        run: git config --system --add safe.directory $GITHUB_WORKSPACE
+
+      - name: Run internationlization
+        shell: bash
+        run: |
+          chmod +x ./.github/scripts/i18n.sh
+          ./.github/scripts/i18n.sh
+        env:
+          GIT_AUTHOR_EMAIL: '3229038+candlepin-bot@users.noreply.github.com'
+          GIT_AUTHOR_NAME: 'candlepin-bot'
+          GIT_BRANCH: ${{ matrix.branch }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
