@@ -1,0 +1,17 @@
+[allowlist]
+description = "Candlepin global allow list"
+
+# Allow/Ignore list for suppressing erroneous flags on files that have either since been removed
+# from the repo and/or never were security concerns to begin with.
+
+paths = [
+  # Ignore legacy/removed directories
+  '''^(?:certs|server|spec|compose.d|proxy)\/.*''',
+
+  # Ignore false-positives for ancient comments in UserResource.java
+  '''^src\/main\/java\/org\/candlepin\/resource\/UserResource\.java$''',
+
+  # Ignore false-positives for tests which verify the fetching of private keys
+  '''^spec-tests\/src\/test\/java\/org\/candlepin\/spec\/imports\/ImportSpecTest\.java$''',
+  '''^spec-tests\/src\/test\/java\/org\/candlepin\/spec\/imports\/ImportSuccessSpecTest\.java$''',
+]
