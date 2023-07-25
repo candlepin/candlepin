@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-12 02:04-0500\n"
+"POT-Creation-Date: 2023-07-24 14:57+0000\n"
 "PO-Revision-Date: 2014-11-18 12:27-0500\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language-Team: Marathi <sshedmak@redhat.com>\n"
@@ -22,345 +22,343 @@ msgstr ""
 msgid "Healing attempted against non-existent org key \"{}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:95
+#: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:92
+#: src/main/java/org/candlepin/controller/Entitler.java:229
 #, java-format
-msgid "Auto-attach is disabled for owner {0}{1}."
+msgid "Auto-attach is disabled for owner {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:191
+#: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:97
+#, java-format
+msgid "Auto-attach is disabled for owner {0} while using simple content access"
+msgstr ""
+
+#: src/main/java/org/candlepin/async/tasks/UndoImportsJob.java:140
 #, java-format
 msgid "Subscriptions deleted by {0}"
 msgstr "{0} तर्फे नष्ट केलेले सबस्क्रिप्शन्स्"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:111
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:110
 #, java-format
 msgid "Unknown event for user {0} and target {1}"
 msgstr "वापरकर्ता {0} व लक्ष्य {1} करीता अपरिचीत घटना"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:123
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:122
 #, java-format
 msgid "{0} created new unit {1}"
 msgstr "{0} ने नविन युनिट {1} निर्माण केले"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:124
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:123
 #, java-format
 msgid "{0} modified the unit {1}"
 msgstr "{0} ने युनिट {1} संपादित केले"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:124
 #, java-format
 msgid "{0} deleted the unit {1}"
 msgstr "{0} ने युनिट {1} नष्ट केले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:125
 #, java-format
 msgid "{0} created new owner {1}"
 msgstr "{0} ने नवीन मालक {1} केले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:126
 #, java-format
 msgid "{0} modified the owner {1}"
 msgstr "{0} ने मालक {1} संपादित केले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:127
 #, java-format
 msgid "{0} deleted the owner {1}"
 msgstr "{0} ने मालक {1} नष्ट केले"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:128
 #, java-format
 msgid "{0} attached a subscription for product {1}"
 msgstr "{0} ने उत्पादन {1} करीता सबस्क्रिप्शन जोडले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:129
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
 #, java-format
 msgid "{0} modified a subscription for product {1}"
 msgstr "{0} ने उत्पादन {1} करीता सबस्क्रिप्शन संपादित केले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:130
 #: src/main/java/org/candlepin/audit/EventAdapterImpl.java:131
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
 #, java-format
 msgid "{0} returned the subscription for {1}"
 msgstr "{0} ने {1} करीता सबस्क्रिप्शन पुरवले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:132
 #, java-format
 msgid "{0} created a pool for product {1}"
 msgstr "{0} ने उत्पादन {1} करीता पूल निर्माण केले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:133
 #, java-format
 msgid "{0} modified a pool for product {1}"
 msgstr "{0} ने उत्पादन {1} करीता पूल निर्माण केले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:134
 #, java-format
 msgid "{0} deleted a pool for product {1}"
 msgstr "{0} ने उत्पादन {1} करीता पूल नष्ट केले"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:135
 #, java-format
 msgid "{0} created an export for unit {1}"
 msgstr "{0} ने युनिट {1} करिता एक्सपोर्ट निर्माण केले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:136
 #, java-format
 msgid "{0} imported a manifest for owner {1}"
 msgstr "{0} ने मालक {1} करीता मॅनिफेस्ट आयात केले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:137
 #, java-format
 msgid "{0} created new user {1}"
 msgstr "{0} ने वापरकर्ता {1} निर्माण केले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:138
 #, java-format
 msgid "{0} modified the user {1}"
 msgstr "{0} ने वापरकर्ता {1} संपादित केले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:139
 #, java-format
 msgid "{0} deleted the user {1}"
 msgstr "{0} ने वापरकर्ता {1} नष्ट केले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:140
 #, java-format
 msgid "{0} created new role {1}"
 msgstr "{0} ने नवीन भूमिका {1} निर्माण केली"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:141
 #, java-format
 msgid "{0} modified the role {1}"
 msgstr "{0} ने भूमिका {1} संपादित केली"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:142
 #, java-format
 msgid "{0} deleted the role {1}"
 msgstr "{0} ने भूमिका {1} नष्ट केली"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:144
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:143
 #, java-format
 msgid "{0} created new subscription for product {1}"
 msgstr "{0} ने उत्पादन {1} करीता नवीन सबस्क्रिप्शन निर्माण केले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:145
 #, java-format
 msgid "{0} deleted a subscription for product {1}"
 msgstr "{0}ने उत्पादन {1} करीता सबस्क्रिप्शन नष्ट केले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:146
 #, java-format
 msgid "{0} created the activation key {1}"
 msgstr "{0} ने ॲक्टिवेशन कि {1} निर्माण केली"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:147
 #, java-format
 msgid "{0} deleted the activation key {1}"
 msgstr "{0} ने ॲक्टिवेशन कि {1} नष्ट केली"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:148
 #, java-format
 msgid "{0} created the guest id {1}"
 msgstr "{0} ने अतिथी id {1} निर्माण केले"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:149
 #, java-format
 msgid "{0} deleted the guest id {1}"
 msgstr "{0} ने अतिथी id {1} नष्ट केले"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:150
 #, java-format
 msgid "{0} updated the rules in the database to version {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:151
 #, java-format
 msgid "{0} removed the rules from the database"
 msgstr "{0} ने कोषपासून नियम काढून टाकले"
 
-#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:153
+#: src/main/java/org/candlepin/audit/EventAdapterImpl.java:152
 #, java-format
 msgid "Compliance recalculated for consumer {1}"
 msgstr "ग्राहक {1} करिता पालनाची पुन्हा गणना केली"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:71
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1365
+#: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:70
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1380
 #, java-format
 msgid "Organization {0} does not exist."
 msgstr "संस्था {0} अस्तित्वात नाही."
 
-#: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:78
+#: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:77
 msgid "None of the activation keys specified exist for this org."
 msgstr "या संस्थेकरिता निर्देशीतपैकी कोणतेही सक्रीयता किज आढळले नाही."
 
-#: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:94
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1148
+#: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:93
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1144
 msgid "Org required to register with activation keys."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:98
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1152
+#: src/main/java/org/candlepin/auth/ActivationKeyAuth.java:97
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1148
 msgid "Cannot specify username with activation keys."
 msgstr "ॲक्टिवेशन किज्सह वापरकर्तानाव निर्देशीत करणे अशक्य."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/auth/BasicAuth.java:74
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:206
+#: src/main/java/org/candlepin/auth/BasicAuth.java:73
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:204
 #: src/main/java/org/candlepin/resteasy/filter/AuthenticationFilter.java:173
 msgid "Invalid Credentials"
 msgstr "अवैध श्रेय"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/auth/BasicAuth.java:88
+#: src/main/java/org/candlepin/auth/BasicAuth.java:87
 msgid "Error contacting user service"
 msgstr "वापरकर्ता सर्व्हिसशी संपर्क करतेवेळी त्रुटी"
 
-#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:264
+#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:265
 msgid ""
 "cloud provider or account details could not be resolved to an organization"
 msgstr ""
 
-#: src/main/java/org/candlepin/auth/ConsumerAuth.java:70
+#: src/main/java/org/candlepin/auth/ConsumerAuth.java:69
 #: src/main/java/org/candlepin/resteasy/filter/StoreFactory.java:142
 #, java-format
 msgid "Unit {0} has been deleted"
 msgstr "युनिट {0} नष्ट केले आहे"
 
-#: src/main/java/org/candlepin/auth/OAuth.java:117
-#: src/main/java/org/candlepin/auth/OAuth.java:153
+#: src/main/java/org/candlepin/auth/OAuth.java:116
+#: src/main/java/org/candlepin/auth/OAuth.java:149
 msgid "Invalid OAuth unit or secret"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/auth/OAuth.java:121
+#: src/main/java/org/candlepin/auth/OAuth.java:120
 #, java-format
 msgid "OAuth problem encountered. Internal message is: {0}"
 msgstr "OAuth अडचण आढळली. आंतरिक संदेश: {0}, असे आहे"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/auth/OAuth.java:127
+#: src/main/java/org/candlepin/auth/OAuth.java:126
 #, java-format
 msgid "OAuth error encountered. Internal message is: {0}"
 msgstr "OAuth त्रुटी आढळली. आंतरिक संदेश: {0}, असे आहे"
 
-#: src/main/java/org/candlepin/auth/OAuth.java:159
+#: src/main/java/org/candlepin/auth/OAuth.java:155
 msgid "Error getting OAuth unit key"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/auth/SSLAuth.java:103
+#: src/main/java/org/candlepin/auth/SSLAuth.java:99
 #, fuzzy
 #| msgid "Invalid Credentials"
 msgid "Invalid Certificate Type"
 msgstr "अवैध श्रेय"
 
 #: src/main/java/org/candlepin/auth/UserAuth.java:54
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1300
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1315
 #: src/main/java/org/candlepin/resource/RoleResource.java:113
 #: src/main/java/org/candlepin/resource/UserResource.java:90
 #, java-format
 msgid "User not found: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/bind/BindContext.java:117
+#: src/main/java/org/candlepin/bind/BindContext.java:118
 #, java-format
 msgid "Subscription pool(s) {0} do not exist."
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:376
-#: src/main/java/org/candlepin/resource/util/ResolverUtil.java:55
+#: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:331
 msgid "No owner specified, or owner lacks identifying information"
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:385
-#: src/main/java/org/candlepin/resource/util/ResolverUtil.java:63
+#: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:340
 #, java-format
 msgid "Unable to find an owner with the key \"{0}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:393
-#: src/main/java/org/candlepin/resource/util/ResolverUtil.java:71
+#: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:348
 #, java-format
 msgid "Unable to find an owner with the ID \"{0}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:2043
+#: src/main/java/org/candlepin/controller/CandlepinPoolManager.java:1924
 msgid ""
 "Unmapped guest entitlement expired without establishing a host/guest mapping."
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/Entitler.java:238
+#: src/main/java/org/candlepin/controller/Entitler.java:237
 #, java-format
-msgid "Auto-attach is disabled for owner \"{0}\"{1}."
+msgid "Auto-attach is disabled for hypervisors of owner {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/Entitler.java:243
-#, java-format
-msgid "Auto-attach is disabled for owner \"{0}\"."
-msgstr ""
-
-#: src/main/java/org/candlepin/controller/Entitler.java:306
-#: src/main/java/org/candlepin/controller/Entitler.java:507
+#: src/main/java/org/candlepin/controller/Entitler.java:303
+#: src/main/java/org/candlepin/controller/Entitler.java:504
 msgid ""
 "Development units may only be used on hosted servers and with orgs that have "
 "active subscriptions."
 msgstr ""
 
-#: src/main/java/org/candlepin/controller/Entitler.java:485
+#: src/main/java/org/candlepin/controller/Entitler.java:482
 #, java-format
 msgid "SKU product not available to this development unit: \"{0}\""
 msgstr ""
@@ -399,26 +397,25 @@ msgstr "लेबल {0} सह CDN प्रणालीवर अस्ति�
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:72
-#: src/main/java/org/candlepin/guice/I18nProvider.java:82
+#: src/main/java/org/candlepin/exceptions/mappers/BadRequestExceptionMapper.java:71
 msgid "Bad Request"
 msgstr "चूकिची विनंती"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:106
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:105
 #, java-format
 msgid "Runtime Error {0} at {1}.{2}:{3}"
 msgstr "{1}.{2}:{3} येथील रनटाइम त्रुटी {0}"
 
-#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:111
+#: src/main/java/org/candlepin/exceptions/mappers/CandlepinExceptionMapper.java:110
 #, java-format
 msgid "Runtime Error {0}"
 msgstr "रनटाइम त्रुटी {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/exceptions/util/JaxRsExceptionResponseBuilder.java:127
+#: src/main/java/org/candlepin/exceptions/util/JaxRsExceptionResponseBuilder.java:126
 #, java-format
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} हे {1} करीता वैध मूल्य नाही"
@@ -427,39 +424,63 @@ msgstr "{0} हे {1} करीता वैध मूल्य नाही"
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "समवर्ती सुधारणामुळे विनंती अपयशी, कृपया पुन्हा प्रयत्न करा."
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:831
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:836
 #, java-format
 msgid "The system with UUID {0} is a virtual guest. It does not have guests."
 msgstr "UUID {0} सह प्रणाली वर्च्युअल अतिथी आहे. अतिथी आढळले नाही."
 
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1248
-#: src/main/java/org/candlepin/model/ConsumerCurator.java:1258
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1253
+#: src/main/java/org/candlepin/model/ConsumerCurator.java:1263
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:158
 #, java-format
 msgid "Unit with ID \"{0}\" could not be found."
 msgstr ""
 
 #: src/main/java/org/candlepin/model/EntitlementCurator.java:492
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:114
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:262
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:311
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:370
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:113
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:261
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:310
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:369
 #, java-format
 msgid "Product with ID \"{0}\" could not be found."
+msgstr ""
+
+#: src/main/java/org/candlepin/model/Pool.java:168
+msgid "Other"
+msgstr ""
+
+#: src/main/java/org/candlepin/model/Pool.java:169
+msgid "Standard"
+msgstr ""
+
+#: src/main/java/org/candlepin/model/Pool.java:170
+msgid "Instance Based"
+msgstr ""
+
+#: src/main/java/org/candlepin/model/Pool.java:171
+msgid "Stackable"
+msgstr ""
+
+#: src/main/java/org/candlepin/model/Pool.java:172
+msgid "Stackable only with other subscriptions"
+msgstr ""
+
+#: src/main/java/org/candlepin/model/Pool.java:173
+msgid "Multi-Entitleable"
 msgstr ""
 
 #: src/main/java/org/candlepin/model/RulesCurator.java:111
 msgid "No rules file found in the database"
 msgstr "डाटाबेसमध्ये rules फाइल आढळले नाही"
 
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:92
+#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:93
 #, java-format
 msgid "Unable to find an owner with key: {0}"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:104
+#: src/main/java/org/candlepin/model/UeberCertificateGenerator.java:105
 #, java-format
 msgid "Problem generating ueber cert for owner {0}"
 msgstr "मालक {0} करीता ueber सर्ट निर्माण करतेवेळी अडचण आढळली"
@@ -550,19 +571,19 @@ msgstr ""
 msgid "{0} COVERAGE PROBLEM.  Supports {1} of {2}"
 msgstr ""
 
-#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:265
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:252
 #, java-format
 msgid "Subscriptions for {0} expired on: {1}"
 msgstr "{0} करीता सबस्क्रिप्शन्स: {1} यांची वेळ समाप्ति झाली"
 
-#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:353
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:336
 #, java-format
 msgid "\"{0}\" Should contain name, priority and at least one attribute"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:367
+#: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRules.java:350
 msgid "second parameter should be the priority number."
 msgstr "दुसरे घटक प्राधान्यक्रम क्रमांक असायला हवे."
 
@@ -711,48 +732,48 @@ msgstr ""
 msgid "Unable to adjust quantity for the entitlement with id \"{1}\": {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:115
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:116
 msgid "Activation key ID is null or empty"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:122
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:123
 #, java-format
 msgid "Activation key with ID \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:155
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1014
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:156
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1016
 #, java-format
 msgid ""
 "The activation key name \"{0}\" must be alphanumeric or include the "
 "characters \"-\" or \"_\""
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:212
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:213
 #, java-format
 msgid "Pool ID \"{0}\" has already been registered with this activation key"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:242
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:243
 #, java-format
 msgid "Product ID \"{0}\" has already been registered with this activation key"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:370
-#: src/main/java/org/candlepin/resource/OwnerResource.java:428
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:371
+#: src/main/java/org/candlepin/resource/OwnerResource.java:430
 #, java-format
 msgid "Pool with id {0} could not be found."
 msgstr "id {0} सह पूल आढळले नाही."
 
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:380
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:381
 #, java-format
 msgid "Product with id {0} could not be found."
 msgstr "id {0} सह उत्पादन आढळले नाही."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:392
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:445
+#: src/main/java/org/candlepin/resource/ActivationKeyResource.java:393
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:450
 msgid "Insufficient permissions"
 msgstr "अपुरे परवानगी"
 
@@ -780,217 +801,217 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:338
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:343
 #, fuzzy, java-format
 #| msgid "Organization {0} does not exist."
 msgid "Organization {0} does not exist"
 msgstr "संस्था {0} अस्तित्वात नाही."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:573
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:578
 msgid "Must specify at least one search criteria."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:616
-#: src/main/java/org/candlepin/resource/JobResource.java:214
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1134
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:621
+#: src/main/java/org/candlepin/resource/JobResource.java:215
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1136
 #, java-format
 msgid ""
 "This endpoint does not support returning more than {0} results at a time, "
 "please use paging."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:634
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:639
 #, java-format
 msgid "Consumer with id {0} could not be found."
 msgstr "id {0} सह ग्राहक आढळले नाही."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:653
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:658
 msgid "No UUIDs provided."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:921
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:924
 msgid "Unit type must be specified."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:927
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:929
 #, java-format
 msgid "Invalid unit type: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1051
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1047
 #, java-format
 msgid "Problem creating unit {0}"
 msgstr "युनिट {0} निर्माण करतेवेळी त्रुटी"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1131
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1127
 msgid "The consumer cannot use the supplied content access mode."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1140
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1136
 msgid "The consumer cannot be assigned a content access mode."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1162
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1158
 msgid "A unit type of \"person\" cannot be used with activation keys"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1166
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1173
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1162
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1169
 msgid "System name cannot contain most special characters."
 msgstr "प्रणाली नावात विशेष अक्षरे समाविष्टीत असू शकत नाही."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1182
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1178
 msgid "You may not create a manifest consumer via Subscription Manager."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1259
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1274
 msgid "System name cannot begin with # character"
 msgstr "प्रणालीचे नाव # अक्षरासह सुरू होणे अशक्य"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1306
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1321
 #, java-format
 msgid "User \"{0}\" has no roles for organization \"{1}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1319
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1334
 #, java-format
 msgid "User \"{0}\" has already registered a personal consumer"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1340
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1355
 msgid "Client is not authorized to register with any organization"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1352
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1367
 msgid "You must specify an organization for new units."
 msgstr "नविन युनिट्सकरिता संस्था निर्देशीत करा."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1379
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1394
 #, java-format
 msgid "{0} is not authorized to register with organization {1}"
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1383
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1398
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:170
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1282
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1284
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "मालक कि: {0} सह आढळले नाही."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1480
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1495
 #, java-format
 msgid "Problem updating unit {0}"
 msgstr "युनिट {0} सुधारित करतेवेळी अडचण"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1565
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1580
 msgid "This consumer cannot be assigned a content access mode"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1571
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1586
 #, java-format
 msgid "This consumer cannot use the supplied content access mode: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1660
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1676
 #, java-format
 msgid "Environment with ID \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1669
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1685
 #, java-format
 msgid "Environment with name \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1673
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1689
 msgid "Environment could not be found using provided details."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1678
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1694
 #, java-format
 msgid "Environment \"{0}\" specified more than once."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:1786
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:1803
 #, java-format
 msgid "Problem updating unit {0}. Hypervisor id: {1} is already used."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2008
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2019
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2012
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2023
 #, java-format
 msgid "Consumer with UUID {0} was already deleted."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2035
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:205
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2039
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:203
 #, java-format
 msgid "Cannot unregister {0} {1} because: {2}"
 msgstr "{0} {1} ची नोंदणी अशक्य कारण: {2}"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2132
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2136
 msgid "Content access mode does not allow this request."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2152
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2156
 msgid "Cannot retrieve content access certificate"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2199
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2204
 msgid "Unable to create entitlement certificate archive"
 msgstr "एंटाइटलमेंट प्रमाणपत्र आर्काइव्ह निर्माण करणे अशक्य"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2265
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2270
 msgid "Cannot bind by multiple parameters."
 msgstr "एकापेक्षाजास्त घटकांसह बाईंड करणे अशक्य."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2269
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2274
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "स्वयं-बांधणी करताना प्रमाण निश्चित करणे अशक्य."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2360
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2687
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2365
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2708
 #: src/main/java/org/candlepin/resource/EnvironmentResource.java:431
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:126
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:156
-#: src/main/java/org/candlepin/resource/JobResource.java:360
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:247
-#: src/main/java/org/candlepin/resource/OwnerResource.java:965
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1300
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1442
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1504
+#: src/main/java/org/candlepin/resource/JobResource.java:361
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:246
+#: src/main/java/org/candlepin/resource/OwnerResource.java:967
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1302
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1444
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1506
 #, java-format
 msgid "An unexpected exception occurred while scheduling job \"{0}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2399
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2404
 #, java-format
 msgid "Ignoring request to auto-attach. It is disabled for org \"{0}\"."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2405
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2410
 #, java-format
 msgid ""
 "Ignoring request to auto-attach. It is disabled for org \"{0}\" because of "
 "the hypervisor autobind setting."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2446
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2451
 #, java-format
 msgid "Organization \"{0}\" has auto-attach disabled."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2487
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2579
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2574
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2612
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:182
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:199
 #: src/main/java/org/candlepin/resource/EntitlementResource.java:228
@@ -1000,34 +1021,34 @@ msgstr ""
 msgid "Entitlement with ID \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2594
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2589
 #, java-format
 msgid "Entitlement Certificate with serial number \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2610
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2605
 #, java-format
 msgid "No entitlements for consumer \"{0}\" with pool id \"{1}\""
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2654
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2675
 msgid "Unable to create export archive"
 msgstr "एक्सपोर्ट साठा निर्माण करणे अशक्य"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2804
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2809
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2825
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2830
 #, java-format
 msgid "Problem regenerating ID cert for unit {0}"
 msgstr "युनिट {0} करिता ID सर्ट पुन्हा निर्माण करतेवेळी अडचण"
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2843
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2864
 #, java-format
 msgid "The system with UUID {0} is not a virtual guest."
 msgstr "UUID {0} सह प्रणाली वर्च्युअल अतिथी नाही."
 
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2920
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2941
 #, java-format
 msgid "Deletion record for hypervisor \"{0}\" not found."
 msgstr ""
@@ -1157,16 +1178,16 @@ msgstr ""
 msgid "Unable to find content with the ID \"{0}\"."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:99
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:97
 msgid "Please supply a valid guest id"
 msgstr "कृपया वैध अतिथी id द्या"
 
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:115
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:113
 #, java-format
 msgid "Guest ID in json \"{0}\" does not match path guest ID \"{1}\""
 msgstr "json मधील अतिथी ID \"{0}\" मार्ग अतिथी ID \"{1}\" सह जुळत नाही"
 
-#: src/main/java/org/candlepin/resource/GuestIdResource.java:189
+#: src/main/java/org/candlepin/resource/GuestIdResource.java:187
 #, java-format
 msgid "Guest with UUID {0} could not be found."
 msgstr ""
@@ -1182,43 +1203,43 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/JobResource.java:130
+#: src/main/java/org/candlepin/resource/JobResource.java:131
 msgid "Error setting scheduler status"
 msgstr "शेड्युअलर स्तिथी निश्चित करतेवेळी त्रुटी"
 
-#: src/main/java/org/candlepin/resource/JobResource.java:234
-#: src/main/java/org/candlepin/resource/JobResource.java:252
+#: src/main/java/org/candlepin/resource/JobResource.java:235
+#: src/main/java/org/candlepin/resource/JobResource.java:253
 msgid "Job ID is null or empty"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/JobResource.java:240
-#: src/main/java/org/candlepin/resource/JobResource.java:261
+#: src/main/java/org/candlepin/resource/JobResource.java:241
+#: src/main/java/org/candlepin/resource/JobResource.java:262
 #, java-format
 msgid "No job status found associated with the given job ID: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/JobResource.java:271
+#: src/main/java/org/candlepin/resource/JobResource.java:272
 #, java-format
 msgid ""
 "Job {0} is already in a terminal state or otherwise cannot be canceled at "
 "this time"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/JobResource.java:330
+#: src/main/java/org/candlepin/resource/JobResource.java:331
 msgid "Job key is null or empty"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/JobResource.java:338
+#: src/main/java/org/candlepin/resource/JobResource.java:339
 #, java-format
 msgid "Job \"{0}\" is not configured for manual scheduling"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/JobResource.java:427
+#: src/main/java/org/candlepin/resource/JobResource.java:428
 #, java-format
 msgid "Unknown job states: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/JobResource.java:497
+#: src/main/java/org/candlepin/resource/JobResource.java:498
 #, java-format
 msgid "Invalid date range; start date occurs after the end date: {0} > {1}"
 msgstr ""
@@ -1247,120 +1268,118 @@ msgid "content \"{0}\" is locked"
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:209
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:414
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:413
 #, java-format
 msgid "Content with ID \"{0}\" could not be found."
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:235
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:345
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1643
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:344
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1645
 #, java-format
 msgid "Owner with key \"{0}\" was not found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:119
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:176
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:268
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:317
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:118
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:175
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:267
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:316
 #, java-format
 msgid "product \"{0}\" is locked"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:153
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:152
 msgid "product has a null or invalid ID"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:157
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:156
 msgid "product has a null or invalid name"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:181
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:180
 #, java-format
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more "
 "subscriptions"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:187
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:186
 #, java-format
 msgid ""
 "Product \"{0}\" cannot be deleted while referenced by one or more products"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:206
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:205
 msgid "Only numeric product IDs are allowed."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:300
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:299
 #, java-format
 msgid "Contradictory ids in update request: {0}, {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:276
+#: src/main/java/org/candlepin/resource/OwnerResource.java:278
 msgid "Owner key is null or empty."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:280
+#: src/main/java/org/candlepin/resource/OwnerResource.java:282
 #, java-format
 msgid "Owner with key \"{0}\" was not found"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:306
+#: src/main/java/org/candlepin/resource/OwnerResource.java:308
 msgid "Owner id is null or empty."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:310
+#: src/main/java/org/candlepin/resource/OwnerResource.java:312
 #, java-format
 msgid "Owner with id \"{0}\" was not found"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:339
+#: src/main/java/org/candlepin/resource/OwnerResource.java:341
 msgid "Owner lookup failed because id and key were null or empty."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:363
+#: src/main/java/org/candlepin/resource/OwnerResource.java:365
 msgid "Entitlement id is null or empty."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:368
+#: src/main/java/org/candlepin/resource/OwnerResource.java:370
 #, java-format
 msgid "Entitlement with id {0} could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:394
+#: src/main/java/org/candlepin/resource/OwnerResource.java:396
 msgid "Consumer id is null or empty."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:398
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:100
+#: src/main/java/org/candlepin/resource/OwnerResource.java:400
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:99
 #, java-format
 msgid "No such unit: {0}"
 msgstr "ह्या प्रकारचे युनिट: {0} नाही"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:424
+#: src/main/java/org/candlepin/resource/OwnerResource.java:426
 msgid "Pool id is null or empty."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:466
-#: src/main/java/org/candlepin/resource/util/ResolverUtil.java:93
-#: src/main/java/org/candlepin/resource/util/ResolverUtil.java:118
+#: src/main/java/org/candlepin/resource/OwnerResource.java:468
 #, java-format
 msgid "Unable to find a product with the ID \"{0}\" for owner \"{1}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:517
-#: src/main/java/org/candlepin/sync/ConsumerImporter.java:209
+#: src/main/java/org/candlepin/resource/OwnerResource.java:519
+#: src/main/java/org/candlepin/sync/ConsumerImporter.java:208
 #, java-format
 msgid "Unable to find parent owner: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:879
+#: src/main/java/org/candlepin/resource/OwnerResource.java:881
 #, java-format
 msgid "Content access mode list contains an unsupported mode: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:899
+#: src/main/java/org/candlepin/resource/OwnerResource.java:901
 #, java-format
 msgid ""
 "Content access mode is not present in the content access mode list for this "
@@ -1369,162 +1388,162 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1007
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1009
 msgid "Must provide a name for activation key."
 msgstr "ॲक्टिवेशन कि करीता नाव पुरवणे आवश्यक आहे."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1026
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1028
 #, java-format
 msgid "The activation key name \"{0}\" is already in use for owner {1}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1069
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1071
 #, java-format
 msgid "{0} is not a valid log level"
 msgstr "{0} वैध लॉग स्तर नाही"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1193
-#: src/main/java/org/candlepin/resource/PoolResource.java:123
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1195
+#: src/main/java/org/candlepin/resource/PoolResource.java:122
 #, java-format
 msgid "Unit: {0} not found"
 msgstr "युनिट: {0} आढळले नाही"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1203
-#: src/main/java/org/candlepin/resource/PoolResource.java:190
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1205
+#: src/main/java/org/candlepin/resource/PoolResource.java:189
 #, java-format
 msgid "User {0} cannot access consumer {1}"
 msgstr "वापरकर्ता {0} ग्राहक {1} करीता प्रवेश स्वीकारणे अशक्य"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1213
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1215
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
 msgstr "id {0} सह ActivationKey आढळली नाही."
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1219
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1221
 msgid "The flags add_future and only_future cannot be used at the same time."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1224
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1226
 msgid ""
 "The flags add_future and only_future cannot be used with the parameter after."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1331
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1333
 msgid "Pool product ID not specified"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1359
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1361
 #, java-format
 msgid "Unable to find a pool with the ID \"{0}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1367
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1369
 #, java-format
 msgid "Pool \"{0}\" does not belong to the specified owner \"{1}\""
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1374
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1376
 msgid "Cannot update bonus pools, as they are auto generated"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1476
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1478
 msgid "Unknown conflict to force"
 msgstr "फोर्सकरीता अपरिचीत मतभेद"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1513
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1515
 msgid "Error reading export archive"
 msgstr "एक्सपोर्ट आर्काइव्ह वाचतेवेळी त्रुटी"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1517
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1519
 msgid "Error storing uploaded archive for asynchronous processing"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1593
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1595
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1668
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1670
 msgid "Owners must be created with a valid key"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1677
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1679
 msgid "The default service level cannot be specified during owner creation"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1715
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1727
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1717
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1729
 #, java-format
 msgid "Could not create the Owner: {0}"
 msgstr "मालक: {0} निर्माण करणे अशक्य"
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:108
+#: src/main/java/org/candlepin/resource/PoolResource.java:107
 msgid "Cannot filter on both owner and unit"
 msgstr "दोन्ही मालक व युनिटला फिल्टर करणे अशक्य"
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:111
+#: src/main/java/org/candlepin/resource/PoolResource.java:110
 msgid "A unit or owner is needed to filter on product"
 msgstr "उत्पादनला फिल्टर करण्यासाठी युनिट किंवा मालक आवश्यक"
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:128
+#: src/main/java/org/candlepin/resource/PoolResource.java:127
 #, java-format
 msgid "User {0} cannot access unit {1}"
 msgstr "वापरकर्ता {0} चे युनिट {1} करिता प्रवेश प्राप्ति अशक्य"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/PoolResource.java:140
+#: src/main/java/org/candlepin/resource/PoolResource.java:139
 #, java-format
 msgid "owner: {0}"
 msgstr "मालक: {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/resource/PoolResource.java:145
+#: src/main/java/org/candlepin/resource/PoolResource.java:144
 #, java-format
 msgid "User {0} cannot access owner {1}"
 msgstr "वापरकर्ता {0} मालक {1} करीता प्रवेश स्वीकारणे अशक्य"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/resource/PoolResource.java:154
+#: src/main/java/org/candlepin/resource/PoolResource.java:153
 #, java-format
 msgid "User {0} cannot access all pools."
 msgstr "वापरकर्ता {0} सर्व पूल्सकरीता प्रवेश प्राप्त करू शकत नाही."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/resource/PoolResource.java:186
+#: src/main/java/org/candlepin/resource/PoolResource.java:185
 #, java-format
 msgid "consumer: {0} not found"
 msgstr "ग्राहक: {0} आढळले नाही"
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:209
-#: src/main/java/org/candlepin/resource/PoolResource.java:237
-#: src/main/java/org/candlepin/resource/PoolResource.java:255
+#: src/main/java/org/candlepin/resource/PoolResource.java:208
+#: src/main/java/org/candlepin/resource/PoolResource.java:236
+#: src/main/java/org/candlepin/resource/PoolResource.java:254
 #, java-format
 msgid "Subscription Pool with ID \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:216
+#: src/main/java/org/candlepin/resource/PoolResource.java:215
 #, java-format
 msgid "Entitlement Pool with ID \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:220
+#: src/main/java/org/candlepin/resource/PoolResource.java:219
 msgid "Cannot delete bonus pools, as they are auto generated"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:284
+#: src/main/java/org/candlepin/resource/PoolResource.java:283
 #, java-format
 msgid "Pool with ID \"{0}\" could not be found."
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/PoolResource.java:289
+#: src/main/java/org/candlepin/resource/PoolResource.java:288
 #, java-format
 msgid "A certificate was not found for pool \"{0}\""
 msgstr ""
@@ -1588,17 +1607,17 @@ msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:90
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:89
 msgid "email is required for notification"
 msgstr "सूचनाकरीता इमेल आवश्यक आहे"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:94
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:93
 msgid "email locale is required for notification"
 msgstr "सूचनाकरीता इमेल लोकेल आवश्यक आहे"
 
-#: src/main/java/org/candlepin/resource/SubscriptionResource.java:130
+#: src/main/java/org/candlepin/resource/SubscriptionResource.java:129
 #, java-format
 msgid "A subscription with the ID \"{0}\" could not be found."
 msgstr ""
@@ -1616,9 +1635,9 @@ msgstr ""
 msgid "User already exists: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/util/CalculatedAttributesUtil.java:56
+#: src/main/java/org/candlepin/resource/util/CalculatedAttributesUtil.java:55
 #, java-format
-msgid "{0}{1}"
+msgid "{0} (Temporary)"
 msgstr ""
 
 #: src/main/java/org/candlepin/resource/util/ConsumerBindUtil.java:136
@@ -1641,22 +1660,6 @@ msgstr "या प्रकारचे युनिट प्रकार: {0} 
 msgid "Failed to parse parameter \"{0}\"; expected format: key:value"
 msgstr ""
 
-#: src/main/java/org/candlepin/resource/util/ResolverUtil.java:81
-#: src/main/java/org/candlepin/resource/util/ResolverUtil.java:124
-#: src/main/java/org/candlepin/resource/util/ResolverUtil.java:129
-msgid "No product specified, or product lacks identifying information"
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/util/ResolverUtil.java:108
-#, java-format
-msgid "Unable to find a product with the UUID \"{0}\""
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/util/ResolverUtil.java:139
-#: src/main/java/org/candlepin/resource/util/ResolverUtil.java:166
-msgid "No subscription specified"
-msgstr ""
-
 #: src/main/java/org/candlepin/resteasy/converter/OffsetDateTimeParamConverterProvider.java:92
 msgid "Unable to parse date parameter"
 msgstr ""
@@ -1671,30 +1674,30 @@ msgid ""
 "details"
 msgstr ""
 
-#: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:91
+#: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:90
 msgid "offset and limit parameters must be positive integers"
 msgstr "ऑफसेट व लिमिट बाबी पॉझिटिव्ह इंजिर्स पाहिजेत"
 
-#: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:108
+#: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:107
 msgid "the order parameter must be either \"ascending\" or \"descending\""
 msgstr ""
 
-#: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:118
+#: src/main/java/org/candlepin/resteasy/filter/PageRequestFilter.java:117
 msgid "Expected a positive integer."
 msgstr "पॉजिटिव्ह इंटिजर अपेक्षित."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:271
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:270
 msgid "Organization"
 msgstr "संस्था"
 
-#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:273
+#: src/main/java/org/candlepin/resteasy/filter/VerifyAuthorizationFilter.java:272
 #, java-format
 msgid "{0} with id {1} could not be found."
 msgstr "{0} , id {1} सह आढळले नाही."
 
-#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:314
+#: src/main/java/org/candlepin/service/impl/DefaultEntitlementCertServiceAdapter.java:315
 #, java-format
 msgid ""
 "Too many content sets for certificate {0}. A newer client may be available "
@@ -1734,123 +1737,123 @@ msgstr "इतर सबस्क्रिप्शन मॅनेजमें�
 msgid "Unable to find product with ID: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:192
+#: src/main/java/org/candlepin/sync/Importer.java:180
 msgid "Uploaded manifest file does not exist."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/sync/Importer.java:251
+#: src/main/java/org/candlepin/sync/Importer.java:239
 #, java-format
 msgid "{0} file imported successfully."
 msgstr "{0} फाइल यशस्वीरित्या आयात केली."
 
-#: src/main/java/org/candlepin/sync/Importer.java:253
+#: src/main/java/org/candlepin/sync/Importer.java:241
 #, java-format
 msgid "{0} file imported forcibly."
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:257
+#: src/main/java/org/candlepin/sync/Importer.java:245
 msgid "No active subscriptions found in the file."
 msgstr ""
 
-#: src/main/java/org/candlepin/sync/Importer.java:261
+#: src/main/java/org/candlepin/sync/Importer.java:249
 msgid "One or more inactive subscriptions found in the file."
 msgstr ""
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:323
+#: src/main/java/org/candlepin/sync/Importer.java:311
 msgid "Wrong metadata type"
 msgstr "चुकिचा मेटाडाटा प्रकार"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:332
+#: src/main/java/org/candlepin/sync/Importer.java:320
 msgid "Invalid owner"
 msgstr "अवैध मालक"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/sync/Importer.java:345
+#: src/main/java/org/candlepin/sync/Importer.java:333
 msgid "Import is older than existing data"
 msgstr "इम्पोर्ट अस्तित्वातील डाटापेक्षा खूपच जुणा आहे"
 
-#: src/main/java/org/candlepin/sync/Importer.java:364
+#: src/main/java/org/candlepin/sync/Importer.java:352
 msgid "Import is the same as existing data"
 msgstr "इम्पोर्ट अस्तित्वातील डाटाप्रमाणेच आहे"
 
-#: src/main/java/org/candlepin/sync/Importer.java:386
+#: src/main/java/org/candlepin/sync/Importer.java:374
 msgid "The archive does not contain the required signature file"
 msgstr "आर्काइव्हमध्ये आवश्यक सिग्नेचर फाइल नाही"
 
-#: src/main/java/org/candlepin/sync/Importer.java:403
+#: src/main/java/org/candlepin/sync/Importer.java:391
 msgid "Archive failed signature check"
 msgstr "आर्काइव्हवर सिग्नेचर तपासणी अपयशी"
 
-#: src/main/java/org/candlepin/sync/Importer.java:419
+#: src/main/java/org/candlepin/sync/Importer.java:407
 #, fuzzy
 #| msgid "The archive does not contain the required consumer.json file"
 msgid "The provided manifest has no content in the exported consumer archive"
 msgstr "आर्काइव्हमध्ये आवश्यक consumer.json फाइल नाही"
 
-#: src/main/java/org/candlepin/sync/Importer.java:440
+#: src/main/java/org/candlepin/sync/Importer.java:428
 msgid "The archive does not contain the required consumer_export.zip file"
 msgstr "आर्काइव्हमध्ये आवश्यक consumer_export.zip फाइल नाही"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author sandeeps
-#: src/main/java/org/candlepin/sync/Importer.java:445
-#: src/main/java/org/candlepin/sync/Importer.java:449
+#: src/main/java/org/candlepin/sync/Importer.java:433
+#: src/main/java/org/candlepin/sync/Importer.java:437
 msgid "Failed to import archive"
 msgstr "आर्काइव्ह आयात करण्यास अपयशी"
 
-#: src/main/java/org/candlepin/sync/Importer.java:453
-#: src/main/java/org/candlepin/sync/Importer.java:812
+#: src/main/java/org/candlepin/sync/Importer.java:441
+#: src/main/java/org/candlepin/sync/Importer.java:800
 msgid "Unable to extract export archive"
 msgstr "एक्सपोर्ट आर्काइव्ह प्राप्त करणे अशक्य"
 
-#: src/main/java/org/candlepin/sync/Importer.java:458
+#: src/main/java/org/candlepin/sync/Importer.java:446
 msgid "Certificate exception checking archive signature"
 msgstr "सर्टिफिकेट एक्सेप्शन चेकिंग आर्काइव्ह सिग्नेचर"
 
-#: src/main/java/org/candlepin/sync/Importer.java:484
+#: src/main/java/org/candlepin/sync/Importer.java:472
 msgid "The archive does not contain the required meta.json file"
 msgstr "आर्काइव्हमध्ये आवश्यक meta.json फाइल नाही"
 
-#: src/main/java/org/candlepin/sync/Importer.java:489
+#: src/main/java/org/candlepin/sync/Importer.java:477
 msgid "The archive does not contain the required consumer_types directory"
 msgstr "आर्काइव्हमध्ये आवश्यक consumer_types डिरेक्ट्री नाही"
 
-#: src/main/java/org/candlepin/sync/Importer.java:494
+#: src/main/java/org/candlepin/sync/Importer.java:482
 msgid "The archive does not contain the required consumer.json file"
 msgstr "आर्काइव्हमध्ये आवश्यक consumer.json फाइल नाही"
 
-#: src/main/java/org/candlepin/sync/Importer.java:500
+#: src/main/java/org/candlepin/sync/Importer.java:488
 msgid "The archive does not contain the required entitlements directory"
 msgstr "आर्काइव्हमध्ये आवश्यक एंटाइटलमेंट्स डिरेक्ट्री नाही"
 
-#: src/main/java/org/candlepin/sync/Importer.java:719
+#: src/main/java/org/candlepin/sync/Importer.java:707
 #, java-format
 msgid "The archive {0} is not a properly compressed file or is empty"
 msgstr "आर्काइव्ह {0} योग्यरित्या कमप्रेस्ड फाइल नाही किंवा रिकामे आहे"
 
-#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:118
+#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:113
 #, java-format
 msgid "The following content labels are invalid: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:127
+#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:122
 #, java-format
 msgid "The following content properties cannot be overridden: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:136
+#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:131
 #, java-format
 msgid "The following override values are invalid: {0}"
 msgstr ""
 
-#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:145
+#: src/main/java/org/candlepin/util/ContentOverrideValidator.java:140
 #, java-format
 msgid ""
 "The following overrides have values longer than the maximum length of {0}: "
