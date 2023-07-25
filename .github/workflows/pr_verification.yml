@@ -28,12 +28,18 @@ jobs:
         run: |
           echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
 
-      - name: Check out repository
-        uses: actions/checkout@v3
-
       - name: Install packages
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y python3 python3-pip python3-requests
+        run: dnf --setopt install_weak_deps=False install -y python3 python3-pip python3-requests git-core
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
 
       - name: Install python dependencies
         run: pip install python-bugzilla
@@ -51,10 +57,16 @@ jobs:
     steps:
       - name: Install dependencies
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext git jss
+        run: dnf --setopt install_weak_deps=False install -y gettext git-core jss
 
       - name: Check out repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
 
       - name: Enable spotless ratchet
         run: |
@@ -78,12 +90,18 @@ jobs:
     container:
       image: fedora:38
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
       - name: Install dependencies
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext jss
+        run: dnf --setopt install_weak_deps=False install -y gettext jss git-core
+        
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -109,12 +127,18 @@ jobs:
       image: fedora:38
       options: --privileged
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
       - name: Install dependencies
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext jss
+        run: dnf --setopt install_weak_deps=False install -y gettext jss git-core
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -133,6 +157,12 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
 
       - name: Run woke
         uses: get-woke/woke-action@v0
@@ -156,10 +186,16 @@ jobs:
 
       - name: Install dependencies
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext jss git
+        run: dnf --setopt install_weak_deps=False install -y gettext jss git-core
 
       - name: Check out repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
 
       - name: Set up Java
         uses: actions/setup-java@v3
@@ -203,6 +239,12 @@ jobs:
 
       - name: Check out repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
 
       - name: Log in to the registry
         if: ${{ ! github.event.pull_request.head.repo.fork }}
@@ -267,14 +309,20 @@ jobs:
         mode: [standalone, hosted]
 
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
       - name: Install dependencies
         shell: bash
         run: |
           dnf -y --setopt install_weak_deps=False update
-          dnf --setopt install_weak_deps=False install -y gettext jss docker
+          dnf --setopt install_weak_deps=False install -y gettext jss docker git-core
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
 
       - name: Install docker compose
         shell: bash
