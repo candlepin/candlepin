@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-12 02:04-0500\n"
+"POT-Creation-Date: 2023-07-24 14:57+0000\n"
 "PO-Revision-Date: 2023-03-02 08:20+0000\n"
 "Last-Translator: Transtats <suanand@redhat.com>\n"
 "Language-Team: Japanese <https://translate.fedoraproject.org/projects/"
@@ -1868,7 +1868,8 @@ msgstr "アーカイブでの署名チェックに失敗しました"
 
 #: src/main/java/org/candlepin/sync/Importer.java:419
 msgid "The provided manifest has no content in the exported consumer archive"
-msgstr "エクスポートされたコンシューマーアーカイブにある、指定のマニフェストにはコン"
+msgstr ""
+"エクスポートされたコンシューマーアーカイブにある、指定のマニフェストにはコン"
 "テンツがありません"
 
 #: src/main/java/org/candlepin/sync/Importer.java:440

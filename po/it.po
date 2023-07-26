@@ -5,8 +5,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-12 02:04-0500\n"
-"PO-Revision-Date: 2023-05-18 06:21+0000\n"
+"POT-Creation-Date: 2023-07-24 14:57+0000\n"
+"PO-Revision-Date: 2023-07-26 06:21+0000\n"
 "Last-Translator: Pino Toscano <toscano.pino@tiscali.it>\n"
 "Language-Team: Italian <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-2-hotfix/it/>\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: Weblate 4.17\n"
+"X-Generator: Weblate 4.18.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -666,8 +666,8 @@ msgstr "Il pool è limitato ai guest virtuali non mappati: \"{1}\""
 msgid ""
 "Pool is restricted to virtual guests in their first day of existence: \"{1}\""
 msgstr ""
-"Il pool è limitato ai guest virtuali nel loro primo giorno di esistenza: \""
-"{1}\""
+"Il pool è limitato ai guest virtuali nel loro primo giorno di esistenza: "
+"\"{1}\""
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:183
 #, java-format
@@ -692,8 +692,8 @@ msgstr ""
 msgid ""
 "There are not enough free subscriptions available for the product \"{1}\""
 msgstr ""
-"Non ci sono abbastanza sottoscrizioni libere disponibili per il prodotto \""
-"{1}\""
+"Non ci sono abbastanza sottoscrizioni libere disponibili per il prodotto "
+"\"{1}\""
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:197
 #, java-format
@@ -1689,6 +1689,8 @@ msgstr "Tipo di unità non trovata: {0}"
 #, java-format
 msgid "Failed to parse parameter \"{0}\"; expected format: key:value"
 msgstr ""
+"Impossibile analizzare il parametro \"{0}\"; il formato atteso è "
+"chiave:valore"
 
 #: src/main/java/org/candlepin/resource/util/ResolverUtil.java:81
 #: src/main/java/org/candlepin/resource/util/ResolverUtil.java:124
@@ -1710,7 +1712,7 @@ msgstr "Nessuna sottoscrizione specificata"
 
 #: src/main/java/org/candlepin/resteasy/converter/OffsetDateTimeParamConverterProvider.java:92
 msgid "Unable to parse date parameter"
-msgstr ""
+msgstr "Impossibile analizzare il parametro di una data"
 
 #: src/main/java/org/candlepin/resteasy/filter/AuthenticationFilter.java:170
 msgid "Please use SSL when accessing protected resources"
