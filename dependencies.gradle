@@ -24,7 +24,7 @@ ext {
 // buildSrc/build.gradle adds them to the gradle classpath
 ext.plugins = [
     "com.adarshr:gradle-test-logger-plugin:3.2.0",
-    "com.diffplug.spotless:spotless-plugin-gradle:6.19.0",
+    "com.diffplug.spotless:spotless-plugin-gradle:6.20.0",
     "com.github.ben-manes:gradle-versions-plugin:0.47.0",
     "com.netflix.nebula:gradle-lint-plugin:18.1.0",
     "org.openapitools:openapi-generator-gradle-plugin:6.3.0",
