@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-09 03:02-0400\n"
+"POT-Creation-Date: 2023-07-27 07:06+0000\n"
 "PO-Revision-Date: 2017-10-18 11:52-0400\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Oriya\n"
@@ -403,7 +403,7 @@ msgstr ""
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} ଟି {1} ପାଇଁ ଗୋଟିଏ ବୈଧ ମୂଲ୍ୟ ନୁହଁ"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1065
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1064
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "ଲଗାତାର ପରିବର୍ତ୍ତନ ହେତୁ ଅନୁରୋଧ ବିଫଳ ହୋଇଛି, ଦୟାକରି ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।"
 

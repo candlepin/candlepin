@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-09 03:02-0400\n"
+"POT-Creation-Date: 2023-07-27 07:06+0000\n"
 "PO-Revision-Date: 2023-01-27 18:20+0000\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
@@ -401,7 +401,7 @@ msgstr "查询参数的格式不正确。格式应该为：{0}"
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} 对于 {1} 来说不是个有效值"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1065
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1064
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "由于同时进行修改导致请求失败，请重试。"
 
