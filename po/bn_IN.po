@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-09 03:02-0400\n"
+"POT-Creation-Date: 2023-07-27 07:06+0000\n"
 "PO-Revision-Date: 2017-10-18 11:52-0400\n"
 "Last-Translator: bnin <sray@redhat.com>\n"
 "Language-Team: Bengali (India)\n"
@@ -404,7 +404,7 @@ msgstr ""
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} মানটি {1}-র ক্ষেত্রে বৈধ নয়"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1065
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1064
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "বারবার সংশোধনের কারণে অনুরোধ ব্যর্থ হয়েছে, দয়া করে অাবার চেষ্টা করুন।"
 

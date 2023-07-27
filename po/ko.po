@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-09 03:02-0400\n"
+"POT-Creation-Date: 2023-07-27 07:06+0000\n"
 "PO-Revision-Date: 2022-10-30 06:19+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
@@ -410,7 +410,7 @@ msgstr ""
 msgid "{0} is not a valid value for {1}"
 msgstr "{0}은 {1}에 대해 잘못된 값입니다"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1065
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1064
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr "동시에 변경하여 요청이 실패했습니다. 다시 시도하십시오."
 
@@ -531,9 +531,9 @@ msgid ""
 "guest subscription. For more information, please see https://access.redhat."
 "com/solutions/1592573"
 msgstr ""
-"게스트가 호스트에서 보고되어 있지 않으며 일치되지 않은 임시 게스트 "
-"서브스크립션을 사용하고 있습니다. 보다 자세한 내용은 https://access.redhat."
-"com/solutions/1592573 에서 참조하십시오"
+"게스트가 호스트에서 보고되어 있지 않으며 일치되지 않은 임시 게스트 서브스크립"
+"션을 사용하고 있습니다. 보다 자세한 내용은 https://access.redhat.com/"
+"solutions/1592573 에서 참조하십시오"
 
 #: src/main/java/org/candlepin/policy/js/compliance/StatusReasonMessageGenerator.java:71
 #, java-format

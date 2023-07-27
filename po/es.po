@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-09 03:02-0400\n"
+"POT-Creation-Date: 2023-07-27 07:06+0000\n"
 "PO-Revision-Date: 2022-08-05 15:19+0000\n"
 "Last-Translator: John Sefler <jsefler@redhat.com>\n"
 "Language-Team: Spanish <https://translate.fedoraproject.org/projects/"
@@ -408,7 +408,7 @@ msgstr ""
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} no es el valor válido para {1}"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1065
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1064
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr ""
 "Falló la solicitud debido a una modificación concurrente, por favor intente "

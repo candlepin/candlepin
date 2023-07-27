@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-09 03:02-0400\n"
+"POT-Creation-Date: 2023-07-27 07:06+0000\n"
 "PO-Revision-Date: 2022-06-24 10:04+0000\n"
 "Last-Translator: Ludek Janda <ljanda@redhat.com>\n"
 "Language-Team: French <https://translate.fedoraproject.org/projects/"
@@ -414,7 +414,7 @@ msgstr ""
 msgid "{0} is not a valid value for {1}"
 msgstr "{0} n’est pas une valeur valide pour {1}"
 
-#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1065
+#: src/main/java/org/candlepin/model/AbstractHibernateCurator.java:1064
 msgid "Request failed due to concurrent modification, please re-try."
 msgstr ""
 "La requête a échoué du fait d’une modification concurrente. Merci de "
@@ -746,8 +746,8 @@ msgstr ""
 #, java-format
 msgid "Unable to adjust quantity for the entitlement with id \"{1}\": {0}"
 msgstr ""
-"Impossible d’ajuster la quantité pour le droit d’accès ayant comme id « {1} »"
-" : {0}"
+"Impossible d’ajuster la quantité pour le droit d’accès ayant comme id "
+"« {1} » : {0}"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:114
 msgid "Activation key ID is null or empty"
@@ -959,7 +959,8 @@ msgstr "L’organisation {0} n’existe pas."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1380
 #, java-format
 msgid "{0} is not authorized to register with organization {1}"
-msgstr "{0} n’est pas autorisé à s’enregistrer auprès de notre organisation {1}"
+msgstr ""
+"{0} n’est pas autorisé à s’enregistrer auprès de notre organisation {1}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
