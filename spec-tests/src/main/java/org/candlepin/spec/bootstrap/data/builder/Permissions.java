@@ -17,31 +17,29 @@ package org.candlepin.spec.bootstrap.data.builder;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
 import org.candlepin.dto.api.client.v1.PermissionBlueprintDTO;
 
+
+
 public enum Permissions {
 
-    OWNER("OWNER"),
-    OWNER_POOLS("OWNER_POOLS"),
-    USERNAME_CONSUMERS("USERNAME_CONSUMERS"),
-    USERNAME_CONSUMERS_ENTITLEMENTS("USERNAME_CONSUMERS_ENTITLEMENTS"),
-    ATTACH("ATTACH"),
-    OWNER_HYPERVISORS("OWNER_HYPERVISORS");
-
-    private final String permission;
-    Permissions(String permission) {
-        this.permission = permission;
-    }
+    OWNER,
+    OWNER_POOLS,
+    USERNAME_CONSUMERS,
+    USERNAME_CONSUMERS_ENTITLEMENTS,
+    ATTACH,
+    OWNER_HYPERVISORS,
+    MANAGE_ACTIVATION_KEYS;
 
     public PermissionBlueprintDTO all(OwnerDTO owner) {
         return new PermissionBlueprintDTO()
             .owner(Owners.toNested(owner))
-            .type(permission)
+            .type(this.name())
             .access("ALL");
     }
 
     public PermissionBlueprintDTO readOnly(OwnerDTO owner) {
         return new PermissionBlueprintDTO()
             .owner(Owners.toNested(owner))
-            .type(permission)
+            .type(this.name())
             .access("READ_ONLY");
     }
 }

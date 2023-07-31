@@ -16,6 +16,7 @@ package org.candlepin.auth;
 
 /**
  * Enumeration of the sub-targets used in the Candlepin permission model.
+ *
  * See AuthInterceptor
  */
 public enum SubResource {
@@ -25,5 +26,8 @@ public enum SubResource {
     POOLS, // org pools
     SUBSCRIPTIONS, // org subscriptions
     SERVICE_LEVELS, // org service levels
-    HYPERVISOR;
+    HYPERVISOR,
+
+    /** Used for explicit permissions surrounding activation keys in an org */
+    ACTIVATION_KEYS;
 }

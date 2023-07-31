@@ -14,10 +14,14 @@
  */
 package org.candlepin.spec.activationkey;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertBadRequest;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertForbidden;
 import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertNotFound;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import org.candlepin.dto.api.client.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.client.v1.ActivationKeyPoolDTO;
@@ -25,9 +29,11 @@ import org.candlepin.dto.api.client.v1.ActivationKeyProductDTO;
 import org.candlepin.dto.api.client.v1.AttributeDTO;
 import org.candlepin.dto.api.client.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.client.v1.OwnerDTO;
+import org.candlepin.dto.api.client.v1.PermissionBlueprintDTO;
 import org.candlepin.dto.api.client.v1.PoolDTO;
 import org.candlepin.dto.api.client.v1.ProductDTO;
 import org.candlepin.dto.api.client.v1.ReleaseVerDTO;
+import org.candlepin.dto.api.client.v1.RoleDTO;
 import org.candlepin.dto.api.client.v1.UserDTO;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
@@ -36,22 +42,741 @@ import org.candlepin.spec.bootstrap.client.request.Request;
 import org.candlepin.spec.bootstrap.data.builder.ActivationKeys;
 import org.candlepin.spec.bootstrap.data.builder.ContentOverrides;
 import org.candlepin.spec.bootstrap.data.builder.Owners;
+import org.candlepin.spec.bootstrap.data.builder.Permissions;
 import org.candlepin.spec.bootstrap.data.builder.Pools;
 import org.candlepin.spec.bootstrap.data.builder.ProductAttributes;
 import org.candlepin.spec.bootstrap.data.builder.Products;
+import org.candlepin.spec.bootstrap.data.builder.Roles;
+import org.candlepin.spec.bootstrap.data.builder.Users;
 import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.candlepin.spec.bootstrap.data.util.UserUtil;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+
+
 @SpecTest
 public class ActivationKeySpecTest {
+
+    private static void assertProductPoolLength(ActivationKeyDTO activationKey, int productLength,
+        int poolLength) {
+
+        assertThat(activationKey.getProducts())
+            .hasSize(productLength);
+
+        assertThat(activationKey.getPools())
+            .hasSize(poolLength);
+    }
+
+    private static OwnerDTO createOwner(ApiClient client) {
+        return client.owners().createOwner(Owners.random());
+    }
+
+    private static ApiClient createUserClient(ApiClient client, OwnerDTO owner) {
+        UserDTO user = UserUtil.createUser(client, owner);
+        return ApiClients.basic(user.getUsername(), user.getPassword());
+    }
+
+    private static ApiClient createUserClient(OwnerDTO owner, Permissions permission, String access) {
+        ApiClient adminClient = ApiClients.admin();
+
+        // create user
+        UserDTO user = Users.random();
+        adminClient.users().createUser(user);
+
+        // create role
+        PermissionBlueprintDTO blueprint = new PermissionBlueprintDTO()
+            .type(permission.name())
+            .owner(Owners.toNested(owner))
+            .access(access);
+
+        RoleDTO role = Roles.with(blueprint)
+            .addUsersItem(user);
+
+        adminClient.roles().createRole(role);
+
+        return ApiClients.basic(user.getUsername(), user.getPassword());
+    }
+
+    private static ActivationKeyDTO createActivationKey(ApiClient client, OwnerDTO owner,
+        ActivationKeyDTO activationKey) {
+
+        return client.owners().createActivationKey(owner.getKey(), activationKey);
+    }
+
+    private static ActivationKeyDTO createActivationKey(ApiClient client, OwnerDTO owner) {
+        return createActivationKey(client, owner, ActivationKeys.random(owner));
+    }
+
+    private static ActivationKeyDTO updateActivationKey(ApiClient client, ActivationKeyDTO activationKey) {
+        return client.activationKeys().updateActivationKey(activationKey.getId(), activationKey);
+    }
+
+    private static PoolDTO createPool(ApiClient client, OwnerDTO owner, ProductDTO product) {
+        return client.owners().createPool(owner.getKey(), Pools.random(product));
+    }
+
+    private static ProductDTO createProduct(ApiClient client, OwnerDTO owner, AttributeDTO... attributes) {
+        return client.ownerProducts()
+            .createProductByOwner(owner.getKey(), Products.withAttributes(attributes));
+    }
+
+    private static ProductDTO createProduct(ApiClient client, OwnerDTO owner) {
+        return client.ownerProducts()
+            .createProductByOwner(owner.getKey(), Products.random());
+    }
+
+    /**
+     * Generates all known combinations of roles and access that should have access to create and
+     * modify activation keys
+     */
+    public static List<Arguments> genRolesWithActivationKeyCreation() {
+        return List.of(
+            Arguments.of(Permissions.OWNER, "ALL"),
+            Arguments.of(Permissions.OWNER, "CREATE"),
+            Arguments.of(Permissions.MANAGE_ACTIVATION_KEYS, "ALL"),
+            Arguments.of(Permissions.MANAGE_ACTIVATION_KEYS, "CREATE"));
+    }
+
+    /**
+     * Generates all known combinations of roles and access that should have access to create and
+     * modify activation keys
+     */
+    public static List<Arguments> genRolesWithActivationKeyManagement() {
+        return List.of(
+            Arguments.of(Permissions.OWNER, "ALL"),
+            Arguments.of(Permissions.MANAGE_ACTIVATION_KEYS, "ALL"));
+    }
+
+    /**
+     * Generates all known combinations of roles and access that should not have access to create
+     * activation keys
+     */
+    public static List<Arguments> genRolesLackingActivationKeyCreation() {
+        List<Arguments> allowedRoles = genRolesWithActivationKeyCreation();
+        List<Arguments> disallowed = new ArrayList<>();
+
+        for (Permissions permission : Permissions.values()) {
+            access: for (String access : Set.of("ALL", "CREATE", "READ_ONLY", "NONE")) {
+                for (Arguments allowed : allowedRoles) {
+                    if (allowed.get()[0].equals(permission) && allowed.get()[1].equals(access)) {
+                        continue access;
+                    }
+                }
+
+                disallowed.add(Arguments.of(permission, access));
+            }
+        }
+
+        return disallowed;
+    }
+
+    /**
+     * Generates all known combinations of roles and access that should not have access to modify
+     * activation keys
+     */
+    public static List<Arguments> genRolesLackingActivationKeyManagement() {
+        List<Arguments> allowedRoles = genRolesWithActivationKeyManagement();
+        List<Arguments> disallowed = new ArrayList<>();
+
+        for (Permissions permission : Permissions.values()) {
+            access: for (String access : Set.of("ALL", "CREATE", "READ_ONLY", "NONE")) {
+                for (Arguments allowed : allowedRoles) {
+                    if (allowed.get()[0].equals(permission) && allowed.get()[1].equals(access)) {
+                        continue access;
+                    }
+                }
+
+                disallowed.add(Arguments.of(permission, access));
+            }
+        }
+
+        return disallowed;
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesWithActivationKeyCreation")
+    public void shouldAllowAuthorizedAccountsToCreateActivationKeys(Permissions permission, String access) {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        ActivationKeyDTO key = userClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        assertNotNull(key);
+
+        // Verify that it exists via superadmin clients
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(result).isEqualTo(key);
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesWithActivationKeyManagement")
+    public void shouldAllowAuthorizedAccountsToModifyActivationKeys(Permissions permission, String access) {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        // Update the activation key using the org admin user
+        key.setName(key.getName() + "-update");
+        userClient.activationKeys().updateActivationKey(key.getId(), key);
+
+        // Verify that it exists in the modified state via superadmin clients
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(result)
+            .isNotNull()
+            .usingRecursiveComparison()
+            .ignoringFields("updated")
+            .isEqualTo(key);
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesWithActivationKeyManagement")
+    public void shouldAllowAuthorizedAccountsToAddProductsToActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ProductDTO product = createProduct(adminClient, owner);
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        // attempt update
+        userClient.activationKeys()
+            .addProductIdToKey(key.getId(), product.getId());
+
+        // verify the modification
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(result)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getProducts, as(collection(ActivationKeyProductDTO.class)))
+            .singleElement()
+            .returns(product.getId(), ActivationKeyProductDTO::getProductId);
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesWithActivationKeyManagement")
+    public void shouldAllowAuthorizedAccountsToRemoveProductsFromActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ProductDTO product = createProduct(adminClient, owner);
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+        adminClient.activationKeys()
+            .addProductIdToKey(key.getId(), product.getId());
+
+        key = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(key)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getProducts, as(collection(ActivationKeyProductDTO.class)))
+            .singleElement()
+            .returns(product.getId(), ActivationKeyProductDTO::getProductId);
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        // attempt update
+        userClient.activationKeys()
+            .removeProductIdFromKey(key.getId(), product.getId());
+
+        // verify the modification
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(result)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getProducts, as(collection(ActivationKeyProductDTO.class)))
+            .isEmpty();
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesWithActivationKeyManagement")
+    public void shouldAllowAuthorizedAccountsToAddContentOverridesToActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ContentOverrideDTO contentOverride = ContentOverrides.random();
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        // attempt update
+        userClient.activationKeys()
+            .addActivationKeyContentOverrides(key.getId(), List.of(contentOverride));
+
+        // verify the modification
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(result)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getContentOverrides, as(collection(ContentOverrideDTO.class)))
+            .singleElement()
+            .usingRecursiveComparison()
+            .ignoringFields("created", "updated")
+            .isEqualTo(contentOverride);
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesWithActivationKeyManagement")
+    public void shouldAllowAuthorizedAccountsToRemoveContentOverridesFromActivationKeys(
+        Permissions permission, String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ContentOverrideDTO contentOverride = ContentOverrides.random();
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+        adminClient.activationKeys()
+            .addActivationKeyContentOverrides(key.getId(), List.of(contentOverride));
+
+        key = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(key)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getContentOverrides, as(collection(ContentOverrideDTO.class)))
+            .singleElement()
+            .usingRecursiveComparison()
+            .ignoringFields("created", "updated")
+            .isEqualTo(contentOverride);
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        // attempt update
+        userClient.activationKeys()
+            .deleteActivationKeyContentOverrides(key.getId(), List.of(contentOverride));
+
+        // verify the modification
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(result)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getContentOverrides, as(collection(ContentOverrideDTO.class)))
+            .isEmpty();
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesWithActivationKeyManagement")
+    public void shouldAllowAuthorizedAccountsToDeleteActivationKeys(Permissions permission, String access) {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        // attempt removal
+        userClient.activationKeys().deleteActivationKey(key.getId());
+
+        // verify the modification
+        assertNotFound(() -> adminClient.activationKeys().getActivationKey(key.getId()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesLackingActivationKeyCreation")
+    public void shouldNotAllowUnauthorizedAccountsToCreateActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        // Attempt creation
+        assertForbidden(() -> userClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner)));
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesLackingActivationKeyManagement")
+    public void shouldNotAllowUnauthorizedAccountsToModifyActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        // attempt update
+        ActivationKeyDTO update = adminClient.activationKeys().getActivationKey(key.getId());
+        update.setName(update.getName() + "-update");
+
+        assertForbidden(() -> userClient.activationKeys()
+            .updateActivationKey(key.getId(), update));
+
+        // Verify that the key is unmodified
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertEquals(key, result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesLackingActivationKeyManagement")
+    public void shouldNotAllowUnauthorizedAccountsToAddProductsToActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ProductDTO product = createProduct(adminClient, owner);
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        // attempt update
+        assertForbidden(() -> userClient.activationKeys()
+            .addProductIdToKey(key.getId(), product.getId()));
+
+        // Verify that the key is unmodified
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertEquals(key, result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesLackingActivationKeyManagement")
+    public void shouldNotAllowUnauthorizedAccountsToRemoveProductsFromActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ProductDTO product = createProduct(adminClient, owner);
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+        adminClient.activationKeys()
+            .addProductIdToKey(key.getId(), product.getId());
+
+        key = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(key)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getProducts, as(collection(ActivationKeyProductDTO.class)))
+            .singleElement()
+            .returns(product.getId(), ActivationKeyProductDTO::getProductId);
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        // attempt update
+        String keyId = key.getId();
+        assertForbidden(() -> userClient.activationKeys()
+            .addProductIdToKey(keyId, product.getId()));
+
+        // verify the key is unmodified
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(result)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getProducts, as(collection(ActivationKeyProductDTO.class)))
+            .singleElement()
+            .returns(product.getId(), ActivationKeyProductDTO::getProductId);
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesLackingActivationKeyManagement")
+    public void shouldNotAllowUnauthorizedAccountsToAddOverridesToActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ContentOverrideDTO contentOverride = ContentOverrides.random();
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        // attempt update
+        assertForbidden(() -> userClient.activationKeys()
+            .addActivationKeyContentOverrides(key.getId(), List.of(contentOverride)));
+
+        // Verify that the key is unmodified
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertEquals(key, result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesLackingActivationKeyManagement")
+    public void shouldNotAllowUnauthorizedAccountsToRemoveOverridesFromActivationKeys(
+        Permissions permission, String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ContentOverrideDTO contentOverride = ContentOverrides.random();
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+        adminClient.activationKeys()
+            .addActivationKeyContentOverrides(key.getId(), List.of(contentOverride));
+
+        key = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(key)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getContentOverrides, as(collection(ContentOverrideDTO.class)))
+            .singleElement()
+            .usingRecursiveComparison()
+            .ignoringFields("created", "updated")
+            .isEqualTo(contentOverride);
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        // attempt update
+        String keyId = key.getId();
+        assertForbidden(() -> userClient.activationKeys()
+            .deleteActivationKeyContentOverrides(keyId, List.of(contentOverride)));
+
+        // verify the modification
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(result)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getContentOverrides, as(collection(ContentOverrideDTO.class)))
+            .singleElement()
+            .usingRecursiveComparison()
+            .ignoringFields("created", "updated")
+            .isEqualTo(contentOverride);
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesLackingActivationKeyManagement")
+    public void shouldNotAllowUnauthorizedAccountsToDeleteActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        // attempt update
+        assertForbidden(() -> userClient.activationKeys().deleteActivationKey(key.getId()));
+
+        // Verify that the key is unmodified
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertEquals(key, result);
+    }
+
+    // Adding pools to activation keys requires being able to read the pools in question, so the
+    // tests require a bit more effort to setup properly
+
+    @ParameterizedTest
+    @MethodSource("genRolesWithActivationKeyManagement")
+    public void shouldAllowAuthorizedAccountsToAddPoolsToActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ProductDTO product = createProduct(adminClient, owner);
+        PoolDTO pool = createPool(adminClient, owner, product);
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        // create user & custom role, including the required read-only access to pools
+        UserDTO user = Users.random();
+        adminClient.users().createUser(user);
+
+        PermissionBlueprintDTO blueprint = new PermissionBlueprintDTO()
+            .type(permission.name())
+            .owner(Owners.toNested(owner))
+            .access(access);
+
+        PermissionBlueprintDTO roPoolAccessBlueprint = new PermissionBlueprintDTO()
+            .type(Permissions.OWNER.name())
+            .owner(Owners.toNested(owner))
+            .access("READ_ONLY");
+
+        RoleDTO role = new RoleDTO()
+            .name(StringUtil.random("test-role"))
+            .permissions(List.of(blueprint, roPoolAccessBlueprint))
+            .addUsersItem(user);
+
+        adminClient.roles().createRole(role);
+
+        ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
+
+        // attempt update
+        userClient.activationKeys()
+            .addPoolToKey(key.getId(), pool.getId(), null);
+
+        // verify the modification
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(result)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getPools, as(collection(ActivationKeyPoolDTO.class)))
+            .singleElement()
+            .returns(pool.getId(), ActivationKeyPoolDTO::getPoolId);
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesWithActivationKeyManagement")
+    public void shouldAllowAuthorizedAccountsToRemovePoolsFromActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ProductDTO product = createProduct(adminClient, owner);
+        PoolDTO pool = createPool(adminClient, owner, product);
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+        adminClient.activationKeys()
+            .addPoolToKey(key.getId(), pool.getId(), null);
+
+        key = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(key)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getPools, as(collection(ActivationKeyPoolDTO.class)))
+            .singleElement()
+            .returns(pool.getId(), ActivationKeyPoolDTO::getPoolId);
+
+        // create user & custom role, including the required read-only access to pools
+        UserDTO user = Users.random();
+        adminClient.users().createUser(user);
+
+        PermissionBlueprintDTO blueprint = new PermissionBlueprintDTO()
+            .type(permission.name())
+            .owner(Owners.toNested(owner))
+            .access(access);
+
+        PermissionBlueprintDTO roPoolAccessBlueprint = new PermissionBlueprintDTO()
+            .type(Permissions.OWNER.name())
+            .owner(Owners.toNested(owner))
+            .access("READ_ONLY");
+
+        RoleDTO role = new RoleDTO()
+            .name(StringUtil.random("test-role"))
+            .permissions(List.of(blueprint, roPoolAccessBlueprint))
+            .addUsersItem(user);
+
+        adminClient.roles().createRole(role);
+
+        ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
+
+        // attempt update
+        userClient.activationKeys()
+            .removePoolFromKey(key.getId(), pool.getId());
+
+        // verify the modification
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(result)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getPools, as(collection(ActivationKeyPoolDTO.class)))
+            .isEmpty();
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesLackingActivationKeyManagement")
+    public void shouldNotAllowUnauthorizedAccountsToAddPoolsToActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ProductDTO product = createProduct(adminClient, owner);
+        PoolDTO pool = createPool(adminClient, owner, product);
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        // create user & custom role, including the required read-only access to pools
+        UserDTO user = Users.random();
+        adminClient.users().createUser(user);
+
+        PermissionBlueprintDTO blueprint = new PermissionBlueprintDTO()
+            .type(permission.name())
+            .owner(Owners.toNested(owner))
+            .access(access);
+
+        PermissionBlueprintDTO roPoolAccessBlueprint = new PermissionBlueprintDTO()
+            .type(Permissions.OWNER.name())
+            .owner(Owners.toNested(owner))
+            .access("READ_ONLY");
+
+        RoleDTO role = new RoleDTO()
+            .name(StringUtil.random("test-role"))
+            .permissions(List.of(blueprint, roPoolAccessBlueprint))
+            .addUsersItem(user);
+
+        adminClient.roles().createRole(role);
+
+        ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
+
+        // attempt update
+        assertForbidden(() -> userClient.activationKeys()
+            .addPoolToKey(key.getId(), pool.getId(), null));
+
+        // Verify that the key is unmodified
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(result)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getPools, as(collection(ActivationKeyPoolDTO.class)))
+            .isEmpty();
+    }
+
+    @ParameterizedTest
+    @MethodSource("genRolesLackingActivationKeyManagement")
+    public void shouldNotAllowUnauthorizedAccountsToRemovePoolsFromActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+        ProductDTO product = createProduct(adminClient, owner);
+        PoolDTO pool = createPool(adminClient, owner, product);
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        adminClient.activationKeys()
+            .addPoolToKey(key.getId(), pool.getId(), null);
+
+        // verify the modification
+        key = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(key)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getPools, as(collection(ActivationKeyPoolDTO.class)))
+            .singleElement()
+            .returns(pool.getId(), ActivationKeyPoolDTO::getPoolId);
+
+        // create user & custom role, including the required read-only access to pools
+        UserDTO user = Users.random();
+        adminClient.users().createUser(user);
+
+        PermissionBlueprintDTO blueprint = new PermissionBlueprintDTO()
+            .type(permission.name())
+            .owner(Owners.toNested(owner))
+            .access(access);
+
+        PermissionBlueprintDTO roPoolAccessBlueprint = new PermissionBlueprintDTO()
+            .type(Permissions.OWNER.name())
+            .owner(Owners.toNested(owner))
+            .access("READ_ONLY");
+
+        RoleDTO role = new RoleDTO()
+            .name(StringUtil.random("test-role"))
+            .permissions(List.of(blueprint, roPoolAccessBlueprint))
+            .addUsersItem(user);
+
+        adminClient.roles().createRole(role);
+
+        ApiClient userClient = ApiClients.basic(user.getUsername(), user.getPassword());
+
+        // attempt update
+        String keyId = key.getId();
+        assertForbidden(() -> userClient.activationKeys()
+            .addPoolToKey(keyId, pool.getId(), null));
+
+        // Verify that the key is unmodified
+        ActivationKeyDTO result = adminClient.activationKeys().getActivationKey(key.getId());
+        assertThat(result)
+            .isNotNull()
+            .extracting(ActivationKeyDTO::getPools, as(collection(ActivationKeyPoolDTO.class)))
+            .singleElement()
+            .returns(pool.getId(), ActivationKeyPoolDTO::getPoolId);
+    }
 
     @Test
     public void shouldAllowActivationKeyFieldFiltering() {
@@ -615,8 +1340,9 @@ public class ActivationKeySpecTest {
         ActivationKeyDTO activationKey4 = createActivationKey(adminClient, owner);
 
         // List keys. We should get all four keys back without error
-        List<ActivationKeyDTO> listOfActivationKeys =
-            adminClient.owners().ownerActivationKeys(owner.getKey(), null);
+        List<ActivationKeyDTO> listOfActivationKeys = adminClient.owners()
+            .ownerActivationKeys(owner.getKey(), null);
+
         assertThat(listOfActivationKeys)
             .hasSize(4);
 
@@ -625,6 +1351,7 @@ public class ActivationKeySpecTest {
             if (processed.contains(activationKey.getId())) {
                 Assertions.fail("Duplicate activation keys received.");
             }
+
             if (activationKey.getId().equals(activationKey1.getId())) {
                 assertProductPoolLength(activationKey, 2, 2);
             }
@@ -637,50 +1364,9 @@ public class ActivationKeySpecTest {
             else if (activationKey.getId().equals(activationKey4.getId())) {
                 assertProductPoolLength(activationKey, 0, 0);
             }
+
             processed.add(activationKey.getId());
         }
     }
 
-    private static void assertProductPoolLength(
-        ActivationKeyDTO activationKey, int productLength, int poolLength) {
-        assertThat(activationKey.getProducts())
-            .hasSize(productLength);
-        assertThat(activationKey.getPools())
-            .hasSize(poolLength);
-    }
-
-    private static ActivationKeyDTO createActivationKey(
-        ApiClient client, OwnerDTO owner, ActivationKeyDTO activationKey) {
-        return client.owners().createActivationKey(owner.getKey(), activationKey);
-    }
-
-    private static PoolDTO createPool(ApiClient client, OwnerDTO owner, ProductDTO product) {
-        return client.owners().createPool(owner.getKey(), Pools.random(product));
-    }
-
-    private static ProductDTO createProduct(ApiClient client, OwnerDTO owner) {
-        return client.ownerProducts().createProductByOwner(owner.getKey(), Products.random());
-    }
-
-    private static ActivationKeyDTO updateActivationKey(ApiClient client, ActivationKeyDTO activationKey) {
-        return client.activationKeys().updateActivationKey(activationKey.getId(), activationKey);
-    }
-
-    private static ActivationKeyDTO createActivationKey(ApiClient client, OwnerDTO owner) {
-        return createActivationKey(client, owner, ActivationKeys.random(owner));
-    }
-
-    private static OwnerDTO createOwner(ApiClient client) {
-        return client.owners().createOwner(Owners.random());
-    }
-
-    private ApiClient createUserClient(ApiClient client, OwnerDTO owner) {
-        UserDTO user = UserUtil.createUser(client, owner);
-        return ApiClients.basic(user.getUsername(), user.getPassword());
-    }
-
-    private ProductDTO createProduct(ApiClient client, OwnerDTO owner, AttributeDTO... attributes) {
-        return client.ownerProducts().createProductByOwner(
-            owner.getKey(), Products.withAttributes(attributes));
-    }
 }

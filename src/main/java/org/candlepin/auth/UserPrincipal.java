@@ -38,7 +38,7 @@ public class UserPrincipal extends Principal {
      *
      * @param username
      */
-    public UserPrincipal(String username, Collection<Permission> permissions, boolean admin) {
+    public UserPrincipal(String username, Collection<? extends Permission> permissions, boolean admin) {
         this(username, permissions, admin, null);
     }
 
@@ -47,8 +47,9 @@ public class UserPrincipal extends Principal {
      *
      * @param username
      */
-    public UserPrincipal(String username, Collection<Permission> permissions, boolean admin,
+    public UserPrincipal(String username, Collection<? extends Permission> permissions, boolean admin,
         OwnerInfo primaryOwner) {
+
         this.username = username;
         this.admin = admin;
         this.primaryOwner = primaryOwner;

@@ -25,14 +25,6 @@ package org.candlepin.service.model;
  */
 public interface PermissionBlueprintInfo extends ServiceAdapterModel {
 
-    // /**
-    //  * Fetches the ID of this role. If the ID has not yet been set, this method returns null.
-    //  *
-    //  * @return
-    //  *  The ID of this role, or null if the ID has not been set
-    //  */
-    // String getId();
-
     /**
      * Fetches the owner for which this permission applies. If the owner has not yet been set, this
      * method returns null.

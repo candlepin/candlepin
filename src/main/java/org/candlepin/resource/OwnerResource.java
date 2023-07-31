@@ -986,6 +986,7 @@ public class OwnerResource implements OwnerApi {
                 return result;
             }
         }
+
         // test is on the string "true" and is case insensitive.
         return poolManager.retrieveServiceLevelsForOwner(owner.getId(), Boolean.parseBoolean(exempt));
     }
@@ -1000,8 +1001,10 @@ public class OwnerResource implements OwnerApi {
     }
 
     @Override
-    public ActivationKeyDTO createActivationKey(@Verify(Owner.class) String ownerKey,
+    public ActivationKeyDTO createActivationKey(
+        @Verify(value = Owner.class, subResource = SubResource.ACTIVATION_KEYS) String ownerKey,
         ActivationKeyDTO dto) {
+
         validator.validateCollectionElementsNotNull(dto::getContentOverrides, dto::getPools,
             dto::getProducts);
 

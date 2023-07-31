@@ -28,20 +28,18 @@ public final class Roles {
     }
 
     public static RoleDTO ownerAll(OwnerDTO owner) {
-        return createRole(Permissions.OWNER.all(owner));
+        return with(Permissions.OWNER.all(owner));
     }
 
     public static RoleDTO ownerReadOnly(OwnerDTO owner) {
-        return createRole(Permissions.OWNER.readOnly(owner));
+        return with(Permissions.OWNER.readOnly(owner));
     }
 
     public static RoleDTO with(PermissionBlueprintDTO... permissions) {
-        return createRole(permissions);
-    }
-
-    private static RoleDTO createRole(PermissionBlueprintDTO... permissions) {
         return new RoleDTO()
             .name(StringUtil.random("test-role"))
             .permissions(List.of(permissions));
     }
+
+
 }
