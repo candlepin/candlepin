@@ -12,9 +12,7 @@
 # Exit on any error:
 set -eE
 
-# have to '|| true' here, for some reason /etc/profile.d/rvm.sh
-# will break set -e even though it actually works
-source /etc/profile || true
+source /etc/profile
 
 if [ -f /root/setup-db.sh ]; then
   source /root/setup-db.sh
