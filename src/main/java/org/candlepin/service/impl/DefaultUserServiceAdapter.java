@@ -264,7 +264,7 @@ public class DefaultUserServiceAdapter implements UserServiceAdapter {
         }
         else {
             // We need to pair this down to just accessible owners...
-            Collection<Permission> permissions = this.permissionFactory.createUserPermissions(entity);
+            Collection<Permission> permissions = this.permissionFactory.createPermissions(entity);
             Set<OwnerInfo> owners = new HashSet<>();
 
             for (Permission permission : permissions) {

@@ -77,6 +77,10 @@ public class OwnerResourceSpecTest {
         ownerProducts = admin.ownerProducts();
     }
 
+    private ProductDTO createProduct(OwnerDTO owner, AttributeDTO... attributes) throws ApiException {
+        return ownerProducts.createProductByOwner(owner.getKey(), Products.withAttributes(attributes));
+    }
+
     @Test
     public void shouldCreateOwner() {
         OwnerDTO ownerDTO = Owners.random();
@@ -149,9 +153,7 @@ public class OwnerResourceSpecTest {
         ConsumerDTO consumer = userClient.consumers().createConsumer(Consumers.random(owner));
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
-        ProductDTO product = createProduct(owner,
-            ProductAttributes.SupportLevel.withValue("VIP")
-        );
+        ProductDTO product = createProduct(owner, ProductAttributes.SupportLevel.withValue("VIP"));
         owners.createPool(owner.getKey(), Pools.random(product));
 
         List<String> serviceLevels = consumerClient.owners()
@@ -775,10 +777,6 @@ public class OwnerResourceSpecTest {
         // return an error)
         SystemPurposeAttributesDTO attributes = userClient.owners().getSyspurpose(owner.getKey());
         assertEquals(owner.getKey(), attributes.getOwner().getKey());
-
     }
 
-    private ProductDTO createProduct(OwnerDTO owner, AttributeDTO... attributes) throws ApiException {
-        return ownerProducts.createProductByOwner(owner.getKey(), Products.withAttributes(attributes));
-    }
 }

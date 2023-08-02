@@ -25,11 +25,15 @@ import org.candlepin.service.model.UserInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
+import java.util.WeakHashMap;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -52,12 +56,12 @@ public class PermissionFactory {
         USERNAME_CONSUMERS,
         USERNAME_CONSUMERS_ENTITLEMENTS,
         ATTACH,
-        OWNER_HYPERVISORS
+        OWNER_HYPERVISORS,
+        MANAGE_ACTIVATION_KEYS
     }
 
     /**
-     * Performs simple resolution of various entities needed by the permissions. A new instance
-     * should be created for each instance
+     * Performs simple resolution of owner instances needed to build permissions.
      *
      * @deprecated
      *  This is a temporary class used purely to perform fast resolution in lieu of a proper
@@ -65,42 +69,45 @@ public class PermissionFactory {
      *  necessary, and should be replaced by a proper resolver as soon as possible.
      */
     @Deprecated
-    protected static class Resolver {
+    protected static class OwnerResolver {
+        private static final WeakReference<Owner> EMPTY_REFERENCE = new WeakReference<>(null);
 
-        protected OwnerCurator ownerCurator;
-        protected Map<String, Owner> ownerCache;
+        private final OwnerCurator ownerCurator;
+        private final WeakHashMap<String, WeakReference<Owner>> ownerCache;
 
-        public Resolver(OwnerCurator ownerCurator) {
-            this.ownerCurator = ownerCurator;
-            this.ownerCache = new HashMap<>();
+        public OwnerResolver(OwnerCurator ownerCurator) {
+            this.ownerCurator = Objects.requireNonNull(ownerCurator);
+            this.ownerCache = new WeakHashMap<>();
         }
 
         public Owner resolve(OwnerInfo oinfo) {
-            if (oinfo != null) {
-                // If it's already an Owner instance, just cast it.
-                if (oinfo instanceof Owner) {
-                    return (Owner) oinfo;
-                }
-
-                // Nope. Guess we need to resolve it...
-                Owner owner = this.ownerCache.get(oinfo.getKey());
-
-                if (owner == null) {
-                    owner = this.ownerCurator.getByKey(oinfo.getKey());
-
-                    if (owner == null) {
-                        throw new IllegalStateException("No such owner: " + oinfo.getKey());
-                    }
-
-                    ownerCache.put(owner.getKey(), owner);
-                    return owner;
-                }
+            if (oinfo == null || oinfo instanceof Owner) {
+                // nothing to resolve, it's already as good as it's going to get
+                return (Owner) oinfo;
             }
 
-            return null;
+            String ownerKey = oinfo.getKey();
+            Owner cached = this.ownerCache.getOrDefault(ownerKey, EMPTY_REFERENCE)
+                .get();
+
+            // If the owner has either never been resolved or was booted out of memory, perform the
+            // lookup and store the result (again).
+            if (cached == null) {
+                cached = this.ownerCurator.getByKey(ownerKey);
+                if (cached == null) {
+                    throw new IllegalStateException("No such owner: " + ownerKey);
+                }
+
+                // Impl note:
+                // We're abusing the fact that we expect the owner to hold a reference to its own
+                // key, so the ref count on `cached.getKey()` should be at least 1 until after the
+                // weak ref value is cleared as a result of the owner itself falling out of scope.
+                this.ownerCache.put(cached.getKey(), new WeakReference<>(cached));
+            }
+
+            return cached;
         }
     }
-
 
     /**
      * Micro-interface used to create simple permission builders from a user and a permission
@@ -108,73 +115,103 @@ public class PermissionFactory {
      */
     @FunctionalInterface
     public interface PermissionBuilder {
-        Permission build(UserInfo user, PermissionBlueprintInfo blueprint, Resolver resolver);
+        List<Permission> build(UserInfo user, PermissionBlueprintInfo blueprint, OwnerResolver resolver);
     }
 
-    protected Map<String, PermissionBuilder> builders;
+    private final OwnerCurator ownerCurator;
+    private final OwnerResolver ownerResolver;
 
-    protected OwnerCurator ownerCurator;
+    private final Map<String, PermissionBuilder> builders;
+
 
     @Inject
     public PermissionFactory(OwnerCurator ownerCurator) {
-        this.ownerCurator = ownerCurator;
+        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.ownerResolver = new OwnerResolver(this.ownerCurator);
 
-        this.initBuilders();
+        this.builders = this.initBuilders();
     }
 
     /**
      * Initializes the permission builders used by this factory.
      */
     @SuppressWarnings("checkstyle:indentation")
-    protected void initBuilders() {
-        this.builders = new HashMap<>();
+    private Map<String, PermissionBuilder> initBuilders() {
+        Map<String, PermissionBuilder> builders = new HashMap<>();
 
-        this.builders.put(PermissionType.OWNER.name(),
-            (user, bp, r) -> new OwnerPermission(r.resolve(bp.getOwner()),
-                Access.valueOf(bp.getAccessLevel())));
+        builders.put(PermissionType.OWNER.name(), (user, bp, res) -> List.of(
+            new OwnerPermission(res.resolve(bp.getOwner()), Access.valueOf(bp.getAccessLevel()))));
 
-        this.builders.put(PermissionType.OWNER_POOLS.name(),
-            (user, bp, r) -> new OwnerPoolsPermission(r.resolve(bp.getOwner())));
+        builders.put(PermissionType.OWNER_POOLS.name(), (user, bp, res) -> List.of(
+            new OwnerPoolsPermission(res.resolve(bp.getOwner()))));
 
-        this.builders.put(PermissionType.USERNAME_CONSUMERS.name(),
-            (user, bp, r) -> new UsernameConsumersPermission(user, r.resolve(bp.getOwner())));
+        builders.put(PermissionType.USERNAME_CONSUMERS.name(), (user, bp, res) -> List.of(
+            new UsernameConsumersPermission(user, res.resolve(bp.getOwner()))));
 
         // At the time of writing, no matching permission exists for USERNAME_CONSUMERS_ENTITLEMENTS
 
-        this.builders.put(PermissionType.ATTACH.name(),
-            (user, bp, r) -> new AttachPermission(r.resolve(bp.getOwner())));
+        builders.put(PermissionType.ATTACH.name(), (user, bp, res) -> List.of(
+            new AttachPermission(res.resolve(bp.getOwner()))));
 
-        this.builders.put(PermissionType.OWNER_HYPERVISORS.name(),
-            (user, bp, r) -> new ConsumerOrgHypervisorPermission(r.resolve(bp.getOwner())));
+        builders.put(PermissionType.OWNER_HYPERVISORS.name(), (user, bp, res) -> List.of(
+            new ConsumerOrgHypervisorPermission(res.resolve(bp.getOwner()))));
+
+        builders.put(PermissionType.MANAGE_ACTIVATION_KEYS.name(), (user, bp, res) -> {
+            List<Permission> output = new ArrayList<>();
+
+            switch (Access.valueOf(bp.getAccessLevel())) {
+                case ALL:
+                    output.add(new ActivationKeyManagementPermission(res.resolve(bp.getOwner())));
+
+                case CREATE:
+                    output.add(new ActivationKeyCreationPermission(res.resolve(bp.getOwner())));
+
+                default:
+                    // intentionally left empty
+            }
+
+            return output;
+        });
+
+        return builders;
     }
 
     /**
-     * Converts the provided permission blueprint into a concrete permission for the given user.
+     * Performs the work of permission creation for the given user and permission blueprint. Should
+     * only be called after the inputs have been validated elsewhere.
      *
      * @param user
-     *  The user info of the user for which to create a permission
+     *  The user for which to create a permission
      *
      * @param blueprint
-     *  The permission blueprint to use to create the permission
-     *
-     * @throws IllegalArgumentException
-     *  if user is null
+     *  The permission blueprint to use to create the user permissions
      *
      * @return
-     *  A concrete permission based on the provided user and permission blueprint
+     *  A collection of concrete permissions created from the given permission blueprint for the provided user
      */
-    public Permission createPermission(UserInfo user, PermissionBlueprintInfo blueprint) {
+    public List<Permission> createPermissions(UserInfo user, PermissionBlueprintInfo blueprint) {
         if (user == null) {
             throw new IllegalArgumentException("user is null");
         }
 
-        return this.createPermissionImpl(user, blueprint, new Resolver(this.ownerCurator));
+        if (blueprint == null) {
+            // nothing to build
+            return List.of();
+        }
+
+        PermissionBuilder builder = this.builders.get(blueprint.getTypeName());
+        if (builder == null) {
+            log.warn("Unsupported permission type: {}", blueprint.getTypeName());
+            return List.of();
+        }
+
+        return builder.build(user, blueprint, this.ownerResolver);
     }
 
     /**
      * Converts the provided permission info into concrete permissions for the given user. If the
      * provided permission blueprints do not result in any explicit permissions for the given user,
-     * this method returns an empty collection.
+     * this method returns an empty list.
      *
      * @param user
      *  The user info of the user for which to create a permission
@@ -188,59 +225,18 @@ public class PermissionFactory {
      * @return
      *  A collection of concrete permissions based on the provided user and permission info
      */
-    public Collection<Permission> createPermissions(UserInfo user,
+    public List<Permission> createPermissions(UserInfo user,
         Collection<? extends PermissionBlueprintInfo> blueprints) {
 
         if (user == null) {
             throw new IllegalArgumentException("user is null");
         }
 
-        Set<Permission> translated = new HashSet<>();
-
-        if (blueprints != null) {
-            Resolver resolver = new Resolver(this.ownerCurator);
-
-            for (PermissionBlueprintInfo pbinfo : blueprints) {
-                Permission permission = this.createPermissionImpl(user, pbinfo, resolver);
-
-                if (permission != null) {
-                    translated.add(permission);
-                }
-            }
-        }
-
-        return translated;
-    }
-
-    /**
-     * Performs the work of permission creation for the given user and permission blueprint. Should
-     * only be called after the inputs have been validated elsewhere.
-     *
-     * @param user
-     *  The user info of the user for which to create a permission
-     *
-     * @param blueprint
-     *  The permission blueprint to use to create the permission
-     *
-     * @param resolver
-     *  The entity resolver to use during permission creation
-     *
-     * @return
-     *  A concrete permission based on the provided user and permission blueprint
-     */
-    private Permission createPermissionImpl(UserInfo user, PermissionBlueprintInfo blueprint,
-        Resolver resolver) {
-
-        if (blueprint != null) {
-            PermissionBuilder builder = this.builders.get(blueprint.getTypeName());
-            if (builder != null) {
-                return builder.build(user, blueprint, resolver);
-            }
-
-            log.warn("Unsupported permission type: {}", blueprint.getTypeName());
-        }
-
-        return null;
+        return (blueprints != null ? blueprints.stream() : Stream.<PermissionBlueprintInfo>empty())
+            .filter(Objects::nonNull)
+            .map(bp -> this.createPermissions(user, bp))
+            .flatMap(Collection::stream)
+            .toList();
     }
 
     /**
@@ -249,7 +245,7 @@ public class PermissionFactory {
      * method returns an empty collection.
      *
      * @param user
-     *  The user for which to build permissions
+     *  The user info of the user for which to build permissions
      *
      * @throws IllegalArgumentException
      *  if user is null
@@ -257,21 +253,17 @@ public class PermissionFactory {
      * @return
      *  a collection of permissions applicable to the provided user
      */
-    public Collection<Permission> createUserPermissions(UserInfo user) {
+    public List<Permission> createPermissions(UserInfo user) {
         if (user == null) {
             throw new IllegalArgumentException("user is null");
         }
 
-        Set<Permission> permissions = new HashSet<>();
+        Collection<? extends RoleInfo> roles = user.getRoles();
 
-        if (user.getRoles() != null) {
-            for (RoleInfo role : user.getRoles()) {
-                if (role != null) {
-                    permissions.addAll(this.createPermissions(user, role.getPermissions()));
-                }
-            }
-        }
-
-        return permissions;
+        return (roles != null ? roles.stream() : Stream.<RoleInfo>empty())
+            .filter(Objects::nonNull)
+            .map(role -> this.createPermissions(user, role.getPermissions()))
+            .flatMap(Collection::stream)
+            .toList();
     }
 }

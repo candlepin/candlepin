@@ -15,9 +15,6 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.Access;
-import org.candlepin.auth.Principal;
-import org.candlepin.auth.SecurityHole;
-import org.candlepin.auth.SubResource;
 import org.candlepin.auth.Verify;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
@@ -25,7 +22,6 @@ import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.server.v1.ContentOverrideDTO;
 import org.candlepin.dto.api.server.v1.PoolDTO;
 import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.ForbiddenException;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerProductCurator;
@@ -46,7 +42,6 @@ import org.candlepin.util.TransformedIterator;
 import com.google.inject.persist.Transactional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.jboss.resteasy.core.ResteasyContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
@@ -141,8 +136,10 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
-    public ActivationKeyDTO updateActivationKey(@Verify(ActivationKey.class) String activationKeyId,
+    public ActivationKeyDTO updateActivationKey(
+        @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         ActivationKeyDTO update) {
+
         dtoValidator.validateCollectionElementsNotNull(update::getProducts, update::getPools,
             update::getContentOverrides);
 
@@ -197,8 +194,11 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
-    public ActivationKeyDTO addPoolToKey(@Verify(ActivationKey.class) String activationKeyId,
-        @Verify(Pool.class) String poolId, Long quantity) {
+    public ActivationKeyDTO addPoolToKey(
+        @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
+        @Verify(value = Pool.class, require = Access.READ_ONLY) String poolId,
+        Long quantity) {
+
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Pool pool = findPool(poolId);
 
@@ -221,8 +221,10 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
-    public ActivationKeyDTO removePoolFromKey(@Verify(ActivationKey.class) String activationKeyId,
-        @Verify(Pool.class) String poolId) {
+    public ActivationKeyDTO removePoolFromKey(
+        @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
+        @Verify(value = Pool.class, require = Access.READ_ONLY) String poolId) {
+
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Pool pool = findPool(poolId);
         key.removePool(pool);
@@ -231,7 +233,9 @@ public class ActivationKeyResource implements ActivationKeyApi {
         return this.translator.translate(key, ActivationKeyDTO.class);
     }
 
-    public ActivationKeyDTO addProductIdToKey(@Verify(ActivationKey.class) String activationKeyId,
+    @Override
+    public ActivationKeyDTO addProductIdToKey(
+        @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         String productId) {
 
         ActivationKey key = this.fetchActivationKey(activationKeyId);
@@ -251,8 +255,10 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
-    public ActivationKeyDTO removeProductIdFromKey(@Verify(ActivationKey.class) String activationKeyId,
+    public ActivationKeyDTO removeProductIdFromKey(
+        @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
         String productId) {
+
         ActivationKey key = this.fetchActivationKey(activationKeyId);
         Product product = confirmProduct(key.getOwner(), productId);
         key.removeProduct(product);
@@ -274,28 +280,28 @@ public class ActivationKeyResource implements ActivationKeyApi {
     }
 
     @Override
-    @SecurityHole
-    public Iterable<ContentOverrideDTO> listActivationKeyContentOverrides(String activationKeyId) {
-        Principal principal = ResteasyContext.getContextData(Principal.class);
-        ActivationKey parent = this.verifyAndGetParent(activationKeyId, principal, Access.READ_ONLY);
+    public Iterable<ContentOverrideDTO> listActivationKeyContentOverrides(
+        @Verify(value = ActivationKey.class, require = Access.READ_ONLY) String activationKeyId) {
 
-        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(parent);
+        ActivationKey key = this.fetchActivationKey(activationKeyId);
+
+        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(key);
         return this.translator.translateQuery(query, ContentOverrideDTO.class);
     }
 
     @Override
     @Transactional
-    @SecurityHole
     public Iterable<ContentOverrideDTO> addActivationKeyContentOverrides(
-        String activationKeyId, List<ContentOverrideDTO> entries) {
-        Principal principal = ResteasyContext.getContextData(Principal.class);
+        @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
+        List<ContentOverrideDTO> entries) {
 
         this.coValidator.validate(entries);
-        ActivationKey parent = this.verifyAndGetParent(activationKeyId, principal, Access.ALL);
+        ActivationKey key = this.fetchActivationKey(activationKeyId);
+
         try {
             for (ContentOverrideDTO dto : entries) {
                 ActivationKeyContentOverride override = this.contentOverrideCurator
-                    .retrieve(parent, dto.getContentLabel(), dto.getName());
+                    .retrieve(key, dto.getContentLabel(), dto.getName());
 
                 // We're counting on Hibernate to do our batching for us here...
                 if (override != null) {
@@ -305,7 +311,7 @@ public class ActivationKeyResource implements ActivationKeyApi {
                 else {
                     override = new ActivationKeyContentOverride();
 
-                    override.setParent(parent);
+                    override.setParent(key);
                     override.setContentLabel(dto.getContentLabel());
                     override.setName(dto.getName());
                     override.setValue(dto.getValue());
@@ -326,41 +332,40 @@ public class ActivationKeyResource implements ActivationKeyApi {
         // Hibernate typically persists automatically before executing a query against a table with
         // pending changes, but if it doesn't, we can add a flush here to make sure this outputs the
         // correct values
-        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(parent);
+        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(key);
         return this.translator.translateQuery(query, ContentOverrideDTO.class);
     }
 
     @Override
     @Transactional
-    @SecurityHole
     public Iterable<ContentOverrideDTO> deleteActivationKeyContentOverrides(
-        String activationKeyId, List<ContentOverrideDTO> entries) {
-        Principal principal = ResteasyContext.getContextData(Principal.class);
+        @Verify(value = ActivationKey.class, require = Access.ALL) String activationKeyId,
+        List<ContentOverrideDTO> entries) {
 
-        ActivationKey parent = this.verifyAndGetParent(activationKeyId, principal, Access.ALL);
+        ActivationKey key = this.fetchActivationKey(activationKeyId);
 
         if (entries.size() == 0) {
-            this.contentOverrideCurator.removeByParent(parent);
+            this.contentOverrideCurator.removeByParent(key);
         }
         else {
             for (ContentOverrideDTO dto : entries) {
                 String label = dto.getContentLabel();
                 if (StringUtils.isBlank(label)) {
-                    this.contentOverrideCurator.removeByParent(parent);
+                    this.contentOverrideCurator.removeByParent(key);
                 }
                 else {
                     String name = dto.getName();
                     if (StringUtils.isBlank(name)) {
-                        this.contentOverrideCurator.removeByContentLabel(parent, dto.getContentLabel());
+                        this.contentOverrideCurator.removeByContentLabel(key, dto.getContentLabel());
                     }
                     else {
-                        this.contentOverrideCurator.removeByName(parent, dto.getContentLabel(), name);
+                        this.contentOverrideCurator.removeByName(key, dto.getContentLabel(), name);
                     }
                 }
             }
         }
 
-        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(parent);
+        CandlepinQuery<ActivationKeyContentOverride> query = this.contentOverrideCurator.getList(key);
         return this.translator.translateQuery(query, ContentOverrideDTO.class);
     }
 
@@ -382,18 +387,6 @@ public class ActivationKeyResource implements ActivationKeyApi {
         }
 
         return prod;
-    }
-
-    private ActivationKey verifyAndGetParent(String parentId, Principal principal, Access access) {
-        // Throws exception if criteria block the id
-        ActivationKey result = this.fetchActivationKey(parentId);
-
-        // Now that we know it exists, verify access level
-        if (!principal.canAccess(result, SubResource.NONE, access)) {
-            throw new ForbiddenException(i18n.tr("Insufficient permissions"));
-        }
-
-        return result;
     }
 
 }
