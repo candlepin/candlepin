@@ -30,11 +30,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Calendar;
 
-import javax.inject.Inject;
-
 public class ManifestFileRecordCuratorTest extends DatabaseTestFixture {
 
-    @Inject private ManifestFileRecordCurator curator;
     private File tempFile;
     private ManifestFileRecord record;
 
@@ -42,7 +39,7 @@ public class ManifestFileRecordCuratorTest extends DatabaseTestFixture {
     public void setupTest() throws Exception {
         Path temp = Files.createTempFile("test-manifest", ".zip");
         tempFile = temp.toFile();
-        record = curator.createFile(ManifestFileType.EXPORT, tempFile,
+        record = manifestFileRecordCurator.createFile(ManifestFileType.EXPORT, tempFile,
             "principalId", "ownerId");
     }
 
@@ -54,22 +51,22 @@ public class ManifestFileRecordCuratorTest extends DatabaseTestFixture {
     @Test
     public void testDeleteById() throws Exception {
         assertNotNull(record);
-        assertTrue(curator.deleteById(record.getId()));
+        assertTrue(manifestFileRecordCurator.deleteById(record.getId()));
     }
 
     @Test
     public void testFindFile() throws Exception {
-        assertNotNull(curator.findFile(record.getId()));
+        assertNotNull(manifestFileRecordCurator.findFile(record.getId()));
     }
 
     @Test
     public void testDeleteExpired() throws Exception {
         Calendar cal = Calendar.getInstance();
-        curator.createFile(ManifestFileType.EXPORT, tempFile, "principalId", "ownerId");
+        manifestFileRecordCurator.createFile(ManifestFileType.EXPORT, tempFile, "principalId", "ownerId");
 
         cal.add(Calendar.HOUR_OF_DAY, -4);
-        assertEquals(0, curator.deleteExpired(cal.getTime()));
+        assertEquals(0, manifestFileRecordCurator.deleteExpired(cal.getTime()));
         cal.add(Calendar.HOUR_OF_DAY, 8);
-        assertEquals(2, curator.deleteExpired(cal.getTime()));
+        assertEquals(2, manifestFileRecordCurator.deleteExpired(cal.getTime()));
     }
 }

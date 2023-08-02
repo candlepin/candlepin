@@ -25,15 +25,12 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
 import javax.persistence.PersistenceException;
 
 /**
  * UeberCertificateCuratorTests
  */
 public class UeberCertificateCuratorTests extends DatabaseTestFixture {
-
-    @Inject private UeberCertificateCurator ueberCertificateCurator;
 
     private Owner owner;
 

@@ -22,28 +22,31 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.Cdn;
 import org.candlepin.model.CdnCertificate;
-import org.candlepin.model.CdnCurator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
-import javax.inject.Inject;
-
-
 public class CdnManagerTest extends DatabaseTestFixture {
-    @Inject private CdnManager manager;
-    @Inject private CdnCurator curator;
+    private CdnManager manager;
+
+    @BeforeEach
+    @Override
+    public void init() throws Exception {
+        super.init();
+        manager = injector.getInstance(CdnManager.class);
+    }
 
     @Test
     public void testCreateCdn() throws Exception {
         Cdn cdn = createCdn("test_cdn");
-        Cdn fetched = curator.getByLabel(cdn.getLabel());
+        Cdn fetched = cdnCurator.getByLabel(cdn.getLabel());
         assertNotNull(fetched);
         assertEquals("test_cdn", fetched.getLabel());
     }
@@ -55,7 +58,7 @@ public class CdnManagerTest extends DatabaseTestFixture {
         cdn.setName("Updated CDN");
         manager.updateCdn(cdn);
 
-        Cdn fetched = curator.getByLabel(cdn.getLabel());
+        Cdn fetched = cdnCurator.getByLabel(cdn.getLabel());
         assertNotNull(fetched);
         assertEquals(cdn.getLabel(), fetched.getLabel());
         assertEquals("Updated CDN", fetched.getName());
@@ -65,7 +68,7 @@ public class CdnManagerTest extends DatabaseTestFixture {
     public void deleteCdn() throws Exception {
         Cdn cdn = createCdn("test_cdn");
         manager.deleteCdn(cdn);
-        assertNull(curator.getByLabel(cdn.getLabel()));
+        assertNull(cdnCurator.getByLabel(cdn.getLabel()));
     }
 
     @Test
@@ -81,7 +84,7 @@ public class CdnManagerTest extends DatabaseTestFixture {
         assertNotNull(pool.getCdn());
 
         manager.deleteCdn(cdn);
-        assertNull(curator.getByLabel(cdn.getLabel()));
+        assertNull(cdnCurator.getByLabel(cdn.getLabel()));
         poolCurator.clear();
 
         Pool updatedPool = poolCurator.get(pool.getId());

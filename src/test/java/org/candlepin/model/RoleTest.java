@@ -28,11 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 public class RoleTest extends DatabaseTestFixture {
-    @Inject private UserCurator userCurator;
-    @Inject private RoleCurator roleCurator;
 
     private Owner owner;
 

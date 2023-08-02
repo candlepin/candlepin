@@ -28,20 +28,17 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
-
-
-
 /**
  * ConsumerTypeResourceTest
  */
 public class ConsumerTypeResourceTest extends DatabaseTestFixture {
-    @Inject private ConsumerTypeResource consumerTypeResource;
+    private ConsumerTypeResource consumerTypeResource;
 
     private ConsumerType testType;
 
     @BeforeEach
     public void setup() {
+        consumerTypeResource = injector.getInstance(ConsumerTypeResource.class);
         this.testType = new ConsumerType();
         this.testType.setLabel("test_type-" + System.currentTimeMillis());
         this.testType.setManifest(true);
@@ -63,16 +60,12 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRetrieveTypeWithBadId() {
-        assertThrows(NotFoundException.class, () ->
-            this.consumerTypeResource.getConsumerType("some bad id")
-        );
+        assertThrows(NotFoundException.class, () -> this.consumerTypeResource.getConsumerType("some bad id"));
     }
 
     @Test
     public void testRetrieveTypeWithNullId() {
-        assertThrows(NotFoundException.class, () ->
-            this.consumerTypeResource.getConsumerType(null)
-        );
+        assertThrows(NotFoundException.class, () -> this.consumerTypeResource.getConsumerType(null));
     }
 
     @Test
@@ -106,9 +99,8 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testCreateTypeWithBadData() {
-        assertThrows(BadRequestException.class, () ->
-            this.consumerTypeResource.createConsumerType(new ConsumerTypeDTO())
-        );
+        assertThrows(BadRequestException.class,
+            () -> this.consumerTypeResource.createConsumerType(new ConsumerTypeDTO()));
     }
 
     @Test
@@ -193,18 +185,15 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
         ConsumerTypeDTO dto = new ConsumerTypeDTO();
         dto.setId("some bad id");
 
-        assertThrows(NotFoundException.class, () ->
-            this.consumerTypeResource.updateConsumerType(dto.getId(), dto)
-        );
+        assertThrows(NotFoundException.class,
+            () -> this.consumerTypeResource.updateConsumerType(dto.getId(), dto));
     }
 
     @Test
     public void testUpdateTypeWithNullId() {
         ConsumerTypeDTO dto = new ConsumerTypeDTO();
 
-        assertThrows(NotFoundException.class, () ->
-            this.consumerTypeResource.updateConsumerType(null, dto)
-        );
+        assertThrows(NotFoundException.class, () -> this.consumerTypeResource.updateConsumerType(null, dto));
     }
 
     @Test
@@ -224,16 +213,13 @@ public class ConsumerTypeResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testDeleteTypeWithBadId() {
-        assertThrows(NotFoundException.class, () ->
-            this.consumerTypeResource.deleteConsumerType("some bad id")
-        );
+        assertThrows(NotFoundException.class,
+            () -> this.consumerTypeResource.deleteConsumerType("some bad id"));
     }
 
     @Test
     public void testDeleteTypeWithNullId() {
-        assertThrows(NotFoundException.class, () ->
-            this.consumerTypeResource.deleteConsumerType(null)
-        );
+        assertThrows(NotFoundException.class, () -> this.consumerTypeResource.deleteConsumerType(null));
     }
 
 }

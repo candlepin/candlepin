@@ -28,16 +28,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import javax.inject.Inject;
-
 /**
  * ConsumerContentOverrideCuratorTest
  */
 public class ConsumerContentOverrideCuratorTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private ConsumerContentOverrideCurator consumerContentOverrideCurator;
 
     private Owner owner;
     private ConsumerType ct;

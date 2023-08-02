@@ -24,11 +24,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Date;
 import java.util.List;
 
-import javax.inject.Inject;
-
 public class CertificateTest extends DatabaseTestFixture {
-    @Inject private SubscriptionsCertificateCurator certificateCurator;
-    @Inject private CertificateSerialCurator certSerialCurator;
 
     protected SubscriptionsCertificate createSubCert(String key, String cert) {
         return createSubCert(key, cert, new Date());
@@ -46,14 +42,14 @@ public class CertificateTest extends DatabaseTestFixture {
 
     @Test
     public void testList() throws Exception {
-        List<SubscriptionsCertificate> certificates = certificateCurator .listAll().list();
+        List<SubscriptionsCertificate> certificates = subscriptionsCertificateCurator.listAll().list();
         int beforeCount = certificates.size();
 
         for (int i = 0; i < 10; i++) {
-            certificateCurator.create(createSubCert("key" + i, "cert" + i));
+            subscriptionsCertificateCurator.create(createSubCert("key" + i, "cert" + i));
         }
 
-        certificates = certificateCurator.listAll().list();
+        certificates = subscriptionsCertificateCurator.listAll().list();
         int afterCount = certificates.size();
         assertEquals(10, afterCount - beforeCount);
     }
@@ -62,8 +58,8 @@ public class CertificateTest extends DatabaseTestFixture {
     public void testLookup() throws Exception {
 
         SubscriptionsCertificate certificate = createSubCert("key", "cert");
-        certificateCurator.create(certificate);
-        SubscriptionsCertificate lookedUp = certificateCurator.get(certificate.getId());
+        subscriptionsCertificateCurator.create(certificate);
+        SubscriptionsCertificate lookedUp = subscriptionsCertificateCurator.get(certificate.getId());
 
         assertNotNull(lookedUp);
         assertEquals(certificate.getId(), lookedUp.getId());
@@ -78,7 +74,7 @@ public class CertificateTest extends DatabaseTestFixture {
         SubscriptionsCertificate certificate1 = createSubCert("not a cert", "booya", now);
         SubscriptionsCertificate certificate2 = createSubCert("not a cert", "booya", now);
 
-        certificateCurator.create(certificate1);
-        certificateCurator.create(certificate2);
+        subscriptionsCertificateCurator.create(certificate1);
+        subscriptionsCertificateCurator.create(certificate2);
     }
 }

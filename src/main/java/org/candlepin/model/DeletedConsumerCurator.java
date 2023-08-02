@@ -28,18 +28,18 @@ import java.util.Date;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-
-
 /**
  * DeletedConsumerCurator
  */
 @Singleton
 public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedConsumer> {
 
-    @Inject private PrincipalProvider principalProvider;
+    private PrincipalProvider principalProvider;
 
-    public DeletedConsumerCurator() {
+    @Inject
+    public DeletedConsumerCurator(PrincipalProvider principalProvider) {
         super(DeletedConsumer.class);
+        this.principalProvider = principalProvider;
     }
 
     public DeletedConsumer findByConsumer(Consumer c) {
@@ -81,8 +81,7 @@ public class DeletedConsumerCurator extends AbstractHibernateCurator<DeletedCons
         }
 
         Principal principal = this.principalProvider.get();
-        String deletedConsumersStatement =
-            "INSERT INTO DeletedConsumer (id, created, updated, consumerUuid, ownerId, " +
+        String deletedConsumersStatement = "INSERT INTO DeletedConsumer (id, created, updated, consumerUuid, ownerId, " +
             "ownerDisplayName, ownerKey, principalName, consumerName) " +
             "SELECT consumer.id, NOW(), NOW(), consumer.uuid, consumer.ownerId, owner.displayName, " +
             "owner.key, :principalName, consumer.name " +

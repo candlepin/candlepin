@@ -23,7 +23,6 @@ import static org.mockito.Mockito.when;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.PoolManager;
-import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Entitlement;
@@ -55,7 +54,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.xnap.commons.i18n.I18n;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -66,14 +64,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.inject.Inject;
-
-
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class EnforcerTest extends DatabaseTestFixture {
-    @Inject
-    private I18n i18n;
 
     @Mock
     private RulesCurator rulesCurator;
@@ -90,8 +83,6 @@ public class EnforcerTest extends DatabaseTestFixture {
     @Mock
     private PoolManager poolManager;
 
-    @Inject
-    private ModelTranslator translator;
     private Enforcer enforcer;
     private Owner owner;
 
@@ -123,11 +114,12 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         JsRunner jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
 
-        translator = new StandardTranslator(consumerTypeCurator, mockEnvironmentCurator, mockOwnerCurator);
+        modelTranslator = new StandardTranslator(consumerTypeCurator, mockEnvironmentCurator,
+            mockOwnerCurator);
 
         enforcer = new EntitlementRules(
-            new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator, consumerTypeCurator,
-            new RulesObjectMapper(), translator, poolManager);
+            new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator,
+            consumerTypeCurator, new RulesObjectMapper(), modelTranslator, poolManager);
     }
 
     @Test
@@ -141,25 +133,22 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void shouldFailParsingIfNoOderIsPresent() {
-        assertThrows(IllegalArgumentException.class, () ->
-            ((EntitlementRules) enforcer).parseRule("func3:attr4")
-        );
+        assertThrows(IllegalArgumentException.class,
+            () -> ((EntitlementRules) enforcer).parseRule("func3:attr4"));
     }
 
     @Test
     public void shouldFailParsingIfNotAllParametersArePresent() {
-        assertThrows(IllegalArgumentException.class, () ->
-            ((EntitlementRules) enforcer).parseRule("func3:3")
-        );
+        assertThrows(IllegalArgumentException.class,
+            () -> ((EntitlementRules) enforcer).parseRule("func3:3"));
     }
 
     @Test
     public void shouldCreateMappingBetweenAttributesAndFunctions() {
-        String attributesAndRules =
-            "func1:1:attr1:attr2:attr3, func2:2:attr1, func3:3:attr4, func5:5:attr1:attr4";
+        String attributesAndRules = "func1:1:attr1:attr2:attr3, func2:2:attr1, func3:3:attr4, func5:5:attr1:attr4";
 
-        Map<String, Set<EntitlementRules.Rule>> parsed =
-            ((EntitlementRules) enforcer).parseAttributeMappings(attributesAndRules);
+        Map<String, Set<EntitlementRules.Rule>> parsed = ((EntitlementRules) enforcer)
+            .parseAttributeMappings(attributesAndRules);
 
         assertTrue(parsed.get("attr1").contains(
             rule("func1", 1, "attr1", "attr2", "attr3")));
@@ -173,8 +162,7 @@ public class EnforcerTest extends DatabaseTestFixture {
     public void shouldSelectAllRulesMappedToSingleAttribute() {
         Map<String, Set<EntitlementRules.Rule>> rules = Map.of(
             "attr1", rules(rule("func5", 5, "attr1"), rule("func1", 2, "attr1")),
-            "attr3", rules(rule("func3", 2, "attr3"))
-        );
+            "attr3", rules(rule("func3", 2, "attr3")));
 
         List<EntitlementRules.Rule> orderedAndFilteredRules = ((EntitlementRules) enforcer)
             .rulesForAttributes(Set.of("attr1"), rules);
@@ -183,19 +171,17 @@ public class EnforcerTest extends DatabaseTestFixture {
             rule("func5", 5, "attr1"),
             rule("func1", 2, "attr1"),
             rule("global", 0)),
-            orderedAndFilteredRules
-        );
+            orderedAndFilteredRules);
     }
 
     @Test
     public void shouldSelectAllRulesMappedToMultipleAttributes() {
         Map<String, Set<EntitlementRules.Rule>> rules = Map.of(
             "attr1", rules(
-            rule("func5", 5, "attr1", "attr2", "attr3"),
-            rule("func1", 2, "attr1", "attr2"),
-            rule("func6", 4, "attr1", "attr2", "attr3", "attr4")),
-            "attr3", rules(rule("func3", 3, "attr3"))
-        );
+                rule("func5", 5, "attr1", "attr2", "attr3"),
+                rule("func1", 2, "attr1", "attr2"),
+                rule("func6", 4, "attr1", "attr2", "attr3", "attr4")),
+            "attr3", rules(rule("func3", 3, "attr3")));
 
         List<EntitlementRules.Rule> orderedAndFilteredRules = ((EntitlementRules) enforcer)
             .rulesForAttributes(Set.of("attr1", "attr2", "attr3"), rules);
@@ -204,8 +190,7 @@ public class EnforcerTest extends DatabaseTestFixture {
             rule("func5", 5, "attr1", "attr2", "attr3"),
             rule("func3", 3, "attr3"),
             rule("func1", 2, "attr1", "attr2"),
-            rule("global", 0)
-        ), orderedAndFilteredRules);
+            rule("global", 0)), orderedAndFilteredRules);
     }
 
     // This exception should mention wrapping a MissingFactException
@@ -219,11 +204,9 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         Product finalProduct = product;
         Pool entitlementPool = entitlementPoolWithMembersAndExpiration(
-            owner, finalProduct, 1, 2, expiryDate(2000, 1, 1)
-        );
-        assertThrows(RuleExecutionException.class, () ->
-            enforcer.preEntitlement(consumer, entitlementPool, 1)
-        );
+            owner, finalProduct, 1, 2, expiryDate(2000, 1, 1));
+        assertThrows(RuleExecutionException.class,
+            () -> enforcer.preEntitlement(consumer, entitlementPool, 1));
     }
 
     private EntitlementRules.Rule rule(String name, int priority, String... attrs) {

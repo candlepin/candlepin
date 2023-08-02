@@ -30,8 +30,6 @@ import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyContentOverride;
 import org.candlepin.test.DatabaseTestFixture;
 
-import com.google.inject.Injector;
-
 import org.jboss.resteasy.core.ResteasyContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,9 +46,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import javax.inject.Inject;
-
-
 /**
  * ActivationKeyContentOverrideResourceTest
  */
@@ -65,8 +60,6 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
     private ActivationKey key;
 
     private ActivationKeyResource resource;
-    @Inject
-    private Injector injector;
 
     @BeforeEach
     public void setUp() {
@@ -311,9 +304,8 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        assertThrows(BadRequestException.class, () ->
-            resource.addActivationKeyContentOverrides(key.getId(), overrides)
-        );
+        assertThrows(BadRequestException.class,
+            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
     }
 
     @Test
@@ -328,9 +320,8 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        assertThrows(BadRequestException.class, () ->
-            resource.addActivationKeyContentOverrides(key.getId(), overrides)
-        );
+        assertThrows(BadRequestException.class,
+            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
     }
 
     @Test
@@ -345,9 +336,8 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        assertThrows(BadRequestException.class, () ->
-            resource.addActivationKeyContentOverrides(key.getId(), overrides)
-        );
+        assertThrows(BadRequestException.class,
+            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
     }
 
     @Test
@@ -362,9 +352,8 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        assertThrows(BadRequestException.class, () ->
-            resource.addActivationKeyContentOverrides(key.getId(), overrides)
-        );
+        assertThrows(BadRequestException.class,
+            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
     }
 
     @Test
@@ -379,9 +368,8 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        assertThrows(BadRequestException.class, () ->
-            resource.addActivationKeyContentOverrides(key.getId(), overrides)
-        );
+        assertThrows(BadRequestException.class,
+            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
     }
 
     @Test
@@ -396,9 +384,8 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        assertThrows(BadRequestException.class, () ->
-            resource.addActivationKeyContentOverrides(key.getId(), overrides)
-        );
+        assertThrows(BadRequestException.class,
+            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
     }
 
     @Test
@@ -413,9 +400,8 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        assertThrows(BadRequestException.class, () ->
-            resource.addActivationKeyContentOverrides(key.getId(), overrides)
-        );
+        assertThrows(BadRequestException.class,
+            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
     }
 
     @Test
@@ -430,9 +416,8 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        assertThrows(BadRequestException.class, () ->
-            resource.addActivationKeyContentOverrides(key.getId(), overrides)
-        );
+        assertThrows(BadRequestException.class,
+            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
     }
 
     @Test
@@ -447,8 +432,7 @@ public class ActivationKeyContentOverrideResourceTest extends DatabaseTestFixtur
 
         overrides.add(dto);
 
-        assertThrows(BadRequestException.class, () ->
-            resource.addActivationKeyContentOverrides(key.getId(), overrides)
-        );
+        assertThrows(BadRequestException.class,
+            () -> resource.addActivationKeyContentOverrides(key.getId(), overrides));
     }
 }

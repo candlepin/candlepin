@@ -18,13 +18,7 @@ import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
-
-
-
 public class MembershipTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private UserCurator userCurator;
 
     @Test
     public void testCreate() throws Exception {
@@ -35,7 +29,7 @@ public class MembershipTest extends DatabaseTestFixture {
         User user = new User(username, password);
         userCurator.create(user);
 
-        // TODO:  Finish up here...
+        // TODO: Finish up here...
     }
 
 }

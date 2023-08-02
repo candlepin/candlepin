@@ -20,18 +20,18 @@ import org.hibernate.criterion.Restrictions;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-
-
 /**
  * RoleCurator
  */
 @Singleton
 public class RoleCurator extends AbstractHibernateCurator<Role> {
 
-    @Inject private CandlepinQueryFactory cpQueryFactory;
+    private CandlepinQueryFactory cpQueryFactory;
 
-    public RoleCurator() {
+    @Inject
+    public RoleCurator(CandlepinQueryFactory cpQueryFactory) {
         super(Role.class);
+        this.cpQueryFactory = cpQueryFactory;
     }
 
     public CandlepinQuery<Role> listForOwner(Owner o) {
@@ -43,7 +43,8 @@ public class RoleCurator extends AbstractHibernateCurator<Role> {
     }
 
     /**
-     * @param name role's unique name to lookup.
+     * @param name
+     *     role's unique name to lookup.
      * @return the role whose name matches the one given.
      */
     public Role getByName(String name) {

@@ -147,8 +147,6 @@ import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
-
-
 /**
  * Guice modules for unit testing
  */
@@ -187,7 +185,8 @@ public class TestingModules {
             bind(JPAInitializer.class).asEagerSingleton();
         }
 
-        @Provides @Named("ValidationProperties")
+        @Provides
+        @Named("ValidationProperties")
         protected Properties getValidationProperties() {
             return new Properties();
         }
@@ -228,9 +227,10 @@ public class TestingModules {
             bind(EntityManager.class).toInstance(em);
             bind(ValidatorFactory.class).toInstance(mock(ValidatorFactory.class));
 
-            /* The JsRunnerProvider is profoundly annoying because when it is created it
-             * begins by trying to read the rules out of the database with the RulesCurator.
-             * Since we don't have a database with this Module, we have to fake it.
+            /*
+             * The JsRunnerProvider is profoundly annoying because when it is created it begins by trying to
+             * read the rules out of the database with the RulesCurator. Since we don't have a database with
+             * this Module, we have to fake it.
              */
             RulesCurator rulesCurator = mock(RulesCurator.class);
 
@@ -274,13 +274,13 @@ public class TestingModules {
             // This is not necessary in the normal module because the config is bound in the
             // context listener
             bind(Configuration.class).toInstance(config);
-            //When testing, we are using mock Candlepin cache. It's
-            //methods are basically no-op
+            // When testing, we are using mock Candlepin cache. It's
+            // methods are basically no-op
             bind(CandlepinCache.class).toInstance(mockedCandlepinCache);
             CandlepinRequestScope requestScope = new CandlepinRequestScope();
             bindScope(CandlepinRequestScoped.class, requestScope);
-            //RequestScoped doesn't exist in unit tests, so we must
-            //define test alternative for it.
+            // RequestScoped doesn't exist in unit tests, so we must
+            // define test alternative for it.
             bindScope(RequestScoped.class, TestingScope.EAGER_SINGLETON);
             bind(CandlepinRequestScope.class).toInstance(requestScope);
 
@@ -355,7 +355,9 @@ public class TestingModules {
             bind(CPMContextListener.class).to(NoopContextListener.class).in(Singleton.class);
         }
 
-        @Provides @Singleton @Named("EventFactoryObjectMapper")
+        @Provides
+        @Singleton
+        @Named("EventFactoryObjectMapper")
         private ObjectMapper configureEventFactoryObjectMapper() {
             ObjectMapper mapper = new ObjectMapper();
 
@@ -378,7 +380,9 @@ public class TestingModules {
             return mapper;
         }
 
-        @Provides @Singleton @Named("X509V3ExtensionUtilObjectMapper")
+        @Provides
+        @Singleton
+        @Named("X509V3ExtensionUtilObjectMapper")
         private ObjectMapper configureX509V3ExtensionUtilObjectMapper() {
             ObjectMapper mapper = new ObjectMapper();
             mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -386,7 +390,9 @@ public class TestingModules {
             return mapper;
         }
 
-        @Provides @Singleton @Named("HypervisorUpdateJobObjectMapper")
+        @Provides
+        @Singleton
+        @Named("HypervisorUpdateJobObjectMapper")
         private ObjectMapper configureHypervisorUpdateJobObjectMapper() {
             ObjectMapper mapper = new ObjectMapper();
             mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);

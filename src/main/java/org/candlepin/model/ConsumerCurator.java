@@ -74,8 +74,6 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
-
-
 /**
  * ConsumerCurator
  */
@@ -178,19 +176,24 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
     }
 
-    @Inject private EntitlementCurator entitlementCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private ContentAccessCertificateCurator contentAccessCertificateCurator;
-    @Inject private CertificateSerialCurator certificateSerialCurator;
-    @Inject private DeletedConsumerCurator deletedConsumerCurator;
-    @Inject private FactValidator factValidator;
-    @Inject private IdentityCertificateCurator identityCertificateCurator;
+    private EntitlementCurator entitlementCurator;
+    private ConsumerTypeCurator consumerTypeCurator;
+    private DeletedConsumerCurator deletedConsumerCurator;
+    private FactValidator factValidator;
+    private Provider<HostCache> cachedHostsProvider;
+    private PrincipalProvider principalProvider;
 
-    @Inject private Provider<HostCache> cachedHostsProvider;
-    @Inject private PrincipalProvider principalProvider;
-
-    public ConsumerCurator() {
+    @Inject
+    public ConsumerCurator(EntitlementCurator entitlementCurator, ConsumerTypeCurator consumerTypeCurator,
+        DeletedConsumerCurator deletedConsumerCurator, FactValidator factValidator,
+        Provider<HostCache> cachedHostsProvider, PrincipalProvider principalProvider) {
         super(Consumer.class);
+        this.entitlementCurator = entitlementCurator;
+        this.consumerTypeCurator = consumerTypeCurator;
+        this.deletedConsumerCurator = deletedConsumerCurator;
+        this.factValidator = factValidator;
+        this.cachedHostsProvider = cachedHostsProvider;
+        this.principalProvider = principalProvider;
     }
 
     @Transactional
@@ -252,10 +255,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Lookup consumer by its virt.uuid.
      *
-     * In some cases the hypervisor will report UUIDs with uppercase, while the guest will
-     * report lowercase. As such we do case insensitive comparison when looking these up.
+     * In some cases the hypervisor will report UUIDs with uppercase, while the guest will report
+     * lowercase. As such we do case insensitive comparison when looking these up.
      *
-     * @param uuid consumer virt.uuid to find
+     * @param uuid
+     *     consumer virt.uuid to find
      * @return Consumer whose name matches the given virt.uuid, null otherwise.
      */
     @Transactional
@@ -286,16 +290,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Lookup all consumers matching the given guest IDs.
      *
-     * Maps guest ID to the most recent registered consumer that matches it.
-     * Any guest ID not found will not return null.
+     * Maps guest ID to the most recent registered consumer that matches it. Any guest ID not found will
+     * not return null.
      *
-     * If multiple registered consumers report this guest ID (re-registraiton), only the
-     * most recently updated will be returned.
+     * If multiple registered consumers report this guest ID (re-registraiton), only the most recently
+     * updated will be returned.
      *
      * @param guestIds
      *
-     * @return VirtConsumerMap of guest ID to it's registered guest consumer, or null if
-     * none exists.
+     * @return VirtConsumerMap of guest ID to it's registered guest consumer, or null if none exists.
      */
     @Transactional
     public VirtConsumerMap getGuestConsumersMap(String ownerId, Set<String> guestIds) {
@@ -305,7 +308,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             return guestConsumersMap;
         }
 
-        List<String> possibleGuestIds = Util.getPossibleUuids(guestIds.toArray(new String [guestIds.size()]));
+        List<String> possibleGuestIds = Util.getPossibleUuids(guestIds.toArray(new String[guestIds.size()]));
 
         String sql = "select cp_consumer.uuid from cp_consumer " +
             "inner join cp_consumer_facts " +
@@ -352,10 +355,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Candlepin supports the notion of a user being a consumer. When in effect
-     * a consumer will exist in the system who is tied to a particular user.
+     * Candlepin supports the notion of a user being a consumer. When in effect a consumer will exist in
+     * the system who is tied to a particular user.
      *
-     * @param user User
+     * @param user
+     *     User
      * @return Consumer for this user if one exists, null otherwise.
      */
     @Transactional
@@ -364,10 +368,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Candlepin supports the notion of a user being a consumer. When in effect
-     * a consumer will exist in the system who is tied to a particular user.
+     * Candlepin supports the notion of a user being a consumer. When in effect a consumer will exist in
+     * the system who is tied to a particular user.
      *
-     * @param username the username to use to find a consumer
+     * @param username
+     *     the username to use to find a consumer
      * @return Consumer for this user if one exists, null otherwise.
      */
     @Transactional
@@ -387,7 +392,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Lookup the Consumer by its UUID.
      *
-     * @param uuid Consumer UUID sought.
+     * @param uuid
+     *     Consumer UUID sought.
      * @return Consumer whose UUID matches the given value, or null otherwise.
      */
     @Transactional
@@ -442,14 +448,13 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     /**
      * Fetches consumers with the specified IDs. If a consumer does not exist for a given ID, no
-     * matching consumer object will be returned, nor will an exception be thrown. As such, the
-     * number of consumer objects fetched may be lower than the number of consumer IDs provided.
+     * matching consumer object will be returned, nor will an exception be thrown. As such, the number
+     * of consumer objects fetched may be lower than the number of consumer IDs provided.
      *
      * @param consumerIds
-     *  A collection of consumer IDs specifying the consumers to fetch
+     *     A collection of consumer IDs specifying the consumers to fetch
      *
-     * @return
-     *  A query to fetch the consumers with the specified consumer IDs
+     * @return A query to fetch the consumers with the specified consumer IDs
      */
     public Collection<Consumer> getConsumers(Collection<String> consumerIds) {
         if (consumerIds != null && !consumerIds.isEmpty()) {
@@ -478,10 +483,9 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * Fetches all unique addon attribute values set by all the consumers of the specified owner.
      *
      * @param owner
-     *  The owner the consumers belong to.
-     * @return
-     *  A list of the all the distinct values of the addon attribute that the consumers belonging
-     *  to the specified owner have set.
+     *     The owner the consumers belong to.
+     * @return A list of the all the distinct values of the addon attribute that the consumers belonging
+     * to the specified owner have set.
      */
     @SuppressWarnings("unchecked")
     @Transactional
@@ -508,9 +512,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Search for Consumers with fields matching those provided.
      *
-     * @param userName the username to match, or null to ignore
-     * @param types the types to match, or null/empty to ignore
-     * @param owner Optional owner to filter on, pass null to skip.
+     * @param userName
+     *     the username to match, or null to ignore
+     * @param types
+     *     the types to match, or null/empty to ignore
+     * @param owner
+     *     Optional owner to filter on, pass null to skip.
      * @return a list of matching Consumers
      */
     @SuppressWarnings("unchecked")
@@ -536,7 +543,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * @param updatedConsumer updated Consumer values.
+     * @param updatedConsumer
+     *     updated Consumer values.
      * @return Updated consumers
      */
     @Transactional
@@ -547,22 +555,22 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Updates an existing consumer with the state specified by the given Consumer instance. If the
      * consumer has not yet been created, it will be created.
-     * <p></p>
-     * <strong>Warning:</strong> Using an pre-existing and persisted Consumer entity as the update
-     * to apply may cause issues, as Hibernate may opt to save changes to nested collections
-     * (facts, guestIds, tags, etc.) when any other database operation is performed. To avoid this
-     * issue, it is advised to use only detached or otherwise unmanaged entities for the updated
-     * consumer to pass to this method.
+     * <p>
+     * </p>
+     * <strong>Warning:</strong> Using an pre-existing and persisted Consumer entity as the update to
+     * apply may cause issues, as Hibernate may opt to save changes to nested collections (facts,
+     * guestIds, tags, etc.) when any other database operation is performed. To avoid this issue, it is
+     * advised to use only detached or otherwise unmanaged entities for the updated consumer to pass to
+     * this method.
      *
      * @param updatedConsumer
-     *  A Consumer instance representing the updated state of a consumer
+     *     A Consumer instance representing the updated state of a consumer
      *
      * @param flush
-     *  Whether or not to flush pending database operations after creating or updating the given
-     *  consumer
+     *     Whether or not to flush pending database operations after creating or updating the given
+     *     consumer
      *
-     * @return
-     *  The persisted, updated consumer
+     * @return The persisted, updated consumer
      */
     @Transactional
     public Consumer update(Consumer updatedConsumer, boolean flush) {
@@ -610,9 +618,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Modifies the last check in and persists the entity. Make sure that the data
-     * is refreshed before using this method.
-     * @param consumer the consumer to update
+     * Modifies the last check in and persists the entity. Make sure that the data is refreshed before
+     * using this method.
+     *
+     * @param consumer
+     *     the consumer to update
      */
     public void updateLastCheckin(Consumer consumer) {
         this.updateLastCheckin(consumer, new Date());
@@ -670,7 +680,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * PropertyValidationException will be thrown.
      *
      * @param consumer
-     *  The consumer containing the facts to validate
+     *     The consumer containing the facts to validate
      */
     private void validateFacts(Consumer consumer) {
         // Impl note:
@@ -690,7 +700,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * @param consumers consumers to update
+     * @param consumers
+     *     consumers to update
      * @return updated consumers
      */
     @Transactional
@@ -699,8 +710,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * @param consumers consumers to update
-     * @param flush whether to flush or not
+     * @param consumers
+     *     consumers to update
+     * @param flush
+     *     whether to flush or not
      * @return updated consumers
      */
     @Transactional
@@ -716,19 +729,20 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Get host consumer for a guest system id.
      *
-     * As multiple hosts could have reported the same guest ID, we find the newest
-     * and assume this is the authoritative host for the guest.
+     * As multiple hosts could have reported the same guest ID, we find the newest and assume this is
+     * the authoritative host for the guest.
      *
-     * This search needs to be case insensitive as some hypervisors report uppercase
-     * guest UUIDs, when the guest itself will report lowercase.
+     * This search needs to be case insensitive as some hypervisors report uppercase guest UUIDs, when
+     * the guest itself will report lowercase.
      *
-     * The first lookup will retrieve the host and then place it in the map. This
-     * will save from reloading the host from the database if it is asked for again
-     * during the session. An auto-bind can call this method up to 50 times and this
-     * will cut the database calls significantly.
+     * The first lookup will retrieve the host and then place it in the map. This will save from
+     * reloading the host from the database if it is asked for again during the session. An auto-bind
+     * can call this method up to 50 times and this will cut the database calls significantly.
      *
-     * @param guestId a virtual guest ID (not a consumer UUID)
-     * @param ownerId ID of the organization to scope the search
+     * @param guestId
+     *     a virtual guest ID (not a consumer UUID)
+     * @param ownerId
+     *     ID of the organization to scope the search
      * @return host consumer who most recently reported the given guestId (if any)
      */
     @Transactional
@@ -764,17 +778,16 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     /**
      * Creates a mapping of input guest IDs to GuestID objects currently tracked and stored in the
-     * backing database. If a given guest ID is not present in the database, it will be mapped to
-     * a null value.
+     * backing database. If a given guest ID is not present in the database, it will be mapped to a null
+     * value.
      *
      * @param guestIds
-     *  A collection of guest IDs to map to existing GuestID objects
+     *     A collection of guest IDs to map to existing GuestID objects
      *
      * @param owner
-     *  The owner to which the mapping lookup should be scoped
+     *     The owner to which the mapping lookup should be scoped
      *
-     * @return
-     *  a mapping of guest IDs to GuestID objects
+     * @return a mapping of guest IDs to GuestID objects
      */
     public Map<String, GuestId> getGuestIdMap(Iterable<String> guestIds, Owner owner) {
         if (guestIds == null || owner == null) {
@@ -821,11 +834,11 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         return d1 != null && (d2 == null || d1.after(d2));
     }
 
-
     /**
      * Get guest consumers for a host consumer.
      *
-     * @param consumer host consumer to find the guests for
+     * @param consumer
+     *     host consumer to find the guests for
      * @return list of registered guest consumers for this host
      */
     @Transactional
@@ -858,15 +871,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * This is an insecure query, because we need to know whether or not the
-     * consumer exists
+     * This is an insecure query, because we need to know whether or not the consumer exists
      *
-     * We do not require that the hypervisor be consumerType hypervisor
-     * because we need to allow regular consumers to be given
-     * HypervisorIds to be updated via hypervisorResource
+     * We do not require that the hypervisor be consumerType hypervisor because we need to allow regular
+     * consumers to be given HypervisorIds to be updated via hypervisorResource
      *
-     * @param hypervisorId Unique identifier of the hypervisor
-     * @param owner Org namespace to search
+     * @param hypervisorId
+     *     Unique identifier of the hypervisor
+     * @param owner
+     *     Org namespace to search
      * @return Consumer that matches the given
      */
     @Transactional
@@ -882,13 +895,16 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Lookup all registered consumers matching one of the given hypervisor IDs.
      *
-     * Results are returned as a map of hypervisor ID to the consumer record created.
-     * If a hypervisor ID is not in the map, this indicates the hypervisor consumer does
-     * not exist, i.e. it is new and needs to be created.
+     * Results are returned as a map of hypervisor ID to the consumer record created. If a hypervisor ID
+     * is not in the map, this indicates the hypervisor consumer does not exist, i.e. it is new and
+     * needs to be created.
      *
      * This is an unsecured query, manually limited to an owner by the parameter given.
-     * @param owner Owner to limit results to.
-     * @param hypervisorIds Collection of hypervisor IDs as reported by the virt fabric.
+     *
+     * @param owner
+     *     Owner to limit results to.
+     * @param hypervisorIds
+     *     Collection of hypervisor IDs as reported by the virt fabric.
      *
      * @return VirtConsumerMap of hypervisor ID to it's consumer, or null if none exists.
      */
@@ -904,18 +920,20 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Lookup all registered consumers matching either:
-     * matching the fact dmi.system.uuid or
-     * the given hypervisor IDs.
+     * Lookup all registered consumers matching either: matching the fact dmi.system.uuid or the given
+     * hypervisor IDs.
      *
-     * Results are returned as a map of hypervisor ID to the consumer record created.
-     * If a hypervisor ID is not in the map, this indicates the hypervisor consumer does
-     * not exist, i.e. it is new and needs to be created.
+     * Results are returned as a map of hypervisor ID to the consumer record created. If a hypervisor ID
+     * is not in the map, this indicates the hypervisor consumer does not exist, i.e. it is new and
+     * needs to be created.
      *
      * This is an unsecured query, manually limited to an owner by the parameter given.
-     * @param owner Owner to limit results to.
-     * @param hypervisors Collection of consumers with either hypervisor IDs or dmi.system.uuid fact
-     *                       as reported by the virt fabric.
+     *
+     * @param owner
+     *     Owner to limit results to.
+     * @param hypervisors
+     *     Collection of consumers with either hypervisor IDs or dmi.system.uuid fact as reported by the
+     *     virt fabric.
      *
      * @return VirtConsumerMap of hypervisor ID to it's consumer, or null if none exists.
      */
@@ -983,8 +1001,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         String systemUuid) {
         VirtConsumerMap hypervisorMap = new VirtConsumerMap();
         Consumer found = null;
-        String sql =
-            "select consumer_id from cp_consumer_hypervisor " +
+        String sql = "select consumer_id from cp_consumer_hypervisor " +
             "where hypervisor_id = :hypervisorId " +
             "and owner_id = :ownerId";
 
@@ -999,13 +1016,12 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             found = (Consumer) ((List) this.getConsumers(one)).get(0);
         }
         else if (systemUuid != null) {
-            sql =
-                "select cp_consumer.id from cp_consumer " +
-                    "join cp_consumer_facts on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
-                    "where cp_consumer_facts.mapkey = :fact_key and " +
-                    "lower(cp_consumer_facts.element) = :uuid " +
-                    "and cp_consumer.owner_id = :ownerId " +
-                    "order by cp_consumer.updated desc";
+            sql = "select cp_consumer.id from cp_consumer " +
+                "join cp_consumer_facts on cp_consumer.id = cp_consumer_facts.cp_consumer_id " +
+                "where cp_consumer_facts.mapkey = :fact_key and " +
+                "lower(cp_consumer_facts.element) = :uuid " +
+                "and cp_consumer.owner_id = :ownerId " +
+                "order by cp_consumer.updated desc";
 
             query = this.currentSession()
                 .createSQLQuery(sql)
@@ -1025,7 +1041,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Retrieves the identity Certificate ids for the provided consumer ids.
      *
-     * @param consumerIds - ids of the {@link Consumer}s.
+     * @param consumerIds
+     *     - ids of the {@link Consumer}s.
      * @return identity Certificate ids.
      */
     public List<String> getIdentityCertIds(Collection<String> consumerIds) {
@@ -1047,7 +1064,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Retrieves the content access certificate ids for provided consumer ids.
      *
-     * @param consumerIds - ids of the {@link Consumer}s.
+     * @param consumerIds
+     *     - ids of the {@link Consumer}s.
      * @return content access certificate ids.
      */
     public List<String> getContentAccessCertIds(Collection<String> consumerIds) {
@@ -1067,18 +1085,19 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Retrieves all the serial ids for provided {@link ContentAccessCertificate} ids
-     * and {@link IdentityCertificate} ids.
+     * Retrieves all the serial ids for provided {@link ContentAccessCertificate} ids and
+     * {@link IdentityCertificate} ids.
      *
-     * @param caCertIds - ids of content access certificates.
-     * @param idCertIds - ids of identity certificates.
+     * @param caCertIds
+     *     - ids of content access certificates.
+     * @param idCertIds
+     *     - ids of identity certificates.
      * @return serial ids.
      */
     public List<Long> getSerialIdsForCerts(Collection<String> caCertIds, Collection<String> idCertIds) {
         List<Long> serialIds = new ArrayList<>();
         if (caCertIds != null && !caCertIds.isEmpty()) {
-            String caCertHql =
-                "SELECT ca.serial.id " +
+            String caCertHql = "SELECT ca.serial.id " +
                 "FROM ContentAccessCertificate ca " +
                 "WHERE ca.id IN (:certIds)";
 
@@ -1093,8 +1112,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         }
 
         if (idCertIds != null && !idCertIds.isEmpty()) {
-            String idCertHql =
-                "SELECT idcert.serial.id " +
+            String idCertHql = "SELECT idcert.serial.id " +
                 "FROM IdentityCertificate idcert " +
                 "WHERE idcert.id IN (:certIds)";
 
@@ -1114,7 +1132,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Deletes {@link Consumer}s based on the provided consumer ids.
      *
-     * @param consumerIds - ids of the consumers to delete.
+     * @param consumerIds
+     *     - ids of the consumers to delete.
      * @return the number of consumer that were deleted.
      */
     public int deleteConsumers(Collection<String> consumerIds) {
@@ -1133,15 +1152,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Retrieves the Ids for inactive {@link Consumer}s based on the provided last checked in retention
      * date and the last updated retention date. Consumers are considered inactive if the have a checked
-     * in date and that date is older than the provided checked in retention date, or the consumer's update
-     * date is older than the provided last update retention date. Also, the consumer must not have any
-     * attached entitlements and must have a non-manifest type to be considered inactive.
+     * in date and that date is older than the provided checked in retention date, or the consumer's
+     * update date is older than the provided last update retention date. Also, the consumer must not
+     * have any attached entitlements and must have a non-manifest type to be considered inactive.
      *
      * @param lastCheckedInRetention
-     *  - consumers that have not checked in before this date are considered inactive.
+     *     - consumers that have not checked in before this date are considered inactive.
      * @param lastUpdatedRetention
-     *  - if the consumer has no checked in date, then the consumers that have an update date older than
-     *    the provided retention date is considered inactive.
+     *     - if the consumer has no checked in date, then the consumers that have an update date older
+     *     than the provided retention date is considered inactive.
      * @return a list of Ids for inactive {@link Consumer}s.
      */
     public List<String> getInactiveConsumerIds(Instant lastCheckedInRetention, Instant lastUpdatedRetention) {
@@ -1153,8 +1172,7 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
             throw new IllegalArgumentException("Last updated retention date cannot be null.");
         }
 
-        String hql =
-            "SELECT consumer.id " +
+        String hql = "SELECT consumer.id " +
             "FROM Consumer consumer " +
             "JOIN ConsumerType type ON type.id=consumer.typeId " +
             "LEFT JOIN Entitlement ent ON ent.consumer.id=consumer.id " +
@@ -1171,8 +1189,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * @param hypervisorIds list of unique hypervisor identifiers
-     * @param ownerId Org namespace to search
+     * @param hypervisorIds
+     *     list of unique hypervisor identifiers
+     * @param ownerId
+     *     Org namespace to search
      * @return Consumer that matches the given
      */
     @SuppressWarnings("unchecked")
@@ -1226,7 +1246,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Given the Consumer UUIDs it returns unique consumer UUIDs that exists.
      *
-     * @param consumerUuids consumer UUIDs.
+     * @param consumerUuids
+     *     consumer UUIDs.
      * @return set of consumer UUIDs that exists.
      */
     public Set<String> getExistingConsumerUuids(Iterable<String> consumerUuids) {
@@ -1278,16 +1299,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Fetches a collection of consumers based on the provided filter data in the query builder. If
-     * the query builder is null or contains no arguments, this method will return all known
-     * consumers.
+     * Fetches a collection of consumers based on the provided filter data in the query builder. If the
+     * query builder is null or contains no arguments, this method will return all known consumers.
      *
      * @param queryArgs
-     *  an ConsumerQueryArguments instance containing the various arguments or filters to use to
-     *  select consumers
+     *     an ConsumerQueryArguments instance containing the various arguments or filters to use to
+     *     select consumers
      *
-     * @return
-     *  a list of consumers matching the provided query arguments/filters
+     * @return a list of consumers matching the provided query arguments/filters
      */
     public List<Consumer> findConsumers(ConsumerQueryArguments queryArgs) {
         CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
@@ -1333,15 +1352,14 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
     /**
      * Fetches the count of consumers matching the provided filter data in the query builder. If the
-     * query builder is null or contains no arguments, this method will return the count of all
-     * known consumers.
+     * query builder is null or contains no arguments, this method will return the count of all known
+     * consumers.
      *
      * @param queryArgs
-     *  a ConsumerQueryArguments instance containing the various arguments or filters to use to count
-     *  consumers
+     *     a ConsumerQueryArguments instance containing the various arguments or filters to use to count
+     *     consumers
      *
-     * @return
-     *  the number of consumers matching the provided query arguments/filters
+     * @return the number of consumers matching the provided query arguments/filters
      */
     public long getConsumerCount(ConsumerQueryArguments queryArgs) {
         CriteriaBuilder criteriaBuilder = this.getEntityManager().getCriteriaBuilder();
@@ -1369,8 +1387,10 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Finds the consumer count for an Owner based on type.
      *
-     * @param owner the owner to count consumers for
-     * @param type the type of the Consumer to filter on.
+     * @param owner
+     *     the owner to count consumers for
+     * @param type
+     *     the type of the Consumer to filter on.
      * @return the number of consumers based on the type.
      */
     public long getConsumerCount(Owner owner, ConsumerType type) {
@@ -1382,21 +1402,20 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Builds a collection of predicates to be used for querying consumers using the JPA criteria
-     * query API.
+     * Builds a collection of predicates to be used for querying consumers using the JPA criteria query
+     * API.
      *
      * @param criteriaBuilder
-     *  the CriteriaBuilder instance to use to create predicates
-
+     *     the CriteriaBuilder instance to use to create predicates
+     *
      * @param root
-     *  the root of the query, should be a reference to the Consumer root
+     *     the root of the query, should be a reference to the Consumer root
      *
      * @param queryArgs
-     *  a ConsumerQueryArguments instance containing the various arguments or filters to use to select
-     *  consumers
+     *     a ConsumerQueryArguments instance containing the various arguments or filters to use to
+     *     select consumers
      *
-     * @return
-     *  a list of predicates to select consumers based on the query parameters provided
+     * @return a list of predicates to select consumers based on the query parameters provided
      */
     private List<Predicate> buildConsumerQueryPredicates(CriteriaBuilder criteriaBuilder, Root<Consumer> root,
         ConsumerQueryArguments queryArgs) {
@@ -1439,15 +1458,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
 
                 if (lcaseHIDs.isEmpty()) {
                     // list contained nothing but nulls
-                    Join<Consumer, HypervisorId> hypervisor =
-                        root.join(Consumer_.hypervisorId, JoinType.LEFT);
+                    Join<Consumer, HypervisorId> hypervisor = root.join(Consumer_.hypervisorId,
+                        JoinType.LEFT);
 
                     hidPredicate = hypervisor.get(HypervisorId_.hypervisorId).isNull();
                 }
                 else if (lcaseHIDs.size() < queryArgs.getHypervisorIds().size()) {
                     // nulls + non-nulls
-                    Join<Consumer, HypervisorId> hypervisor =
-                        root.join(Consumer_.hypervisorId, JoinType.LEFT);
+                    Join<Consumer, HypervisorId> hypervisor = root.join(Consumer_.hypervisorId,
+                        JoinType.LEFT);
 
                     hidPredicate = criteriaBuilder.or(hypervisor.get(HypervisorId_.hypervisorId).isNull(),
                         hypervisor.get(HypervisorId_.hypervisorId).in(lcaseHIDs));
@@ -1491,19 +1510,18 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * values.
      *
      * @param criteriaBuilder
-     *  the CriteriaBuilder to use to construct the predicate
+     *     the CriteriaBuilder to use to construct the predicate
      *
      * @param root
-     *  the Consumer root from which to build the predicate
+     *     the Consumer root from which to build the predicate
      *
      * @param fact
-     *  the fact to use to select consumers
+     *     the fact to use to select consumers
      *
      * @param values
-     *  a collection containing the desired values of the target fact
+     *     a collection containing the desired values of the target fact
      *
-     * @return
-     *  a predicate to be used for matching consumers by the specified fact and value
+     * @return a predicate to be used for matching consumers by the specified fact and value
      */
     private Predicate buildConsumerFactPredicate(CriteriaBuilder criteriaBuilder, Root<Consumer> root,
         String fact, Collection<String> values) {
@@ -1511,17 +1529,17 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
         // Impl note:
         // Fact filtering is irritatingly complex. To maintain backward compatibility with endpoints
         // that use this, we need to implement the following:
-        //  - For a given fact key, each unique value is combined via OR:
-        //      (mapkey = 'my_fact' AND (element = 'value1' OR element = 'value2' OR ...))
-        //  - Each given map key set is combined with an AND. This means each fact key
-        //    constitutes a correlated subquery or join
-        //  - Values are not compared with equals as indicated above, but with a custom
-        //    like statement that converts shell-style wildcards (* and ?) into like-compatible
-        //    wildcards, escaping any present like-native wildcards:
-        //      "myvalue*" => "myvalue%"
-        //      "%my_val?" => "!%my!_val_" (ESCAPE '!')
-        //  - Value comparison are case-insensitive at the query level, not collation :(
-        //  - The complexity with value comparison also applies to keys, sans case-insensitivity
+        // - For a given fact key, each unique value is combined via OR:
+        // (mapkey = 'my_fact' AND (element = 'value1' OR element = 'value2' OR ...))
+        // - Each given map key set is combined with an AND. This means each fact key
+        // constitutes a correlated subquery or join
+        // - Values are not compared with equals as indicated above, but with a custom
+        // like statement that converts shell-style wildcards (* and ?) into like-compatible
+        // wildcards, escaping any present like-native wildcards:
+        // "myvalue*" => "myvalue%"
+        // "%my_val?" => "!%my!_val_" (ESCAPE '!')
+        // - Value comparison are case-insensitive at the query level, not collation :(
+        // - The complexity with value comparison also applies to keys, sans case-insensitivity
 
         // Ensure we have some kind of fact data to filter on
         if (fact == null || fact.isEmpty() || values == null || values.isEmpty()) {
@@ -1554,32 +1572,27 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Translates a fact expression from the external syntax with shell-style wildcards to an
-     * expression compatible with an SQL LIKE operation.
-     * <p></p>
+     * Translates a fact expression from the external syntax with shell-style wildcards to an expression
+     * compatible with an SQL LIKE operation.
+     * <p>
+     * </p>
      * The following translations are performed by this operation:
      *
      * <ul>
-     *  <li>
-     *      LIKE-compatible wildcards and exclamation points (bangs) are escaped using an exclamation point:
-     *      "_" and "%" become "!_" and "!%" respectively
-     *  </li>
-     *  <li>
-     *      Shell-style wildcards that are not escaped with a backslash (\) are translated to LIKE-compatible
-     *      wildcards: "?" and "*" become "_" and "%" respectively
-     *  </li>
-     *  <li>
-     *      Escaped escapes (\\) are translated to a single backslash (\)
-     *  <li>
+     * <li>LIKE-compatible wildcards and exclamation points (bangs) are escaped using an exclamation
+     * point: "_" and "%" become "!_" and "!%" respectively</li>
+     * <li>Shell-style wildcards that are not escaped with a backslash (\) are translated to
+     * LIKE-compatible wildcards: "?" and "*" become "_" and "%" respectively</li>
+     * <li>Escaped escapes (\\) are translated to a single backslash (\)
+     * <li>
      * </ul>
      *
      * Any other characters and sequences are left as-is (such as unrecognized escape sequences).
      *
      * @param expression
-     *  the fact expression to translate
+     *     the fact expression to translate
      *
-     * @return
-     *  the translated fact expression
+     * @return the translated fact expression
      */
     private String translateFactExpression(String expression) {
         if (expression != null && !expression.isEmpty()) {
@@ -1630,16 +1643,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
      * using a mode which is no longer in the provided set of existing modes.
      *
      * @param owner
-     *  the owner for which to fetch active consumer content access modes
+     *     the owner for which to fetch active consumer content access modes
      *
      * @param existingModes
-     *  a var-arg list of existing modes to retain
+     *     a var-arg list of existing modes to retain
      *
      * @throws IllegalArgumentException
-     *  if owner is null, or the list of existing modes is null
+     *     if owner is null, or the list of existing modes is null
      *
-     * @return
-     *  the number of consumers updated as a result of this operation
+     * @return the number of consumers updated as a result of this operation
      */
     public int cullInvalidConsumerContentAccess(Owner owner, String... existingModes) {
         if (owner == null) {
@@ -1667,16 +1679,15 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     }
 
     /**
-     * Fetches all unique system purpose attribute values set by all the consumers
-     * of the specified owner.
+     * Fetches all unique system purpose attribute values set by all the consumers of the specified
+     * owner.
      *
      * @param owner
-     *  The owner the consumers belong to
+     *     The owner the consumers belong to
      * @param sysPurposeAttribute
-     *  The type of system purpose attribute needs to be fetched
-     * @return
-     *  A list of the all the distinct values of the system purpose attributes that the consumers
-     *  belonging to the specified owner have set
+     *     The type of system purpose attribute needs to be fetched
+     * @return A list of the all the distinct values of the system purpose attributes that the consumers
+     * belonging to the specified owner have set
      */
     @SuppressWarnings("unchecked")
     public List<String> getDistinctSyspurposeValuesByOwner(Owner owner,
@@ -1719,7 +1730,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Takes a list of identity certificate ids and unlinks them from consumers.
      *
-     * @param certIds certificate ids to be unlinked
+     * @param certIds
+     *     certificate ids to be unlinked
      * @return a number of unlinked consumers
      */
     @Transactional
@@ -1747,7 +1759,8 @@ public class ConsumerCurator extends AbstractHibernateCurator<Consumer> {
     /**
      * Takes a list of content access certificate ids and unlinks them from consumers.
      *
-     * @param certIds certificate ids to be unlinked
+     * @param certIds
+     *     certificate ids to be unlinked
      * @return a number of unlinked consumers
      */
     @Transactional

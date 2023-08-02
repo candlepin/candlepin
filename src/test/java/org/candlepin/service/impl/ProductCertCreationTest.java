@@ -29,21 +29,25 @@ import org.candlepin.test.TestUtil;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import javax.inject.Inject;
-
-
 
 /**
  * DefaultProductServiceAdapterTest
  */
 public class ProductCertCreationTest extends DatabaseTestFixture {
-    @Inject private ProductServiceAdapter productAdapter;
+    private ProductServiceAdapter productAdapter;
 
     @Override
     protected Module getGuiceOverrideModule() {
         return new ProductCertCreationModule();
+    }
+
+    @BeforeEach
+    @Override
+    public void init() throws Exception {
+        super.init();
+        productAdapter = injector.getInstance(ProductServiceAdapter.class);
     }
 
     @Test

@@ -33,7 +33,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.xnap.commons.i18n.I18n;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.container.ContainerRequestContext;
 
@@ -43,14 +42,15 @@ import javax.ws.rs.container.ContainerRequestContext;
 @ExtendWith(MockitoExtension.class)
 public class PageRequestFilterTest {
 
-    @Inject @Mock
+    @Mock
     private HttpServletRequest mockServletReq;
 
     private javax.inject.Provider<I18n> i18nProvider;
     private PageRequestFilter interceptor;
 
     private MockHttpRequest mockReq;
-    @Mock private ContainerRequestContext mockRequestContext;
+    @Mock
+    private ContainerRequestContext mockRequestContext;
 
     @BeforeEach
     public void setUp() {

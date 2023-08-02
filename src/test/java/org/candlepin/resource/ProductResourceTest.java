@@ -30,7 +30,6 @@ import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.DevConfig;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.ProductCertificateDTO;
@@ -38,11 +37,8 @@ import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductCertificate;
-import org.candlepin.model.ProductCertificateCurator;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
@@ -50,7 +46,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
-import org.xnap.commons.i18n.I18n;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -58,26 +53,17 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.inject.Inject;
-
-
 /**
  * ProductResourceTest
  */
 public class ProductResourceTest extends DatabaseTestFixture {
-    @Inject private ProductCertificateCurator productCertificateCurator;
-    @Inject private ProductResource productResource;
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
-    @Inject private DevConfig config;
-    @Inject private I18n i18n;
-
+    private ProductResource productResource;
     private JobManager jobManager;
 
     @BeforeEach
     public void init() throws Exception {
         super.init();
-
+        productResource = this.injector.getInstance(ProductResource.class);
         this.jobManager = mock(JobManager.class);
 
         doAnswer((Answer<AsyncJobStatus>) invocation -> {
@@ -273,20 +259,20 @@ public class ProductResourceTest extends DatabaseTestFixture {
 
     @Test
     public void testRefreshPoolsByProductInputValidation() {
-        assertThrows(BadRequestException.class, () ->
-            productResource.refreshPoolsForProducts(new LinkedList<>(), true)
-        );
+        assertThrows(BadRequestException.class,
+            () -> productResource.refreshPoolsForProducts(new LinkedList<>(), true));
     }
 
     @Test
     public void testRefreshPoolsByProductJobQueueingErrorsShouldBeHandled() throws JobException {
         config.setProperty(ConfigProperties.STANDALONE, "false");
 
-        // We want to simulate the first queueJob call succeeds, and the second throws a validation exception
+        // We want to simulate the first queueJob call succeeds, and the second throws a validation
+        // exception
         JobManager jobManager = mock(JobManager.class);
         AsyncJobStatus status1 = new AsyncJobStatus();
         status1.setName(RefreshPoolsJob.JOB_NAME);
-        status1.setState(AsyncJobStatus.JobState.CREATED); //need to prime the previous state field
+        status1.setState(AsyncJobStatus.JobState.CREATED); // need to prime the previous state field
         status1.setState(AsyncJobStatus.JobState.QUEUED);
         when(jobManager.queueJob(any(JobConfig.class)))
             .thenReturn(status1)
@@ -299,7 +285,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
         List<AsyncJobStatusDTO> jobs = null;
         try {
             jobs = productResource.refreshPoolsForProducts(Collections.singletonList("p1"), true)
-                    .collect(Collectors.toList());
+                .collect(Collectors.toList());
         }
         catch (Exception e) {
             fail("A validation exception when trying to queue a job should be handled " +

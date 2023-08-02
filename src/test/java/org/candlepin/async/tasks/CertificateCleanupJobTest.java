@@ -33,9 +33,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
-import javax.inject.Inject;
-
-
 class CertificateCleanupJobTest extends DatabaseTestFixture {
 
     private static final Date VALID = TestUtil.createDateOffset(2, 0, 0);
@@ -48,7 +45,6 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
     private Consumer consumer3;
     private Consumer consumer4;
 
-    @Inject
     private CertificateCleanupJob job;
 
     @BeforeEach
@@ -61,6 +57,8 @@ class CertificateCleanupJobTest extends DatabaseTestFixture {
         this.consumer2 = createConsumer(EXPIRED, VALID);
         this.consumer3 = createConsumer(VALID, EXPIRED);
         this.consumer4 = createConsumer(EXPIRED, EXPIRED);
+
+        job = injector.getInstance(CertificateCleanupJob.class);
     }
 
     @Test

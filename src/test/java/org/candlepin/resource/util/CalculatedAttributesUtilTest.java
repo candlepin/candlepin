@@ -23,11 +23,9 @@ import static org.mockito.Mockito.when;
 import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolComplianceType;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -44,12 +42,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.inject.Inject;
-
-
 public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private ProductCurator productCurator;
 
     private CalculatedAttributesUtil attrUtil;
     private Owner owner1;
@@ -59,8 +52,10 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
 
     private I18n i18n;
 
-    @Mock private QuantityRules quantityRules;
-    @Mock private Pool mockPool;
+    @Mock
+    private QuantityRules quantityRules;
+    @Mock
+    private Pool mockPool;
 
     @BeforeEach
     public void setUp() throws Exception {
@@ -100,8 +95,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         Map<String, SuggestedQuantityDTO> suggestedMap = new HashMap<>();
         suggestedMap.put(pool1.getId(), suggested);
         when(quantityRules.getSuggestedQuantities(anyList(),
-            any(Consumer.class), any(Date.class))).
-            thenReturn(suggestedMap);
+            any(Consumer.class), any(Date.class))).thenReturn(suggestedMap);
 
         Date date = new Date();
         attrUtil.setQuantityAttributes(pool1, consumer, date);
@@ -152,8 +146,7 @@ public class CalculatedAttributesUtilTest extends DatabaseTestFixture {
         Map<String, SuggestedQuantityDTO> suggestedMap = new HashMap<>();
         suggestedMap.put(pool2.getId(), suggested);
         when(quantityRules.getSuggestedQuantities(anyList(),
-            any(Consumer.class), any(Date.class))).
-            thenReturn(suggestedMap);
+            any(Consumer.class), any(Date.class))).thenReturn(suggestedMap);
 
         Date date = new Date();
         attrUtil.setQuantityAttributes(pool2, consumer, date);

@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.candlepin.model.activationkeys.ActivationKey;
-import org.candlepin.model.activationkeys.ActivationKeyCurator;
 import org.candlepin.test.DatabaseTestFixture;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -27,16 +26,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.Set;
 
-import javax.inject.Inject;
-
-
-
 class ActivationKeyCuratorTest extends DatabaseTestFixture {
-
-    @Inject
-    private OwnerCurator ownerCurator;
-    @Inject
-    private ActivationKeyCurator activationKeyCurator;
 
     private Owner owner;
 

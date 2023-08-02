@@ -20,14 +20,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import org.candlepin.dto.api.server.v1.ComplianceStatusDTO;
 import org.candlepin.dto.api.server.v1.SystemPurposeComplianceStatusDTO;
 import org.candlepin.model.Consumer;
-import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
 import org.candlepin.model.ConsumerType;
-import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
-import org.candlepin.model.PoolCurator;
 import org.candlepin.model.Product;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
@@ -35,17 +31,11 @@ import org.candlepin.test.TestUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.inject.Inject;
-
 /**
  * ConsumerResourceEntitlementRulesTest
  */
 public class ConsumerResourceDisableStatusTest extends DatabaseTestFixture {
-    @Inject private OwnerCurator ownerCurator;
-    @Inject private PoolCurator poolCurator;
-    @Inject private ConsumerCurator consumerCurator;
-    @Inject private ConsumerTypeCurator consumerTypeCurator;
-    @Inject private ConsumerResource consumerResource;
+    private ConsumerResource consumerResource;
 
     private Consumer consumer;
 
@@ -53,6 +43,7 @@ public class ConsumerResourceDisableStatusTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
+        consumerResource = injector.getInstance(ConsumerResource.class);
         ConsumerType standardSystemType = consumerTypeCurator.create(new ConsumerType("standard-system"));
 
         this.owner = this.ownerCurator.create(new Owner()
@@ -113,8 +104,8 @@ public class ConsumerResourceDisableStatusTest extends DatabaseTestFixture {
 
     @Test
     public void systemPurposeStatusWhenGoldenTicketEnabled() {
-        SystemPurposeComplianceStatusDTO status =
-            consumerResource.getSystemPurposeComplianceStatus(consumer.getUuid(), null);
+        SystemPurposeComplianceStatusDTO status = consumerResource
+            .getSystemPurposeComplianceStatus(consumer.getUuid(), null);
         assertEquals("disabled", status.getStatus());
         assertNull(status.getNonCompliantRole());
     }
@@ -123,8 +114,8 @@ public class ConsumerResourceDisableStatusTest extends DatabaseTestFixture {
     public void systemPurposeStatusWhenGoldenTicketDisabled() {
         owner.setContentAccessMode("entitlement");
         ownerCurator.merge(owner);
-        SystemPurposeComplianceStatusDTO status =
-            consumerResource.getSystemPurposeComplianceStatus(consumer.getUuid(), null);
+        SystemPurposeComplianceStatusDTO status = consumerResource
+            .getSystemPurposeComplianceStatus(consumer.getUuid(), null);
         assertEquals("mismatched", status.getStatus());
         assertEquals("myrole", status.getNonCompliantRole());
     }
@@ -133,8 +124,8 @@ public class ConsumerResourceDisableStatusTest extends DatabaseTestFixture {
     public void systemPurposeStatusWhenGoldenTicketReenabled() {
         owner.setContentAccessMode("entitlement");
         ownerCurator.merge(owner);
-        SystemPurposeComplianceStatusDTO status =
-            consumerResource.getSystemPurposeComplianceStatus(consumer.getUuid(), null);
+        SystemPurposeComplianceStatusDTO status = consumerResource
+            .getSystemPurposeComplianceStatus(consumer.getUuid(), null);
         assertEquals("mismatched", status.getStatus());
 
         owner.setContentAccessMode("org_environment");

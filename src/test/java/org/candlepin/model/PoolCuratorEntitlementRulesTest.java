@@ -26,7 +26,6 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -36,15 +35,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
-
 /**
  * PoolCuratorEntitlementRulesTest
  */
 public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
-    @Inject private CandlepinPoolManager poolManager;
-    @Inject private Injector injector;
+    private CandlepinPoolManager poolManager;
 
     private Owner owner;
     private Product product;
@@ -52,6 +48,8 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void setUp() {
+        poolManager = injector.getInstance(CandlepinPoolManager.class);
+
         owner = this.createOwner();
 
         product = this.createProduct(owner);
@@ -106,9 +104,8 @@ public class PoolCuratorEntitlementRulesTest extends DatabaseTestFixture {
         List<Entitlement> e1 = poolManager.entitleByPools(consumer, poolQuantities);
         assertEquals(1, e1.size());
         poolQuantities.put(consumerPool.getId(), 1);
-        assertThrows(EntitlementRefusedException.class, () ->
-            anotherEntitler.entitleByPools(consumer, poolQuantities)
-        );
+        assertThrows(EntitlementRefusedException.class,
+            () -> anotherEntitler.entitleByPools(consumer, poolQuantities));
     }
 
     @Override

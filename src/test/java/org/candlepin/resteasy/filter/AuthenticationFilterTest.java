@@ -41,7 +41,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.model.ConsumerCurator;
-import org.candlepin.model.DeletedConsumerCurator;
 import org.candlepin.model.User;
 import org.candlepin.resteasy.AnnotationLocator;
 import org.candlepin.resteasy.MethodLocator;
@@ -71,11 +70,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
-import org.xnap.commons.i18n.I18n;
 
 import java.lang.reflect.Method;
 
-import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Path;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -87,19 +84,25 @@ import javax.ws.rs.container.ResourceInfo;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class AuthenticationFilterTest extends DatabaseTestFixture {
-    @Inject private DeletedConsumerCurator deletedConsumerCurator;
-    @Inject private Injector injector;
-    @Inject private I18n i18n;
 
-    @Mock private HttpServletRequest mockHttpServletRequest;
-    @Mock private ContainerRequestContext mockRequestContext;
-    @Mock private CandlepinSecurityContext mockSecurityContext;
-    @Mock private ResourceInfo mockInfo;
-    @Mock private UserServiceAdapter usa;
-    @Mock private KeycloakConfiguration keycloakAdapterConfiguration;
-    @Mock private AdapterConfig adapterConfig;
-    @Mock private BearerTokenRequestAuthenticator bearerTokenRequestAuthenticator;
-    @Mock private KeycloakDeployment keycloakDeployment;
+    @Mock
+    private HttpServletRequest mockHttpServletRequest;
+    @Mock
+    private ContainerRequestContext mockRequestContext;
+    @Mock
+    private CandlepinSecurityContext mockSecurityContext;
+    @Mock
+    private ResourceInfo mockInfo;
+    @Mock
+    private UserServiceAdapter usa;
+    @Mock
+    private KeycloakConfiguration keycloakAdapterConfiguration;
+    @Mock
+    private AdapterConfig adapterConfig;
+    @Mock
+    private BearerTokenRequestAuthenticator bearerTokenRequestAuthenticator;
+    @Mock
+    private KeycloakDeployment keycloakDeployment;
 
     /* Note: this token can be easily decoded using any JWT-compatible tool (e.g. jwt.io) */
     private static final String TESTTOKEN = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9." +
@@ -144,8 +147,8 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         when(adapterConfig.getRealm()).thenReturn("redhat");
         when(keycloakAdapterConfiguration.getKeycloakDeployment()).thenReturn(keycloakDeployment);
         when(bearerTokenRequestAuthenticator.authenticate(any())).thenReturn(AuthOutcome.AUTHENTICATED);
-        when(bearerTokenRequestAuthenticator.getToken()).
-            thenReturn(TokenVerifier.create(TESTTOKEN, AccessToken.class).getToken());
+        when(bearerTokenRequestAuthenticator.getToken())
+            .thenReturn(TokenVerifier.create(TESTTOKEN, AccessToken.class).getToken());
     }
 
     private AuthenticationFilter buildInterceptor() {
@@ -166,11 +169,11 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
         KeycloakOIDCFacade keycloakOIDCFacade = new KeycloakOIDCFacade(mockReq);
         when(usa.findByLogin(eq("qa@redhat.com"))).thenReturn(
             new User("Test", "redhat", true));
-        RequestAuthenticator keycloakRequestAuthenticator = new
-            CandlepinKeycloakRequestAuthenticator(keycloakOIDCFacade, mockReq, keycloakDeployment) {
+        RequestAuthenticator keycloakRequestAuthenticator = new CandlepinKeycloakRequestAuthenticator(
+            keycloakOIDCFacade, mockReq, keycloakDeployment) {
             @Override
             protected boolean verifySSL() {
-                //false means verification is successful
+                // false means verification is successful
                 return false;
             }
 
@@ -179,8 +182,8 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
                 return bearerTokenRequestAuthenticator;
             }
         };
-        when(keycloakAdapterConfiguration.createRequestAuthenticator(mockReq)).
-            thenReturn(keycloakRequestAuthenticator);
+        when(keycloakAdapterConfiguration.createRequestAuthenticator(mockReq))
+            .thenReturn(keycloakRequestAuthenticator);
     }
 
     private void mockResourceMethod(Method method) {
@@ -448,8 +451,7 @@ public class AuthenticationFilterTest extends DatabaseTestFixture {
     }
 
     /**
-     * FakeResource simply to create a Method object to pass down into
-     * the interceptor.
+     * FakeResource simply to create a Method object to pass down into the interceptor.
      */
     @Path("/fake")
     public static class FakeResource {
