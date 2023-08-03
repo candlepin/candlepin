@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-24 14:57+0000\n"
+"POT-Creation-Date: 2023-07-30 07:05+0000\n"
 "PO-Revision-Date: 2023-07-26 06:21+0000\n"
 "Last-Translator: Pino Toscano <toscano.pino@tiscali.it>\n"
 "Language-Team: Italian <https://translate.fedoraproject.org/projects/"
@@ -1689,8 +1689,8 @@ msgstr "Tipo di unità non trovata: {0}"
 #, java-format
 msgid "Failed to parse parameter \"{0}\"; expected format: key:value"
 msgstr ""
-"Impossibile analizzare il parametro \"{0}\"; il formato atteso è "
-"chiave:valore"
+"Impossibile analizzare il parametro \"{0}\"; il formato atteso è chiave:"
+"valore"
 
 #: src/main/java/org/candlepin/resource/util/ResolverUtil.java:81
 #: src/main/java/org/candlepin/resource/util/ResolverUtil.java:124
