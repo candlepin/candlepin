@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  mariadb:
+    image: mariadb:10.6.14
+    command: --transaction-isolation=READ-COMMITTED
+    container_name: mariadb
+    environment:
+      MARIADB_USER: candlepin
+      MARIADB_PASSWORD: candlepin
+      MARIADB_DATABASE: candlepin
+      MARIADB_ROOT_PASSWORD: candlepin
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -ucandlepin -pcandlepin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  candlepin:
+    image: ${CANDLEPIN_IMAGE}
+    container_name: candlepin
+    environment:
+      JPA_CONFIG_HIBERNATE_DIALECT: org.hibernate.dialect.MySQL5InnoDBDialect
+      JPA_CONFIG_HIBERNATE_CONNECTION_DRIVER_CLASS: com.mysql.jdbc.Driver
+      JPA_CONFIG_HIBERNATE_CONNECTION_URL: jdbc:mysql://mariadb/candlepin
+      JPA_CONFIG_HIBERNATE_CONNECTION_USERNAME: candlepin
+      JPA_CONFIG_HIBERNATE_CONNECTION_PASSWORD: candlepin
+      CANDLEPIN_AUTH_CLOUD_ENABLE: ${CANDLEPIN_AUTH_CLOUD_ENABLE}
+      CANDLEPIN_AUTH_TRUSTED_ENABLE: "true"
+      CANDLEPIN_AUTH_OAUTH_ENABLE: "true"
+      CANDLEPIN_AUTH_OAUTH_CONSUMER_RSPEC_SECRET: rspec-oauth-secret
+      MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE: ${MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE}
+      CANDLEPIN_STANDALONE: ${CANDLEPIN_STANDALONE}
+    ports:
+      - "8443:8443"
+    healthcheck:
+      test: wget --tries=1 --spider https://localhost:8443/candlepin/status || exit 1
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    depends_on:
+      mariadb:
+        condition: service_healthy

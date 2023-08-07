@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    environment:
+      POSTGRES_USER: candlepin
+      POSTGRES_PASSWORD: candlepin
+      POSTGRES_DB: candlepin
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U candlepin -d candlepin"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  candlepin:
+    image: ${CANDLEPIN_IMAGE}
+    container_name: candlepin
+    environment:
+      JPA_CONFIG_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQL92Dialect
+      JPA_CONFIG_HIBERNATE_CONNECTION_DRIVER_CLASS: org.postgresql.Driver
+      JPA_CONFIG_HIBERNATE_CONNECTION_URL: jdbc:postgresql://postgres/candlepin
+      JPA_CONFIG_HIBERNATE_CONNECTION_USERNAME: candlepin
+      JPA_CONFIG_HIBERNATE_CONNECTION_PASSWORD: candlepin
+      CANDLEPIN_AUTH_CLOUD_ENABLE: ${CANDLEPIN_AUTH_CLOUD_ENABLE}
+      CANDLEPIN_AUTH_TRUSTED_ENABLE: "true"
+      CANDLEPIN_AUTH_OAUTH_ENABLE: "true"
+      CANDLEPIN_AUTH_OAUTH_CONSUMER_RSPEC_SECRET: rspec-oauth-secret
+      CANDLEPIN_STANDALONE: ${CANDLEPIN_STANDALONE}
+      MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE: ${MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE}
+    ports:
+      - "8443:8443"
+    healthcheck:
+      test: wget --tries=1 --spider https://localhost:8443/candlepin/status || exit 1
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy

@@ -4,7 +4,8 @@ CERTS_HOME=/etc/candlepin/certs
 UPSTREAM_CERTS_HOME=$CERTS_HOME/upstream
 KEYSTORE_PASSWORD=$CERTS_HOME/keystore-password.txt
 CA_KEY=$CERTS_HOME/candlepin-ca.key
-CA_REDHAT_CERT=conf/candlepin-redhat-ca.crt
+CA_REDHAT_CERT_1=config/candlepin/candlepin-redhat-ca.crt
+CA_REDHAT_CERT_2=config/candlepin/candlepin-redhat-r2-ca.crt
 CA_UPSTREAM_CERT=$UPSTREAM_CERTS_HOME/candlepin-redhat-ca.crt
 CA_PUB_KEY=$CERTS_HOME/candlepin-ca-pub.key
 CA_CERT=$CERTS_HOME/candlepin-ca.crt
@@ -66,6 +67,7 @@ else
     $SUDO keytool -keystore $KEYSTORE -noprompt -importcert -storepass:file $KEYSTORE_PASSWORD -alias candlepin_ca -file $CA_CERT
 
     $SUDO chmod a+r $CERTS_HOME/*
-    $SUDO cp $CA_REDHAT_CERT $CA_UPSTREAM_CERT
+    $SUDO cp $CA_REDHAT_CERT_1 $CA_UPSTREAM_CERT
+    $SUDO cp $CA_REDHAT_CERT_2 $CA_UPSTREAM_CERT
     $SUDO chmod a+r $KEYSTORE
 fi
