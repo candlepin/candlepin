@@ -30,7 +30,7 @@ jobs:
       - name: Mask secrets
         shell: bash
         run: |
-          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+          echo "::add-mask::${{ secrets.I18N_TOKEN }}"
 
       - name: Install dependencies
         shell: bash
@@ -61,4 +61,5 @@ jobs:
           GIT_AUTHOR_NAME: 'candlepin-bot'
           GIT_BRANCH: ${{ matrix.branch }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          I18N_TOKEN: ${{ secrets.I18N_TOKEN }}
 
