@@ -1,16 +1,21 @@
 #!/usr/bin/env python
 
 import binascii
+from dataclasses import dataclass
 import datetime
 from functools import partial
 import getpass
+from io import TextIOWrapper
 import json
 import logging
 from optparse import OptionParser
 import os
 import re
 import sys
+from time import perf_counter
 import zipfile
+
+from pyparsing import Any
 
 import cp_connectors as cp
 
@@ -209,9 +214,13 @@ def fetch_product_uuids(db, org_id):
     # DB-level deduplication feature anyway.
     product_uuid_query = 'SELECT op.product_uuid FROM cp2_owner_products op WHERE op.owner_id = %s ' + \
         'UNION ' + \
-        'SELECT pool.product_uuid FROM cp_pool pool WHERE pool.owner_id = %s ' + \
-        'UNION ' + \
-        'SELECT akp.product_uuid FROM cp_activation_key ak JOIN cp2_activation_key_products akp ON akp.key_id = ak.id WHERE ak.owner_id = %s'
+        'SELECT pool.product_uuid FROM cp_pool pool WHERE pool.owner_id = %s '
+    # Same, but still has cp2_activation_key_products
+    # product_uuid_query = 'SELECT op.product_uuid FROM cp2_owner_products op WHERE op.owner_id = %s ' + \
+    #     'UNION ' + \
+    #     'SELECT pool.product_uuid FROM cp_pool pool WHERE pool.owner_id = %s ' + \
+    #     'UNION ' + \
+    #     'SELECT akp.product_uuid FROM cp_activation_key ak JOIN cp2_activation_key_products akp ON akp.key_id = ak.id WHERE ak.owner_id = %s'
 
     children_uuid_query = 'SELECT p.derived_product_uuid AS product_uuid FROM cp2_products p WHERE p.derived_product_uuid IS NOT NULL AND p.uuid IN (%s) ' + \
         'UNION ' + \
@@ -227,8 +236,11 @@ def fetch_product_uuids(db, org_id):
     tier = 0
 
     # Fetch top-level product UUIDs
-    with db.execQuery(product_uuid_query, (org_id, org_id, org_id)) as cursor:
+    with db.execQuery(product_uuid_query, (org_id, org_id)) as cursor:
         process_cursor(cursor, uuids, children_uuids, tier)
+    # Same, but still has cp2_activation_key_products
+    # with db.execQuery(product_uuid_query, (org_id, org_id, org_id)) as cursor:
+    #     process_cursor(cursor, uuids, children_uuids, tier)
 
     # Fetch children UUIDs
     while children_uuids:
@@ -244,13 +256,23 @@ def fetch_product_uuids(db, org_id):
 
     return uuids
 
+@dataclass(frozen=True, kw_only=True, slots=True)
+class Config:
+    db: Any
+    archive: zipfile.ZipFile
+    org_id: str
+    ignore_dupes: bool
+    skip_cert_data: bool
+    skip_content_overrides: bool
 
 class ModelManager(object):
-    def __init__(self, org_id, archive, db, ignore_dupes):
-        self.org_id = org_id
-        self.db = db
-        self.archive = archive
-        self.ignore_dupes = ignore_dupes
+    def __init__(self, config: Config):
+        self.org_id = config.org_id
+        self.db = config.db
+        self.archive = config.archive
+        self.ignore_dupes = config.ignore_dupes
+        self.skip_cert_data = config.skip_cert_data
+        self.skip_content_overrides = config.skip_content_overrides
 
         self._imported = False
         self._exported = False
@@ -280,14 +302,40 @@ class ModelManager(object):
             'rows':         []
         }
 
-        for row in cursor:
+        total_rows = 0
+        last_reported = perf_counter()
+
+        def _jsonify_item(item):
+            nonlocal total_rows
+            nonlocal last_reported
+            total_rows = total_rows + 1
+            now = perf_counter()
+            if now - last_reported > 2:
+                log.debug('Exported %d rows (so far) for table: %s', total_rows, table)
+                last_reported = now
+
             if callable(row_cb):
-                row = row_cb(row)
+                item = row_cb(item)
+            return jsonify(item)
 
-            output['rows'].append(row)
+        with self.archive.open(file, mode='w', force_zip64=True) as zipout:
+            with TextIOWrapper(zipout, encoding='utf-8') as out:
+                # First: table, columns, and column_types
+                print('{"table":',
+                    jsonify(output['table']),
+                    ',"columns":', jsonify(output['columns']),
+                    ',"column_types":', jsonify(output['column_types']),
+                    ',', sep='', end='', file=out)
 
-        self.archive.writestr(file, jsonify(output))
-        log.debug('Exported %d rows for table: %s', len(output['rows']), table)
+                # Now rows
+                print('"rows":[', end='', file=out)
+                print(*(_jsonify_item(row)
+                        for row in cursor), sep=',', end='', file=out)
+
+                # lastly, close rows and object entries.
+                print(']}', file=out)
+
+        log.debug('Exported %d rows for table: %s', total_rows, table)
 
     def _export_query(self, file, table, query, params=()):
         with self.db.execQuery(query, params) as cursor:
@@ -319,10 +367,15 @@ class ModelManager(object):
         log.debug('Exported %d rows for table: %s', len(output['rows']), table)
 
     def _bulk_insert(self, table, columns, rows, row_hook=None):
+        def _partition(l, n):
+            for i in range(0, len(l), n):
+                yield l[i:i + n]
+
         validate_column_names(table, columns)
 
         log.debug('Importing %d rows into table: %s', len(rows), table)
         statement = self.db.build_insert_statement(table, columns, self.ignore_dupes)
+        log.log(LOGLVL_TRACE, 'Statement: %s', statement)
 
         # try:
         with self.db.cursor() as cursor:
@@ -331,12 +384,25 @@ class ModelManager(object):
             else:
                 log.log(LOGLVL_TRACE, 'No rows to insert; skipping insert')
 
-            for row in rows:
-                if callable(row_hook):
-                    row = row_hook(columns, row)
+            last_reported = perf_counter()
+            rows_imported = 0
 
-                log.log(LOGLVL_TRACE, '  row: %s', row)
-                cursor.execute(statement, row)
+            for chunk in _partition(rows, 1000):
+                if callable(row_hook):
+                    for row in chunk:
+                        row = row_hook(columns, row)
+
+                if log.isEnabledFor(LOGLVL_TRACE):
+                    for row in chunk:
+                        log.log(LOGLVL_TRACE, '  row: %s', row)
+
+                cursor.executemany(statement, chunk)
+
+                rows_imported = rows_imported + len(chunk)
+                now = perf_counter()
+                if now - last_reported > 2:
+                    log.debug('Imported %d rows (so far) for table: %s', rows_imported, table)
+                    last_reported = now
 
         return True
         # TODO: Uncomment this if we figure out a sane way to get Python to not hide the original
@@ -346,6 +412,9 @@ class ModelManager(object):
         #     raise e
 
     def _import_json(self, file, row_hook=None):
+        if file not in self.archive.namelist():
+            log.info('Not importing data from file: %s (not found)', file)
+            return True # Successfully skipped file.
         log.debug('Importing data from file: %s', file)
         result = False
 
@@ -372,8 +441,8 @@ class ModelManager(object):
 
 
 class OwnerManager(ModelManager):
-    def __init__(self, org_id, archive, db, ignore_dupes):
-        super(OwnerManager, self).__init__(org_id, archive, db, ignore_dupes)
+    def __init__(self, config: Config):
+        super(OwnerManager, self).__init__(config)
 
     def do_export(self):
         if self.exported:
@@ -396,8 +465,8 @@ class OwnerManager(ModelManager):
 
 
 class UeberCertManager(ModelManager):
-    def __init__(self, org_id, archive, db, ignore_dupes):
-        super(UeberCertManager, self).__init__(org_id, archive, db, ignore_dupes)
+    def __init__(self, config: Config):
+        super(UeberCertManager, self).__init__(config)
 
     def depends_on(self):
         return [OwnerManager]
@@ -428,8 +497,8 @@ class UeberCertManager(ModelManager):
 
 
 class ContentManager(ModelManager):
-    def __init__(self, org_id, archive, db, ignore_dupes):
-        super(ContentManager, self).__init__(org_id, archive, db, ignore_dupes)
+    def __init__(self, config: Config):
+        super(ContentManager, self).__init__(config)
 
     def depends_on(self):
         return [OwnerManager]
@@ -453,16 +522,22 @@ class ContentManager(ModelManager):
 
         content_uuids = set()
 
-        content_uuid_query1 = 'SELECT oc.content_uuid FROM cp2_owner_content oc WHERE oc.owner_id = %s' + \
-            'UNION ' + \
-            'SELECT ec.content_uuid FROM cp2_environment_content ec JOIN cp_environment e on e.id = ec.environment_id WHERE e.owner_id = %s'
+        content_uuid_query1 = 'SELECT oc.content_uuid FROM cp2_owner_content oc WHERE oc.owner_id = %s'
+        # Same, but with cp2_environment_content
+        # content_uuid_query1 = 'SELECT oc.content_uuid FROM cp2_owner_content oc WHERE oc.owner_id = %s' + \
+        #     'UNION ' + \
+        #     'SELECT ec.content_uuid FROM cp2_environment_content ec JOIN cp_environment e on e.id = ec.environment_id WHERE e.owner_id = %s'
 
         content_uuid_query2 = 'SELECT pc.content_uuid FROM cp2_product_content pc WHERE pc.product_uuid IN (%s)'
 
         # Pull content UUIDs from referencing tables
-        with self.db.execQuery(content_uuid_query1, (self.org_id, self.org_id)) as cursor:
+        with self.db.execQuery(content_uuid_query1, (self.org_id,)) as cursor:
             for row in cursor:
                 content_uuids.add(row[0])
+        # Same, but with cp2_environment_content
+        # with self.db.execQuery(content_uuid_query1, (self.org_id, self.org_id)) as cursor:
+        #     for row in cursor:
+        #         content_uuids.add(row[0])
 
         product_uuids = list(fetch_product_uuids(self.db, self.org_id).keys())
         block_size = IN_OPERATOR_LIMIT
@@ -498,8 +573,8 @@ class ContentManager(ModelManager):
 
 
 class ProductManager(ModelManager):
-    def __init__(self, org_id, archive, db, ignore_dupes):
-        super(ProductManager, self).__init__(org_id, archive, db, ignore_dupes)
+    def __init__(self, config: Config):
+        super(ProductManager, self).__init__(config)
 
     def depends_on(self):
         return [OwnerManager, ContentManager]
@@ -571,8 +646,8 @@ class ProductManager(ModelManager):
 
 
 class EnvironmentManager(ModelManager):
-    def __init__(self, org_id, archive, db, ignore_dupes):
-        super(EnvironmentManager, self).__init__(org_id, archive, db, ignore_dupes)
+    def __init__(self, config):
+        super(EnvironmentManager, self).__init__(config)
 
     def depends_on(self):
         return [OwnerManager, ContentManager]
@@ -582,7 +657,8 @@ class EnvironmentManager(ModelManager):
             return True
 
         self._export_query('cp_environment.json', 'cp_environment', 'SELECT * FROM cp_environment WHERE owner_id=%s', (self.org_id,))
-        self._export_query('cp2_environment_content.json', 'cp2_environment_content', 'SELECT ec.* FROM cp2_environment_content ec JOIN cp_environment e ON ec.environment_id = e.id WHERE e.owner_id=%s', (self.org_id,))
+        # cp2_environment_content is gone in 4.3.6
+        # self._export_query('cp2_environment_content.json', 'cp2_environment_content', 'SELECT ec.* FROM cp2_environment_content ec JOIN cp_environment e ON ec.environment_id = e.id WHERE e.owner_id=%s', (self.org_id,))
 
         self._exported = True
         return True
@@ -592,7 +668,8 @@ class EnvironmentManager(ModelManager):
             return True
 
         result = self._import_json('cp_environment.json')
-        result = result and self._import_json('cp2_environment_content.json')
+        # cp2_environment_content is gone in 4.3.6
+        # result = result and self._import_json('cp2_environment_content.json')
 
         self._imported = result
         return result
@@ -600,8 +677,8 @@ class EnvironmentManager(ModelManager):
 
 
 class ConsumerManager(ModelManager):
-    def __init__(self, org_id, archive, db, ignore_dupes):
-        super(ConsumerManager, self).__init__(org_id, archive, db, ignore_dupes)
+    def __init__(self, config):
+        super(ConsumerManager, self).__init__(config)
 
     def depends_on(self):
         return [OwnerManager, ContentManager, EnvironmentManager]
@@ -612,15 +689,28 @@ class ConsumerManager(ModelManager):
 
         # Consumer certificate stuff
         self._export_query('cp_cert_serial-cac.json', 'cp_cert_serial', 'SELECT cs.* FROM cp_cert_serial cs JOIN cp_cont_access_cert cac ON cac.serial_id = cs.id JOIN cp_consumer c ON c.cont_acc_cert_id = cac.id WHERE c.owner_id=%s', (self.org_id,))
-        self._export_query('cp_cont_access_cert.json', 'cp_cont_access_cert', 'SELECT cac.* FROM cp_cont_access_cert cac JOIN cp_consumer c ON c.cont_acc_cert_id = cac.id WHERE c.owner_id=%s', (self.org_id,))
+
+        select_cols = 'cac.*'
+        if self.skip_cert_data:
+            select_cols = 'cac.id, cac.created, cac.updated, "Redacted" as cert, "Redacted" as privatekey, cac.serial_id, "Redacted" as content'
+        self._export_query('cp_cont_access_cert.json', 'cp_cont_access_cert', f'SELECT {select_cols} FROM cp_cont_access_cert cac JOIN cp_consumer c ON c.cont_acc_cert_id = cac.id WHERE c.owner_id=%s', (self.org_id,))
 
         self._export_query('cp_cert_serial-ic.json', 'cp_cert_serial', 'SELECT cs.* FROM cp_cert_serial cs JOIN cp_id_cert ic ON ic.serial_id = cs.id JOIN cp_consumer c ON c.consumer_idcert_id = ic.id WHERE c.owner_id=%s', (self.org_id,))
-        self._export_query('cp_id_cert-local.json', 'cp_id_cert', 'SELECT ic.* FROM cp_id_cert ic JOIN cp_consumer c ON c.consumer_idcert_id = ic.id WHERE c.owner_id=%s', (self.org_id,))
+        select_cols = 'ic.*'
+        if self.skip_cert_data:
+            select_cols = 'ic.id, ic.created, ic.updated, "Redacted" as cert, "Redacted" as privatekey, ic.serial_id'
+        self._export_query('cp_id_cert-local.json', 'cp_id_cert', f'SELECT {select_cols} FROM cp_id_cert ic JOIN cp_consumer c ON c.consumer_idcert_id = ic.id WHERE c.owner_id=%s', (self.org_id,))
 
         self._export_query('cp_cert_serial-uc.json', 'cp_cert_serial', 'SELECT cs.* FROM cp_cert_serial cs JOIN cp_id_cert ic ON ic.serial_id = cs.id JOIN cp_upstream_consumer uc ON uc.consumer_idcert_id = ic.id WHERE uc.owner_id=%s', (self.org_id,))
-        self._export_query('cp_id_cert-upstream.json', 'cp_id_cert', 'SELECT ic.* FROM cp_id_cert ic JOIN cp_upstream_consumer uc ON uc.consumer_idcert_id = ic.id WHERE uc.owner_id=%s', (self.org_id,))
+        select_cols = 'ic.*'
+        if self.skip_cert_data:
+            select_cols = 'ic.id, ic.created, ic.updated, "Redacted" as cert, "Redacted" as privatekey, ic.serial_id'
+        self._export_query('cp_id_cert-upstream.json', 'cp_id_cert', f'SELECT {select_cols} FROM cp_id_cert ic JOIN cp_upstream_consumer uc ON uc.consumer_idcert_id = ic.id WHERE uc.owner_id=%s', (self.org_id,))
 
-        self._export_query('cp_key_pair.json', 'cp_key_pair', 'SELECT ckp.* FROM cp_key_pair ckp JOIN cp_consumer c ON c.keypair_id = ckp.id WHERE c.owner_id=%s', (self.org_id,))
+        select_cols = 'ckp.*'
+        if self.skip_cert_data:
+            select_cols = 'ckp.id, ckp.created, ckp.updated, "Redacted" as privatekey, "Redacted" as publickey'
+        self._export_query('cp_key_pair.json', 'cp_key_pair', f'SELECT {select_cols} FROM cp_key_pair ckp JOIN cp_consumer c ON c.keypair_id = ckp.id WHERE c.owner_id=%s', (self.org_id,))
 
         # Consumer
         self._export_query('cp_consumer_type.json', 'cp_consumer_type', 'SELECT * FROM cp_consumer_type', [])
@@ -633,7 +723,8 @@ class ConsumerManager(ModelManager):
         self._export_query('cp_consumer_hypervisor.json', 'cp_consumer_hypervisor', 'SELECT ch.* FROM cp_consumer_hypervisor ch JOIN cp_consumer c ON c.id = ch.consumer_id WHERE c.owner_id=%s', (self.org_id,))
         self._export_query('cp_consumer_environments.json', 'cp_consumer_environments', 'SELECT ce.* FROM cp_consumer_environments ce JOIN cp_consumer c ON c.id = ce.cp_consumer_id WHERE c.owner_id = %s', (self.org_id,))
         self._export_query('cp_installed_products.json', 'cp_installed_products', 'SELECT ip.* FROM cp_installed_products ip JOIN cp_consumer c ON c.id = ip.consumer_id WHERE c.owner_id=%s', (self.org_id,))
-        self._export_query('cp_content_override.json', 'cp_content_override', 'SELECT co.* FROM cp_content_override co JOIN cp_consumer c ON c.id = co.consumer_id WHERE c.owner_id=%s', (self.org_id,))
+        if not self.skip_content_overrides:
+            self._export_query('cp_content_override.json', 'cp_content_override', 'SELECT co.* FROM cp_content_override co JOIN cp_consumer c ON c.id = co.consumer_id WHERE c.owner_id=%s', (self.org_id,))
         self._export_query('cp_sp_add_on.json', 'cp_sp_add_on', 'SELECT spa.* FROM cp_sp_add_on spa JOIN cp_consumer c ON c.id = spa.consumer_id WHERE c.owner_id=%s', (self.org_id,))
         self._export_query('cp_consumer_activation_key.json', 'cp_consumer_activation_key', 'SELECT cak.* FROM cp_consumer_activation_key cak JOIN cp_consumer c ON c.id = cak.consumer_id WHERE c.owner_id=%s', (self.org_id,))
 
@@ -667,7 +758,10 @@ class ConsumerManager(ModelManager):
         result = result and self._import_json('cp_consumer_guests_attributes.json')
         result = result and self._import_json('cp_consumer_hypervisor.json')
         result = result and self._import_json('cp_installed_products.json')
-        result = result and self._import_json('cp_content_override.json')
+        if self.skip_content_overrides:
+            log.info('Skipping cp_content_override.')
+        else:
+            result = result and self._import_json('cp_content_override.json')
         result = result and self._import_json('cp_sp_add_on.json')
         result = result and self._import_json('cp_consumer_activation_key.json')
 
@@ -750,8 +844,8 @@ class ConsumerManager(ModelManager):
 
 
 class PoolManager(ModelManager):
-    def __init__(self, org_id, archive, db, ignore_dupes):
-        super(PoolManager, self).__init__(org_id, archive, db, ignore_dupes)
+    def __init__(self, config: Config):
+        super(PoolManager, self).__init__(config)
 
     def depends_on(self):
         return [OwnerManager, ProductManager, ConsumerManager]
@@ -856,7 +950,10 @@ class PoolManager(ModelManager):
 
         # Entitlement certs (note: unlike all other certs, these must be inserted *after* entitlements)
         self._export_query('cp_cert_serial-ent.json', 'cp_cert_serial', 'SELECT cs.* FROM cp_cert_serial cs JOIN cp_ent_certificate ec ON ec.serial_id = cs.id JOIN cp_entitlement e ON e.id = ec.entitlement_id JOIN cp_pool p ON p.id = e.pool_id WHERE p.owner_id=%s', (self.org_id,))
-        self._export_query('cp_ent_certificate.json', 'cp_ent_certificate', 'SELECT ec.* FROM cp_ent_certificate ec JOIN cp_entitlement e ON e.id = ec.entitlement_id JOIN cp_pool p ON p.id = e.pool_id WHERE p.owner_id=%s', (self.org_id,))
+        select_cols = 'ec.*'
+        if self.skip_cert_data:
+            select_cols = 'ec.id, ec.created, ec.updated, "Redacted" as cert, "Redacted" as privatekey, ec.entitlement_id, ec.serial_id'
+        self._export_query('cp_ent_certificate.json', 'cp_ent_certificate', f'SELECT {select_cols} FROM cp_ent_certificate ec JOIN cp_entitlement e ON e.id = ec.entitlement_id JOIN cp_pool p ON p.id = e.pool_id WHERE p.owner_id=%s', (self.org_id,))
 
         self._exported = True
         return True
@@ -871,17 +968,10 @@ class PoolManager(ModelManager):
         result = result and self._import_json('cp_cert_serial-pool.json', boolean_converter(['collected', 'revoked']))
         result = result and self._import_json('cp_certificate.json', base64_decoder(['cert', 'privatekey']))
 
-        try:
-            # do iterative pool/entitlement import until we hit a key error, indicating we're out of
-            # files to import
-            depth = 0
-            while True:
-                result = result and self._import_json("cp_pool-%d.json" % (depth,), boolean_converter(['activesubscription']))
-                result = result and self._import_json("cp_entitlement-%d.json" % (depth,), boolean_converter(['dirty', 'updatedonstart']))
-
-                depth = depth + 1
-        except KeyError:
-            pass
+        for pool_file in (i for i in self.archive.namelist() if i.startswith('cp_pool-')):
+            result = result and self._import_json(pool_file, boolean_converter(['activesubscription']))
+        for entitlement_file in (i for i in self.archive.namelist() if i.startswith('cp_entitlement-')):
+            result = result and self._import_json(entitlement_file, boolean_converter(['dirty', 'updatedonstart']))
 
         result = result and self._import_json('cp_pool_attribute.json')
         result = result and self._import_json('cp_pool_source_stack.json')
@@ -896,8 +986,8 @@ class PoolManager(ModelManager):
 
 
 class ActivationKeyManager(ModelManager):
-    def __init__(self, org_id, archive, db, ignore_dupes):
-        super(ActivationKeyManager, self).__init__(org_id, archive, db, ignore_dupes)
+    def __init__(self, config):
+        super(ActivationKeyManager, self).__init__(config)
 
     def depends_on(self):
         return [OwnerManager, ProductManager, PoolManager]
@@ -908,7 +998,8 @@ class ActivationKeyManager(ModelManager):
 
         self._export_query('cp_activation_key.json', 'cp_activation_key', 'SELECT * FROM cp_activation_key WHERE owner_id=%s', (self.org_id,))
         self._export_query('cp_activationkey_pool.json', 'cp_activationkey_pool', 'SELECT akp.* FROM cp_activationkey_pool akp JOIN cp_activation_key ak ON ak.id = akp.key_id WHERE ak.owner_id=%s', (self.org_id,))
-        self._export_query('cp2_activation_key_products.json', 'cp2_activation_key_products', 'SELECT akp.* FROM cp2_activation_key_products akp JOIN cp2_owner_products op ON op.product_uuid = akp.product_uuid WHERE op.owner_id=%s', (self.org_id,))
+        # cp2_activation_key_products no longer exists as of 4.3.6
+        #self._export_query('cp2_activation_key_products.json', 'cp2_activation_key_products', 'SELECT akp.* FROM cp2_activation_key_products akp JOIN cp2_owner_products op ON op.product_uuid = akp.product_uuid WHERE op.owner_id=%s', (self.org_id,))
         self._export_query('cp_act_key_sp_add_on.json', 'cp_act_key_sp_add_on', 'SELECT aksao.* FROM cp_act_key_sp_add_on aksao JOIN cp_activation_key ak ON ak.id = aksao.activation_key_id WHERE ak.owner_id=%s', (self.org_id,))
 
         self._exported = True
@@ -920,7 +1011,8 @@ class ActivationKeyManager(ModelManager):
 
         result = self._import_json('cp_activation_key.json')
         result = result and self._import_json('cp_activationkey_pool.json')
-        result = result and self._import_json('cp2_activation_key_products.json')
+        # cp2_activation_key_products no longer exists as of 4.3.6
+        #result = result and self._import_json('cp2_activation_key_products.json')
         result = result and self._import_json('cp_act_key_sp_add_on.json')
 
         self._imported = result
@@ -931,24 +1023,20 @@ class ActivationKeyManager(ModelManager):
 class OrgMigrator(object):
     workers = [OwnerManager, ProductManager, ContentManager, EnvironmentManager, ConsumerManager, PoolManager, UeberCertManager, ActivationKeyManager]
 
-    def __init__(self, dbconn, archive, org_id, ignore_dupes):
-        self.db = dbconn
-        self.archive = archive
-        self.org_id = org_id
-        self.ignore_dupes = ignore_dupes
-
+    def __init__(self, config: Config):
+        self.config = config
         self.exporters = {}
 
     def __del__(self):
         self.close()
 
     def close(self):
-        if self.archive is not None:
-            self.archive.close()
+        if self.config.archive is not None:
+            self.config.archive.close()
 
     def _get_model_exporter(self, exporter):
         if exporter not in self.exporters:
-            self.exporters[exporter] = exporter(self.org_id, self.archive, self.db, self.ignore_dupes)
+            self.exporters[exporter] = exporter(self.config)
 
         return self.exporters[exporter]
 
@@ -958,10 +1046,16 @@ class OrgMigrator(object):
 
 
 class OrgExporter(OrgMigrator):
-    def __init__(self, dbconn, archive_file, org_id, ignore_dupes):
-        archive = zipfile.ZipFile(archive_file, mode='w', compression=zipfile.ZIP_DEFLATED)
+    def __init__(self, dbconn, archive_file, org_id, ignore_dupes, skip_cert_data, skip_content_overrides):
+        archive = zipfile.ZipFile(archive_file, mode='w', compression=zipfile.ZIP_DEFLATED, allowZip64=True)
+        config = Config(db=dbconn,
+                        archive=archive,
+                        org_id=org_id,
+                        ignore_dupes=ignore_dupes,
+                        skip_cert_data=skip_cert_data,
+                        skip_content_overrides=skip_content_overrides)
 
-        super(OrgExporter, self).__init__(dbconn, archive, org_id, ignore_dupes)
+        super(OrgExporter, self).__init__(config)
 
     def execute(self):
         # Impl note:
@@ -987,8 +1081,14 @@ class OrgExporter(OrgMigrator):
 class OrgImporter(OrgMigrator):
     def __init__(self, dbconn, archive_file, org_id, ignore_dupes):
         archive = zipfile.ZipFile(archive_file, 'r')
+        config = Config(db=dbconn,
+                        archive=archive,
+                        org_id=org_id,
+                        ignore_dupes=ignore_dupes,
+                        skip_cert_data=False,
+                        skip_content_overrides=False)
 
-        super(OrgImporter, self).__init__(dbconn, archive, org_id, ignore_dupes)
+        super(OrgImporter, self).__init__(config)
 
     def execute(self):
         return self._import_impl(self.workers)
@@ -1029,6 +1129,10 @@ def parse_options():
         help="Enables debug output")
     parser.add_option("--trace", action="store_true", default=False,
         help="Enables trace output; implies --debug")
+    parser.add_option("--skip_cert_data", action="store_true", default=False,
+        help="Still fetches the certificates associated with consumers, but replaces the certificate payload with fake data.")
+    parser.add_option("--skip_content_overrides", action="store_true", default=False,
+        help="Do not fetch any content overrides")
 
     parser.add_option("--dbtype", action="store", default='postgresql',
         help="The type of database to target. Can target MySQL, MariaDB or PostgreSQL; defaults to PostgreSQL")
@@ -1131,7 +1235,7 @@ def main():
             if org_id is not None:
                 log.info('Resolved org "%s" to org ID: %s', org_key, org_id)
 
-                exporter = OrgExporter(db, options.file, org_id, False)
+                exporter = OrgExporter(db, options.file, org_id, False, options.skip_cert_data, options.skip_content_overrides)
 
                 log.info('Exporting data to file: %s', options.file)
                 with(db.start_transaction(readonly=True)) as transaction:
