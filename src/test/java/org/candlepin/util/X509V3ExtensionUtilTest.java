@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
+import org.candlepin.TestingModules;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.util.ContentPrefix;
 import org.candlepin.controller.util.PromotedContent;
@@ -37,11 +38,12 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.X509V3ExtensionUtil.NodePair;
 import org.candlepin.util.X509V3ExtensionUtil.PathNode;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.name.Names;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,8 +63,14 @@ public class X509V3ExtensionUtilTest {
     @BeforeEach
     public void init() {
         Configuration config = mock(Configuration.class);
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+        this.mapper = injector.getInstance(Key.get(ObjectMapper.class,
+            Names.named("X509V3ExtensionUtilObjectMapper")));
+
         EntitlementCurator ec = mock(EntitlementCurator.class);
-        mapper = new ObjectMapper();
         util = new X509V3ExtensionUtil(config, ec, this.mapper);
     }
 
@@ -291,8 +299,6 @@ public class X509V3ExtensionUtilTest {
 
     @Test
     public void subscriptionWithSysPurposeAttributes() throws JsonProcessingException {
-        this.mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        this.mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
         Owner owner = new Owner()
             .setKey("Test Corporation")
             .setDisplayName("Test Corporation");

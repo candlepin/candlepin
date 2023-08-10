@@ -18,17 +18,8 @@ import org.candlepin.exceptions.IseException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.AnnotationIntrospector;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +28,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.inject.Inject;
+
+
 
 /**
  * RulesObjectMapper
@@ -61,30 +54,8 @@ public class RulesObjectMapper {
 
     @Inject
     @SuppressWarnings("checkstyle:indentation")
-    public RulesObjectMapper() {
-        this.mapper = new ObjectMapper();
-
-        SimpleFilterProvider filterProvider = new SimpleFilterProvider()
-            .setFailOnUnknownId(false);
-
-        this.mapper.setFilterProvider(filterProvider);
-
-        Hibernate5Module hbm = new Hibernate5Module();
-        hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
-
-        mapper.registerModule(new Jdk8Module());
-        mapper.registerModule(new JavaTimeModule());
-        mapper.registerModule(hbm);
-
-        // Very important for deployments so new rules files can return additional
-        // properties that this current server doesn't know how to serialize, but still
-        // shouldn't fail on.
-        this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
-        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
-        this.mapper.setAnnotationIntrospector(pair);
+    public RulesObjectMapper(ObjectMapper objectMapper) {
+        this.mapper = objectMapper;
     }
 
     public String toJsonString(Map<String, Object> toSerialize) {

@@ -26,7 +26,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
 import org.candlepin.audit.EventSink;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.CandlepinQuery;
@@ -53,6 +56,8 @@ import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -77,6 +82,7 @@ import java.util.Random;
 import java.util.Set;
 
 
+
 public class ComplianceRulesTest {
     private Owner owner;
     private ComplianceRules compliance;
@@ -87,19 +93,29 @@ public class ComplianceRulesTest {
     private static final String STACK_ID_1 = "my-stack-1";
     private static final String STACK_ID_2 = "my-stack-2";
 
-    @Mock private ConsumerCurator consumerCurator;
-    @Mock private ConsumerTypeCurator consumerTypeCurator;
-    @Mock private OwnerCurator mockOwnerCurator;
-    @Mock private EntitlementCurator entCurator;
-    @Mock private RulesCurator rulesCuratorMock;
-    @Mock private EventSink eventSink;
-    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
-    @Mock private JsRunnerRequestCache cache;
-    @Mock private EnvironmentCurator environmentCurator;
+    @Mock
+    private ConsumerCurator consumerCurator;
+    @Mock
+    private ConsumerTypeCurator consumerTypeCurator;
+    @Mock
+    private OwnerCurator mockOwnerCurator;
+    @Mock
+    private EntitlementCurator entCurator;
+    @Mock
+    private RulesCurator rulesCuratorMock;
+    @Mock
+    private EventSink eventSink;
+    @Mock
+    private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock
+    private JsRunnerRequestCache cache;
+    @Mock
+    private EnvironmentCurator environmentCurator;
 
     private ModelTranslator translator;
     private I18n i18n;
     private JsRunnerProvider provider;
+    private Injector injector;
 
     private Map<String, String> activeGuestAttrs;
 
@@ -107,6 +123,12 @@ public class ComplianceRulesTest {
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
+
+        Configuration config = TestConfig.defaults();
+        injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
 
         Locale locale = new Locale("en_US");
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale, I18nFactory.FALLBACK);
@@ -118,7 +140,8 @@ public class ComplianceRulesTest {
         when(cacheProvider.get()).thenReturn(cache);
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         compliance = new ComplianceRules(provider.get(), entCurator, new StatusReasonMessageGenerator(i18n),
-            eventSink, consumerCurator, consumerTypeCurator, new RulesObjectMapper(), translator);
+            eventSink, consumerCurator, consumerTypeCurator, injector.getInstance(RulesObjectMapper.class),
+            translator);
 
         this.owner = new Owner()
             .setId(TestUtil.randomString())
@@ -142,7 +165,8 @@ public class ComplianceRulesTest {
     public void additivePropertiesCanStillDeserialize() {
         JsRunner mockRunner = mock(JsRunner.class);
         compliance = new ComplianceRules(mockRunner, entCurator, new StatusReasonMessageGenerator(i18n),
-            eventSink, consumerCurator, consumerTypeCurator, new RulesObjectMapper(), translator);
+            eventSink, consumerCurator, consumerTypeCurator, injector.getInstance(RulesObjectMapper.class),
+            translator);
 
         when(mockRunner.runJsFunction(any(Class.class), eq("get_status"),
             any(JsContext.class))).thenReturn("{\"unknown\": \"thing\"}");
@@ -152,7 +176,7 @@ public class ComplianceRulesTest {
         compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
     }
 
-    private Consumer mockConsumer(Product ... installedProducts) {
+    private Consumer mockConsumer(Product... installedProducts) {
         ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
         ctype.setId("test-ctype-" + TestUtil.randomInt());
 
@@ -172,7 +196,7 @@ public class ComplianceRulesTest {
         return consumer;
     }
 
-    private Entitlement mockEntitlement(Consumer consumer, Product product, Product ... providedProducts) {
+    private Entitlement mockEntitlement(Consumer consumer, Product product, Product... providedProducts) {
         // Make the end date relative to now so it won't outrun it over time.
         Calendar cal = Calendar.getInstance();
         cal.add(Calendar.YEAR, 50);
@@ -182,12 +206,11 @@ public class ComplianceRulesTest {
             product,
             TestUtil.createDate(2000, 1, 1),
             cal.getTime(),
-            providedProducts
-        );
+            providedProducts);
     }
 
     private Entitlement mockEntitlement(Consumer consumer, Product product, Date start, Date end,
-        Product ... providedProducts) {
+        Product... providedProducts) {
 
         Set<Product> ppset = new HashSet<>();
         Collections.addAll(ppset, providedProducts);
@@ -217,7 +240,7 @@ public class ComplianceRulesTest {
     }
 
     private Entitlement mockBaseStackedEntitlement(Consumer consumer, String stackId,
-        Product product, Product ... providedProducts) {
+        Product product, Product... providedProducts) {
 
         Entitlement e = mockEntitlement(consumer, product, providedProducts);
 
@@ -233,7 +256,7 @@ public class ComplianceRulesTest {
     }
 
     private Entitlement mockStackedEntitlement(Consumer consumer, String stackId,
-        Product product, Product ... providedProducts) {
+        Product product, Product... providedProducts) {
 
         Entitlement ent = this.mockBaseStackedEntitlement(consumer, stackId, product, providedProducts);
         ent.getPool().getProduct().setAttribute(Product.Attributes.SOCKETS, "2");
@@ -241,7 +264,7 @@ public class ComplianceRulesTest {
     }
 
     private Entitlement mockInstanceEntitlement(Consumer consumer, String stackId,
-        String instanceMultiplier, Product product, Product ... providedProducts) {
+        String instanceMultiplier, Product product, Product... providedProducts) {
         Entitlement ent = this.mockBaseStackedEntitlement(consumer, stackId, product, providedProducts);
 
         Pool pool = ent.getPool();
@@ -252,7 +275,7 @@ public class ComplianceRulesTest {
     }
 
     private Entitlement mockHostRestrictedEntitlement(Consumer consumer, String stackId,
-        Product product, Product ... providedProducts) {
+        Product product, Product... providedProducts) {
         Entitlement ent = this.mockBaseStackedEntitlement(consumer, stackId, product, providedProducts);
 
         Pool pool = ent.getPool();
@@ -806,17 +829,13 @@ public class ComplianceRulesTest {
             PRODUCT_1, PRODUCT_2));
         // Full stack providing only product 1:
         ents.add(mockStackedEntitlement(
-            c, STACK_ID_2, TestUtil.createProduct("Awesome Product 2"), PRODUCT_1
-        ));
+            c, STACK_ID_2, TestUtil.createProduct("Awesome Product 2"), PRODUCT_1));
         ents.add(mockStackedEntitlement(
-            c, STACK_ID_2, TestUtil.createProduct("Awesome Product 2"), PRODUCT_1
-        ));
+            c, STACK_ID_2, TestUtil.createProduct("Awesome Product 2"), PRODUCT_1));
         ents.add(mockStackedEntitlement(
-            c, STACK_ID_2, TestUtil.createProduct("Awesome Product 2"), PRODUCT_1
-        ));
+            c, STACK_ID_2, TestUtil.createProduct("Awesome Product 2"), PRODUCT_1));
         ents.add(mockStackedEntitlement(
-            c, STACK_ID_2, TestUtil.createProduct("Awesome Product 2"), PRODUCT_1
-        ));
+            c, STACK_ID_2, TestUtil.createProduct("Awesome Product 2"), PRODUCT_1));
         mockEntCurator(c, ents);
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
@@ -857,24 +876,21 @@ public class ComplianceRulesTest {
             TestUtil.createProduct("Provides Product 1 For Short Period"),
             start,
             TestUtil.createDate(2005, 6, 22),
-            PRODUCT_1
-        );
+            PRODUCT_1);
 
         Entitlement ent2 = mockEntitlement(
             consumer,
             TestUtil.createProduct("Provides Product 1 past Ent3"),
             TestUtil.createDate(2005, 6, 20),
             TestUtil.createDate(2005, 7, 28),
-            PRODUCT_1
-        );
+            PRODUCT_1);
 
         Entitlement ent3 = mockEntitlement(
             consumer,
             TestUtil.createProduct("Provides Product 2 Past Ent1"),
             start,
             TestUtil.createDate(2005, 7, 18),
-            PRODUCT_2
-        );
+            PRODUCT_2);
 
         mockEntCurator(consumer, Arrays.asList(ent1, ent2, ent3));
 
@@ -899,16 +915,14 @@ public class ComplianceRulesTest {
                 TestUtil.createProduct("Provides Product 1 For Short Period"),
                 new Date(start.getTime() + i),
                 new Date(start.getTime() + i + interval),
-                PRODUCT_1
-            ));
+                PRODUCT_1));
 
             ents.add(mockEntitlement(
                 consumer,
                 TestUtil.createProduct("Provides Product 2 For Short Period"),
                 new Date(start.getTime() + i),
                 new Date(start.getTime() + i + interval),
-                PRODUCT_2
-            ));
+                PRODUCT_2));
         }
 
         mockEntCurator(consumer, ents);
@@ -934,15 +948,13 @@ public class ComplianceRulesTest {
                 TestUtil.createProduct("Provides Product 1 For Short Period"),
                 new Date(start.getTime() + i),
                 new Date(start.getTime() + i + interval),
-                PRODUCT_1
-            ));
+                PRODUCT_1));
             ents.add(mockEntitlement(
                 consumer,
                 TestUtil.createProduct("Provides Product 2 For Short Period"),
                 new Date(start.getTime() + i),
                 new Date(start.getTime() + i + interval),
-                PRODUCT_2
-            ));
+                PRODUCT_2));
         }
 
         mockEntCurator(consumer, ents);
@@ -992,16 +1004,14 @@ public class ComplianceRulesTest {
             TestUtil.createProduct("Provides Product 1 past Ent3"),
             TestUtil.createDate(2005, 5, 20),
             TestUtil.createDate(2005, 6, 2),
-            PRODUCT_1
-        );
+            PRODUCT_1);
 
         Entitlement ent = mockEntitlement(
             consumer,
             TestUtil.createProduct("Provides Product 1 For Short Period"),
             start,
             TestUtil.createDate(2005, 6, 22),
-            PRODUCT_1
-        );
+            PRODUCT_1);
 
         // Set up entitlements at specific dates.
         mockEntCurator(consumer, Arrays.asList(expired, ent));
@@ -1270,7 +1280,6 @@ public class ComplianceRulesTest {
         c.setFact("cpu.cpu_socket(s)", "4");
         c.setFact("cpu.core(s)_per_socket", "8");
 
-
         Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
         ent1.getPool().getProduct().setAttribute(Product.Attributes.CORES, "32");
         ent1.getPool().getProduct().setAttribute(Product.Attributes.SOCKETS, "4");
@@ -1290,7 +1299,6 @@ public class ComplianceRulesTest {
         Consumer c = mockConsumer(PRODUCT_3);
         c.setFact("cpu.cpu_socket(s)", "4");
         c.setFact("cpu.core(s)_per_socket", "8");
-
 
         Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
         ent1.getPool().getProduct().setAttribute(Product.Attributes.CORES, "24");
@@ -1316,7 +1324,6 @@ public class ComplianceRulesTest {
         c.setFact("cpu.cpu_socket(s)", "4");
         c.setFact("cpu.core(s)_per_socket", "8");
 
-
         Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
         ent1.getPool().getProduct().setAttribute(Product.Attributes.SOCKETS, "4");
 
@@ -1339,7 +1346,6 @@ public class ComplianceRulesTest {
         c.setFact("cpu.cpu_socket(s)", "4");
         c.setFact("cpu.core(s)_per_socket", "8");
 
-
         Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
         ent1.getPool().getProduct().setAttribute(Product.Attributes.SOCKETS, "2");
 
@@ -1361,7 +1367,6 @@ public class ComplianceRulesTest {
         Consumer c = mockConsumer(PRODUCT_3);
         c.setFact("cpu.cpu_socket(s)", "4");
         c.setFact("cpu.core(s)_per_socket", "8");
-
 
         Entitlement ent1 = mockBaseStackedEntitlement(c, STACK_ID_1, PRODUCT_1, PRODUCT_3);
         ent1.getPool().getProduct().setAttribute(Product.Attributes.SOCKETS, "4");
@@ -1571,8 +1576,7 @@ public class ComplianceRulesTest {
         ents.add(mockNonStackedHostRestrictedEntitlement(
             c,
             PRODUCT_1,
-            PRODUCT_2
-        ));
+            PRODUCT_2));
         ents.get(0).setQuantity(1);
         ents.get(0).getPool().getProduct().setAttribute(Product.Attributes.VCPU, "1");
         mockEntCurator(c, ents);
@@ -1850,15 +1854,13 @@ public class ComplianceRulesTest {
             c,
             TestUtil.createProduct("Awesome OS server"),
             PRODUCT_1,
-            PRODUCT_2
-        );
+            PRODUCT_2);
         mockServerEntitlement.getPool().getProduct().setAttribute(Product.Attributes.GUEST_LIMIT, "4");
         ents.add(mockServerEntitlement);
         mockEntCurator(c, ents);
 
         // Before we add the hypervisor, this product shouldn't be compliant
-        ComplianceStatus status =
-            compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
+        ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
         // Should be partial
         assertEquals("partial", status.getStatus());
@@ -1868,8 +1870,7 @@ public class ComplianceRulesTest {
             c,
             TestUtil.createProduct("Awesome Enterprise Hypervisor"),
             PRODUCT_1,
-            PRODUCT_2
-        );
+            PRODUCT_2);
         mockHypervisorEntitlement.getPool().getProduct().setAttribute(Product.Attributes.GUEST_LIMIT, "-1");
         ents.add(mockHypervisorEntitlement);
         mockEntCurator(c, ents);
@@ -1905,8 +1906,7 @@ public class ComplianceRulesTest {
             c,
             TestUtil.createProduct("Awesome Enterprise Hypervisor"),
             PRODUCT_1,
-            PRODUCT_2
-        );
+            PRODUCT_2);
         mockHypervisorEntitlement.getPool()
             .getProduct().setAttribute(Product.Attributes.GUEST_LIMIT, "-1");
         ents.add(mockHypervisorEntitlement);
@@ -1929,8 +1929,7 @@ public class ComplianceRulesTest {
             c,
             TestUtil.createProduct("Awesome OS server"),
             PRODUCT_1,
-            PRODUCT_2
-        );
+            PRODUCT_2);
         mockServerEntitlement.getPool().getProduct().setAttribute(Product.Attributes.GUEST_LIMIT, "4");
         ents.add(mockServerEntitlement);
 
@@ -1959,8 +1958,7 @@ public class ComplianceRulesTest {
             c,
             TestUtil.createProduct("Awesome Enterprise Hypervisor"),
             PRODUCT_1,
-            PRODUCT_2
-        );
+            PRODUCT_2);
         mockHypervisorEntitlement.getPool()
             .getProduct().setAttribute(Product.Attributes.GUEST_LIMIT, "-1");
         ents.add(mockHypervisorEntitlement);

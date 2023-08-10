@@ -36,6 +36,7 @@ import org.candlepin.model.IdentityCertificateCurator;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.UpstreamConsumer;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,6 +51,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Locale;
 import java.util.Map;
+
 
 
 public class ConsumerImporterTest {
@@ -70,15 +72,14 @@ public class ConsumerImporterTest {
         importer = new ConsumerImporter(curator, idCertCurator, i18n, serialCurator);
 
         DevConfig config = TestConfig.custom(Map.of(
-            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
-        ));
-        this.mapper = new SyncUtils(config).getObjectMapper();
+            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"));
+        this.mapper = ObjectMapperFactory.getSyncObjectMapper(config);
     }
 
     @Test
     public void importShouldCreateAValidConsumer() throws IOException {
-        ConsumerDTO consumer =
-            importer.createObject(mapper, new StringReader("{\"uuid\":\"test-uuid\",\"name\":\"test-name\"}"));
+        ConsumerDTO consumer = importer.createObject(mapper,
+            new StringReader("{\"uuid\":\"test-uuid\",\"name\":\"test-name\"}"));
 
         assertEquals("test-uuid", consumer.getUuid());
         assertEquals("test-name", consumer.getName());
@@ -88,9 +89,8 @@ public class ConsumerImporterTest {
     public void importHandlesUnknownPropertiesGracefully() throws Exception {
         // Override default config to error out on unknown properties:
         DevConfig config = TestConfig.custom(Map.of(
-            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
-        ));
-        this.mapper = new SyncUtils(config).getObjectMapper();
+            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"));
+        this.mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         ConsumerDTO consumer = importer.createObject(
             mapper, new StringReader("{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}"));
@@ -101,9 +101,8 @@ public class ConsumerImporterTest {
     public void importFailsOnUnknownPropertiesWithNonDefaultConfig() {
         // Override default config to error out on unknown properties:
         DevConfig config = TestConfig.custom(Map.of(
-            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "true"
-        ));
-        this.mapper = new SyncUtils(config).getObjectMapper();
+            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "true"));
+        this.mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         String json = "{\"uuid\":\"test-uuid\", \"unknown\":\"notreal\"}";
         assertThrows(JsonMappingException.class,
@@ -128,8 +127,7 @@ public class ConsumerImporterTest {
         importer.store(owner, consumer, new ConflictOverrides(), idCert);
 
         // now verify that the owner has the upstream consumer set
-        ArgumentCaptor<UpstreamConsumer> arg =
-            ArgumentCaptor.forClass(UpstreamConsumer.class);
+        ArgumentCaptor<UpstreamConsumer> arg = ArgumentCaptor.forClass(UpstreamConsumer.class);
 
         verify(owner).setUpstreamConsumer(arg.capture());
         assertEquals("test-uuid", arg.getValue().getUuid());
@@ -217,8 +215,7 @@ public class ConsumerImporterTest {
             new ConflictOverrides(Importer.Conflict.DISTRIBUTOR_CONFLICT), idCert);
 
         // now verify that the owner has the upstream consumer set
-        ArgumentCaptor<UpstreamConsumer> arg =
-            ArgumentCaptor.forClass(UpstreamConsumer.class);
+        ArgumentCaptor<UpstreamConsumer> arg = ArgumentCaptor.forClass(UpstreamConsumer.class);
 
         verify(owner).setUpstreamConsumer(arg.capture());
         assertEquals("test-uuid", arg.getValue().getUuid());
@@ -252,8 +249,7 @@ public class ConsumerImporterTest {
         importer.store(owner, consumer, new ConflictOverrides(), null);
 
         // now verify that the owner has the upstream consumer set
-        ArgumentCaptor<UpstreamConsumer> arg =
-            ArgumentCaptor.forClass(UpstreamConsumer.class);
+        ArgumentCaptor<UpstreamConsumer> arg = ArgumentCaptor.forClass(UpstreamConsumer.class);
 
         verify(owner).setUpstreamConsumer(arg.capture());
         assertEquals("test-uuid", arg.getValue().getUuid());

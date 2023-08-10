@@ -165,23 +165,12 @@ import org.candlepin.util.DateSource;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.ExpiryDateFunction;
 import org.candlepin.util.FactValidator;
+import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.validation.CandlepinMessageInterpolator;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.AnnotationIntrospector;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -276,8 +265,10 @@ public class CandlepinModule extends AbstractModule {
         bind(Principal.class).toProvider(PrincipalProvider.class);
         bind(JsRunnerProvider.class).asEagerSingleton();
         bind(JsRunner.class).toProvider(JsRunnerProvider.class);
-        bind(RulesObjectMapper.class).asEagerSingleton();
         bind(SyncUtils.class).asEagerSingleton();
+        bind(ObjectMapperFactory.class).asEagerSingleton();
+        bind(ObjectMapper.class).toProvider(ObjectMapperFactory.class);
+        bind(RulesObjectMapper.class);
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
         bind(AttributeValidator.class);
         bind(FactValidator.class);
@@ -347,7 +338,8 @@ public class CandlepinModule extends AbstractModule {
         configureBindFactories();
     }
 
-    @Provides @Named("ValidationProperties")
+    @Provides
+    @Named("ValidationProperties")
     protected Properties getValidationProperties() {
         return new Properties();
     }
@@ -481,52 +473,45 @@ public class CandlepinModule extends AbstractModule {
         bind(ModelTranslator.class).to(StandardTranslator.class).asEagerSingleton();
     }
 
-    @Provides @Singleton @Named("ActivationListenerObjectMapper")
+    @Provides
+    @Singleton
+    @Named("ActivationListenerObjectMapper")
     private ObjectMapper configureActivationListenerObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
-        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
-        mapper.setAnnotationIntrospector(pair);
-
-        return mapper;
+        return ObjectMapperFactory.getActivationListenerObjectMapper();
     }
 
-    @Provides @Singleton @Named("EventFactoryObjectMapper")
+    @Provides
+    @Singleton
+    @Named("EventFactoryObjectMapper")
     private ObjectMapper configureEventFactoryObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-
-        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.setFailOnUnknownId(false);
-
-        mapper.setFilterProvider(filterProvider);
-
-        Hibernate5Module hbm = new Hibernate5Module();
-        hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
-        mapper.registerModule(hbm);
-        mapper.registerModule(new Jdk8Module());
-        mapper.registerModule(new JavaTimeModule());
-
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
-        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
-        mapper.setAnnotationIntrospector(pair);
-
-        return mapper;
+        return ObjectMapperFactory.getEventFactoryObjectMapper();
     }
 
-    @Provides @Singleton @Named("X509V3ExtensionUtilObjectMapper")
+    @Provides
+    @Singleton
+    @Named("X509V3ExtensionUtilObjectMapper")
     private ObjectMapper configureX509V3ExtensionUtilObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-        return mapper;
+        return ObjectMapperFactory.getX509V3ExtensionUtilObjectMapper();
     }
 
-    @Provides @Singleton @Named("HypervisorUpdateJobObjectMapper")
+    @Provides
+    @Singleton
+    @Named("HypervisorUpdateJobObjectMapper")
     private ObjectMapper configureHypervisorUpdateJobObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        return mapper;
+        return ObjectMapperFactory.getHypervisorUpdateJobObjectMapper();
+    }
+
+    @Provides
+    @Singleton
+    @Named("ImportObjectMapper")
+    private ObjectMapper configureImportObjectMapper() {
+        return ObjectMapperFactory.getSyncObjectMapper(this.config);
+    }
+
+    @Provides
+    @Singleton
+    @Named("ExportObjectMapper")
+    private ObjectMapper configureExportObjectMapper() {
+        return ObjectMapperFactory.getSyncObjectMapper(this.config);
     }
 }

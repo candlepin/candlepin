@@ -19,9 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.auth.Principal;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.guice.PrincipalProvider;
@@ -39,6 +42,8 @@ import org.candlepin.policy.js.compliance.ComplianceStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,6 +52,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
 
 
 public class EventFactoryTest {
@@ -58,9 +64,16 @@ public class EventFactoryTest {
     private PrincipalProvider principalProvider;
 
     private EventFactory eventFactory;
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     public void init() throws Exception {
+        Configuration config = TestConfig.defaults();
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+        objectMapper = injector.getInstance(ObjectMapper.class);
         principalProvider = mock(PrincipalProvider.class);
         Principal principal = mock(Principal.class);
         when(principalProvider.get()).thenReturn(principal);
@@ -72,7 +85,8 @@ public class EventFactoryTest {
         this.modelTranslator = new StandardTranslator(this.mockConsumerTypeCurator,
             this.mockEnvironmentCurator, this.mockOwnerCurator);
 
-        eventFactory = new EventFactory(principalProvider, new ObjectMapper(), this.modelTranslator);
+        eventFactory = new EventFactory(principalProvider, objectMapper,
+            this.modelTranslator);
     }
 
     @Test
@@ -112,8 +126,7 @@ public class EventFactoryTest {
         reason2.setMessage("Supports architecture ppc64 but the system is x86_64.");
         reason2.setAttributes(ImmutableMap.of(
             ComplianceReason.Attributes.MARKETING_NAME,
-            "Awesome Middleware"
-        ));
+            "Awesome Middleware"));
 
         when(status.getReasons()).thenReturn(ImmutableSet.of(reason1, reason2));
 

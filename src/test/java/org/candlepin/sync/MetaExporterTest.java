@@ -20,6 +20,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -31,15 +32,15 @@ import java.util.Date;
 import java.util.Map;
 
 
+
 public class MetaExporterTest {
 
     @Test
     public void testMetaExporter() throws IOException {
         DevConfig config = TestConfig.custom(Map.of(
-            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
-        ));
+            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"));
 
-        ObjectMapper mapper = new SyncUtils(config).getObjectMapper();
+        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         MetaExporter metaEx = new MetaExporter();
         StringWriter writer = new StringWriter();

@@ -19,11 +19,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.candlepin.TestingModules;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.api.server.v1.AttributeDTO;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,6 +38,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+
 
 
 class AttributeDeserializerTest {
@@ -49,8 +55,13 @@ class AttributeDeserializerTest {
 
     @BeforeEach
     public void setup() {
-        mapper = new ObjectMapper();
         deserializer = new AttributeDeserializer();
+        Configuration config = TestConfig.defaults();
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+        mapper = injector.getInstance(ObjectMapper.class);
     }
 
     @Test
@@ -132,9 +143,9 @@ class AttributeDeserializerTest {
 
     private String listOfNameValueAttributes() {
         return String.format("[" +
-                "{\"name\":\"%s\",\"value\":\"%s\"}," +
-                "{\"name\":\"%s\",\"value\":\"%s\"}," +
-                "{\"name\":\"%s\",\"value\":\"%s\"}]",
+            "{\"name\":\"%s\",\"value\":\"%s\"}," +
+            "{\"name\":\"%s\",\"value\":\"%s\"}," +
+            "{\"name\":\"%s\",\"value\":\"%s\"}]",
             ARCH_KEY, ARCH_VALUE,
             SOCKETS_KEY, SOCKETS_VALUE,
             RAM_KEY, RAM_VALUE);

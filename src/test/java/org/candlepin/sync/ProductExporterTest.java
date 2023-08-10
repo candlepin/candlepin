@@ -25,6 +25,7 @@ import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Product;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -35,14 +36,14 @@ import java.io.StringWriter;
 import java.util.Map;
 
 
+
 public class ProductExporterTest {
     @Test
     public void testProductExport() throws IOException {
         DevConfig config = TestConfig.custom(Map.of(
-            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
-        ));
+            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"));
 
-        ObjectMapper mapper = new SyncUtils(config).getObjectMapper();
+        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         ProductExporter exporter = new ProductExporter(
             new StandardTranslator(new ConsumerTypeCurator(), new EnvironmentCurator(), new OwnerCurator()));

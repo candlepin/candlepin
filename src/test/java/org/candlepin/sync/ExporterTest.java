@@ -64,6 +64,7 @@ import org.candlepin.service.EntitlementCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.version.VersionUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -94,9 +95,9 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-
 // TODO: FIXME: Rewrite this test to not be so reliant upon mocks. It's making things incredibly brittle and
 // wasting dev time tracking down non-issues when a mock silently fails because the implementation changes.
+
 
 
 /**
@@ -261,10 +262,11 @@ public class ExporterTest {
 
         when(consumer.getOwnerId()).thenReturn(owner.getId());
         when(oc.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
 
         File export = e.getFullExport(consumer, null, null, null);
@@ -315,13 +317,13 @@ public class ExporterTest {
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
         when(cqmock.iterator()).thenReturn(Arrays.asList(new ConsumerType("system")).iterator());
         when(ctc.listAll()).thenReturn(cqmock);
+        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
 
-        assertThrows(ExportCreationException.class, () ->
-            e.getFullExport(consumer, null, null, null));
+        assertThrows(ExportCreationException.class, () -> e.getFullExport(consumer, null, null, null));
     }
 
     @Test
@@ -357,10 +359,11 @@ public class ExporterTest {
         CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
         when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
+        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
 
@@ -409,10 +412,11 @@ public class ExporterTest {
         when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
         when(emptyIteratorMock.iterator()).thenReturn(Arrays.asList().iterator());
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
+        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
 
@@ -467,10 +471,11 @@ public class ExporterTest {
         CandlepinQuery emptyIteratorMock = mock(CandlepinQuery.class);
         when(emptyIteratorMock.iterate()).thenReturn(new MockResultIterator(Arrays.asList().iterator()));
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
+        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
 
@@ -531,10 +536,11 @@ public class ExporterTest {
         when(emptyIteratorMock.iterator()).thenReturn(Arrays.asList().iterator());
         when(cdnc.listAll()).thenReturn(emptyIteratorMock);
         when(ctc.listAll()).thenReturn(emptyIteratorMock);
+        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         // FINALLY test this badboy
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getFullExport(consumer, null, null, null);
 
@@ -584,9 +590,10 @@ public class ExporterTest {
 
         when(ecsa.listForConsumer(consumer)).thenReturn(Arrays.asList(entCert));
         when(contentAccessManager.getCertificate(consumer)).thenReturn(cac);
+        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         File export = e.getEntitlementExport(consumer, null);
 
@@ -644,9 +651,10 @@ public class ExporterTest {
 
         doReturn(Arrays.asList(entCert)).when(ecsa).listForConsumer(consumer);
         doReturn(cac).when(contentAccessManager).getCertificate(consumer);
+        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         Set<Long> serials = new HashSet<>();
         serials.add(12345678910L);
@@ -706,9 +714,10 @@ public class ExporterTest {
 
         doReturn(Arrays.asList(entCert)).when(ecsa).listForConsumer(consumer);
         doReturn(cac).when(contentAccessManager).getCertificate(consumer);
+        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         Set<Long> serials = new HashSet<>();
         serials.add(entSerial.getId());
@@ -768,9 +777,10 @@ public class ExporterTest {
 
         doReturn(Arrays.asList(entCert)).when(ecsa).listForConsumer(consumer);
         doReturn(cac).when(contentAccessManager).getCertificate(consumer);
+        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         Exporter e = new Exporter(ctc, oc, me, ce, cte, re, ecsa, pe, psa,
-            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su,
+            pce, ec, ee, pki, config, exportRules, pprov, dvc, dve, cdnc, cdne, su, mapper,
             translator, contentAccessManager);
         Set<Long> serials = new HashSet<>();
         serials.add(cacSerial.getId());
@@ -906,10 +916,9 @@ public class ExporterTest {
             os.close();
 
             DevConfig config = TestConfig.custom(Map.of(
-                ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
-            ));
+                ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"));
 
-            ObjectMapper mapper = new SyncUtils(config).getObjectMapper();
+            ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
             Meta m = mapper.readValue(new FileInputStream("/tmp/meta.json"), Meta.class);
 
@@ -1004,10 +1013,9 @@ public class ExporterTest {
             os.close();
 
             DevConfig config = TestConfig.custom(Map.of(
-                ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
-            ));
+                ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"));
 
-            ObjectMapper mapper = new SyncUtils(config).getObjectMapper();
+            ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
             ConsumerDTO c = mapper.readValue(new FileInputStream("/tmp/" + filename), ConsumerDTO.class);
 
@@ -1040,10 +1048,9 @@ public class ExporterTest {
             os.close();
 
             DevConfig config = TestConfig.custom(Map.of(
-                ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
-            ));
+                ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"));
 
-            ObjectMapper mapper = new SyncUtils(config).getObjectMapper();
+            ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
             DistributorVersion dv = mapper.readValue(
                 new FileInputStream("/tmp/" + filename),

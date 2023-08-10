@@ -24,9 +24,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
@@ -53,13 +58,21 @@ import java.util.List;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ArtemisMessageSourceTest {
 
-    @Mock private ClientSessionFactory clientSessionFactory;
+    @Mock
+    private ClientSessionFactory clientSessionFactory;
 
     private ActiveMQSessionFactory sessionFactory;
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     public void setup() {
         this.sessionFactory = createConnection();
+        Configuration config = TestConfig.defaults();
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+        objectMapper = injector.getInstance(ObjectMapper.class);
     }
 
     @Test
@@ -73,8 +86,8 @@ public class ArtemisMessageSourceTest {
         MessageSourceReceiverFactory receiverFactory = mock(MessageSourceReceiverFactory.class);
         when(receiverFactory.get(eq(connection))).thenReturn(messageReceivers);
 
-        ArtemisMessageSource source = new ArtemisMessageSource(connection, new ObjectMapper(),
-            receiverFactory);
+        ArtemisMessageSource source = new ArtemisMessageSource(connection,
+            objectMapper, receiverFactory);
 
         // Should not attempt to create a client session.
         verifyNoInteractions(clientSessionFactory);
@@ -106,8 +119,8 @@ public class ArtemisMessageSourceTest {
         DefaultEventMessageReceiver receiver2 = new DefaultEventMessageReceiver(mock(EventListener.class),
             sessionFactory, mock(ObjectMapper.class));
 
-        ArtemisMessageSource messageSource =
-            createEventSourceStubbedWithFactoryCreation(receiver1, receiver2);
+        ArtemisMessageSource messageSource = createEventSourceStubbedWithFactoryCreation(receiver1,
+            receiver2);
         messageSource.shutDown();
 
         // Verify that all client sessions were closed.
@@ -156,13 +169,13 @@ public class ArtemisMessageSourceTest {
      *
      * @return the new ArtemisMessageSource
      */
-    private ArtemisMessageSource createEventSourceStubbedWithFactoryCreation(MessageReceiver ... receivers)
+    private ArtemisMessageSource createEventSourceStubbedWithFactoryCreation(MessageReceiver... receivers)
         throws Exception {
         MessageSourceReceiverFactory receiverFactory = mock(MessageSourceReceiverFactory.class);
         when(receiverFactory.get(eq(sessionFactory))).thenReturn(Arrays.asList(receivers));
 
-        ArtemisMessageSource source = new ArtemisMessageSource(sessionFactory, new ObjectMapper(),
-            receiverFactory);
+        ArtemisMessageSource source = new ArtemisMessageSource(sessionFactory,
+            objectMapper, receiverFactory);
 
         // Listener client sessions are not created until the source has been notified
         // that the connection can be made. Simulate this.

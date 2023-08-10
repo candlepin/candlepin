@@ -33,6 +33,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
@@ -73,6 +74,8 @@ import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
@@ -100,6 +103,7 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 
 
+
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ContentAccessManagerTest {
@@ -108,23 +112,32 @@ public class ContentAccessManagerTest {
 
     private DevConfig config;
 
-    @Mock private EventSink mockEventSink;
-    @Mock private KeyPairDataCurator mockKeyPairDataCurator;
-    @Mock private CertificateSerialCurator mockCertSerialCurator;
-    @Mock private ConsumerCurator mockConsumerCurator;
-    @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
-    @Mock private ContentAccessCertificateCurator mockContentAccessCertCurator;
-    @Mock private OwnerCurator mockOwnerCurator;
-    @Mock private OwnerContentCurator mockOwnerContentCurator;
-    @Mock private EnvironmentCurator mockEnvironmentCurator;
-    @Mock private EntitlementCurator mockEntitlementCurator;
+    @Mock
+    private EventSink mockEventSink;
+    @Mock
+    private KeyPairDataCurator mockKeyPairDataCurator;
+    @Mock
+    private CertificateSerialCurator mockCertSerialCurator;
+    @Mock
+    private ConsumerCurator mockConsumerCurator;
+    @Mock
+    private ConsumerTypeCurator mockConsumerTypeCurator;
+    @Mock
+    private ContentAccessCertificateCurator mockContentAccessCertCurator;
+    @Mock
+    private OwnerCurator mockOwnerCurator;
+    @Mock
+    private OwnerContentCurator mockOwnerContentCurator;
+    @Mock
+    private EnvironmentCurator mockEnvironmentCurator;
+    @Mock
+    private EntitlementCurator mockEntitlementCurator;
+    private ObjectMapper objectMapper;
     private PKIUtility pkiUtility;
-    private ObjectMapper objMapper;
     private X509V3ExtensionUtil x509V3ExtensionUtil;
 
     private final String entitlementMode = ContentAccessMode.ENTITLEMENT.toDatabaseValue();
     private final String orgEnvironmentMode = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
-
 
     @BeforeAll
     public static void loadTestKeyPair() throws Exception {
@@ -144,6 +157,11 @@ public class ContentAccessManagerTest {
     @BeforeEach
     public void setup() throws Exception {
         this.config = TestConfig.defaults();
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+        objectMapper = injector.getInstance(ObjectMapper.class);
 
         PrivateKeyReader keyReader = new JSSPrivateKeyReader();
         CertificateReader certReader = new CertificateReader(this.config, keyReader);
@@ -151,9 +169,8 @@ public class ContentAccessManagerTest {
         this.pkiUtility = spy(new JSSPKIUtility(certReader, keyIdWriter, this.config,
             this.mockKeyPairDataCurator));
 
-        this.objMapper = new ObjectMapper();
         this.x509V3ExtensionUtil = spy(new X509V3ExtensionUtil(this.config, this.mockEntitlementCurator,
-            this.objMapper));
+            objectMapper));
 
         // FIXME: This mess of mocks is why we should not be using mocks in this way. We should be
         // using a test database framework and our actual curators and objects.
@@ -456,8 +473,8 @@ public class ContentAccessManagerTest {
 
         ContentAccessManager manager = this.createManager();
 
-        assertThrows(IllegalArgumentException.class, () ->
-            manager.updateOwnerContentAccess(owner, updatedAccessModeList, updatedAccessMode));
+        assertThrows(IllegalArgumentException.class,
+            () -> manager.updateOwnerContentAccess(owner, updatedAccessModeList, updatedAccessMode));
     }
 
     @Test
@@ -526,8 +543,8 @@ public class ContentAccessManagerTest {
 
         ContentAccessManager manager = this.createManager();
 
-        assertThrows(IllegalArgumentException.class, () ->
-            manager.updateOwnerContentAccess(owner, updatedAccessModeList, updatedAccessMode));
+        assertThrows(IllegalArgumentException.class,
+            () -> manager.updateOwnerContentAccess(owner, updatedAccessModeList, updatedAccessMode));
     }
 
     @Test
@@ -549,8 +566,8 @@ public class ContentAccessManagerTest {
 
         ContentAccessManager manager = this.createManager();
 
-        assertThrows(IllegalArgumentException.class, () ->
-            manager.updateOwnerContentAccess(owner, updatedAccessModeList, updatedAccessMode));
+        assertThrows(IllegalArgumentException.class,
+            () -> manager.updateOwnerContentAccess(owner, updatedAccessModeList, updatedAccessMode));
     }
 
     @Test

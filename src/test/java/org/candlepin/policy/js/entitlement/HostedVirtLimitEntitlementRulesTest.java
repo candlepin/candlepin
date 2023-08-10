@@ -29,6 +29,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
 import org.candlepin.bind.PoolOperations;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
@@ -64,6 +65,8 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.Util;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -86,13 +89,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+
+
 /**
  * HostedVirtLimitEntitlementRulesTest: Complex tests around the hosted virt limit
  * bonus pool functionality.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class HostedVirtLimitEntitlementRulesTest  {
+public class HostedVirtLimitEntitlementRulesTest {
 
     @Mock
     private RulesCurator rulesCurator;
@@ -125,6 +130,11 @@ public class HostedVirtLimitEntitlementRulesTest  {
     @BeforeEach
     public void createEnforcer() {
         this.config = TestConfig.defaults();
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+
         this.config.setProperty(ConfigProperties.PRODUCT_CACHE_MAX, "100");
         InputStream is = this.getClass().getResourceAsStream(
             RulesCurator.DEFAULT_RULES_FILE);
@@ -145,10 +155,9 @@ public class HostedVirtLimitEntitlementRulesTest  {
             config,
             consumerCurator,
             consumerTypeCurator,
-            new RulesObjectMapper(),
+            injector.getInstance(RulesObjectMapper.class),
             translator,
-            poolManager
-        );
+            poolManager);
 
         owner = TestUtil.createOwner();
 
@@ -224,10 +233,8 @@ public class HostedVirtLimitEntitlementRulesTest  {
         assertEquals(1, subscriptionIds.size());
         assertEquals("subId", subscriptionIds.iterator().next());
 
-
         assertEquals(1, poolOperations.updates().size());
-        Map.Entry<Pool, Long> poolUpdate =
-            poolOperations.updates().entrySet().iterator().next();
+        Map.Entry<Pool, Long> poolUpdate = poolOperations.updates().entrySet().iterator().next();
         assertEquals(virtBonusPool, poolUpdate.getKey());
         assertEquals(90L, poolUpdate.getValue().longValue());
 
@@ -484,8 +491,7 @@ public class HostedVirtLimitEntitlementRulesTest  {
         assertEquals("subId", subscriptionIds.iterator().next());
 
         assertEquals(1, poolOperations.updates().size());
-        Map.Entry<Pool, Long> poolUpdate =
-            poolOperations.updates().entrySet().iterator().next();
+        Map.Entry<Pool, Long> poolUpdate = poolOperations.updates().entrySet().iterator().next();
         assertEquals(virtBonusPool, poolUpdate.getKey());
         assertEquals((Long) 0L, poolUpdate.getValue());
 

@@ -54,7 +54,8 @@ public class QuantityRules {
     private ModelTranslator translator;
 
     @Inject
-    public QuantityRules(JsRunner jsRules, RulesObjectMapper mapper, ModelTranslator translator) {
+    public QuantityRules(JsRunner jsRules, RulesObjectMapper mapper,
+        ModelTranslator translator) {
 
         this.jsRules = jsRules;
         this.mapper = mapper;
@@ -85,7 +86,6 @@ public class QuantityRules {
         String json = jsRules.runJsFunction(String.class, "get_suggested_quantity", args);
         return mapper.toObject(json, SuggestedQuantityDTO.class);
     }
-
 
     /**
      * Calculates the suggested quantities for many pools in one call. This allows for
@@ -124,8 +124,7 @@ public class QuantityRules {
 
         String json = jsRules.runJsFunction(String.class, "get_suggested_quantities", args);
         Map<String, SuggestedQuantityDTO> resultMap;
-        TypeReference<Map<String, SuggestedQuantityDTO>> typeref =
-            new TypeReference<Map<String, SuggestedQuantityDTO>>() {};
+        TypeReference<Map<String, SuggestedQuantityDTO>> typeref = new TypeReference<Map<String, SuggestedQuantityDTO>>() {};
 
         try {
             resultMap = mapper.toObject(json, typeref);

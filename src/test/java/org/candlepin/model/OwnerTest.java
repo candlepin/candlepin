@@ -122,7 +122,7 @@ public class OwnerTest extends DatabaseTestFixture {
         Set<Consumer> consumers = o.getConsumers();
 
         System.out.println(consumers.size());
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = injector.getInstance(ObjectMapper.class);
 //        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
 //        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
 //        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
@@ -154,7 +154,7 @@ public class OwnerTest extends DatabaseTestFixture {
     }
 
     interface MixIn {
-        @JsonProperty("consumers") Set<Consumer> getConsumers();
-
+        @JsonProperty("consumers")
+        Set<Consumer> getConsumers();
     }
 }

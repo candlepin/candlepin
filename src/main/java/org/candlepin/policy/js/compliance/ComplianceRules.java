@@ -76,7 +76,8 @@ public class ComplianceRules {
     @Inject
     public ComplianceRules(JsRunner jsRules, EntitlementCurator entCurator,
         StatusReasonMessageGenerator generator, EventSink eventSink, ConsumerCurator consumerCurator,
-        ConsumerTypeCurator consumerTypeCurator, RulesObjectMapper mapper, ModelTranslator translator) {
+        ConsumerTypeCurator consumerTypeCurator, RulesObjectMapper mapper,
+        ModelTranslator translator) {
 
         this.jsRules = jsRules;
         this.entCurator = entCurator;
@@ -170,12 +171,11 @@ public class ComplianceRules {
         Stream<EntitlementDTO> entStream = Stream.concat(
             newEntitlements != null ? newEntitlements.stream() : Stream.empty(),
             consumer.getEntitlements() != null ? consumer.getEntitlements().stream() : Stream.empty())
-                .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
+            .map(this.translator.getStreamMapper(Entitlement.class, EntitlementDTO.class));
 
         Stream<GuestIdDTO> guestIdStream = consumer.getGuestIds() == null ? Stream.empty() :
             consumer.getGuestIds().stream()
                 .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
-
 
         // Status can only be 'disabled' when in golden ticket mode
         if (consumer.getOwner() != null && consumer.getOwner().isUsingSimpleContentAccess()) {
@@ -301,7 +301,6 @@ public class ComplianceRules {
         ComplianceStatusHasher hasher = new ComplianceStatusHasher(consumer, status);
         return hasher.hash();
     }
-
 
     /**
      * Populates an entity that is to be created with data from the provided DTO.

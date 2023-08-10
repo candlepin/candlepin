@@ -25,6 +25,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import org.candlepin.TestingModules;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.ConfigurationException;
 import org.candlepin.config.DevConfig;
@@ -38,6 +39,8 @@ import org.candlepin.messaging.CPMSessionFactory;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -129,7 +132,6 @@ public class JobMessageDispatcherTest {
         }
     }
 
-
     private DevConfig config;
     private ObjectMapper mapper;
 
@@ -137,12 +139,14 @@ public class JobMessageDispatcherTest {
     private CPMSessionConfig sessionConfig;
     private CPMProducerConfig producerConfig;
 
-
     @BeforeEach
     public void init() {
         this.config = TestConfig.defaults();
-        this.mapper = new ObjectMapper();
-
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+        mapper = injector.getInstance(ObjectMapper.class);
         this.sessionFactory = mock(CPMSessionFactory.class);
         this.sessionConfig = spy(new CPMSessionConfig());
         this.producerConfig = spy(new CPMProducerConfig());

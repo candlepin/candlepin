@@ -28,6 +28,7 @@ import org.candlepin.dto.manifest.v1.ContentDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.ProductDTO.ProductContentDTO;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -50,6 +51,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
+
 public class ProductImporterTest {
 
     private I18n i18n;
@@ -67,7 +69,7 @@ public class ProductImporterTest {
         this.tmpdir = Files.createTempDirectory("product_importer_test").toFile();
         this.tmpdir.deleteOnExit();
 
-        this.mapper = new SyncUtils(this.config).getObjectMapper();
+        this.mapper = ObjectMapperFactory.getSyncObjectMapper(config);
     }
 
     @Test

@@ -65,15 +65,24 @@ import java.util.stream.Stream;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class DefaultEventMessageReceiverTest {
 
-    @Mock private ClientSessionFactory clientSessionFactory;
-    @Mock private ClientSession clientSession;
-    @Mock private ClientConsumer clientConsumer;
-    @Mock private EventListener eventListener;
-    @Mock private ClientMessage clientMessage;
-    @Mock private ActiveMQStatusMonitor monitor;
-    @Mock private Configuration config;
-    @Spy private ObjectMapper mapper = new ObjectMapper();
-    @Spy private ActiveMQBuffer activeMQBuffer = ActiveMQBuffers.fixedBuffer(1000);
+    @Mock
+    private ClientSessionFactory clientSessionFactory;
+    @Mock
+    private ClientSession clientSession;
+    @Mock
+    private ClientConsumer clientConsumer;
+    @Mock
+    private EventListener eventListener;
+    @Mock
+    private ClientMessage clientMessage;
+    @Mock
+    private ActiveMQStatusMonitor monitor;
+    @Mock
+    private Configuration config;
+    @Spy
+    private ObjectMapper mapper;
+    @Spy
+    private ActiveMQBuffer activeMQBuffer = ActiveMQBuffers.fixedBuffer(1000);
 
     private ActiveMQSessionFactory sessionFactory;
     private DefaultEventMessageReceiver receiver;
@@ -85,7 +94,6 @@ public class DefaultEventMessageReceiverTest {
         when(clientSession.createConsumer(anyString())).thenReturn(clientConsumer);
 
         this.sessionFactory = new TestingActiveMQSessionFactory(clientSessionFactory, null);
-
         receiver = new DefaultEventMessageReceiver(eventListener, this.sessionFactory, mapper);
         receiver.connect();
     }
@@ -106,8 +114,7 @@ public class DefaultEventMessageReceiverTest {
     public static Stream<Arguments> testMsgTypes() {
         return Stream.of(
             Arguments.of(ClientMessage.DEFAULT_TYPE),
-            Arguments.of(ClientMessage.TEXT_TYPE)
-        );
+            Arguments.of(ClientMessage.TEXT_TYPE));
     }
 
     @Test

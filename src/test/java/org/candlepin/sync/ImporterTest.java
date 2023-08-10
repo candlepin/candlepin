@@ -74,6 +74,7 @@ import org.candlepin.pki.impl.JSSProviderLoader;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.sync.Importer.ImportFile;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -112,31 +113,47 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 
+
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class ImporterTest {
 
-    @TempDir protected File tmpFolder;
+    @TempDir
+    protected File tmpFolder;
 
     private DevConfig config;
     private I18n i18n;
     private ModelTranslator modelTranslator;
     private SyncUtils syncUtils;
 
-    @Mock private CdnCurator mockCdnCurator;
-    @Mock private CertificateSerialCurator mockCertSerialCurator;
-    @Mock private ConsumerTypeCurator mockConsumerTypeCurator;
-    @Mock private EnvironmentCurator mockEnvironmentCurator;
-    @Mock private ExporterMetadataCurator mockExporterMetadataCurator;
-    @Mock private IdentityCertificateCurator mockIdentityCertCurator;
-    @Mock private ImportRecordCurator mockImportRecordCurator;
-    @Mock private OwnerCurator mockOwnerCurator;
-    @Mock private RefresherFactory refresherFactory;
-    @Mock private RulesImporter mockRulesImporter;
-    @Mock private PKIUtility mockPKIUtility;
-    @Mock private EventSink mockEventSink;
-    @Mock private DistributorVersionCurator mockDistributorVersionCurator;
-    @Mock private SubscriptionReconciler mockSubscriptionReconciler;
+    @Mock
+    private CdnCurator mockCdnCurator;
+    @Mock
+    private CertificateSerialCurator mockCertSerialCurator;
+    @Mock
+    private ConsumerTypeCurator mockConsumerTypeCurator;
+    @Mock
+    private EnvironmentCurator mockEnvironmentCurator;
+    @Mock
+    private ExporterMetadataCurator mockExporterMetadataCurator;
+    @Mock
+    private IdentityCertificateCurator mockIdentityCertCurator;
+    @Mock
+    private ImportRecordCurator mockImportRecordCurator;
+    @Mock
+    private OwnerCurator mockOwnerCurator;
+    @Mock
+    private RefresherFactory refresherFactory;
+    @Mock
+    private RulesImporter mockRulesImporter;
+    @Mock
+    private PKIUtility mockPKIUtility;
+    @Mock
+    private EventSink mockEventSink;
+    @Mock
+    private DistributorVersionCurator mockDistributorVersionCurator;
+    @Mock
+    private SubscriptionReconciler mockSubscriptionReconciler;
 
     private ObjectMapper mapper;
     private ClassLoader classLoader = getClass().getClassLoader();
@@ -155,8 +172,8 @@ public class ImporterTest {
         this.modelTranslator = new StandardTranslator(this.mockConsumerTypeCurator,
             this.mockEnvironmentCurator, this.mockOwnerCurator);
 
+        this.mapper = ObjectMapperFactory.getSyncObjectMapper(config);
         this.syncUtils = new SyncUtils(this.config);
-        this.mapper = this.syncUtils.getObjectMapper();
         this.mockJsPath = new File(this.tmpFolder, "empty.js").getPath();
 
         this.updateReleaseVersion("0.0.3", "1");
@@ -184,7 +201,7 @@ public class ImporterTest {
             this.mockOwnerCurator, this.mockIdentityCertCurator, this.refresherFactory,
             this.mockPKIUtility, this.mockExporterMetadataCurator,
             this.mockCertSerialCurator, this.mockEventSink, this.i18n, this.mockDistributorVersionCurator,
-            this.mockCdnCurator, this.syncUtils, this.mockImportRecordCurator,
+            this.mockCdnCurator, this.syncUtils, this.mapper, this.mockImportRecordCurator,
             this.mockSubscriptionReconciler, this.modelTranslator);
     }
 
@@ -232,7 +249,7 @@ public class ImporterTest {
         out.putNextEntry(new ZipEntry(file.getName()));
         FileInputStream in = new FileInputStream(file);
 
-        byte [] buf = new byte[1024];
+        byte[] buf = new byte[1024];
         int len;
         while ((len = in.read(buf)) > 0) {
             out.write(buf, 0, len);
@@ -517,7 +534,7 @@ public class ImporterTest {
         // Mock a passed signature check:
         doReturn(true)
             .when(this.mockPKIUtility)
-            .verifySHA256WithRSAHashAgainstCACerts(any(File.class), any(byte [].class));
+            .verifySHA256WithRSAHashAgainstCACerts(any(File.class), any(byte[].class));
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -548,7 +565,7 @@ public class ImporterTest {
         // Mock a passed signature check:
         doReturn(true)
             .when(this.mockPKIUtility)
-            .verifySHA256WithRSAHashAgainstCACerts(any(File.class), any(byte [].class));
+            .verifySHA256WithRSAHashAgainstCACerts(any(File.class), any(byte[].class));
 
         Owner owner = mock(Owner.class);
         ConflictOverrides co = mock(ConflictOverrides.class);
@@ -901,7 +918,7 @@ public class ImporterTest {
         importFiles.put(ImportFile.DISTRIBUTOR_VERSIONS.fileName(), null);
 
         File cTypes = mock(File.class);
-        when(cTypes.listFiles()).thenReturn(new File[]{});
+        when(cTypes.listFiles()).thenReturn(new File[] {});
 
         importFiles.put(ImportFile.CONSUMER_TYPE.fileName(), cTypes);
 
@@ -953,7 +970,7 @@ public class ImporterTest {
 
         Map<String, Object> data = new HashMap<>();
         data.put("meta", meta);
-        data.put("subscriptions",  new ArrayList<Subscription>());
+        data.put("subscriptions", new ArrayList<Subscription>());
 
         Importer importer = this.buildImporter();
         ImportRecord record = importer.recordImportSuccess(owner, data, new ConflictOverrides(), "test.zip");
@@ -982,7 +999,7 @@ public class ImporterTest {
 
         Map<String, Object> data = new HashMap<>();
         data.put("meta", meta);
-        data.put("subscriptions",  new ArrayList<Subscription>());
+        data.put("subscriptions", new ArrayList<Subscription>());
 
         Importer importer = this.buildImporter();
         ImportRecord record = importer.recordImportSuccess(owner, data, new ConflictOverrides(), "test.zip");

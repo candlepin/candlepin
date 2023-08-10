@@ -46,6 +46,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
+
+
 /**
  * Test suite for the ContentAccessManager backed by the testing database infrastructure
  */
@@ -57,7 +59,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
     private static final String ORG_ENVIRONMENT_MODE = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
     private PKIUtility pkiUtility;
-    private ObjectMapper objMapper;
+    private ObjectMapper objectMapper;
     private X509V3ExtensionUtil x509V3ExtensionUtil;
 
     private EventSink mockEventSink;
@@ -70,9 +72,8 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
         this.pkiUtility = spy(new JSSPKIUtility(certReader, keyIdWriter, this.config,
             this.keyPairDataCurator));
 
-        this.objMapper = new ObjectMapper();
         this.x509V3ExtensionUtil = spy(new X509V3ExtensionUtil(this.config, this.entitlementCurator,
-            this.objMapper));
+            injector.getInstance(ObjectMapper.class)));
 
         this.mockEventSink = mock(EventSink.class);
     }

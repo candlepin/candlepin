@@ -26,6 +26,7 @@ import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -39,16 +40,16 @@ import java.util.Map;
 import java.util.Set;
 
 
+
 public class ConsumerTypeImporterTest {
     private ObjectMapper mapper;
 
     @BeforeEach
     public void init() {
         DevConfig config = TestConfig.custom(Map.of(
-            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
-        ));
+            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"));
 
-        this.mapper = new SyncUtils(config).getObjectMapper();
+        this.mapper = ObjectMapperFactory.getSyncObjectMapper(config);
     }
 
     @Test

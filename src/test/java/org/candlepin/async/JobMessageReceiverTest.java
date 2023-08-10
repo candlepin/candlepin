@@ -27,6 +27,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import org.candlepin.TestingModules;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.ConfigurationException;
 import org.candlepin.config.DevConfig;
@@ -44,6 +45,8 @@ import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.persist.UnitOfWork;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -69,8 +72,12 @@ public class JobMessageReceiverTest {
     public void setUp() throws Exception {
         this.config = TestConfig.defaults();
         this.jobManager = mock(JobManager.class);
-        this.mapper = new ObjectMapper();
         this.unitOfWork = mock(UnitOfWork.class);
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+        mapper = injector.getInstance(ObjectMapper.class);
 
         // Set the number of threads/consumers to 1 so we don't have to worry about
         // clobbering any collected state during consumer creation
@@ -117,10 +124,10 @@ public class JobMessageReceiverTest {
         CPMConsumer consumer = mock(CPMConsumer.class);
 
         doAnswer(iom -> {
-                CPMMessageListener prev = container.get();
-                container.set((CPMMessageListener) iom.getArguments()[0]);
-                return prev;
-            })
+            CPMMessageListener prev = container.get();
+            container.set((CPMMessageListener) iom.getArguments()[0]);
+            return prev;
+        })
             .when(consumer)
             .setMessageListener(any(CPMMessageListener.class));
 
@@ -220,7 +227,6 @@ public class JobMessageReceiverTest {
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
-
         doThrow(new JobExecutionException()).when(this.jobManager).executeJob(any(JobMessage.class));
 
         listener.handleMessage(this.session, this.consumer, message);
@@ -239,7 +245,6 @@ public class JobMessageReceiverTest {
         JobMessageReceiver receiver = this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
-
 
         JobStateManagementException exception = new JobStateManagementException(new AsyncJobStatus(),
             JobState.RUNNING, JobState.FAILED, true);
@@ -263,7 +268,6 @@ public class JobMessageReceiverTest {
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
-
         JobStateManagementException exception = new JobStateManagementException(new AsyncJobStatus(),
             JobState.RUNNING, JobState.FAILED_WITH_RETRY, false);
 
@@ -286,7 +290,6 @@ public class JobMessageReceiverTest {
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
 
-
         doThrow(new JobMessageDispatchException()).when(this.jobManager).executeJob(any(JobMessage.class));
 
         listener.handleMessage(this.session, this.consumer, message);
@@ -305,7 +308,6 @@ public class JobMessageReceiverTest {
         JobMessageReceiver receiver = this.buildJobMessageReceiver();
         CPMMessageListener listener = this.listenerContainer.get();
         assertNotNull(listener);
-
 
         doThrow(new JobException(true)).when(this.jobManager).executeJob(any(JobMessage.class));
 

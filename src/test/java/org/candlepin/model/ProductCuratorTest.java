@@ -53,6 +53,8 @@ import java.util.stream.Collectors;
 import javax.persistence.PersistenceException;
 import javax.validation.ConstraintViolationException;
 
+
+
 public class ProductCuratorTest extends DatabaseTestFixture {
 
     private Owner owner;
@@ -161,7 +163,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Map<String, String> data = new HashMap<>();
         data.put("a", "1");
         data.put("b", "2");
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = injector.getInstance(ObjectMapper.class);
         String jsonData = mapper.writeValueAsString(data);
 
         Product prod = new Product("cptest-label", "My Product");
@@ -191,7 +193,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         data.add(contentSet1);
         data.add(contentSet2);
 
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = injector.getInstance(ObjectMapper.class);
         String jsonData = mapper.writeValueAsString(data);
 
         Product prod = TestUtil.createProduct("cptest-label", "My Product");

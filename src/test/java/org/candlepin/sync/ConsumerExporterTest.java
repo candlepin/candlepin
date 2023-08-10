@@ -29,6 +29,7 @@ import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.EnvironmentCurator;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -40,6 +41,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Map;
+
 
 
 @ExtendWith(MockitoExtension.class)
@@ -55,9 +57,8 @@ public class ConsumerExporterTest {
     @Test
     public void testConsumerExport() throws IOException {
         DevConfig config = TestConfig.custom(Map.of(
-            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"
-        ));
-        ObjectMapper mapper = new SyncUtils(config).getObjectMapper();
+            ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES, "false"));
+        ObjectMapper mapper = ObjectMapperFactory.getSyncObjectMapper(config);
 
         ModelTranslator translator = new StandardTranslator(
             mockConsumerTypeCurator, mockEnvironmentCurator, ownerCurator);

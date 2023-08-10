@@ -19,7 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
 import org.candlepin.auth.Principal;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.exceptions.IseException;
@@ -30,9 +33,12 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 
 
 public class EventBuilderTest {
@@ -44,10 +50,17 @@ public class EventBuilderTest {
     private EventFactory factory;
     private EventBuilder eventBuilder;
     private PrincipalProvider principalProvider;
-
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     public void init() throws Exception {
+        Configuration config = TestConfig.defaults();
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+        objectMapper = injector.getInstance(ObjectMapper.class);
+
         this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
         this.mockEnvironmentCurator = mock(EnvironmentCurator.class);
         this.mockOwnerCurator = mock(OwnerCurator.class);
@@ -58,7 +71,7 @@ public class EventBuilderTest {
         principalProvider = mock(PrincipalProvider.class);
         Principal principal = mock(Principal.class);
 
-        factory = new EventFactory(principalProvider, new ObjectMapper(), this.modelTranslator);
+        factory = new EventFactory(principalProvider, objectMapper, this.modelTranslator);
         when(principalProvider.get()).thenReturn(principal);
     }
 

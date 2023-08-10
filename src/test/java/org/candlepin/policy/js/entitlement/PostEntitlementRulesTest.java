@@ -26,6 +26,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
 import org.candlepin.bind.PoolOperations;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
@@ -55,6 +56,8 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.Util;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -72,6 +75,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+
+
 
 /**
  * PostEntitlementRulesTest: Tests for post-entitlement rules, as well as the post-unbind
@@ -110,6 +115,12 @@ public class PostEntitlementRulesTest {
     public void createEnforcer() {
         this.config = TestConfig.defaults();
         this.config.setProperty(ConfigProperties.PRODUCT_CACHE_MAX, "100");
+
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+
         InputStream is = this.getClass().getResourceAsStream(
             RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
@@ -129,10 +140,9 @@ public class PostEntitlementRulesTest {
             config,
             consumerCurator,
             consumerTypeCurator,
-            new RulesObjectMapper(),
+            injector.getInstance(RulesObjectMapper.class),
             translator,
-            poolManager
-        );
+            poolManager);
 
         owner = TestUtil.createOwner();
 
