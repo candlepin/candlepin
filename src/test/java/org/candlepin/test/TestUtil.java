@@ -53,6 +53,7 @@ import org.candlepin.model.dto.ProductData;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.service.model.ProductInfo;
+import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Transactional;
 import org.candlepin.util.Util;
 
@@ -76,7 +77,6 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
-
 
 
 
@@ -535,8 +535,7 @@ public class TestUtil {
             1000L,
             createDate(2000, 1, 1),
             createDate(2050, 1, 1),
-            createDate(2000, 1, 1)
-        );
+            createDate(2000, 1, 1));
 
         sub.setId("test-sub-" + randomInt());
 
@@ -619,9 +618,8 @@ public class TestUtil {
     public static UserPrincipal createPrincipal(String username, Owner owner, Access role) {
         return new UserPrincipal(
             username,
-            Arrays.asList(new Permission[]{ new OwnerPermission(owner, role) }),
-            false
-        );
+            Arrays.asList(new Permission[] { new OwnerPermission(owner, role) }),
+            false);
     }
 
     public static UserPrincipal createOwnerPrincipal(Owner owner) {
@@ -632,7 +630,6 @@ public class TestUtil {
         Owner owner = createOwner("Test Owner " + randomInt());
         return createPrincipal("someuser", owner, Access.ALL);
     }
-
 
     public static Set<String> createSet(String productId) {
         Set<String> results = new HashSet<>();
@@ -686,8 +683,7 @@ public class TestUtil {
             owner,
             createConsumer(owner),
             createPool(owner, createProduct()),
-            null
-        );
+            null);
     }
 
     public static GuestIdDTO createGuestIdDTO(String guestId) {
@@ -795,7 +791,7 @@ public class TestUtil {
     }
 
     public static boolean isJsonEqual(String one, String two) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper = ObjectMapperFactory.getObjectMapper();
         JsonNode tree1 = mapper.readTree(one);
         JsonNode tree2 = mapper.readTree(two);
         return tree1.equals(tree2);
@@ -807,7 +803,7 @@ public class TestUtil {
         return new String(charArray);
     }
 
-    public static Map<String, Product> stubChangedProducts(Product ... products) {
+    public static Map<String, Product> stubChangedProducts(Product... products) {
         Map<String, Product> result = new HashMap<>();
         for (Product p : products) {
             result.put(p.getId(), p);

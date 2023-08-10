@@ -18,17 +18,6 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.exceptions.IseException;
 
-import com.fasterxml.jackson.databind.AnnotationIntrospector;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -41,7 +30,6 @@ import javax.inject.Inject;
  */
 public class SyncUtils {
     private Configuration config;
-    private ObjectMapper mapper;
 
     File makeTempDir(String baseName) throws IOException {
         File baseDir = new File(config.getString(ConfigProperties.SYNC_WORK_DIR));
@@ -65,32 +53,5 @@ public class SyncUtils {
     @Inject
     public SyncUtils(Configuration config) {
         this.config = config;
-
-        this.mapper = new ObjectMapper();
-        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(this.mapper.getTypeFactory());
-        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
-
-        this.mapper.setAnnotationIntrospector(pair);
-        this.mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-
-        // Add support for new JDK8 features
-        this.mapper.registerModule(new Jdk8Module());
-        mapper.registerModule(new JavaTimeModule());
-
-        // Filter specific things we do not want exported:
-        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-        filterProvider.setFailOnUnknownId(false);
-
-        this.mapper.setFilterProvider(filterProvider);
-
-        if (config != null) {
-            this.mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
-                config.getBoolean(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES));
-        }
-    }
-
-    public ObjectMapper getObjectMapper() {
-        return this.mapper;
     }
 }

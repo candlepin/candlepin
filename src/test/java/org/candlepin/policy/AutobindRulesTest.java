@@ -24,6 +24,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.dto.ModelTranslator;
@@ -60,6 +61,8 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -83,14 +86,22 @@ import java.util.Set;
 
 
 public class AutobindRulesTest {
-    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
-    @Mock private JsRunnerRequestCache cache;
-    @Mock private Configuration config;
-    @Mock private RulesCurator rulesCurator;
-    @Mock private OwnerCurator mockOwnerCurator;
-    @Mock private ProductCurator mockProductCurator;
-    @Mock private ConsumerTypeCurator consumerTypeCurator;
-    @Mock private EnvironmentCurator environmentCurator;
+    @Mock
+    private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock
+    private JsRunnerRequestCache cache;
+    @Mock
+    private Configuration config;
+    @Mock
+    private RulesCurator rulesCurator;
+    @Mock
+    private OwnerCurator mockOwnerCurator;
+    @Mock
+    private ProductCurator mockProductCurator;
+    @Mock
+    private ConsumerTypeCurator consumerTypeCurator;
+    @Mock
+    private EnvironmentCurator environmentCurator;
 
     private ComplianceStatus compliance;
     private AutobindRules autobindRules; // TODO rename
@@ -119,11 +130,15 @@ public class AutobindRulesTest {
         doReturn(cache).when(this.cacheProvider).get();
 
         jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
-        mapper =  new RulesObjectMapper();
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+        mapper = injector.getInstance(RulesObjectMapper.class);
 
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
         autobindRules = new AutobindRules(jsRules, mockProductCurator, consumerTypeCurator, mockOwnerCurator,
-           mapper, translator);
+            mapper, translator);
 
         owner = new Owner();
         owner.setId(TestUtil.randomString());
@@ -147,7 +162,6 @@ public class AutobindRulesTest {
         activeGuestAttrs.put("virtWhoType", "libvirt");
         activeGuestAttrs.put("active", "1");
     }
-
 
     @Test
     public void testFindBestWithSingleProductSinglePoolReturnsProvidedPool() {
@@ -650,7 +664,6 @@ public class AutobindRulesTest {
             .setId("pool2")
             .setQuantity(1L);
 
-
         List<Pool> pools = new ArrayList<>();
         pools.add(pool1);
         pools.add(pool2);
@@ -796,7 +809,6 @@ public class AutobindRulesTest {
 
         Pool p3 = TestUtil.createPool(owner, prod3)
             .setId("p3");
-
 
         jsRules.reinitTo("test_name_space");
         JsonJsContext args = new JsonJsContext(mapper);
@@ -2256,7 +2268,7 @@ public class AutobindRulesTest {
         assertTrue(bestPools.contains(new PoolQuantity(MCT1650, 1)));
     }
 
-   /*
+    /*
      * This test demonstrates that a pool that provides a certain addon, will be selected
      * during autoattach if that addon matches the one the consumer specified, even if
      * no installed product is covered by that pool.(because addon, as well as roles, are special
@@ -3678,7 +3690,7 @@ public class AutobindRulesTest {
         assertEquals(4, q.getQuantity());
     }
 
-     // Simple utility to simulate a pre-existing entitlement for a pool.
+    // Simple utility to simulate a pre-existing entitlement for a pool.
     private Entitlement mockEntitlement(Pool p, int quantity) {
         Entitlement e = TestUtil.createEntitlement(owner, consumer, p, null);
         e.setQuantity(quantity);
@@ -3935,8 +3947,7 @@ public class AutobindRulesTest {
 
     @Test
     public void testPoolQuantityCompare() {
-        Product prod =
-            mockProduct(productId, "some prod", "2");
+        Product prod = mockProduct(productId, "some prod", "2");
         Pool pool1 = TestUtil.createPool(owner, prod, 10);
         pool1.setId("1234");
         PoolQuantity pq1 = new PoolQuantity(pool1, 5);

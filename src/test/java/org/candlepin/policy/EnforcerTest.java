@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.PoolManager;
@@ -45,6 +46,8 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.TestUtil;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +66,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -90,6 +95,11 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @BeforeEach
     public void createEnforcer() throws Exception {
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+
         when(config.getInt(ConfigProperties.PRODUCT_CACHE_MAX)).thenReturn(100);
 
         owner = createOwner();
@@ -119,7 +129,8 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         enforcer = new EntitlementRules(
             new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator,
-            consumerTypeCurator, new RulesObjectMapper(), modelTranslator, poolManager);
+            consumerTypeCurator, injector.getInstance(RulesObjectMapper.class),
+            modelTranslator, poolManager);
     }
 
     @Test

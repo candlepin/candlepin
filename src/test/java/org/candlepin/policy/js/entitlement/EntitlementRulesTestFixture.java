@@ -20,6 +20,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
@@ -49,6 +50,8 @@ import org.candlepin.test.TestUtil;
 import org.candlepin.util.DateSourceImpl;
 import org.candlepin.util.Util;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +66,8 @@ import org.xnap.commons.i18n.I18nFactory;
 
 import java.io.InputStream;
 import java.util.Locale;
+
+
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -102,6 +107,12 @@ public class EntitlementRulesTestFixture {
     public void createEnforcer() {
         this.config = TestConfig.defaults();
         this.config.setProperty(ConfigProperties.PRODUCT_CACHE_MAX, "100");
+
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+
         InputStream is = this.getClass().getResourceAsStream(
             RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
@@ -120,10 +131,9 @@ public class EntitlementRulesTestFixture {
             config,
             consumerCurator,
             consumerTypeCurator,
-            new RulesObjectMapper(),
+            injector.getInstance(RulesObjectMapper.class),
             translator,
-            poolManager
-        );
+            poolManager);
 
         owner = TestUtil.createOwner();
 

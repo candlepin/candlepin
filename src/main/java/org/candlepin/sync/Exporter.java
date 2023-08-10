@@ -67,6 +67,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 
 
@@ -118,6 +119,7 @@ public class Exporter {
         CdnCurator cdnCurator,
         CdnExporter cdnExporter,
         SyncUtils syncUtils,
+        @Named("ExportObjectMapper") ObjectMapper mapper,
         ModelTranslator translator,
         ContentAccessManager contentAccessManager) {
 
@@ -142,7 +144,7 @@ public class Exporter {
         this.cdnCurator = cdnCurator;
         this.cdnExporter = cdnExporter;
         this.syncUtils = syncUtils;
-        mapper = syncUtils.getObjectMapper();
+        this.mapper = mapper;
         this.translator = translator;
         this.contentAccessManager = contentAccessManager;
     }
@@ -300,7 +302,7 @@ public class Exporter {
         try {
             in = new FileInputStream(file);
 
-            byte [] buf = new byte[1024];
+            byte[] buf = new byte[1024];
             int len;
             while ((len = in.read(buf)) > 0) {
                 out.write(buf, 0, len);
@@ -428,7 +430,7 @@ public class Exporter {
 
         if (contentAccessCert != null &&
             (serials == null || contentAccessCert.getSerial() == null ||
-            serials.contains(contentAccessCert.getSerial().getId()))) {
+                serials.contains(contentAccessCert.getSerial().getId()))) {
             File contentAccessCertDir = new File(baseDir.getCanonicalPath(), "content_access_certificates");
             contentAccessCertDir.mkdir();
 

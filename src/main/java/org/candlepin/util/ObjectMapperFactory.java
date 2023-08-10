@@ -14,9 +14,17 @@
  */
 package org.candlepin.util;
 
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
+import org.candlepin.policy.js.RulesObjectMapper;
+
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
@@ -71,4 +79,60 @@ public class ObjectMapperFactory implements Provider<ObjectMapper> {
         return mapper;
     }
 
+    public static ObjectMapper getActivationListenerObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
+        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
+        mapper.setAnnotationIntrospector(pair);
+
+        return mapper;
+    }
+
+    public static ObjectMapper getEventFactoryObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+
+        SimpleFilterProvider filterProvider = new SimpleFilterProvider();
+        filterProvider.setFailOnUnknownId(false);
+
+        mapper.setFilterProvider(filterProvider);
+
+        Hibernate5Module hbm = new Hibernate5Module();
+        hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
+        mapper.registerModule(hbm);
+        mapper.registerModule(new Jdk8Module());
+        mapper.registerModule(new JavaTimeModule());
+
+        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
+        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
+        AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
+        mapper.setAnnotationIntrospector(pair);
+
+        return mapper;
+    }
+
+    public static ObjectMapper getX509V3ExtensionUtilObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
+        return mapper;
+    }
+
+    public static ObjectMapper getHypervisorUpdateJobObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        return mapper;
+    }
+
+    public static ObjectMapper getSyncObjectMapper(Configuration config) {
+        ObjectMapper mapper = getObjectMapper();
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
+            config.getBoolean(ConfigProperties.FAIL_ON_UNKNOWN_IMPORT_PROPERTIES));
+        return mapper;
+    }
+
+    public static RulesObjectMapper getRulesObjectMapper() {
+        return new RulesObjectMapper(getObjectMapper());
+    }
 }

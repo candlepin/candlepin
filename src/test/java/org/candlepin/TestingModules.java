@@ -60,6 +60,7 @@ import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.policy.criteria.CriteriaRules;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
+import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.resource.ActivationKeyResource;
@@ -94,23 +95,12 @@ import org.candlepin.test.EnforcerForTesting;
 import org.candlepin.test.VerifyAuthorizationFilterFactory;
 import org.candlepin.util.DateSource;
 import org.candlepin.util.ExpiryDateFunction;
+import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 import org.candlepin.validation.CandlepinMessageInterpolator;
 
-import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.AnnotationIntrospector;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.introspect.AnnotationIntrospectorPair;
-import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.fasterxml.jackson.datatype.hibernate5.Hibernate5Module;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -146,6 +136,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.validation.MessageInterpolator;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
+
+
 
 /**
  * Guice modules for unit testing
@@ -353,50 +345,44 @@ public class TestingModules {
             // Messaging
             bind(CPMSessionFactory.class).to(NoopSessionFactory.class).in(Singleton.class);
             bind(CPMContextListener.class).to(NoopContextListener.class).in(Singleton.class);
+            bind(ObjectMapperFactory.class).asEagerSingleton();
+            bind(ObjectMapper.class).toProvider(ObjectMapperFactory.class);
+            bind(RulesObjectMapper.class);
         }
 
         @Provides
         @Singleton
         @Named("EventFactoryObjectMapper")
         private ObjectMapper configureEventFactoryObjectMapper() {
-            ObjectMapper mapper = new ObjectMapper();
-
-            SimpleFilterProvider filterProvider = new SimpleFilterProvider();
-            filterProvider.setFailOnUnknownId(false);
-
-            mapper.setFilterProvider(filterProvider);
-
-            Hibernate5Module hbm = new Hibernate5Module();
-            hbm.enable(Hibernate5Module.Feature.FORCE_LAZY_LOADING);
-            mapper.registerModule(hbm);
-            mapper.registerModule(new Jdk8Module());
-            mapper.registerModule(new JavaTimeModule());
-
-            AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-            AnnotationIntrospector secondary = new JaxbAnnotationIntrospector(mapper.getTypeFactory());
-            AnnotationIntrospector pair = new AnnotationIntrospectorPair(primary, secondary);
-            mapper.setAnnotationIntrospector(pair);
-
-            return mapper;
+            return ObjectMapperFactory.getEventFactoryObjectMapper();
         }
 
         @Provides
         @Singleton
         @Named("X509V3ExtensionUtilObjectMapper")
         private ObjectMapper configureX509V3ExtensionUtilObjectMapper() {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-            mapper.setVisibility(PropertyAccessor.FIELD, JsonAutoDetect.Visibility.ANY);
-            return mapper;
+            return ObjectMapperFactory.getX509V3ExtensionUtilObjectMapper();
         }
 
         @Provides
         @Singleton
         @Named("HypervisorUpdateJobObjectMapper")
         private ObjectMapper configureHypervisorUpdateJobObjectMapper() {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            return mapper;
+            return ObjectMapperFactory.getHypervisorUpdateJobObjectMapper();
+        }
+
+        @Provides
+        @Singleton
+        @Named("ImportObjectMapper")
+        private ObjectMapper configureImportObjectMapper() {
+            return ObjectMapperFactory.getSyncObjectMapper(TestConfig.defaults());
+        }
+
+        @Provides
+        @Singleton
+        @Named("ExportObjectMapper")
+        private ObjectMapper configureExportObjectMapper() {
+            return ObjectMapperFactory.getSyncObjectMapper(TestConfig.defaults());
         }
     }
 }

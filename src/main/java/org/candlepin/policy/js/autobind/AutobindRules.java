@@ -56,6 +56,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 
+
 /**
  * AutobindRules
  *
@@ -75,8 +76,8 @@ public class AutobindRules {
 
     @Inject
     public AutobindRules(JsRunner jsRules, ProductCurator productCurator,
-        ConsumerTypeCurator consumerTypeCurator, OwnerCurator ownerCurator, RulesObjectMapper mapper,
-        ModelTranslator translator) {
+        ConsumerTypeCurator consumerTypeCurator, OwnerCurator ownerCurator,
+        RulesObjectMapper mapper, ModelTranslator translator) {
 
         this.jsRules = jsRules;
         this.productCurator = productCurator;
@@ -126,7 +127,7 @@ public class AutobindRules {
 
         Stream<GuestIdDTO> guestIdStream = consumer.getGuestIds() == null ? Stream.empty() :
             consumer.getGuestIds().stream()
-            .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
+                .map(this.translator.getStreamMapper(GuestId.class, GuestIdDTO.class));
 
         // Provide objects for the script:
         JsonJsContext args = new JsonJsContext(mapper);
@@ -197,7 +198,7 @@ public class AutobindRules {
 
         List<String> consumerProducts = new LinkedList<>();
         if (consumer != null && consumer.getInstalledProducts() != null) {
-            for (ConsumerInstalledProduct product: consumer.getInstalledProducts()) {
+            for (ConsumerInstalledProduct product : consumer.getInstalledProducts()) {
                 consumerProducts.add(product.getProductId());
             }
         }

@@ -14,6 +14,8 @@
  */
 package org.candlepin.servlet.filter.logging;
 
+import org.candlepin.util.ObjectMapperFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 
@@ -28,6 +30,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+
+
 /**
  * ServletLogger
  */
@@ -36,7 +40,7 @@ public class ServletLogger {
     private static ObjectWriter writer;
 
     static {
-        mapper = new ObjectMapper();
+        mapper = ObjectMapperFactory.getObjectMapper();
         writer = mapper.writerWithDefaultPrettyPrinter();
     }
 
@@ -132,9 +136,9 @@ public class ServletLogger {
         long startTime) {
         long duration = System.currentTimeMillis() - startTime;
         return new StringBuilder().append("Response: status=")
-                .append(resp.getStatus())
-                .append(", content-type=\"").append(resp.getContentType())
-                .append("\", time=").append(duration);
+            .append(resp.getStatus())
+            .append(", content-type=\"").append(resp.getContentType())
+            .append("\", time=").append(duration);
     }
 
     public static boolean showAsText(String header) {

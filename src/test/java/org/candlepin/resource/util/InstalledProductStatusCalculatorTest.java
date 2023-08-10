@@ -23,7 +23,10 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
 import org.candlepin.audit.EventSink;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.server.v1.DateRange;
@@ -54,6 +57,8 @@ import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -90,16 +95,26 @@ import java.util.Random;
 public class InstalledProductStatusCalculatorTest {
     private ComplianceRules complianceRules;
 
-    @Mock private ConsumerCurator consumerCurator;
-    @Mock private ConsumerTypeCurator consumerTypeCurator;
-    @Mock private EntitlementCurator entCurator;
-    @Mock private EnvironmentCurator environmentCurator;
-    @Mock private RulesCurator rulesCuratorMock;
-    @Mock private EventSink eventSink;
-    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
-    @Mock private JsRunnerRequestCache cache;
-    @Mock private OwnerProductCurator ownerProductCurator;
-    @Mock private OwnerCurator ownerCurator;
+    @Mock
+    private ConsumerCurator consumerCurator;
+    @Mock
+    private ConsumerTypeCurator consumerTypeCurator;
+    @Mock
+    private EntitlementCurator entCurator;
+    @Mock
+    private EnvironmentCurator environmentCurator;
+    @Mock
+    private RulesCurator rulesCuratorMock;
+    @Mock
+    private EventSink eventSink;
+    @Mock
+    private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock
+    private JsRunnerRequestCache cache;
+    @Mock
+    private OwnerProductCurator ownerProductCurator;
+    @Mock
+    private OwnerCurator ownerCurator;
 
     private ModelTranslator translator;
     private JsRunnerProvider provider;
@@ -111,6 +126,12 @@ public class InstalledProductStatusCalculatorTest {
         translator = new StandardTranslator(this.consumerTypeCurator,
             this.environmentCurator,
             this.ownerCurator);
+
+        Configuration config = TestConfig.defaults();
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
 
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
@@ -124,11 +145,9 @@ public class InstalledProductStatusCalculatorTest {
         this.provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale, I18nFactory.FALLBACK);
 
-        RulesObjectMapper objectMapper = new RulesObjectMapper();
-
         this.complianceRules = new ComplianceRules(provider.get(), this.entCurator,
             new StatusReasonMessageGenerator(i18n), eventSink, this.consumerCurator, this.consumerTypeCurator,
-            objectMapper, translator);
+            injector.getInstance(RulesObjectMapper.class), translator);
 
         this.consumerEnricher = new ConsumerEnricher(this.complianceRules, this.ownerProductCurator);
     }
@@ -823,6 +842,7 @@ public class InstalledProductStatusCalculatorTest {
     }
 
     private static int lastPoolId = 0;
+
     private Entitlement mockEntitlement(Owner owner, Consumer consumer, Product product, DateRange range,
         Product... providedProducts) {
 
@@ -847,7 +867,7 @@ public class InstalledProductStatusCalculatorTest {
     }
 
     private Entitlement mockUnmappedGuestEntitlement(Owner owner, Consumer consumer, Product product,
-        DateRange range, Product ... providedProducts) {
+        DateRange range, Product... providedProducts) {
 
         consumer.setFact("virt.is_guest", "True");
         Entitlement e = mockEntitlement(owner, consumer, product, range, providedProducts);
@@ -886,7 +906,7 @@ public class InstalledProductStatusCalculatorTest {
     }
 
     private Entitlement mockStackedEntitlement(Owner owner, Consumer consumer, String stackId,
-        Product product, int quantity, DateRange range, Product ... providedProducts) {
+        Product product, int quantity, DateRange range, Product... providedProducts) {
 
         Entitlement entitlement = this.mockEntitlement(owner, consumer, product, range, providedProducts);
         entitlement.setQuantity(quantity);

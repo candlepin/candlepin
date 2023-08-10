@@ -276,8 +276,7 @@ public class EntitlementRules implements Enforcer {
                     // quantity should be divisible by multiplier
                     if ((entitlement.getQuantity() + change) % instanceMultiplier != 0) {
                         result.addError(new ValidationError(
-                            EntitlementRulesTranslator.PoolErrorKeys.QUANTITY_MISMATCH
-                        ));
+                            EntitlementRulesTranslator.PoolErrorKeys.QUANTITY_MISMATCH));
                     }
                 }
             }
@@ -559,7 +558,7 @@ public class EntitlementRules implements Enforcer {
 
                 if (stackId == null ||
                     (!stackIdsThathaveSubPools.contains(stackId) &&
-                    !alreadyCoveredStackIds.contains(stackId))) {
+                        !alreadyCoveredStackIds.contains(stackId))) {
                     alreadyCoveredStackIds.add(stackId);
                     log.debug("Creating a new sub-pool for {}", pool);
                     try {
@@ -610,8 +609,8 @@ public class EntitlementRules implements Enforcer {
 
         ConsumerType type = this.consumerTypeCurator.getConsumerType(consumer);
 
-        boolean consumerFactExpression = type.isManifest() && !config.getBoolean(ConfigProperties
-            .STANDALONE);
+        boolean consumerFactExpression = type.isManifest() &&
+            !config.getBoolean(ConfigProperties.STANDALONE);
 
         if (!consumerFactExpression) {
             return poolOperations;
@@ -634,7 +633,7 @@ public class EntitlementRules implements Enforcer {
             subscriptionPoolMap.get(pool.getSubscriptionId()).add(pool);
         }
 
-        for (Entry<String, Entitlement> entry: entitlements.entrySet()) {
+        for (Entry<String, Entitlement> entry : entitlements.entrySet()) {
             String poolId = entry.getKey();
             Entitlement entitlement = entry.getValue();
             Pool pool = poolQuantityMap.get(poolId).getPool();
@@ -710,7 +709,7 @@ public class EntitlementRules implements Enforcer {
                     pools.stream()
                         .filter(thisPool -> thisPool.getAttributeValue(Pool.Attributes.DERIVED_POOL) != null)
                         .forEach(thisPool -> poolOperations.updateQuantity(thisPool,
-                        pool.getQuantity().equals(exportCount) ? 0 : -1));
+                            pool.getQuantity().equals(exportCount) ? 0 : -1));
                 }
             }
         }
@@ -749,7 +748,7 @@ public class EntitlementRules implements Enforcer {
 
                 poolOperations
                     .append(postBindVirtLimit(consumer, virtLimitEntitlements,
-                    flatAttributeMaps, subPoolsForStackIds, isUpdate, poolQuantityMap));
+                        flatAttributeMaps, subPoolsForStackIds, isUpdate, poolQuantityMap));
             }
         }
 

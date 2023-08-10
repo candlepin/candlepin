@@ -24,6 +24,7 @@ import org.candlepin.dto.api.server.v1.ActivationKeyDTO;
 import org.candlepin.dto.api.server.v1.NestedOwnerDTO;
 import org.candlepin.jackson.DynamicFilterData;
 import org.candlepin.model.ProductCurator;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -51,11 +52,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.ws.rs.core.MediaType;
 
 
+
 @ExtendWith(MockitoExtension.class)
 public class JsonProviderTest {
 
-    @Mock private Configuration config;
-    @Mock private ProductCurator productCurator;
+    @Mock
+    private Configuration config;
+    @Mock
+    private ProductCurator productCurator;
     private ObjectMapper ourMapper;
 
     @BeforeEach
@@ -79,7 +83,7 @@ public class JsonProviderTest {
     // This tests to see that the ObjectMapper serializes Date objects to the proper format
     @Test
     public void serializedDateDoesNotIncludeMilliseconds() throws JsonProcessingException {
-        Date now = new Date();  // will be initialized to when it was allocated with millisecond precision
+        Date now = new Date(); // will be initialized to when it was allocated with millisecond precision
         SimpleDateFormat iso8601WithoutMilliseconds = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
         iso8601WithoutMilliseconds.setTimeZone(TimeZone.getTimeZone("UTC"));
         String expectedDate = "\"" + iso8601WithoutMilliseconds.format(now) + "\"";
@@ -163,10 +167,9 @@ public class JsonProviderTest {
             fail("Serializing ActivationKeyDTO failed!");
         }
 
-        ObjectMapper mapper = new ObjectMapper();
         JsonNode akNode = null;
         try {
-            akNode = mapper.readTree(serializedKey);
+            akNode = ObjectMapperFactory.getObjectMapper().readTree(serializedKey);
         }
         catch (JsonProcessingException e) {
             fail("Parsing serialized ActivationKeyDTO failed!");
@@ -195,10 +198,9 @@ public class JsonProviderTest {
             fail("Serializing ActivationKeyDTO failed!");
         }
 
-        ObjectMapper mapper = new ObjectMapper();
         JsonNode akNode = null;
         try {
-            akNode = mapper.readTree(serializedKey);
+            akNode = ObjectMapperFactory.getObjectMapper().readTree(serializedKey);
         }
         catch (JsonProcessingException e) {
             fail("Parsing serialized ActivationKeyDTO failed!");
@@ -228,10 +230,9 @@ public class JsonProviderTest {
             fail("Serializing ActivationKeyDTO failed!");
         }
 
-        ObjectMapper mapper = new ObjectMapper();
         JsonNode akNode = null;
         try {
-            akNode = mapper.readTree(serializedKey);
+            akNode = ObjectMapperFactory.getObjectMapper().readTree(serializedKey);
         }
         catch (JsonProcessingException e) {
             fail("Parsing serialized ActivationKeyDTO failed!");
@@ -258,10 +259,9 @@ public class JsonProviderTest {
             fail("Serializing ActivationKeyDTO failed!");
         }
 
-        ObjectMapper mapper = new ObjectMapper();
         JsonNode akNode = null;
         try {
-            akNode = mapper.readTree(serializedKey);
+            akNode = ObjectMapperFactory.getObjectMapper().readTree(serializedKey);
         }
         catch (JsonProcessingException e) {
             fail("Parsing serialized ActivationKeyDTO failed!");
@@ -293,10 +293,9 @@ public class JsonProviderTest {
             fail("Serializing ActivationKeyDTO failed!");
         }
 
-        ObjectMapper mapper = new ObjectMapper();
         JsonNode akNode = null;
         try {
-            akNode = mapper.readTree(serializedKey);
+            akNode = ObjectMapperFactory.getObjectMapper().readTree(serializedKey);
         }
         catch (JsonProcessingException e) {
             fail("Parsing serialized ActivationKeyDTO failed!");
@@ -334,10 +333,9 @@ public class JsonProviderTest {
             fail("Serializing a list ActivationKeyDTOs failed!");
         }
 
-        ObjectMapper mapper = new ObjectMapper();
         JsonNode akNode = null;
         try {
-            akNode = mapper.readTree(serializedKeys);
+            akNode = ObjectMapperFactory.getObjectMapper().readTree(serializedKeys);
         }
         catch (JsonProcessingException e) {
             fail("Parsing serialized ActivationKeyDTO list failed!");

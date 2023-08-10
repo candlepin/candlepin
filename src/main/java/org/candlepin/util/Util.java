@@ -65,13 +65,14 @@ import java.util.UUID;
 import java.util.function.Predicate;
 
 
+
 /**
  * Genuinely random utilities.
  */
 public class Util {
 
     private static final Logger log = LoggerFactory.getLogger(Util.class);
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = ObjectMapperFactory.getObjectMapper();
     private static final String UTC_STR = "UTC";
 
     private Util() {
@@ -289,7 +290,6 @@ public class Util {
         byte[] sha1hash = md.digest();
         return new String(Hex.encodeHex(sha1hash));
     }
-
 
     public static String toJson(Object anObject) throws JsonProcessingException {
         return MAPPER.writeValueAsString(anObject);

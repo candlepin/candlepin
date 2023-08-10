@@ -16,6 +16,10 @@ package org.candlepin.policy.js;
 
 import org.mozilla.javascript.Scriptable;
 
+import javax.inject.Inject;
+
+
+
 /**
  * JsonContext
  *
@@ -29,8 +33,9 @@ public class JsonJsContext extends JsContext {
     private final RulesObjectMapper rulesObjectMapper;
     private ArgumentJsContext nonSerializableContext;
 
-    public JsonJsContext(RulesObjectMapper rulesObjectMapper) {
-        this.rulesObjectMapper = rulesObjectMapper;
+    @Inject
+    public JsonJsContext(RulesObjectMapper objectMapper) {
+        this.rulesObjectMapper = objectMapper;
         this.nonSerializableContext = new ArgumentJsContext();
     }
 

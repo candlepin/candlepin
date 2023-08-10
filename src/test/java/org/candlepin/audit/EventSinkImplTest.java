@@ -28,8 +28,10 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.auth.Principal;
+import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
@@ -48,6 +50,8 @@ import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 import org.apache.activemq.artemis.api.core.ActiveMQBuffers;
@@ -76,13 +80,20 @@ import java.util.List;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class EventSinkImplTest {
-    @Mock private ClientSessionFactory mockSessionFactory;
-    @Mock private ClientSession mockClientSession;
-    @Mock private ClientProducer mockClientProducer;
-    @Mock private ClientMessage mockClientMessage;
-    @Mock private PrincipalProvider mockPrincipalProvider;
-    @Mock private ServerLocator mockLocator;
-    @Mock private CandlepinModeManager mockModeManager;
+    @Mock
+    private ClientSessionFactory mockSessionFactory;
+    @Mock
+    private ClientSession mockClientSession;
+    @Mock
+    private ClientProducer mockClientProducer;
+    @Mock
+    private ClientMessage mockClientMessage;
+    @Mock
+    private PrincipalProvider mockPrincipalProvider;
+    @Mock
+    private ServerLocator mockLocator;
+    @Mock
+    private CandlepinModeManager mockModeManager;
 
     private ConsumerTypeCurator mockConsumerTypeCurator;
     private EnvironmentCurator mockEnvironmentCurator;
@@ -99,6 +110,13 @@ public class EventSinkImplTest {
 
     @BeforeEach
     public void init() throws Exception {
+        Configuration config = TestConfig.defaults();
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+        this.mapper = injector.getInstance(ObjectMapper.class);
+
         this.principal = TestUtil.createOwnerPrincipal();
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
         when(mockSessionFactory.createSession()).thenReturn(mockClientSession);
@@ -109,7 +127,7 @@ public class EventSinkImplTest {
         doReturn(Mode.NORMAL).when(this.mockModeManager).getCurrentMode();
 
         this.amqSessionFactory = new TestingActiveMQSessionFactory(null, mockSessionFactory);
-        this.mapper = spy(new ObjectMapper());
+        this.mapper = spy(this.mapper);
 
         this.mockConsumerTypeCurator = mock(ConsumerTypeCurator.class);
         this.mockEnvironmentCurator = mock(EnvironmentCurator.class);

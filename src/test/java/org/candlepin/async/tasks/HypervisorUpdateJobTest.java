@@ -32,6 +32,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
@@ -60,6 +61,8 @@ import org.candlepin.service.impl.HypervisorUpdateAction;
 import org.candlepin.test.TestUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,6 +74,7 @@ import java.util.Set;
 import java.util.function.Function;
 
 import javax.persistence.EntityManager;
+
 
 
 public class HypervisorUpdateJobTest {
@@ -106,8 +110,13 @@ public class HypervisorUpdateJobTest {
         sink = mock(EventSink.class);
         evtFactory = mock(EventFactory.class);
         entityManager = mock(EntityManager.class);
-        objectMapper = new ObjectMapper();
         when(owner.getId()).thenReturn("joe");
+
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+        objectMapper = injector.getInstance(ObjectMapper.class);
 
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
         ctype.setId("test-ctype");
@@ -122,13 +131,12 @@ public class HypervisorUpdateJobTest {
         EnvironmentCurator environmentCurator = mock(EnvironmentCurator.class);
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCurator);
 
-        hypervisorJson =
-            "{\"hypervisors\":" +
-                "[{" +
-                "\"name\" : \"hypervisor_999\"," +
-                "\"hypervisorId\" : {\"hypervisorId\":\"uuid_999\"}," +
-                "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]" +
-                "}]}";
+        hypervisorJson = "{\"hypervisors\":" +
+            "[{" +
+            "\"name\" : \"hypervisor_999\"," +
+            "\"hypervisorId\" : {\"hypervisorId\":\"uuid_999\"}," +
+            "\"guestIds\" : [{\"guestId\" : \"guestId_1_999\"}]" +
+            "}]}";
 
         hypervisorUpdateAction = new HypervisorUpdateAction(
             consumerCurator, consumerTypeCurator, consumerResource, subAdapter, translator, config,

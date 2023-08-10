@@ -32,7 +32,6 @@ import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
-import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -80,19 +79,19 @@ public class HostedTestResource {
 
     private static final Pattern ARCHIVE_FILENAME_REGEX = Pattern.compile("\\.(?i:gz)\\z");
 
-    private static final ObjectMapper OBJ_MAPPER = ObjectMapperFactory.getObjectMapper();
-
     private final HostedTestDataStore datastore;
     private final UniqueIdGenerator idGenerator;
     private final ModelTranslator translator;
+    private final ObjectMapper mapper;
 
     @Inject
     public HostedTestResource(HostedTestDataStore datastore, UniqueIdGenerator idGenerator,
-        ModelTranslator translator) {
+        ModelTranslator translator, ObjectMapper mapper) {
 
         this.datastore = Objects.requireNonNull(datastore);
         this.idGenerator = Objects.requireNonNull(idGenerator);
         this.translator = Objects.requireNonNull(translator);
+        this.mapper = mapper;
     }
 
     /**
@@ -233,7 +232,6 @@ public class HostedTestResource {
             }
         }
     }
-
 
     /**
      * Deletes all data currently maintained by the backing adapter.
@@ -497,7 +495,6 @@ public class HostedTestResource {
         return this.datastore.deleteProduct(productId) != null;
     }
 
-
     @GET
     @Path("/content")
     @Produces(MediaType.APPLICATION_JSON)
@@ -668,7 +665,7 @@ public class HostedTestResource {
                     istream = new GZIPInputStream(istream);
                 }
 
-                return OBJ_MAPPER.readValue(istream, typeref);
+                return this.mapper.readValue(istream, typeref);
             }
             finally {
                 if (istream != null) {

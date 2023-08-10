@@ -80,6 +80,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.persistence.PersistenceException;
 
 
@@ -147,8 +148,9 @@ public class Importer {
         RulesImporter rulesImporter, OwnerCurator ownerCurator, IdentityCertificateCurator idCertCurator,
         RefresherFactory refresherFactory, PKIUtility pki, ExporterMetadataCurator emc,
         CertificateSerialCurator csc, EventSink sink, I18n i18n, DistributorVersionCurator distVerCurator,
-        CdnCurator cdnCurator, SyncUtils syncUtils, ImportRecordCurator importRecordCurator,
-        SubscriptionReconciler subscriptionReconciler, ModelTranslator translator) {
+        CdnCurator cdnCurator, SyncUtils syncUtils, @Named("ImportObjectMapper") ObjectMapper mapper,
+        ImportRecordCurator importRecordCurator, SubscriptionReconciler subscriptionReconciler,
+        ModelTranslator translator) {
 
         this.consumerTypeCurator = Objects.requireNonNull(consumerTypeCurator);
         this.rulesImporter = Objects.requireNonNull(rulesImporter);
@@ -156,7 +158,7 @@ public class Importer {
         this.idCertCurator = Objects.requireNonNull(idCertCurator);
         this.refresherFactory = Objects.requireNonNull(refresherFactory);
         this.syncUtils = Objects.requireNonNull(syncUtils);
-        this.mapper = Objects.requireNonNull(syncUtils.getObjectMapper());
+        this.mapper = Objects.requireNonNull(mapper);
         this.pki = Objects.requireNonNull(pki);
         this.expMetaCurator = Objects.requireNonNull(emc);
         this.csCurator = Objects.requireNonNull(csc);

@@ -23,6 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.candlepin.TestingModules;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.jackson.DynamicPropertyFilter;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
@@ -33,6 +36,8 @@ import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,6 +52,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
+
+
 
 /**
  * Test suite for the ProductData class
@@ -85,7 +92,13 @@ public class ProductDataTest {
 
     @BeforeEach
     public void createObjects() {
-        this.mapper = new ObjectMapper();
+        Configuration config = TestConfig.defaults();
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
+        mapper = injector.getInstance(ObjectMapper.class);
+
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider.setDefaultFilter(new DynamicPropertyFilter());
         this.mapper.setFilters(filterProvider);
@@ -331,14 +344,13 @@ public class ProductDataTest {
         ContentData[] content = new ContentData[] {
             new ContentData("c1", "content-1", "test_type", "test_label-1", "test_vendor-1"),
             new ContentData("c2", "content-2", "test_type", "test_label-2", "test_vendor-2"),
-            new ContentData("c3", "content-3", "test_type", "test_label-3", "test_vendor-3"),
+            new ContentData("c3", "content-3", "test_type", "test_label-3", "test_vendor-3")
         };
 
         Collection<ProductContentData> input = Arrays.asList(
             new ProductContentData(content[0], true),
             new ProductContentData(content[1], false),
-            new ProductContentData(content[2], true)
-        );
+            new ProductContentData(content[2], true));
 
         Collection<ProductContentData> input2 = Arrays.asList(
             new ProductContentData(content[0], false),
@@ -346,8 +358,7 @@ public class ProductDataTest {
             new ProductContentData(content[1], true),
             new ProductContentData(content[1], false),
             new ProductContentData(content[2], false),
-            new ProductContentData(content[2], true)
-        );
+            new ProductContentData(content[2], true));
 
         Collection<ProductContentData> output = dto.getProductContent();
         assertNull(output);
@@ -413,8 +424,7 @@ public class ProductDataTest {
         Collection<ProductContentData> input = Arrays.asList(
             new ProductContentData(content[0], true),
             new ProductContentData(content[1], false),
-            new ProductContentData(content[2], true)
-        );
+            new ProductContentData(content[2], true));
 
         boolean output = dto.hasContent("c1");
         assertFalse(output);
@@ -564,7 +574,6 @@ public class ProductDataTest {
         ProductContentData pcdata1 = new ProductContentData(content[0], true);
         ProductContentData pcdata2 = new ProductContentData(content[1], false);
         ProductContentData pcdata3 = new ProductContentData(content[1], true);
-
 
         assertNull(dto.getProductContent());
 
@@ -877,8 +886,7 @@ public class ProductDataTest {
         Collection<Branding> input = Arrays.asList(
             new Branding(null, "eng_id_1", "brand_name_1", "OS"),
             new Branding(null, "eng_id_2", "brand_name_2", "OS"),
-            new Branding(null, "eng_id_3", "brand_name_3", "OS")
-        );
+            new Branding(null, "eng_id_3", "brand_name_3", "OS"));
 
         Collection<Branding> output = dto.getBranding();
         assertNull(output);
@@ -976,8 +984,7 @@ public class ProductDataTest {
         ProductData dto = new ProductData();
         Collection<ProductData> input = Arrays.asList(
             new ProductData("eng_id_1", "name_1"),
-            new ProductData("eng_id_2", "name_2")
-        );
+            new ProductData("eng_id_2", "name_2"));
 
         Collection<ProductData> output = dto.getProvidedProducts();
         assertNull(output);
@@ -1076,36 +1083,30 @@ public class ProductDataTest {
         Collection<ProductContentData> productContent1 = Arrays.asList(
             new ProductContentData(content[0], true),
             new ProductContentData(content[1], false),
-            new ProductContentData(content[2], true)
-        );
+            new ProductContentData(content[2], true));
 
         Collection<ProductContentData> productContent2 = Arrays.asList(
             new ProductContentData(content[3], true),
             new ProductContentData(content[4], false),
-            new ProductContentData(content[5], true)
-        );
+            new ProductContentData(content[5], true));
 
         Collection<BrandingInfo> branding1 = Arrays.asList(
             new Branding(null, "eng_id_1", "brand_name_1", "OS"),
             new Branding(null, "eng_id_2", "brand_name_2", "OS"),
-            new Branding(null, "eng_id_3", "brand_name_3", "OS")
-        );
+            new Branding(null, "eng_id_3", "brand_name_3", "OS"));
 
         Collection<BrandingInfo> branding2 = Arrays.asList(
             new Branding(null, "eng_id_4", "brand_name_4", "OS"),
             new Branding(null, "eng_id_5", "brand_name_5", "OS"),
-            new Branding(null, "eng_id_6", "brand_name_6", "OS")
-        );
+            new Branding(null, "eng_id_6", "brand_name_6", "OS"));
 
         Set<ProductData> providedProductData1 = Util.asSet(
             new ProductData("pd1", "providedProduct1"),
-            new ProductData("pd2", "providedProduct2")
-        );
+            new ProductData("pd2", "providedProduct2"));
 
         Set<ProductData> providedProductData2 = Util.asSet(
             new ProductData("pd3", "providedProduct3"),
-            new ProductData("pd4", "providedProduct4")
-        );
+            new ProductData("pd4", "providedProduct4"));
 
         return Stream.of(
             new Object[] { "Uuid", "test_value", "alt_value" },
@@ -1115,11 +1116,10 @@ public class ProductDataTest {
             new Object[] { "Attributes", attributes1, attributes2 },
             new Object[] { "ProductContent", productContent1, productContent2 },
             new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList("4", "5") },
-            new Object[] { "Branding", branding1, branding2},
+            new Object[] { "Branding", branding1, branding2 },
             // new Object[] { "Href", "test_value", null },
             new Object[] { "Locked", Boolean.TRUE, false },
-            new Object[] { "ProvidedProducts", providedProductData1, providedProductData2 }
-        );
+            new Object[] { "ProvidedProducts", providedProductData1, providedProductData2 });
     }
 
     protected Method[] getAccessorAndMutator(String methodSuffix, Class mutatorInputClass)
@@ -1180,8 +1180,7 @@ public class ProductDataTest {
 
         if (value1 instanceof Collection) {
             assertTrue(Util.collectionsAreEqual(
-                (Collection) accessor.invoke(lhs), (Collection) accessor.invoke(rhs)
-            ));
+                (Collection) accessor.invoke(lhs), (Collection) accessor.invoke(rhs)));
         }
         else {
             assertEquals(accessor.invoke(lhs), accessor.invoke(rhs));
@@ -1197,8 +1196,7 @@ public class ProductDataTest {
 
         if (value2 instanceof Collection) {
             assertFalse(Util.collectionsAreEqual(
-                (Collection) accessor.invoke(lhs), (Collection) accessor.invoke(rhs)
-            ));
+                (Collection) accessor.invoke(lhs), (Collection) accessor.invoke(rhs)));
         }
         else {
             assertNotEquals(accessor.invoke(lhs), accessor.invoke(rhs));
@@ -1225,8 +1223,7 @@ public class ProductDataTest {
 
         if (value1 instanceof Collection) {
             assertTrue(Util.collectionsAreEqual(
-                (Collection) accessor.invoke(base), (Collection) accessor.invoke(clone)
-            ));
+                (Collection) accessor.invoke(base), (Collection) accessor.invoke(clone)));
         }
         else {
             assertEquals(accessor.invoke(base), accessor.invoke(clone));
@@ -1285,8 +1282,7 @@ public class ProductDataTest {
             // new Object[] { "ProductContent", productContent, Arrays.asList() },
             new Object[] { "DependentProductIds", Arrays.asList("1", "2", "3"), Arrays.asList() },
             // new Object[] { "Href", "test_value", null },
-            new Object[] { "Locked", Boolean.TRUE, false }
-        );
+            new Object[] { "Locked", Boolean.TRUE, false });
     }
 
     @ParameterizedTest
@@ -1461,8 +1457,7 @@ public class ProductDataTest {
 
         assertNotNull(base.getProductContent());
         assertTrue(Util.collectionsAreEqual(
-            Arrays.asList(pcdata1, pcdata2, pcdata3), base.getProductContent()
-        ));
+            Arrays.asList(pcdata1, pcdata2, pcdata3), base.getProductContent()));
     }
 
     @Test

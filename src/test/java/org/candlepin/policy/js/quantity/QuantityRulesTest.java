@@ -19,6 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.TestingModules;
+import org.candlepin.config.Configuration;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
@@ -41,6 +44,8 @@ import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +62,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+
 
 /**
  * QuantityRulesTest
@@ -81,16 +88,28 @@ public class QuantityRulesTest {
     private JsRunnerProvider provider;
     private ModelTranslator translator;
 
-    @Mock private RulesCurator rulesCuratorMock;
-    @Mock private OwnerCurator ownerCuratorMock;
-    @Mock private Provider<JsRunnerRequestCache> cacheProvider;
-    @Mock private JsRunnerRequestCache cache;
-    @Mock private ConsumerTypeCurator consumerTypeCurator;
-    @Mock private EnvironmentCurator environmentCurator;
+    @Mock
+    private RulesCurator rulesCuratorMock;
+    @Mock
+    private OwnerCurator ownerCuratorMock;
+    @Mock
+    private Provider<JsRunnerRequestCache> cacheProvider;
+    @Mock
+    private JsRunnerRequestCache cache;
+    @Mock
+    private ConsumerTypeCurator consumerTypeCurator;
+    @Mock
+    private EnvironmentCurator environmentCurator;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
+
+        Configuration config = TestConfig.defaults();
+        Injector injector = Guice.createInjector(
+            new TestingModules.MockJpaModule(),
+            new TestingModules.StandardTest(config),
+            new TestingModules.ServletEnvironmentModule());
 
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
@@ -101,7 +120,8 @@ public class QuantityRulesTest {
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
 
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCuratorMock);
-        quantityRules = new QuantityRules(provider.get(), new RulesObjectMapper(), translator);
+        quantityRules = new QuantityRules(provider.get(), injector.getInstance(RulesObjectMapper.class),
+            translator);
 
         owner = TestUtil.createOwner();
         product = TestUtil.createProduct();
@@ -164,8 +184,7 @@ public class QuantityRulesTest {
     public void testPhysicalDefaultToNumSocketsBySocketCount() {
         consumer.setFact(SOCKET_FACT, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(2L, suggested.getSuggested());
     }
 
@@ -173,8 +192,7 @@ public class QuantityRulesTest {
     public void testPhysicalRoundsUp() {
         consumer.setFact(SOCKET_FACT, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "3");
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(2L, suggested.getSuggested());
     }
 
@@ -191,8 +209,7 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(2L, suggested.getSuggested());
     }
 
@@ -201,8 +218,7 @@ public class QuantityRulesTest {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(CORES_FACT, "8");
         pool.getProduct().setAttribute(VCPU_ATTRIBUTE, "4");
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(2L, suggested.getSuggested());
     }
 
@@ -227,8 +243,7 @@ public class QuantityRulesTest {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(1L, suggested.getSuggested());
     }
 
@@ -239,8 +254,7 @@ public class QuantityRulesTest {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(SOCKET_FACT, "4");
         consumer.setFact(CORES_FACT, "8");
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(1L, suggested.getSuggested());
     }
 
@@ -249,8 +263,7 @@ public class QuantityRulesTest {
         consumer.setFact(IS_VIRT, "true");
         consumer.setFact(CORES_FACT, "8");
         pool.getProduct().setAttribute(VCPU_ATTRIBUTE, "6");
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(2L, suggested.getSuggested());
     }
 
@@ -268,8 +281,7 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(2L, suggested.getSuggested());
     }
 
@@ -278,8 +290,7 @@ public class QuantityRulesTest {
         consumer.setFact(SOCKET_FACT, "8");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.setQuantity(-1L);
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(4L, suggested.getSuggested());
     }
 
@@ -289,8 +300,7 @@ public class QuantityRulesTest {
         consumer.setFact(SOCKET_FACT, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
 
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(2L, suggested.getSuggested());
         assertEquals(1L, suggested.getIncrement());
     }
@@ -302,8 +312,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(4L, suggested.getSuggested());
         assertEquals(2L, suggested.getIncrement());
     }
@@ -315,8 +324,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(2L, suggested.getSuggested());
         assertEquals(2L, suggested.getIncrement());
     }
@@ -328,8 +336,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "1");
         pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(2L, suggested.getSuggested());
         assertEquals(2L, suggested.getIncrement());
     }
@@ -342,8 +349,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
         pool.setQuantity(4L);
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(4L, suggested.getSuggested());
         assertEquals(2L, suggested.getIncrement());
     }
@@ -356,8 +362,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
         pool.setQuantity(3L);
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(2L, suggested.getSuggested());
         assertEquals(2L, suggested.getIncrement());
     }
@@ -371,8 +376,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(1L, suggested.getSuggested());
         assertEquals(1L, suggested.getIncrement());
     }
@@ -383,8 +387,7 @@ public class QuantityRulesTest {
         consumer.setFact(SOCKET_FACT, "4");
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
 
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(2L, suggested.getSuggested());
     }
 
@@ -405,8 +408,7 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(2L, suggested.getSuggested());
     }
 
@@ -424,8 +426,7 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(0L, suggested.getSuggested());
     }
 
@@ -466,8 +467,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
         currentPool.getProduct().setAttribute(SOCKET_ATTRIBUTE, "2");
 
-        Entitlement currentEntitlement =
-            TestUtil.createEntitlement(owner, consumer, currentPool, null);
+        Entitlement currentEntitlement = TestUtil.createEntitlement(owner, consumer, currentPool, null);
         currentEntitlement.setQuantity(2);
 
         Set<Entitlement> ents = new HashSet<>();
@@ -479,9 +479,8 @@ public class QuantityRulesTest {
         assertEquals(0L, suggested.getSuggested());
 
         // Make sure current coverage does not affect the future
-        suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer,
-                TestUtil.createDate(9000, 6, 1));
+        suggested = quantityRules.getSuggestedQuantity(pool, consumer,
+            TestUtil.createDate(9000, 6, 1));
         assertEquals(2L, suggested.getSuggested());
     }
 
@@ -510,8 +509,7 @@ public class QuantityRulesTest {
 
         consumer.setEntitlements(ents);
 
-        SuggestedQuantityDTO suggested =
-            quantityRules.getSuggestedQuantity(pool, consumer, new Date());
+        SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, consumer, new Date());
         assertEquals(4L, suggested.getSuggested());
     }
 
