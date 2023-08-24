@@ -3,6 +3,11 @@ name: AutoAssignReviewer
 on:
   pull_request:
 
+env:
+  CI: 'true'
+  JAVA_DISTRIBUTION: 'temurin'
+  JAVA_VERSION: '17'
+
 jobs:
   spec_tests:
     name: spec tests
