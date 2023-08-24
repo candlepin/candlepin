@@ -12,21 +12,11 @@ jobs:
   spec_tests:
     name: spec tests
     runs-on: ubuntu-latest
-    container:
-      image: fedora:38
-      options: --privileged
     permissions:
       contents: read
       packages: write
 
     steps:
-      - name: Install dependencies
-        shell: bash
-        run: |
-          dnf -y --setopt install_weak_deps=False update
-          dnf --setopt install_weak_deps=False install -y gettext jss git-core rbenv perl zlib-devel \
-          bzip2 readline-devel
-
       - name: Check out repository
         uses: actions/checkout@v3
         with:
@@ -39,21 +29,16 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
 
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '2.5.3'
+
       - name: Setup ruby
         shell: bash
         run: |
-          git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build
-          echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
-          echo 'eval "$(rbenv init -)"' >> ~/.bashrc
-          source ~/.bashrc
-          rbenv install 2.5.3
-          rbenv global 2.5.3
-          echo "gem: --no-document" > ~/.gemrc
           gem install bundler -v 1.16.1
           bundle install --without=proton
           gem query --local
-
-      - run: echo "/usr/local/opt/ruby/bin" >> $GITHUB_PATH
 
       - name: list
         shell: bash
@@ -62,7 +47,7 @@ jobs:
           echo "-----------------------------------------------------------------"
           echo $PATH
           echo "-----------------------------------------------------------------"
-          bundle exec rspec -v
+          rspec -v
           echo "-----------------------------------------------------------------"
           gem query --local
       - name: Rspec
