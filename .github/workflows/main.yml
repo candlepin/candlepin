@@ -20,16 +20,14 @@ jobs:
         shell: bash
         run: |
           dnf -y --setopt install_weak_deps=False update
-          dnf --setopt install_weak_deps=False install -y gettext jss docker git-core rbenv perl zlib-devel \
+          dnf --setopt install_weak_deps=False install -y gettext jss git-core zlib-devel \
           bzip2 readline-devel
+
       - name: Check out repository
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
-
-      - name: Rebase
-        uses: ./.github/actions/rebase
 
       - name: Set up Java
         uses: actions/setup-java@v3
