@@ -24,7 +24,7 @@ jobs:
         shell: bash
         run: |
           dnf -y --setopt install_weak_deps=False update
-          dnf --setopt install_weak_deps=False install -y gettext jss git-core zlib-devel \
+          dnf --setopt install_weak_deps=False install -y gettext jss git-core rbenv perl zlib-devel \
           bzip2 readline-devel
 
       - name: Check out repository
@@ -39,13 +39,16 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
 
-      - uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: '2.5.3'
-
       - name: Setup ruby
         shell: bash
         run: |
+          git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build
+          echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+          echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+          source ~/.bashrc
+          rbenv install 2.5.3
+          rbenv global 2.5.3
+          echo "gem: --no-document" > ~/.gemrc
           gem install bundler -v 1.16.1
           bundle install --without=proton
           gem query --local
