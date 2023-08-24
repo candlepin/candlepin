@@ -24,7 +24,7 @@ jobs:
         shell: bash
         run: |
           dnf -y --setopt install_weak_deps=False update
-          dnf --setopt install_weak_deps=False install -y gettext eg jss git-core rbenv perl zlib-devel \
+          dnf --setopt install_weak_deps=False install -y gettext jss git-core rbenv perl zlib-devel \
           bzip2 readline-devel
 
       - name: Check out repository
@@ -60,7 +60,7 @@ jobs:
           echo "-----------------------------------------------------------------"
           echo $PATH
           echo "-----------------------------------------------------------------"
-          eg 'rspec -v'
+          rspec -v
           echo "-----------------------------------------------------------------"
           gem query --local
       - name: Rspec
