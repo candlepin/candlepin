@@ -5,11 +5,61 @@ on:
     types: [opened, ready_for_review]
 
 jobs:
-  auto-assign-reviewer:
+  spec_tests:
+    name: spec tests
     runs-on: ubuntu-latest
+    container:
+      image: fedora:38
+      options: --privileged
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - name: Run assignment of reviewer team
-        uses: nikosmoum/auto-assign-reviewer-team@v0.5
+      - name: Install dependencies
+        shell: bash
+        run: |
+          dnf -y --setopt install_weak_deps=False update
+          dnf --setopt install_weak_deps=False install -y gettext jss docker git-core rbenv perl zlib-devel \
+          bzip2 readline-devel
+      - name: Check out repository
+        uses: actions/checkout@v3
         with:
-          githubToken: ${{ secrets.AutoAssignReviewerSecret }}
-          teamName: 'candlepin-server'
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Setup ruby
+        shell: bash
+        run: |
+          git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build
+          echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+          echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+          source ~/.bashrc
+          rbenv install 2.5.3
+          rbenv global 2.5.3
+          echo "gem: --no-document" > ~/.gemrc
+          gem install bundler -v 1.16.1
+          bundle install --without=proton
+          gem query --local
+      - name: list
+        shell: bash
+        run: |
+          ls -l
+          echo "-----------------------------------------------------------------"
+          gem query --local
+          echo "-----------------------------------------------------------------"
+          echo $PATH
+          echo "-----------------------------------------------------------------"
+          eg 'rspec -v'
+      - name: Rspec
+        shell: bash
+        run: ./gradlew rspec --scan
