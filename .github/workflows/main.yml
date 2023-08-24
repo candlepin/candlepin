@@ -39,9 +39,9 @@ jobs:
           distribution: ${{ env.JAVA_DISTRIBUTION }}
           java-version: ${{ env.JAVA_VERSION }}
 
-      - uses: actions/setup-ruby@v1
+      - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '2.5'
+          ruby-version: '2.5.3'
 
       - name: Setup ruby
         shell: bash
