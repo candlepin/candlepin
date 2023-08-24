@@ -53,6 +53,8 @@ jobs:
           bundle install --without=proton
           gem query --local
 
+      - run: echo "/usr/local/opt/ruby/bin" >> $GITHUB_PATH
+
       - name: list
         shell: bash
         run: |
