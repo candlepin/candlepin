@@ -49,7 +49,7 @@ import javax.xml.xpath.XPathFactory;
  * This class is not really a unit test, per se, but there's not really a better place for it.
  */
 public class SchemaCompatibilityTest {
-    private static final String EXPECTED_XSD_VERSION = "3.1";
+    private static final Double EXPECTED_XSD_VERSION = 4.19;
 
     @Test
     public void verifySchemaVersion() throws Exception {
@@ -58,7 +58,7 @@ public class SchemaCompatibilityTest {
         // the the schemaLocation attribute node within the databaseChangeLog element
         String expression = "/databaseChangeLog/@schemaLocation";
         Pattern xsdPattern = Pattern.compile("http://www.liquibase" +
-            ".org/xml/ns/dbchangelog/dbchangelog-(\\d.\\d).xsd");
+            ".org/xml/ns/dbchangelog/dbchangelog-(\\d.\\d+).xsd");
 
         List<String> warnings = new ArrayList<>();
         for (File f : changesets) {
@@ -76,9 +76,10 @@ public class SchemaCompatibilityTest {
                 String location = schemaLocation.getNodeValue();
                 Matcher matcher = xsdPattern.matcher(location);
                 if (matcher.find()) {
-                    String xsdVersion = matcher.group(1);
-                    if (!EXPECTED_XSD_VERSION.equals(xsdVersion)) {
-                        warnings.add("XSD version mismatch (found: " + xsdVersion + ", expected: " +
+                    Double xsdVersion = Double.parseDouble(matcher.group(1));
+                    if (EXPECTED_XSD_VERSION < xsdVersion) {
+                        warnings.add("XSD version mismatch (found: " + xsdVersion +
+                            ", expected less than or equal to: " +
                             EXPECTED_XSD_VERSION + ") for " + f);
                     }
                 }
