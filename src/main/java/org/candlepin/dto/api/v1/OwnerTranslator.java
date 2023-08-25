@@ -24,6 +24,7 @@ import org.candlepin.model.UpstreamConsumer;
 import org.candlepin.util.Util;
 
 
+
 /**
  * The OwnerTranslator provides translation from Owner model objects to OwnerDTOs
  */
@@ -78,7 +79,9 @@ public class OwnerTranslator implements ObjectTranslator<Owner, OwnerDTO> {
             .autobindHypervisorDisabled(source.isAutobindHypervisorDisabled())
             .contentAccessMode(source.getContentAccessMode())
             .contentAccessModeList(source.getContentAccessModeList())
-            .lastRefreshed(Util.toDateTime(source.getLastRefreshed()));
+            .lastRefreshed(Util.toDateTime(source.getLastRefreshed()))
+            .anonymous(source.getAnonymous())
+            .claimed(source.getClaimed());
 
         if (translator != null) {
             Owner parent = source.getParentOwner();
@@ -92,7 +95,8 @@ public class OwnerTranslator implements ObjectTranslator<Owner, OwnerDTO> {
         if (translator != null) {
             UpstreamConsumer consumer = source.getUpstreamConsumer();
             dest.upstreamConsumer(consumer != null ?
-                translator.translate(consumer, UpstreamConsumerDTO.class) : null);
+                translator.translate(consumer, UpstreamConsumerDTO.class) :
+                null);
         }
         else {
             dest.setUpstreamConsumer(null);

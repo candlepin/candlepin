@@ -8988,6 +8988,10 @@ components:
               $ref: '#/components/schemas/NestedOwnerDTO'
             upstreamConsumer:
               $ref: '#/components/schemas/UpstreamConsumerDTO'
+            anonymous:
+              type: boolean
+            claimed:
+              type: boolean
 
     OwnerInfo:
       description: Represents owner information
