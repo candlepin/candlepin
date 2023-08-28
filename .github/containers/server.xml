@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~  Copyright (c) 2009 - ${YEAR} Red Hat, Inc.
+  ~
+  ~  This software is licensed to you under the GNU General Public License,
+  ~  version 2 (GPLv2). There is NO WARRANTY for this software, express or
+  ~  implied, including the implied warranties of MERCHANTABILITY or FITNESS
+  ~  FOR A PARTICULAR PURPOSE. You should have received a copy of GPLv2
+  ~  along with this software; if not, see
+  ~  http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
+  ~
+  ~  Red Hat trademarks are not licensed under GPLv2. No permission is
+  ~  granted to use or replicate Red Hat trademarks that are incorporated
+  ~  in this software or its documentation.
+  -->
+
+<Server port="8005" shutdown="SHUTDOWN">
+    <Listener className="org.apache.catalina.startup.VersionLoggerListener" />
+    <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
+    <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
+    <Listener className="org.apache.catalina.core.ThreadLocalLeakPreventionListener" />
+
+    <GlobalNamingResources>
+        <Resource name="UserDatabase" auth="Container" type="org.apache.catalina.UserDatabase"
+            description="User database that can be updated and saved"
+            factory="org.apache.catalina.users.MemoryUserDatabaseFactory"
+            pathname="conf/tomcat-users.xml" />
+    </GlobalNamingResources>
+
+    <Service name="Catalina">
+
+        <Connector
+            port="8443"
+            protocol="HTTP/1.1"
+            scheme="https"
+            secure="true"
+            SSLEnabled="true"
+            maxThreads="150">
+
+            <SSLHostConfig
+                certificateVerification="optional"
+                protocols="+TLSv1,+TLSv1.1,+TLSv1.2"
+                sslProtocol="TLS">
+                <Certificate
+                    certificateFile="/etc/candlepin/certs/candlepin-ca.crt"
+                    certificateKeyFile="/etc/candlepin/certs/candlepin-ca.key"
+                    type="RSA" />
+            </SSLHostConfig>
+        </Connector>
+
+        <Connector port="8080" protocol="HTTP/1.1" connectionTimeout="20000" redirectPort="8443" />
+        <Engine name="Catalina" defaultHost="localhost">
+            <Realm className="org.apache.catalina.realm.LockOutRealm">
+                <Realm className="org.apache.catalina.realm.UserDatabaseRealm" resourceName="UserDatabase" />
+            </Realm>
+
+            <Host name="localhost" appBase="webapps" unpackWARs="true" autoDeploy="true">
+                <Valve className="org.apache.catalina.valves.AccessLogValve" directory="/var/log/candlepin/"
+                    prefix="access" rotatable="false" checkExists="true" suffix=".log"
+                    pattern="%h %l %u %t &quot;%r&quot; %s %b &quot;&quot; &quot;%{user-agent}i sm/%{x-subscription-manager-version}i&quot; &quot;req_time=%T,req=%{requestUuid}r&quot;"
+                    resolveHosts="false" />
+            </Host>
+        </Engine>
+    </Service>
+</Server>
