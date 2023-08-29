@@ -442,16 +442,23 @@ tasks.register('pom') {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        // Publish the candlepin war
+        warArtifact(MavenPublication) {
+            from components.web
+
             groupId 'org.candlepin'
             artifactId 'candlepin'
-
-            from components.web
-            pom {
-                name = 'Candlepin'
-                description = 'Candlepin WAR'
-            }
         }
+
+        // Publish the candlepin-api jar
+        jarArtifact(MavenPublication) {
+            artifact tasks.apiJar
+
+            groupId = 'org.candlepin'
+            artifactId = 'candlepin-api'
+        }
+
+        // Generate pom.xml
         local(MavenPublication) {
 
             generatePomFileForLocalPublication {
