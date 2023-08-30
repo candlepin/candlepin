@@ -21,11 +21,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.exceptions.ServiceUnavailableException;
 import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
@@ -46,29 +50,36 @@ import java.util.Locale;
 import javax.ws.rs.core.Response;
 
 
+
 /**
  * SubscriptionResourceTest
  */
 @ExtendWith(MockitoExtension.class)
-public class SubscriptionResourceTest  {
-    @Mock private SubscriptionServiceAdapter subService;
-    @Mock private ConsumerCurator consumerCurator;
-    @Mock private PoolManager poolManager;
-    @Mock private ModelTranslator modelTranslator;
-    @Mock private ContentAccessManager mockContentAccessManager;
+public class SubscriptionResourceTest {
 
+    @Mock
+    private SubscriptionServiceAdapter subService;
+    @Mock
+    private ConsumerCurator consumerCurator;
+    @Mock
+    private PoolManager poolManager;
+    @Mock
+    private ModelTranslator modelTranslator;
+    @Mock
+    private ContentAccessManager mockContentAccessManager;
+
+    private DevConfig config;
     private SubscriptionResource subResource;
 
     @BeforeEach
     public void setUp() {
-        I18n i18n = I18nFactory.getI18n(
-            getClass(),
-            Locale.US,
-            I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
-        );
+        this.config = TestConfig.defaults();
 
-        this.subResource = new SubscriptionResource(
-            subService, consumerCurator, poolManager, i18n, modelTranslator, mockContentAccessManager);
+        I18n i18n = I18nFactory.getI18n(this.getClass(), Locale.US,
+            I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK);
+
+        this.subResource = new SubscriptionResource(this.config, this.subService, this.consumerCurator,
+            this.poolManager, i18n, this.modelTranslator, this.mockContentAccessManager);
     }
 
     @Test
@@ -83,24 +94,32 @@ public class SubscriptionResourceTest  {
 
     @Test
     public void activateNoEmail() {
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
+
         assertThrows(BadRequestException.class,
             () -> subResource.activateSubscription("random", null, "en_us"));
     }
 
     @Test
     public void activateNoEmailLocale() {
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
+
         assertThrows(BadRequestException.class,
             () -> subResource.activateSubscription("random", "random@somthing.com", null));
     }
 
     @Test
     public void activateBadConsumer() {
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
+
         assertThrows(BadRequestException.class,
             () -> subResource.activateSubscription("test_consumer", "email@whatever.net", "en_us"));
     }
 
     @Test
     public void activateSubServiceCalled() {
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
+
         Consumer consumer = new Consumer()
             .setName("test_consumer")
             .setUsername("alf");
@@ -114,6 +133,8 @@ public class SubscriptionResourceTest  {
 
     @Test
     public void activateCorrectResponseCode() {
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
+
         Consumer consumer = new Consumer()
             .setName("test_consumer")
             .setUsername("alf");
@@ -123,6 +144,14 @@ public class SubscriptionResourceTest  {
         Response result = subResource.activateSubscription("ae843603bdc73", "alf@alfnet.com", "en");
 
         assertEquals(result.getStatus(), 202);
+    }
+
+    @Test
+    public void testActivateSubscriptionRequiresHostedMode() {
+        this.config.setProperty(ConfigProperties.STANDALONE, "true");
+
+        assertThrows(ServiceUnavailableException.class,
+            () -> this.subResource.activateSubscription("uuid", "consumer@email.com", "consumer_locale"));
     }
 
 }
