@@ -49,6 +49,7 @@ import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
@@ -68,6 +69,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.persistence.PersistenceException;
+
+
 
 /**
  * Test suite for the PoolCurator object
@@ -3042,6 +3045,38 @@ public class PoolCuratorTest extends DatabaseTestFixture {
 
         assertEquals(1, results.size());
         assertEquals(pool.getId(), results.get(0).getId());
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    @ValueSource(strings = { "  " })
+    public void testHasPoolForProductWithInvalidOwnerKey(String ownerKey) {
+        boolean actual = this.poolCurator.hasPoolForProduct(ownerKey, "prod-id");
+
+        assertFalse(actual);
+    }
+
+    @ParameterizedTest(name = "{displayName} {index}: {0}")
+    @NullAndEmptySource
+    @ValueSource(strings = { "  " })
+    public void testHasPoolForProductWithInvalidProductId(String productId) {
+        boolean actual = this.poolCurator.hasPoolForProduct("owner-key", productId);
+
+        assertFalse(actual);
+    }
+
+    @Test
+    public void testHasPoolForProductWithExistingPool() {
+        boolean actual = this.poolCurator.hasPoolForProduct(owner.getKey(), pool.getProductId());
+
+        assertTrue(actual);
+    }
+
+    @Test
+    public void testHasPoolForProductWithNoExistingPool() {
+        boolean actual = this.poolCurator.hasPoolForProduct(owner.getKey(), "unknown-id");
+
+        assertFalse(actual);
     }
 
 }

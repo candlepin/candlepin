@@ -19,7 +19,10 @@ import org.candlepin.service.exception.CouldNotAcquireCloudAccountLockException;
 import org.candlepin.service.exception.CouldNotEntitleOrganizationException;
 import org.candlepin.service.exception.MalformedCloudRegistrationException;
 import org.candlepin.service.model.CloudAccountData;
+import org.candlepin.service.model.CloudAuthenticationResult;
 import org.candlepin.service.model.CloudRegistrationInfo;
+
+
 
 /**
  * The Cloud Registration Adapter provides the interface for verifying and resolving cloud
@@ -42,6 +45,24 @@ public interface CloudRegistrationAdapter {
      * @return the owner key of the owner (organization) to which the cloud user will be registered
      */
     String resolveCloudRegistrationData(CloudRegistrationInfo cloudRegInfo)
+        throws CloudRegistrationAuthorizationException, MalformedCloudRegistrationException;
+
+    /**
+     * Resolves the cloud registration details to a specific owner using version 2 logic.
+     *
+     * @param cloudRegInfo
+     *     A CloudRegistrationInfo instance which contains the cloud provider details to process
+     *
+     * @throws MalformedCloudRegistrationException
+     *     if the cloud registration info is null, incomplete, or invalid
+     *
+     * @throws CloudRegistrationAuthorizationException
+     *     if cloud registration is not permitted for the provider or account holder
+     *
+     * @return the cloud authentication result which contains the owner key, cloud account ID, and
+     * product ID
+     */
+    CloudAuthenticationResult resolveCloudRegistrationDataV2(CloudRegistrationInfo cloudRegInfo)
         throws CloudRegistrationAuthorizationException, MalformedCloudRegistrationException;
 
     /**
