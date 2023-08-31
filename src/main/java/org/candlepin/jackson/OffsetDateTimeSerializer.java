@@ -24,6 +24,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 
 
+
 /**
  * OffsetDateTimeSerializer
  * This serializer removes milliseconds from OffsetDateTime objects in order to be more
@@ -36,7 +37,7 @@ public class OffsetDateTimeSerializer extends JsonSerializer<OffsetDateTime> {
 
     public OffsetDateTimeSerializer() {
         // This DateTimeFormatter pattern is ISO 8601 without milliseconds
-        this.dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssxxx");
+        this.dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssZ");
     }
 
     @Override

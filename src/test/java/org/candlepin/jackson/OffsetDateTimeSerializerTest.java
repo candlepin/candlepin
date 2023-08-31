@@ -26,6 +26,7 @@ import java.io.StringWriter;
 import java.time.OffsetDateTime;
 
 
+
 /**
  * Basic test for OffsetDateTimeSerializer
  */
@@ -40,6 +41,6 @@ public class OffsetDateTimeSerializerTest {
         OffsetDateTime dateTime = OffsetDateTime.parse("2021-01-24T13:30:30.382+01:00");
         serializer.serialize(dateTime, jsonGenerator, null);
         jsonGenerator.flush();
-        assertEquals("\"2021-01-24T13:30:30+01:00\"", stringWriter.toString());
+        assertEquals("\"2021-01-24T13:30:30+0100\"", stringWriter.toString());
     }
 }
