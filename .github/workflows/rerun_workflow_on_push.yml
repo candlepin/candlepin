@@ -1,0 +1,81 @@
+---
+name: Rerun affected workflows in long lived branches on push
+
+on:
+  push:
+    branches:
+      - main
+      - candlepin-*-HOTFIX
+
+jobs:
+  rerun-workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mask secrets
+        shell: bash
+        run: |
+          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+
+#      - name: Get PR info
+#        uses: 8BitJonny/gh-get-current-pr@2.2.0
+#        id: PR
+#        with:
+#          github-token: ${{ github.token }}
+
+      # We lock version of gh API with header: X-GitHub-Api-Version.
+      - name: Rerun workflows
+#        if: $PR_LABEL == *"skip CI"*
+        shell: bash
+        run: |
+          base_branch="${GITHUB_REF#refs/heads/}"
+          
+          # List affected PRs exclude dependabots, weblate and draft PRs
+          pr_head_shas=$(gh api \
+          -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          /repos/candlepin/candlepin/pulls | \
+          jq --arg base "$base_branch" -r '.[] | select(.base.ref == $base and .draft == false and .user.login != "weblate" and .user.login != "dependabot") | .head.sha')
+
+          # List runner ids from PRs(only for pr_verification.yml)
+          for head_sha in $pr_head_shas; do
+            runner_id=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/candlepin/candlepin/actions/workflows/pr_verification.yml/runs?head_sha=$head_sha | \
+            jq -r '.workflow_runs[] | .id')
+            runner_ids+=($runner_id)
+          done
+          
+          # Cancel running workflows
+          for id in "${runner_ids[@]}"; do
+            # Get status of running workflow
+            status=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/candlepin/candlepin/actions/runs/$id | \
+            jq -r '.status')
+          
+            # Cancel workflow if it in progress or in queue
+            if [ "$status" = "in_progress" ] || [ "$status" = "queued" ]; then
+              gh api \
+              --method POST \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              /repos/candlepin/candlepin/actions/runs/$id/cancel
+            fi
+          done
+          
+          # We need to sleep here because canceling workflows take some time
+          sleep 15
+          
+          # Rerun workflows
+          for id in "${runner_ids[@]}"; do 
+            gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            /repos/candlepin/candlepin/actions/runs/$id/rerun
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          PR_LABEL: ${{ steps.PR.outputs.pr_labels }}
