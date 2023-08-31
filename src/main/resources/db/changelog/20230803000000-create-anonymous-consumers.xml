@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="20230803000000-1" author="jalbrech">
+        <createTable tableName="cp_anonymous_cloud_consumers">
+            <column name="id" type="varchar(32)">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="created" type="DATETIME"/>
+            <column name="updated" type="DATETIME"/>
+            <column name="uuid" type="varchar(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cloud_account_id" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cloud_instance_id" type="varchar(170)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="cloud_provider_short_name" type="varchar(15)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="product_id" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20230803000000-2" author="jalbrech">
+        <createIndex tableName="cp_anonymous_cloud_consumers" indexName="cp_anonymous_cloud_consumers_idx1">
+            <column name="uuid"/>
+        </createIndex>
+        <createIndex tableName="cp_anonymous_cloud_consumers" indexName="cp_anonymous_cloud_consumers_idx2">
+            <column name="cloud_instance_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>
