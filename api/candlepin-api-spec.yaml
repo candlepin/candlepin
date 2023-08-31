@@ -557,7 +557,16 @@ paths:
       tags:
         - cloud_registration
       operationId: cloudAuthorize
-      security: [ ]
+      security: []
+      x-java-response:
+        type: javax.ws.rs.core.Response
+        isContainer: false
+      parameters:
+        - name: version
+          in: query
+          description: Version of cloud authentication
+          schema:
+            type: integer
       requestBody:
         description: Cloud registration data
         required: true
@@ -567,11 +576,14 @@ paths:
               $ref: '#/components/schemas/CloudRegistrationDTO'
       responses:
         200:
-          description: Cloud authorization successful.
+          description: Cloud authorization successful. When the version of authorization requested is 2, application/json is returned that contains a JWT token amongst other data. Otherwise, only a JWT token in text/plain format is returned.
           content:
             text/plain:
               schema:
                 type: string
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CloudAuthenticationResultDTO'
         400:
           description: CloudRegistrationInfo is null
           content:
@@ -8292,6 +8304,23 @@ components:
           minLength: 1
         signature:
           type: string
+
+    CloudAuthenticationResultDTO:
+      description: Contains the result of authenticating the provided cloud registration information.
+      required:
+        - token
+        - tokenType
+      properties:
+        ownerKey:
+          type: string
+        anonymousConsumerUuid:
+          type: string
+        token:
+          type: string
+          minLength: 1
+        tokenType:
+          type: string
+          minLength: 1
 
     ConsumerDTO:
       description: Represents a consumer

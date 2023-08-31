@@ -20,7 +20,6 @@ import org.candlepin.resource.client.v1.AdminApi;
 import org.candlepin.resource.client.v1.CdnApi;
 import org.candlepin.resource.client.v1.CertificateRevocationListApi;
 import org.candlepin.resource.client.v1.CertificateSerialApi;
-import org.candlepin.resource.client.v1.CloudRegistrationApi;
 import org.candlepin.resource.client.v1.ConsumerTypeApi;
 import org.candlepin.resource.client.v1.ContentApi;
 import org.candlepin.resource.client.v1.DeletedConsumerApi;
@@ -36,6 +35,7 @@ import org.candlepin.resource.client.v1.RootApi;
 import org.candlepin.resource.client.v1.StatusApi;
 import org.candlepin.resource.client.v1.SubscriptionApi;
 import org.candlepin.resource.client.v1.UsersApi;
+import org.candlepin.spec.bootstrap.client.api.CloudRegistrationClient;
 import org.candlepin.spec.bootstrap.client.api.ConsumerClient;
 import org.candlepin.spec.bootstrap.client.api.EnvironmentClient;
 import org.candlepin.spec.bootstrap.client.api.JobsClient;
@@ -50,6 +50,8 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.util.Objects;
+
+
 
 /**
  * An entrypoint of Candlepin client. Serves as a crossroads between specific APIs.
@@ -88,8 +90,8 @@ public class ApiClient {
         return new CertificateSerialApi(this.client);
     }
 
-    public CloudRegistrationApi cloudAuthorization() {
-        return new CloudRegistrationApi(this.client);
+    public CloudRegistrationClient cloudAuthorization() {
+        return new CloudRegistrationClient(this.client, MAPPER);
     }
 
     public ConsumerClient consumers() {

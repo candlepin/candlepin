@@ -33,7 +33,9 @@ import org.candlepin.service.model.ProductContentInfo;
 import org.candlepin.service.model.ProductInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.jboss.resteasy.plugins.providers.multipart.MultipartInput;
@@ -110,7 +112,7 @@ public class HostedTestResource {
      * Creates or updates all of the children entities referenced by the given subscription.
      *
      * @param subscription
-     *  The subscription for which to create or update children entities
+     *     The subscription for which to create or update children entities
      */
     private void createSubscriptionChildren(SubscriptionInfo subscription) {
         if (subscription == null) {
@@ -137,7 +139,7 @@ public class HostedTestResource {
      * Creates or updates all of the children entities referenced by the given product.
      *
      * @param product
-     *  The product for which to create or update children entities
+     *     The product for which to create or update children entities
      */
     private void createProductChildren(ProductInfo product) {
         if (product == null) {
@@ -243,14 +245,13 @@ public class HostedTestResource {
     }
 
     /**
-     * Creates a new owner from the subscription JSON provided. Any UUID
-     * provided in the JSON will be ignored when creating the new subscription.
+     * Creates a new owner from the subscription JSON provided. Any UUID provided in the JSON will be
+     * ignored when creating the new subscription.
      *
      * @param owner
-     *  An OwnerDTO object built from the JSON provided in the request
+     *     An OwnerDTO object built from the JSON provided in the request
      *
-     * @return
-     *  The newly created Subscription object
+     * @return The newly created Subscription object
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -270,18 +271,17 @@ public class HostedTestResource {
     // TODO: Add remaining owner CRUD operations as needed
 
     /**
-     * Creates a new subscription from the subscription JSON provided. Any UUID
-     * provided in the JSON will be ignored when creating the new subscription.
+     * Creates a new subscription from the subscription JSON provided. Any UUID provided in the JSON
+     * will be ignored when creating the new subscription.
      *
      * @param createChildren
-     *  whether or not children entities in the provided subscription data should be automatically
-     *  created or updated before creating the new subscription
+     *     whether or not children entities in the provided subscription data should be automatically
+     *     created or updated before creating the new subscription
      *
      * @param subscription
-     *  the subscription data to use to create the new subscription
+     *     the subscription data to use to create the new subscription
      *
-     * @return
-     *  The newly created Subscription object
+     * @return The newly created Subscription object
      */
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -324,8 +324,7 @@ public class HostedTestResource {
     /**
      * Lists all known subscriptions currently maintained by the subscription service.
      *
-     * @return
-     *  A collection of subscriptions maintained by the subscription service
+     * @return A collection of subscriptions maintained by the subscription service
      */
     @GET
     @Produces(MediaType.APPLICATION_JSON)
@@ -336,14 +335,12 @@ public class HostedTestResource {
     }
 
     /**
-     * Retrieves the subscription for the specified subscription id. If the
-     * subscription id cannot be found, this method returns null.
+     * Retrieves the subscription for the specified subscription id. If the subscription id cannot be
+     * found, this method returns null.
      *
      * @param subscriptionId
-     *        The id of the subscription to retrieve
-     * @return
-     *         The requested Subscription object, or null if the subscription
-     *         could not be found
+     *     The id of the subscription to retrieve
+     * @return The requested Subscription object, or null if the subscription could not be found
      */
     @GET
     @Path("/subscriptions/{subscription_id}")
@@ -362,17 +359,16 @@ public class HostedTestResource {
      * Updates the specified subscription with the provided subscription data.
      *
      * @param subscriptionId
-     *  the ID of the subscription to update
+     *     the ID of the subscription to update
      *
      * @param createChildren
-     *  whether or not children entities in the provided subscription data should be automatically
-     *  created or updated before applying the subscription changes
+     *     whether or not children entities in the provided subscription data should be automatically
+     *     created or updated before applying the subscription changes
      *
      * @param subscription
-     *  the subscription data to use to update the specified subscription
+     *     the subscription data to use to update the specified subscription
      *
-     * @return
-     *  the updated subscription
+     * @return the updated subscription
      */
     @PUT
     @Consumes(MediaType.APPLICATION_JSON)
@@ -648,10 +644,9 @@ public class HostedTestResource {
      * necessary.
      *
      * @throws IOException
-     *  if an exception occurs while deserializing the attached file
+     *     if an exception occurs while deserializing the attached file
      *
-     * @return
-     *  The processed attached file, deserialized into the specified type
+     * @return The processed attached file, deserialized into the specified type
      */
     private <T> T processAttachedFile(AttachedFile attached, TypeReference<T> typeref) {
         boolean archive = ARCHIVE_FILENAME_REGEX.matcher(attached.getFilename("")).find();
@@ -749,6 +744,44 @@ public class HostedTestResource {
 
         return String.format("%d products imported (%d created; %d updated)\n",
             created + updated, created, updated);
+    }
+
+    @POST
+    @Path("cloud/offers")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void addCloudOfferToProductMapping(String json) throws JsonProcessingException {
+        JsonNode root = this.mapper.readTree(json);
+        String offerId = root.get("cloudOfferId").asText();
+        if (offerId == null) {
+            throw new BadRequestException("cloud offer ID is null");
+        }
+
+        String productId = root.get("productId").asText();
+        if (productId == null) {
+            throw new BadRequestException("product ID is null");
+        }
+
+        this.datastore.setProductIdForCloudOfferId(offerId, productId);
+    }
+
+    @POST
+    @Path("cloud/accounts")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void addCloudAccountToOwnerMapping(String json) throws JsonProcessingException {
+        JsonNode root = this.mapper.readTree(json);
+        String cloudAccountId = root.get("cloudAccountId").asText();
+        if (cloudAccountId == null) {
+            throw new BadRequestException("cloud account ID is null");
+        }
+
+        String ownerId = root.get("ownerId").asText();
+        if (ownerId == null) {
+            throw new BadRequestException("owner ID is null");
+        }
+
+        this.datastore.setCloudAccountIdForOwnerKey(cloudAccountId, ownerId);
     }
 
 }
