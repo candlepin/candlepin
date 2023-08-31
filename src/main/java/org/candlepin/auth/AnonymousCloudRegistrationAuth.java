@@ -14,28 +14,23 @@
  */
 package org.candlepin.auth;
 
-import org.candlepin.auth.permissions.OwnerPermission;
-import org.candlepin.auth.permissions.Permission;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.ConversionException;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.AnonymousCloudConsumer;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.resteasy.filter.AuthUtil;
 
 import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.TokenVerifier;
 import org.keycloak.common.VerificationException;
-import org.keycloak.representations.AccessToken;
 import org.keycloak.representations.JsonWebToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 import javax.inject.Inject;
@@ -43,26 +38,26 @@ import javax.inject.Inject;
 
 
 /**
- * AuthenticationProvider that accepts an {@link AccessToken} generated from an earlier call to the
- * CloudRegistration authorize endpoint
+ * AuthenticationProvider that authenticates anonymous access tokens generated from the CloudRegistration endpoint
  */
-public class CloudRegistrationAuth implements AuthProvider {
-    private static Logger log = LoggerFactory.getLogger(CloudRegistrationAuth.class);
+public class AnonymousCloudRegistrationAuth implements AuthProvider {
+    private static Logger log = LoggerFactory.getLogger(AnonymousCloudRegistrationAuth.class);
 
     private static final String AUTH_TYPE = "Bearer";
 
     private final Configuration config;
-    private final OwnerCurator ownerCurator;
+    private final AnonymousCloudConsumerCurator anonymousCloudConsumerCurator;
     private final CertificateReader certificateReader;
 
     private final boolean enabled;
     private final PublicKey publicKey;
 
     @Inject
-    public CloudRegistrationAuth(Configuration config, OwnerCurator ownerCurator,
+    public AnonymousCloudRegistrationAuth(Configuration config,
+        AnonymousCloudConsumerCurator anonymousCloudConsumerCurator,
         CertificateReader certificateReader) {
         this.config = Objects.requireNonNull(config);
-        this.ownerCurator = Objects.requireNonNull(ownerCurator);
+        this.anonymousCloudConsumerCurator = Objects.requireNonNull(anonymousCloudConsumerCurator);
         this.certificateReader = Objects.requireNonNull(certificateReader);
 
         // Pre-parse config values
@@ -84,9 +79,6 @@ public class CloudRegistrationAuth implements AuthProvider {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public Principal getPrincipal(HttpRequest httpRequest) {
         if (!this.enabled) {
@@ -120,21 +112,20 @@ public class CloudRegistrationAuth implements AuthProvider {
             }
 
             // Verify the token has the JWT type we're expecting
-            if (CloudAuthTokenType.STANDARD.equalsType(token.getType())) {
-                // Pull the subject (username) and owner key(s) out of the token
+            if (CloudAuthTokenType.ANONYMOUS.equalsType(token.getType())) {
                 String subject = token.getSubject();
-                String ownerKey = audiences != null && audiences.length > 0 ? audiences[0] : null;
+                String consumerUuid = audiences != null && audiences.length > 0 ? audiences[0] : null;
 
                 if (subject == null || subject.isEmpty()) {
                     throw new VerificationException("Token contains an invalid subject: " + subject);
                 }
 
-                if (ownerKey == null || ownerKey.isEmpty()) {
-                    throw new VerificationException("Token contains an invalid audience: " + ownerKey);
+                if (consumerUuid == null || consumerUuid.isEmpty()) {
+                    throw new VerificationException("Token contains an invalid audience: " + consumerUuid);
                 }
 
-                log.info("Token type used for authentication: {}", CloudAuthTokenType.STANDARD);
-                return this.createCloudUserPrincipal(subject, ownerKey);
+                log.info("Token type used for authentication: {}", CloudAuthTokenType.ANONYMOUS);
+                return this.createCloudUserPrincipal(subject, consumerUuid);
             }
         }
         catch (VerificationException e) {
@@ -148,34 +139,12 @@ public class CloudRegistrationAuth implements AuthProvider {
         return null;
     }
 
-    /**
-     * Creates a dummy user principal with the minimum amount of information and access to complete a
-     * user registration. The username of the principal will be the subject provided.
-     *
-     * @param subject
-     *     the subject for which to create the principal; will be used as the username
-     *
-     * @param ownerKey
-     *     the key of an organization in which the principal will have authorization to register clients
-     *
-     * @return a minimal UserPrincipal representing the cloud registration token
-     */
-    private UserPrincipal createCloudUserPrincipal(String subject, String ownerKey) {
-        Owner owner = this.ownerCurator.getByKey(ownerKey);
-        if (owner == null) {
-            // If the owner does not exist, we might be creating it on client registration, so
-            // make a fake owner to pass into our permission object
-            owner = new Owner()
-                .setKey(ownerKey)
-                .setDisplayName(ownerKey);
-        }
+    private UserPrincipal createCloudUserPrincipal(String subject, String consumerUuid) {
+        AnonymousCloudConsumer consumer = anonymousCloudConsumerCurator.getByUuid(consumerUuid);
 
-        List<Permission> permissions = Arrays.asList(
-            new OwnerPermission(owner, Access.CREATE)
-        // Add any additional permissions here as needed
-        );
+        // TODO: Handle as part of CANDLEPIN-625
 
-        return new UserPrincipal(subject, permissions, false);
+        return null;
     }
 
 }

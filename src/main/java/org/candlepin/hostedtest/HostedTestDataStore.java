@@ -53,11 +53,12 @@ import javax.inject.Singleton;
 
 
 /**
- * The HostedTestDataStore class is used to provide an in-memory upstream source for subscription data
- * to properly simulate hosted mode.
- * <p></p>
- * While it is built with Candlepin, it is not packaged in candlepin.war, as the only purpose of this
- * class is to support spec tests.
+ * The HostedTestDataStore class is used to provide an in-memory upstream source for subscription
+ * data to properly simulate hosted mode.
+ * <p>
+ * </p>
+ * While it is built with Candlepin, it is not packaged in candlepin.war, as the only purpose of
+ * this class is to support spec tests.
  */
 @Singleton
 public class HostedTestDataStore {
@@ -82,6 +83,9 @@ public class HostedTestDataStore {
     protected Map<String, Set<String>> productProductMap;
     protected Map<String, Set<String>> productSubscriptionMap;
 
+    protected Map<String, String> cloudOfferIdToProductId;
+    protected Map<String, String> cloudAccountIdToOwnerKey;
+
     /**
      * Creates a new HostedTestDataStore instance
      */
@@ -89,16 +93,18 @@ public class HostedTestDataStore {
     public HostedTestDataStore() {
         this.ownerMap = new ConcurrentHashMap<>();
 
-        this.subscriptionMap = new ConcurrentHashMap();
+        this.subscriptionMap = new ConcurrentHashMap<>();
 
-        this.productMap = new ConcurrentHashMap();
-        this.contentMap = new ConcurrentHashMap();
+        this.productMap = new ConcurrentHashMap<>();
+        this.contentMap = new ConcurrentHashMap<>();
 
-        this.contentProductMap = new ConcurrentHashMap();
-        this.productProductMap = new ConcurrentHashMap();
-        this.productSubscriptionMap = new ConcurrentHashMap();
+        this.contentProductMap = new ConcurrentHashMap<>();
+        this.productProductMap = new ConcurrentHashMap<>();
+        this.productSubscriptionMap = new ConcurrentHashMap<>();
+
+        this.cloudOfferIdToProductId = new ConcurrentHashMap<>();
+        this.cloudAccountIdToOwnerKey = new ConcurrentHashMap<>();
     }
-
 
     public OwnerInfo createOwner(OwnerInfo ownerInfo) {
         if (ownerInfo == null) {
@@ -142,7 +148,6 @@ public class HostedTestDataStore {
 
         return this.ownerMap.get(ownerKey);
     }
-
 
     public SubscriptionInfo createSubscription(SubscriptionInfo sinfo) {
         if (sinfo == null) {
@@ -453,7 +458,6 @@ public class HostedTestDataStore {
         return this.productMap.get(productId);
     }
 
-
     public ContentInfo createContent(ContentInfo cinfo) {
         if (cinfo == null) {
             throw new IllegalArgumentException("cinfo is null");
@@ -646,7 +650,6 @@ public class HostedTestDataStore {
         return false;
     }
 
-
     protected void updateSubscriptionProductMappings(Subscription sdata) {
         if (sdata == null) {
             throw new IllegalArgumentException("sdata is null");
@@ -784,7 +787,6 @@ public class HostedTestDataStore {
             }
         }
     }
-
 
     protected Owner resolveOwner(OwnerInfo oinfo) {
         if (oinfo == null || StringUtils.isBlank(oinfo.getKey())) {
@@ -968,7 +970,23 @@ public class HostedTestDataStore {
         return null;
     }
 
+    protected void setProductIdForCloudOfferId(String cloudOfferId,
+        String productId) {
+        cloudOfferIdToProductId.put(cloudOfferId, productId);
+    }
 
+    protected String getProductIdForOfferId(String cloudOfferId) {
+        return cloudOfferIdToProductId.get(cloudOfferId);
+    }
+
+    protected void setCloudAccountIdForOwnerKey(String cloudAccountId,
+        String ownerKey) {
+        cloudAccountIdToOwnerKey.put(cloudAccountId, ownerKey);
+    }
+
+    protected String getOwnerKeyForCloudAccountId(String cloudAccountId) {
+        return cloudAccountIdToOwnerKey.get(cloudAccountId);
+    }
 
     /**
      * Clears all data for this service adapter
@@ -980,6 +998,8 @@ public class HostedTestDataStore {
         this.contentMap.clear();
         this.contentProductMap.clear();
         this.productSubscriptionMap.clear();
+        this.cloudOfferIdToProductId.clear();
+        this.cloudAccountIdToOwnerKey.clear();
     }
 
 }
