@@ -20,8 +20,6 @@ jobs:
   bugzilla_check:
     name: bugzilla reference check
     runs-on: ubuntu-latest
-    container:
-      image: fedora:38
     steps:
       - name: Mask secrets
         shell: bash
@@ -30,7 +28,7 @@ jobs:
 
       - name: Install packages
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y python3 python3-pip python3-requests git-core
+        run: sudo apt-get install -y python3 python3-pip python3-requests git-core
 
       - name: Check out repository
         uses: actions/checkout@v3
@@ -52,12 +50,10 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    container:
-      image: fedora:38
     steps:
       - name: Install dependencies
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext git-core jss
+        run: sudo apt-get install -y gettext git-core
 
       - name: Check out repository
         uses: actions/checkout@v3
@@ -123,13 +119,10 @@ jobs:
 
   validate_translations:
     runs-on: ubuntu-latest
-    container:
-      image: fedora:38
-      options: --privileged
     steps:
       - name: Install dependencies
         shell: bash
-        run: dnf --setopt install_weak_deps=False install -y gettext jss git-core
+        run: sudo apt-get install -y gettext git-core
 
       - name: Check out repository
         uses: actions/checkout@v3
