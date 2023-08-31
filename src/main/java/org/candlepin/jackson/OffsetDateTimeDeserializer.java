@@ -25,6 +25,8 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 
+
+
 /**
  * A deserializer that turns ISO 8601 date strings into OffsetDateTime objects, with optional sections.
  * Specifically, it can handle parsing the following formats:
@@ -45,16 +47,17 @@ public class OffsetDateTimeDeserializer extends JsonDeserializer<OffsetDateTime>
 
     public OffsetDateTimeDeserializer() {
         this.formatter = new DateTimeFormatterBuilder()
-              .parseCaseInsensitive()
-              .append(DateTimeFormatter.ISO_LOCAL_DATE)
-              .optionalStart().appendLiteral('T').optionalEnd()
-              .optionalStart().appendLiteral(' ').optionalEnd()
-              .appendOptional(DateTimeFormatter.ISO_LOCAL_TIME)
-              .optionalStart().appendOffset("+HHMM", "+0000").optionalEnd()
-              .optionalStart().appendOffset("+HH:MM", "+00:00").optionalEnd()
-              .optionalStart().appendOffset("+HH", "+00").optionalEnd()
-              .optionalStart().appendZoneId().optionalEnd()
-              .toFormatter();
+            .parseCaseInsensitive()
+            .append(DateTimeFormatter.ISO_LOCAL_DATE)
+            .optionalStart().appendLiteral('T').optionalEnd()
+            .optionalStart().appendLiteral(' ').optionalEnd()
+            .appendOptional(DateTimeFormatter.ISO_LOCAL_TIME)
+            .optionalStart().appendOffset("+HHMM", "+0000").optionalEnd()
+            .optionalStart().appendOffset("+HH:MM", "+00:00").optionalEnd()
+            .optionalStart().appendOffset("+HH", "+00").optionalEnd()
+            .optionalStart().appendOffset("+Hmmss", "Z").optionalEnd()
+            .optionalStart().appendOffsetId().optionalEnd()
+            .toFormatter();
     }
 
     /**
