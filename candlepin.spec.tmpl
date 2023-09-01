@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.3.7
-Release: 1%{?dist}
+Release: 2%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -240,6 +240,12 @@ fi
 
 #raw
 %changelog
+* Fri Sep 01 2023 Nikos Moumoulidis <nmoumoul@redhat.com> 4.3.7-2
+- CANDLEPIN-650: Reverted date/time serialization change (crog@redhat.com)
+
+* Fri Sep 01 2023 Nikos Moumoulidis <nmoumoul@redhat.com>
+- CANDLEPIN-650: Reverted date/time serialization change (crog@redhat.com)
+
 * Wed Jul 19 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.7-1
 - Bump com.gradle.enterprise from 3.13.4 to 3.14
   (49699333+dependabot[bot]@users.noreply.github.com)
