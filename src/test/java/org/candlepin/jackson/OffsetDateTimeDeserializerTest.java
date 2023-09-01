@@ -15,6 +15,7 @@
 package org.candlepin.jackson;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -25,6 +26,8 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
+
 
 
 public class OffsetDateTimeDeserializerTest {
@@ -93,6 +96,12 @@ public class OffsetDateTimeDeserializerTest {
         when(parser.getText()).thenReturn("2021-01-24");
         OffsetDateTime dateTime = deserializer.deserialize(parser, null);
         assertEquals("2021-01-24T00:00Z", dateTime.toString());
+    }
+
+    @Test
+    public void testDateTimeWithMalformedOffset() throws IOException {
+        when(parser.getText()).thenReturn("2021-01-24T13:30:30.382Junk");
+        assertThrows(DateTimeParseException.class, () -> deserializer.deserialize(parser, null));
     }
 
 }
