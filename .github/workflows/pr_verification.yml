@@ -370,6 +370,13 @@ jobs:
           echo "MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE=org.candlepin.hostedtest.AdapterOverrideModule" >> .env
           echo "CANDLEPIN_AUTH_CLOUD_ENABLE=true" >> .env
 
+      - if: matrix.database == 'mariadb'
+        name: Add mysql in use env variable
+        working-directory: ./.github/containers
+        shell: bash
+        run: |
+          echo "MYSQL_IN_USE=true" >> .env
+
       - name: Create Candlepin and database containers
         shell: bash
         run: |
