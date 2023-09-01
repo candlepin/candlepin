@@ -46,6 +46,8 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -89,6 +91,113 @@ public class ConsumerResourceActivationKeySpecTest {
         assertThat(consumer.getUuid()).isNotNull();
         assertThat(client.pools().getPool(pool1.getId(), consumer.getUuid(), null))
             .returns(3L, PoolDTO::getConsumed);
+    }
+
+    @Test
+    public void shouldAllowConsumerToRegisterThenUnregisterWithActivationKeysConcurrently()
+        throws Exception {
+        // The order of keys is important. The pool ids of the first key used should be
+        // sortable by id later than those in the second key in the combined list of pools
+        OwnerDTO owner = ownerClient.createOwner(Owners.random());
+
+        int consumerCount = 3;
+        int poolCount = 6;
+        List<ConsumerDTO> consumers = Collections.synchronizedList(new ArrayList<>());
+        List<ConsumerDTO> reregConsumers = Collections.synchronizedList(new ArrayList<>());
+        List<Exception> exceptions = new ArrayList<>();
+        List<PoolDTO> pools;
+        List<Thread> threads = new ArrayList<>();
+        List<Thread> reThreads = new ArrayList<>();
+
+        // create 6 pools and 2 activation keys
+        ActivationKeyDTO key1 = ownerClient.createActivationKey(owner.getKey(),
+            ActivationKeys.random(owner));
+        ActivationKeyDTO key2 = ownerClient.createActivationKey(owner.getKey(),
+            ActivationKeys.random(owner));
+
+        IntStream.range(0, poolCount).forEach(entry -> {
+            ProductDTO prod = Products.random()
+                .addAttributesItem(ProductAttributes.MultiEntitlement.withValue("yes"));
+            prod = ownerProductApi.createProductByOwner(owner.getKey(), prod);
+            PoolDTO pool = ownerClient.createPool(owner.getKey(), Pools.random(prod).quantity(100L));
+            if (entry < 3) {
+                activationKeyApi.addPoolToKey(key1.getId(), pool.getId(), 1L);
+            }
+            else {
+                activationKeyApi.addPoolToKey(key2.getId(), pool.getId(), 1L);
+            }
+        });
+        pools = ownerClient.listOwnerPools(owner.getKey());
+        assertThat(pools).hasSize(poolCount);
+
+        // register new systems
+        IntStream.range(0, consumerCount).forEach(entry -> {
+            threads.add(new Thread(() -> {
+                try {
+                    String uuid = StringUtil.random("uuid");
+                    ConsumerDTO consumer = Consumers.random(owner)
+                        .facts(Map.of("system.certificate_version", "3.3", "dmi.system.uuid", uuid));
+                    consumer = consumerClient.createConsumer(consumer, null, owner.getKey(),
+                        key2.getName() + "," + key1.getName(), true);
+                    // this ensures completion of creation before proceeding
+                    consumer = consumerClient.getConsumer(consumer.getUuid());
+                    assertThat(consumer).isNotNull();
+                    assertThat(consumer.getEntitlementCount()).isEqualTo(poolCount);
+                    consumers.add(consumer);
+                }
+                catch (Exception e) {
+                    exceptions.add(e);
+                }
+            }));
+        });
+        threads.forEach(Thread::start);
+        for (Thread thread : threads) {
+            while (thread.isAlive()) {
+                thread.join();
+            }
+        }
+        assertThat(exceptions).hasSize(0);
+        assertThat(consumers).hasSize(consumerCount);
+        pools.forEach(pool -> assertThat(
+            client.pools().getPool(pool.getId(), null, null).getConsumed()).isEqualTo(consumerCount));
+
+        // force reregister
+        consumers.forEach(consumer -> {
+            reThreads.add(new Thread(() -> {
+                try {
+                    ConsumerDTO originalConsumer = consumerClient.getConsumer(consumer.getUuid());
+                    consumerClient.deleteConsumer(consumer.getUuid());
+                    ConsumerDTO reregConsumer = Consumers.random(owner)
+                        .facts(Map.of("system.certificate_version", "3.3",
+                        "dmi.system.uuid", originalConsumer.getFacts().get("dmi.system.uuid")));
+                    reregConsumer = consumerClient.createConsumer(reregConsumer, null,
+                        owner.getKey(),
+                        key2.getName() + "," + key1.getName(), true);
+                    // this ensures completion of creation before proceeding
+                    reregConsumer = consumerClient.getConsumer(reregConsumer.getUuid());
+                    assertThat(reregConsumer).isNotNull();
+                    assertThat(reregConsumer.getEntitlementCount()).isEqualTo(poolCount);
+                    reregConsumers.add(reregConsumer);
+                }
+                catch (Exception e) {
+                    exceptions.add(e);
+                }
+            }));
+        });
+        reThreads.forEach(Thread::start);
+        for (Thread reThread : reThreads) {
+            while (reThread.isAlive()) {
+                reThread.join();
+            }
+        }
+        assertThat(exceptions).hasSize(0);
+        assertThat(reregConsumers).hasSize(consumerCount);
+        pools.forEach(pool -> assertThat(
+            client.pools().getPool(pool.getId(), null, null).getConsumed()).isEqualTo(consumerCount));
+
+        reregConsumers.forEach(consumer -> consumerClient.deleteConsumer(consumer.getUuid()));
+        pools.forEach(pool -> assertThat(
+            client.pools().getPool(pool.getId(), null, null).getConsumed()).isEqualTo(0));
     }
 
     @Test
