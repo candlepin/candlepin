@@ -37,7 +37,7 @@ jobs:
           echo "::add-mask::${{ secrets.SONAR_TOKEN }}"
 
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install dependencies
         shell: bash
