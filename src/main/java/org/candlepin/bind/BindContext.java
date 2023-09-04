@@ -27,8 +27,6 @@ import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.util.Util;
 
-import com.google.inject.assistedinject.Assisted;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Collection;
@@ -37,6 +35,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.inject.Inject;
+
+
 
 /**
  * - Container class for holding bind information.
@@ -69,8 +69,8 @@ public class BindContext {
         ConsumerTypeCurator consumerTypeCurator,
         OwnerCurator ownerCurator,
         I18n i18n,
-        @Assisted Consumer consumer,
-        @Assisted Map<String, Integer> quantities) {
+        Consumer consumer,
+        Map<String, Integer> quantities) {
 
         this.poolCurator = poolCurator;
         this.consumerCurator = consumerCurator;
@@ -128,7 +128,7 @@ public class BindContext {
     public void lockPools() {
         Collection<Pool> pools = poolCurator.lockAndLoad(poolQuantities.keySet());
         this.poolCurator.refresh(pools);
-        for (Pool pool: pools) {
+        for (Pool pool : pools) {
             poolQuantities.get(pool.getId()).setPool(pool);
         }
     }

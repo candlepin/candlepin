@@ -20,8 +20,6 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.policy.EntitlementRefusedException;
 import org.candlepin.policy.js.entitlement.Enforcer;
 
-import com.google.inject.assistedinject.Assisted;
-
 import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,18 +29,18 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
+
 
 /**
  * Holds and represents the binding chain of responsibility.
  * Inspired by the servlet filter interfaces.
  */
 public class BindChain {
-    private BindContext context;
-    private List<BindOperation> operations = new ArrayList<>();
-    private static Logger log = LoggerFactory.getLogger(BindChain.class);
+    private static final Logger log = LoggerFactory.getLogger(BindChain.class);
 
-    @Inject
+    private final BindContext context;
+    private final List<BindOperation> operations = new ArrayList<>();
+
     public BindChain(
         BindContextFactory bindContextFactory,
         PreEntitlementRulesCheckOpFactory rulesCheckOpFactory,
@@ -51,9 +49,9 @@ public class BindChain {
         CheckBonusPoolQuantitiesOp checkBonusPoolQuantitiesOp,
         HandleCertificatesOp handleCertificatesOp,
         ComplianceOp complianceOp,
-        @Assisted Consumer consumer,
-        @Assisted Map<String, Integer> poolQuantityMap,
-        @Assisted Enforcer.CallerType caller) {
+        Consumer consumer,
+        Map<String, Integer> poolQuantityMap,
+        Enforcer.CallerType caller) {
 
         context = bindContextFactory.create(consumer, poolQuantityMap);
         operations.add(rulesCheckOpFactory.create(caller));

@@ -104,7 +104,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Names;
 import com.google.inject.persist.PersistService;
@@ -332,9 +331,9 @@ public class TestingModules {
                 .to(ExpiryDateFunction.class).in(Singleton.class);
 
             bind(CandlepinModeManager.class).asEagerSingleton();
-            install(new FactoryModuleBuilder().build(BindChainFactory.class));
-            install(new FactoryModuleBuilder().build(BindContextFactory.class));
-            install(new FactoryModuleBuilder().build(PreEntitlementRulesCheckOpFactory.class));
+            bind(BindChainFactory.class);
+            bind(BindContextFactory.class);
+            bind(PreEntitlementRulesCheckOpFactory.class);
 
             // Bind model translator
             bind(ModelTranslator.class).to(StandardTranslator.class).asEagerSingleton();

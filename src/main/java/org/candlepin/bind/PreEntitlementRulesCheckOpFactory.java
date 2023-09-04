@@ -16,12 +16,22 @@ package org.candlepin.bind;
 
 import org.candlepin.policy.js.entitlement.Enforcer;
 
-/**
- * This is the factory interface to create a {@link PreEntitlementRulesCheckOp} via assisted
- * injection. Guice 3 automatically implements this interface for us, this is so we can specify
- * constructor arguments that we will be assisting with.
- */
-public interface PreEntitlementRulesCheckOpFactory {
+import java.util.Objects;
 
-    PreEntitlementRulesCheckOp create(Enforcer.CallerType callerType);
+import javax.inject.Inject;
+
+
+
+public class PreEntitlementRulesCheckOpFactory {
+
+    private final Enforcer enforcer;
+
+    @Inject
+    public PreEntitlementRulesCheckOpFactory(Enforcer enforcer) {
+        this.enforcer = Objects.requireNonNull(enforcer);
+    }
+
+    public PreEntitlementRulesCheckOp create(Enforcer.CallerType callerType) {
+        return new PreEntitlementRulesCheckOp(this.enforcer, callerType);
+    }
 }

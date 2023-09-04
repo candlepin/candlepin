@@ -86,7 +86,6 @@ dependencies {
     implementation libraries["gettext"]
 
     // Guice Libraries
-    implementation libraries["guiceAssistedInject"]
     implementation libraries["guiceServlet"]
     implementation libraries["guicePersist"]
 

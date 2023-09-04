@@ -21,14 +21,15 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.Enforcer.CallerType;
 
-import com.google.inject.assistedinject.Assisted;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Objects;
 
 import javax.inject.Inject;
+
+
 
 /**
  * This operation is responsible for validating if a bind request is permissible.
@@ -36,15 +37,16 @@ import javax.inject.Inject;
  */
 public class PreEntitlementRulesCheckOp implements BindOperation {
 
-    private Enforcer enforcer;
-    private CallerType callerType;
+    private static final Logger log = LoggerFactory.getLogger(PreEntitlementRulesCheckOp.class);
+
+    private final Enforcer enforcer;
+    private final CallerType callerType;
     private Map<String, ValidationResult> results;
-    private static Logger log = LoggerFactory.getLogger(PreEntitlementRulesCheckOp.class);
 
     @Inject
-    public PreEntitlementRulesCheckOp(Enforcer enforcer, @Assisted CallerType callerType) {
-        this.enforcer = enforcer;
-        this.callerType = callerType;
+    public PreEntitlementRulesCheckOp(Enforcer enforcer, CallerType callerType) {
+        this.enforcer = Objects.requireNonNull(enforcer);
+        this.callerType = Objects.requireNonNull(callerType);
     }
 
     /**
