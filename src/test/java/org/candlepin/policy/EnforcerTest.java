@@ -20,7 +20,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.PoolManager;
@@ -38,16 +37,14 @@ import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
 import org.candlepin.policy.js.RuleExecutionException;
-import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.entitlement.Enforcer;
 import org.candlepin.policy.js.entitlement.EntitlementRules;
 import org.candlepin.policy.js.entitlement.EntitlementRules.Rule;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.DateSourceForTesting;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -68,10 +65,11 @@ import java.util.Map;
 import java.util.Set;
 
 
-
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class EnforcerTest extends DatabaseTestFixture {
+
+    private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
 
     @Mock
     private RulesCurator rulesCurator;
@@ -91,15 +89,9 @@ public class EnforcerTest extends DatabaseTestFixture {
     private Enforcer enforcer;
     private Owner owner;
 
-    private static final String PRODUCT_CPULIMITED = "CPULIMITED001";
 
     @BeforeEach
     public void createEnforcer() throws Exception {
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-
         when(config.getInt(ConfigProperties.PRODUCT_CACHE_MAX)).thenReturn(100);
 
         owner = createOwner();
@@ -129,7 +121,7 @@ public class EnforcerTest extends DatabaseTestFixture {
 
         enforcer = new EntitlementRules(
             new DateSourceForTesting(2010, 1, 1), jsRules, i18n, config, consumerCurator,
-            consumerTypeCurator, injector.getInstance(RulesObjectMapper.class),
+            consumerTypeCurator, ObjectMapperFactory.getRulesObjectMapper(),
             modelTranslator, poolManager);
     }
 
@@ -180,9 +172,9 @@ public class EnforcerTest extends DatabaseTestFixture {
             .rulesForAttributes(Set.of("attr1"), rules);
 
         assertEquals(List.of(
-            rule("func5", 5, "attr1"),
-            rule("func1", 2, "attr1"),
-            rule("global", 0)),
+                rule("func5", 5, "attr1"),
+                rule("func1", 2, "attr1"),
+                rule("global", 0)),
             orderedAndFilteredRules);
     }
 

@@ -34,10 +34,9 @@ import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.JSSPKIUtility;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.test.DatabaseTestFixture;
+import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,7 +58,6 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
     private static final String ORG_ENVIRONMENT_MODE = ContentAccessMode.ORG_ENVIRONMENT.toDatabaseValue();
 
     private PKIUtility pkiUtility;
-    private ObjectMapper objectMapper;
     private X509V3ExtensionUtil x509V3ExtensionUtil;
 
     private EventSink mockEventSink;
@@ -73,7 +71,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
             this.keyPairDataCurator));
 
         this.x509V3ExtensionUtil = spy(new X509V3ExtensionUtil(this.config, this.entitlementCurator,
-            injector.getInstance(ObjectMapper.class)));
+            ObjectMapperFactory.getObjectMapper()));
 
         this.mockEventSink = mock(EventSink.class);
     }
@@ -103,7 +101,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
         return this.consumerCurator.merge(consumer);
     }
 
-    private void scaCertGenerationTest(Consumer consumer) throws Exception {
+    private void scaCertGenerationTest(Consumer consumer) {
         ContentAccessManager manager = this.createManager();
 
         ContentAccessCertificate cert = manager.getCertificate(consumer);
@@ -113,7 +111,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetCertificate() throws Exception {
+    public void testGetCertificate() {
         Owner owner = this.createSCAOwner();
         Consumer consumer = this.createV3Consumer(owner, null);
 
@@ -121,7 +119,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetCertificateWithEnvironment() throws Exception {
+    public void testGetCertificateWithEnvironment() {
         Owner owner = this.createSCAOwner();
         Environment environment = this.createEnvironment(owner);
         Consumer consumer = this.createV3Consumer(owner, environment);
@@ -129,7 +127,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
         this.scaCertGenerationTest(consumer);
     }
 
-    private void regenerateExpiredSCACertTest(Consumer consumer) throws Exception {
+    private void regenerateExpiredSCACertTest(Consumer consumer) {
         ContentAccessManager manager = this.createManager();
 
         ContentAccessCertificate cert = manager.getCertificate(consumer);
@@ -157,7 +155,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetCertificateRegeneratesExpiredCerts() throws Exception {
+    public void testGetCertificateRegeneratesExpiredCerts() {
         Owner owner = this.createSCAOwner();
         Consumer consumer = this.createV3Consumer(owner, null);
 
@@ -165,7 +163,7 @@ public class ContentAccessManagerDBTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetCertificateRegeneratesExpiredCertsWithEnvironment() throws Exception {
+    public void testGetCertificateRegeneratesExpiredCertsWithEnvironment() {
         Owner owner = this.createSCAOwner();
         Environment environment = this.createEnvironment(owner);
         Consumer consumer = this.createV3Consumer(owner, environment);

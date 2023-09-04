@@ -14,13 +14,13 @@
  */
 package org.candlepin.servlet.filter;
 
-import com.google.inject.Injector;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -40,31 +40,29 @@ import javax.servlet.http.HttpServletResponse;
 @Singleton
 public class CandlepinContentTypeFilter implements Filter {
 
-    private Injector injector;
+    private final Provider<I18n> i18nProvider;
 
     @Inject
-    public CandlepinContentTypeFilter(Injector injector) {
-        this.injector = injector;
+    public CandlepinContentTypeFilter(Provider<I18n> i18nProvider) {
+        this.i18nProvider = Objects.requireNonNull(i18nProvider);
     }
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response,
         FilterChain chain) throws IOException, ServletException {
-
-        I18n i18n = injector.getInstance(I18n.class);
         // Validate media type contains a slash, to avoid RESTEasy's inability to handle this
         String contentType = request.getContentType();
+        if (contentType == null || contentType.contains("/")) {
+            chain.doFilter(request, response);
+        }
+        else {
+            I18n i18n = this.i18nProvider.get();
 
-        if (contentType != null && !contentType.contains("/")) {
             HttpServletResponse httpResponse = (HttpServletResponse) response;
             httpResponse.setContentType("text/plain");
             httpResponse.setCharacterEncoding("UTF-8");
             httpResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             httpResponse.getWriter().write(i18n.tr("Invalid Content-Type {0}", contentType));
-            return;
-        }
-        else {
-            chain.doFilter(request, response);
         }
     }
 

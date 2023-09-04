@@ -16,7 +16,6 @@ package org.candlepin.audit;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -24,14 +23,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
-import org.candlepin.config.Configuration;
-import org.candlepin.config.TestConfig;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import org.apache.activemq.artemis.api.core.ActiveMQException;
 import org.apache.activemq.artemis.api.core.client.ClientConsumer;
@@ -67,12 +62,7 @@ public class ArtemisMessageSourceTest {
     @BeforeEach
     public void setup() {
         this.sessionFactory = createConnection();
-        Configuration config = TestConfig.defaults();
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-        objectMapper = injector.getInstance(ObjectMapper.class);
+        this.objectMapper = ObjectMapperFactory.getObjectMapper();
     }
 
     @Test
@@ -84,7 +74,7 @@ public class ArtemisMessageSourceTest {
             connection, mock(ObjectMapper.class)));
 
         MessageSourceReceiverFactory receiverFactory = mock(MessageSourceReceiverFactory.class);
-        when(receiverFactory.get(eq(connection))).thenReturn(messageReceivers);
+        when(receiverFactory.get(connection)).thenReturn(messageReceivers);
 
         ArtemisMessageSource source = new ArtemisMessageSource(connection,
             objectMapper, receiverFactory);
@@ -172,7 +162,7 @@ public class ArtemisMessageSourceTest {
     private ArtemisMessageSource createEventSourceStubbedWithFactoryCreation(MessageReceiver... receivers)
         throws Exception {
         MessageSourceReceiverFactory receiverFactory = mock(MessageSourceReceiverFactory.class);
-        when(receiverFactory.get(eq(sessionFactory))).thenReturn(Arrays.asList(receivers));
+        when(receiverFactory.get(sessionFactory)).thenReturn(Arrays.asList(receivers));
 
         ArtemisMessageSource source = new ArtemisMessageSource(sessionFactory,
             objectMapper, receiverFactory);

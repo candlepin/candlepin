@@ -268,7 +268,6 @@ public class CandlepinModule extends AbstractModule {
         bind(SyncUtils.class).asEagerSingleton();
         bind(ObjectMapperFactory.class).asEagerSingleton();
         bind(ObjectMapper.class).toProvider(ObjectMapperFactory.class);
-        bind(RulesObjectMapper.class);
         bind(UniqueIdGenerator.class).to(DefaultUniqueIdGenerator.class);
         bind(AttributeValidator.class);
         bind(FactValidator.class);
@@ -401,6 +400,15 @@ public class CandlepinModule extends AbstractModule {
         bind(SuperAdminAuthorizationFilter.class);
         bind(SecurityHoleAuthorizationFilter.class);
         bind(AuthenticationFilter.class);
+        bind(StoreFactory.OwnerStore.class);
+        bind(StoreFactory.EnvironmentStore.class);
+        bind(StoreFactory.ConsumerStore.class);
+        bind(StoreFactory.EntitlementStore.class);
+        bind(StoreFactory.PoolStore.class);
+        bind(StoreFactory.UserStore.class);
+        bind(StoreFactory.ActivationKeyStore.class);
+        bind(StoreFactory.ProductStore.class);
+        bind(StoreFactory.AsyncJobStatusStore.class);
     }
 
     private void configureInterceptors() {
@@ -515,4 +523,12 @@ public class CandlepinModule extends AbstractModule {
     private ObjectMapper configureExportObjectMapper() {
         return ObjectMapperFactory.getSyncObjectMapper(this.config);
     }
+
+    @Provides
+    @Singleton
+    @Named("ExportObjectMapper")
+    private RulesObjectMapper configureRulesObjectMapper() {
+        return ObjectMapperFactory.getRulesObjectMapper();
+    }
+
 }

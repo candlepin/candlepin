@@ -16,12 +16,8 @@ package org.candlepin.policy.js.quantity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
-import org.candlepin.config.Configuration;
-import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.rules.v1.SuggestedQuantityDTO;
@@ -40,18 +36,19 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
-import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.io.InputStream;
 import java.util.Calendar;
@@ -64,10 +61,8 @@ import java.util.Map;
 import java.util.Set;
 
 
-
-/**
- * QuantityRulesTest
- */
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class QuantityRulesTest {
 
     private static final String SOCKET_ATTRIBUTE = "sockets";
@@ -103,14 +98,6 @@ public class QuantityRulesTest {
 
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
-
-        Configuration config = TestConfig.defaults();
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
@@ -120,7 +107,7 @@ public class QuantityRulesTest {
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
 
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, ownerCuratorMock);
-        quantityRules = new QuantityRules(provider.get(), injector.getInstance(RulesObjectMapper.class),
+        quantityRules = new QuantityRules(provider.get(), ObjectMapperFactory.getRulesObjectMapper(),
             translator);
 
         owner = TestUtil.createOwner();
@@ -130,8 +117,8 @@ public class QuantityRulesTest {
 
         ctype = TestUtil.createConsumerType();
         consumer = TestUtil.createConsumer(owner);
-        when(consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
-        when(consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
+        when(consumerTypeCurator.get(ctype.getId())).thenReturn(ctype);
+        when(consumerTypeCurator.getConsumerType(consumer)).thenReturn(ctype);
 
         Entitlement e = TestUtil.createEntitlement(owner, consumer, pool, new EntitlementCertificate());
 
@@ -599,7 +586,7 @@ public class QuantityRulesTest {
         pool.getProduct().setAttribute(INSTANCE_ATTRIBUTE, "2");
 
         ctype.setManifest(true);
-        when(consumerTypeCurator.getConsumerType(eq(dist))).thenReturn(ctype);
+        when(consumerTypeCurator.getConsumerType(dist)).thenReturn(ctype);
 
         SuggestedQuantityDTO suggested = quantityRules.getSuggestedQuantity(pool, dist, new Date());
         assertEquals(1L, suggested.getSuggested());

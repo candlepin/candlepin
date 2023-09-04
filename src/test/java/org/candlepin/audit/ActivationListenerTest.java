@@ -19,19 +19,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
-import org.candlepin.config.Configuration;
-import org.candlepin.config.TestConfig;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.ImportSubscriptionServiceAdapter;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
 
 
 public class ActivationListenerTest {
@@ -42,12 +37,7 @@ public class ActivationListenerTest {
 
     @BeforeEach
     public void init() {
-        Configuration config = TestConfig.defaults();
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-        objectMapper = injector.getInstance(ObjectMapper.class);
+        objectMapper = ObjectMapperFactory.getObjectMapper();
         subscriptionService = mock(ImportSubscriptionServiceAdapter.class);
         listener = new ActivationListener(subscriptionService, objectMapper);
     }

@@ -78,6 +78,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.inject.Singleton;
 import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceException;
@@ -336,6 +337,7 @@ public class JobManager implements ModeChangeListener {
     private final CandlepinRequestScope candlepinRequestScope;
     private final PrincipalProvider principalProvider;
     private final Injector injector;
+    private final Provider<EventSink> eventSinkProvider;
 
     private ManagerState state;
     private JobMessageSynchronizer synchronizer;
@@ -358,6 +360,7 @@ public class JobManager implements ModeChangeListener {
         JobMessageReceiver receiver,
         PrincipalProvider principalProvider,
         CandlepinRequestScope scope,
+        Provider<EventSink> eventSink,
         Injector injector) {
 
         this.configuration = Objects.requireNonNull(configuration);
@@ -369,6 +372,7 @@ public class JobManager implements ModeChangeListener {
         this.receiver = Objects.requireNonNull(receiver);
         this.candlepinRequestScope = Objects.requireNonNull(scope);
         this.principalProvider = Objects.requireNonNull(principalProvider);
+        this.eventSinkProvider = Objects.requireNonNull(eventSink);
         this.injector = Objects.requireNonNull(injector);
 
         this.state = ManagerState.CREATED;
@@ -1251,7 +1255,6 @@ public class JobManager implements ModeChangeListener {
                 throw new JobInitializationException(errmsg, true);
             }
 
-            EventSink eventSink = injector.getInstance(EventSink.class);
             AsyncJob job = injector.getInstance(jobClass);
 
             if (job == null) {
@@ -1278,6 +1281,7 @@ public class JobManager implements ModeChangeListener {
                 log.info("Starting job \"{}\" using class: {}", status.getName(), jobClass.getName());
             }
 
+            EventSink eventSink = this.eventSinkProvider.get();
             try {
                 job.execute(new JobExecutionContext(status));
 
@@ -1316,7 +1320,7 @@ public class JobManager implements ModeChangeListener {
 
     /**
      * Configures the job's runtime environment, performing the following operations:
-     *
+     * <p>
      *  - Entering the new injection scope (CandlepinRequestScope)
      *  - Setting up the logging level
      *  - Injecting the job's metadata to the logging backend

@@ -33,7 +33,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
 import org.candlepin.audit.EventSink;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
@@ -70,12 +69,11 @@ import org.candlepin.pki.impl.DefaultSubjectKeyIdentifierWriter;
 import org.candlepin.pki.impl.JSSPKIUtility;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509V3ExtensionUtil;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
@@ -157,11 +155,7 @@ public class ContentAccessManagerTest {
     @BeforeEach
     public void setup() throws Exception {
         this.config = TestConfig.defaults();
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-        objectMapper = injector.getInstance(ObjectMapper.class);
+        this.objectMapper = ObjectMapperFactory.getObjectMapper();
 
         PrivateKeyReader keyReader = new JSSPrivateKeyReader();
         CertificateReader certReader = new CertificateReader(this.config, keyReader);

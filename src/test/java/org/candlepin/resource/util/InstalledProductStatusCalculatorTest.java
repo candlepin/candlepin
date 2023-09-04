@@ -15,6 +15,7 @@
 package org.candlepin.resource.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyCollection;
@@ -23,10 +24,7 @@ import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
 import org.candlepin.audit.EventSink;
-import org.candlepin.config.Configuration;
-import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.api.server.v1.DateRange;
@@ -49,23 +47,20 @@ import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
-import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.compliance.ComplianceRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.policy.js.compliance.StatusReasonMessageGenerator;
 import org.candlepin.test.MockResultIterator;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
@@ -86,14 +81,9 @@ import java.util.Map;
 import java.util.Random;
 
 
-
-/**
- * InstalledProductStatusCalculatorTest
- */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class InstalledProductStatusCalculatorTest {
-    private ComplianceRules complianceRules;
 
     @Mock
     private ConsumerCurator consumerCurator;
@@ -116,6 +106,7 @@ public class InstalledProductStatusCalculatorTest {
     @Mock
     private OwnerCurator ownerCurator;
 
+    private ComplianceRules complianceRules;
     private ModelTranslator translator;
     private JsRunnerProvider provider;
     private I18n i18n;
@@ -126,12 +117,6 @@ public class InstalledProductStatusCalculatorTest {
         translator = new StandardTranslator(this.consumerTypeCurator,
             this.environmentCurator,
             this.ownerCurator);
-
-        Configuration config = TestConfig.defaults();
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
 
         // Load the default production rules:
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
@@ -147,7 +132,7 @@ public class InstalledProductStatusCalculatorTest {
 
         this.complianceRules = new ComplianceRules(provider.get(), this.entCurator,
             new StatusReasonMessageGenerator(i18n), eventSink, this.consumerCurator, this.consumerTypeCurator,
-            injector.getInstance(RulesObjectMapper.class), translator);
+            ObjectMapperFactory.getRulesObjectMapper(), translator);
 
         this.consumerEnricher = new ConsumerEnricher(this.complianceRules, this.ownerProductCurator);
     }
@@ -164,7 +149,7 @@ public class InstalledProductStatusCalculatorTest {
         consumer.addEntitlement(entitlement);
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
 
@@ -188,7 +173,7 @@ public class InstalledProductStatusCalculatorTest {
         consumer.addEntitlement(entitlement);
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
 
@@ -215,7 +200,7 @@ public class InstalledProductStatusCalculatorTest {
         consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
 
@@ -240,7 +225,7 @@ public class InstalledProductStatusCalculatorTest {
         consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -266,7 +251,7 @@ public class InstalledProductStatusCalculatorTest {
         cip.setProductId(product.getId());
         consumer.addInstalledProduct(cip);
 
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         product.setAttribute(Product.Attributes.ARCHITECTURE, "candlepin arch");
         product.setAttribute(Product.Attributes.VERSION, "candlepin version");
@@ -295,7 +280,7 @@ public class InstalledProductStatusCalculatorTest {
         cip.setProductId(product.getId());
         consumer.addInstalledProduct(cip);
 
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         // Set these to non-null values to show they aren't overwritten
         cip.setArch("original arch");
@@ -327,7 +312,7 @@ public class InstalledProductStatusCalculatorTest {
         consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -352,7 +337,7 @@ public class InstalledProductStatusCalculatorTest {
         consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -376,7 +361,7 @@ public class InstalledProductStatusCalculatorTest {
         consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -400,7 +385,7 @@ public class InstalledProductStatusCalculatorTest {
         consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -424,7 +409,7 @@ public class InstalledProductStatusCalculatorTest {
         consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -448,7 +433,7 @@ public class InstalledProductStatusCalculatorTest {
         consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -469,12 +454,12 @@ public class InstalledProductStatusCalculatorTest {
         consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(null, cip.getStartDate());
-        assertEquals(null, cip.getEndDate());
+        assertNull(cip.getStartDate());
+        assertNull(cip.getEndDate());
     }
 
     @Test
@@ -490,12 +475,12 @@ public class InstalledProductStatusCalculatorTest {
         consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range1, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
-        assertEquals(null, cip.getStartDate());
-        assertEquals(null, cip.getEndDate());
+        assertNull(cip.getStartDate());
+        assertNull(cip.getEndDate());
     }
 
     // Stacking becomes involved here.
@@ -514,7 +499,7 @@ public class InstalledProductStatusCalculatorTest {
             this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range1, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -540,7 +525,7 @@ public class InstalledProductStatusCalculatorTest {
             this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range2, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
 
@@ -567,7 +552,7 @@ public class InstalledProductStatusCalculatorTest {
             this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range2, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -595,7 +580,7 @@ public class InstalledProductStatusCalculatorTest {
             this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range2, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -624,7 +609,7 @@ public class InstalledProductStatusCalculatorTest {
             this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range3, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -652,7 +637,7 @@ public class InstalledProductStatusCalculatorTest {
             this.mockStackedEntitlement(owner, consumer, "stack_id_1", product2, 1, range1, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -685,7 +670,7 @@ public class InstalledProductStatusCalculatorTest {
             this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range4, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -712,7 +697,7 @@ public class InstalledProductStatusCalculatorTest {
             this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range2, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         ComplianceStatus status = complianceRules.getStatus(consumer, now);
         assertEquals("partial", status.getStatus());
@@ -740,7 +725,7 @@ public class InstalledProductStatusCalculatorTest {
             this.mockStackedEntitlement(owner, consumer, "stack_id_1", product, 1, range3, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -769,7 +754,7 @@ public class InstalledProductStatusCalculatorTest {
         consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range3, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -796,7 +781,7 @@ public class InstalledProductStatusCalculatorTest {
         consumer.addEntitlement(this.mockEntitlement(owner, consumer, product, range2, product));
 
         this.mockConsumerEntitlements(consumer, consumer.getEntitlements());
-        this.mockOwnerProducts(owner, Arrays.asList(product));
+        this.mockOwnerProducts(owner, List.of(product));
 
         this.consumerEnricher.enrich(consumer);
         ConsumerInstalledProduct cip = this.getInstalledProduct(consumer, product);
@@ -846,7 +831,7 @@ public class InstalledProductStatusCalculatorTest {
     private Entitlement mockEntitlement(Owner owner, Consumer consumer, Product product, DateRange range,
         Product... providedProducts) {
 
-        product = (Product) product.clone();
+        product = product.clone();
         product.setProvidedProducts(Arrays.asList(providedProducts));
 
         final Pool p = new Pool()
@@ -899,8 +884,8 @@ public class InstalledProductStatusCalculatorTest {
 
         consumer.setFact(Consumer.Facts.CPU_SOCKETS, "4");
 
-        when(this.consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
-        when(this.consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
+        when(this.consumerTypeCurator.get(ctype.getId())).thenReturn(ctype);
+        when(this.consumerTypeCurator.getConsumerType(consumer)).thenReturn(ctype);
 
         return consumer;
     }
@@ -943,7 +928,7 @@ public class InstalledProductStatusCalculatorTest {
         when(mockCPQuery.list()).thenReturn(entList);
         when(mockCPQuery.iterator()).thenReturn(entitlements.iterator());
 
-        when(entCurator.listByConsumer(eq(consumer))).thenReturn(entList);
+        when(entCurator.listByConsumer(consumer)).thenReturn(entList);
         when(entCurator.listByConsumerAndDate(eq(consumer), any(Date.class))).thenReturn(mockCPQuery);
     }
 
@@ -961,27 +946,24 @@ public class InstalledProductStatusCalculatorTest {
             productMap.put(product.getId(), product);
         }
 
-        doAnswer(new Answer<CandlepinQuery<Product>>() {
-            @Override
-            public CandlepinQuery<Product> answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                Collection<String> productIds = (Collection<String>) args[1];
+        doAnswer((Answer<CandlepinQuery<Product>>) invocation -> {
+            Object[] args = invocation.getArguments();
+            Collection<String> productIds = (Collection<String>) args[1];
 
-                Collection<Product> products = new LinkedList<>();
-                for (String productId : productIds) {
-                    Product product = productMap.get(productId);
+            Collection<Product> products1 = new LinkedList<>();
+            for (String productId : productIds) {
+                Product product = productMap.get(productId);
 
-                    if (product != null) {
-                        products.add(product);
-                    }
+                if (product != null) {
+                    products1.add(product);
                 }
-
-                CandlepinQuery cqmock = mock(CandlepinQuery.class);
-                when(cqmock.iterator()).thenReturn(products.iterator());
-                when(cqmock.iterate()).thenReturn(new MockResultIterator(products.iterator()));
-
-                return cqmock;
             }
+
+            CandlepinQuery cqmock = mock(CandlepinQuery.class);
+            when(cqmock.iterator()).thenReturn(products1.iterator());
+            when(cqmock.iterate()).thenReturn(new MockResultIterator(products1.iterator()));
+
+            return cqmock;
         }).when(this.ownerProductCurator).getProductsByIds(eq(owner.getId()), anyCollection());
     }
 

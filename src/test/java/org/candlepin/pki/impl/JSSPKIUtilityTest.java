@@ -27,7 +27,6 @@ import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
-import org.candlepin.TestingModules;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
 import org.candlepin.model.Consumer;
@@ -39,9 +38,6 @@ import org.candlepin.pki.X509ByteExtensionWrapper;
 import org.candlepin.pki.X509ExtensionWrapper;
 import org.candlepin.test.CertificateReaderForTesting;
 import org.candlepin.util.OIDUtil;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import org.bouncycastle.asn1.ASN1OctetString;
 import org.bouncycastle.asn1.DERBitString;
@@ -87,7 +83,6 @@ import java.util.Set;
 
 public class JSSPKIUtilityTest {
 
-    private Injector injector;
     private KeyPair subjectKeyPair;
     private Configuration config;
 
@@ -105,13 +100,8 @@ public class JSSPKIUtilityTest {
         generator.initialize(4096);
         this.subjectKeyPair = generator.generateKeyPair();
 
-        this.injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-
-        certificateReader = injector.getInstance(CertificateReaderForTesting.class);
-        skiWriter = injector.getInstance(SubjectKeyIdentifierWriter.class);
+        certificateReader = new CertificateReaderForTesting();
+        skiWriter = new DefaultSubjectKeyIdentifierWriter();
 
         this.mockKeyPairDataCurator = mock(KeyPairDataCurator.class);
         doAnswer(returnsFirstArg()).when(this.mockKeyPairDataCurator).merge(any());
@@ -162,8 +152,7 @@ public class JSSPKIUtilityTest {
             new JcaX509ExtensionUtils().createSubjectKeyIdentifier(subjectKeyPair.getPublic()).getEncoded(),
             SubjectKeyIdentifier.fromExtensions(bcExtensions).getEncoded());
 
-        CertificateReader reader = injector.getInstance(CertificateReader.class);
-        PrivateKey key = reader.getCaKey();
+        PrivateKey key = this.certificateReader.getCaKey();
         KeyFactory kf = KeyFactory.getInstance("RSA");
         RSAPrivateCrtKeySpec ks = kf.getKeySpec(key, RSAPrivateCrtKeySpec.class);
         RSAPublicKeySpec pubKs = new RSAPublicKeySpec(ks.getModulus(), ks.getPublicExponent());
@@ -189,7 +178,7 @@ public class JSSPKIUtilityTest {
 
         String byteExtOid = OIDUtil.REDHAT_OID + "." +
             OIDUtil.TOPLEVEL_NAMESPACES.get(OIDUtil.ENTITLEMENT_DATA_KEY);
-        byte[] someBytes = new byte[] { 0xd, 0xe, 0xf, 0xa, 0xc, 0xe, 0xa, 0xc, 0xe };
+        byte[] someBytes = new byte[]{0xd, 0xe, 0xf, 0xa, 0xc, 0xe, 0xa, 0xc, 0xe};
         X509ByteExtensionWrapper byteExtension = new X509ByteExtensionWrapper(byteExtOid, false, someBytes);
         Set<X509ByteExtensionWrapper> byteExtensions = Set.of(byteExtension);
 
@@ -299,8 +288,8 @@ public class JSSPKIUtilityTest {
 
         // The keypair coming out should be the same, since it shouldn't have required
         // regeneration
-        assertTrue(Arrays.equals(keypairA.getPublic().getEncoded(), keypairB.getPublic().getEncoded()));
-        assertTrue(Arrays.equals(keypairA.getPrivate().getEncoded(), keypairB.getPrivate().getEncoded()));
+        assertArrayEquals(keypairA.getPublic().getEncoded(), keypairB.getPublic().getEncoded());
+        assertArrayEquals(keypairA.getPrivate().getEncoded(), keypairB.getPrivate().getEncoded());
     }
 
     private byte[] serializeObject(Object key) throws Exception {
@@ -338,12 +327,12 @@ public class JSSPKIUtilityTest {
         assertNotNull(kpdata);
         assertFalse(Arrays.equals(jsoPubKeyBytes, kpdata.getPublicKeyData()));
         assertFalse(Arrays.equals(jsoPrivKeyBytes, kpdata.getPrivateKeyData()));
-        assertTrue(Arrays.equals(keypair.getPublic().getEncoded(), converted.getPublic().getEncoded()));
-        assertTrue(Arrays.equals(keypair.getPrivate().getEncoded(), converted.getPrivate().getEncoded()));
+        assertArrayEquals(keypair.getPublic().getEncoded(), converted.getPublic().getEncoded());
+        assertArrayEquals(keypair.getPrivate().getEncoded(), converted.getPrivate().getEncoded());
 
         // The converted key pair data should match the encoding of the keys
-        assertTrue(Arrays.equals(keypair.getPublic().getEncoded(), kpdata.getPublicKeyData()));
-        assertTrue(Arrays.equals(keypair.getPrivate().getEncoded(), kpdata.getPrivateKeyData()));
+        assertArrayEquals(keypair.getPublic().getEncoded(), kpdata.getPublicKeyData());
+        assertArrayEquals(keypair.getPrivate().getEncoded(), kpdata.getPrivateKeyData());
     }
 
     @Test
@@ -372,8 +361,8 @@ public class JSSPKIUtilityTest {
         assertFalse(Arrays.equals(pubKeyBytes, kpdata.getPublicKeyData()));
         assertFalse(Arrays.equals(privKeyBytes, kpdata.getPrivateKeyData()));
 
-        assertTrue(Arrays.equals(keypair.getPublic().getEncoded(), kpdata.getPublicKeyData()));
-        assertTrue(Arrays.equals(keypair.getPrivate().getEncoded(), kpdata.getPrivateKeyData()));
+        assertArrayEquals(keypair.getPublic().getEncoded(), kpdata.getPublicKeyData());
+        assertArrayEquals(keypair.getPrivate().getEncoded(), kpdata.getPrivateKeyData());
     }
 
     private static class SHA256DigestCalculator

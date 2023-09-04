@@ -28,10 +28,8 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
 import org.candlepin.async.impl.ActiveMQSessionFactory;
 import org.candlepin.auth.Principal;
-import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
 import org.candlepin.controller.mode.CandlepinModeManager;
 import org.candlepin.controller.mode.CandlepinModeManager.Mode;
@@ -47,11 +45,10 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Rules;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import org.apache.activemq.artemis.api.core.ActiveMQBuffer;
 import org.apache.activemq.artemis.api.core.ActiveMQBuffers;
@@ -110,13 +107,7 @@ public class EventSinkImplTest {
 
     @BeforeEach
     public void init() throws Exception {
-        Configuration config = TestConfig.defaults();
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-        this.mapper = injector.getInstance(ObjectMapper.class);
-
+        this.mapper = ObjectMapperFactory.getObjectMapper();
         this.principal = TestUtil.createOwnerPrincipal();
         when(mockPrincipalProvider.get()).thenReturn(this.principal);
         when(mockSessionFactory.createSession()).thenReturn(mockClientSession);

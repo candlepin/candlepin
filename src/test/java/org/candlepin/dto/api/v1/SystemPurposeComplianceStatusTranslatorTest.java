@@ -18,10 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
 
-import org.candlepin.TestingModules;
-import org.candlepin.config.Configuration;
 import org.candlepin.dto.AbstractTranslatorTest;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.EntitlementDTO;
@@ -32,19 +29,16 @@ import org.candlepin.model.Pool;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.util.Util;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-
 import org.xnap.commons.i18n.I18n;
+import org.xnap.commons.i18n.I18nFactory;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Test suite for the ComplianceStatusTranslator class
- */
+
 public class SystemPurposeComplianceStatusTranslatorTest extends
     AbstractTranslatorTest<SystemPurposeComplianceStatus, SystemPurposeComplianceStatusDTO,
     SystemPurposeComplianceStatusTranslator> {
@@ -52,20 +46,12 @@ public class SystemPurposeComplianceStatusTranslatorTest extends
     protected SystemPurposeComplianceStatusTranslator translator;
     protected EntitlementTranslator entitlementTranslator;
     protected PoolTranslator poolTranslator;
-    private Injector injector;
     private I18n i18n;
 
     @Override
     protected SystemPurposeComplianceStatusTranslator initObjectTranslator() {
+        this.i18n = I18nFactory.getI18n(this.getClass(), Locale.US, I18nFactory.FALLBACK);
 
-
-        Configuration config = mock(Configuration.class);
-        injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule()
-        );
-        i18n = injector.getInstance(I18n.class);
         this.entitlementTranslator = new EntitlementTranslator();
         this.poolTranslator = new PoolTranslator();
 

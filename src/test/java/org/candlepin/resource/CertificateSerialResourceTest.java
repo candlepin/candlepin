@@ -19,30 +19,25 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
 import org.candlepin.dto.ModelTranslator;
+import org.candlepin.dto.SimpleModelTranslator;
 import org.candlepin.dto.api.server.v1.CertificateSerialDTO;
+import org.candlepin.dto.api.v1.CertificateSerialTranslator;
 import org.candlepin.model.CertificateSerial;
 import org.candlepin.model.CertificateSerialCurator;
-
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class CertificateSerialResourceTest {
 
-    protected ModelTranslator modelTranslator;
+    private ModelTranslator modelTranslator;
 
     @BeforeEach
     public void init() {
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.ServletEnvironmentModule(),
-            new TestingModules.StandardTest());
-        injector.injectMembers(this);
-        modelTranslator = injector.getInstance(ModelTranslator.class);
+        this.modelTranslator = new SimpleModelTranslator();
+        this.modelTranslator.registerTranslator(
+            new CertificateSerialTranslator(), CertificateSerial.class, CertificateSerialDTO.class);
     }
 
     @Test

@@ -27,6 +27,7 @@ import org.candlepin.config.ConfigProperties;
 import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.AttributeValidator;
+import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.PropertyValidationException;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -52,7 +53,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.PersistenceException;
 import javax.validation.ConstraintViolationException;
-
 
 
 public class ProductCuratorTest extends DatabaseTestFixture {
@@ -163,7 +163,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Map<String, String> data = new HashMap<>();
         data.put("a", "1");
         data.put("b", "2");
-        ObjectMapper mapper = injector.getInstance(ObjectMapper.class);
+        ObjectMapper mapper = ObjectMapperFactory.getObjectMapper();
         String jsonData = mapper.writeValueAsString(data);
 
         Product prod = new Product("cptest-label", "My Product");
@@ -174,7 +174,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         assertEquals(jsonData, lookedUp.getAttributeValue("content_sets"));
 
         data = mapper.readValue(lookedUp.getAttributeValue("content_sets"),
-            new TypeReference<Map<String, String>>() {});
+            new TypeReference<>() {});
         assertEquals("1", data.get("a"));
         assertEquals("2", data.get("b"));
     }
@@ -193,7 +193,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         data.add(contentSet1);
         data.add(contentSet2);
 
-        ObjectMapper mapper = injector.getInstance(ObjectMapper.class);
+        ObjectMapper mapper = ObjectMapperFactory.getObjectMapper();
         String jsonData = mapper.writeValueAsString(data);
 
         Product prod = TestUtil.createProduct("cptest-label", "My Product");
@@ -203,8 +203,7 @@ public class ProductCuratorTest extends DatabaseTestFixture {
         Product lookedUp = productCurator.get(prod.getUuid());
         assertEquals(jsonData, lookedUp.getAttributeValue("content_sets"));
 
-        data = mapper.readValue(lookedUp.getAttributeValue("content_sets"),
-            new TypeReference<List<Map<String, String>>>() {});
+        data = mapper.readValue(lookedUp.getAttributeValue("content_sets"), new TypeReference<>() {});
         Map<String, String> cs1 = data.get(0);
         assertEquals("cs1", cs1.get("name"));
 

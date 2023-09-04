@@ -35,8 +35,6 @@ import org.candlepin.model.User;
 import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.activationkeys.ActivationKeyCurator;
 
-import com.google.inject.Injector;
-
 import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
@@ -44,9 +42,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.inject.Singleton;
 
 /**
  * This class should be bound to an instance
@@ -56,16 +56,26 @@ public class StoreFactory {
         storeMap = new HashMap<>();
 
     @Inject
-    public StoreFactory(Injector injector) {
-        storeMap.put(Owner.class, injector.getInstance(OwnerStore.class));
-        storeMap.put(Environment.class, injector.getInstance(EnvironmentStore.class));
-        storeMap.put(Consumer.class, injector.getInstance(ConsumerStore.class));
-        storeMap.put(Entitlement.class, injector.getInstance(EntitlementStore.class));
-        storeMap.put(Pool.class, injector.getInstance(PoolStore.class));
-        storeMap.put(User.class, new UserStore());
-        storeMap.put(ActivationKey.class, injector.getInstance(ActivationKeyStore.class));
-        storeMap.put(Product.class, injector.getInstance(ProductStore.class));
-        storeMap.put(AsyncJobStatus.class, injector.getInstance(AsyncJobStatusStore.class));
+    public StoreFactory(
+        OwnerStore ownerStore,
+        EnvironmentStore environmentStore,
+        ConsumerStore consumerStore,
+        EntitlementStore entitlementStore,
+        PoolStore poolStore,
+        UserStore userStore,
+        ActivationKeyStore activationKeyStore,
+        ProductStore productStore,
+        AsyncJobStatusStore asyncJobStatusStore
+    ) {
+        storeMap.put(Owner.class, ownerStore);
+        storeMap.put(Environment.class, environmentStore);
+        storeMap.put(Consumer.class, consumerStore);
+        storeMap.put(Entitlement.class, entitlementStore);
+        storeMap.put(Pool.class, poolStore);
+        storeMap.put(User.class, userStore);
+        storeMap.put(ActivationKey.class, activationKeyStore);
+        storeMap.put(Product.class, productStore);
+        storeMap.put(AsyncJobStatus.class, asyncJobStatusStore);
     }
 
     public EntityStore<? extends Persisted> getFor(Class<? extends Persisted> clazz) {
@@ -78,16 +88,13 @@ public class StoreFactory {
         return store;
     }
 
-    public boolean canValidate(Class<?> clazz) {
-        return storeMap.containsKey(clazz);
-    }
-
-    private static class OwnerStore implements EntityStore<Owner> {
-        private OwnerCurator ownerCurator;
+    @Singleton
+    public static class OwnerStore implements EntityStore<Owner> {
+        private final OwnerCurator ownerCurator;
 
         @Inject
         public OwnerStore(OwnerCurator ownerCurator) {
-            this.ownerCurator = ownerCurator;
+            this.ownerCurator = Objects.requireNonNull(ownerCurator);
         }
 
         @Override
@@ -106,12 +113,13 @@ public class StoreFactory {
         }
     }
 
-    private static class EnvironmentStore implements EntityStore<Environment> {
-        private EnvironmentCurator envCurator;
+    @Singleton
+    public static class EnvironmentStore implements EntityStore<Environment> {
+        private final EnvironmentCurator envCurator;
 
         @Inject
         public EnvironmentStore(EnvironmentCurator environmentCurator) {
-            this.envCurator = environmentCurator;
+            this.envCurator = Objects.requireNonNull(environmentCurator);
         }
 
         @Override
@@ -130,20 +138,21 @@ public class StoreFactory {
         }
     }
 
-    private static class ConsumerStore implements EntityStore<Consumer> {
-        private ConsumerCurator consumerCurator;
-        private DeletedConsumerCurator deletedConsumerCurator;
-        private Provider<I18n> i18nProvider;
-        private OwnerCurator ownerCurator;
+    @Singleton
+    public static class ConsumerStore implements EntityStore<Consumer> {
+        private final ConsumerCurator consumerCurator;
+        private final DeletedConsumerCurator deletedConsumerCurator;
+        private final Provider<I18n> i18nProvider;
+        private final OwnerCurator ownerCurator;
 
         @Inject
         public ConsumerStore(ConsumerCurator consumerCurator,
             DeletedConsumerCurator deletedConsumerCurator, Provider<I18n> i18nProvider,
             OwnerCurator ownerCurator) {
-            this.consumerCurator = consumerCurator;
-            this.deletedConsumerCurator = deletedConsumerCurator;
-            this.i18nProvider = i18nProvider;
-            this.ownerCurator = ownerCurator;
+            this.consumerCurator = Objects.requireNonNull(consumerCurator);
+            this.deletedConsumerCurator = Objects.requireNonNull(deletedConsumerCurator);
+            this.i18nProvider = Objects.requireNonNull(i18nProvider);
+            this.ownerCurator = Objects.requireNonNull(ownerCurator);
         }
 
         @Override
@@ -177,12 +186,13 @@ public class StoreFactory {
         }
     }
 
-    private static class EntitlementStore implements EntityStore<Entitlement> {
-        private EntitlementCurator entitlementCurator;
+    @Singleton
+    public static class EntitlementStore implements EntityStore<Entitlement> {
+        private final EntitlementCurator entitlementCurator;
 
         @Inject
         public EntitlementStore(EntitlementCurator entitlementCurator) {
-            this.entitlementCurator = entitlementCurator;
+            this.entitlementCurator = Objects.requireNonNull(entitlementCurator);
         }
 
         @Override
@@ -201,12 +211,13 @@ public class StoreFactory {
         }
     }
 
-    private static class PoolStore implements EntityStore<Pool> {
-        private PoolCurator poolCurator;
+    @Singleton
+    public static class PoolStore implements EntityStore<Pool> {
+        private final PoolCurator poolCurator;
 
         @Inject
         public PoolStore(PoolCurator poolCurator) {
-            this.poolCurator = poolCurator;
+            this.poolCurator = Objects.requireNonNull(poolCurator);
         }
 
         @Override
@@ -225,12 +236,13 @@ public class StoreFactory {
         }
     }
 
-    private static class ActivationKeyStore implements EntityStore<ActivationKey> {
-        private ActivationKeyCurator activationKeyCurator;
+    @Singleton
+    public static class ActivationKeyStore implements EntityStore<ActivationKey> {
+        private final ActivationKeyCurator activationKeyCurator;
 
         @Inject
         public ActivationKeyStore(ActivationKeyCurator activationKeyCurator) {
-            this.activationKeyCurator = activationKeyCurator;
+            this.activationKeyCurator = Objects.requireNonNull(activationKeyCurator);
         }
 
         @Override
@@ -249,12 +261,13 @@ public class StoreFactory {
         }
     }
 
-    private static class ProductStore implements EntityStore<Product> {
-        private ProductCurator productCurator;
+    @Singleton
+    public static class ProductStore implements EntityStore<Product> {
+        private final ProductCurator productCurator;
 
         @Inject
         public ProductStore(ProductCurator productCurator) {
-            this.productCurator = productCurator;
+            this.productCurator = Objects.requireNonNull(productCurator);
         }
 
         @Override
@@ -273,12 +286,13 @@ public class StoreFactory {
         }
     }
 
-    private static class AsyncJobStatusStore implements EntityStore<AsyncJobStatus> {
-        private AsyncJobStatusCurator jobCurator;
+    @Singleton
+    public static class AsyncJobStatusStore implements EntityStore<AsyncJobStatus> {
+        private final AsyncJobStatusCurator jobCurator;
 
         @Inject
         public AsyncJobStatusStore(AsyncJobStatusCurator jobCurator) {
-            this.jobCurator = jobCurator;
+            this.jobCurator = Objects.requireNonNull(jobCurator);
         }
 
         @Override
@@ -297,7 +311,8 @@ public class StoreFactory {
         }
     }
 
-    private static class UserStore implements EntityStore<User> {
+    @Singleton
+    public static class UserStore implements EntityStore<User> {
         @Override
         public User lookup(String key) {
             /*

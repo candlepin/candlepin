@@ -29,7 +29,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
 import org.candlepin.bind.PoolOperations;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
@@ -59,14 +58,12 @@ import org.candlepin.model.dto.Subscription;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
-import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.pool.PoolRules;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.DateSourceImpl;
+import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -88,7 +85,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
 
 
 /**
@@ -130,11 +126,6 @@ public class HostedVirtLimitEntitlementRulesTest {
     @BeforeEach
     public void createEnforcer() {
         this.config = TestConfig.defaults();
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-
         this.config.setProperty(ConfigProperties.PRODUCT_CACHE_MAX, "100");
         InputStream is = this.getClass().getResourceAsStream(
             RulesCurator.DEFAULT_RULES_FILE);
@@ -155,7 +146,7 @@ public class HostedVirtLimitEntitlementRulesTest {
             config,
             consumerCurator,
             consumerTypeCurator,
-            injector.getInstance(RulesObjectMapper.class),
+            ObjectMapperFactory.getRulesObjectMapper(),
             translator,
             poolManager);
 

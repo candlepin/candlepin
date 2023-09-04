@@ -42,9 +42,6 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 
-/**
- * RuntimeExceptionMapperTest
- */
 public class RuntimeExceptionMapperTest extends TestExceptionMapperBase {
 
     @BeforeEach

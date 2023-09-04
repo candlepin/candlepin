@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import javax.inject.Inject;
 
@@ -48,14 +49,13 @@ import javax.inject.Inject;
  */
 public class RulesObjectMapper {
 
-    private static Logger log = LoggerFactory.getLogger(RulesObjectMapper.class);
+    private static final Logger log = LoggerFactory.getLogger(RulesObjectMapper.class);
 
-    private ObjectMapper mapper;
+    private final ObjectMapper mapper;
 
     @Inject
-    @SuppressWarnings("checkstyle:indentation")
     public RulesObjectMapper(ObjectMapper objectMapper) {
-        this.mapper = objectMapper;
+        this.mapper = Objects.requireNonNull(objectMapper);
     }
 
     public String toJsonString(Map<String, Object> toSerialize) {

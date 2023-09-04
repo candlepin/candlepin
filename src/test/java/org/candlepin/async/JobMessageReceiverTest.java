@@ -27,7 +27,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import org.candlepin.TestingModules;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.ConfigurationException;
 import org.candlepin.config.DevConfig;
@@ -43,10 +42,9 @@ import org.candlepin.messaging.CPMSessionFactory;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatus.JobState;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.persist.UnitOfWork;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -73,11 +71,7 @@ public class JobMessageReceiverTest {
         this.config = TestConfig.defaults();
         this.jobManager = mock(JobManager.class);
         this.unitOfWork = mock(UnitOfWork.class);
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-        mapper = injector.getInstance(ObjectMapper.class);
+        this.mapper = ObjectMapperFactory.getObjectMapper();
 
         // Set the number of threads/consumers to 1 so we don't have to worry about
         // clobbering any collected state during consumer creation

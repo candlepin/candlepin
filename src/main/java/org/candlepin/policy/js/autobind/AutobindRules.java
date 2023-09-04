@@ -32,7 +32,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsonJsContext;
 import org.candlepin.policy.js.RuleExecutionException;
@@ -64,23 +63,21 @@ import javax.inject.Inject;
  */
 public class AutobindRules {
 
-    protected static final String SELECT_POOL_FUNCTION = "select_pools";
-    private static Logger log = LoggerFactory.getLogger(AutobindRules.class);
+    private static final Logger log = LoggerFactory.getLogger(AutobindRules.class);
+    private static final String SELECT_POOL_FUNCTION = "select_pools";
 
-    private JsRunner jsRules;
-    private RulesObjectMapper mapper;
-    private ProductCurator productCurator;
-    private ConsumerTypeCurator consumerTypeCurator;
-    private OwnerCurator ownerCurator;
-    private ModelTranslator translator;
+    private final JsRunner jsRules;
+    private final RulesObjectMapper mapper;
+    private final ConsumerTypeCurator consumerTypeCurator;
+    private final OwnerCurator ownerCurator;
+    private final ModelTranslator translator;
 
     @Inject
-    public AutobindRules(JsRunner jsRules, ProductCurator productCurator,
+    public AutobindRules(JsRunner jsRules,
         ConsumerTypeCurator consumerTypeCurator, OwnerCurator ownerCurator,
         RulesObjectMapper mapper, ModelTranslator translator) {
 
         this.jsRules = jsRules;
-        this.productCurator = productCurator;
         this.ownerCurator = ownerCurator;
         this.consumerTypeCurator = consumerTypeCurator;
         this.mapper = mapper;
