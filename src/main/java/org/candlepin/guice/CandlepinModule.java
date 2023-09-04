@@ -175,7 +175,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Names;
 import com.google.inject.persist.jpa.JpaPersistModule;
 import com.google.inject.persist.jpa.JpaPersistOptions;
@@ -390,9 +389,9 @@ public class CandlepinModule extends AbstractModule {
     }
 
     private void configureBindFactories() {
-        install(new FactoryModuleBuilder().build(BindChainFactory.class));
-        install(new FactoryModuleBuilder().build(BindContextFactory.class));
-        install(new FactoryModuleBuilder().build(PreEntitlementRulesCheckOpFactory.class));
+        bind(BindChainFactory.class);
+        bind(BindContextFactory.class);
+        bind(PreEntitlementRulesCheckOpFactory.class);
     }
 
     private void configureAuth() {

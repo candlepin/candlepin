@@ -18,13 +18,45 @@ import org.candlepin.model.Consumer;
 import org.candlepin.policy.js.entitlement.Enforcer;
 
 import java.util.Map;
+import java.util.Objects;
 
-/**
- * This is the factory interface to create a BindChain2 via assisted injection.
- * Guice 3 automatically implements this interface for us, this is so we can specify
- * constructor arguments that we will be assisting with.
- */
-public interface BindChainFactory {
+import javax.inject.Inject;
 
-    BindChain create(Consumer consumer, Map<String, Integer> quantities, Enforcer.CallerType caller);
+
+
+public class BindChainFactory {
+
+    private final BindContextFactory bindContextFactory;
+    private final PreEntitlementRulesCheckOpFactory rulesCheckOpFactory;
+    private final HandleEntitlementsOp handleEntitlementsOp;
+    private final PostBindBonusPoolsOp postBindBonusPoolsOp;
+    private final CheckBonusPoolQuantitiesOp checkBonusPoolQuantitiesOp;
+    private final HandleCertificatesOp handleCertificatesOp;
+    private final ComplianceOp complianceOp;
+
+    @Inject
+    public BindChainFactory(BindContextFactory bindContextFactory,
+        PreEntitlementRulesCheckOpFactory rulesCheckOpFactory, HandleEntitlementsOp handleEntitlementsOp,
+        PostBindBonusPoolsOp postBindBonusPoolsOp, CheckBonusPoolQuantitiesOp checkBonusPoolQuantitiesOp,
+        HandleCertificatesOp handleCertificatesOp, ComplianceOp complianceOp) {
+        this.bindContextFactory = Objects.requireNonNull(bindContextFactory);
+        this.rulesCheckOpFactory = Objects.requireNonNull(rulesCheckOpFactory);
+        this.handleEntitlementsOp = Objects.requireNonNull(handleEntitlementsOp);
+        this.postBindBonusPoolsOp = Objects.requireNonNull(postBindBonusPoolsOp);
+        this.checkBonusPoolQuantitiesOp = Objects.requireNonNull(checkBonusPoolQuantitiesOp);
+        this.handleCertificatesOp = Objects.requireNonNull(handleCertificatesOp);
+        this.complianceOp = Objects.requireNonNull(complianceOp);
+    }
+
+    public BindChain create(Consumer consumer, Map<String, Integer> quantities, Enforcer.CallerType caller) {
+        return new BindChain(
+            this.bindContextFactory,
+            this.rulesCheckOpFactory,
+            this.handleEntitlementsOp,
+            this.postBindBonusPoolsOp,
+            this.checkBonusPoolQuantitiesOp,
+            this.handleCertificatesOp,
+            this.complianceOp,
+            consumer, quantities, caller);
+    }
 }

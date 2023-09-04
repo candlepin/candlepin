@@ -35,6 +35,8 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+
+
 /**
  * This BindOperation will be replaced shortly in an upcoming PR, where we
  * will split the implementation into pre-process and execute steps.
@@ -103,8 +105,7 @@ public class PostBindBonusPoolsOp implements BindOperation {
             entitlements,
             subPoolsForStackIds,
             false,
-            poolQuantities
-        ));
+            poolQuantities));
 
         // un-associate pools with entitlements.
         for (Entitlement entitlement : entitlements.values()) {
