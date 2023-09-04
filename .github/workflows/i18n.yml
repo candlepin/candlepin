@@ -37,7 +37,7 @@ jobs:
         run: dnf --setopt install_weak_deps=False install -y gettext jss git
 
       - name: Check out repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ matrix.branch }}
 
