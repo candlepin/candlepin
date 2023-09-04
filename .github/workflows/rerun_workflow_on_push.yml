@@ -34,8 +34,7 @@ jobs:
           -H "Accept: application/vnd.github+json" \
           -H "X-GitHub-Api-Version: 2022-11-28" \
           /repos/candlepin/candlepin/pulls | \
-          jq -r '.[] | select(.base.ref == "sbakaj/workflow_rerun") | .head.sha')
-
+          jq -r '.[] | select(.base.ref == "sbakaj/worklflow_rerun") | .head.sha')
           for head_sha in $pr_head_shas; do
             runner_id=$(gh api \
             -H "Accept: application/vnd.github+json" \
