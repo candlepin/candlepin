@@ -154,6 +154,7 @@ import javax.inject.Provider;
 import javax.persistence.EntityManager;
 
 
+
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class PoolManagerTest {
@@ -318,9 +319,9 @@ public class PoolManagerTest {
     }
 
     private void setupBindChain() {
-        final HandleEntitlementsOp entitlementsOp =
-            new HandleEntitlementsOp(mockPoolCurator, entitlementCurator);
-        final PostBindBonusPoolsOp postBindBonusPoolsOp = new PostBindBonusPoolsOp(manager,
+        final HandleEntitlementsOp entitlementsOp = new HandleEntitlementsOp(mockPoolCurator,
+            entitlementCurator);
+        final PostBindBonusPoolsOp postBindBonusPoolsOp = new PostBindBonusPoolsOp(poolRulesMock,
             consumerTypeCuratorMock, mockPoolCurator, enforcerMock, poolOpProcessor);
         final CheckBonusPoolQuantitiesOp checkBonusPoolQuantitiesOp = new CheckBonusPoolQuantitiesOp(manager);
         final HandleCertificatesOp certificatesOp = new HandleCertificatesOp(mockECGenerator, certCuratorMock,
@@ -452,7 +453,7 @@ public class PoolManagerTest {
         verify(mockPoolCurator).batchDelete(eq(pools), anySet());
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testRefreshPoolsOnlyRegeneratesFloatingWhenNecessary() {
         List<Subscription> subscriptions = new ArrayList<>();
@@ -492,7 +493,7 @@ public class PoolManagerTest {
         verify(this.manager).updateFloatingPools(eq(expectedFloating), eq(true), anyMap());
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testRefreshPoolsOnlyRegeneratesWhenNecessary() {
         List<Subscription> subscriptions = new ArrayList<>();
@@ -978,7 +979,7 @@ public class PoolManagerTest {
         verify(this.mockPoolCurator, times(1)).create(any(Pool.class), anyBoolean());
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void refreshPoolsCleanupPoolThatLostVirtLimit() {
         List<Subscription> subscriptions = new ArrayList<>();
@@ -1133,7 +1134,7 @@ public class PoolManagerTest {
         verify(mockPoolCurator).batchDelete(eq(poolsWithSourceAsSet), any());
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testEntitleWithADate() throws Exception {
         // TODO: Fix this test with proper mocks -- the current mocks were hiding a bug in the
@@ -1410,7 +1411,7 @@ public class PoolManagerTest {
         return newPool;
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void testEntitleByProductsEmptyArray() throws Exception {
         Product product = TestUtil.createProduct();
@@ -1605,7 +1606,7 @@ public class PoolManagerTest {
         assertEquals(2, newPools.size());
         assertTrue(
             newPools.get(0).getSourceSubscription().getSubscriptionSubKey().equals(DERIVED_POOL_SUB_KEY) ||
-            newPools.get(1).getSourceSubscription().getSubscriptionSubKey().equals(DERIVED_POOL_SUB_KEY));
+                newPools.get(1).getSourceSubscription().getSubscriptionSubKey().equals(DERIVED_POOL_SUB_KEY));
         assertTrue(newPools.get(0).getSourceSubscription().getSubscriptionSubKey()
             .startsWith(PRIMARY_POOL_SUB_KEY) ||
             newPools.get(1).getSourceSubscription().getSubscriptionSubKey().startsWith(PRIMARY_POOL_SUB_KEY));
@@ -1625,7 +1626,7 @@ public class PoolManagerTest {
 
         assertTrue(
             newPools.get(0).getSourceSubscription().getSubscriptionSubKey().equals(DERIVED_POOL_SUB_KEY) ||
-            newPools.get(1).getSourceSubscription().getSubscriptionSubKey().equals(DERIVED_POOL_SUB_KEY));
+                newPools.get(1).getSourceSubscription().getSubscriptionSubKey().equals(DERIVED_POOL_SUB_KEY));
         assertTrue(newPools.get(0).getSourceSubscription().getSubscriptionSubKey()
             .startsWith(PRIMARY_POOL_SUB_KEY) ||
             newPools.get(1).getSourceSubscription().getSubscriptionSubKey().startsWith(PRIMARY_POOL_SUB_KEY));
