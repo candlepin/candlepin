@@ -16,6 +16,7 @@ package org.candlepin.spec;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.candlepin.spec.bootstrap.assertions.JobStatusAssert.assertThatJob;
+import static org.candlepin.spec.bootstrap.assertions.StatusCodeAssertions.assertUnavailable;
 import static org.candlepin.spec.bootstrap.data.builder.Pools.PRIMARY_POOL_SUB_KEY;
 
 import org.candlepin.dto.api.client.v1.AsyncJobStatusDTO;
@@ -28,6 +29,7 @@ import org.candlepin.resource.HostedTestApi;
 import org.candlepin.resource.client.v1.OwnerProductApi;
 import org.candlepin.spec.bootstrap.assertions.CandlepinMode;
 import org.candlepin.spec.bootstrap.assertions.OnlyInHosted;
+import org.candlepin.spec.bootstrap.assertions.OnlyInStandalone;
 import org.candlepin.spec.bootstrap.client.ApiClient;
 import org.candlepin.spec.bootstrap.client.ApiClients;
 import org.candlepin.spec.bootstrap.client.SpecTest;
@@ -44,6 +46,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 import java.util.stream.Collectors;
+
 
 
 @SpecTest
@@ -71,6 +74,8 @@ public class SubscriptionResourceSpecTest {
         assertThat(ownerApi.getOwnerSubscriptions(owner.getKey())).hasSize(size);
     }
 
+    // TODO: Rewrite this test to have the appropriate pool/sub creation flow depending on the
+    // context of the test (standalone vs hosted)
     @Test
     public void shouldAllowAdminsToDeleteSubscriptions() {
         OwnerDTO owner = ownerApi.createOwner(Owners.random());
@@ -88,6 +93,20 @@ public class SubscriptionResourceSpecTest {
         assertThat(ownerApi.getOwnerSubscriptions(owner.getKey())).hasSize(1);
         ConsumerDTO consumer = client.consumers().createConsumer(Consumers.random(owner));
         client.subscriptions().activateSubscription(consumer.getUuid(), "mail", "locale");
+    }
+
+    @Test
+    @OnlyInStandalone
+    public void shouldThrowExceptionOnActivateSubscriptionInStandalone() {
+        ApiClient adminClient = ApiClients.admin();
+
+        OwnerDTO owner = adminClient.owners()
+            .createOwner(Owners.random());
+        ConsumerDTO consumer = adminClient.consumers()
+            .createConsumer(Consumers.random(owner));
+
+        assertUnavailable(() -> adminClient.subscriptions()
+            .activateSubscription(consumer.getUuid(), "consumer@e.mail", "consumer_locale"));
     }
 
     @Test
@@ -141,21 +160,23 @@ public class SubscriptionResourceSpecTest {
         client.pools().deletePool(pool.getId());
     }
 
+    // TODO: Remove this. The old sub-or-pool creation was very bad for maintenance and test logic
     private PoolDTO createSubscriptionOrPool(OwnerDTO owner) {
         if (CandlepinMode.isStandalone()) {
             ProductDTO prod = ownerProductApi.createProductByOwner(owner.getKey(), Products.random());
-            PoolDTO pool1 = ownerApi.createPool(owner.getKey(),
-                Pools.random(prod)
+
+            PoolDTO pool = Pools.random(prod)
                 .subscriptionId(StringUtil.random("id"))
                 .subscriptionSubKey(PRIMARY_POOL_SUB_KEY)
-                .upstreamPoolId(StringUtil.random("pool")));
-            ownerApi.createPool(owner.getKey(), pool1);
-            return pool1;
+                .upstreamPoolId(StringUtil.random("pool"));
+
+            return ownerApi.createPool(owner.getKey(), pool);
         }
         else {
             ProductDTO prod = hostedTestApi.createProduct(Products.random());
             SubscriptionDTO sub = hostedTestApi.createSubscription(Subscriptions.random(owner, prod));
-            AsyncJobStatusDTO  job = ownerApi.refreshPools(owner.getKey(), false);
+            AsyncJobStatusDTO job = ownerApi.refreshPools(owner.getKey(), false);
+
             job = client.jobs().waitForJob(job.getId());
             assertThatJob(job).isFinished();
             return ownerApi.listOwnerPools(owner.getKey()).stream()

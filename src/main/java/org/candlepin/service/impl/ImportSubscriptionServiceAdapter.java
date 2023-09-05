@@ -16,20 +16,16 @@ package org.candlepin.service.impl;
 
 import org.candlepin.dto.manifest.v1.ProductDTO;
 import org.candlepin.dto.manifest.v1.SubscriptionDTO;
-import org.candlepin.exceptions.ServiceUnavailableException;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.model.ConsumerInfo;
-
-import org.xnap.commons.i18n.I18n;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.inject.Inject;
+
 
 /**
  * @author mstead
@@ -38,18 +34,16 @@ public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdap
 
     private List<SubscriptionDTO> subscriptions;
     private Map<String, SubscriptionDTO> subsBySubId = new HashMap<>();
-    private I18n i18n;
-
-    @Inject
-    public ImportSubscriptionServiceAdapter(I18n i18n) {
-        this(new LinkedList<>());
-    }
 
     public ImportSubscriptionServiceAdapter(List<SubscriptionDTO> subs) {
         this.subscriptions = subs;
         for (SubscriptionDTO sub : this.subscriptions) {
             subsBySubId.put(sub.getId(), sub);
         }
+    }
+
+    public ImportSubscriptionServiceAdapter() {
+        this(new ArrayList<>());
     }
 
     @Override
@@ -74,7 +68,7 @@ public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdap
 
     @Override
     public Collection<? extends SubscriptionDTO> getSubscriptionsByProductId(String productId) {
-        List<SubscriptionDTO> subs = new LinkedList<>();
+        List<SubscriptionDTO> subs = new ArrayList<>();
 
         if (productId != null) {
             for (SubscriptionDTO sub : this.subscriptions) {
@@ -105,8 +99,7 @@ public class ImportSubscriptionServiceAdapter implements SubscriptionServiceAdap
 
     @Override
     public void activateSubscription(ConsumerInfo consumer, String email, String emailLocale) {
-        throw new ServiceUnavailableException(
-            i18n.tr("Standalone candlepin does not support redeeming a subscription."));
+        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -15,12 +15,15 @@
 package org.candlepin.resource;
 
 import org.candlepin.auth.Verify;
+import org.candlepin.config.ConfigProperties;
+import org.candlepin.config.Configuration;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.PoolManager;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.api.server.v1.SubscriptionDTO;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.exceptions.NotFoundException;
+import org.candlepin.exceptions.ServiceUnavailableException;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.Owner;
@@ -33,7 +36,6 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -43,24 +45,27 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 
+
 /**
  * SubscriptionResource
  */
 public class SubscriptionResource implements SubscriptionApi {
     private static Logger log = LoggerFactory.getLogger(SubscriptionResource.class);
 
+    private final Configuration config;
     private final SubscriptionServiceAdapter subService;
     private final ConsumerCurator consumerCurator;
     private final PoolManager poolManager;
     private final I18n i18n;
     private final ModelTranslator translator;
-    private ContentAccessManager contentAccessManager;
+    private final ContentAccessManager contentAccessManager;
 
     @Inject
-    public SubscriptionResource(SubscriptionServiceAdapter subService,
+    public SubscriptionResource(Configuration config, SubscriptionServiceAdapter subService,
         ConsumerCurator consumerCurator, PoolManager poolManager, I18n i18n,
         ModelTranslator translator, ContentAccessManager contentAccessManager) {
 
+        this.config = Objects.requireNonNull(config);
         this.subService = Objects.requireNonNull(subService);
         this.consumerCurator = Objects.requireNonNull(consumerCurator);
         this.poolManager = Objects.requireNonNull(poolManager);
@@ -71,19 +76,18 @@ public class SubscriptionResource implements SubscriptionApi {
 
     @Override
     public List<SubscriptionDTO> getSubscriptions() {
-        List<SubscriptionDTO> subscriptions = new LinkedList<>();
-
-        for (Pool pool : this.poolManager.getPrimaryPools()) {
-            subscriptions.add(this.translator.translate(pool,
-                SubscriptionDTO.class));
-        }
-
-        return subscriptions;
+        return this.translator.translateQuery(this.poolManager.getPrimaryPools(), SubscriptionDTO.class)
+            .list();
     }
 
     @Override
     public Response activateSubscription(@Verify(Consumer.class) String consumerUuid, String email,
         String emailLocale) {
+
+        if (this.config.getBoolean(ConfigProperties.STANDALONE)) {
+            throw new ServiceUnavailableException(
+                this.i18n.tr("Standalone candlepin does not support redeeming a subscription."));
+        }
 
         if (email == null) {
             throw new BadRequestException(i18n.tr("email is required for notification"));
@@ -94,7 +98,6 @@ public class SubscriptionResource implements SubscriptionApi {
         }
 
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
-
         if (consumer == null) {
             throw new BadRequestException(i18n.tr("No such unit: {0}", consumerUuid));
         }

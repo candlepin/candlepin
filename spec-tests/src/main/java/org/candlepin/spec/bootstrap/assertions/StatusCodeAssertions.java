@@ -25,10 +25,18 @@ import org.assertj.core.api.ThrowableAssert;
 
 import java.util.function.Supplier;
 
+
+
 public final class StatusCodeAssertions {
 
     private StatusCodeAssertions() {
         throw new UnsupportedOperationException();
+    }
+
+    public static AbstractThrowableAssert<?, ? extends Throwable> assertNotModified(
+        ThrowableAssert.ThrowingCallable callable) {
+        ApiException exception = catchApiException(callable);
+        return assertReturnCode(304, exception);
     }
 
     public static AbstractThrowableAssert<?, ? extends Throwable> assertBadRequest(
@@ -67,10 +75,10 @@ public final class StatusCodeAssertions {
         return assertReturnCode(410, exception);
     }
 
-    public static AbstractThrowableAssert<?, ? extends Throwable> assertNotModified(
+    public static AbstractThrowableAssert<?, ? extends Throwable> assertUnavailable(
         ThrowableAssert.ThrowingCallable callable) {
         ApiException exception = catchApiException(callable);
-        return assertReturnCode(304, exception);
+        return assertReturnCode(503, exception);
     }
 
     public static CandlepinStatusAssert assertThatStatus(
