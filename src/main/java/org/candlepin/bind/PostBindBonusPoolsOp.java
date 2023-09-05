@@ -14,7 +14,6 @@
  */
 package org.candlepin.bind;
 
-import org.candlepin.controller.PoolManager;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
@@ -23,6 +22,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.PoolCurator;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.policy.js.entitlement.Enforcer;
+import org.candlepin.policy.js.pool.PoolRules;
 
 import org.apache.commons.collections.CollectionUtils;
 
@@ -43,7 +43,7 @@ import javax.inject.Inject;
  */
 public class PostBindBonusPoolsOp implements BindOperation {
 
-    private final PoolManager poolManager;
+    private final PoolRules poolRules;
     private final ConsumerTypeCurator consumerTypeCurator;
     private final PoolCurator poolCurator;
     private final Enforcer enforcer;
@@ -52,10 +52,10 @@ public class PostBindBonusPoolsOp implements BindOperation {
     private List<Pool> subPoolsForStackIds = null;
 
     @Inject
-    public PostBindBonusPoolsOp(PoolManager poolManager, ConsumerTypeCurator consumerTypeCurator,
+    public PostBindBonusPoolsOp(PoolRules poolRules, ConsumerTypeCurator consumerTypeCurator,
         PoolCurator poolCurator, Enforcer enforcer, PoolOpProcessor poolOpProcessor) {
 
-        this.poolManager = poolManager;
+        this.poolRules = poolRules;
         this.consumerTypeCurator = consumerTypeCurator;
         this.poolCurator = poolCurator;
         this.enforcer = enforcer;
@@ -91,9 +91,8 @@ public class PostBindBonusPoolsOp implements BindOperation {
         if (!stackIds.isEmpty() && !ctype.isManifest()) {
             subPoolsForStackIds = poolCurator.getSubPoolsForStackIds(consumer, stackIds);
             if (CollectionUtils.isNotEmpty(subPoolsForStackIds)) {
-                poolManager.updatePoolsFromStackWithoutDeletingStack(consumer,
-                    subPoolsForStackIds,
-                    entitlements.values());
+                poolRules.updatePoolsFromStack(consumer, subPoolsForStackIds,
+                    entitlements.values(), false);
             }
         }
         else {
