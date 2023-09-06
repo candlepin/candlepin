@@ -327,8 +327,8 @@ project.tasks["sonar"].dependsOn "coverage"
 sonar {
     properties {
         property "sonar.sourceEncoding", "Utf-8"
-        property "sonar.projectKey", "candlepin_candlepin"
-        property "sonar.organization", "candlepin"
+        property "sonar.projectKey", "bakajstep_candlepin"
+        property "sonar.organization", "bakajstep"
         property "sonar.host.url", "https://sonarcloud.io"
     }
 }

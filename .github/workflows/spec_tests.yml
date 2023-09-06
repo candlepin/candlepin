@@ -1,0 +1,198 @@
+---
+name: Build Candlepin image and run spec tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+  merge_group:
+
+env:
+  CI: 'true'
+  JAVA_DISTRIBUTION: 'temurin'
+  JAVA_VERSION: '17'
+
+# Cancel in-progress PR verification workflows. We only care about verifying the latest commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build_image:
+    name: build Candlepin image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Install packages
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install \
+            git-core \
+            buildah
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
+
+      - name: Log in to the registry
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Candlepin image
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
+        id: build-image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ghcr.io/candlepin/gha_build
+          tags: pr-${{ github.event.pull_request.number }}
+          containerfiles: ./.github/containers/Dockerfile
+
+      - name: Push to registry
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ghcr.io/candlepin/gha_build
+          tags: pr-${{ github.event.pull_request.number }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and export
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        uses: docker/build-push-action@v4
+        with:
+          file: ./.github/containers/Dockerfile
+          tags: ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}
+          outputs: type=docker,dest=/tmp/gha_build.tar
+
+      - name: Upload artifact
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: gha_build
+          path: /tmp/gha_build.tar
+
+  spec_tests:
+    name: spec tests
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:38
+      options: --privileged
+    permissions:
+      contents: read
+      packages: write
+    needs: build_image
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [postgres, mariadb]
+        mode: [standalone, hosted]
+
+    steps:
+      - name: Install dependencies
+        shell: bash
+        run: |
+          dnf -y --setopt install_weak_deps=False update
+          dnf --setopt install_weak_deps=False install -y gettext jss docker git-core
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
+
+      - name: Install docker compose
+        shell: bash
+        run: |
+          DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+          mkdir -p $DOCKER_CONFIG/cli-plugins
+          curl -SL https://github.com/docker/compose/releases/download/v2.18.1/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+          sudo chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+
+      - name: Log in to the registry
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull candlepin image
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
+        shell: bash
+        run: docker image pull ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}
+
+      - name: Set up Docker Buildx
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        uses: docker/setup-buildx-action@v2
+
+      - name: Download artifact
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        uses: actions/download-artifact@v3
+        with:
+          name: gha_build
+          path: /tmp
+
+      - name: Load image
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        run: docker load --input /tmp/gha_build.tar
+
+      - if: matrix.mode == 'standalone'
+        name: Add standalone env variable
+        working-directory: ./.github/containers
+        shell: bash
+        run: |
+          echo "CANDLEPIN_STANDALONE=true" > .env
+          echo "CANDLEPIN_AUTH_CLOUD_ENABLE=false" >> .env
+
+      - if: matrix.mode == 'hosted'
+        name: Add hosted env variables
+        working-directory: ./.github/containers
+        shell: bash
+        run: |
+          echo "CANDLEPIN_STANDALONE=false" > .env
+          echo "MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE=org.candlepin.hostedtest.AdapterOverrideModule" >> .env
+          echo "CANDLEPIN_AUTH_CLOUD_ENABLE=true" >> .env
+
+      - name: Create Candlepin and database containers
+        shell: bash
+        run: |
+          echo "CANDLEPIN_IMAGE=ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}" >> ./.github/containers/.env
+          BRIDGE_NETWORK=$(docker network ls --filter=name=github_network_ --format="{{ .Name }}")
+          echo "NETWORK=$BRIDGE_NETWORK" >> ./.github/containers/.env
+          docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml --env-file ./.github/containers/.env up -d --wait
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Run Spec tests
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: spec -Dspec.test.client.host=candlepin
+
+      - if: always()
+        name: Stop containers
+        shell: bash
+        run: docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml down
