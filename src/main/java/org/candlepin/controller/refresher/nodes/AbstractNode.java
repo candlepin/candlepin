@@ -261,23 +261,6 @@ public abstract class AbstractNode<E extends AbstractHibernateObject, I extends 
      * {@inheritDoc}
      */
     @Override
-    public EntityNode<E, I> setMergedEntity(E entity) {
-        this.mergedEntity = entity;
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public E getMergedEntity() {
-        return this.mergedEntity;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String toString() {
         return String.format("EntityNode [class: %s, entity id: %s, state: %s]",
             this.getEntityClass(), this.getEntityId(), this.getNodeState());

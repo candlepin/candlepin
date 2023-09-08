@@ -151,8 +151,7 @@ public class AbstractHibernateCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testLockAndLoadWithSingleIdRetainsFlushedChanged() {
-        Owner owner = this.createOwner();
-        Content content = this.createContent("c1", "content-1", owner);
+        Content content = this.createContent("c1", "content-1");
 
         // Verify that a flush will make the change persistent
         content.setName("changed_name");

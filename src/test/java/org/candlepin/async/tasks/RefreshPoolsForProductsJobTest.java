@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -40,12 +41,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class RefreshPoolsForProductJobTest {
+
+
+public class RefreshPoolsForProductsJobTest {
 
     private static final String VALID_ID = "valid_id";
     private static final String VALID_NAME = "valid_name";
     private static final String INVALID_ID = "";
+
     private ProductCurator productCurator;
     private ProductServiceAdapter prodAdapter;
     private SubscriptionServiceAdapter subAdapter;
@@ -59,26 +67,49 @@ public class RefreshPoolsForProductJobTest {
         refresherFactory = mock(RefresherFactory.class);
     }
 
+    private Product buildProduct() {
+        return new Product()
+            .setUuid("product_uuid")
+            .setId(VALID_ID)
+            .setName(VALID_NAME);
+    }
+
     @Test
     public void shouldSucceed() throws Exception {
-        final String expected = "Pools refreshed for product: " + VALID_ID + "\n";
-        final AsyncJob job = new RefreshPoolsForProductJob(productCurator, subAdapter,
-            prodAdapter, refresherFactory);
-        final Product product = new Product(INVALID_ID, VALID_NAME);
-        product.setUuid(VALID_ID);
-        final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
-            .setProduct(product)
+        final String expected = "Pools refreshed for products: [" + VALID_ID + "]\n";
+
+        final Product product = this.buildProduct();
+
+        doAnswer(iom -> {
+            Map<String, Product> output = new HashMap<>();
+
+            Collection<String> productIds = iom.getArgument(0);
+            if (productIds != null && productIds.contains(product.getId())) {
+                output.put(product.getId(), product);
+            }
+
+            return output;
+        }).when(this.productCurator).getProductsByIds(any(Collection.class));
+
+        doReturn(product).when(productCurator).get(eq(VALID_ID));
+
+        final JobConfig jobConfig = RefreshPoolsForProductsJob.createJobConfig()
+            .setProducts(List.of(product))
             .setLazy(false);
+
         final JobExecutionContext context = mock(JobExecutionContext.class);
         doReturn(jobConfig.getJobArguments()).when(context).getJobArguments();
-        doReturn(product).when(productCurator).get(eq(VALID_ID));
 
         Refresher mockRefresher = mock(Refresher.class);
         doReturn(mockRefresher).when(this.refresherFactory).getRefresher(any(), any());
         doReturn(mockRefresher).when(mockRefresher).add(any(Product.class));
+        doReturn(mockRefresher).when(mockRefresher).addProducts(any(Collection.class));
         doReturn(mockRefresher).when(mockRefresher).setLazyCertificateRegeneration(anyBoolean());
 
         ArgumentCaptor<Object> captor = ArgumentCaptor.forClass(Object.class);
+
+        AsyncJob job = new RefreshPoolsForProductsJob(productCurator, subAdapter,
+            prodAdapter, refresherFactory);
 
         job.execute(context);
 
@@ -90,11 +121,10 @@ public class RefreshPoolsForProductJobTest {
 
     @Test
     public void productAndLazyFlagMustBePresent() {
-        final Product product = new Product(INVALID_ID, VALID_NAME);
-        product.setUuid(VALID_ID);
+        final Product product = this.buildProduct();
 
-        final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
-            .setProduct(product)
+        final JobConfig jobConfig = RefreshPoolsForProductsJob.createJobConfig()
+            .setProducts(List.of(product))
             .setLazy(false);
 
         try {
@@ -107,11 +137,14 @@ public class RefreshPoolsForProductJobTest {
 
     @Test
     public void shouldFailWhenProductNotFound() throws Exception {
-        final AsyncJob job = new RefreshPoolsForProductJob(productCurator, subAdapter,
+        final Product product = new Product()
+            .setId("invalid_id")
+            .setName("product_name");
+
+        final AsyncJob job = new RefreshPoolsForProductsJob(productCurator, subAdapter,
             prodAdapter, refresherFactory);
-        final Product product = new Product(INVALID_ID, VALID_NAME);
-        final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
-            .setProduct(product)
+        final JobConfig jobConfig = RefreshPoolsForProductsJob.createJobConfig()
+            .setProducts(List.of(product))
             .setLazy(false);
         final JobExecutionContext context = mock(JobExecutionContext.class);
         doReturn(jobConfig.getJobArguments()).when(context).getJobArguments();
@@ -123,25 +156,23 @@ public class RefreshPoolsForProductJobTest {
         verify(context, times(1)).setJobResult(captor.capture());
         Object result = captor.getValue();
 
-        assertEquals(
-            "Unable to refresh pools for product \"null\": Could not find a product with the specified UUID",
-            result);
+        assertEquals("No products found for the given product IDs: [" + product.getId() + "]", result);
     }
 
     @Test
     public void productMustBePresent() {
-        final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
+        final JobConfig jobConfig = RefreshPoolsForProductsJob.createJobConfig()
             .setLazy(false);
 
         assertThrows(JobConfigValidationException.class, jobConfig::validate);
     }
 
     @Test
-    public void productUuidMustBePresent() {
-        final Product product = new Product(INVALID_ID, VALID_NAME);
+    public void productIdsMustBePresent() {
+        final Product product = new Product();
 
-        final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
-            .setProduct(product)
+        final JobConfig jobConfig = RefreshPoolsForProductsJob.createJobConfig()
+            .setProducts(List.of(product))
             .setLazy(false);
 
         assertThrows(JobConfigValidationException.class, jobConfig::validate);
@@ -149,11 +180,10 @@ public class RefreshPoolsForProductJobTest {
 
     @Test
     public void lazyFlagMustBePresent() {
-        final Product product = new Product(VALID_ID, VALID_NAME);
-        product.setUuid(VALID_ID);
+        final Product product = this.buildProduct();
 
-        final JobConfig jobConfig = RefreshPoolsForProductJob.createJobConfig()
-            .setProduct(product);
+        final JobConfig jobConfig = RefreshPoolsForProductsJob.createJobConfig()
+            .setProducts(List.of(product));
 
         assertThrows(JobConfigValidationException.class, jobConfig::validate);
     }

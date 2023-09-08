@@ -69,11 +69,4 @@ public interface NodeVisitor<E extends AbstractHibernateObject, I extends Servic
      */
     void applyChanges(EntityNode<E, I> node);
 
-    /**
-     * Completes any processing operations that may be pending from one or more previous calls to
-     * the <tt>processNode</tt> method. Repeated, sequential calls to this method should have no
-     * further effect on the visitor or the previously processed nodes or data.
-     */
-    void complete();
-
 }

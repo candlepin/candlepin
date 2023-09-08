@@ -87,14 +87,11 @@ public class NodeProcessorTest {
 
         E existing = mock(entityCls);
         I imported = mock(importCls);
-        E merged = mock(entityCls);
 
         doReturn(id).when(existing).getId();
-        doReturn(id).when(merged).getId();
 
         node.setExistingEntity(existing);
         node.setImportedEntity(imported);
-        node.setMergedEntity(merged);
 
         return node;
     }

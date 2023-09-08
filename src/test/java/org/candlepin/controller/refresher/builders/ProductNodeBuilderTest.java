@@ -121,7 +121,6 @@ public class ProductNodeBuilderTest {
         // and no updated entity should be created yet
         assertNull(output.getExistingEntity());
         assertEquals(imported, output.getImportedEntity());
-        assertNull(output.getMergedEntity());
 
         // The node should not have any flags set
         assertNull(output.getNodeState());
@@ -165,7 +164,6 @@ public class ProductNodeBuilderTest {
         // and no updated entity should be created yet
         assertEquals(existing, output.getExistingEntity());
         assertEquals(imported, output.getImportedEntity());
-        assertNull(output.getMergedEntity());
 
         // The node should not have any flags set
         assertNull(output.getNodeState());
@@ -208,7 +206,6 @@ public class ProductNodeBuilderTest {
         // and no updated entity should be created yet
         assertEquals(existing, output.getExistingEntity());
         assertNull(output.getImportedEntity());
-        assertNull(output.getMergedEntity());
 
         // The node should not have any flags set
         assertNull(output.getNodeState());

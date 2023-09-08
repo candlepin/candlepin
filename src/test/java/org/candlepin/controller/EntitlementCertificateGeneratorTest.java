@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.isNull;
 import static org.mockito.Mockito.mock;
@@ -280,20 +281,21 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void testLazyRegenerationForProductById() {
+    public void testLazyRegenerationForProduct() {
         Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
         Consumer consumer = TestUtil.createConsumer(owner);
         Product product = TestUtil.createProduct();
         Pool pool = TestUtil.createPool(owner, product);
         Entitlement entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
-        Set<Entitlement> entitlements = new HashSet<>();
-        entitlements.add(entitlement);
-        pool.setEntitlements(entitlements);
+        pool.setEntitlements(Set.of(entitlement));
 
-        when(this.mockPoolCurator.listAvailableEntitlementPools(isNull(), eq(owner),
-            eq(product.getId()), any(Date.class))).thenReturn(Arrays.asList(pool));
+        doReturn(Arrays.asList(entitlement))
+            .when(this.mockEntitlementCurator)
+            .getEntitlementsByProductIds(eq(List.of(product.getId())), any(Date.class));
+
         when(mockEventFactory.entitlementChanged(any(Entitlement.class))).thenReturn(mock(Event.class));
-        this.ecGenerator.regenerateCertificatesOf(owner, product.getId(), true);
+
+        this.ecGenerator.regenerateCertificatesForProduct(product, true);
 
         assertTrue(entitlement.isDirty());
 
@@ -301,26 +303,27 @@ public class EntitlementCertificateGeneratorTest {
     }
 
     @Test
-    public void testNonLazyRegenerationForProductById() throws Exception {
+    public void testNonLazyRegenerationForProduct() throws Exception {
         Owner owner = TestUtil.createOwner("test-owner", "Test Owner");
         Consumer consumer = TestUtil.createConsumer(owner);
         Product product = TestUtil.createProduct();
         Pool pool = TestUtil.createPool(owner, product);
         Entitlement entitlement = TestUtil.createEntitlement(owner, consumer, pool, null);
-        Set<Entitlement> entitlements = new HashSet<>();
-        entitlements.add(entitlement);
-        pool.setEntitlements(entitlements);
+        pool.setEntitlements(Set.of(entitlement));
 
         HashMap<String, EntitlementCertificate> ecMap = new HashMap<>();
         ecMap.put(pool.getId(), new EntitlementCertificate());
 
-        when(this.mockPoolCurator.listAvailableEntitlementPools(isNull(), eq(owner),
-            eq(product.getId()), any(Date.class))).thenReturn(Arrays.asList(pool));
-        when(this.mockEntCertAdapter.generateEntitlementCerts(any(Consumer.class), anyMap(),
-            anyMap(), anyMap(), anyBoolean())).thenReturn(ecMap);
+        doReturn(Arrays.asList(entitlement))
+            .when(this.mockEntitlementCurator)
+            .getEntitlementsByProductIds(eq(List.of(product.getId())), any(Date.class));
+
+        doReturn(ecMap)
+            .when(this.mockEntCertAdapter)
+            .generateEntitlementCerts(any(Consumer.class), anyMap(), anyMap(), anyMap(), anyBoolean());
 
         when(mockEventFactory.entitlementChanged(any(Entitlement.class))).thenReturn(mock(Event.class));
-        this.ecGenerator.regenerateCertificatesOf(owner, product.getId(), false);
+        this.ecGenerator.regenerateCertificatesForProduct(product, false);
 
         assertFalse(entitlement.isDirty());
 

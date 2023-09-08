@@ -160,11 +160,6 @@ public class NodeProcessor {
         this.mapper.getRootNodeStream()
             .forEach(elem -> this.applyChangesImpl(visited, elem));
 
-        // Have our visitors complete any pending operations
-        for (NodeVisitor<?, ?> visitor : this.visitors.values()) {
-            visitor.complete();
-        }
-
         // Compile and return the results
         return this.compileResults();
     }
@@ -254,23 +249,23 @@ public class NodeProcessor {
                 throw new IllegalStateException(errmsg);
             }
 
+            log.debug("Node? {}", node);
+
             switch (state) {
                 case CREATED:
-                    result.addEntity(node.getEntityClass(), node.getMergedEntity(), EntityState.CREATED);
+                    result.addEntity(node.getEntityClass(), node.getExistingEntity(), EntityState.CREATED);
                     break;
 
                 case UPDATED:
-                    result.addEntity(node.getEntityClass(), node.getMergedEntity(), EntityState.UPDATED);
+                    result.addEntity(node.getEntityClass(), node.getExistingEntity(), EntityState.UPDATED);
                     break;
 
                 case UNCHANGED:
-                    result.addEntity(node.getEntityClass(), node.getExistingEntity(),
-                        EntityState.UNCHANGED);
+                    result.addEntity(node.getEntityClass(), node.getExistingEntity(), EntityState.UNCHANGED);
                     break;
 
                 case DELETED:
-                    result.addEntity(node.getEntityClass(), node.getExistingEntity(),
-                        EntityState.DELETED);
+                    result.addEntity(node.getEntityClass(), node.getExistingEntity(), EntityState.DELETED);
                     break;
 
                 case SKIPPED:

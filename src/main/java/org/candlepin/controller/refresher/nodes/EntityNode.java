@@ -260,27 +260,4 @@ public interface EntityNode<E extends AbstractHibernateObject, I extends Service
      */
     I getImportedEntity();
 
-    /**
-     * Sets the merged entity for this node. The merged entity represents the merged changes
-     * applied to a database model entity to persist. If the merged entity is not set, no database
-     * changes will be made for the entity represented by this node.
-     *
-     * @param entity
-     *  the merged entity to be set for this node, or null to clear the merged entity
-     *
-     * @return
-     *  a reference to this entity node
-     */
-    EntityNode<E, I> setMergedEntity(E entity);
-
-    /**
-     * Fetches the merged entity for this node, representing the merged changes applied to a
-     * database model entity to persist. If the merged entity is not set, this method will return
-     * null.
-     *
-     * @return
-     *  the merged entity set for this node, or null if this node does not represent a database
-     *  change
-     */
-    E getMergedEntity();
 }

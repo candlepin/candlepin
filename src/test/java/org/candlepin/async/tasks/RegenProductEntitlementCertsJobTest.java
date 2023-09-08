@@ -39,22 +39,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
+
 
 
 public class RegenProductEntitlementCertsJobTest {
 
     private EntitlementCertificateGenerator ecGenerator;
-    private OwnerCurator ownerCurator;
 
     @BeforeEach
     public void setUp() {
         this.ecGenerator = mock(EntitlementCertificateGenerator.class);
-        this.ownerCurator = mock(OwnerCurator.class);
     }
 
     public RegenProductEntitlementCertsJob buildTestJob() {
-        return new RegenProductEntitlementCertsJob(this.ecGenerator, this.ownerCurator);
+        return new RegenProductEntitlementCertsJob(this.ecGenerator);
     }
 
     @Test
@@ -116,48 +116,6 @@ public class RegenProductEntitlementCertsJobTest {
 
         Set<String> productIds = Collections.singleton(productId);
 
-        Owner owner1 = new Owner()
-            .setKey("test_owner_key-1")
-            .setDisplayName("test_owner_name-1");
-        Owner owner2 = new Owner()
-            .setKey("test_owner_key-2")
-            .setDisplayName("test_owner_name-2");
-        Owner owner3 = new Owner()
-            .setKey("test_owner_key-3")
-            .setDisplayName("test_owner_name-3");
-
-        Set<Owner> matchingOwners = Util.asSet(owner1, owner2, owner3);
-        doReturn(matchingOwners).when(this.ownerCurator).getOwnersWithProducts(productIds);
-
-        JobConfig config = RegenProductEntitlementCertsJob.createJobConfig()
-            .setProductId(productId)
-            .setLazyRegeneration(lazyRegen);
-
-        JobExecutionContext context = mock(JobExecutionContext.class);
-        doReturn(config.getJobArguments()).when(context).getJobArguments();
-
-
-        RegenProductEntitlementCertsJob testJob = this.buildTestJob();
-        testJob.execute(context);
-
-        verify(this.ownerCurator, times(1)).getOwnersWithProducts(productIds);
-        verify(this.ecGenerator, times(1))
-            .regenerateCertificatesOf(owner1, productId, lazyRegen);
-        verify(this.ecGenerator, times(1))
-            .regenerateCertificatesOf(owner2, productId, lazyRegen);
-        verify(this.ecGenerator, times(1))
-            .regenerateCertificatesOf(owner3, productId, lazyRegen);
-    }
-
-    @Test
-    public void testExecutionWithNoMatchingOwners() throws JobExecutionException {
-        String productId = "test_prod_id";
-        boolean lazyRegen = true;
-
-        Set<String> productIds = Collections.singleton(productId);
-        Set<Owner> matchingOwners = Util.asSet();
-        doReturn(matchingOwners).when(this.ownerCurator).getOwnersWithProducts(productIds);
-
         JobConfig config = RegenProductEntitlementCertsJob.createJobConfig()
             .setProductId(productId)
             .setLazyRegeneration(lazyRegen);
@@ -168,8 +126,6 @@ public class RegenProductEntitlementCertsJobTest {
         RegenProductEntitlementCertsJob testJob = this.buildTestJob();
         testJob.execute(context);
 
-        verify(this.ownerCurator, times(1)).getOwnersWithProducts(productIds);
-        verify(this.ecGenerator, never())
-            .regenerateCertificatesOf(any(Owner.class), anyString(), anyBoolean());
+        verify(this.ecGenerator, times(1)).regenerateCertificatesForProducts(List.of(productId), lazyRegen);
     }
 }

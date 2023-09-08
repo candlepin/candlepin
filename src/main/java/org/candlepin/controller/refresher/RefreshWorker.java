@@ -389,14 +389,12 @@ public class RefreshWorker {
 
         this.poolMapper.addExistingEntities(pools);
 
-        Set<String> productUuids = pools.stream()
-            .map(Pool::getProductUuid)
+        Set<String> productIds = pools.stream()
+            .map(Pool::getProductId)
             .collect(Collectors.toSet());
 
-        // TODO: This lookup may not be necessary once the native query cache invalidation issue
-        // is resolved.
-
-        Set<Product> products = this.productCurator.getProductsByUuidCached(productUuids);
+        Collection<Product> products = this.productCurator.getProductsByIds(productIds)
+            .values();
 
         this.mapExistingProducts(products);
     }
@@ -417,9 +415,6 @@ public class RefreshWorker {
         Set<String> productUuids = products.stream()
             .map(Product::getUuid)
             .collect(Collectors.toSet());
-
-        // TODO: These lookups may not be necessary once the native query cache invalidation issue
-        // is resolved.
 
         Set<Product> childrenProducts = this.productCurator
             .getChildrenProductsOfProductsByUuids(productUuids);
@@ -521,17 +516,20 @@ public class RefreshWorker {
             this.contentMapper.clearExistingEntities();
 
             // Add in our existing entities
+            Collection<String> importedProductIds = this.productMapper.getImportedEntities().keySet();
+            Collection<String> importedContentIds = this.contentMapper.getImportedEntities().keySet();
+
             List<Pool> pools = this.poolCurator
                 .listByOwnerAndTypes(owner.getId(), PoolType.NORMAL, PoolType.DEVELOPMENT);
             this.mapExistingPools(pools);
 
-            // Add in the org-mapped entities to ensure we catch everything for this org, as well
-            // verifying there aren't any dangling references to out-of-org entities
-            Collection<Product> ownerProducts = this.ownerProductCurator.getProductsByOwner(owner);
-            this.mapExistingProducts(ownerProducts);
+            Collection<Product> products = this.productCurator.getProductsByIds(importedProductIds)
+                .values();
+            this.mapExistingProducts(products);
 
-            Collection<Content> ownerContent = this.ownerContentCurator.getContentByOwner(owner);
-            this.mapExistingContent(ownerContent);
+            Collection<Content> contents = this.contentCurator.getContentsByIds(importedContentIds)
+                .values();
+            this.mapExistingContent(contents);
 
             // Have our node factory build the node trees
             nodeFactory.buildNodes(owner);
@@ -539,21 +537,6 @@ public class RefreshWorker {
             // Process our nodes, starting at the roots, letting the processors build up any persistence
             // state necessary to finalize everything
             RefreshResult result = nodeProcessor.processNodes();
-
-            // If we had any dirty mappings, rebuild the org's mappings to ensure no leftover shenanigans
-            if (this.productMapper.isDirty() ||
-                !this.productMapper.containsOnlyExistingEntities(ownerProducts)) {
-
-                log.warn("Found one or more dirty product mappings for org {}; remapping products", owner);
-                this.rebuildOwnerProductMapping(owner, result);
-            }
-
-            if (this.contentMapper.isDirty() ||
-                !this.contentMapper.containsOnlyExistingEntities(ownerContent)) {
-
-                log.warn("Found one or more dirty content mappings for org {}; remapping content", owner);
-                this.rebuildOwnerContentMapping(owner, result);
-            }
 
             return result;
         });

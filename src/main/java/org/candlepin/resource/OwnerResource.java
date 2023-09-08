@@ -90,6 +90,7 @@ import org.candlepin.model.Pool;
 import org.candlepin.model.Pool.PoolType;
 import org.candlepin.model.PoolFilterBuilder;
 import org.candlepin.model.Product;
+import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Release;
 import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.SystemPurposeAttributeType;
@@ -188,6 +189,7 @@ public class OwnerResource implements OwnerApi {
     private ServiceLevelValidator serviceLevelValidator;
     private Configuration config;
     private ConsumerTypeValidator consumerTypeValidator;
+    private ProductCurator productCurator;
     private OwnerProductCurator ownerProductCurator;
     private ModelTranslator translator;
     private JobManager jobManager;
@@ -219,6 +221,7 @@ public class OwnerResource implements OwnerApi {
         OwnerServiceAdapter ownerService,
         Configuration config,
         ConsumerTypeValidator consumerTypeValidator,
+        ProductCurator productCurator,
         OwnerProductCurator ownerProductCurator,
         ModelTranslator translator,
         JobManager jobManager,
@@ -248,6 +251,7 @@ public class OwnerResource implements OwnerApi {
         this.ownerService = ownerService;
         this.config = config;
         this.consumerTypeValidator = consumerTypeValidator;
+        this.productCurator = productCurator;
         this.ownerProductCurator = ownerProductCurator;
         this.translator = translator;
         this.jobManager = jobManager;
@@ -437,9 +441,6 @@ public class OwnerResource implements OwnerApi {
      * Returns the product object that is identified by the given product id and owner object,
      * if it is found in the system. Otherwise, it throws a NotFoundException.
      *
-     * @param owner
-     *  The owner of the product we are searching for
-     *
      * @param productId
      *  The ID of the product to lookup
      *
@@ -452,21 +453,16 @@ public class OwnerResource implements OwnerApi {
      * @return
      *  the product with the specified product ID and owner
      */
-    private Product findProduct(Owner owner, String productId) {
-        if (owner == null) {
-            throw new IllegalArgumentException("owner is null");
-        }
-
+    private Product findProduct(String productId) {
         if (productId == null || productId.isEmpty()) {
             throw new IllegalArgumentException("productId is null or empty");
         }
 
-        Product product = this.ownerProductCurator.getProductById(owner, productId);
+        Product product = this.productCurator.getProductById(productId);
 
         if (product == null) {
             throw new BadRequestException(
-                i18n.tr("Unable to find a product with the ID \"{0}\" for owner \"{1}\"",
-                    product, owner.getKey()));
+                this.i18n.tr("Unable to find a product with the ID \"{0}\"", product));
         }
 
         return product;
@@ -652,7 +648,7 @@ public class OwnerResource implements OwnerApi {
             Set<String> pids = new HashSet<>();
 
             dto.getProducts().stream()
-                .map(keyprod -> this.findProduct(entity.getOwner(), keyprod.getProductId()).getId())
+                .map(keyprod -> this.findProduct(keyprod.getProductId()).getId())
                 .forEach(pids::add);
 
             entity.setProductIds(pids);
@@ -1336,7 +1332,7 @@ public class OwnerResource implements OwnerApi {
             throw new BadRequestException(i18n.tr("Pool product ID not specified"));
         }
 
-        pool.setProduct(findProduct(pool.getOwner(), inputPoolDTO.getProductId()));
+        pool.setProduct(findProduct(inputPoolDTO.getProductId()));
 
         if (inputPoolDTO.getSourceEntitlement() != null) {
             pool.setSourceEntitlement(findEntitlement(inputPoolDTO.getSourceEntitlement().getId()));

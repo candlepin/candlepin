@@ -2786,17 +2786,29 @@ paths:
 
   /content:
     get:
+      description: |
+        Fetches contents for the specified content IDs. If a content does not exist for a given
+        content ID, it will be silently discarded. If no content IDs are specified, all known
+        contents will be returned.
       tags:
         - content
-      description: Retrieves list of Content
-      operationId: listContent
-      x-java-response:
-        type: Iterable
-        isContainer: true
+      operationId: getContentsByIds
       security: []
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
+      parameters:
+        - name: content
+          in: query
+          description: A list of IDs for the contents to fetch
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
       responses:
         200:
-          description: Content successfully listed
+          description: A list of contents for the given content IDs
           content:
             application/json:
               schema:
@@ -2806,37 +2818,227 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
-  /content/{content_uuid}:
-    get:
+    post:
+      description: |
+        Creates a new content from the given content data. If the specified content ID already
+        exists, or required content information is absent or malformed, the creation request will be
+        rejected.
       tags:
         - content
-      description: Retrieves a single Content
-      operationId: getContent
+      operationId: createContent
       security: []
-      parameters:
-        - name: content_uuid
-          in: path
-          required: true
-          schema:
-            type: string
+      requestBody:
+        description: An object consisting of the data to use to create the new content
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentDTO'
       responses:
         200:
-          description: Content successfully retrieved
+          description: Content successfully created
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ContentDTO'
-        404:
-          description: Content with the given UUID was not found
+        400:
+          description: Unable to create content
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
-                displayMessage: Content with the given UUID was not found
+                displayMessage: Invalid inputs, unable to create content
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
+
+  /content/{content_id}:
+    get:
+      description: Fetches a single content by its ID.
+      tags:
+        - content
+      operationId: getContentById
+      parameters:
+        - in: path
+          name: content_id
+          description: The ID of the content to retrieve
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: The content for the given ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentDTO'
+        404:
+          description: A content with the specified ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Content not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: |
+        Updates the content specified by ID. If the content ID does exist, the content is "locked",
+        or the update data is malformed, the update request will be rejected.
+      tags:
+        - content
+      operationId: updateContent
+      security: []
+      parameters:
+        - name: content_id
+          in: path
+          description: Content ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Content to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContentDTO'
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentDTO'
+        400:
+          description: Invalid inputs, unable to update content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, unable to update content
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Content is locked. Unable to update content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Content is locked. Unable to update content
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: A content with the specified ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Content not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: |
+        Removes a content by ID. If a content for the given ID doesn't exist, the content is locked,
+        or the content is in use by one or more subscriptions, the delete request will be rejected.
+      tags:
+        - content
+      operationId: deleteContent
+      security: []
+      parameters:
+        - in: path
+          name: content_id
+          description: Content ID
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Content successfully deleted
+        400:
+          description: Content cannot be deleted while subscriptions using the content exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Content cannot be deleted while subscriptions exists
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Content is locked and cannot be maintained manually
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Content is locked. Unable to delete content
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: A content with the specified ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Content not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  # /content/batch:
+  #   post:
+  #     description: Creates contents in bulk
+  #     tags:
+  #       - content
+  #     operationId: createBatchContent
+  #     security: []
+  #     parameters:
+  #       - name: owner_key
+  #         in: path
+  #         description: key of the owner whose content has to be created
+  #         required: true
+  #         schema:
+  #           type: string
+  #     requestBody:
+  #       description: List of contents to be created
+  #       required: true
+  #       content:
+  #         application/json:
+  #           schema:
+  #             type: array
+  #             items:
+  #               $ref: '#/components/schemas/ContentDTO'
+  #     x-java-response:
+  #       type: Iterable
+  #       isContainer: true
+  #     responses:
+  #       200:
+  #         description: Contents created
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/ContentDTO'
+  #       400:
+  #         description: Invalid inputs, could not create content
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/ExceptionMessage'
+  #             example:
+  #               displayMessage: Invalid inputs, could not create content
+  #               requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+  #       default:
+  #         $ref: '#/components/responses/default'
+
+
 
   /crl:
     get:
@@ -4437,246 +4639,6 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
-  /owners/{owner_key}/content:
-    get:
-      description: Retrieves list of owner contents
-      tags:
-        - owner_content
-      operationId: listOwnerContent
-      x-java-response:
-        type: Iterable
-        isContainer: true
-      parameters:
-        - name: owner_key
-          in: path
-          description: The key of the owner whose content has to be retrieved
-          required: true
-          schema:
-            type: string
-      security: []
-      responses:
-        200:
-          description: Content successfully listed
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ContentDTO'
-        404:
-          description: Owner key is null, empty or could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Owner key is null, empty or could not be found
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-    post:
-      description: Creates a content for owner
-      tags:
-        - owner_content
-      operationId: createContent
-      security: []
-      parameters:
-        - name: owner_key
-          in: path
-          description: The key of the owner
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: Content to be created
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ContentDTO'
-      responses:
-        200:
-          description: Created a content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContentDTO'
-        400:
-          description: Invalid inputs, Content cannot be created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Invalid inputs, Content cannot be created
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-  /owners/{owner_key}/content/{content_id}:
-    get:
-      description: Retrieves a single content
-      tags:
-        - owner_content
-      operationId: getOwnerContent
-      security: []
-      parameters:
-        - name: owner_key
-          in: path
-          description: The key of the owner whose content has to be retrieved
-          required: true
-          schema:
-            type: string
-        - name: content_id
-          in: path
-          description: The id of the content to be retrieved
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContentDTO'
-        400:
-          description: Owner Key or ID of the Content is null, empty or could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                  displayMessage: Owner Key or ID of the Content is null, empty or could not be found
-                  requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-    put:
-      description: Updates a Content
-      tags:
-        - owner_content
-      operationId: updateContent
-      security: []
-      parameters:
-        - name: owner_key
-          in: path
-          description: The key of the owner to be updated
-          required: true
-          schema:
-            type: string
-        - name: content_id
-          in: path
-          description: The ID of the Content to be updated
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: Content to be updated
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ContentDTO'
-      responses:
-        200:
-          description: Updated content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContentDTO'
-        400:
-          description: Invalid inputs, could not update content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Invalid inputs, could not update Content
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-    delete:
-      description: Deletes a Content
-      tags:
-        - owner_content
-      operationId: remove
-      security: []
-      parameters:
-        - name: owner_key
-          in: path
-          description: The key of the owner whose content has to be deleted
-          required: true
-          schema:
-            type: string
-        - name: content_id
-          in: path
-          description: The ID of the content to be deleted
-          required: true
-          schema:
-            type: string
-      responses:
-        204:
-          description: A successful operation
-        400:
-          description: Invalid inputs, content could not be deleted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Invalid inputs, content could not be deleted
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-  /owners/{owner_key}/content/batch:
-    post:
-      description: Creates Contents in bulk
-      tags:
-        - owner_content
-      operationId: createBatchContent
-      security: []
-      parameters:
-        - name: owner_key
-          in: path
-          description: key of the owner whose content has to be created
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: List of contents to be created
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                $ref: '#/components/schemas/ContentDTO'
-      x-java-response:
-        type: Iterable
-        isContainer: true
-      responses:
-        200:
-          description: Contents created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ContentDTO'
-        400:
-          description: Invalid inputs, could not create content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Invalid inputs, could not create content
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
   /owners/{owner_key}/consumers:
     get:
       description: Retrieves a list of Consumers for the Owner
@@ -5711,610 +5673,6 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
-  /owners/{owner_key}/products:
-    get:
-      description: Retrieves a list of products by owner
-      tags:
-        - owner_product
-      operationId: getProductsByOwner
-      security: []
-      x-java-response:
-        type: Iterable
-        isContainer: true
-      parameters:
-        - name: owner_key
-          in: path
-          description: Owner key
-          required: true
-          schema:
-            type: string
-        - name: product
-          in: query
-          description: List of product ID's
-          required: true
-          schema:
-            type: array
-            items:
-              type: string
-      responses:
-        200:
-          description: Retrieves a list of products by owner
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductDTO'
-        404:
-          description: Owner key could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Owner key could not be found
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-    post:
-      description: Creates a product for an owner
-      tags:
-        - owner_product
-      operationId: createProductByOwner
-      security: []
-      parameters:
-        - name: owner_key
-          in: path
-          description: Owner key
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: A product to be created
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProductDTO'
-      responses:
-        200:
-          description: Product successfully created.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductDTO'
-        400:
-          description: Invalid inputs, unable to create product
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Invalid inputs, unable to create product
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-  /owners/{owner_key}/products/{product_id}:
-    get:
-      description: Retrieves a single product for an owner
-      tags:
-        - owner_product
-      operationId: getProductByOwner
-      security: []
-      parameters:
-        - name: owner_key
-          in: path
-          description: Owner key
-          required: true
-          schema:
-            type: string
-        - name: product_id
-          in: path
-          description: Product ID
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Retrieves a single product for an owner
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductDTO'
-        404:
-          description: Owner key or product ID could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Owner key or product ID could not be found
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-    put:
-      description: Updates a product for an owner
-      tags:
-        - owner_product
-      operationId: updateProductByOwner
-      security: []
-      parameters:
-        - name: owner_key
-          in: path
-          description: Owner key
-          required: true
-          schema:
-            type: string
-        - name: product_id
-          in: path
-          description: Product ID
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: Product to be updated
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProductDTO'
-      responses:
-        200:
-          description: A successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductDTO'
-        400:
-          description: Invalid inputs, unable to update product
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Invalid inputs, unable to update product
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        403:
-          description: Product is locked. Unable to update product
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product is locked. Unable to update product
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        404:
-          description: Owner key could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Owner key could not be found
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-    delete:
-      description: Removes a product for an owner
-      tags:
-        - owner_product
-      operationId: deleteProductByOwner
-      security: []
-      parameters:
-        - in: path
-          name: owner_key
-          description: Owner key
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: product_id
-          description: Product ID
-          required: true
-          schema:
-            type: string
-      responses:
-        204:
-          description: Product successfully deleted.
-        400:
-          description: Product cannot be deleted while subscriptions exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product cannot be deleted while subscriptions exists
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        403:
-          description: Product is locked. Unable to delete product
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product is locked. Unable to delete product
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        404:
-          description: Owner key or product ID could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Owner key or product ID could not be found
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-  /owners/{owner_key}/products/{product_id}/subscriptions:
-    put:
-      description: Refreshes Pools by Product
-      tags:
-        - owner_product
-      operationId: refreshPoolsForProduct
-      security: []
-      parameters:
-        - name: owner_key
-          in: path
-          description: Owner key
-          required: true
-          schema:
-            type: string
-        - name: product_id
-          in: path
-          description: Product ID
-          required: true
-          schema:
-            type: string
-        - name: lazy_regen
-          in: query
-          description: Regenerate certificates immediatelly or allow them to be regenerated on demand
-          required: true
-          schema:
-            type: boolean
-            default: true
-      responses:
-        200:
-          description: A successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AsyncJobStatusDTO'
-        400:
-          description: Unable to fulfill refresh pools request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Unable to fulfill refresh pools request
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        404:
-          description: Owner key or product ID could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Owner key or product ID could not be found
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-  /owners/{owner_key}/products/{product_id}/certificate:
-    get:
-      description: Retrieves a product certificate for an owner
-      tags:
-        - owner_product
-      operationId: getProductCertificateByOwner
-      security: []
-      parameters:
-        - name: owner_key
-          in: path
-          description: Owner key
-          required: true
-          schema:
-            type: string
-        - name: product_id
-          in: path
-          description: Product ID
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Retrieves a product certificate for an owner
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductCertificateDTO'
-        400:
-          description: Only numeric product IDs are allowed
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Only numeric product IDs are allowed
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        404:
-          description: Owner key or product ID could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Owner key or product ID could not be found
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-  /owners/{owner_key}/products/{product_id}/content/{content_id}:
-    post:
-      description: Adds content to a product
-      tags:
-        - owner_product
-      operationId: addContent
-      security: []
-      parameters:
-        - name: owner_key
-          in: path
-          description: Owner key
-          required: true
-          schema:
-            type: string
-        - name: product_id
-          in: path
-          description: Product ID
-          required: true
-          schema:
-            type: string
-        - name: content_id
-          in: path
-          description: Content ID
-          required: true
-          schema:
-            type: string
-        - name: enabled
-          in: query
-          description: Content enabled flag
-          required: true
-          schema:
-            type: boolean
-      responses:
-        200:
-          description: Content added to a product
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductDTO'
-        400:
-          description: Invalid inputs, unable to add content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Invalid inputs, unable to add content
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        403:
-          description: Product is locked. Unable to add content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product is locked. Unable to add content
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        404:
-          description: Owner key could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Owner key could not be found
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-    delete:
-      description: Removes a single Content from a product
-      tags:
-        - owner_product
-      operationId: removeContent
-      security: []
-      parameters:
-        - in: path
-          name: owner_key
-          description: Owner key
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: product_id
-          description: Product ID
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: content_id
-          description: Content ID
-          required: true
-          schema:
-            type: string
-      responses:
-        200:
-          description: Content removed from a product
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductDTO'
-        400:
-          description: Invalid inputs, unable to remove content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Invalid inputs, unable to remove content
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        403:
-          description: Product is locked. Unable to remove content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product is locked. Unable to remove content
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        404:
-          description: Owner key could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Owner key could not be found
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-  /owners/{owner_key}/products/{product_id}/batch_content:
-    post:
-      description: Adds content to a product in bulk
-      tags:
-        - owner_product
-      operationId: addBatchContent
-      security: []
-      parameters:
-        - name: owner_key
-          in: path
-          description: Owner key
-          required: true
-          schema:
-            type: string
-        - name: product_id
-          in: path
-          description: Product ID
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: Content map
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties:
-                type: boolean
-      responses:
-        200:
-          description: Content added to a product
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductDTO'
-        400:
-          description: Invalid inputs, unable to add content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Invalid inputs, unable to add content
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        403:
-          description: Product is locked. Unable to add content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product is locked. Unable to add content
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        404:
-          description: Owner key could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Owner key could not be found
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-    delete:
-      description: Removes content from a product in batch
-      tags:
-        - owner_product
-      operationId: removeBatchContent
-      security: []
-      parameters:
-        - in: path
-          name: owner_key
-          description: Owner key
-          required: true
-          schema:
-            type: string
-        - in: path
-          name: product_id
-          description: Product ID
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: Content IDs
-        required: true
-        content:
-          application/json:
-            schema:
-              type: array
-              items:
-                type: string
-      responses:
-        200:
-          description: Content removed from a product
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductDTO'
-        400:
-          description: Invalid inputs, unable to remove content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Invalid inputs, unable to remove content
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        403:
-          description: Product is locked. Unable to remove content
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product is locked. Unable to remove content
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        404:
-          description: Owner key could not be found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Owner key could not be found
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
   /owners/{owner_key}/servicelevels:
     get:
       description: Retrieves a list of support levels for an owner
@@ -6622,72 +5980,6 @@ paths:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
                 displayMessage: Owner key could not be found using the provided key
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-  /products/{product_uuid}:
-    get:
-      description: Retrieves a single Product
-      tags:
-        - products
-      operationId: getProduct
-      parameters:
-        - in: path
-          name: product_uuid
-          description: The product UUID
-          required: true
-          schema:
-            type: string
-      security: []
-      responses:
-        200:
-          description: A single product
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductDTO'
-        404:
-          description: Product not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product not found
-                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
-        default:
-          $ref: '#/components/responses/default'
-
-  /products/{product_uuid}/certificate:
-    get:
-      description: Retrieves a Certificate for a Product
-      tags:
-        - products
-      operationId: getProductCertificate
-      parameters:
-        - in: path
-          name: product_uuid
-          description: The product UUID
-          required: true
-          schema:
-            type: string
-      security: []
-      responses:
-        200:
-          description: A product certificate
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductCertificateDTO'
-        404:
-          description: Product not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExceptionMessage'
-              example:
-                displayMessage: Product not found
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
@@ -7016,56 +6308,554 @@ paths:
         default:
           $ref: '#/components/responses/default'
 
-  /products/owners:
+  /products:
     get:
-      description: Retrieves a list of Owners by Product
+      description: |
+        Fetches products for the specified product IDs. If a product does not exist for a given
+        product ID, it will be silently discarded. If no product IDs are specified, all known
+        products will be returned.
       tags:
         - products
-      operationId: getProductOwners
+      operationId: getProductsByIds
+      security: []
+      x-java-response:
+        type: java.util.stream.Stream
+        isContainer: true
       parameters:
-        - in: query
-          name: product
-          description: Multiple product Ids
-          required: true
+        - name: product
+          in: query
+          description: A list of IDs for the products to fetch
+          required: false
           schema:
             type: array
             items:
               type: string
-      x-java-response:
-        type: java.util.stream.Stream
-        isContainer: true
-      security: []
       responses:
         200:
-          description: Owners for the provided product Ids
+          description: A list of products for the given product IDs
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/OwnerDTO'
+                  $ref: '#/components/schemas/ProductDTO'
+        default:
+          $ref: '#/components/responses/default'
+
+    post:
+      description: |
+        Creates a new product from the given product data. If the specified product ID already
+        exists, or required product information is absent or malformed, the creation request will be
+        rejected.
+      tags:
+        - products
+      operationId: createProduct
+      security: []
+      requestBody:
+        description: An object consisting of the data to use to create the new product
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductDTO'
+      responses:
+        200:
+          description: Product successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
         400:
-          description: No product IDs specified
+          description: Unable to create product
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
-                displayMessage: No product IDs specified
+                displayMessage: Invalid inputs, unable to create product
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+
+  /products/{product_id}:
+    get:
+      description: Fetches a single product by its ID.
+      tags:
+        - products
+      operationId: getProductById
+      parameters:
+        - in: path
+          name: product_id
+          description: The ID of the product to retrieve
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: The product for the given ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+        404:
+          description: A product with the specified ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    put:
+      description: |
+        Updates the product specified by ID. If the product ID does exist, the product is "locked",
+        or the update data is malformed, the update request will be rejected.
+      tags:
+        - products
+      operationId: updateProduct
+      security: []
+      parameters:
+        - name: product_id
+          in: path
+          description: Product ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Product to be updated
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductDTO'
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+        400:
+          description: Invalid inputs, unable to update product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, unable to update product
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Product is locked. Unable to update product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product is locked. Unable to update product
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner key could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: |
+        Removes a product by ID. If a product for the given ID doesn't exist, the product is locked,
+        or the product is in use by one or more subscriptions, the delete request will be rejected.
+      tags:
+        - products
+      operationId: deleteProduct
+      security: []
+      parameters:
+        - in: path
+          name: product_id
+          description: Product ID
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: Product successfully deleted
+        400:
+          description: Product cannot be deleted while subscriptions using the product exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product cannot be deleted while subscriptions exists
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Product is locked and cannot be maintained manually
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product is locked. Unable to delete product
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: No product with the given ID could be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key or product ID could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+
+  /products/{product_id}/content/{content_id}:
+    post:
+      description: Attaches a single content to the specified product
+      tags:
+        - products
+      operationId: addContentToProduct
+      security: []
+      parameters:
+        - name: product_id
+          in: path
+          description: The ID of the product to receive the content
+          required: true
+          schema:
+            type: string
+        - name: content_id
+          in: path
+          description: The ID of the content to attach
+          required: true
+          schema:
+            type: string
+        - name: enabled
+          in: query
+          description: Whether or not the content repo should be enabled; defaults to false.
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        200:
+          description: The content was successfully added to the product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+        400:
+          description: Invalid inputs, unable to add content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, unable to add content
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Product is locked. Unable to add content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product is locked. Unable to add content
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: The specified product or content could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product with ID "123" could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Removes a single content from the specified product
+      tags:
+        - products
+      operationId: removeContentFromProduct
+      security: []
+      parameters:
+        - in: path
+          name: product_id
+          description: Product ID
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: content_id
+          description: Content ID
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: The content was successfully removed from the product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+        400:
+          description: Invalid inputs, unable to remove content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, unable to remove content
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Product is locked. Unable to remove content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product is locked. Unable to remove content
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: The specified product or content could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product with ID "123" could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+
+  /products/{product_id}/batch_content:
+    post:
+      description: Attaches multiple content to the specified product
+      tags:
+        - products
+      operationId: addMultipleContentsToProduct
+      security: []
+      parameters:
+        - name: product_id
+          in: path
+          description: Product ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: |
+          A map (or dictionary) of content IDs to booleans indicating whether or not the content
+          repo should be enabled by default.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties:
+                type: boolean
+      responses:
+        200:
+          description: All content successfully added to the product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+        400:
+          description: Invalid inputs, unable to add content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, unable to add content
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Product is locked. Unable to add content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product is locked. Unable to add content
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: The specified product or content could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product with ID "123" could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+    delete:
+      description: Removes content from a product in batch
+      tags:
+        - products
+      operationId: removeMultipleContentsFromProduct
+      security: []
+      parameters:
+        - in: path
+          name: product_id
+          description: Product ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: an array of IDs of the content repos to remove from the specified product
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: string
+      responses:
+        200:
+          description: Content removed from a product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDTO'
+        400:
+          description: Invalid inputs, unable to remove content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Invalid inputs, unable to remove content
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        403:
+          description: Product is locked. Unable to remove content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product is locked. Unable to remove content
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: The specified product or content could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product with ID "123" could not be found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+
+  /products/{product_id}/certificate:
+    get:
+      description: |
+        Retrieves a product certificate for the product specified by the given ID. If the product
+        does not yet have a certificate, one will be generated.
+      tags:
+        - products
+      operationId: getProductCertificate
+      parameters:
+        - in: path
+          name: product_id
+          description: the ID of the product for which to fetch a product certificate
+          required: true
+          schema:
+            type: string
+      security: []
+      responses:
+        200:
+          description: a certificate for the specified product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCertificateDTO'
+        404:
+          description: A product with the specified ID does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Product not found
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        default:
+          $ref: '#/components/responses/default'
+
+  /products/{product_id}/subscriptions:
+    put:
+      description: Refreshes Pools by Product
+      tags:
+        - products
+      operationId: refreshPoolsForProduct
+      security: []
+      parameters:
+        - name: product_id
+          in: path
+          description: Product ID
+          required: true
+          schema:
+            type: string
+        - name: lazy_regen
+          in: query
+          description: Regenerate certificates immediatelly or allow them to be regenerated on demand
+          required: false
+          schema:
+            type: boolean
+            default: true
+      responses:
+        200:
+          description: A successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
+        400:
+          description: Unable to fulfill refresh pools request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Unable to fulfill refresh pools request
+                requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
+        404:
+          description: Owner key or product ID could not be found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExceptionMessage'
+              example:
+                displayMessage: Owner key or product ID could not be found
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         default:
           $ref: '#/components/responses/default'
 
   /products/subscriptions:
     put:
-      description: Refreshes Pools by Product
+      description: Refreshes any pools for the given products
       tags:
         - products
       operationId: refreshPoolsForProducts
       parameters:
         - in: query
           name: product
-          description: Multiple product Ids
+          description: a list of IDs of the products for which to trigger a pool refresh
           required: true
           schema:
             type: array
@@ -7073,24 +6863,21 @@ paths:
               type: string
         - in: query
           name: lazy_regen
-          description: Regenerate certificates immediatelly or allow them to be regenerated on demand
+          description: |
+            whether or not to trigger entitlement certificate regeneration immediately, or to flag
+            any outdated certificates for later on-demand regeneration
           required: false
           schema:
             type: boolean
             default: true
-      x-java-response:
-        type: java.util.stream.Stream
-        isContainer: true
       security: []
       responses:
         200:
-          description: A list of statuses of the created refresh pools jobs
+          description: A list of job statuses of the refresh pools jobs created for this operation
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/AsyncJobStatusDTO'
+                $ref: '#/components/schemas/AsyncJobStatusDTO'
         400:
           description: No product IDs specified
           content:

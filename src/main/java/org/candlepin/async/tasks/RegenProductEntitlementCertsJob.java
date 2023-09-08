@@ -23,13 +23,12 @@ import org.candlepin.async.JobConstraints;
 import org.candlepin.async.JobExecutionContext;
 import org.candlepin.async.JobExecutionException;
 import org.candlepin.controller.EntitlementCertificateGenerator;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -50,23 +49,16 @@ public class RegenProductEntitlementCertsJob implements AsyncJob {
     private static final String ARG_LAZY_REGEN = "lazy_regen";
 
     private final EntitlementCertificateGenerator ecGenerator;
-    private final OwnerCurator ownerCurator;
 
     /**
      * Instantiates a new instance of the RegenProductEntitlementCertsJob
      *
      * @param ecGenerator
      *  the generator to use for regenerating entitlement certificates
-     *
-     * @param ownerCurator
-     *  the OwnerCurator instance to use for looking up owners related to the given product
      */
     @Inject
-    public RegenProductEntitlementCertsJob(
-        EntitlementCertificateGenerator ecGenerator, OwnerCurator ownerCurator) {
-
+    public RegenProductEntitlementCertsJob(EntitlementCertificateGenerator ecGenerator) {
         this.ecGenerator = Objects.requireNonNull(ecGenerator);
-        this.ownerCurator = Objects.requireNonNull(ownerCurator);
     }
 
     /**
@@ -79,24 +71,11 @@ public class RegenProductEntitlementCertsJob implements AsyncJob {
         String productId = args.getAsString(ARG_PRODUCT_ID);
         boolean lazyRegen = args.getAsBoolean(ARG_LAZY_REGEN, true);
 
-        // Find a set of owners that actually have the product...
-        Set<Owner> owners = this.ownerCurator.getOwnersWithProducts(Collections.singleton(productId));
-
         // Regenerate if we found any...
-        if (!owners.isEmpty()) {
-            log.info("Regenerating entitlement certificates for {} owners with product: {}",
-                owners.size(), productId);
+        log.info("Regenerating entitlement certificates for product: {}", productId);
+        this.ecGenerator.regenerateCertificatesForProducts(List.of(productId), lazyRegen);
 
-            for (Owner owner : owners) {
-                this.ecGenerator.regenerateCertificatesOf(owner, productId, lazyRegen);
-            }
-        }
-        else {
-            log.debug("Nothing to regenerate; no owners currently using product: {}", productId);
-        }
-
-        context.setJobResult("Entitlements regenerated for %d owners using product: %s",
-            owners.size(), productId);
+        context.setJobResult("Entitlements regenerated for product: %s", productId);
     }
 
     /**

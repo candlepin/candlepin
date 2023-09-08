@@ -29,6 +29,8 @@ import java.util.Set;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
@@ -48,6 +50,110 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         super(Content.class);
 
         this.productCurator = productCurator;
+    }
+
+    /**
+     * Fetches a content instance with the specified lock for the content with the given ID. If a
+     * matching content could not be found, this method returns null. If the specified lock mode is
+     * null, no lock will be applied to the query.
+     *
+     * @param contentId
+     *  the ID of the content to retrieve
+     *
+     * @param lockModeType
+     *  the lock mode to apply to the query/entity
+     *
+     * @return
+     *  the content for the given content ID, or null if a matching content was not found
+     */
+    public Content getContentById(String contentId, LockModeType lockModeType) {
+        String jpql = "SELECT content FROM Content content WHERE content.id = :content_id";
+
+        TypedQuery<Content> query = this.getEntityManager()
+            .createQuery(jpql, Content.class)
+            .setParameter("content_id", contentId);
+
+        if (lockModeType != null) {
+            query.setLockMode(lockModeType);
+        }
+
+        try {
+            return query.getSingleResult();
+        }
+        catch (NoResultException e) {
+            // Intentionally left empty
+        }
+
+        return null;
+    }
+
+    /**
+     * Fetches a content instance for the content with the given ID. If a matching content could not
+     * be found, this method returns null.
+     *
+     * @param contentId
+     *  the ID of the content to retrieve
+     *
+     * @return
+     *  the content for the given content ID, or null if a matching content was not found
+     */
+    public Content getContentById(String contentId) {
+        return this.getContentById(contentId, null);
+    }
+
+    /**
+     * Fetches a map containing content instances for the specified content IDs. If any given ID
+     * cannot be resolved to an existing content instance, it will be silently discarded from the
+     * output.
+     *
+     * @param contentIds
+     *  a collection of IDs of the content instances to retrieve
+     *
+     * @return
+     *  a map of content instances to the respective content IDs, filtered by the given IDs
+     */
+    public Map<String, Content> getContentsByIds(Collection<String> contentIds) {
+        Map<String, Content> output = new HashMap<>();
+
+        if (contentIds != null && !contentIds.isEmpty()) {
+            // Deduplicate input so we don't have to worry about equality shenanigans in the output
+            Set<String> input = contentIds instanceof Set ?
+                (Set<String>) contentIds :
+                (new HashSet<>(contentIds));
+
+            String jpql = "SELECT cont FROM Content cont WHERE cont.id IN (:content_ids)";
+
+            TypedQuery<Content> query = this.getEntityManager()
+                .createQuery(jpql, Content.class);
+
+            for (Collection<String> block : this.partition(input)) {
+                query.setParameter("content_ids", block)
+                    .getResultList()
+                    .forEach(elem -> output.put(elem.getId(), elem));
+            }
+        }
+
+        return output;
+    }
+
+    /**
+     * Checks if a content exists for the given content ID without fetching the content instance
+     * itself. Returns true if one or more contents exist with the given content ID.
+     *
+     * @param contentId
+     *  the ID of the content to lookup
+     *
+     * @return
+     *  true if one or more contents exist with the given content ID; false otherwise
+     */
+    public boolean contentExistsById(String contentId) {
+        String jpql = "SELECT count(content) FROM Content content WHERE content.id = :content_id";
+
+        TypedQuery<Long> query = this.getEntityManager()
+            .createQuery(jpql, Long.class)
+            .setParameter("content_id", contentId);
+
+        return query.getSingleResult() != 0;
     }
 
     // Needs an override due to the use of UUID as db identifier.
@@ -184,5 +290,55 @@ public class ContentCurator extends AbstractHibernateCurator<Content> {
         }
 
         return output;
+    }
+
+    /**
+     * Returns a list of IDs of the products referencing the given content by ID. If no products are
+     * referencing the content, or the content is invalid, this method returns an empty list.
+     *
+     * @param contentId
+     *  the ID of the content for which to fetch referencing product IDs
+     *
+     * @return
+     *  a list of product IDs referencing the content specified by ID
+     */
+    public List<String> getProductIdsReferencingContentById(String contentId) {
+        String jpql = "SELECT prod.id FROM Product prod " +
+            "JOIN prod.productContent pc " +
+            "WHERE pc.content.id = :content_id";
+
+        return this.getEntityManager()
+            .createQuery(jpql, String.class)
+            .setParameter("content_id", contentId)
+            .getResultList();
+    }
+
+    /**
+     * Checks if the specified content is referenced by any subscriptions as its marketing content.
+     * Indirect references to contents, such as provided contents and derived contents, are not
+     * considered by this method.
+     *
+     * @param content
+     *  The content to check for product usage
+     *
+     * @return
+     *  true if the content is referenced by one or more products; false otherwise
+     */
+    public boolean contentIsReferencedByProducts(Content content) {
+        if (content == null) {
+            return false;
+        }
+
+        String jpql = "SELECT count(prod) " +
+            "FROM Product prod " +
+            "JOIN prod.productContent pcontent " +
+            "JOIN pcontent.content content " +
+            "WHERE content.uuid = :content_uuid";
+
+        TypedQuery<Long> query = this.getEntityManager()
+            .createQuery(jpql, Long.class)
+            .setParameter("content_uuid", content.getUuid());
+
+        return query.getSingleResult() != 0;
     }
 }

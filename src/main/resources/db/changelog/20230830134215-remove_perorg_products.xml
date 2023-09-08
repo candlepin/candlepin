@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="20230830134215-1" author="crog">
+
+        <!--
+            TODO: create a new table, copy products (and content) to the new tables, temporarily
+            leave the old table about for manual fixing or rolling back of junk
+
+            For now, just modify cp2_products and cp2_content a bit; but don't actually do this
+            outside of the prototype.
+        -->
+
+
+        <dropUniqueConstraint tableName="cp2_products" constraintName="cp2_product_entity_version"/>
+        <dropIndex tableName="cp2_products" indexName="cp2_products_idx2"/>
+
+        <dropColumn tableName="cp2_products" columnName="entity_version" />
+
+        <createIndex tableName="cp2_products" indexName="cp2_products_idx2" unique="true">
+            <column name="product_id"/>
+        </createIndex>
+
+
+        <dropUniqueConstraint tableName="cp2_content" constraintName="cp2_content_entity_version"/>
+        <dropIndex tableName="cp2_content" indexName="cp2_content_idx2"/>
+
+        <dropColumn tableName="cp2_content" columnName="entity_version" />
+
+        <createIndex tableName="cp2_content" indexName="cp2_content_idx2" unique="true">
+            <column name="content_id"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>
+
+
+<!--
+                             Table "public.cp2_products"
+        Column        |            Type             | Collation | Nullable | Default
+
+ uuid                 | character varying(32)       |           | not null |
+ created              | timestamp without time zone |           |          |
+ updated              | timestamp without time zone |           |          |
+ multiplier           | bigint                      |           |          |
+ product_id           | character varying(32)       |           | not null |
+ name                 | character varying(255)      |           | not null |
+ entity_version       | bigint                      |           |          |
+ locked               | integer                     |           |          |
+ derived_product_uuid | character varying(32)       |           |          |
+Indexes:
+    "cp2_products_pk" PRIMARY KEY, btree (uuid)
+    "cp2_product_entity_version" UNIQUE CONSTRAINT, btree (product_id, entity_version) DEFERRABLE
+    "cp2_products_idx1" btree (entity_version)
+    "cp2_products_idx2" btree (product_id)
+Foreign-key constraints:
+    "cp2_products_fk1" FOREIGN KEY (derived_product_uuid) REFERENCES cp2_products(uuid)
+Referenced by:
+    TABLE "cp2_owner_products" CONSTRAINT "cp2_owner_products_fk2" FOREIGN KEY (product_uuid) REFERENCES cp2_products(uuid)
+    TABLE "cp2_product_dependent_products" CONSTRAINT "cp2_proddepprod_fk1" FOREIGN KEY (product_uuid) REFERENCES cp2_products(uuid) ON DELETE CASCADE
+    TABLE "cp2_product_attributes" CONSTRAINT "cp2_product_attributes_fk1" FOREIGN KEY (product_uuid) REFERENCES cp2_products(uuid) ON DELETE CASCADE
+    TABLE "cp2_product_branding" CONSTRAINT "cp2_product_branding_fk1" FOREIGN KEY (product_uuid) REFERENCES cp2_products(uuid) ON DELETE CASCADE
+    TABLE "cp2_product_certificates" CONSTRAINT "cp2_product_certificates_fk1" FOREIGN KEY (product_uuid) REFERENCES cp2_products(uuid) ON DELETE CASCADE
+    TABLE "cp2_product_content" CONSTRAINT "cp2_product_content_fk1" FOREIGN KEY (product_uuid) REFERENCES cp2_products(uuid) ON DELETE CASCADE
+    TABLE "cp2_products" CONSTRAINT "cp2_products_fk1" FOREIGN KEY (derived_product_uuid) REFERENCES cp2_products(uuid)
+    TABLE "cp2_product_provided_products" CONSTRAINT "cp2_products_prov_prods_fk1" FOREIGN KEY (product_uuid) REFERENCES cp2_products(uuid) ON DELETE CASCADE
+    TABLE "cp2_product_provided_products" CONSTRAINT "cp2_products_prov_prods_fk2" FOREIGN KEY (provided_product_uuid) REFERENCES cp2_products(uuid) ON DELETE CASCADE
+    TABLE "cp_pool" CONSTRAINT "cp_pool_fk1" FOREIGN KEY (product_uuid) REFERENCES cp2_products(uuid)
+
+
+
+
+                          Table "public.cp2_content"
+     Column     |            Type             | Collation | Nullable | Default
+
+ uuid           | character varying(32)       |           | not null |
+ content_id     | character varying(32)       |           | not null |
+ created        | timestamp without time zone |           |          |
+ updated        | timestamp without time zone |           |          |
+ contenturl     | character varying(255)      |           |          |
+ gpgurl         | character varying(255)      |           |          |
+ label          | character varying(255)      |           | not null |
+ metadataexpire | bigint                      |           |          |
+ name           | character varying(255)      |           | not null |
+ releasever     | character varying(255)      |           |          |
+ requiredtags   | character varying(255)      |           |          |
+ type           | character varying(255)      |           | not null |
+ vendor         | character varying(255)      |           | not null |
+ arches         | character varying(255)      |           |          |
+ entity_version | bigint                      |           |          |
+ locked         | integer                     |           |          |
+Indexes:
+    "cp2_content_pk" PRIMARY KEY, btree (uuid)
+    "cp2_content_entity_version" UNIQUE CONSTRAINT, btree (content_id, entity_version) DEFERRABLE
+    "cp2_content_idx1" btree (entity_version)
+    "cp2_content_idx2" btree (content_id)
+Referenced by:
+    TABLE "cp2_content_modified_products" CONSTRAINT "cp2_cmp_fk1" FOREIGN KEY (content_uuid) REFERENCES cp2_content(uuid) ON DELETE CASCADE
+    TABLE "cp2_owner_content" CONSTRAINT "cp2_owner_content_fk2" FOREIGN KEY (content_uuid) REFERENCES cp2_content(uuid)
+    TABLE "cp2_product_content" CONSTRAINT "cp2_product_content_fk2" FOREIGN KEY (content_uuid) REFERENCES cp2_content(uuid)
+-->

@@ -74,12 +74,4 @@ public class PoolNodeVisitor implements NodeVisitor<Pool, SubscriptionInfo> {
         // Intentionally left empty; see above for details
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void complete() {
-        // Intentionally left empty
-    }
-
 }

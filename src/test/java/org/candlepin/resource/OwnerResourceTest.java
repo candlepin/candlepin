@@ -262,8 +262,8 @@ public class OwnerResourceTest extends DatabaseTestFixture {
             this.mockImportRecordCurator, this.mockEntitlementCurator, this.mockUeberCertCurator,
             this.mockUeberCertificateGenerator, this.mockEnvironmentCurator, this.calculatedAttributesUtil,
             this.contentOverrideValidator, this.serviceLevelValidator, this.ownerServiceAdapter, this.config,
-            this.consumerTypeValidator, this.mockOwnerProductCurator, this.modelTranslator,
-            this.mockJobManager, this.dtoValidator, this.principalProvider);
+            this.consumerTypeValidator, this.mockProductCurator, this.mockOwnerProductCurator,
+            this.modelTranslator, this.mockJobManager, this.dtoValidator, this.principalProvider);
     }
 
     private ProductDTO buildTestProductDTO() {
@@ -1587,7 +1587,7 @@ public class OwnerResourceTest extends DatabaseTestFixture {
         OwnerResource thisOwnerResource = new OwnerResource(
             this.mockOwnerCurator, null, null, i18n, this.mockEventSink, mockEventFactory, null,
             this.mockManifestManager, null, null, null, null, importRecordCurator, null, null, null, null,
-            null, contentOverrideValidator, serviceLevelValidator, null, null, null, null,
+            null, contentOverrideValidator, serviceLevelValidator, null, null, null, null, null,
             this.modelTranslator, this.mockJobManager, null, null);
 
         MultipartInput input = mock(MultipartInput.class);

@@ -47,6 +47,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
@@ -59,6 +60,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
+
 
 
 /**
@@ -815,16 +817,18 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
      *  The number of certificates updated
      */
     @Transactional
-    public int markEntitlementsDirty(Iterable<String> entitlementIds) {
+    public int markEntitlementsDirty(Collection<String> entitlementIds) {
+        if (entitlementIds == null || entitlementIds.isEmpty()) {
+            return 0;
+        }
+
         int count = 0;
 
-        if (entitlementIds != null && entitlementIds.iterator().hasNext()) {
-            String hql = "UPDATE Entitlement SET dirty = true WHERE id IN (:entIds)";
-            Query query = this.getEntityManager().createQuery(hql);
+        String hql = "UPDATE Entitlement SET dirty = true WHERE id IN (:entIds)";
+        Query query = this.getEntityManager().createQuery(hql);
 
-            for (List<String> block : this.partition(entitlementIds)) {
-                count += query.setParameter("entIds", block).executeUpdate();
-            }
+        for (List<String> block : this.partition(entitlementIds)) {
+            count += query.setParameter("entIds", block).executeUpdate();
         }
 
         return count;
@@ -868,6 +872,87 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
             cb.greaterThanOrEqualTo(pool.get(Pool_.endDate), new Date()),
             cb.or(cb.equal(product.get(Product_.id), productId),
                 cb.equal(providedProducts.get(Product_.id), productId)));
+    }
+
+
+    /**
+     * Sets the "dirty" flag on any entitlement for a pool which directly or indirectly references
+     * any of the given products. The value returned by this method does not account for
+     * entitlements which are already marked as dirty, resulting in a value that should be
+     * consistent between invocations of the same data set.
+     *
+     * @param productIds
+     *  a collection of product IDs to use to find entitlements to mark as dirty
+     *
+     * @param effectiveDate
+     *  the effective date for which to find entitlements. Entitlements for pools which have expired
+     *  before this date will not be included in the results
+     *
+     * @return
+     *  the number of entitlements marked dirty
+     */
+    public List<Entitlement> getEntitlementsByProductIds(Collection<String> productIds, Date effectiveDate) {
+        List<Entitlement> output = new ArrayList<>();
+
+        if (productIds == null || productIds.isEmpty() || effectiveDate == null) {
+            return output;
+        }
+
+        String sql = "SELECT parent.id " +
+            "  FROM cp2_products parent " +
+            "  JOIN cp2_product_provided_products provref ON provref.product_uuid = parent.uuid " +
+            "  JOIN cp2_products prov ON prov.uuid = provref.provided_product_uuid " +
+            "  WHERE prov.id IN (:product_ids_1) " +
+            "UNION " +
+            "SELECT parent.id " +
+            "  FROM cp2_products parent " +
+            "  JOIN cp2_products derived ON derived.uuid = parent.derived_product_uuid " +
+            "  WHERE derived.id IN (:product_ids_2) ";
+
+        int blockSize = Math.min(this.getInBlockSize(), this.getQueryParameterLimit() / 2);
+
+        Query pidQuery = this.getEntityManager()
+            .createNativeQuery(sql, String.class);
+
+        Set<String> entitlementProductIds = new HashSet<>();
+        Collection<String> nextPids = productIds;
+
+        // Irritating recursive step...
+        while (!nextPids.isEmpty()) {
+            List<String> pids = new ArrayList<>();
+
+            for (List<String> block : this.partition(nextPids, blockSize)) {
+                List<String> pidBlock = pidQuery.setParameter("product_ids_1", block)
+                    .setParameter("product_ids_2", block)
+                    .getResultList();
+
+                pids.addAll(pidBlock);
+            }
+
+            entitlementProductIds.addAll(pids);
+            nextPids = pids;
+        }
+
+        if (!entitlementProductIds.isEmpty()) {
+            Set<String> entitlementIds = new HashSet<>();
+
+            String jpql = "SELECT DISTINCT ent " +
+                "FROM Entitlement ent " +
+                "JOIN ent.pool pool " +
+                "JOIN pool.product prod " +
+                "WHERE pool.endDate > :effective_date AND prod.id IN (:product_ids)";
+
+            TypedQuery<Entitlement> entQuery = this.getEntityManager()
+                .createQuery(jpql, Entitlement.class)
+                .setParameter("effective_date", effectiveDate);
+
+            for (List<String> block : this.partition(entitlementProductIds)) {
+                output.addAll(entQuery.setParameter("product_ids", block)
+                    .getResultList());
+            }
+        }
+
+        return output;
     }
 
     /**
@@ -1390,4 +1475,5 @@ public class EntitlementCurator extends AbstractHibernateCurator<Entitlement> {
 
         return entContentIdMap;
     }
+
 }

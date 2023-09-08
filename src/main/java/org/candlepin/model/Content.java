@@ -55,8 +55,6 @@ import javax.validation.constraints.Size;
  * ProductContent
  */
 @Entity
-@Immutable
-@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 @Table(name = Content.DB_TABLE)
 public class Content extends AbstractHibernateObject implements SharedEntity, Cloneable, ContentInfo {
 
@@ -126,16 +124,14 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
     @CollectionTable(name = "cp2_content_modified_products", joinColumns = @JoinColumn(name = "content_uuid"))
     @Column(name = "element")
     @Size(max = 255)
-    @Immutable
-    @Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
     private Set<String> modifiedProductIds;
 
     @Column(nullable = true)
     @Size(max = 255)
     private String arches;
 
-    @Column(name = "entity_version")
-    private Long entityVersion;
+    // @Column(name = "entity_version")
+    // private Long entityVersion;
 
     @Column
     @Type(type = "org.hibernate.type.NumericBooleanType")
@@ -213,7 +209,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         this.setMetadataExpiration(source.getMetadataExpiration());
         this.setArches(source.getArches());
         this.setModifiedProductIds(source.getModifiedProductIds());
-        this.entityVersion = null;
+        // this.entityVersion = null;
 
         return this;
     }
@@ -240,7 +236,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         copy.setCreated(this.getCreated() != null ? (Date) this.getCreated().clone() : null);
         copy.setUpdated(this.getUpdated() != null ? (Date) this.getUpdated().clone() : null);
 
-        copy.entityVersion = null;
+        // copy.entityVersion = null;
 
         return copy;
     }
@@ -306,7 +302,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      */
     public Content setId(String id) {
         this.id = id;
-        this.entityVersion = null;
+        // this.entityVersion = null;
 
         return this;
     }
@@ -318,7 +314,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setType(String type) {
         this.type = type;
-        this.entityVersion = null;
+        // this.entityVersion = null;
 
         return this;
     }
@@ -330,7 +326,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setLabel(String label) {
         this.label = label;
-        this.entityVersion = null;
+        // this.entityVersion = null;
 
         return this;
     }
@@ -342,7 +338,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setName(String name) {
         this.name = name;
-        this.entityVersion = null;
+        // this.entityVersion = null;
 
         return this;
     }
@@ -354,7 +350,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setVendor(String vendor) {
         this.vendor = vendor;
-        this.entityVersion = null;
+        // this.entityVersion = null;
 
         return this;
     }
@@ -366,7 +362,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setContentUrl(String contentUrl) {
         this.contentUrl = contentUrl;
-        this.entityVersion = null;
+        // this.entityVersion = null;
 
         return this;
     }
@@ -389,7 +385,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      */
     public Content setRequiredTags(String requiredTags) {
         this.requiredTags = requiredTags;
-        this.entityVersion = null;
+        // this.entityVersion = null;
 
         return this;
     }
@@ -410,7 +406,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
      */
     public Content setReleaseVersion(String releaseVer) {
         this.releaseVer = releaseVer;
-        this.entityVersion = null;
+        // this.entityVersion = null;
 
         return this;
     }
@@ -422,7 +418,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setGpgUrl(String gpgUrl) {
         this.gpgUrl = gpgUrl;
-        this.entityVersion = null;
+        // this.entityVersion = null;
 
         return this;
     }
@@ -434,7 +430,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setMetadataExpiration(Long metadataExpire) {
         this.metadataExpire = metadataExpire;
-        this.entityVersion = null;
+        // this.entityVersion = null;
 
         return this;
     }
@@ -478,7 +474,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             throw new IllegalArgumentException("productId is null");
         }
 
-        this.entityVersion = null;
+        // this.entityVersion = null;
         return this.modifiedProductIds.add(productId);
     }
 
@@ -500,7 +496,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             throw new IllegalArgumentException("productId is null");
         }
 
-        this.entityVersion = null;
+        // this.entityVersion = null;
         return this.modifiedProductIds != null ? this.modifiedProductIds.remove(productId) : false;
     }
 
@@ -522,7 +518,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
         }
         this.modifiedProductIds.clear();
 
-        this.entityVersion = null;
+        // this.entityVersion = null;
         if (requiredProductIds != null) {
             this.modifiedProductIds.addAll(requiredProductIds);
         }
@@ -532,7 +528,7 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
 
     public Content setArches(String arches) {
         this.arches = arches;
-        this.entityVersion = null;
+        // this.entityVersion = null;
 
         return this;
     }
@@ -571,9 +567,9 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             return true;
         }
 
-        if (this.getEntityVersion() != that.getEntityVersion()) {
-            return false;
-        }
+        // if (this.getEntityVersion() != that.getEntityVersion()) {
+        //     return false;
+        // }
 
         boolean equals = new EqualsBuilder()
             .append(this.getId(), that.getId())
@@ -606,59 +602,59 @@ public class Content extends AbstractHibernateObject implements SharedEntity, Cl
             .toHashCode();
     }
 
-    /**
-     * Calculates and returns a version hash for this entity. This method operates much like the
-     * hashCode method, except that it is more accurate and should have fewer collisions.
-     *
-     * @return
-     *  a version hash for this entity
-     */
-    public long getEntityVersion() {
-        if (this.entityVersion == null) {
-            // initialValue and multiplier choosen fairly arbitrarily from a list of prime numbers
-            // These should be unique per versioned entity.
-            LongHashCodeBuilder builder = new LongHashCodeBuilder(419, 433)
-                .append(this.getId())
-                .append(this.getType())
-                .append(this.getLabel())
-                .append(this.getName())
-                .append(this.getVendor())
-                .append(this.getContentUrl())
-                .append(this.getRequiredTags())
-                .append(this.getReleaseVersion())
-                .append(this.getGpgUrl())
-                .append(this.getMetadataExpiration())
-                .append(this.getArches());
+    // /**
+    //  * Calculates and returns a version hash for this entity. This method operates much like the
+    //  * hashCode method, except that it is more accurate and should have fewer collisions.
+    //  *
+    //  * @return
+    //  *  a version hash for this entity
+    //  */
+    // public long getEntityVersion() {
+    //     if (this.entityVersion == null) {
+    //         // initialValue and multiplier choosen fairly arbitrarily from a list of prime numbers
+    //         // These should be unique per versioned entity.
+    //         LongHashCodeBuilder builder = new LongHashCodeBuilder(419, 433)
+    //             .append(this.getId())
+    //             .append(this.getType())
+    //             .append(this.getLabel())
+    //             .append(this.getName())
+    //             .append(this.getVendor())
+    //             .append(this.getContentUrl())
+    //             .append(this.getRequiredTags())
+    //             .append(this.getReleaseVersion())
+    //             .append(this.getGpgUrl())
+    //             .append(this.getMetadataExpiration())
+    //             .append(this.getArches());
 
-            // Impl note:
-            // We need to be certain that the hash code is calculated in a way that's order
-            // independent and not subject to Hibernate's poor hashCode implementation on proxy
-            // collections.
-            builder.append("modified_product_ids");
-            Collection<String> modifiedProductIds = this.getModifiedProductIds();
-            Stream<String> mpistream = modifiedProductIds != null && !modifiedProductIds.isEmpty() ?
-                modifiedProductIds.stream() :
-                Stream.empty();
+    //         // Impl note:
+    //         // We need to be certain that the hash code is calculated in a way that's order
+    //         // independent and not subject to Hibernate's poor hashCode implementation on proxy
+    //         // collections.
+    //         builder.append("modified_product_ids");
+    //         Collection<String> modifiedProductIds = this.getModifiedProductIds();
+    //         Stream<String> mpistream = modifiedProductIds != null && !modifiedProductIds.isEmpty() ?
+    //             modifiedProductIds.stream() :
+    //             Stream.empty();
 
-            mpistream.filter(Objects::nonNull)
-                .sorted()
-                .forEach(builder::append);
+    //         mpistream.filter(Objects::nonNull)
+    //             .sorted()
+    //             .forEach(builder::append);
 
-            this.entityVersion = builder.toHashCode();
-        }
+    //         this.entityVersion = builder.toHashCode();
+    //     }
 
-        return this.entityVersion;
-    }
+    //     return this.entityVersion;
+    // }
 
     @Override
     public String toString() {
-        return String.format("Content [uuid: %s, id: %s, name: %s, label: %s, entity_version: %s]",
-            this.getUuid(), this.getId(), this.getName(), this.getLabel(), this.getEntityVersion());
+        return String.format("Content [uuid: %s, id: %s, name: %s, label: %s]",
+            this.getUuid(), this.getId(), this.getName(), this.getLabel());
     }
 
-    @PrePersist
-    @PreUpdate
-    public void updateEntityVersion() {
-        this.entityVersion = this.getEntityVersion();
-    }
+    // @PrePersist
+    // @PreUpdate
+    // public void updateEntityVersion() {
+    //     this.entityVersion = this.getEntityVersion();
+    // }
 }

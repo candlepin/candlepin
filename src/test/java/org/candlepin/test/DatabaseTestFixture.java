@@ -460,6 +460,8 @@ public class DatabaseTestFixture {
         return this.cdnCurator.create(cdn);
     }
 
+    // TODO: Remove owner parameter from the createContent methods; do not ship without doing so
+
     protected Content createContent(Owner... owners) {
         String contentId = "test-content-" + TestUtil.randomInt();
         return this.createContent(contentId, contentId, owners);
@@ -472,18 +474,12 @@ public class DatabaseTestFixture {
     protected Content createContent(String id, String name, Owner... owners) {
         Content content = TestUtil.createContent(id, name);
         content = this.contentCurator.create(content);
-        this.ownerContentCurator.mapContentToOwners(content, owners);
 
         return content;
     }
 
     protected Content createContent(Content content, Owner... owners) {
         content = this.contentCurator.create(content);
-
-        if (owners != null & owners.length > 0) {
-            this.ownerContentCurator.mapContentToOwners(content, owners);
-        }
-
         return content;
     }
 
@@ -671,6 +667,8 @@ public class DatabaseTestFixture {
             TestUtil.createDate(2100, 1, 1));
     }
 
+    // TODO: Remove owner parameter from the createProduct methods; do not ship without doing so
+
     protected Product createProduct(Owner... owners) {
         String productId = "test_product-" + TestUtil.randomInt();
         return this.createProduct(productId, productId, owners);
@@ -694,10 +692,7 @@ public class DatabaseTestFixture {
     }
 
     protected Product createProduct(Product product, Owner... owners) {
-        product = this.productCurator.create(product);
-        this.ownerProductCurator.mapProductToOwners(product, owners);
-
-        return product;
+        return this.productCurator.create(product);
     }
 
     protected Principal setupPrincipal(Owner owner, Access role) {

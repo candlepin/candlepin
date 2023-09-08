@@ -272,14 +272,14 @@ public class EntitlementCertificateGenerator {
      * which individually regenerates certificates for each entitlement in the provided collection.
      *
      * @param entitlementIds
-     *  An iterable collection of entitlement IDs for which to regenerate certificates
+     *  An collection of entitlement IDs for which to regenerate certificates
      *
      * @param lazy
      *  Whether or not to generate the certificate immediately, or mark it dirty and allow it to be
      *  regenerated on-demand
      */
     @Transactional
-    public void regenerateCertificatesByEntitlementIds(Iterable<String> entitlementIds, boolean lazy) {
+    public void regenerateCertificatesByEntitlementIds(Collection<String> entitlementIds, boolean lazy) {
 
         // If we're regenerating these lazily, we can avoid loading all of them by just updating the
         // DB directly.
@@ -350,27 +350,67 @@ public class EntitlementCertificateGenerator {
         this.regenerateCertificatesByEntitlementIds(entsToRegen, lazy);
     }
 
+    // /**
+    //  * Regenerates the entitlement certificates for all pools using any of the the specified
+    //  * product(s), effective for the given owners.
+    //  *
+    //  * @param products
+    //  *  A collection of products for which to regenerate affected certificates
+    //  *
+    //  * @param lazy
+    //  *  Whether or not to generate the certificate immediately, or mark it dirty and allow it to be
+    //  *  regenerated on-demand
+    //  */
+    // @Transactional
+    // public void regenerateCertificatesOf(Collection<Product> products,
+    //     boolean lazy) {
+
+    //     if (owners == null || owners.isEmpty() || products == null || products.isEmpty()) {
+    //         return; // Nothing to do
+    //     }
+
+    //     Set<String> productIds = products.stream()
+    //         .map(Product::getId)
+    //         .collect(Collectors.toSet());
+
+    //     // TODO: This is a very expensive operation. Update pool curator with something to let us
+    //     // do this without hitting the DB several times over.
+    //     if (lazy) {
+    //         for (Owner owner : owners) {
+    //             poolCurator.markCertificatesDirtyForPoolsWithProducts(owner, productIds);
+    //         }
+    //     }
+    //     else {
+    //         Date now = new Date();
+    //         Set<Entitlement> entitlements = new HashSet<>();
+
+    //         for (Owner owner : owners) {
+    //             this.poolCurator
+    //                 .listAvailableEntitlementPools(null, owner, productIds, now)
+    //                 .stream()
+    //                 .flatMap(pool -> pool.getEntitlements().stream())
+    //                 .forEach(entitlements::add);
+    //         }
+
+    //         this.regenerateCertificatesOf(entitlements, lazy);
+    //     }
+    // }
+
     /**
-     * Regenerates the entitlement certificates of all entitlements for pools using the specified
-     * product.
-     *
-     * @param owner
-     *  The owner for which to regenerate entitlement certificates
+     * Regenerates the entitlement certificates of all entitlements for pools directly or indirectly
+     * using any of the specified products.
      *
      * @param productId
-     *  The Red Hat ID of the product for which to regenerate certificates
+     *  A collection of Red Hat ID of the products for which to regenerate entitlement certificates
      *
      * @param lazy
      *  Whether or not to generate the certificate immediately, or mark it dirty and allow it to be
      *  regenerated on-demand
      */
     @Transactional
-    public void regenerateCertificatesOf(Owner owner, String productId, boolean lazy) {
-        Set<Entitlement> entitlements = this.poolCurator
-            .listAvailableEntitlementPools(null, owner, productId, new Date())
-            .stream()
-            .flatMap(pool -> pool.getEntitlements().stream())
-            .collect(Collectors.toSet());
+    public void regenerateCertificatesForProducts(Collection<String> productIds, boolean lazy) {
+        List<Entitlement> entitlements = this.entitlementCurator
+            .getEntitlementsByProductIds(productIds, new Date());
 
         this.regenerateCertificatesOf(entitlements, lazy);
     }
@@ -378,9 +418,6 @@ public class EntitlementCertificateGenerator {
     /**
      * Regenerates the entitlement certificates of all entitlements for pools using the specified
      * product.
-     *
-     * @param owner
-     *  The owner for which to regenerate entitlement certificates
      *
      * @param product
      *  The product for which to regenerate certificates
@@ -390,61 +427,7 @@ public class EntitlementCertificateGenerator {
      *  regenerated on-demand
      */
     @Transactional
-    public void regenerateCertificatesOf(Owner owner, Product product, boolean lazy) {
-        this.regenerateCertificatesOf(owner, product.getId(), lazy);
+    public void regenerateCertificatesForProduct(Product product, boolean lazy) {
+        this.regenerateCertificatesForProducts(List.of(product.getId()), lazy);
     }
-
-    /**
-     * Regenerates the entitlement certificates for all pools using any of the the specified
-     * product(s), effective for the given owners.
-     *
-     * @param owners
-     *  A collection of owners for which the certificates should be generated. Pools using the given
-     *  products but not owned by an owner within this collection will not have their certificates
-     *  regenerated.
-     *
-     * @param products
-     *  A collection of products for which to regenerate affected certificates
-     *
-     * @param lazy
-     *  Whether or not to generate the certificate immediately, or mark it dirty and allow it to be
-     *  regenerated on-demand
-     */
-    @Transactional
-    public void regenerateCertificatesOf(Collection<Owner> owners, Collection<Product> products,
-        boolean lazy) {
-
-        if (owners == null || owners.isEmpty() || products == null || products.isEmpty()) {
-            return; // Nothing to do
-        }
-
-        Set<String> productIds = products.stream()
-            .map(Product::getId)
-            .collect(Collectors.toSet());
-
-        // TODO: This is a very expensive operation. Update pool curator with something to let us
-        // do this without hitting the DB several times over.
-        if (lazy) {
-            for (Owner owner : owners) {
-                poolCurator.markCertificatesDirtyForPoolsWithProducts(owner, productIds);
-            }
-        }
-        else {
-            Date now = new Date();
-            Set<Entitlement> entitlements = new HashSet<>();
-
-            for (Owner owner : owners) {
-                Collection<Entitlement> poolEntitlements = this.poolCurator
-                    .listAvailableEntitlementPools(null, owner, productIds, now)
-                    .stream()
-                    .flatMap(pool -> pool.getEntitlements().stream())
-                    .collect(Collectors.toList());
-
-                entitlements.addAll(poolEntitlements);
-            }
-
-            this.regenerateCertificatesOf(entitlements, lazy);
-        }
-    }
-
 }

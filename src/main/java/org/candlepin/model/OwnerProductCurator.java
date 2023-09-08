@@ -141,30 +141,32 @@ public class OwnerProductCurator extends AbstractHibernateCurator<OwnerProduct> 
         }
     }
 
+    @Transactional
+    public Product getProductById(String ownerId, String productId) {
+        log.warn("FIXME: FETCHING PRODUCT VIA OwnerProductCurator! {}", new RuntimeException());
+
+        String jpql = "SELECT prod FROM Product prod WHERE prod.id = :product_id";
+
+        try {
+            return this.getEntityManager()
+                .createQuery(jpql, Product.class)
+                .setParameter("product_id", productId)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            // Intentionally left empty
+        }
+
+        return null;
+    }
+
     public Product getProductById(Owner owner, String productId) {
         return this.getProductById(owner.getId(), productId);
     }
 
     @Transactional
-    public Product getProductById(String ownerId, String productId) {
-        return (Product) this.createSecureCriteria()
-            .createAlias("owner", "owner")
-            .createAlias("product", "product")
-            .setProjection(Projections.property("product"))
-            .add(Restrictions.eq("owner.id", ownerId))
-            .add(Restrictions.eq("product.id", productId))
-            .uniqueResult();
-    }
-
-    @Transactional
     public Product getProductByIdUsingOwnerKey(String ownerKey, String productId) {
-        return (Product) this.createSecureCriteria()
-            .createAlias("owner", "owner")
-            .createAlias("product", "product")
-            .setProjection(Projections.property("product"))
-            .add(Restrictions.eq("owner.key", ownerKey))
-            .add(Restrictions.eq("product.id", productId))
-            .uniqueResult();
+        return this.getProductById("dummyval", productId);
     }
 
     public CandlepinQuery<Owner> getOwnersByProduct(Product product) {

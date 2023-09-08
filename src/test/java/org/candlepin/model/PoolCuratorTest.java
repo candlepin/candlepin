@@ -2072,24 +2072,28 @@ public class PoolCuratorTest extends DatabaseTestFixture {
     @Test
     public void testMarkCertificatesDirtyForPoolsWithProvidedProduct() {
         Consumer consumer = this.createConsumer(owner);
-        Set<Product> providedProducts = new HashSet<>();
-        Product providedProduct = new Product(product.getId(), "Test Provided Product");
-        providedProducts.add(providedProduct);
-        productCurator.create(providedProduct);
 
-        Product parent = TestUtil.createProduct();
-        parent.setProvidedProducts(providedProducts);
-        productCurator.create(parent);
+        Product providedProduct = this.createProduct("test_prov_prod", "Test Provided Product");
+
+        Product parent = new Product()
+            .setId("parent_prod")
+            .setName("parent product")
+            .setProvidedProducts(Set.of(providedProduct));
+
+        this.productCurator.create(parent);
 
         Pool pool = TestUtil.createPool(owner, parent, 5);
         poolCurator.create(pool);
+
         EntitlementCertificate cert = createEntitlementCertificate("fake", "fake");
         Entitlement entitlement = createEntitlement(owner, consumer, pool, cert);
+        entitlementCurator.create(entitlement);
+
         assertFalse(entitlement.isDirty(), "entitlement should not be dirty initially");
 
-        entitlementCurator.create(entitlement);
-        poolCurator.markCertificatesDirtyForPoolsWithProducts(owner, Collections.singleton(product.getId()));
+        poolCurator.markCertificatesDirtyForPoolsWithProducts(owner, List.of(providedProduct.getId()));
         entitlementCurator.refresh(entitlement);
+
         assertTrue(entitlement.isDirty(), "entitlement should be marked dirty");
     }
 
@@ -3003,27 +3007,6 @@ public class PoolCuratorTest extends DatabaseTestFixture {
         assertTrue(updated.before(pool.getUpdated()));
 
         assertEquals(created, pool.getCreated());
-    }
-
-    @Test
-    public void testProvidedProductImmutability() {
-        Product parentProduct = TestUtil.createProduct("1", "product-1");
-        Product providedProduct = this.createProduct("provided", "Child 1", owner);
-        parentProduct.setProvidedProducts(Arrays.asList(providedProduct));
-
-        Product childProduct1 = this.createProduct("child1", "child1", owner);
-
-        parentProduct = this.createProduct(parentProduct, owner);
-        Pool pool = TestUtil.createPool(owner, parentProduct, 5);
-        poolCurator.create(pool);
-        pool = poolCurator.get(pool.getId());
-        assertEquals(1, pool.getProduct().getProvidedProducts().size());
-
-        // provided products are immutable set.
-        pool.getProduct().addProvidedProduct(childProduct1);
-        Pool finalPool = pool;
-        poolCurator.merge(finalPool);
-        assertThrows(PersistenceException.class, () -> this.poolCurator.flush());
     }
 
     @Test

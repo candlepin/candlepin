@@ -32,7 +32,7 @@ import org.candlepin.async.tasks.InactiveConsumerCleanerJob;
 import org.candlepin.async.tasks.JobCleaner;
 import org.candlepin.async.tasks.ManifestCleanerJob;
 import org.candlepin.async.tasks.OrphanCleanupJob;
-import org.candlepin.async.tasks.RefreshPoolsForProductJob;
+import org.candlepin.async.tasks.RefreshPoolsForProductsJob;
 import org.candlepin.async.tasks.RefreshPoolsJob;
 import org.candlepin.async.tasks.RegenEnvEntitlementCertsJob;
 import org.candlepin.async.tasks.RegenProductEntitlementCertsJob;
@@ -447,7 +447,7 @@ public class CandlepinModule extends AbstractModule {
         JobManager.registerJob(JobCleaner.JOB_KEY, JobCleaner.class);
         JobManager.registerJob(ManifestCleanerJob.JOB_KEY, ManifestCleanerJob.class);
         JobManager.registerJob(OrphanCleanupJob.JOB_KEY, OrphanCleanupJob.class);
-        JobManager.registerJob(RefreshPoolsForProductJob.JOB_KEY, RefreshPoolsForProductJob.class);
+        JobManager.registerJob(RefreshPoolsForProductsJob.JOB_KEY, RefreshPoolsForProductsJob.class);
         JobManager.registerJob(RefreshPoolsJob.JOB_KEY, RefreshPoolsJob.class);
         JobManager.registerJob(RegenEnvEntitlementCertsJob.JOB_KEY, RegenEnvEntitlementCertsJob.class);
         JobManager.registerJob(RegenProductEntitlementCertsJob.JOB_KEY,

@@ -93,7 +93,6 @@ public class ContentNodeBuilderTest {
         // and no updated entity should be created yet
         assertNull(output.getExistingEntity());
         assertEquals(imported, output.getImportedEntity());
-        assertNull(output.getMergedEntity());
 
         // Content does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());
@@ -134,7 +133,6 @@ public class ContentNodeBuilderTest {
         // and no updated entity should be created yet
         assertEquals(existing, output.getExistingEntity());
         assertEquals(imported, output.getImportedEntity());
-        assertNull(output.getMergedEntity());
 
         // Content does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());
@@ -174,7 +172,6 @@ public class ContentNodeBuilderTest {
         // and no updated entity should be created yet
         assertEquals(existing, output.getExistingEntity());
         assertNull(output.getImportedEntity());
-        assertNull(output.getMergedEntity());
 
         // Content does not have any children, and we do not have parents in this context
         assertNotNull(output.getParentNodes());

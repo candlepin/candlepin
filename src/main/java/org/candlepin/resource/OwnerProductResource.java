@@ -17,7 +17,7 @@ package org.candlepin.resource;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
-import org.candlepin.async.tasks.RefreshPoolsForProductJob;
+import org.candlepin.async.tasks.RefreshPoolsForProductsJob;
 import org.candlepin.auth.Verify;
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.Configuration;
@@ -42,7 +42,7 @@ import org.candlepin.model.ProductCertificate;
 import org.candlepin.model.ProductCertificateCurator;
 import org.candlepin.model.ProductContent;
 import org.candlepin.model.ProductCurator;
-import org.candlepin.resource.server.v1.OwnerProductApi;
+// import org.candlepin.resource.server.v1.OwnerProductApi;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.resource.validation.DTOValidator;
 
@@ -60,7 +60,7 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.persistence.LockModeType;
 
-public class OwnerProductResource implements OwnerProductApi {
+public class OwnerProductResource { //implements OwnerProductApi {
 
     private static Logger log = LoggerFactory.getLogger(OwnerProductResource.class);
     private OwnerCurator ownerCurator;
@@ -102,225 +102,225 @@ public class OwnerProductResource implements OwnerProductApi {
         this.productCurator = productCurator;
     }
 
-    @Override
-    @Transactional
-    public ProductDTO addBatchContent(String ownerKey, String productId, Map<String, Boolean> contentMap) {
-        Owner owner = this.getOwnerByKey(ownerKey);
+    // @Override
+    // @Transactional
+    // public ProductDTO addBatchContent(String ownerKey, String productId, Map<String, Boolean> contentMap) {
+    //     Owner owner = this.getOwnerByKey(ownerKey);
 
-        // Lock the owner_product while we are doing the update for this org
-        // This is done in order to prevent collisions in updates on different parts of the product
-        if (!this.ownerProductCurator.lockOwnerProduct(owner, productId, LockModeType.PESSIMISTIC_WRITE)) {
-            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
-        }
-        Product product = this.ownerProductCurator.getProductById(owner, productId);
+    //     // Lock the owner_product while we are doing the update for this org
+    //     // This is done in order to prevent collisions in updates on different parts of the product
+    //     if (!this.ownerProductCurator.lockOwnerProduct(owner, productId, LockModeType.PESSIMISTIC_WRITE)) {
+    //         throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
+    //     }
+    //     Product product = this.ownerProductCurator.getProductById(owner, productId);
 
-        if (product.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
-        }
+    //     if (product.isLocked()) {
+    //         throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
+    //     }
 
-        Product update = this.buildProductForBatchContentChange(product);
+    //     Product update = this.buildProductForBatchContentChange(product);
 
-        boolean changed = false;
-        for (Map.Entry<String, Boolean> entry : contentMap.entrySet()) {
-            Content content = this.fetchContent(owner, entry.getKey());
-            boolean enabled = entry.getValue() != null ?
-                entry.getValue() :
-                ProductContent.DEFAULT_ENABLED_STATE;
+    //     boolean changed = false;
+    //     for (Map.Entry<String, Boolean> entry : contentMap.entrySet()) {
+    //         Content content = this.fetchContent(owner, entry.getKey());
+    //         boolean enabled = entry.getValue() != null ?
+    //             entry.getValue() :
+    //             ProductContent.DEFAULT_ENABLED_STATE;
 
-            changed |= update.addContent(content, enabled);
-        }
+    //         changed |= update.addContent(content, enabled);
+    //     }
 
-        if (changed) {
-            product = this.productManager.updateProduct(owner, update, true);
-        }
+    //     if (changed) {
+    //         product = this.productManager.updateProduct(owner, update, true);
+    //     }
 
-        return this.translator.translate(product, ProductDTO.class);
-    }
+    //     return this.translator.translate(product, ProductDTO.class);
+    // }
 
-    @Override
-    @Transactional
-    public ProductDTO addContent(String ownerKey, String productId, String contentId, Boolean enabled) {
-        // Package the params up and pass it off to our batch method
-        Map<String, Boolean> contentMap = Collections.singletonMap(contentId, enabled);
-        return this.addBatchContent(ownerKey, productId, contentMap);
-    }
+    // @Override
+    // @Transactional
+    // public ProductDTO addContent(String ownerKey, String productId, String contentId, Boolean enabled) {
+    //     // Package the params up and pass it off to our batch method
+    //     Map<String, Boolean> contentMap = Collections.singletonMap(contentId, enabled);
+    //     return this.addBatchContent(ownerKey, productId, contentMap);
+    // }
 
-    @Override
-    @Transactional
-    public ProductDTO createProductByOwner(String ownerKey, ProductDTO dto) {
-        if (dto.getId() == null || dto.getId().matches("^\\s*$")) {
-            throw new BadRequestException(i18n.tr("product has a null or invalid ID"));
-        }
+    // @Override
+    // @Transactional
+    // public ProductDTO createProductByOwner(String ownerKey, ProductDTO dto) {
+    //     if (dto.getId() == null || dto.getId().matches("^\\s*$")) {
+    //         throw new BadRequestException(i18n.tr("product has a null or invalid ID"));
+    //     }
 
-        if (dto.getName() == null || dto.getName().matches("^\\s*$")) {
-            throw new BadRequestException(i18n.tr("product has a null or invalid name"));
-        }
+    //     if (dto.getName() == null || dto.getName().matches("^\\s*$")) {
+    //         throw new BadRequestException(i18n.tr("product has a null or invalid name"));
+    //     }
 
-        this.validator.validateCollectionElementsNotNull(dto::getBranding,
-            dto::getDependentProductIds, dto::getProductContent);
+    //     this.validator.validateCollectionElementsNotNull(dto::getBranding,
+    //         dto::getDependentProductIds, dto::getProductContent);
 
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product entity = productManager.createProduct(owner, InfoAdapter.productInfoAdapter(dto));
+    //     Owner owner = this.getOwnerByKey(ownerKey);
+    //     Product entity = productManager.createProduct(owner, InfoAdapter.productInfoAdapter(dto));
 
-        return this.translator.translate(entity, ProductDTO.class);
-    }
+    //     return this.translator.translate(entity, ProductDTO.class);
+    // }
 
-    @Override
-    @Transactional
-    public void deleteProductByOwner(String ownerKey, String productId) {
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
+    // @Override
+    // @Transactional
+    // public void deleteProductByOwner(String ownerKey, String productId) {
+    //     Owner owner = this.getOwnerByKey(ownerKey);
+    //     Product product = this.fetchProduct(owner, productId);
 
-        if (product.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
-        }
+    //     if (product.isLocked()) {
+    //         throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
+    //     }
 
-        if (this.productCurator.productHasSubscriptions(owner, product)) {
-            throw new BadRequestException(i18n.tr(
-                "Product \"{0}\" cannot be deleted while referenced by one or more subscriptions",
-                productId));
-        }
+    //     if (this.productCurator.productHasSubscriptions(owner, product)) {
+    //         throw new BadRequestException(i18n.tr(
+    //             "Product \"{0}\" cannot be deleted while referenced by one or more subscriptions",
+    //             productId));
+    //     }
 
-        if (this.productCurator.productHasParentProducts(owner, product)) {
-            throw new BadRequestException(i18n.tr(
-                "Product \"{0}\" cannot be deleted while referenced by one or more products",
-                productId));
-        }
+    //     if (this.productCurator.productHasParentProducts(owner, product)) {
+    //         throw new BadRequestException(i18n.tr(
+    //             "Product \"{0}\" cannot be deleted while referenced by one or more products",
+    //             productId));
+    //     }
 
-        this.productManager.removeProduct(owner, product);
-    }
+    //     this.productManager.removeProduct(owner, product);
+    // }
 
-    @Override
-    public ProductDTO getProductByOwner(@Verify(Owner.class) String ownerKey, String productId) {
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
+    // @Override
+    // public ProductDTO getProductByOwner(@Verify(Owner.class) String ownerKey, String productId) {
+    //     Owner owner = this.getOwnerByKey(ownerKey);
+    //     Product product = this.fetchProduct(owner, productId);
 
-        return this.translator.translate(product, ProductDTO.class);
-    }
+    //     return this.translator.translate(product, ProductDTO.class);
+    // }
 
-    @Override
-    @Transactional
-    public ProductCertificateDTO getProductCertificateByOwner(String ownerKey, String productId) {
-        if (!productId.matches("\\d+")) {
-            throw new BadRequestException(i18n.tr("Only numeric product IDs are allowed."));
-        }
+    // @Override
+    // @Transactional
+    // public ProductCertificateDTO getProductCertificateByOwner(String ownerKey, String productId) {
+    //     if (!productId.matches("\\d+")) {
+    //         throw new BadRequestException(i18n.tr("Only numeric product IDs are allowed."));
+    //     }
 
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
+    //     Owner owner = this.getOwnerByKey(ownerKey);
+    //     Product product = this.fetchProduct(owner, productId);
 
-        ProductCertificate productCertificate = this.productCertCurator.getCertForProduct(product);
-        return this.translator.translate(productCertificate, ProductCertificateDTO.class);
-    }
+    //     ProductCertificate productCertificate = this.productCertCurator.getCertForProduct(product);
+    //     return this.translator.translate(productCertificate, ProductCertificateDTO.class);
+    // }
 
-    @Override
-    public CandlepinQuery<ProductDTO> getProductsByOwner(@Verify(Owner.class) String ownerKey,
-        List<String> productIds) {
+    // @Override
+    // public CandlepinQuery<ProductDTO> getProductsByOwner(@Verify(Owner.class) String ownerKey,
+    //     List<String> productIds) {
 
-        Owner owner = getOwnerByKey(ownerKey);
-        CandlepinQuery<Product> query = productIds != null && !productIds.isEmpty() ?
-            this.ownerProductCurator.getProductsByIds(owner, productIds) :
-            this.ownerProductCurator.getProductsByOwnerCPQ(owner);
+    //     Owner owner = getOwnerByKey(ownerKey);
+    //     CandlepinQuery<Product> query = productIds != null && !productIds.isEmpty() ?
+    //         this.ownerProductCurator.getProductsByIds(owner, productIds) :
+    //         this.ownerProductCurator.getProductsByOwnerCPQ(owner);
 
-        return this.translator.translateQuery(query, ProductDTO.class);
-    }
+    //     return this.translator.translateQuery(query, ProductDTO.class);
+    // }
 
-    @Override
-    @Transactional
-    public AsyncJobStatusDTO refreshPoolsForProduct(String ownerKey, String productId, Boolean lazyRegen) {
-        if (config.getBoolean(ConfigProperties.STANDALONE)) {
-            log.warn("Ignoring refresh pools request due to standalone config.");
-            return null;
-        }
+    // @Override
+    // @Transactional
+    // public AsyncJobStatusDTO refreshPoolsForProduct(String ownerKey, String productId, Boolean lazyRegen) {
+    //     if (config.getBoolean(ConfigProperties.STANDALONE)) {
+    //         log.warn("Ignoring refresh pools request due to standalone config.");
+    //         return null;
+    //     }
 
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Product product = this.fetchProduct(owner, productId);
-        JobConfig config = RefreshPoolsForProductJob.createJobConfig()
-            .setProduct(product)
-            .setLazy(lazyRegen);
+    //     Owner owner = this.getOwnerByKey(ownerKey);
+    //     Product product = this.fetchProduct(owner, productId);
+    //     JobConfig config = RefreshPoolsForProductJob.createJobConfig()
+    //         .setProduct(product)
+    //         .setLazy(lazyRegen);
 
-        try {
-            AsyncJobStatus status = jobManager.queueJob(config);
-            return this.translator.translate(status, AsyncJobStatusDTO.class);
-        }
-        catch (JobException e) {
-            String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
-                config.getJobKey());
-            log.error(errmsg, e);
-            throw new IseException(errmsg, e);
-        }
-    }
+    //     try {
+    //         AsyncJobStatus status = jobManager.queueJob(config);
+    //         return this.translator.translate(status, AsyncJobStatusDTO.class);
+    //     }
+    //     catch (JobException e) {
+    //         String errmsg = this.i18n.tr("An unexpected exception occurred while scheduling job \"{0}\"",
+    //             config.getJobKey());
+    //         log.error(errmsg, e);
+    //         throw new IseException(errmsg, e);
+    //     }
+    // }
 
-    @Override
-    @Transactional
-    public ProductDTO removeBatchContent(String ownerKey, String productId, List<String> contentIds) {
-        Owner owner = this.getOwnerByKey(ownerKey);
+    // @Override
+    // @Transactional
+    // public ProductDTO removeBatchContent(String ownerKey, String productId, List<String> contentIds) {
+    //     Owner owner = this.getOwnerByKey(ownerKey);
 
-        // Lock the owner_product while we are doing the update for this org
-        // This is done in order to prevent collisions in updates on different parts of the product
-        if (!this.ownerProductCurator.lockOwnerProduct(owner, productId, LockModeType.PESSIMISTIC_WRITE)) {
-            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
-        }
+    //     // Lock the owner_product while we are doing the update for this org
+    //     // This is done in order to prevent collisions in updates on different parts of the product
+    //     if (!this.ownerProductCurator.lockOwnerProduct(owner, productId, LockModeType.PESSIMISTIC_WRITE)) {
+    //         throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
+    //     }
 
-        Product product = this.ownerProductCurator.getProductById(owner, productId);
+    //     Product product = this.ownerProductCurator.getProductById(owner, productId);
 
-        if (product.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
-        }
+    //     if (product.isLocked()) {
+    //         throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", product.getId()));
+    //     }
 
-        Product update = this.buildProductForBatchContentChange(product);
+    //     Product update = this.buildProductForBatchContentChange(product);
 
-        boolean changed = false;
-        for (String contentId : contentIds) {
-            changed |= update.removeContent(contentId);
-        }
+    //     boolean changed = false;
+    //     for (String contentId : contentIds) {
+    //         changed |= update.removeContent(contentId);
+    //     }
 
-        if (changed) {
-            product = this.productManager.updateProduct(owner, update, true);
-        }
+    //     if (changed) {
+    //         product = this.productManager.updateProduct(owner, update, true);
+    //     }
 
-        return this.translator.translate(product, ProductDTO.class);
-    }
+    //     return this.translator.translate(product, ProductDTO.class);
+    // }
 
-    @Override
-    @Transactional
-    public ProductDTO removeContent(String ownerKey, String productId, String contentId) {
-        // Package up the params and pass it to our bulk operation
-        return this.removeBatchContent(ownerKey, productId, Collections.singletonList(contentId));
-    }
+    // @Override
+    // @Transactional
+    // public ProductDTO removeContent(String ownerKey, String productId, String contentId) {
+    //     // Package up the params and pass it to our bulk operation
+    //     return this.removeBatchContent(ownerKey, productId, Collections.singletonList(contentId));
+    // }
 
-    @Override
-    @Transactional
-    public ProductDTO updateProductByOwner(String ownerKey, String productId, ProductDTO update) {
-        if (StringUtils.isEmpty(update.getId())) {
-            update.setId(productId);
-        }
-        else if (!StringUtils.equals(update.getId(), productId)) {
-            throw new BadRequestException(
-                i18n.tr("Contradictory ids in update request: {0}, {1}", productId, update.getId()));
-        }
+    // @Override
+    // @Transactional
+    // public ProductDTO updateProductByOwner(String ownerKey, String productId, ProductDTO update) {
+    //     if (StringUtils.isEmpty(update.getId())) {
+    //         update.setId(productId);
+    //     }
+    //     else if (!StringUtils.equals(update.getId(), productId)) {
+    //         throw new BadRequestException(
+    //             i18n.tr("Contradictory ids in update request: {0}, {1}", productId, update.getId()));
+    //     }
 
-        this.validator.validateCollectionElementsNotNull(
-            update::getBranding, update::getDependentProductIds, update::getProductContent);
+    //     this.validator.validateCollectionElementsNotNull(
+    //         update::getBranding, update::getDependentProductIds, update::getProductContent);
 
-        Owner owner = this.getOwnerByKey(ownerKey);
+    //     Owner owner = this.getOwnerByKey(ownerKey);
 
-        // Lock the owner_product while we are doing the update for this org.
-        // This is done in order to prevent collisions in updates on different parts of the product.
-        if (!this.ownerProductCurator.lockOwnerProduct(owner, productId, LockModeType.PESSIMISTIC_WRITE)) {
-            throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
-        }
+    //     // Lock the owner_product while we are doing the update for this org.
+    //     // This is done in order to prevent collisions in updates on different parts of the product.
+    //     if (!this.ownerProductCurator.lockOwnerProduct(owner, productId, LockModeType.PESSIMISTIC_WRITE)) {
+    //         throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
+    //     }
 
-        Product existing = this.ownerProductCurator.getProductById(owner, productId);
+    //     Product existing = this.ownerProductCurator.getProductById(owner, productId);
 
-        if (existing.isLocked()) {
-            throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", existing.getId()));
-        }
+    //     if (existing.isLocked()) {
+    //         throw new ForbiddenException(i18n.tr("product \"{0}\" is locked", existing.getId()));
+    //     }
 
-        Product updated = this.productManager.updateProduct(owner, InfoAdapter.productInfoAdapter(update),
-            true);
+    //     Product updated = this.productManager.updateProduct(owner, InfoAdapter.productInfoAdapter(update),
+    //         true);
 
-        return this.translator.translate(updated, ProductDTO.class);
-    }
+    //     return this.translator.translate(updated, ProductDTO.class);
+    // }
 
     /**
      * Retrieves an Owner instance for the owner with the specified key/account. If a matching owner
@@ -338,7 +338,7 @@ public class OwnerProductResource implements OwnerProductApi {
      * @httpcode 200
      * @httpcode 404
      */
-    protected Owner getOwnerByKey(String key) {
+    private Owner getOwnerByKey(String key) {
         Owner owner = this.ownerCurator.getByKey(key);
         if (owner == null) {
             throw new NotFoundException(i18n.tr("Owner with key \"{0}\" was not found.", key));
@@ -363,7 +363,7 @@ public class OwnerProductResource implements OwnerProductApi {
      * @return
      *  the Product instance for the product with the specified id
      */
-    protected Product fetchProduct(Owner owner, String productId) {
+    private Product fetchProduct(Owner owner, String productId) {
         Product product = this.ownerProductCurator.getProductById(owner, productId);
         if (product == null) {
             throw new NotFoundException(i18n.tr("Product with ID \"{0}\" could not be found.", productId));
@@ -405,7 +405,7 @@ public class OwnerProductResource implements OwnerProductApi {
      * @return
      *  the content entity with the given owner and content ID
      */
-    protected Content fetchContent(Owner owner, String contentId) {
+    private Content fetchContent(Owner owner, String contentId) {
         Content content = this.ownerContentCurator.getContentById(owner, contentId);
 
         if (content == null) {

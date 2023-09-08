@@ -47,220 +47,220 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class RefreshWorkerVersioningTest extends DatabaseTestFixture {
 
-    @BeforeEach
-    public void init() throws Exception {
-        super.init(false);
-    }
+    // @BeforeEach
+    // public void init() throws Exception {
+    //     super.init(false);
+    // }
 
-    private RefreshWorker buildRefreshWorker() {
-        return new RefreshWorker(this.poolCurator, this.productCurator, this.ownerProductCurator,
-            this.contentCurator, this.ownerContentCurator);
-    }
+    // private RefreshWorker buildRefreshWorker() {
+    //     return new RefreshWorker(this.poolCurator, this.productCurator, this.ownerProductCurator,
+    //         this.contentCurator, this.ownerContentCurator);
+    // }
 
-    private ProductInfo mockProductInfo(String id, String name) {
-        ProductInfo entity = mock(ProductInfo.class);
-        doReturn(id).when(entity).getId();
-        doReturn(null).when(entity).getMultiplier();
-        doReturn(name).when(entity).getName();
+    // private ProductInfo mockProductInfo(String id, String name) {
+    //     ProductInfo entity = mock(ProductInfo.class);
+    //     doReturn(id).when(entity).getId();
+    //     doReturn(null).when(entity).getMultiplier();
+    //     doReturn(name).when(entity).getName();
 
-        return entity;
-    }
+    //     return entity;
+    // }
 
-    private ContentInfo mockContentInfo(String id, String name) {
-        ContentInfo entity = mock(ContentInfo.class);
-        doReturn(id).when(entity).getId();
-        doReturn(null).when(entity).getMetadataExpiration();
-        doReturn(name).when(entity).getName();
+    // private ContentInfo mockContentInfo(String id, String name) {
+    //     ContentInfo entity = mock(ContentInfo.class);
+    //     doReturn(id).when(entity).getId();
+    //     doReturn(null).when(entity).getMetadataExpiration();
+    //     doReturn(name).when(entity).getName();
 
-        return entity;
-    }
+    //     return entity;
+    // }
 
-    @Test
-    public void testProductCreationMergesWithExistingVersion() {
-        Owner owner1 = this.createOwner("owner-1");
-        Owner owner2 = this.createOwner("owner-2");
+    // @Test
+    // public void testProductCreationMergesWithExistingVersion() {
+    //     Owner owner1 = this.createOwner("owner-1");
+    //     Owner owner2 = this.createOwner("owner-2");
 
-        String id = "pid-1";
-        String name = "product_name";
+    //     String id = "pid-1";
+    //     String name = "product_name";
 
-        Product product = this.createProduct(id, name, owner1);
+    //     Product product = this.createProduct(id, name, owner1);
 
-        RefreshWorker worker = this.buildRefreshWorker();
-        worker.addProducts(product);
+    //     RefreshWorker worker = this.buildRefreshWorker();
+    //     worker.addProducts(product);
 
-        RefreshResult result = worker.execute(owner2);
+    //     RefreshResult result = worker.execute(owner2);
 
-        assertNotNull(result);
-        assertEquals(1, result.getEntities(Product.class, EntityState.CREATED).size());
-        assertEquals(0, result.getEntities(Product.class, EntityState.UPDATED).size());
-        assertEquals(0, result.getEntities(Product.class, EntityState.UNCHANGED).size());
-        assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
+    //     assertNotNull(result);
+    //     assertEquals(1, result.getEntities(Product.class, EntityState.CREATED).size());
+    //     assertEquals(0, result.getEntities(Product.class, EntityState.UPDATED).size());
+    //     assertEquals(0, result.getEntities(Product.class, EntityState.UNCHANGED).size());
+    //     assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
 
-        Product created = result.getEntity(Product.class, id);
+    //     Product created = result.getEntity(Product.class, id);
 
-        assertNotNull(created);
-        assertEquals(product, created);
-        assertEquals(product.getUuid(), created.getUuid());
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(created, owner1));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(created, owner2));
-    }
+    //     assertNotNull(created);
+    //     assertEquals(product, created);
+    //     assertEquals(product.getUuid(), created.getUuid());
+    //     assertTrue(this.ownerProductCurator.isProductMappedToOwner(created, owner1));
+    //     assertTrue(this.ownerProductCurator.isProductMappedToOwner(created, owner2));
+    // }
 
-    @Test
-    public void testProductUpdateMergesWithExistingVersion() {
-        Owner owner1 = this.createOwner("owner-1");
-        Owner owner2 = this.createOwner("owner-2");
+    // @Test
+    // public void testProductUpdateMergesWithExistingVersion() {
+    //     Owner owner1 = this.createOwner("owner-1");
+    //     Owner owner2 = this.createOwner("owner-2");
 
-        String id = "pid-1";
-        String name = "product_name";
+    //     String id = "pid-1";
+    //     String name = "product_name";
 
-        Product product = this.createProduct(id, name, owner1);
-        Product existing = this.createProduct(id, "old_name", owner2);
-        ProductInfo imported = this.mockProductInfo(id, name);
+    //     Product product = this.createProduct(id, name, owner1);
+    //     Product existing = this.createProduct(id, "old_name", owner2);
+    //     ProductInfo imported = this.mockProductInfo(id, name);
 
-        RefreshWorker worker = this.buildRefreshWorker();
-        worker.addProducts(imported);
+    //     RefreshWorker worker = this.buildRefreshWorker();
+    //     worker.addProducts(imported);
 
-        RefreshResult result = worker.execute(owner2);
+    //     RefreshResult result = worker.execute(owner2);
 
-        assertNotNull(result);
-        assertEquals(0, result.getEntities(Product.class, EntityState.CREATED).size());
-        assertEquals(1, result.getEntities(Product.class, EntityState.UPDATED).size());
-        assertEquals(0, result.getEntities(Product.class, EntityState.UNCHANGED).size());
-        assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
+    //     assertNotNull(result);
+    //     assertEquals(0, result.getEntities(Product.class, EntityState.CREATED).size());
+    //     assertEquals(1, result.getEntities(Product.class, EntityState.UPDATED).size());
+    //     assertEquals(0, result.getEntities(Product.class, EntityState.UNCHANGED).size());
+    //     assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
 
-        Product updated = result.getEntity(Product.class, id);
+    //     Product updated = result.getEntity(Product.class, id);
 
-        assertNotNull(updated);
-        assertEquals(product, updated);
-        assertEquals(product.getUuid(), updated.getUuid());
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(updated, owner1));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(updated, owner2));
-    }
+    //     assertNotNull(updated);
+    //     assertEquals(product, updated);
+    //     assertEquals(product.getUuid(), updated.getUuid());
+    //     assertTrue(this.ownerProductCurator.isProductMappedToOwner(updated, owner1));
+    //     assertTrue(this.ownerProductCurator.isProductMappedToOwner(updated, owner2));
+    // }
 
-    @Test
-    public void testProductUpdateDivergesFromExistingVersion() {
-        Owner owner1 = this.createOwner("owner-1");
-        Owner owner2 = this.createOwner("owner-2");
+    // @Test
+    // public void testProductUpdateDivergesFromExistingVersion() {
+    //     Owner owner1 = this.createOwner("owner-1");
+    //     Owner owner2 = this.createOwner("owner-2");
 
-        String id = "pid-1";
+    //     String id = "pid-1";
 
-        Product product = this.createProduct(id, "old_name", owner1, owner2);
-        ProductInfo imported = this.mockProductInfo(id, "new_name");
+    //     Product product = this.createProduct(id, "old_name", owner1, owner2);
+    //     ProductInfo imported = this.mockProductInfo(id, "new_name");
 
-        RefreshWorker worker = this.buildRefreshWorker();
-        worker.addProducts(imported);
+    //     RefreshWorker worker = this.buildRefreshWorker();
+    //     worker.addProducts(imported);
 
-        RefreshResult result = worker.execute(owner2);
+    //     RefreshResult result = worker.execute(owner2);
 
-        assertNotNull(result);
-        assertEquals(0, result.getEntities(Product.class, EntityState.CREATED).size());
-        assertEquals(1, result.getEntities(Product.class, EntityState.UPDATED).size());
-        assertEquals(0, result.getEntities(Product.class, EntityState.UNCHANGED).size());
-        assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
+    //     assertNotNull(result);
+    //     assertEquals(0, result.getEntities(Product.class, EntityState.CREATED).size());
+    //     assertEquals(1, result.getEntities(Product.class, EntityState.UPDATED).size());
+    //     assertEquals(0, result.getEntities(Product.class, EntityState.UNCHANGED).size());
+    //     assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
 
-        Product updated = result.getEntity(Product.class, id);
+    //     Product updated = result.getEntity(Product.class, id);
 
-        assertNotNull(updated);
-        assertNotEquals(product, updated);
-        assertNotEquals(product.getUuid(), updated.getUuid());
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
-        assertFalse(this.ownerProductCurator.isProductMappedToOwner(updated, owner1));
-        assertTrue(this.ownerProductCurator.isProductMappedToOwner(updated, owner2));
-    }
+    //     assertNotNull(updated);
+    //     assertNotEquals(product, updated);
+    //     assertNotEquals(product.getUuid(), updated.getUuid());
+    //     assertTrue(this.ownerProductCurator.isProductMappedToOwner(product, owner1));
+    //     assertFalse(this.ownerProductCurator.isProductMappedToOwner(product, owner2));
+    //     assertFalse(this.ownerProductCurator.isProductMappedToOwner(updated, owner1));
+    //     assertTrue(this.ownerProductCurator.isProductMappedToOwner(updated, owner2));
+    // }
 
 
-    @Test
-    public void testContentCreationMergesWithExistingVersion() {
-        Owner owner1 = this.createOwner("owner-1");
-        Owner owner2 = this.createOwner("owner-2");
+    // @Test
+    // public void testContentCreationMergesWithExistingVersion() {
+    //     Owner owner1 = this.createOwner("owner-1");
+    //     Owner owner2 = this.createOwner("owner-2");
 
-        String id = "pid-1";
-        String name = "content_name";
+    //     String id = "pid-1";
+    //     String name = "content_name";
 
-        Content content = this.createContent(id, name, owner1);
+    //     Content content = this.createContent(id, name, owner1);
 
-        RefreshWorker worker = this.buildRefreshWorker();
-        worker.addContent(content);
+    //     RefreshWorker worker = this.buildRefreshWorker();
+    //     worker.addContent(content);
 
-        RefreshResult result = worker.execute(owner2);
+    //     RefreshResult result = worker.execute(owner2);
 
-        assertNotNull(result);
-        assertEquals(1, result.getEntities(Content.class, EntityState.CREATED).size());
-        assertEquals(0, result.getEntities(Content.class, EntityState.UPDATED).size());
-        assertEquals(0, result.getEntities(Content.class, EntityState.UNCHANGED).size());
-        assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
+    //     assertNotNull(result);
+    //     assertEquals(1, result.getEntities(Content.class, EntityState.CREATED).size());
+    //     assertEquals(0, result.getEntities(Content.class, EntityState.UPDATED).size());
+    //     assertEquals(0, result.getEntities(Content.class, EntityState.UNCHANGED).size());
+    //     assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
 
-        Content created = result.getEntity(Content.class, id);
+    //     Content created = result.getEntity(Content.class, id);
 
-        assertNotNull(created);
-        assertEquals(content, created);
-        assertEquals(content.getUuid(), created.getUuid());
-        assertTrue(this.ownerContentCurator.isContentMappedToOwner(created, owner1));
-        assertTrue(this.ownerContentCurator.isContentMappedToOwner(created, owner2));
-    }
+    //     assertNotNull(created);
+    //     assertEquals(content, created);
+    //     assertEquals(content.getUuid(), created.getUuid());
+    //     assertTrue(this.ownerContentCurator.isContentMappedToOwner(created, owner1));
+    //     assertTrue(this.ownerContentCurator.isContentMappedToOwner(created, owner2));
+    // }
 
-    @Test
-    public void testContentUpdateMergesWithExistingVersion() {
-        Owner owner1 = this.createOwner("owner-1");
-        Owner owner2 = this.createOwner("owner-2");
+    // @Test
+    // public void testContentUpdateMergesWithExistingVersion() {
+    //     Owner owner1 = this.createOwner("owner-1");
+    //     Owner owner2 = this.createOwner("owner-2");
 
-        String id = "pid-1";
-        String name = "content_name";
+    //     String id = "pid-1";
+    //     String name = "content_name";
 
-        Content content = this.createContent(id, name, owner1);
-        Content existing = this.createContent(id, "old_name", owner2);
-        ContentInfo imported = this.mockContentInfo(id, name);
+    //     Content content = this.createContent(id, name, owner1);
+    //     Content existing = this.createContent(id, "old_name", owner2);
+    //     ContentInfo imported = this.mockContentInfo(id, name);
 
-        RefreshWorker worker = this.buildRefreshWorker();
-        worker.addContent(imported);
+    //     RefreshWorker worker = this.buildRefreshWorker();
+    //     worker.addContent(imported);
 
-        RefreshResult result = worker.execute(owner2);
+    //     RefreshResult result = worker.execute(owner2);
 
-        assertNotNull(result);
-        assertEquals(0, result.getEntities(Content.class, EntityState.CREATED).size());
-        assertEquals(1, result.getEntities(Content.class, EntityState.UPDATED).size());
-        assertEquals(0, result.getEntities(Content.class, EntityState.UNCHANGED).size());
-        assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
+    //     assertNotNull(result);
+    //     assertEquals(0, result.getEntities(Content.class, EntityState.CREATED).size());
+    //     assertEquals(1, result.getEntities(Content.class, EntityState.UPDATED).size());
+    //     assertEquals(0, result.getEntities(Content.class, EntityState.UNCHANGED).size());
+    //     assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
 
-        Content updated = result.getEntity(Content.class, id);
+    //     Content updated = result.getEntity(Content.class, id);
 
-        assertNotNull(updated);
-        assertEquals(content, updated);
-        assertEquals(content.getUuid(), updated.getUuid());
-        assertTrue(this.ownerContentCurator.isContentMappedToOwner(updated, owner1));
-        assertTrue(this.ownerContentCurator.isContentMappedToOwner(updated, owner2));
-    }
+    //     assertNotNull(updated);
+    //     assertEquals(content, updated);
+    //     assertEquals(content.getUuid(), updated.getUuid());
+    //     assertTrue(this.ownerContentCurator.isContentMappedToOwner(updated, owner1));
+    //     assertTrue(this.ownerContentCurator.isContentMappedToOwner(updated, owner2));
+    // }
 
-    @Test
-    public void testContentUpdateDivergesFromExistingVersion() {
-        Owner owner1 = this.createOwner("owner-1");
-        Owner owner2 = this.createOwner("owner-2");
+    // @Test
+    // public void testContentUpdateDivergesFromExistingVersion() {
+    //     Owner owner1 = this.createOwner("owner-1");
+    //     Owner owner2 = this.createOwner("owner-2");
 
-        String id = "pid-1";
+    //     String id = "pid-1";
 
-        Content content = this.createContent(id, "old_name", owner1, owner2);
-        ContentInfo imported = this.mockContentInfo(id, "new_name");
+    //     Content content = this.createContent(id, "old_name", owner1, owner2);
+    //     ContentInfo imported = this.mockContentInfo(id, "new_name");
 
-        RefreshWorker worker = this.buildRefreshWorker();
-        worker.addContent(imported);
+    //     RefreshWorker worker = this.buildRefreshWorker();
+    //     worker.addContent(imported);
 
-        RefreshResult result = worker.execute(owner2);
+    //     RefreshResult result = worker.execute(owner2);
 
-        assertNotNull(result);
-        assertEquals(0, result.getEntities(Content.class, EntityState.CREATED).size());
-        assertEquals(1, result.getEntities(Content.class, EntityState.UPDATED).size());
-        assertEquals(0, result.getEntities(Content.class, EntityState.UNCHANGED).size());
-        assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
+    //     assertNotNull(result);
+    //     assertEquals(0, result.getEntities(Content.class, EntityState.CREATED).size());
+    //     assertEquals(1, result.getEntities(Content.class, EntityState.UPDATED).size());
+    //     assertEquals(0, result.getEntities(Content.class, EntityState.UNCHANGED).size());
+    //     assertEquals(0, result.getEntities(Content.class, EntityState.DELETED).size());
 
-        Content updated = result.getEntity(Content.class, id);
+    //     Content updated = result.getEntity(Content.class, id);
 
-        assertNotNull(updated);
-        assertNotEquals(content, updated);
-        assertNotEquals(content.getUuid(), updated.getUuid());
-        assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner1));
-        assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner2));
-        assertFalse(this.ownerContentCurator.isContentMappedToOwner(updated, owner1));
-        assertTrue(this.ownerContentCurator.isContentMappedToOwner(updated, owner2));
-    }
+    //     assertNotNull(updated);
+    //     assertNotEquals(content, updated);
+    //     assertNotEquals(content.getUuid(), updated.getUuid());
+    //     assertTrue(this.ownerContentCurator.isContentMappedToOwner(content, owner1));
+    //     assertFalse(this.ownerContentCurator.isContentMappedToOwner(content, owner2));
+    //     assertFalse(this.ownerContentCurator.isContentMappedToOwner(updated, owner1));
+    //     assertTrue(this.ownerContentCurator.isContentMappedToOwner(updated, owner2));
+    // }
 }

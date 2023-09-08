@@ -36,6 +36,7 @@ import java.util.Set;
 
 import javax.inject.Singleton;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
@@ -56,19 +57,28 @@ public class OwnerContentCurator extends AbstractHibernateCurator<OwnerContent> 
         super(OwnerContent.class);
     }
 
-    public Content getContentById(Owner owner, String contentId) {
-        return this.getContentById(owner.getId(), contentId);
-    }
 
     @Transactional
     public Content getContentById(String ownerId, String contentId) {
-        return (Content) this.createSecureCriteria()
-            .createAlias("owner", "owner")
-            .createAlias("content", "content")
-            .setProjection(Projections.property("content"))
-            .add(Restrictions.eq("owner.id", ownerId))
-            .add(Restrictions.eq("content.id", contentId))
-            .uniqueResult();
+        log.warn("FIXME: FETCHING CONTENT VIA OwnerContentCurator! {}", new RuntimeException());
+
+        String jpql = "SELECT cont FROM Content cont WHERE cont.id = :content_id";
+
+        try {
+            return this.getEntityManager()
+                .createQuery(jpql, Content.class)
+                .setParameter("content_id", contentId)
+                .getSingleResult();
+        }
+        catch (NoResultException e) {
+            // Intentionally left empty
+        }
+
+        return null;
+    }
+
+    public Content getContentById(Owner owner, String contentId) {
+        return this.getContentById(owner.getId(), contentId);
     }
 
     public CandlepinQuery<Owner> getOwnersByContent(Content content) {

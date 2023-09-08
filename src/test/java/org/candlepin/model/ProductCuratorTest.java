@@ -491,20 +491,20 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void ensureProductHasSubscription() {
-        assertTrue(productCurator.productHasSubscriptions(owner, product));
+        assertTrue(productCurator.productHasSubscriptions(product));
     }
 
     @Test
     public void ensureIndirectProductReferencesDoNotCountAsHavingSubscriptions() {
-        assertFalse(productCurator.productHasSubscriptions(owner, providedProduct));
-        assertFalse(productCurator.productHasSubscriptions(owner, derivedProduct));
-        assertFalse(productCurator.productHasSubscriptions(owner, derivedProvidedProduct));
+        assertFalse(productCurator.productHasSubscriptions(providedProduct));
+        assertFalse(productCurator.productHasSubscriptions(derivedProduct));
+        assertFalse(productCurator.productHasSubscriptions(derivedProvidedProduct));
     }
 
     @Test
     public void ensureDoesNotHaveSubscription() {
         Product noSub = this.createProduct("p1", "p1", owner);
-        assertFalse(productCurator.productHasSubscriptions(owner, noSub));
+        assertFalse(productCurator.productHasSubscriptions(noSub));
     }
 
     @Test
@@ -543,63 +543,6 @@ public class ProductCuratorTest extends DatabaseTestFixture {
 
         // Delete
         productCurator.delete(marketingProduct);
-    }
-
-    @Test
-    public void testProductCannotUpdateImmutableBrandingCollectionByAddingItems() {
-        Product marketingProduct = createTestProduct();
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, "eng_prod_id_1", "Brand No 1", "OS"));
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, "eng_prod_id_2", "Brand No 2", "OS"));
-
-        productCurator.create(marketingProduct);
-        productCurator.flush();
-
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, "eng_prod_id_3", "Brand No 3", "OS"));
-        productCurator.merge(marketingProduct);
-
-        PersistenceException pe = assertThrows(PersistenceException.class, () -> productCurator.flush());
-        assertEquals(HibernateException.class, pe.getCause().getClass());
-        assertTrue(pe.getCause().getMessage().contains("changed an immutable collection instance"));
-    }
-
-    @Test
-    public void testProductCannotUpdateImmutableBrandingCollectionByRemovingItems() {
-        Product marketingProduct = createTestProduct();
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, "eng_prod_id_1", "Brand No 1", "OS"));
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, "eng_prod_id_2", "Brand No 2", "OS"));
-
-        productCurator.create(marketingProduct);
-        productCurator.flush();
-
-        marketingProduct.getBranding().clear();
-        productCurator.merge(marketingProduct);
-
-        PersistenceException pe = assertThrows(PersistenceException.class, () -> productCurator.flush());
-        assertEquals(HibernateException.class, pe.getCause().getClass());
-        assertTrue(pe.getCause().getMessage().contains("changed an immutable collection instance"));
-    }
-
-    @Test
-    public void testProductCannotUpdateImmutableBrandingCollectionByUpdatingItem() {
-        Product marketingProduct = createTestProduct();
-        marketingProduct.addBranding(
-            new Branding(marketingProduct, "eng_prod_id_1", "Brand No 1", "OS"));
-
-        productCurator.create(marketingProduct);
-        productCurator.flush();
-
-        ((Branding) marketingProduct.getBranding().toArray()[0]).setName("new name");
-        productCurator.merge(marketingProduct);
-        productCurator.flush();
-        productCurator.evict(marketingProduct);
-
-        Product lookedUp = productCurator.get(marketingProduct.getUuid());
-        assertNotEquals("new name", ((Branding) lookedUp.getBranding().toArray()[0]).getName());
     }
 
     @Test

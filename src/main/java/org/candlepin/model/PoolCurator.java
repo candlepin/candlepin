@@ -64,6 +64,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 
 
@@ -343,6 +344,7 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
             .setProjection(Projections.property("consumer.uuid"))
             .list();
     }
+
     /**
      * List entitlement pools.
      *
@@ -1532,31 +1534,58 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     public void markCertificatesDirtyForPoolsWithProducts(Owner owner, Collection<String> productIds) {
-        for (List<String> batch : Iterables.partition(productIds, getInBlockSize())) {
-            markCertificatesDirtyForPoolsWithNormalProducts(owner, batch);
-            markCertificatesDirtyForPoolsWithProvidedProducts(owner, batch);
+        if (productIds == null || productIds.isEmpty()) {
+            // no products provided; nothing to flag
+            return;
         }
-    }
 
-    private void markCertificatesDirtyForPoolsWithNormalProducts(Owner owner, Collection<String> productIds) {
-        String statement = "update Entitlement e set e.dirty=true where e.pool.id in " +
-            "(select p.id from Pool p where p.owner=:owner and p.product.id in :productIds)";
-        Query query = currentSession().createQuery(statement);
-        query.setParameter("owner", owner);
-        query.setParameterList("productIds", productIds);
-        query.executeUpdate();
-    }
+        log.debug("Marking entitlements dirty for pools using products in org: {}, {}", owner, productIds);
 
-    private void markCertificatesDirtyForPoolsWithProvidedProducts(Owner owner,
-        Collection<String> productIds) {
+        Set<String> poolIds = new HashSet<>();
 
-        String statement = "update Entitlement e set e.dirty=true where e.pool.id in " +
-            "(select p.id from Pool p join p.product.providedProducts pp where pp.id in :productIds)" +
-            "and e.owner = :owner";
-        Query query = currentSession().createQuery(statement);
-        query.setParameter("owner", owner);
-        query.setParameterList("productIds", productIds);
-        query.executeUpdate();
+        // TODO: FIXME: This could probably become a native query using a union to avoid doubling up
+        // all our queries
+        String prodQueryJpql = "SELECT DISTINCT pool.id " +
+            "FROM Pool pool " +
+            "JOIN pool.product prod " +
+            "WHERE pool.owner.id = :owner_id AND prod.id IN (:prod_ids)";
+
+        String provQueryJpql = "SELECT DISTINCT pool.id " +
+            "FROM Pool pool " +
+            "JOIN pool.product prod " +
+            "JOIN prod.providedProducts prov " +
+            "WHERE pool.owner.id = :owner_id AND prov.id IN (:prod_ids)";
+
+        EntityManager entityManager = this.getEntityManager();
+
+        TypedQuery<String> poolQuery1 = entityManager.createQuery(prodQueryJpql, String.class)
+            .setParameter("owner_id", owner.getId());
+
+        TypedQuery<String> poolQuery2 = entityManager.createQuery(provQueryJpql, String.class)
+            .setParameter("owner_id", owner.getId());
+
+        for (List<String> block : this.partition(productIds)) {
+            poolIds.addAll(poolQuery1.setParameter("prod_ids", block).getResultList());
+            poolIds.addAll(poolQuery2.setParameter("prod_ids", block).getResultList());
+        }
+
+        // If we've found any pools, flag their entitlements as dirty, iteratively.
+        if (!poolIds.isEmpty()) {
+            log.debug("Found {} pools for the given products: {}", poolIds.size(), poolIds);
+
+            int count = 0;
+            String updateJpql = "UPDATE Entitlement ent SET ent.dirty = true " +
+                "WHERE ent.pool.id IN (:pool_ids)";
+
+            javax.persistence.Query updateQuery = entityManager.createQuery(updateJpql);
+
+            for (List<String> block : this.partition(poolIds)) {
+                count += updateQuery.setParameter("pool_ids", block)
+                    .executeUpdate();
+            }
+
+            log.debug("Marked {} entitlements dirty", count);
+        }
     }
 
     /**

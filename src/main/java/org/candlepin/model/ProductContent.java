@@ -41,8 +41,6 @@ import javax.validation.constraints.NotNull;
  * ProductContent
  */
 @Entity
-@Immutable
-@Cache(usage = CacheConcurrencyStrategy.READ_ONLY)
 @Table(name = ProductContent.DB_TABLE)
 public class ProductContent extends AbstractHibernateObject implements ProductContentInfo {
 
@@ -163,22 +161,6 @@ public class ProductContent extends AbstractHibernateObject implements ProductCo
     public int hashCode() {
         return new HashCodeBuilder(3, 23)
             .append(this.getContent() != null ? this.getContent().getId() : null)
-            .toHashCode();
-    }
-
-    /**
-     * Calculates and returns a version hash for this entity. This method operates much like the
-     * hashCode method, except that it is more accurate and should have fewer collisions.
-     *
-     * @return
-     *  a version hash for this entity
-     */
-    public long getEntityVersion() {
-        // initialValue and multiplier choosen fairly arbitrarily from a list of prime numbers
-        // These should be unique per versioned entity.
-        return new LongHashCodeBuilder(307, 317)
-            .append(this.getContent() != null ? this.getContent().getEntityVersion() : null)
-            .append(this.isEnabled())
             .toHashCode();
     }
 

@@ -56,19 +56,19 @@ public class ContentManager {
     public static final String SYSTEM_LOCK = "content";
 
     private final ContentAccessManager contentAccessManager;
-    private final ProductManager productManager;
+    private final EntitlementCertificateGenerator entitlementCertGenerator;
 
     private final ContentCurator contentCurator;
     private final OwnerContentCurator ownerContentCurator;
     private final OwnerProductCurator ownerProductCurator;
 
     @Inject
-    public ContentManager(ContentAccessManager contentAccessManager, ProductManager productManager,
-        ContentCurator contentCurator, OwnerContentCurator ownerContentCurator,
-        OwnerProductCurator ownerProductCurator) {
+    public ContentManager(ContentAccessManager contentAccessManager,
+        EntitlementCertificateGenerator entitlementCertGenerator, ContentCurator contentCurator,
+        OwnerContentCurator ownerContentCurator, OwnerProductCurator ownerProductCurator) {
 
         this.contentAccessManager = Objects.requireNonNull(contentAccessManager);
-        this.productManager = Objects.requireNonNull(productManager);
+        this.entitlementCertGenerator = Objects.requireNonNull(entitlementCertGenerator);
 
         this.contentCurator = Objects.requireNonNull(contentCurator);
         this.ownerContentCurator = Objects.requireNonNull(ownerContentCurator);
@@ -76,39 +76,7 @@ public class ContentManager {
     }
 
     /**
-     * Builds a ProductInfo instance which does not contain a reference to the specified removed
-     * content ID. This can be passed to the ProductManager to update an affected product by
-     * removing the reference to the removed content.
-     *
-     * @param entity
-     *  the base product entity to use for creating the update
-     *
-     * @param removedContentId
-     *  the Red Hat content ID of the content to remove from the given product
-     *
-     * @return
-     *  a ProductInfo instance which does not contain a reference to the removed content
-     */
-    private ProductInfo buildProductInfoForContentRemoval(Product entity, String removedContentId) {
-        Product output = new Product()
-            .setId(entity.getId());
-
-        for (ProductContent pc : entity.getProductContent()) {
-            Content referent = pc.getContent();
-
-            if (!removedContentId.equals(referent.getId())) {
-                output.addContent(new Content().setId(referent.getId()), pc.isEnabled());
-            }
-        }
-
-        return output;
-    }
-
-    /**
      * Creates a new Content instance using the given content data.
-     *
-     * @param owner
-     *  the owner for which to create the new content
      *
      * @param contentData
      *  a ContentInfo instance containing the data for the new content
@@ -123,11 +91,7 @@ public class ContentManager {
      *  the new created Content instance
      */
     @Transactional
-    public Content createContent(Owner owner, ContentInfo contentData) {
-        if (owner == null) {
-            throw new IllegalArgumentException("owner is null");
-        }
-
+    public Content createContent(ContentInfo contentData) {
         if (contentData == null) {
             throw new IllegalArgumentException("contentData is null");
         }
@@ -137,65 +101,23 @@ public class ContentManager {
             throw new IllegalArgumentException("contentData is incomplete");
         }
 
-        this.ownerContentCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
-
-        if (this.ownerContentCurator.contentExists(owner, contentData.getId())) {
-            throw new IllegalStateException("content has already been created: " + contentData.getId());
+        if (this.contentCurator.contentExistsById(contentData.getId())) {
+            throw new IllegalStateException("content already exists: " + contentData.getId());
         }
 
-        log.debug("Creating new content for org: {}, {}", contentData, owner);
+        log.debug("Creating new content: {}", contentData);
 
         Content entity = new Content()
             .setId(contentData.getId());
 
-        applyContentChanges(entity, contentData);
-
-        // Check if we have an alternate version we can use instead.
-        List<Content> alternateVersions = this.ownerContentCurator
-            .getContentByVersions(Set.of(entity.getEntityVersion()))
-            .get(entity.getId());
-
-        if (alternateVersions != null) {
-            // Impl note: this should only ever have 1 entry in it due to our implicit limitation
-            // on ID and entity version
-            if (alternateVersions.size() != 1) {
-                log.warn("Unexpected number of alternate versions received for content ID {}: {}",
-                    entity.getId(), alternateVersions.size());
-            }
-            else {
-                log.debug("Checking {} alternate content versions", alternateVersions.size());
-            }
-
-            for (Content candidate : alternateVersions) {
-                if (entity.equals(candidate)) {
-                    // We found a match! Map to the candidate entity
-                    log.debug("Converging with existing content version: {} => {}", entity, candidate);
-
-                    // If we're "creating" a content, we shouldn't have any other object references to
-                    // update for this content. Instead, we'll just add the new owner to the content.
-                    this.ownerContentCurator.mapContentToOwner(candidate, owner);
-                    return candidate;
-                }
-
-                // If we have a version collision, and the entity IDs are the same, there's likely
-                // some shenanigans going on. Rather than halting all behavior, let's just clear
-                // the old entity's version so we start mapping to the new one.
-                // If we have a collision where the contents are actually different, we won't
-                // fail at this point (but we *will* fail), and we won't be able to detect it.
-                log.error("Entity version collision detected; attempting resolution... {} != {}",
-                    entity, candidate);
-
-                this.ownerContentCurator.clearContentEntityVersion(candidate);
-            }
-        }
+        this.applyContentChanges(entity, contentData);
 
         log.debug("Creating new content instance: {}", entity);
-
         entity = this.contentCurator.create(entity);
-        this.ownerContentCurator.mapContentToOwner(entity, owner);
 
-        log.debug("Synchronizing last content update for org: {}", owner);
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+        // TODO: FIXME: uh oh...
+        // log.debug("Synchronizing last content update for affected orgs...");
+        // this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
         return entity;
     }
@@ -203,9 +125,6 @@ public class ContentManager {
     /**
      * Updates content with the ID specified in the given content data, optionally regenerating
      * certificates of entitlements affected by the content update.
-     *
-     * @param owner
-     *  the owner for which to update the specified content
      *
      * @param contentData
      *  the content data to use to update the specified content
@@ -224,231 +143,109 @@ public class ContentManager {
      *  the updated Content instance
      */
     @Transactional
-    public Content updateContent(Owner owner, ContentInfo contentData, boolean regenCerts) {
-        if (owner == null) {
-            throw new IllegalArgumentException("owner is null");
+    public Content updateContent(Content entity, ContentInfo contentData, boolean regenCerts) {
+        if (entity == null) {
+            throw new IllegalArgumentException("entity is null");
         }
 
         if (contentData == null) {
             throw new IllegalArgumentException("contentData is null");
         }
 
-        if (contentData.getId() == null) {
-            throw new IllegalArgumentException("contentData is incomplete");
-        }
-
-        this.ownerContentCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
-
-        // Resolve the entity to ensure we're working with the merged entity, and to ensure it's
-        // already been created.
-        Content entity = this.ownerContentCurator.getContentById(owner, contentData.getId());
-
-        if (entity == null) {
-            // If we're doing an exclusive update, this should be an error condition
-            throw new IllegalStateException("Content has not yet been created");
-        }
+        // this.ownerContentCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
 
         // Make sure we have an actual change to apply
         if (!isChangedBy(entity, contentData)) {
             return entity;
         }
 
-        log.debug("Applying content update for org: {} => {}, {}", contentData, entity, owner);
+        log.debug("Applying content update: {} => {}", contentData, entity);
+        this.applyContentChanges(entity, contentData);
 
-        Content updated = applyContentChanges((Content) entity.clone(), contentData)
-            .setUuid(null);
+        log.debug("Updating content instance: {}", entity);
+        entity = this.contentCurator.merge(entity);
 
-        // Grab a list of products that are using this content. Due to versioning restrictions,
-        // we'll need to update these manually as a recursive step. We'll come back to these later.
-        Collection<Product> affectedProducts = this.ownerProductCurator
-            .getProductsReferencingContent(owner.getId(), entity.getUuid());
+        if (regenCerts) {
+            // TODO: FIXME: This could be very far reaching...
+            List<String> affectedProductIds = this.contentCurator
+                .getProductIdsReferencingContentById(entity.getId());
 
-        // Check for newer versions of the same content. We want to try to dedupe as much data as we
-        // can, and if we have a newer version of the content (which matches the version provided by
-        // the caller), we can just point the given orgs to the new content instead of giving them
-        // their own version.
-        // This is probably going to be a very expensive operation, though.
-        List<Content> alternateVersions = this.ownerContentCurator
-            .getContentByVersions(Set.of(updated.getEntityVersion()))
-            .get(updated.getId());
-
-        if (alternateVersions != null) {
-            // Impl note: this should only ever have 1 entry in it due to our implicit limitation
-            // on ID and version
-            if (alternateVersions.size() != 1) {
-                log.warn("Unexpected number of alternate versions received for content ID {}: {}",
-                    entity.getId(), alternateVersions.size());
-            }
-            else {
-                log.debug("Checking {} alternate content versions", alternateVersions.size());
-            }
-
-            for (Content candidate : alternateVersions) {
-                if (updated.equals(candidate)) {
-                    // We found a match! Map to the candidate entity
-                    log.debug("Converging with existing content version: {} => {}", updated, candidate);
-
-                    this.ownerContentCurator.updateOwnerContentReferences(owner,
-                        Map.of(entity.getUuid(), candidate.getUuid()));
-
-                    updated = candidate;
-                    break;
-                }
-
-                // If we have a version collision, and the entity IDs are the same, there's likely
-                // some shenanigans going on. Rather than halting all behavior, let's just clear
-                // the old entity's version so we start mapping to the new one.
-                // If we have a collision where the contents are actually different, we won't
-                // fail at this point (but we *will* fail), and we won't be able to detect it.
-                log.error("Entity version collision detected; attempting resolution... {} != {}",
-                    updated, candidate);
-
-                this.ownerContentCurator.clearContentEntityVersion(candidate);
-            }
+            this.entitlementCertGenerator.regenerateCertificatesForProducts(affectedProductIds, true);
         }
 
-        if (updated.getUuid() == null) {
-            log.debug("Creating new content instance and applying update: {}", updated);
-            // We need to make sure this is flushed to the DB as the
-            // ownerContentCurator.updateOwnerContentReferences will immediately try to create a link using
-            // it and will fail a foreign key check if we don't.
-            updated = this.contentCurator.create(updated, true);
+        // TODO: FIXME: uh oh...
+        // log.debug("Synchronizing last content update for affected orgs...");
+        // this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
-            this.ownerContentCurator.updateOwnerContentReferences(owner,
-                Map.of(entity.getUuid(), updated.getUuid()));
-        }
-
-        if (affectedProducts.size() > 0) {
-            log.debug("Updating {} products affected by content update", affectedProducts.size());
-
-            for (Product affected : affectedProducts) {
-                this.productManager.updateChildrenReferences(owner, affected, regenCerts);
-            }
-        }
-
-        log.debug("Synchronizing last content update for org: {}", owner);
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
-
-        return updated;
+        return entity;
     }
 
     /**
      * Updates content with the ID specified in the given content data, regenerating certificates
      * of entitlements affected by the content update.
      *
-     * @param owner
-     *  the owner for which to update the specified content
-     *
      * @param contentData
      *  the content data to use to update the specified content
      *
      * @throws IllegalArgumentException
-     *  if owner is null, contentData is null, or contentData is missing required information
+     *  if contentData is null, or contentData is missing required information
      *
      * @throws IllegalStateException
-     *  if the content specified by the content data does not yet exist for the given owner
+     *  if the content specified by the content data does not yet exist
      *
      * @return
      *  the updated Content instance
      */
-    public Content updateContent(Owner owner, Content contentData) {
-        return this.updateContent(owner, contentData, true);
+    public Content updateContent(Content entity, ContentInfo contentData) {
+        return this.updateContent(entity, contentData, true);
     }
 
     /**
-     * Removes the content specified by the provided content ID from the given owner, optionally
-     * regenerating certificates of affected entitlements.
-     *
-     * @param owner
-     *  the owner for which to remove the specified content
+     * Removes the content specified by the provided content ID, optionally regenerating
+     * certificates of affected entitlements.
      *
      * @param contentId
      *  the Red Hat content ID of the content to remove
      *
-     * @param regenCerts
-     *  whether or not certificates for affected entitlements should be regenerated after removing
-     *  the specified content
-     *
      * @throws IllegalArgumentException
-     *  if owner is null, or contentId is null
+     *  if or contentId is null
      *
      * @throws IllegalStateException
-     *  if a content with the given ID has not yet been created for the specified owner
+     *  if a content with the given ID has not yet been created
      *
      * @return
-     *  the Content instance removed from the given owner
+     *  the Content instance removed
      */
     @Transactional
-    public Content removeContent(Owner owner, String contentId, boolean regenCerts) {
-        if (owner == null) {
-            throw new IllegalArgumentException("owner is null");
-        }
-
-        if (contentId == null) {
-            throw new IllegalArgumentException("contentId is null");
-        }
-
-        this.ownerContentCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
-
-        Content entity = this.ownerContentCurator.getContentById(owner, contentId);
+    public Content deleteContent(Content entity) {
         if (entity == null) {
-            throw new IllegalStateException("Content has not yet been created");
+            throw new IllegalArgumentException("entity is null");
         }
 
-        // Grab a list of products that are using this content. Due to versioning restrictions,
-        // we'll need to update these manually as a recursive step. We'll come back to these later.
-        Collection<Product> affectedProducts = this.ownerProductCurator
-            .getProductsReferencingContent(owner.getId(), entity.getUuid());
+        // Resolve the entity to the actual entity to (a) verify it exists and (b) ensure we're
+        // passing a managed entity to the curator
+        String entityId = entity.getId();
+        entity = this.contentCurator.getContentById(entityId);
+        if (entity == null) {
+            throw new IllegalStateException("No such content entity exists: " + entityId);
+        }
+
+        // this.ownerContentCurator.getSystemLock(SYSTEM_LOCK, LockModeType.PESSIMISTIC_WRITE);
+
+        // Make sure the content isn't referenced by any products
+        if (this.contentCurator.contentIsReferencedByProducts(entity)) {
+            throw new IllegalStateException("Content is referenced by one or more products: " + entity);
+        }
 
         // Validation checks passed, remove the reference to it
-        log.debug("Removing content for org: {}, {}", entity, owner);
-        this.ownerContentCurator.removeOwnerContentReferences(owner, Set.of(entity.getUuid()));
+        log.debug("Deleting content: {}", entity);
+        this.contentCurator.delete(entity);
 
-        // Update affected products
-        if (affectedProducts.size() > 0) {
-            log.debug("Updating {} products affected by content removal", affectedProducts.size());
-
-            for (Product affected : affectedProducts) {
-                ProductInfo update = this.buildProductInfoForContentRemoval(affected, contentId);
-                this.productManager.updateProduct(owner, update, regenCerts);
-            }
-        }
-
-        log.debug("Synchronizing last content update for org: {}", owner);
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+        // TODO: FIXME: get a list of affected orgs and sync owner content update for the affected orgs
+        // log.debug("Synchronizing last content update for org: {}", owner);
+        // this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
         return entity;
-    }
-
-    /**
-     * Removes the content specified by the provided content data from the given owner, optionally
-     * regenerating certificates of affected entitlements.
-     *
-     * @param owner
-     *  the owner for which to remove the specified content
-     *
-     * @param contentData
-     *  the content data containing the Red Hat ID of the content to remove
-     *
-     * @param regenCerts
-     *  whether or not certificates for affected entitlements should be regenerated after removing
-     *  the specified content
-     *
-     * @throws IllegalArgumentException
-     *  if owner is null, or contentData is null
-     *
-     * @throws IllegalStateException
-     *  if a content with the given ID has not yet been created for the specified owner
-     *
-     * @return
-     *  the Content instance removed from the given owner
-     */
-    public Content removeContent(Owner owner, ContentInfo contentData, boolean regenCerts) {
-        if (contentData == null) {
-            throw new IllegalArgumentException("contentData is null");
-        }
-
-        return this.removeContent(owner, contentData.getId(), regenCerts);
     }
 
     /**

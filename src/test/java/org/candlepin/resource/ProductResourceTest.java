@@ -28,13 +28,15 @@ import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobException;
 import org.candlepin.async.JobManager;
-import org.candlepin.async.tasks.RefreshPoolsJob;
+import org.candlepin.async.tasks.RefreshPoolsForProductsJob;
 import org.candlepin.config.ConfigProperties;
+import org.candlepin.controller.ProductManager;
 import org.candlepin.dto.api.server.v1.AsyncJobStatusDTO;
 import org.candlepin.dto.api.server.v1.OwnerDTO;
 import org.candlepin.dto.api.server.v1.ProductCertificateDTO;
 import org.candlepin.dto.api.server.v1.ProductDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Product;
@@ -57,13 +59,15 @@ import java.util.stream.Collectors;
  * ProductResourceTest
  */
 public class ProductResourceTest extends DatabaseTestFixture {
-    private ProductResource productResource;
+
+    private ProductManager productManager;
     private JobManager jobManager;
 
     @BeforeEach
     public void init() throws Exception {
         super.init();
-        productResource = this.injector.getInstance(ProductResource.class);
+
+        this.productManager = this.injector.getInstance(ProductManager.class);
         this.jobManager = mock(JobManager.class);
 
         doAnswer((Answer<AsyncJobStatus>) invocation -> {
@@ -78,6 +82,17 @@ public class ProductResourceTest extends DatabaseTestFixture {
         }).when(this.jobManager).queueJob(any(JobConfig.class));
     }
 
+    private ProductResource buildProductResource(JobManager jobManager) {
+        return new ProductResource(this.config, this.i18n, this.modelTranslator, this.validator,
+            this.productManager, jobManager, this.productCurator, this.productCertificateCurator,
+            this.contentCurator);
+    }
+
+    private ProductResource buildProductResource() {
+        return this.buildProductResource(this.jobManager);
+    }
+
+
     @Test
     public void getProduct() {
         Owner owner = this.createOwner("Example-Corporation");
@@ -89,7 +104,9 @@ public class ProductResourceTest extends DatabaseTestFixture {
         }
 
         securityInterceptor.enable();
-        ProductDTO result = productResource.getProduct(entity.getUuid());
+
+        ProductResource productResource = this.buildProductResource();
+        ProductDTO result = productResource.getProductById(entity.getId());
 
         assertNotNull(result);
         assertEquals(result, expected);
@@ -99,7 +116,7 @@ public class ProductResourceTest extends DatabaseTestFixture {
     public void getProductCertificate() {
         Owner owner = this.createOwner("Example-Corporation");
 
-        Product entity = this.createProduct(owner);
+        Product entity = this.createProduct("123", "AwesomeOS Core");
         // ensure we check SecurityHole
         securityInterceptor.enable();
 
@@ -109,7 +126,8 @@ public class ProductResourceTest extends DatabaseTestFixture {
         cert.setProduct(entity);
         productCertificateCurator.create(cert);
 
-        ProductCertificateDTO cert1 = productResource.getProductCertificate(entity.getUuid());
+        ProductResource productResource = this.buildProductResource();
+        ProductCertificateDTO cert1 = productResource.getProductCertificate(entity.getId());
         ProductCertificateDTO expected = this.modelTranslator.translate(cert, ProductCertificateDTO.class);
         assertEquals(cert1, expected);
     }
@@ -145,170 +163,115 @@ public class ProductResourceTest extends DatabaseTestFixture {
         return Arrays.asList(owner1, owner2, owner3);
     }
 
-    @Test
-    public void testGetOwnersForProducts() {
-        List<Owner> owners = this.setupDBForOwnerProdTests();
-        Owner owner1 = owners.get(0);
-        Owner owner2 = owners.get(1);
-        Owner owner3 = owners.get(2);
-        OwnerDTO ownerDTO1 = this.modelTranslator.translate(owner1, OwnerDTO.class);
-        OwnerDTO ownerDTO2 = this.modelTranslator.translate(owner2, OwnerDTO.class);
-        OwnerDTO ownerDTO3 = this.modelTranslator.translate(owner3, OwnerDTO.class);
+    private void verifyRefreshPoolsJobWasQueued(AsyncJobStatusDTO job) {
+        assertNotNull(job);
 
-        List<OwnerDTO> ownersReturned;
-
-        ownersReturned = productResource.getProductOwners(Collections.singletonList("p1"))
-            .collect(Collectors.toList());
-        assertTrue(CollectionUtils.isEqualCollection(Arrays.asList(ownerDTO1, ownerDTO2), ownersReturned));
-
-        ownersReturned = productResource.getProductOwners(Arrays.asList("p1", "p2"))
-            .collect(Collectors.toList());
-        assertTrue(CollectionUtils
-            .isEqualCollection(Arrays.asList(ownerDTO1, ownerDTO2, ownerDTO3), ownersReturned));
-
-        ownersReturned = productResource.getProductOwners(Collections.singletonList("p3"))
-            .collect(Collectors.toList());
-        assertEquals(Collections.singletonList(ownerDTO3), ownersReturned);
-
-        ownersReturned = productResource.getProductOwners(Collections.singletonList("nope"))
-            .collect(Collectors.toList());
-        assertEquals(0, ownersReturned.size());
-    }
-
-    @Test
-    public void testGetOwnersForProductsInputValidation() {
-        assertThrows(BadRequestException.class, () -> productResource.getProductOwners(new LinkedList<>()));
-    }
-
-    private void verifyRefreshPoolsJobsWereQueued(List<AsyncJobStatusDTO> jobs) {
-        for (AsyncJobStatusDTO job : jobs) {
-            assertEquals(RefreshPoolsJob.JOB_NAME, job.getName());
-            assertEquals(AsyncJobStatus.JobState.CREATED.toString(), job.getState());
-            assertEquals(AsyncJobStatus.JobState.CREATED.toString(), job.getPreviousState());
-            assertEquals(Integer.valueOf(0), job.getAttempts());
-            assertEquals(Integer.valueOf(1), job.getMaxAttempts());
-        }
+        assertEquals(RefreshPoolsForProductsJob.JOB_NAME, job.getName());
+        assertEquals(AsyncJobStatus.JobState.CREATED.toString(), job.getState());
+        assertEquals(AsyncJobStatus.JobState.CREATED.toString(), job.getPreviousState());
+        assertEquals(Integer.valueOf(0), job.getAttempts());
+        assertEquals(Integer.valueOf(1), job.getMaxAttempts());
     }
 
     @Test
     public void testRefreshPoolsByProduct() {
-        config.setProperty(ConfigProperties.STANDALONE, "false");
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
-        ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
-            this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
+        ProductResource productResource = this.buildProductResource();
         this.setupDBForOwnerProdTests();
 
-        List<AsyncJobStatusDTO> jobs = productResource
-            .refreshPoolsForProducts(Collections.singletonList("p1"), true)
-            .collect(Collectors.toList());
-
-        assertNotNull(jobs);
-        assertEquals(2, jobs.size());
-        this.verifyRefreshPoolsJobsWereQueued(jobs);
+        AsyncJobStatusDTO job = productResource.refreshPoolsForProducts(List.of("p1"), true);
+        this.verifyRefreshPoolsJobWasQueued(job);
     }
 
     @Test
     public void testRefreshPoolsByProductForMultipleProducts() {
-        config.setProperty(ConfigProperties.STANDALONE, "false");
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
-        ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
-            this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
+        ProductResource productResource = this.buildProductResource();
         this.setupDBForOwnerProdTests();
 
-        List<AsyncJobStatusDTO> jobs = productResource
-            .refreshPoolsForProducts(Arrays.asList("p1", "p2"), false)
-            .collect(Collectors.toList());
-
-        assertNotNull(jobs);
-        assertEquals(3, jobs.size());
-        this.verifyRefreshPoolsJobsWereQueued(jobs);
+        AsyncJobStatusDTO job = productResource.refreshPoolsForProducts(List.of("p1", "p2"), false);
+        this.verifyRefreshPoolsJobWasQueued(job);
     }
 
     @Test
     public void testRefreshPoolsByProductWithoutLazyOffload() {
-        config.setProperty(ConfigProperties.STANDALONE, "false");
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
-        ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
-            this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
+        ProductResource productResource = this.buildProductResource();
         this.setupDBForOwnerProdTests();
 
-        List<AsyncJobStatusDTO> jobs = productResource
-            .refreshPoolsForProducts(Collections.singletonList("p3"), false)
-            .collect(Collectors.toList());
-
-        assertNotNull(jobs);
-        assertEquals(1, jobs.size());
-        this.verifyRefreshPoolsJobsWereQueued(jobs);
+        AsyncJobStatusDTO job = productResource.refreshPoolsForProducts(List.of("p3"), false);
+        this.verifyRefreshPoolsJobWasQueued(job);
     }
 
     @Test
     public void testRefreshPoolsByProductWithBadProductId() {
-        config.setProperty(ConfigProperties.STANDALONE, "false");
+        this.config.setProperty(ConfigProperties.STANDALONE, "false");
 
-        ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
-            this.productCertificateCurator, config, this.i18n, this.modelTranslator, this.jobManager);
+        ProductResource productResource = this.buildProductResource();
         this.setupDBForOwnerProdTests();
 
-        List<AsyncJobStatusDTO> jobs = productResource
-            .refreshPoolsForProducts(Collections.singletonList("nope"), false)
-            .collect(Collectors.toList());
-
-        assertNotNull(jobs);
-        assertEquals(0, jobs.size());
+        assertThrows(NotFoundException.class,
+            () -> productResource.refreshPoolsForProducts(List.of("nope"), true));
     }
 
     @Test
     public void testRefreshPoolsByProductInputValidation() {
+        ProductResource productResource = this.buildProductResource();
+
         assertThrows(BadRequestException.class,
             () -> productResource.refreshPoolsForProducts(new LinkedList<>(), true));
     }
 
-    @Test
-    public void testRefreshPoolsByProductJobQueueingErrorsShouldBeHandled() throws JobException {
-        config.setProperty(ConfigProperties.STANDALONE, "false");
+    // TODO: v v v  Rewrite this  v v v
 
-        // We want to simulate the first queueJob call succeeds, and the second throws a validation
-        // exception
-        JobManager jobManager = mock(JobManager.class);
-        AsyncJobStatus status1 = new AsyncJobStatus();
-        status1.setName(RefreshPoolsJob.JOB_NAME);
-        status1.setState(AsyncJobStatus.JobState.CREATED); // need to prime the previous state field
-        status1.setState(AsyncJobStatus.JobState.QUEUED);
-        when(jobManager.queueJob(any(JobConfig.class)))
-            .thenReturn(status1)
-            .thenThrow(new JobConfigValidationException("a job config validation error happened!"));
+    // @Test
+    // public void testRefreshPoolsByProductJobQueueingErrorsShouldBeHandled() throws JobException {
+    //     config.setProperty(ConfigProperties.STANDALONE, "false");
 
-        ProductResource productResource = new ProductResource(this.productCurator, this.ownerCurator,
-            this.productCertificateCurator, config, this.i18n, this.modelTranslator, jobManager);
-        this.setupDBForOwnerProdTests();
+    //     // We want to simulate the first queueJob call succeeds, and the second throws a validation
+    //     // exception
+    //     JobManager jobManager = mock(JobManager.class);
+    //     AsyncJobStatus status1 = new AsyncJobStatus();
+    //     status1.setName(RefreshPoolsJob.JOB_NAME);
+    //     status1.setState(AsyncJobStatus.JobState.CREATED); // need to prime the previous state field
+    //     status1.setState(AsyncJobStatus.JobState.QUEUED);
+    //     when(jobManager.queueJob(any(JobConfig.class)))
+    //         .thenReturn(status1)
+    //         .thenThrow(new JobConfigValidationException("a job config validation error happened!"));
 
-        List<AsyncJobStatusDTO> jobs = null;
-        try {
-            jobs = productResource.refreshPoolsForProducts(Collections.singletonList("p1"), true)
-                .collect(Collectors.toList());
-        }
-        catch (Exception e) {
-            fail("A validation exception when trying to queue a job should be handled " +
-                "by the endpoint, not thrown!");
-        }
-        assertNotNull(jobs);
-        assertEquals(2, jobs.size());
+    //     ProductResource productResource = this.buildProductResource(jobManager);
+    //     this.setupDBForOwnerProdTests();
 
-        // assert first job succeeded in queueing
-        AsyncJobStatusDTO statusDTO1 = jobs.get(0);
-        assertEquals(RefreshPoolsJob.JOB_NAME, statusDTO1.getName());
-        assertEquals(AsyncJobStatus.JobState.CREATED.toString(), statusDTO1.getState());
-        assertEquals(AsyncJobStatus.JobState.CREATED.toString(), statusDTO1.getPreviousState());
-        assertEquals(Integer.valueOf(0), statusDTO1.getAttempts());
-        assertEquals(Integer.valueOf(1), statusDTO1.getMaxAttempts());
+    //     List<AsyncJobStatusDTO> jobs = null;
+    //     try {
+    //         jobs = productResource.refreshPoolsForProducts(Collections.singletonList("p1"), true)
+    //             .collect(Collectors.toList());
+    //     }
+    //     catch (Exception e) {
+    //         fail("A validation exception when trying to queue a job should be handled " +
+    //             "by the endpoint, not thrown!");
+    //     }
+    //     assertNotNull(jobs);
+    //     assertEquals(2, jobs.size());
 
-        // assert second job failed validation
-        AsyncJobStatusDTO statusDTO2 = jobs.get(1);
-        assertEquals(RefreshPoolsJob.JOB_NAME, statusDTO2.getName());
-        assertEquals(AsyncJobStatus.JobState.FAILED.toString(), statusDTO2.getState());
-        assertEquals(AsyncJobStatus.JobState.CREATED.toString(), statusDTO2.getPreviousState());
-        assertEquals(Integer.valueOf(0), statusDTO2.getAttempts());
-        assertEquals(Integer.valueOf(1), statusDTO2.getMaxAttempts());
-    }
+    //     // assert first job succeeded in queueing
+    //     AsyncJobStatusDTO statusDTO1 = jobs.get(0);
+    //     assertEquals(RefreshPoolsJob.JOB_NAME, statusDTO1.getName());
+    //     assertEquals(AsyncJobStatus.JobState.CREATED.toString(), statusDTO1.getState());
+    //     assertEquals(AsyncJobStatus.JobState.CREATED.toString(), statusDTO1.getPreviousState());
+    //     assertEquals(Integer.valueOf(0), statusDTO1.getAttempts());
+    //     assertEquals(Integer.valueOf(1), statusDTO1.getMaxAttempts());
+
+    //     // assert second job failed validation
+    //     AsyncJobStatusDTO statusDTO2 = jobs.get(1);
+    //     assertEquals(RefreshPoolsJob.JOB_NAME, statusDTO2.getName());
+    //     assertEquals(AsyncJobStatus.JobState.FAILED.toString(), statusDTO2.getState());
+    //     assertEquals(AsyncJobStatus.JobState.CREATED.toString(), statusDTO2.getPreviousState());
+    //     assertEquals(Integer.valueOf(0), statusDTO2.getAttempts());
+    //     assertEquals(Integer.valueOf(1), statusDTO2.getMaxAttempts());
+    // }
 
 }

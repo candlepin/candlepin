@@ -96,12 +96,34 @@ public class Refresher {
      * @return this Refresher instance
      */
     public Refresher add(Product product) {
-        products.add(product);
+        if (product == null) {
+            throw new IllegalArgumentException("product is null");
+        }
+
+        this.products.add(product);
+        return this;
+    }
+
+    /**
+     * Adds a collection of products to the set of products for which all applicable subscriptions
+     * will be refreshed.
+     *
+     * @param products
+     *  a collection of products whose pools should be refreshed
+     *
+     * @return
+     *  this refresher instance
+     */
+    public Refresher addProducts(Collection<Product> products) {
+        if (products == null || products.isEmpty()) {
+            throw new IllegalArgumentException("products is null or empty");
+        }
+
+        this.products.addAll(products);
         return this;
     }
 
     public void run() {
-
         // If products were specified on the refresher, lookup any subscriptions
         // using them, regardless of organization, and trigger a refresh for those
         // specific subscriptions.

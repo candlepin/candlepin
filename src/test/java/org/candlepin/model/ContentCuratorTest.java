@@ -43,13 +43,7 @@ import javax.persistence.PersistenceException;
  */
 public class ContentCuratorTest extends DatabaseTestFixture {
 
-    private Content createOrphanedContent() {
-        String contentId = "test-content-" + TestUtil.randomInt();
-        Content content = TestUtil.createContent(contentId, contentId);
-        return this.contentCurator.create(content);
-    }
-
-    private Product createProductWithContent(Owner owner, Content... contents) {
+    private Product createProductWithContent(Content... contents) {
         String productId = "test-product-" + TestUtil.randomInt();
         Product product = TestUtil.createProduct(productId, productId);
 
@@ -59,7 +53,22 @@ public class ContentCuratorTest extends DatabaseTestFixture {
             }
         }
 
-        return this.createProduct(product, owner);
+        return this.productCurator.create(product);
+    }
+
+    private Product createProductWithContent(String productId, int contentCount) {
+        Product product = new Product()
+            .setId(productId)
+            .setName(productId);
+
+        for (int i = 0; i < contentCount; ++i) {
+            String cid = productId + "_content-" + i;
+            Content content = this.createContent(cid);
+
+            product.addContent(content, true);
+        }
+
+        return this.productCurator.create(product);
     }
 
     @Test
@@ -86,23 +95,8 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testDeleteCannotDeleteContentReferencedByProducts() {
-        Owner owner = this.createOwner();
-        Content content = this.createContent(owner);
-        Product product = this.createProductWithContent(owner, content);
-
-        this.contentCurator.flush();
-
-        assertThrows(PersistenceException.class, () -> {
-            this.contentCurator.delete(content);
-            this.contentCurator.flush();
-        });
-    }
-
-    @Test
-    public void testDeleteCannotDeleteOrphanedContentReferencedByProducts() {
-        Owner owner = this.createOwner();
-        Content content = this.createOrphanedContent();
-        Product product = this.createProductWithContent(owner, content);
+        Content content = this.createContent();
+        Product product = this.createProductWithContent(content);
 
         this.contentCurator.flush();
 
@@ -172,21 +166,8 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testBulkDeleteByUuidsCannotDeleteContentReferencedByProducts() {
-        Owner owner = this.createOwner();
-        Content content = this.createContent(owner);
-        Product product = this.createProductWithContent(owner, content);
-
-        this.contentCurator.flush();
-
-        assertThrows(PersistenceException.class, () ->
-            this.contentCurator.bulkDeleteByUuids(Set.of(content.getUuid())));
-    }
-
-    @Test
-    public void testBulkDeleteByUuidsCannotDeleteOrphanedContentReferencedByProducts() {
-        Owner owner = this.createOwner();
-        Content content = this.createOrphanedContent();
-        Product product = this.createProductWithContent(owner, content);
+        Content content = this.createContent();
+        Product product = this.createProductWithContent(content);
 
         this.contentCurator.flush();
 
@@ -207,52 +188,14 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testGetOrphanedContentUuids() {
-        Owner owner = this.createOwner();
-        Content content1 = this.createContent(owner);
-        Content orphanedContent1 = this.createOrphanedContent();
-        Content orphanedContent2 = this.createOrphanedContent();
-
-        List<String> output = this.contentCurator.getOrphanedContentUuids();
-        assertNotNull(output);
-        assertEquals(2, output.size());
-
-        assertFalse(output.contains(content1.getUuid()));
-        assertTrue(output.contains(orphanedContent1.getUuid()));
-        assertTrue(output.contains(orphanedContent2.getUuid()));
-    }
-
-    @Test
-    public void testGetOrphanedContentUuidsWithNoContent() {
-        List<String> output = this.contentCurator.getOrphanedContentUuids();
-        assertNotNull(output);
-        assertTrue(output.isEmpty());
-    }
-
-    @Test
-    public void testGetOrphanedContentUuidsWithNoOrphans() {
-        Owner owner = this.createOwner();
-        Content content1 = this.createContent(owner);
-        Content content2 = this.createContent(owner);
-        Content content3 = this.createContent(owner);
-
-        List<String> output = this.contentCurator.getOrphanedContentUuids();
-        assertNotNull(output);
-        assertTrue(output.isEmpty());
-    }
-
-    @Test
     public void testGetProductsReferencingContent() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
 
-        Content content1 = this.createContent(owner1);
-        Content content2 = this.createContent(owner2);
-        Content content3 = this.createContent(owner1);
-
-        Product product1 = this.createProductWithContent(owner1, content1);
-        Product product2 = this.createProductWithContent(owner2, content2, content3);
-        Product product3 = this.createProductWithContent(owner1);
+        Product product1 = this.createProductWithContent(content1);
+        Product product2 = this.createProductWithContent(content2, content3);
+        Product product3 = this.createProductWithContent();
 
         Set<String> input = Set.of(content1.getUuid(), content2.getUuid(), content3.getUuid());
 
@@ -272,15 +215,13 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetProductsRefrencingContentWithMultipleReferences() {
-        Owner owner = this.createOwner();
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
 
-        Content content1 = this.createContent(owner);
-        Content content2 = this.createContent(owner);
-        Content content3 = this.createContent(owner);
-
-        Product product1 = this.createProductWithContent(owner, content1, content2);
-        Product product2 = this.createProductWithContent(owner, content2, content3);
-        Product product3 = this.createProductWithContent(owner, content3, content1);
+        Product product1 = this.createProductWithContent(content1, content2);
+        Product product2 = this.createProductWithContent(content2, content3);
+        Product product3 = this.createProductWithContent(content3, content1);
 
         Set<String> input = Set.of(content1.getUuid(), content2.getUuid(), content3.getUuid());
 
@@ -300,16 +241,13 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetProductsReferencingContentWithNoReferences() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
+        Content content1 = this.createContent();
+        Content content2 = this.createContent();
+        Content content3 = this.createContent();
 
-        Content content1 = this.createContent(owner1);
-        Content content2 = this.createContent(owner2);
-        Content content3 = this.createContent(owner1);
-
-        Product product1 = this.createProduct(owner1);
-        Product product2 = this.createProduct(owner2);
-        Product product3 = this.createProduct(owner1);
+        Product product1 = this.createProduct();
+        Product product2 = this.createProduct();
+        Product product3 = this.createProduct();
 
         Set<String> input = Set.of(content1.getUuid(), content2.getUuid(), content3.getUuid());
 
@@ -332,30 +270,13 @@ public class ContentCuratorTest extends DatabaseTestFixture {
         assertTrue(output.isEmpty());
     }
 
-    private Product createProductWithContent(String productId, int contentCount, Owner... owners) {
-        Product product = new Product()
-            .setId(productId)
-            .setName(productId);
-
-        for (int i = 0; i < contentCount; ++i) {
-            String cid = productId + "_content-" + i;
-            Content content = this.createContent(cid, owners);
-
-            product.addContent(content, true);
-        }
-
-        return this.createProduct(product, owners);
-    }
 
     @Test
     public void testGetChildrenContentOfProductsByUuids() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-
         Product product1 = this.createProductWithContent("p1", 0);
-        Product product2 = this.createProductWithContent("p2", 1, owner1);
-        Product product3 = this.createProductWithContent("p3", 2, owner2);
-        Product product4 = this.createProductWithContent("p4", 3, owner1, owner2);
+        Product product2 = this.createProductWithContent("p2", 1);
+        Product product3 = this.createProductWithContent("p3", 2);
+        Product product4 = this.createProductWithContent("p4", 3);
 
         List<Product> products = List.of(product1, product2, product3, product4);
 
@@ -375,13 +296,10 @@ public class ContentCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetChildrenContentOfProductsByUuidsIgnoresInvalidProductUuids() {
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-
         Product product1 = this.createProductWithContent("p1", 1);
-        Product product2 = this.createProductWithContent("p2", 2, owner1);
-        Product product3 = this.createProductWithContent("p3", 3, owner2);
-        Product product4 = this.createProductWithContent("p4", 4, owner1, owner2);
+        Product product2 = this.createProductWithContent("p2", 2);
+        Product product3 = this.createProductWithContent("p3", 3);
+        Product product4 = this.createProductWithContent("p4", 4);
 
         List<Product> products = List.of(product2, product3);
 
@@ -401,16 +319,115 @@ public class ContentCuratorTest extends DatabaseTestFixture {
     @NullAndEmptySource
     public void testGetChildrenContentOfProductsByUuidsHandlesNullAndEmptyCollections(List<String> input) {
         // Create some products just to ensure it doesn't pull random existing things for this case
-        Owner owner1 = this.createOwner();
-        Owner owner2 = this.createOwner();
-
         Product product1 = this.createProductWithContent("p1", 1);
-        Product product2 = this.createProductWithContent("p2", 2, owner1);
-        Product product3 = this.createProductWithContent("p3", 3, owner2);
-        Product product4 = this.createProductWithContent("p4", 4, owner1, owner2);
+        Product product2 = this.createProductWithContent("p2", 2);
+        Product product3 = this.createProductWithContent("p3", 3);
+        Product product4 = this.createProductWithContent("p4", 4);
 
         Set<Content> output = this.contentCurator.getChildrenContentOfProductsByUuids(input);
         assertNotNull(output);
         assertTrue(output.isEmpty());
     }
+
+    // TODO: move this to content curator
+    // @Test
+    // public void testGetContentById() {
+    //     Owner owner = this.createOwner();
+    //     Content content = this.createContent();
+    //     this.createOwnerContentMapping(owner, content);
+
+    //     Content resultA = this.ownerContentCurator.getContentById(owner, content.getId());
+    //     assertEquals(resultA, content);
+
+    //     Content resultB = this.ownerContentCurator.getContentById(owner.getId(), content.getId());
+    //     assertEquals(resultB, content);
+
+    //     assertSame(resultA, resultB);
+    // }
+
+    // @Test
+    // public void testGetContentByIdNoMapping() {
+    //     Owner owner = this.createOwner();
+    //     Content content = this.createContent();
+
+    //     Content resultA = this.ownerContentCurator.getContentById(owner, content.getId());
+    //     assertNull(resultA);
+
+    //     Content resultB = this.ownerContentCurator.getContentById(owner.getId(), content.getId());
+    //     assertNull(resultB);
+    // }
+
+    // @Test
+    // public void testGetContentByIdWrongContentId() {
+    //     Owner owner = this.createOwner();
+    //     Content content1 = this.createContent();
+    //     Content content2 = this.createContent();
+    //     this.createOwnerContentMapping(owner, content1);
+
+    //     Content resultA = this.ownerContentCurator.getContentById(owner, content2.getId());
+    //     assertNull(resultA);
+
+    //     Content resultB = this.ownerContentCurator.getContentById(owner.getId(), content2.getId());
+    //     assertNull(resultB);
+    // }
+
+    // @Test
+    // public void testGetContentByIds() {
+    //     Owner owner = this.createOwner();
+    //     Content content1 = this.createContent();
+    //     Content content2 = this.createContent();
+    //     Content content3 = this.createContent();
+    //     this.createOwnerContentMapping(owner, content1);
+    //     this.createOwnerContentMapping(owner, content2);
+
+    //     Collection<String> ids = Arrays.asList(content1.getId(), content2.getId(), content3.getId(), "dud");
+    //     Map<String, Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids);
+    //     Map<String, Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids);
+
+    //     assertEquals(2, contentA.size());
+
+    //     assertTrue(contentA.containsKey(content1.getId()));
+    //     assertEquals(content1, contentA.get(content1.getId()));
+
+    //     assertTrue(contentA.containsKey(content2.getId()));
+    //     assertEquals(content2, contentA.get(content2.getId()));
+
+    //     assertFalse(contentA.containsKey(content3.getId()));
+
+    //     assertEquals(contentA, contentB);
+    // }
+
+    // @Test
+    // public void testGetContentByIdsNullList() {
+    //     Owner owner = this.createOwner();
+    //     Content content1 = this.createContent();
+    //     Content content2 = this.createContent();
+    //     Content content3 = this.createContent();
+    //     this.createOwnerContentMapping(owner, content1);
+    //     this.createOwnerContentMapping(owner, content2);
+
+    //     Collection<String> ids = null;
+    //     Map<String, Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids);
+    //     Map<String, Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids);
+
+    //     assertTrue(contentA.isEmpty());
+    //     assertTrue(contentB.isEmpty());
+    // }
+
+    // @Test
+    // public void testGetContentByIdsEmptyList() {
+    //     Owner owner = this.createOwner();
+    //     Content content1 = this.createContent();
+    //     Content content2 = this.createContent();
+    //     Content content3 = this.createContent();
+    //     this.createOwnerContentMapping(owner, content1);
+    //     this.createOwnerContentMapping(owner, content2);
+
+    //     Collection<String> ids = Collections.<String>emptyList();
+    //     Map<String, Content> contentA = this.ownerContentCurator.getContentByIds(owner, ids);
+    //     Map<String, Content> contentB = this.ownerContentCurator.getContentByIds(owner.getId(), ids);
+
+    //     assertTrue(contentA.isEmpty());
+    //     assertTrue(contentB.isEmpty());
+    // }
 }

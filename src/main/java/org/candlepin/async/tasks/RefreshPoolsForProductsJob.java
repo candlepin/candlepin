@@ -26,18 +26,23 @@ import org.candlepin.model.ProductCurator;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 import javax.inject.Inject;
 
 
-public class RefreshPoolsForProductJob implements AsyncJob {
 
-    public static final String JOB_KEY = "RefreshPoolsForProductJob";
-    public static final String JOB_NAME = "Refresh Pools For Product";
+public class RefreshPoolsForProductsJob implements AsyncJob {
 
-    private static final String LAZY_KEY = "lazy_regen";
-    private static final String PRODUCT_KEY = "product_key";
+    public static final String JOB_KEY = "RefreshPoolsForProductsJob";
+    public static final String JOB_NAME = "Refresh Pools For Products";
+
+    private static final String LAZY_REGEN_KEY = "lazy_regen";
+    private static final String PRODUCT_IDS_KEY = "product_ids";
 
     private final ProductCurator productCurator;
     private final SubscriptionServiceAdapter subAdapter;
@@ -46,7 +51,7 @@ public class RefreshPoolsForProductJob implements AsyncJob {
 
 
     @Inject
-    public RefreshPoolsForProductJob(
+    public RefreshPoolsForProductsJob(
         ProductCurator productCurator,
         SubscriptionServiceAdapter subAdapter,
         ProductServiceAdapter prodAdapter,
@@ -62,26 +67,27 @@ public class RefreshPoolsForProductJob implements AsyncJob {
     public void execute(final JobExecutionContext context) {
         final JobArguments args = context.getJobArguments();
 
-        final String productUuid = args.getAsString(PRODUCT_KEY);
-        final Boolean lazy = args.getAsBoolean(LAZY_KEY);
+        final String[] productIds = args.getAs(PRODUCT_IDS_KEY, String[].class);
+        final Boolean lazy = args.getAsBoolean(LAZY_REGEN_KEY);
         final StringBuilder result = new StringBuilder();
 
-        final Product product = this.productCurator.get(productUuid);
+        final Map<String, Product> products = this.productCurator.getProductsByIds(Arrays.asList(productIds));
 
-        if (product != null) {
+        // TODO: should we verify the number of products we fetch matches the input count?
+
+        if (products != null && !products.isEmpty()) {
             this.refresherFactory.getRefresher(this.subAdapter, this.prodAdapter)
-                .setLazyCertificateRegeneration(true)
-                .add(product)
+                .setLazyCertificateRegeneration(lazy)
+                .addProducts(products.values())
                 .run();
 
-            result.append("Pools refreshed for product: ")
-                .append(productUuid)
+            result.append("Pools refreshed for products: ")
+                .append(Arrays.toString(productIds))
                 .append("\n");
         }
         else {
-            result.append("Unable to refresh pools for product \"")
-                .append(productUuid)
-                .append("\": Could not find a product with the specified UUID");
+            result.append("No products found for the given product IDs: ")
+                .append(Arrays.toString(productIds));
         }
 
         context.setJobResult(result.toString());
@@ -95,29 +101,39 @@ public class RefreshPoolsForProductJob implements AsyncJob {
      * @return
      *  a JobConfig instance configured to execute the refresh pools for product job
      */
-    public static RefreshPoolsForProductJobConfig createJobConfig() {
-        return new RefreshPoolsForProductJobConfig();
+    public static RefreshPoolsForProductsJobConfig createJobConfig() {
+        return new RefreshPoolsForProductsJobConfig();
     }
 
     /**
      * Job configuration object for the refresh pools for product job
      */
-    public static class RefreshPoolsForProductJobConfig extends JobConfig<RefreshPoolsForProductJobConfig> {
+    public static class RefreshPoolsForProductsJobConfig extends JobConfig<RefreshPoolsForProductsJobConfig> {
 
-        RefreshPoolsForProductJobConfig() {
+        public RefreshPoolsForProductsJobConfig() {
             this.setJobKey(JOB_KEY)
                 .setJobName(JOB_NAME);
         }
 
-        public RefreshPoolsForProductJobConfig setProduct(final Product product) {
-            final String uuid = Objects.requireNonNull(product).getUuid();
-            this.setJobArgument(PRODUCT_KEY, uuid);
-            return this;
+        public RefreshPoolsForProductsJobConfig setProducts(Collection<Product> products) {
+            if (products == null) {
+                throw new IllegalArgumentException("products is null");
+            }
+
+            String[] productIds = products.stream()
+                .filter(Objects::nonNull)
+                .map(Product::getId)
+                .filter(Objects::nonNull)
+                .filter(Predicate.not(String::isBlank))
+                .toArray(String[]::new);
+
+            return this.setJobArgument(PRODUCT_IDS_KEY, productIds);
         }
 
-        public RefreshPoolsForProductJobConfig setLazy(final boolean lazy) {
-            this.setJobArgument(LAZY_KEY, lazy);
-            return this;
+        // TODO: Add methods for setting products by ID as needed
+
+        public RefreshPoolsForProductsJobConfig setLazy(final boolean lazy) {
+            return this.setJobArgument(LAZY_REGEN_KEY, lazy);
         }
 
         @Override
@@ -127,11 +143,11 @@ public class RefreshPoolsForProductJob implements AsyncJob {
             try {
                 final JobArguments args = this.getJobArguments();
 
-                final String productUuid = args.getAsString(PRODUCT_KEY);
-                final Boolean lazy = args.getAsBoolean(LAZY_KEY);
+                String[] productIds = args.getAs(PRODUCT_IDS_KEY, String[].class);
+                Boolean lazy = args.getAsBoolean(LAZY_REGEN_KEY);
 
-                if (productUuid == null || productUuid.isEmpty()) {
-                    final String errmsg = "Product UUID has not been set";
+                if (productIds == null || productIds.length == 0) {
+                    final String errmsg = "Product IDs have not been set";
                     throw new JobConfigValidationException(errmsg);
                 }
 

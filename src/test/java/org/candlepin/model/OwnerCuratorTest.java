@@ -102,9 +102,9 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner();
         Owner owner3 = this.createOwner();
 
-        Product provided1 = this.createProduct(owner1, owner2, owner3);
-        Product provided2 = this.createProduct(owner1, owner2, owner3);
-        Product provided3 = this.createProduct(owner1, owner2, owner3);
+        Product provided1 = this.createProduct();
+        Product provided2 = this.createProduct();
+        Product provided3 = this.createProduct();
 
         Product product1 = TestUtil.createProduct("product1", "product1")
             .setProvidedProducts(List.of(provided1));
@@ -113,9 +113,9 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Product product3 = TestUtil.createProduct("product3", "product3")
             .setProvidedProducts(List.of(provided3));
 
-        this.createProduct(product1, owner1, owner2, owner3);
-        this.createProduct(product2, owner1, owner2, owner3);
-        this.createProduct(product3, owner1, owner2, owner3);
+        this.productCurator.create(product1);
+        this.productCurator.create(product2);
+        this.productCurator.create(product3);
 
         this.createAndConsumePool(owner1, product1);
         this.createAndConsumePool(owner2, product2);
@@ -134,10 +134,10 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
     public void testGetOwnerByActiveProduct() {
         Owner owner = createOwner();
 
-        Product provided = this.createProduct(owner);
+        Product provided = this.createProduct();
         Product product = TestUtil.createProduct("productId1", "productName1");
         product.setProvidedProducts(Arrays.asList(provided));
-        Product finalProduct1 = this.createProduct(product, owner);
+        Product finalProduct1 = this.productCurator.create(product);
 
         createAndConsumePool(owner, finalProduct1);
 
@@ -158,8 +158,8 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
 
         product.addProvidedProduct(provided);
 
-        provided = this.createProduct(provided, owner);
-        product = this.createProduct(product, owner);
+        provided = this.productCurator.create(provided);
+        product = this.productCurator.create(product);
 
         // Create pool with end date in the past.
         Pool pool = new Pool()
@@ -258,9 +258,9 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
         Owner owner2 = this.createOwner("owner2");
         Owner owner3 = this.createOwner("owner3");
 
-        Product provided1 = this.createProduct("provided1", "eng1", owner1, owner2, owner3);
-        Product provided2 = this.createProduct("provided2", "eng2", owner1, owner2);
-        Product provided3 = this.createProduct("provided3", "eng3", owner2, owner3);
+        Product provided1 = this.createProduct("provided1", "eng1");
+        Product provided2 = this.createProduct("provided2", "eng2");
+        Product provided3 = this.createProduct("provided3", "eng3");
 
         Product sku1derived = TestUtil.createProduct("sku1d", "sku1_derived")
             .setProvidedProducts(List.of(provided2));
@@ -280,12 +280,12 @@ public class OwnerCuratorTest extends DatabaseTestFixture {
             .setProvidedProducts(List.of(provided1))
             .setDerivedProduct(sku3derived);
 
-        this.createProduct(sku1derived, owner1);
-        this.createProduct(sku1, owner1);
-        this.createProduct(sku2derived, owner2);
-        this.createProduct(sku2, owner2);
-        this.createProduct(sku3derived, owner3);
-        this.createProduct(sku3, owner3);
+        this.productCurator.create(sku1derived);
+        this.productCurator.create(sku1);
+        this.productCurator.create(sku2derived);
+        this.productCurator.create(sku2);
+        this.productCurator.create(sku3derived);
+        this.productCurator.create(sku3);
 
         Pool pool1 = new Pool()
             .setOwner(owner1)

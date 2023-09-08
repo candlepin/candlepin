@@ -38,6 +38,8 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import javax.persistence.Cache;
+import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 
@@ -68,9 +70,6 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * Retrieves a Product instance for the product with the specified name. If a matching product
      * could not be found, this method returns null.
      *
-     * @param owner
-     *  The owner/org in which to search for a product
-     *
      * @param name
      *  The name of the product to retrieve
      *
@@ -78,14 +77,114 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  a Product instance for the product with the specified name, or null if a matching product
      *  was not found.
      */
-    public Product getByName(Owner owner, String name) {
-        return (Product) this.createSecureCriteria(OwnerProduct.class, null)
-            .createAlias("owner", "owner")
-            .createAlias("product", "product")
-            .setProjection(Projections.property("product"))
-            .add(Restrictions.eq("owner.id", owner.getId()))
-            .add(Restrictions.eq("product.name", name))
+    public Product getByName(String name) {
+        return (Product) this.createSecureCriteria(Product.class, null)
+            .add(Restrictions.eq("name", name))
             .uniqueResult();
+    }
+
+    /**
+     * Fetches a product instance with the specified lock for the product with the given ID. If a
+     * matching product could not be found, this method returns null. If the specified lock mode is
+     * null, no lock will be applied to the query.
+     *
+     * @param productId
+     *  the ID of the product to retrieve
+     *
+     * @param lockModeType
+     *  the lock mode to apply to the query/entity
+     *
+     * @return
+     *  the product for the given product ID, or null if a matching product was not found
+     */
+    public Product getProductById(String productId, LockModeType lockModeType) {
+        String jpql = "SELECT prod FROM Product prod WHERE prod.id = :product_id";
+
+        TypedQuery<Product> query = this.getEntityManager()
+            .createQuery(jpql, Product.class)
+            .setParameter("product_id", productId);
+
+        if (lockModeType != null) {
+            query.setLockMode(lockModeType);
+        }
+
+        try {
+            return query.getSingleResult();
+        }
+        catch (NoResultException e) {
+            // Intentionally left empty
+        }
+
+        return null;
+    }
+
+    /**
+     * Fetches a product instance for the product with the given ID. If a matching product could not
+     * be found, this method returns null.
+     *
+     * @param productId
+     *  the ID of the product to retrieve
+     *
+     * @return
+     *  the product for the given product ID, or null if a matching product was not found
+     */
+    public Product getProductById(String productId) {
+        return this.getProductById(productId, null);
+    }
+
+    /**
+     * Checks if a product exists for the given product ID without fetching the product instance
+     * itself. Returns true if one or more products exist with the given product ID.
+     *
+     * @param productId
+     *  the ID of the product to lookup
+     *
+     * @return
+     *  true if one or more products exist with the given product ID; false otherwise
+     */
+    public boolean productExistsById(String productId) {
+        String jpql = "SELECT count(prod) FROM Product prod WHERE prod.id = :product_id";
+
+        TypedQuery<Long> query = this.getEntityManager()
+            .createQuery(jpql, Long.class)
+            .setParameter("product_id", productId);
+
+        return query.getSingleResult() != 0;
+    }
+
+    /**
+     * Fetches a map containing product instances for the specified product IDs. If any given ID
+     * cannot be resolved to an existing product instance, it will be silently discarded from the
+     * output.
+     *
+     * @param productIds
+     *  a collection of IDs of the product instances to retrieve
+     *
+     * @return
+     *  a map of product instances to the respective product IDs, filtered by the given IDs
+     */
+    public Map<String, Product> getProductsByIds(Collection<String> productIds) {
+        Map<String, Product> output = new HashMap<>();
+
+        if (productIds != null && !productIds.isEmpty()) {
+            // Deduplicate input so we don't have to worry about equality shenanigans in the output
+            Set<String> input = productIds instanceof Set ?
+                (Set<String>) productIds :
+                (new HashSet<>(productIds));
+
+            String jpql = "SELECT prod FROM Product prod WHERE prod.id IN (:product_ids)";
+
+            TypedQuery<Product> query = this.getEntityManager()
+                .createQuery(jpql, Product.class);
+
+            for (Collection<String> block : this.partition(input)) {
+                query.setParameter("product_ids", block)
+                    .getResultList()
+                    .forEach(elem -> output.put(elem.getId(), elem));
+            }
+        }
+
+        return output;
     }
 
     public CandlepinQuery<Product> listAllByUuids(Collection<? extends Serializable> uuids) {
@@ -244,9 +343,8 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      *  The provided product reference
      */
     protected Product validateProductReferences(Product entity) {
-        for (Map.Entry<String, String> entry : entity.getAttributes().entrySet()) {
-            this.attributeValidator.validate(entry.getKey(), entry.getValue());
-        }
+        entity.getAttributes()
+            .forEach(this.attributeValidator::validate);
 
         if (entity.getProductContent() != null) {
             for (ProductContent pc : entity.getProductContent()) {
@@ -303,12 +401,21 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
         return super.merge(entity);
     }
 
-    // Needs an override due to the use of UUID as db identifier.
+    /**
+     * Deletes the given entity. If the entity is null, or not a managed entity, this method throws
+     * an exception.
+     *
+     * @param entity
+     *  the entity to delete
+     */
     @Override
-    @Transactional
     public void delete(Product entity) {
-        Product toDelete = this.get(entity.getUuid());
-        currentSession().delete(toDelete);
+        if (entity == null) {
+            throw new IllegalArgumentException("entity is null");
+        }
+
+        this.getEntityManager()
+            .remove(entity);
     }
 
     /**
@@ -341,23 +448,18 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * Indirect references to products, such as provided products and derived products, are not
      * considered by this method.
      *
-     * @param owner
-     *  The owner to use for finding pools/subscriptions
-     *
      * @param product
      *  The product to check for subscriptions
      *
      * @return
      *  true if the product is referenced by one or more pools; false otherwise
      */
-    public boolean productHasSubscriptions(Owner owner, Product product) {
+    public boolean productHasSubscriptions(Product product) {
         String jpql = "SELECT count(pool) FROM Pool pool " +
-            "WHERE pool.owner.id = :owner_id " +
-            "  AND pool.product.uuid = :product_uuid";
+            "WHERE pool.product.uuid = :product_uuid";
 
         TypedQuery<Long> query = this.getEntityManager()
             .createQuery(jpql, Long.class)
-            .setParameter("owner_id", owner.getId())
             .setParameter("product_uuid", product.getUuid());
 
         return query.getSingleResult() != 0;
@@ -367,26 +469,20 @@ public class ProductCurator extends AbstractHibernateCurator<Product> {
      * Checks if the specified product is referenced by any other products as a derived or provided
      * product.
      *
-     * @param owner
-     *  the owner of the product to check
-     *
      * @param product
      *  the product to check for parent products
      *
      * @return
      *  true if the product is referenced by one or more other products; false otherwise
      */
-    public boolean productHasParentProducts(Owner owner, Product product) {
-        String jpql = "SELECT count(product) FROM OwnerProduct op " +
-            "JOIN op.product product " +
-            "LEFT JOIN product.providedProducts pp " +
-            "WHERE op.owner.id = :owner_id " +
-            "  AND (product.derivedProduct.uuid = :product_uuid " +
-            "   OR pp.uuid = :product_uuid)";
+    public boolean productHasParentProducts(Product product) {
+        String jpql = "SELECT count(prod) FROM Product prod " +
+            "LEFT JOIN prod.providedProducts provided " +
+            "WHERE prod.derivedProduct.uuid = :product_uuid " +
+            "  OR provided.uuid = :product_uuid";
 
         TypedQuery<Long> query = this.getEntityManager()
             .createQuery(jpql, Long.class)
-            .setParameter("owner_id", owner.getId())
             .setParameter("product_uuid", product.getUuid());
 
         return query.getSingleResult() != 0;

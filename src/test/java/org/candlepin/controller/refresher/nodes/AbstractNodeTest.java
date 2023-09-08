@@ -382,32 +382,4 @@ public abstract class AbstractNodeTest<E extends AbstractHibernateObject, I exte
         // Verify the entity was cleared
         assertNull(node.getImportedEntity());
     }
-
-    @Test
-    public void testUpdatedEntity() {
-        Owner owner = TestUtil.createOwner();
-        E entity = this.buildLocalEntity(owner, "test_id");
-        EntityNode<E, I> node = this.buildEntityNode(owner, "test_id");
-
-        // Initial state should be null
-        assertNull(node.getMergedEntity());
-
-        // Set the entity
-        EntityNode output = node.setMergedEntity(entity);
-        assertNotNull(output);
-        assertSame(node, output);
-
-        // Verify the entity was stored and is returned
-        E updated = node.getMergedEntity();
-        assertNotNull(updated);
-        assertSame(entity, updated);
-
-        // Clear the entity
-        output = node.setMergedEntity(null);
-        assertNotNull(output);
-        assertSame(node, output);
-
-        // Verify the entity was cleared
-        assertNull(node.getMergedEntity());
-    }
 }

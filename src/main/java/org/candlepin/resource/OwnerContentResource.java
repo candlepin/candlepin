@@ -27,7 +27,7 @@ import org.candlepin.model.Content;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerContentCurator;
 import org.candlepin.model.OwnerCurator;
-import org.candlepin.resource.server.v1.OwnerContentApi;
+// import org.candlepin.resource.server.v1.OwnerContentApi;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.UniqueIdGenerator;
@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-public class OwnerContentResource implements OwnerContentApi {
+public class OwnerContentResource { //implements OwnerContentApi {
     private DTOValidator validator;
     private ModelTranslator translator;
     private ContentAccessManager contentAccessManager;
@@ -102,88 +102,88 @@ public class OwnerContentResource implements OwnerContentApi {
         }
     }
 
-    @Override
-    @Transactional
-    public ContentDTO createContent(String ownerKey, ContentDTO content) {
-        Owner owner = this.getOwnerByKey(ownerKey);
+    // @Override
+    // @Transactional
+    // public ContentDTO createContent(String ownerKey, ContentDTO content) {
+    //     Owner owner = this.getOwnerByKey(ownerKey);
 
-        this.validateContentForCreation(content);
-        Content entity = this.createContentImpl(owner, content);
+    //     this.validateContentForCreation(content);
+    //     Content entity = this.createContentImpl(owner, content);
 
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+    //     this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
-        return this.translator.translate(entity, ContentDTO.class);
-    }
+    //     return this.translator.translate(entity, ContentDTO.class);
+    // }
 
-    @Override
-    public ContentDTO getOwnerContent(
-        @Verify(Owner.class) String ownerKey, String contentId) {
+    // @Override
+    // public ContentDTO getOwnerContent(
+    //     @Verify(Owner.class) String ownerKey, String contentId) {
 
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Content content = this.fetchContent(owner, contentId);
+    //     Owner owner = this.getOwnerByKey(ownerKey);
+    //     Content content = this.fetchContent(owner, contentId);
 
-        return this.translator.translate(content, ContentDTO.class);
-    }
+    //     return this.translator.translate(content, ContentDTO.class);
+    // }
 
-    @Override
-    public CandlepinQuery<ContentDTO> listOwnerContent(@Verify(Owner.class) String ownerKey) {
-        Owner owner = this.getOwnerByKey(ownerKey);
-        CandlepinQuery<Content> query = this.ownerContentCurator.getContentByOwnerCPQ(owner);
+    // @Override
+    // public CandlepinQuery<ContentDTO> listOwnerContent(@Verify(Owner.class) String ownerKey) {
+    //     Owner owner = this.getOwnerByKey(ownerKey);
+    //     CandlepinQuery<Content> query = this.ownerContentCurator.getContentByOwnerCPQ(owner);
 
-        return this.translator.translateQuery(query, ContentDTO.class);
-    }
+    //     return this.translator.translateQuery(query, ContentDTO.class);
+    // }
 
-    @Override
-    @Transactional
-    public Collection<ContentDTO> createBatchContent(String ownerKey, List<ContentDTO> contents) {
-        for (ContentDTO content : contents) {
-            this.validateContentForCreation(content);
-        }
+    // @Override
+    // @Transactional
+    // public Collection<ContentDTO> createBatchContent(String ownerKey, List<ContentDTO> contents) {
+    //     for (ContentDTO content : contents) {
+    //         this.validateContentForCreation(content);
+    //     }
 
-        Owner owner = this.getOwnerByKey(ownerKey);
+    //     Owner owner = this.getOwnerByKey(ownerKey);
 
-        List<ContentDTO> output = contents.stream()
-            .map(content -> this.createContentImpl(owner, content))
-            .map(this.translator.getStreamMapper(Content.class, ContentDTO.class))
-            .collect(Collectors.toList());
+    //     List<ContentDTO> output = contents.stream()
+    //         .map(content -> this.createContentImpl(owner, content))
+    //         .map(this.translator.getStreamMapper(Content.class, ContentDTO.class))
+    //         .collect(Collectors.toList());
 
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+    //     this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
-        return output;
-    }
+    //     return output;
+    // }
 
-    @Override
-    @Transactional
-    public ContentDTO updateContent(String ownerKey, String contentId, ContentDTO content) {
-        this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
+    // @Override
+    // @Transactional
+    // public ContentDTO updateContent(String ownerKey, String contentId, ContentDTO content) {
+    //     this.validator.validateCollectionElementsNotNull(content::getModifiedProductIds);
 
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Content existing = this.fetchContent(owner, contentId);
+    //     Owner owner = this.getOwnerByKey(ownerKey);
+    //     Content existing = this.fetchContent(owner, contentId);
 
-        if (existing.isLocked()) {
-            throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
-        }
+    //     if (existing.isLocked()) {
+    //         throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
+    //     }
 
-        Content updated = this.contentManager
-            .updateContent(owner, InfoAdapter.contentInfoAdapter(content.id(contentId)), true);
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+    //     Content updated = this.contentManager
+    //         .updateContent(owner, InfoAdapter.contentInfoAdapter(content.id(contentId)), true);
+    //     this.contentAccessManager.syncOwnerLastContentUpdate(owner);
 
-        return this.translator.translate(updated, ContentDTO.class);
-    }
+    //     return this.translator.translate(updated, ContentDTO.class);
+    // }
 
-    @Override
-    @Transactional
-    public void remove(String ownerKey, String contentId) {
-        Owner owner = this.getOwnerByKey(ownerKey);
-        Content content = this.fetchContent(owner, contentId);
+    // @Override
+    // @Transactional
+    // public void remove(String ownerKey, String contentId) {
+    //     Owner owner = this.getOwnerByKey(ownerKey);
+    //     Content content = this.fetchContent(owner, contentId);
 
-        if (content.isLocked()) {
-            throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", content.getId()));
-        }
+    //     if (content.isLocked()) {
+    //         throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", content.getId()));
+    //     }
 
-        this.contentManager.removeContent(owner, content, true);
-        this.contentAccessManager.syncOwnerLastContentUpdate(owner);
-    }
+    //     this.contentManager.removeContent(owner, content, true);
+    //     this.contentAccessManager.syncOwnerLastContentUpdate(owner);
+    // }
 
     /**
      * Retrieves the content entity with the given content ID for the specified owner. If a
@@ -238,44 +238,44 @@ public class OwnerContentResource implements OwnerContentApi {
         return owner;
     }
 
-    /**
-     * Creates or merges the given Content object.
-     *
-     * @param owner
-     *  The owner for which to create the new content
-     *
-     * @param content
-     *  The content to create or merge
-     *
-     * @return
-     *  the newly created and/or merged Content object.
-     */
-    private Content createContentImpl(Owner owner, ContentDTO content) {
-        // TODO: check if arches have changed ??
+    // /**
+    //  * Creates or merges the given Content object.
+    //  *
+    //  * @param owner
+    //  *  The owner for which to create the new content
+    //  *
+    //  * @param content
+    //  *  The content to create or merge
+    //  *
+    //  * @return
+    //  *  the newly created and/or merged Content object.
+    //  */
+    // private Content createContentImpl(Owner owner, ContentDTO content) {
+    //     // TODO: check if arches have changed ??
 
-        Content entity = null;
+    //     Content entity = null;
 
-        if (content.getId() == null || content.getId().trim().length() == 0) {
-            content.setId(this.idGenerator.generateId());
+    //     if (content.getId() == null || content.getId().trim().length() == 0) {
+    //         content.setId(this.idGenerator.generateId());
 
-            entity = this.contentManager.createContent(owner, InfoAdapter.contentInfoAdapter(content));
-        }
-        else {
-            Content existing = this.ownerContentCurator.getContentById(owner, content.getId());
+    //         entity = this.contentManager.createContent(owner, InfoAdapter.contentInfoAdapter(content));
+    //     }
+    //     else {
+    //         Content existing = this.ownerContentCurator.getContentById(owner, content.getId());
 
-            if (existing != null) {
-                if (existing.isLocked()) {
-                    throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
-                }
+    //         if (existing != null) {
+    //             if (existing.isLocked()) {
+    //                 throw new ForbiddenException(i18n.tr("content \"{0}\" is locked", existing.getId()));
+    //             }
 
-                entity = this.contentManager.updateContent(owner, InfoAdapter.contentInfoAdapter(content),
-                    true);
-            }
-            else {
-                entity = this.contentManager.createContent(owner, InfoAdapter.contentInfoAdapter(content));
-            }
-        }
+    //             entity = this.contentManager.updateContent(owner, InfoAdapter.contentInfoAdapter(content),
+    //                 true);
+    //         }
+    //         else {
+    //             entity = this.contentManager.createContent(owner, InfoAdapter.contentInfoAdapter(content));
+    //         }
+    //     }
 
-        return entity;
-    }
+    //     return entity;
+    // }
 }

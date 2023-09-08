@@ -286,13 +286,13 @@ public class CandlepinPoolManager implements PoolManager {
 
             // Check if we've put any pools into a state in which they're referencing a product which no
             // longer belongs to the organization
-            List<String> pids = this.poolCurator.getPoolsUsingOrphanedProducts(resolvedOwner.getId());
-            if (pids != null && pids.size() > 0) {
-                log.error("One or more pools references a product which no longer belongs to its " +
-                    "organization: {}", pids);
+            // List<String> pids = this.poolCurator.getPoolsUsingOrphanedProducts(resolvedOwner.getId());
+            // if (pids != null && pids.size() > 0) {
+            //     log.error("One or more pools references a product which no longer belongs to its " +
+            //         "organization: {}", pids);
 
-                throw new IllegalStateException("One or more pools was left in an undefined state: " + pids);
-            }
+            //     throw new IllegalStateException("One or more pools was left in an undefined state: " + pids);
+            // }
 
             // If we've updated or deleted a pool and we have product/content changes, our content view has
             // likely changed.
@@ -352,7 +352,7 @@ public class CandlepinPoolManager implements PoolManager {
         return owner;
     }
 
-    void refreshPoolsForPrimaryPool(Pool pool, boolean updateStackDerived, boolean lazy,
+    public void refreshPoolsForPrimaryPool(Pool pool, boolean updateStackDerived, boolean lazy,
         Map<String, Product> changedProducts) {
 
         // These don't all necessarily belong to this owner
@@ -382,7 +382,7 @@ public class CandlepinPoolManager implements PoolManager {
     }
 
     @Transactional
-    void refreshPoolsForPrimaryPool(Pool pool, boolean updateStackDerived, boolean lazy,
+    public void refreshPoolsForPrimaryPool(Pool pool, boolean updateStackDerived, boolean lazy,
         Map<String, Product> changedProducts, List<Pool> subscriptionPools) {
 
         // Update product references on the pools, I guess

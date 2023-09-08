@@ -58,7 +58,6 @@ public class NodeFactoryTest {
         EntityNode node = mock(EntityNode.class);
 
         AbstractHibernateObject existing = mock(cls);
-        AbstractHibernateObject merged = mock(cls);
         ServiceAdapterModel imported = mock(ServiceAdapterModel.class);
 
         doReturn(owner).when(node).getOwner();
@@ -66,11 +65,9 @@ public class NodeFactoryTest {
         doReturn(id).when(node).getEntityId();
 
         doReturn(id).when(existing).getId();
-        doReturn(id).when(merged).getId();
 
         doReturn(existing).when(node).getExistingEntity();
         doReturn(imported).when(node).getImportedEntity();
-        doReturn(merged).when(node).getMergedEntity();
 
         return node;
     }
