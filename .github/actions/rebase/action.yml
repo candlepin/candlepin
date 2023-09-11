@@ -1,0 +1,22 @@
+name: 'Rebase'
+description: 'Rebase against base branch'
+runs:
+  using: "composite"
+  steps:
+    - name: Rebase feature branch with base branch
+      shell: bash
+      run: |
+        git config --global --add safe.directory $GITHUB_WORKSPACE
+        git config --global user.email "ghaction@random.com"
+        git config --global user.name "ghaction"
+        
+        base_branch="${{ github.base_ref }}"
+        
+        # Check if this is a pull request and if the base branch has changed
+        if [ -n "$GITHUB_HEAD_REF" ] && [ "$GITHUB_HEAD_REF" != "$base_branch" ]; then
+          git remote add origin_base_branch https://github.com/${GITHUB_REPOSITORY}.git
+          git fetch origin_base_branch
+          git rebase origin_base_branch/$base_branch
+        else
+          echo "No rebase needed."
+        fi
