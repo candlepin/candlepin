@@ -23,10 +23,9 @@ import static org.mockito.Mockito.mock;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
-import org.candlepin.model.activationkeys.ActivationKey;
 import org.candlepin.model.Owner;
+import org.candlepin.model.activationkeys.ActivationKey;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -88,14 +87,15 @@ public class ActivationKeyManagementPermissionTest {
 
         // These should always return null
         assertNull(perm.getCriteriaRestrictions(ActivationKey.class));
-        assertNull(perm.getQueryRestriction(ActivationKey.class, mock(CriteriaBuilder.class), mock(From.class)));
+        assertNull(perm.getQueryRestriction(ActivationKey.class, mock(CriteriaBuilder.class),
+            mock(From.class)));
     }
 
     // TODO: This should eventually change to *not* blanket permit all access, but at the time of
     // writing, we don't have much more granularity with our permissions with respect to the
     // operation requirements.
     @ParameterizedTest
-    @EnumSource(value = Access.class)
+    @EnumSource(Access.class)
     public void testProvidesAllLevelAccess(Access required) {
         Owner owner = this.createOwner("test_org");
         ActivationKey key = this.createActivationKey(owner);
@@ -108,7 +108,7 @@ public class ActivationKeyManagementPermissionTest {
 
     @ParameterizedTest
     @NullSource
-    @EnumSource(value = SubResource.class)
+    @EnumSource(SubResource.class)
     public void testIgnoresSubResource(SubResource subresource) {
         Owner owner = this.createOwner("test_org");
         ActivationKey key = this.createActivationKey(owner);

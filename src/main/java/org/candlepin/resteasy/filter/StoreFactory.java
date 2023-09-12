@@ -52,7 +52,8 @@ import javax.inject.Provider;
  * This class should be bound to an instance
  */
 public class StoreFactory {
-    private final Map<Class<? extends Persisted>, EntityStore<? extends Persisted>> storeMap = new HashMap<>();
+    private final Map<Class<? extends Persisted>, EntityStore<? extends Persisted>>
+        storeMap = new HashMap<>();
 
     @Inject
     public StoreFactory(Injector injector) {

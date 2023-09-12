@@ -29,7 +29,8 @@ import java.lang.annotation.Target;
  */
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
-@EnabledIf(value = "org.candlepin.spec.bootstrap.assertions.DatabaseEmployed#notWithMySql", disabledReason = "Candlepin is running against MySQL")
+@EnabledIf(value = "org.candlepin.spec.bootstrap.assertions.DatabaseEmployed#notWithMySql",
+    disabledReason = "Candlepin is running against MySQL")
 @Tag("notWithMySql")
 public @interface NotWithMySql {
 }

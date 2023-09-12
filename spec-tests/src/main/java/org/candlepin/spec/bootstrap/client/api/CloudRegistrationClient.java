@@ -56,7 +56,8 @@ public class CloudRegistrationClient extends CloudRegistrationApi {
      * @param registration
      *     the registration information that needs to be authenticated
      *
-     * @return the cloud authentication results which includes the authentication token, or null if the authentication results can not be created
+     * @return the cloud authentication results which includes the authentication token, or null if the
+     *  authentication results can not be created
      */
     public CloudAuthenticationResultDTO cloudAuthorizeV2(CloudRegistrationDTO registration) {
         String jsonString = super.cloudAuthorize(registration, 2);

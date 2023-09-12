@@ -1,6 +1,6 @@
 plugins {
     id "java"
-    id "spotless-conventions"
+    id "checkstyle-conventions"
     id "test-logging-conventions"
 }
 apply from: "../dependencies.gradle"

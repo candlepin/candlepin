@@ -156,7 +156,8 @@ public class EnforcerTest extends DatabaseTestFixture {
 
     @Test
     public void shouldCreateMappingBetweenAttributesAndFunctions() {
-        String attributesAndRules = "func1:1:attr1:attr2:attr3, func2:2:attr1, func3:3:attr4, func5:5:attr1:attr4";
+        String attributesAndRules = "func1:1:attr1:attr2:attr3, func2:2:attr1, func3:3:attr4, " +
+            "func5:5:attr1:attr4";
 
         Map<String, Set<EntitlementRules.Rule>> parsed = ((EntitlementRules) enforcer)
             .parseAttributeMappings(attributesAndRules);

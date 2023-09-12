@@ -124,7 +124,8 @@ public class QuantityRules {
 
         String json = jsRules.runJsFunction(String.class, "get_suggested_quantities", args);
         Map<String, SuggestedQuantityDTO> resultMap;
-        TypeReference<Map<String, SuggestedQuantityDTO>> typeref = new TypeReference<Map<String, SuggestedQuantityDTO>>() {};
+        TypeReference<Map<String, SuggestedQuantityDTO>> typeref =
+            new TypeReference<Map<String, SuggestedQuantityDTO>>() {};
 
         try {
             resultMap = mapper.toObject(json, typeref);
