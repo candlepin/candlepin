@@ -1,0 +1,374 @@
+---
+name: Pull request verification
+
+on:
+  pull_request:
+  workflow_dispatch:
+  merge_group:
+
+env:
+  CI: 'true'
+  JAVA_DISTRIBUTION: 'temurin'
+  JAVA_VERSION: '11'
+
+# Cancel in-progress PR verification workflows. We only care about verifying the latest commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  bugzilla_check:
+    name: bugzilla reference check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mask secrets
+        shell: bash
+        run: |
+          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Install packages
+        shell: bash
+        run: sudo apt-get install -y python3 python3-pip python3-requests git-core
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+          set-safe-directory: true
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
+
+      - name: Install python dependencies
+        run: pip install python-bugzilla
+
+      - name: Run bugzilla reference check
+        run: ./.github/scripts/bugzilla_reference_check.py
+        env:
+          GITHUB_TOKEN_PSW: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+
+  checkstyle:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:37
+    steps:
+      - name: Install dependencies
+        shell: bash
+        run: dnf --setopt install_weak_deps=False install -y gettext git-core jss
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Run checkstyle
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: checkstyle
+
+  unit_tests:
+    name: unit tests
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:37
+    steps:
+      - name: Install dependencies
+        shell: bash
+        run: dnf --setopt install_weak_deps=False install -y gettext jss git-core
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Run unit tests
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: test coverage
+
+      - name: Archive reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: unit_test_reports
+          path: |
+            **/build/**/jacoco*.xml
+
+  validate_translations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install dependencies
+        shell: bash
+        run: sudo apt-get install -y gettext git-core
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Run validate translation
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: validate_translation
+
+  build_image:
+    name: build Candlepin image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Install packages
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install \
+            git-core \
+            buildah
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
+
+      - name: Log in to the registry
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Candlepin image
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
+        id: build-image
+        uses: redhat-actions/buildah-build@v2
+        with:
+          image: ghcr.io/candlepin/gha_build
+          tags: pr-${{ github.event.pull_request.number }}
+          containerfiles: ./.github/containers/Dockerfile
+
+      - name: Push to registry
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ghcr.io/candlepin/gha_build
+          tags: pr-${{ github.event.pull_request.number }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build and export
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        uses: docker/build-push-action@v4
+        with:
+          file: ./.github/containers/Dockerfile
+          tags: ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}
+          outputs: type=docker,dest=/tmp/gha_build.tar
+
+      - name: Upload artifact
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: gha_build
+          path: /tmp/gha_build.tar
+
+  spec_tests:
+    name: spec tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    needs: build_image
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [postgres, mariadb]
+        mode: [standalone, hosted]
+
+    steps:
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get -y update
+          sudo apt-get install -y ca-certificates curl gnupg git-core
+
+      - name: Check out repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
+
+      - name: Install docker
+        shell: bash
+        run: |
+          sudo install -m 0755 -d /etc/apt/keyrings
+          curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+          sudo chmod a+r /etc/apt/keyrings/docker.gpg
+          echo \
+          "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+          "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+          sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+          sudo apt-get update
+          sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+      - name: Log in to the registry
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull candlepin image
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
+        shell: bash
+        run: docker image pull ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}
+
+      - name: Set up Docker Buildx
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        uses: docker/setup-buildx-action@v2
+
+      - name: Download artifact
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        uses: actions/download-artifact@v3
+        with:
+          name: gha_build
+          path: /tmp
+
+      - name: Load image
+        if: ${{ github.event.pull_request.head.repo.fork }}
+        run: docker load --input /tmp/gha_build.tar
+
+      - if: matrix.mode == 'standalone'
+        name: Add standalone env variable
+        working-directory: ./.github/containers
+        shell: bash
+        run: |
+          echo "CANDLEPIN_STANDALONE=true" > .env
+          echo "CANDLEPIN_AUTH_CLOUD_ENABLE=false" >> .env
+
+      - if: matrix.mode == 'hosted'
+        name: Add hosted env variables
+        working-directory: ./.github/containers
+        shell: bash
+        run: |
+          echo "CANDLEPIN_STANDALONE=false" > .env
+          echo "MODULE_CONFIG_HOSTED_CONFIGURATION_MODULE=org.candlepin.hostedtest.AdapterOverrideModule" >> .env
+          echo "CANDLEPIN_AUTH_CLOUD_ENABLE=true" >> .env
+
+      - name: Create Candlepin and database containers
+        shell: bash
+        run: |
+          echo "CANDLEPIN_IMAGE=ghcr.io/candlepin/gha_build:pr-${{ github.event.pull_request.number }}" >> ./.github/containers/.env
+          echo "SOURCE_LOCATION=${{ github.workspace }}" >> ./.github/containers/.env
+          docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml --env-file ./.github/containers/.env up -d --wait
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '2.5.3'
+      
+      - name: Install gems
+        shell: bash
+        run: |
+          gem install bundler -v 1.16.1
+          bundle install --without=proton
+          gem query --local
+
+      - name: Get cert from candlepin container
+        shell: bash
+        run: |
+          sudo docker cp candlepin:/etc/candlepin/certs/candlepin-ca.crt /usr/local/share/ca-certificates
+          sudo update-ca-certificates
+
+      - name: Run rspec
+        uses: gradle/gradle-build-action@v2
+        with:
+          arguments: rspec --scan
+            
+      - name: Collect docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@4599896f4f5414b2444c1512096809da191c9e81
+        with:
+          dest: './logs-${{ matrix.database }}-${{ matrix.mode }}'
+
+      - name: Collect Candlepin and Tomcat logs on failure
+        if: failure()
+        shell: bash
+        run: | 
+          docker cp candlepin:/var/log/candlepin/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/candlepin/
+          docker cp candlepin:/opt/tomcat/logs/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/tomcat/
+          
+      - name: Collect postgress logs on failure
+        if: failure() && matrix.database == 'postgres'
+        run:  docker cp postgres:/var/log/postgresql/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/postgresql/
+
+      - name: Collect mariadb logs on failure
+        if: failure() && matrix.database == 'mariadb'
+        run:  docker cp mariadb:/var/log/mysql/ ./logs-${{ matrix.database }}-${{ matrix.mode }}/mysql/
+
+      - name: Tar logs
+        if: failure()
+        run: sudo tar cvzf ./logs-${{ matrix.database }}-${{ matrix.mode }}.tgz ./logs-${{ matrix.database }}-${{ matrix.mode }}
+
+      - name: Upload logs to GitHub
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: logs-${{ matrix.database }}-${{ matrix.mode }}.tgz
+          path: ./logs-${{ matrix.database }}-${{ matrix.mode }}.tgz
+
+      - if: always()
+        name: Stop containers
+        shell: bash
+        run: docker compose -f ./.github/containers/${{ matrix.database }}.docker-compose.yml down
