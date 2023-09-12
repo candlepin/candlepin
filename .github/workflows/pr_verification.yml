@@ -268,7 +268,7 @@ jobs:
 
       - name: Set up Docker Buildx
         if: ${{ github.event.pull_request.head.repo.fork }}
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Build and export
         if: ${{ github.event.pull_request.head.repo.fork }}
@@ -340,7 +340,7 @@ jobs:
 
       - name: Set up Docker Buildx
         if: ${{ github.event.pull_request.head.repo.fork }}
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Download artifact
         if: ${{ github.event.pull_request.head.repo.fork }}
