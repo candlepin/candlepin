@@ -13,7 +13,6 @@
     - [IDEA Setup](#idea-setup)
 * [Building Candlepin](#building-candlepin)
   + [Building with Gradle](#building-with-gradle)
-  + [Building with Maven](#building-with-maven)
 * [JSS Candlepin Crypto Extension](#jss-candlepin-crypto-extension)
 * [Miscellaneous](#miscellaneous)
 * [Frequently Asked Questions](#frequently-asked-questions)
@@ -147,9 +146,6 @@ To run Java spec tests:
   Swagger UI at `https://<server_ip>:8443/candlepin/docs`, or it can be retrieved  
   in a raw format from  
   `https://<server_ip>:8443/candlepin/docs/candlepin-api-spec.yaml`.
-
-## Building with Maven
-TODO
 
 ## JSS Candlepin Crypto Extension
 

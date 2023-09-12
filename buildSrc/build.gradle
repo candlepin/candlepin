@@ -43,10 +43,5 @@ gradlePlugin {
             id = "org.candlepin.gradle.msgfmt"
             implementationClass = "Msgfmt"
         }
-
-        pomToolkitPlugin {
-            id = "org.candlepin.gradle.PomToolkit"
-            implementationClass = "PomToolkit"
-        }
     }
 }

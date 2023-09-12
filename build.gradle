@@ -18,7 +18,6 @@ plugins {
     id "org.candlepin.gradle.gettext"
     id "org.candlepin.gradle.msgfmt"
     id "org.candlepin.gradle.SpecVersion"
-    id "org.candlepin.gradle.PomToolkit"
     id "spotless-conventions"
     id "test-logging-conventions"
 }
@@ -241,7 +240,6 @@ openApiGenerate {
     outputDir = "$buildDir/generated/api"
     configOptions = [
             interfaceOnly: 'true',
-            generatePom  : 'false',
             dateLibrary  : "java8",
             useTags      : "true"
     ]
@@ -435,10 +433,6 @@ war {
     }
 }
 
-tasks.register('pom') {
-    dependsOn "generatePomFileForLocalPublication"
-}
-
 publishing {
     publications {
         // Publish the candlepin war
@@ -455,48 +449,6 @@ publishing {
 
             groupId = 'org.candlepin'
             artifactId = 'candlepin-api'
-        }
-
-        // Generate pom.xml
-        local(MavenPublication) {
-
-            generatePomFileForLocalPublication {
-                destination = file("./pom.xml")
-            }
-
-            pom {
-                description = 'The Candlepin Entitlement Engine'
-                packaging = 'war'
-                licenses {
-                    license {
-                        name = 'GNU Public License (GPL) version 2.0'
-                        url = 'http://www.gnu.org/licenses/gpl-2.0.html'
-                        distribution = 'repo'
-                    }
-                }
-
-                scm {
-                    connection = 'scm:git:git://github.com/candlepin/candlepin.git'
-                    developerConnection = 'scm:git:git@github.com:candlepin/candlepin.git'
-                }
-
-                pom.withXml {
-                    PomToolkit.generatePomDependencies(
-                            asNode(),
-                            configurations.compileOnly.dependencies,
-                            configurations.implementation.dependencies,
-                            configurations.providedCompile.dependencies,
-                            configurations.runtimeOnly.dependencies,
-                            configurations.testImplementation.dependencies,
-                            configurations.testRuntimeOnly.dependencies
-                    )
-
-                    PomToolkit.generateRepositories(asNode())
-                    PomToolkit.generateBuild(asNode(), configurations.annotationProcessor.dependencies)
-                    PomToolkit.generateProfiles(asNode())
-                    PomToolkit.generateDependencyManagement(asNode())
-                }
-            }
         }
     }
 }
