@@ -6,7 +6,7 @@ runs:
     - name: Rebase feature branch with base branch
       shell: bash
       run: |
-        git config --global --add safe.directory /__w/candlepin/candlepin
+        git config --global --add safe.directory $GITHUB_WORKSPACE
         git config --global user.email "ghaction@random.com"
         git config --global user.name "ghaction"
         
