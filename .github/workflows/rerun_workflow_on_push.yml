@@ -27,21 +27,30 @@ jobs:
         shell: bash
         run: |
           base_branch="${GITHUB_REF#refs/heads/}"
+          if [ $base_branch = main ]; then
+            pr_workflows=("bugzilla_check.yml" "checkstyle.yml" "spec_tests.yml" "unit_tests.yml" "woke.yml" "validate_translations.yml")
+          else
+            pr_workflows=("pr_verification.yml")
+          fi
+          
           
           # List affected PRs exclude dependabots, weblate and draft PRs
           pr_head_shas=$(gh api \
           -H "Accept: application/vnd.github+json" \
           /repos/candlepin/candlepin/pulls | \
           jq --arg base "$base_branch" -r '.[] | select(.base.ref == $base and .draft == false and .user.login != "weblate" and .user.login != "dependabot[bot]") | .head.sha')
-
-          # List runner ids from PRs(only for pr_verification.yml)
-          for head_sha in $pr_head_shas; do
-            runner_id=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            /repos/candlepin/candlepin/actions/workflows/pr_verification.yml/runs?head_sha=$head_sha | \
-            jq -r '.workflow_runs[] | .id')
-            runner_ids+=($runner_id)
-          done
+          
+          # Iterate over the array elements using a for loop
+            for workflow in "${pr_workflows[@]}"; do
+              # List runners id for PR verification
+              for head_sha in $pr_head_shas; do
+                runner_id=$(gh api \
+                -H "Accept: application/vnd.github+json" \
+                /repos/candlepin/candlepin/actions/workflows/$workflow/runs?head_sha=$head_sha | \
+                jq -r '.workflow_runs[] | .id')
+                runner_ids+=($runner_id)
+              done
+            done
           
           # Cancel running workflows
           for id in "${runner_ids[@]}"; do

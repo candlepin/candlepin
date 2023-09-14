@@ -1,0 +1,43 @@
+---
+name: Bugzilla check
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+# Cancel in-progress PR verification workflows. We only care about verifying the latest commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  bugzilla_check:
+    name: bugzilla reference check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mask secrets
+        shell: bash
+        run: |
+          echo "::add-mask::${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Install packages
+        shell: bash
+        run: sudo apt-get install -y python3 python3-pip python3-requests git-core
+
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
+
+      - name: Install python dependencies
+        run: pip install python-bugzilla
+
+      - name: Run bugzilla reference check
+        run: ./.github/scripts/bugzilla_reference_check.py
+        env:
+          GITHUB_TOKEN_PSW: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
