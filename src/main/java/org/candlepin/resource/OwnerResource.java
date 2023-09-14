@@ -1536,7 +1536,8 @@ public class OwnerResource implements OwnerApi {
 
     @Override
     public SystemPurposeAttributesDTO getSyspurpose(
-        @Verify(value = Owner.class, subResource = SubResource.POOLS, require = Access.READ_ONLY) String ownerKey) {
+        @Verify(value = Owner.class, subResource = SubResource.POOLS, require = Access.READ_ONLY)
+        String ownerKey) {
 
         Owner owner = findOwnerByKey(ownerKey);
         Map<String, Set<String>> attributeMap = ownerProductCurator.getSyspurposeAttributesByOwner(owner);

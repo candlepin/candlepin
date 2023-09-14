@@ -96,7 +96,8 @@ public class ConfigProperties {
      * The interval (in milliseconds) at which the ActiveMQStatusMonitor will check the connection state
      * once the connection has dropped.
      */
-    public static final String ACTIVEMQ_CONNECTION_MONITOR_INTERVAL = "candlepin.audit.hornetq.monitor.interval";
+    public static final String ACTIVEMQ_CONNECTION_MONITOR_INTERVAL =
+        "candlepin.audit.hornetq.monitor.interval";
 
     public static final String AUDIT_LISTENERS = "candlepin.audit.listeners";
     /**
@@ -162,8 +163,10 @@ public class ConfigProperties {
     // have now.
     public static final String ACTIVEMQ_EMBEDDED_BROKER = "candlepin.messaging.activemq.embedded.enabled";
 
-    public static final String ACTIVEMQ_JAAS_INVM_LOGIN_NAME = "candlepin.messaging.activemq.embedded.jaas_invm_login_name";
-    public static final String ACTIVEMQ_JAAS_CERTIFICATE_LOGIN_NAME = "candlepin.messaging.activemq.embedded.jaas_certificate_login_name";
+    public static final String ACTIVEMQ_JAAS_INVM_LOGIN_NAME =
+        "candlepin.messaging.activemq.embedded.jaas_invm_login_name";
+    public static final String ACTIVEMQ_JAAS_CERTIFICATE_LOGIN_NAME =
+        "candlepin.messaging.activemq.embedded.jaas_certificate_login_name";
 
     // Quartz configurations
     public static final String QUARTZ_CLUSTERED_MODE = "org.quartz.jobStore.isClustered";

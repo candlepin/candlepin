@@ -243,7 +243,8 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     @Override
     public String toString() {
         return String.format(
-            "Anonymous Consumer [id: %s, uuid: %s, cloudAccountId: %s, cloudProviderShortName: %s, productId: %s]",
+            "Anonymous Consumer [id: %s, uuid: %s, cloudAccountId: %s, cloudProviderShortName: %s, " +
+                " productId: %s]",
             this.getId(), this.getUuid(), this.getCloudAccountId(), this.getCloudProviderShortName(),
             this.getProductId());
     }

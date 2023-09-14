@@ -38,7 +38,8 @@ import javax.inject.Inject;
 
 
 /**
- * AuthenticationProvider that authenticates anonymous access tokens generated from the CloudRegistration endpoint
+ * AuthenticationProvider that authenticates anonymous access tokens generated from the CloudRegistration
+ *  endpoint
  */
 public class AnonymousCloudRegistrationAuth implements AuthProvider {
     private static Logger log = LoggerFactory.getLogger(AnonymousCloudRegistrationAuth.class);

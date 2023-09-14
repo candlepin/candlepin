@@ -145,8 +145,8 @@ public class CloudAuthTokenGenerator {
     }
 
     /**
-     * Creates a new anonymous cloud registration token for the specific anonymous consumer UUID. The consumer UUID
-     * will be set as the audience of the token.
+     * Creates a new anonymous cloud registration token for the specific anonymous consumer UUID.
+     *  The consumer UUID will be set as the audience of the token.
      *
      * @param principal
      *  the principal for which the token will be generated

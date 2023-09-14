@@ -18,7 +18,7 @@ plugins {
     id "org.candlepin.gradle.gettext"
     id "org.candlepin.gradle.msgfmt"
     id "org.candlepin.gradle.SpecVersion"
-    id "spotless-conventions"
+    id "checkstyle-conventions"
     id "test-logging-conventions"
 }
 
