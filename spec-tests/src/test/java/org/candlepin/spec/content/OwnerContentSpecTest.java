@@ -109,7 +109,7 @@ class OwnerContentSpecTest {
 
         return new ContentDTO()
             .id("test_content-" + cid)
-            .name("test content " + cid)
+            .name("random change " + cid)
             .type("content type " + cid)
             .label("content label " + cid)
             .vendor("content vendor " + cid)
