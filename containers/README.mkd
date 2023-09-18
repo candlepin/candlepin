@@ -2,7 +2,6 @@
 This folder contains podman configurations that are primarily used for running the various unit/spec/smoke tests.
 Much of the old scripting has been replaced with invocations of `podman pods`, and is required to use this. Note that
 the following is useful for running tests directly (for example, you want to test something before you commit it);
-ideally this would be triggered automatically via jenkins [[1]](https://github.com/candlepin/candlepin-jobs).
 
 ## Building Images
 To build the images run the `build-images` script.
@@ -76,7 +75,6 @@ be able to use an off the shelf solution for the databases. The advantages of th
 1. We now have more composibility with our podman environment
   * custom databases with preloaded data could be made now and run against any candlepin
 1. Since the container will mount in the candlepin checkout, we no longer have to rebuild the image for every candlepin change
-  * Jenkins environments will already have checked candlepin out
   * Dev environments will already have checked canelpin out
   * Only changes to the `containers/candlepin-base` or candlepin updates in brew (for the `containers/candlepin-rhel*` folders) would require a rebuild
   * This saves tons of space on our build machines.
