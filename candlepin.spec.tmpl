@@ -23,7 +23,7 @@
 
 Name: candlepin
 Version: 4.3.7
-Release: 2%{?dist}
+Release: 3%{?dist}
 #if $epoch
 Epoch: $epoch
 #end if
@@ -240,6 +240,9 @@ fi
 
 #raw
 %changelog
+* Wed Sep 20 2023 Nikos Moumoulidis <nmoumoul@redhat.com> 4.3.7-3
+- Disallow creating consumers in org without permission (nmoumoul@redhat.com)
+
 * Fri Sep 01 2023 Nikos Moumoulidis <nmoumoul@redhat.com> 4.3.7-2
 - CANDLEPIN-650: Reverted date/time serialization change (crog@redhat.com)
 
