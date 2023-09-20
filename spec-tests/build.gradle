@@ -60,7 +60,6 @@ tasks.register('spec', Test) {
     }
 
     useJUnitPlatform()
-    // TODO Find better value for concurrency limit that doesn't break jenkins
     // maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
     reports.html.required = false
     reports.junitXml.required = false

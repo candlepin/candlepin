@@ -53,7 +53,7 @@ while getopts ":c:mn:o:pl" opt; do
   esac
 done
 
-# PROJ_NAME should be set in a jenkins environment. It allows multiple
+# PROJ_NAME should be set. It allows multiple
 #  instances of the compose to run without clobbering each other.
 cd $DIR
 
