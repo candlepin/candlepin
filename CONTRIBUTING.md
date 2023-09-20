@@ -13,6 +13,14 @@
     - [IDEA Setup](#idea-setup)
 * [Building Candlepin](#building-candlepin)
   + [Building with Gradle](#building-with-gradle)
+* [Candlepin Container](#candlepin-container)
+  + [Run Production Contaienr](#run-production-container)
+    - [Extend Candlepin Production Base Image](#extend-candlepin-production-base-image)
+  + [Run Development Container](#run-development-container)
+  + [Configure Candlepin Container](#configure-candlepin-container)
+    - [Candlepin Configuration](#candlepin-configuration)
+    - [Development Image Default Configurations](#development-image-default-configurations)
+    - [Paths](#paths)
 * [JSS Candlepin Crypto Extension](#jss-candlepin-crypto-extension)
 * [Miscellaneous](#miscellaneous)
 * [Frequently Asked Questions](#frequently-asked-questions)
@@ -27,7 +35,6 @@ Also, make sure you have set up your Git authorship correctly:
 ```
 git config --global user.name "Your Full Name"
 git config --global user.email your.email@example.com
-
 ```
 ### Code reviews
 All submissions, including submissions by project members, need to be reviewed before being merged.
@@ -164,6 +171,163 @@ To run Java spec tests:
   Swagger UI at `https://<server_ip>:8443/candlepin/docs`, or it can be retrieved  
   in a raw format from  
   `https://<server_ip>:8443/candlepin/docs/candlepin-api-spec.yaml`.
+
+## Candlepin Container
+
+This topic guides you through configuring and running Candlepin using the official container images.
+
+Candlepin container images come in two types:
+- **Production Base Image**: quay.io/candlepin/candlepin:latest
+- **Development Image**: quay.io/candlepin/candlepin:dev-latest
+
+### Run Production Container
+
+The Candlepin production base image is designed to be a base image for your own Candlepin image that can run in a production environment. The reason for this is that the image does not include any default configurations and it is expected that you provide configurations that are appropriate for your production environment. The following are the configurations that you will need to provide:
+
+- Candlepin configurations
+- Tomcat server.xml configurations
+- Certificate and key for TLS communication and Candlepin encryption
+
+**Note:** When adding your own certificate, you must also update the Java trust store with this certificate. This can be done by copying the certificate to the `/etc/pki/ca-trust/source/anchors` directory and running `update-ca-trust`.
+
+#### Extend Candlepin Production Base Image
+
+The following is an example on how to extend the Candlepin production image using your own configurations and certificates to build a production Candlepin image that you can run.
+
+Example:
+``` dockerfile
+FROM quay.io/candlepin/candlepin:latest
+
+USER root
+
+COPY ./candlepin.conf /etc/candlepin/
+COPY ./server.xml /opt/tomcat/conf
+COPY ./certs /etc/candlepin/certs
+
+# Add the certificate to the Java trust store
+RUN ln -s /etc/candlepin/certs/*.crt /etc/pki/ca-trust/source/anchors --force; \
+  update-ca-trust;
+
+USER tomcat
+
+EXPOSE 8080 8443 5432 3306
+
+ENTRYPOINT ["/opt/tomcat/bin/catalina.sh", "run"]
+```
+
+### Run Development Container
+
+The Candlepin development image is designed to run right after pulling the image using default Candlepin and Tomcat configurations as well as a default certificate and key for TLS communication and encryption. Since this certificate and key is packaged in a publicly available container image, the use of the Candlepin development image should **not** be used in a production environment to avoid security risks.
+
+The following is an example on how to run the Candlepin development container using the Podman CLI.
+
+1. Start the Postgres container
+```Bash
+podman run --name postgres -itd \
+  -e POSTGRES_USER=candlepin \
+  -e POSTGRES_PASSWORD=candlepin \
+  -e POSTGRES_DB=candlepin \
+  --network host \
+  postgres:latest
+```
+
+2. Start the latest stable version of Candlepin:
+```Bash
+podman run --name candlepin -itd \
+  --network host \
+  quay.io/candlepin/candlepin:dev-latest
+```
+
+Note that both containers are running on the host network. That is because the Postgres hostname for the default JDBC connection url is localhost in the Candlepin configurations for the development image. Refer to the [default configuration](#development-image-default-configurations) section for details on the Candlepin development container's default configurations.
+
+To run the Candlepin development container on a user defined network, you will need to set the `jpa.config.hibernate.connection.url` value to include the IP or hostname of the database container.
+
+Example:
+```Bash
+podman run --name candlepin -itd \
+  -e JPA_CONFIG_HIBERNATE_CONNECTION_URL=jdbc:postgresql://postgres/candlepin \
+  --network host \
+  quay.io/candlepin/candlepin:dev-latest
+```
+
+### Configure Candlepin Container
+
+This topic provides information on how to configure the Candlepin container.
+
+#### Candlepin Configuration
+
+Candlepin has configuration values to control functionality that includes JPA data access, logging levels, OAuth, individual modules, etc. There are two ways you can set Candlepin specific configuration values.
+
+1. Configuration file
+2. Environment variables
+
+**Configuration File**: The Candlepin configuration file (/etc/candlepin/candlepin.conf) is a list of properties and their values that is read by Candlepin. 
+
+**Environment Variables**: Candlepin uses Smallrye to read environment variables and use them for running Candlepin. This means that we adhere to [Smallrye's environment variable naming and conversion rules](https://github.com/smallrye/smallrye-config/blob/main/documentation/src/main/docs/config/environment-variables.md).
+
+#### Paths
+
+The following are notable paths within the Candlepin images.
+
+| Path | Description |
+| ----------- | ----------- |
+| /etc/candlepin/ | Directory for Candlepin configurations |
+| /etc/candlepin/certs | Default directory for certificate for TLS communication and Candlepin encryption |
+| /opt/tomcat/ | Tomcat installation root directory |
+| /opt/tomcat/conf | Tomcat configuration directory |
+| /opt/tomcat/bin | Directory that includes Tomcat startup, shutdown, and other scripts |
+| /var/logs/candlepin | Candlepin log directory |
+
+#### Development Image Default Configurations
+
+By default the Candlepin development image is configured to run using a Postgres database container on the host network. This section displays the default configuration that are included in the development image and the expected configuration values to be set in the Postgres container.
+
+Default candlepin.conf file:
+```
+jpa.config.hibernate.dialect=org.hibernate.dialect.PostgreSQL92Dialect
+jpa.config.hibernate.connection.driver_class=org.postgresql.Driver
+jpa.config.hibernate.connection.url=jdbc:postgresql://localhost/candlepin
+jpa.config.hibernate.connection.username=candlepin
+jpa.config.hibernate.connection.password=candlepin
+candlepin.auth.trusted.enable=true
+candlepin.auth.oauth.enable=true
+candlepin.auth.oauth.consumer.rspec.secret=rspec-oauth-secret
+candlepin.db.database_manage_on_startup=Manage
+candlepin.refresh.orphan_entity_grace_period=0
+candlepin.standalone=true
+```
+
+Based on the default candlepin.conf configurations, the Postgres container is expected to have the following environment variables set and the container should be available on localhost.
+
+Expected Postgres container configurations:
+
+| Environment variable | Value | 
+| ----------- | ----------- |
+| POSTGRES_USER | candlepin |
+| POSTGRES_PASSWORD | candlepin |
+| POSTGRES_DB | candlepin |
+
+Default Tomcat server.xml connector configuration:
+```xml
+<Connector
+  port="8443"
+  protocol="HTTP/1.1"
+  scheme="https"
+  secure="true"
+  SSLEnabled="true"
+  maxThreads="150">
+
+  <SSLHostConfig
+    certificateVerification="optional"
+    protocols="+TLSv1,+TLSv1.1,+TLSv1.2"
+    sslProtocol="TLS">
+    <Certificate
+      certificateFile="/etc/candlepin/certs/candlepin-ca.crt"
+      certificateKeyFile="/etc/candlepin/certs/candlepin-ca.key"
+      type="RSA" />
+  </SSLHostConfig>
+</Connector>
+```
 
 ## JSS Candlepin Crypto Extension
 
