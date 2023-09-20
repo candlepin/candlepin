@@ -69,7 +69,7 @@ public class UsernameConsumersPermission implements Permission, Serializable {
         // Implied create access to the owner's consumers collection, which includes
         // read as well:
         if (target.getClass().equals(Owner.class) && subResource.equals(SubResource.CONSUMERS) &&
-            Access.CREATE.provides(required)) {
+            Access.CREATE.provides(required) && ((Owner) target).getId().equals(owner.getId())) {
             return true;
         }
 
