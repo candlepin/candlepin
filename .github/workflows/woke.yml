@@ -1,0 +1,31 @@
+---
+name: Detect non-inclusive language in your source code
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+# Cancel in-progress PR verification workflows. We only care about verifying the latest commit.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  woke:
+    name: woke
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Rebase
+        uses: ./.github/actions/rebase
+
+      - name: Run woke
+        uses: get-woke/woke-action@v0
+        with:
+          # Cause the check to fail on any broke rules
+          fail-on-error: true
