@@ -57,6 +57,11 @@ public class TrustedUserPrincipalTest {
     }
 
     @Test
+    public void authMethod() {
+        assertEquals(AuthenticationMethod.TRUSTED_USER, principal.getAuthenticationMethod());
+    }
+
+    @Test
     public void access() {
         Consumer c = mock(Consumer.class);
         Pool p = mock(Pool.class);

@@ -33,6 +33,7 @@ public class ConsumerDTO extends CandlepinDTO<ConsumerDTO> {
     protected ConsumerTypeDTO type;
     protected String urlWeb;
     protected String urlApi;
+    protected String regAuthMethod;
 
     /**
      * Initializes a new ConsumerDTO instance with null values.

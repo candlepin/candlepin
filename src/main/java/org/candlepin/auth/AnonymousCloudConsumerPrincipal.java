@@ -75,4 +75,9 @@ public class AnonymousCloudConsumerPrincipal extends Principal {
         return Objects.hash(this.consumer.getUuid());
     }
 
+    @Override
+    public AuthenticationMethod getAuthenticationMethod() {
+        return AuthenticationMethod.ANONYMOUS_CLOUD;
+    }
+
 }

@@ -1202,7 +1202,8 @@ public class ConsumerResourceTest {
     @Test
     public void testSearchConsumersRequiresNonNullSearchCriteria() {
         assertThrows(BadRequestException.class, () ->
-            consumerResource.searchConsumers(null, null, null, null, null, null, null, null, null, null));
+            consumerResource.searchConsumers(null, null, null, null, null, null, null, null, null,
+            null, null));
     }
 
     @Test
@@ -1210,7 +1211,7 @@ public class ConsumerResourceTest {
     public void testSearchConsumersRequiresNonEmptySearchCriteria() {
         assertThrows(BadRequestException.class, () ->
             consumerResource.searchConsumers("", Collections.emptySet(), "", Collections.emptyList(),
-                Collections.emptyList(), Collections.emptyList(), null, null, null, null));
+                Collections.emptyList(), null,  Collections.emptyList(), null, null, null, null));
     }
 
     @Test
@@ -1224,7 +1225,7 @@ public class ConsumerResourceTest {
         doReturn(expected).when(this.consumerCurator).findConsumers(any(ConsumerQueryArguments.class));
 
         Stream<ConsumerDTOArrayElement> result = this.consumerResource
-            .searchConsumers("username", null, null, null, null, null, null, null, null, null);
+            .searchConsumers("username", null, null, null, null, null, null, null, null, null, null);
 
         assertNotNull(result);
         assertEquals(expected.size(), result.count());
@@ -1236,7 +1237,7 @@ public class ConsumerResourceTest {
         doReturn(5000L).when(this.consumerCurator).getConsumerCount(any(ConsumerQueryArguments.class));
 
         assertThrows(BadRequestException.class, () -> this.consumerResource
-            .searchConsumers("username", null, null, null, null, null, null, null, null, null));
+            .searchConsumers("username", null, null, null, null, null, null, null, null, null, null));
     }
 
     @Test
@@ -1251,7 +1252,7 @@ public class ConsumerResourceTest {
 
         ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
         Stream<ConsumerDTOArrayElement> result = this.consumerResource.searchConsumers(null, null,
-            owner.getKey(), null, null, null, null, null, null, null);
+            owner.getKey(), null, null, null, null, null, null, null, null);
 
         // Verify the input passthrough is working properly
         verify(this.consumerCurator, times(1)).findConsumers(captor.capture());
@@ -1285,7 +1286,7 @@ public class ConsumerResourceTest {
 
         ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
         Stream<ConsumerDTOArrayElement> result = this.consumerResource.searchConsumers(username, null, null,
-            null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null);
 
         // Verify the input passthrough is working properly
         verify(this.consumerCurator, times(1)).findConsumers(captor.capture());
@@ -1319,7 +1320,7 @@ public class ConsumerResourceTest {
 
         ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
         Stream<ConsumerDTOArrayElement> result = this.consumerResource.searchConsumers(null, null, null,
-            uuids, null, null, null, null, null, null);
+            uuids, null, null, null, null, null, null, null);
 
         // Verify the input passthrough is working properly
         verify(this.consumerCurator, times(1)).findConsumers(captor.capture());
@@ -1374,7 +1375,7 @@ public class ConsumerResourceTest {
 
         ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
         Stream<ConsumerDTOArrayElement> result = this.consumerResource.searchConsumers(null, typeMap.keySet(),
-            null, null, null, null, null, null, null, null);
+            null, null, null, null, null, null, null, null, null);
 
         // Verify the input passthrough is working properly
         verify(this.consumerCurator, times(1)).findConsumers(captor.capture());
@@ -1410,7 +1411,7 @@ public class ConsumerResourceTest {
 
         ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
         Stream<ConsumerDTOArrayElement> result = this.consumerResource.searchConsumers(null, null, null,
-            null, hids, null, null, null, null, null);
+            null, hids, null, null, null, null, null, null);
 
         // Verify the input passthrough is working properly
         verify(this.consumerCurator, times(1)).findConsumers(captor.capture());
@@ -1453,7 +1454,7 @@ public class ConsumerResourceTest {
 
         ArgumentCaptor<ConsumerQueryArguments> captor = ArgumentCaptor.forClass(ConsumerQueryArguments.class);
         Stream<ConsumerDTOArrayElement> result = this.consumerResource.searchConsumers(null, null, null,
-            null, null, factsParam, null, null, null, null);
+            null, null, null, factsParam, null, null, null, null);
 
         // Verify the input passthrough is working properly
         verify(this.consumerCurator, times(1)).findConsumers(captor.capture());

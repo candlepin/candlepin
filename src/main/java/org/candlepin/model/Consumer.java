@@ -319,6 +319,9 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @Fetch(FetchMode.SELECT)
     private Map<String, String> environmentIds;
 
+    @Column(name = "reg_auth_method")
+    private String registrationAuthenticationMethod;
+
     public Consumer() {
         this.addOns = new HashSet<>();
         this.entitlements = new HashSet<>();
@@ -1236,6 +1239,15 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
         }
 
         return this;
+    }
+
+    public Consumer setRegistrationAuthenticationMethod(String method) {
+        this.registrationAuthenticationMethod = method;
+        return this;
+    }
+
+    public String getRegistrationAuthenticationMethod() {
+        return this.registrationAuthenticationMethod;
     }
 
     /**

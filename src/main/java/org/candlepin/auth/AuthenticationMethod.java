@@ -12,31 +12,26 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
+
 package org.candlepin.auth;
 
-/**
- *
- */
-public class NoAuthPrincipal extends Principal {
+public enum AuthenticationMethod {
+    BASIC("User"),
+    ACTIVATION_KEY("ActivationKey"),
+    ANONYMOUS_CLOUD("AnonymousCloud"),
+    CLOUD("Cloud"),
+    CONSUMER("Consumer"),
+    KEYCLOAK("KeyCloak"),
+    NO_AUTH("NoAuth"),
+    SYSTEM("System"),
+    TRUSTED_USER("TrustedUser");
 
-    @Override
-    public String getType() {
-        return "no_auth";
+    private String description;
+    AuthenticationMethod(String description) {
+        this.description = description;
     }
 
-    @Override
-    public String getName() {
-        return "Anonymous";
+    public String getDescription() {
+        return description;
     }
-
-    @Override
-    public boolean hasFullAccess() {
-        return false;
-    }
-
-    @Override
-    public AuthenticationMethod getAuthenticationMethod() {
-        return AuthenticationMethod.NO_AUTH;
-    }
-
 }

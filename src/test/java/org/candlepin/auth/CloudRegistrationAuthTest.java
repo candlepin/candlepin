@@ -14,6 +14,7 @@
  */
 package org.candlepin.auth;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -209,6 +210,7 @@ public class CloudRegistrationAuthTest {
 
         assertNotNull(principal);
         assertTrue(principal instanceof UserPrincipal);
+        assertEquals(AuthenticationMethod.CLOUD, principal.getAuthenticationMethod());
 
         // Test note:
         // The owner key resolves to the cloud registration type due to the mock adapter implementation
