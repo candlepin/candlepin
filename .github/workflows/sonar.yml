@@ -5,7 +5,6 @@ on:
   workflow_run:
     workflows: [Unit tests]
     types: [completed]
-    branches: [main]
 
 jobs:
   sonar:
@@ -85,6 +84,7 @@ jobs:
           name: unit_test_reports
 
       - name: Analyze
+        if: ${{ fromJson(steps.get_pr_data.outputs.data).base.ref == 'main'}}
         uses: gradle/gradle-build-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
