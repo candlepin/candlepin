@@ -396,6 +396,43 @@ public class ConsumerResourceSpecTest {
     }
 
     @Test
+    public void shouldNotAllowUserToCreateConsumerInOrganizationWithoutPermission() {
+        OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
+
+        // We need a user with the USERNAME_CONSUMERS - ALL permission, which allows for
+        // create/view/update/delete of consumers, on a specific Organization ('owner').
+        UserDTO user = UserUtil.createWith(ApiClients.admin(), Permissions.USERNAME_CONSUMERS.all(owner));
+
+        // This user should NOT be able to create consumers in a different organization ('owner2').
+        // Instead, a 404 should be returned, that tells the user that an org with that key does not exist
+        // in order to not confirm or deny its existence.
+        ApiClient userClient = ApiClients.basic(user);
+        assertNotFound(() -> userClient.consumers().createConsumer(Consumers.random(owner2)));
+    }
+
+    @Test
+    public void shouldNotAllowUserToViewUpdateOrDeleteConsumerInOrganizationWithoutPermission() {
+        OwnerDTO owner2 = adminClient.owners().createOwner(Owners.random());
+        ConsumerDTO consumerInOwner2 = adminClient.consumers().createConsumer(Consumers.random(owner2));
+
+        // We need a user with the USERNAME_CONSUMERS - ALL permission, which allows for
+        // create/view/update/delete of consumers, on a specific Organization ('owner').
+        UserDTO user = UserUtil.createWith(ApiClients.admin(), Permissions.USERNAME_CONSUMERS.all(owner));
+
+        // This user should NOT be able to view/update/delete consumers in a different organization
+        // ('owner2'). Instead, a 404 should be returned, that tells the user that an org with that
+        // key does not exist in order to not confirm or deny its existence.
+        ApiClient userClient = ApiClients.basic(user);
+        assertNotFound(() -> userClient.consumers().getConsumer(consumerInOwner2.getUuid()));
+
+        consumerInOwner2.setName("newName");
+        assertNotFound(() -> userClient.consumers().updateConsumer(consumerInOwner2.getUuid(),
+            consumerInOwner2));
+
+        assertNotFound(() -> userClient.consumers().deleteConsumer(consumerInOwner2.getUuid()));
+    }
+
+    @Test
     public void shouldReturnNotFoundForANonExistentConsumer() {
         adminClient.consumers().createConsumer(Consumers.random(owner));
 
