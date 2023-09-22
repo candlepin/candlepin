@@ -12,7 +12,7 @@ msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-07-30 07:05+0000\n"
-"PO-Revision-Date: 2023-02-16 01:20+0000\n"
+"PO-Revision-Date: 2023-08-06 18:21+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-2-hotfix/ko/>\n"
@@ -21,7 +21,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.15.2\n"
+"X-Generator: Weblate 4.18.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -909,7 +909,7 @@ msgstr "키: {0}의 소유자를 찾을 수 없음."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1480
 #, java-format
 msgid "Problem updating unit {0}"
-msgstr "장치 {0}을 업데이트하는 도중 문제 발생"
+msgstr "장치 {0}를 최신화 중에 문제 발생"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1565
 msgid "This consumer cannot be assigned a content access mode"
@@ -1196,14 +1196,12 @@ msgstr "UUID {0}인 게스트를 찾을 수 없습니다."
 
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:201
 msgid "Host to guest mapping was not provided for hypervisor update."
-msgstr ""
-"호스트에서 게스트로의 매핑은 하이퍼바이저 업데이트에 제공되지 않습니다."
+msgstr "호스트에서 게스트로의 매핑은 하이퍼바이저 최신화에 제공되지 않습니다."
 
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:209
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:215
 msgid "Invalid host to guest mapping was provided for hypervisor update."
-msgstr ""
-"잘못된 호스트에서 게스트로의 매핑은 하이퍼바이저 업데이트에 제공됩니다."
+msgstr "잘못된 호스트에서 게스트로의 매핑은 하이퍼바이저 최신화에 제공됩니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -1328,7 +1326,7 @@ msgstr "제품 ID로 숫자만 사용할 수 있습니다."
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:300
 #, java-format
 msgid "Contradictory ids in update request: {0}, {1}"
-msgstr "업데이트 요청 ID가 일치하지 않습니다: {0}, {1}"
+msgstr "최신화 요청에서 모순된 IDs: {0}, {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:276
 msgid "Owner key is null or empty."
