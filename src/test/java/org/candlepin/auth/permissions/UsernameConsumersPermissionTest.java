@@ -15,7 +15,9 @@
 package org.candlepin.auth.permissions;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import org.candlepin.auth.Access;
 import org.candlepin.auth.SubResource;
@@ -27,6 +29,9 @@ import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.From;
 
 
 public class UsernameConsumersPermissionTest {
@@ -66,6 +71,16 @@ public class UsernameConsumersPermissionTest {
             .setOwner(owner);
 
         assertTrue(perm.canAccess(owner, SubResource.CONSUMERS, Access.CREATE));
+    }
+
+    @Test
+    public void disallowsRegistrationToOrgWithoutCreatePermission() {
+        Owner owner2 = new Owner()
+            .setId(TestUtil.randomString())
+            .setKey("ownerkey2")
+            .setDisplayName("My Org 2");
+
+        assertFalse(perm.canAccess(owner2, SubResource.CONSUMERS, Access.CREATE));
     }
 
     @Test
@@ -145,4 +160,8 @@ public class UsernameConsumersPermissionTest {
         assertFalse(perm.canAccess(e, SubResource.NONE, Access.ALL));
     }
 
+    @Test
+    public void shouldNotReturnQueryRestrictionsWhenEntityIsNotConsumer() {
+        assertNull(perm.getQueryRestriction(Owner.class, mock(CriteriaBuilder.class), mock(From.class)));
+    }
 }
