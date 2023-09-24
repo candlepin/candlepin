@@ -3,14 +3,14 @@
 # simmon <simmon@nplob.com>, 2021, 2022.
 # Sundeep Anand <suanand@redhat.com>, 2021.
 # Pino Toscano <ptoscano@redhat.com>, 2022.
-# 김인수 <simmon@nplob.com>, 2022.
+# 김인수 <simmon@nplob.com>, 2022, 2023.
 # John Sefler <jsefler@redhat.com>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2023-07-30 07:06+0000\n"
-"PO-Revision-Date: 2022-10-30 06:19+0000\n"
+"PO-Revision-Date: 2023-09-24 05:35+0000\n"
 "Last-Translator: 김인수 <simmon@nplob.com>\n"
 "Language-Team: Korean <https://translate.fedoraproject.org/projects/"
 "candlepin/candlepin-4-1-hotfix/ko/>\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Weblate 4.14.1\n"
+"X-Generator: Weblate 5.0.2\n"
 
 #: src/main/java/org/candlepin/async/tasks/HealEntireOrgJob.java:88
 msgid "Healing attempted against non-existent org key \"{}\""
@@ -620,27 +620,27 @@ msgstr ""
 #, java-format
 msgid ""
 "Unit does not support instance based calculation required by pool \"{1}\""
-msgstr "장치/유닛은 풀 ''{1}''에 필요한 인스턴스 기반 계산을 지원하지 않습니다"
+msgstr "단위는 풀 ''{1}''에 필요한 인스턴스 기반 계산을 지원하지 않습니다"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:171
 #, java-format
 msgid "Unit does not support band calculation required by pool \"{1}\""
-msgstr "장치/유닛은 풀 ''{1}''에 필요한 대역 계산을 지원하지 않습니다"
+msgstr "단위는 풀 ''{1}''에 필요한 대역 계산을 지원하지 않습니다"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:173
 #, java-format
 msgid "Unit does not support core calculation required by pool \"{1}\""
-msgstr "장치/유닛은 풀 ''{1}''에 필요한 코어 계산을 지원하지 않습니다"
+msgstr "단위는 풀 ''{1}''에 필요한 코어 계산을 지원하지 않습니다"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:175
 #, java-format
 msgid "Unit does not support RAM calculation required by pool \"{1}\""
-msgstr "장치/유닛은 풀 ''{1}''에 필요한 RAM 계산을 지원하지 않습니다"
+msgstr "단위는 풀 ''{1}''에 필요한 RAM 계산을 지원하지 않습니다"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:177
 #, java-format
 msgid "Unit does not support derived products data required by pool \"{1}\""
-msgstr "장치/유닛은 풀 ''{1}''에 필요한 변형 제품 데이터를 지원하지 않습니다"
+msgstr "단위는 풀 ''{1}''에 필요한 변형 제품 데이터를 지원하지 않습니다"
 
 #: src/main/java/org/candlepin/policy/js/entitlement/EntitlementRulesTranslator.java:179
 #, java-format
@@ -922,7 +922,7 @@ msgstr "키: {0}의 소유자를 찾을 수 없음."
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1482
 #, java-format
 msgid "Problem updating unit {0}"
-msgstr "장치 {0}을 업데이트하는 도중 문제 발생"
+msgstr "장치 {0}를 최신화 중에 문제 발생"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1566
 msgid "This consumer cannot be assigned a content access mode"
@@ -1204,14 +1204,12 @@ msgstr "조직 ''{0}''에서 하이퍼바이저를 찾을 수 없습니다"
 
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:368
 msgid "Host to guest mapping was not provided for hypervisor update."
-msgstr ""
-"호스트에서 게스트로의 매핑은 하이퍼바이저 업데이트에 제공되지 않습니다."
+msgstr "호스트에서 게스트로의 매핑은 하이퍼바이저 최신화에 제공되지 않습니다."
 
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:376
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:382
 msgid "Invalid host to guest mapping was provided for hypervisor update."
-msgstr ""
-"잘못된 호스트에서 게스트로의 매핑은 하이퍼바이저 업데이트에 제공됩니다."
+msgstr "잘못된 호스트에서 게스트로의 매핑은 하이퍼바이저 최신화에 제공됩니다."
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author eukim
@@ -1453,7 +1451,7 @@ msgstr "제품 ID로 숫자만 사용할 수 있습니다."
 #: src/main/java/org/candlepin/resource/OwnerResource.java:1986
 #, java-format
 msgid "Contradictory ids in update request: {0}, {1}"
-msgstr "업데이트 요청 ID가 일치하지 않습니다: {0}, {1}"
+msgstr "최신화 요청에 모순된 IDs: {0}, {1}"
 
 #: src/main/java/org/candlepin/resource/OwnerResource.java:2004
 #: src/main/java/org/candlepin/resource/OwnerResource.java:2043
