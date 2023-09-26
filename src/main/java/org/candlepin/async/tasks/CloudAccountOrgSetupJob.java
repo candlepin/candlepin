@@ -37,8 +37,6 @@ import java.util.Objects;
 
 import javax.inject.Inject;
 
-
-
 public class CloudAccountOrgSetupJob implements AsyncJob {
 
     private static final Logger log = LoggerFactory.getLogger(CloudAccountOrgSetupJob.class);
@@ -163,16 +161,16 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
         /**
          * Sets the cloud provider for this job
          *
-         * @param cloudProvider
-         *     cloud provider for this job
+         * @param cloudProviderShortName
+         *     shortcut of the cloud provider
          * @return a reference to this job config
          */
-        public CloudAccountOrgSetupJobConfig setCloudProvider(CloudProvider cloudProvider) {
-            if (cloudProvider == null) {
-                throw new IllegalArgumentException("cloudProvider is null");
+        public CloudAccountOrgSetupJobConfig setCloudProvider(CloudProvider cloudProviderShortName) {
+            if (cloudProviderShortName == null) {
+                throw new IllegalArgumentException("cloudProviderShortName is null");
             }
 
-            this.setJobArgument(CLOUD_PROVIDER, cloudProvider);
+            this.setJobArgument(CLOUD_PROVIDER, cloudProviderShortName);
 
             return this;
         }
@@ -221,7 +219,7 @@ public class CloudAccountOrgSetupJob implements AsyncJob {
                     throw new JobConfigValidationException(errmsg);
                 }
 
-                if (ownerKey != null && ownerKey.isBlank()) {
+                if (ownerKey.isBlank()) {
                     String errmsg = "Owner key is empty";
                     throw new JobConfigValidationException(errmsg);
                 }
