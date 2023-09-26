@@ -63,8 +63,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-
-
 @SpecTest
 public class OwnerResourceSpecTest {
 
@@ -109,30 +107,6 @@ public class OwnerResourceSpecTest {
         assertThat(status.getContentAccessModeList()).isEqualTo(ownerDTO.getContentAccessModeList());
         assertThat(status.getKey()).isEqualTo(ownerDTO.getKey());
         assertThat(status.getDisplayName()).isEqualTo(ownerDTO.getDisplayName());
-    }
-
-    @Test
-    public void shouldCreateAnonymousOwner() {
-        OwnerDTO expectedOwner = Owners.random();
-        expectedOwner.anonymous(true);
-        owners.createOwner(expectedOwner);
-
-        OwnerDTO actual = owners.getOwner(expectedOwner.getKey());
-
-        assertThat(actual)
-            .returns(expectedOwner.getAnonymous(), OwnerDTO::getAnonymous);
-    }
-
-    @Test
-    public void shouldCreateClaimedOwner() {
-        OwnerDTO expectedOwner = Owners.random();
-        expectedOwner.claimed(true);
-        expectedOwner = owners.createOwner(expectedOwner);
-
-        OwnerDTO actual = owners.getOwner(expectedOwner.getKey());
-
-        assertThat(actual)
-            .returns(expectedOwner.getClaimed(), OwnerDTO::getClaimed);
     }
 
     @Test
@@ -336,6 +310,7 @@ public class OwnerResourceSpecTest {
         admin.ownerProducts().createProductByOwner(owner.getKey(), product);
         owners.createPool(owner.getKey(), Pools.random(product));
 
+
         assertForbidden(() -> readOnlyClient.owners().refreshPools(owner.getKey(), false));
         assertForbidden(() -> readWriteClient.owners().refreshPools(owner.getKey(), false));
         adminClient.owners().refreshPools(owner.getKey(), false);
@@ -415,10 +390,12 @@ public class OwnerResourceSpecTest {
         OwnerDTO owner = owners.createOwner(Owners.random());
         assertThat(owner.getDefaultServiceLevel()).isNull();
         ProductDTO product1 = createProduct(owner,
-            ProductAttributes.SupportLevel.withValue("VIP"));
+            ProductAttributes.SupportLevel.withValue("VIP")
+        );
         ProductDTO product2 = createProduct(owner,
             ProductAttributes.SupportLevel.withValue("Layered"),
-            ProductAttributes.SupportLevelExempt.withValue("true"));
+            ProductAttributes.SupportLevelExempt.withValue("true")
+        );
         owners.createPool(owner.getKey(), Pools.random(product1));
         owners.createPool(owner.getKey(), Pools.random(product2));
 
@@ -461,11 +438,14 @@ public class OwnerResourceSpecTest {
         OwnerDTO owner = owners.createOwner(Owners.random());
         assertThat(owner.getDefaultServiceLevel()).isNull();
         ProductDTO product1 = createProduct(owner,
-            ProductAttributes.SupportLevel.withValue("Really High"));
+            ProductAttributes.SupportLevel.withValue("Really High")
+        );
         ProductDTO product2 = createProduct(owner,
-            ProductAttributes.SupportLevel.withValue("Really Low"));
+            ProductAttributes.SupportLevel.withValue("Really Low")
+        );
         ProductDTO product3 = createProduct(owner,
-            ProductAttributes.SupportLevel.withValue("Really Low"));
+            ProductAttributes.SupportLevel.withValue("Really Low")
+        );
         owners.createPool(owner.getKey(), Pools.random(product1));
         owners.createPool(owner.getKey(), Pools.random(product2));
         owners.createPool(owner.getKey(), Pools.random(product3));
@@ -484,13 +464,16 @@ public class OwnerResourceSpecTest {
         ApiClient consumerClient = ApiClients.ssl(consumer);
 
         ProductDTO product1 = createProduct(owner,
-            ProductAttributes.SupportLevel.withValue("VIP"));
+            ProductAttributes.SupportLevel.withValue("VIP")
+        );
         ProductDTO product2 = createProduct(owner,
             ProductAttributes.SupportLevel.withValue("Layered"),
-            ProductAttributes.SupportLevelExempt.withValue("true"));
+            ProductAttributes.SupportLevelExempt.withValue("true")
+        );
         ProductDTO product3 = createProduct(owner,
             // The exempt attribute will cover here as well despite the casing
-            ProductAttributes.SupportLevel.withValue("LAYered"));
+            ProductAttributes.SupportLevel.withValue("LAYered")
+        );
         owners.createPool(owner.getKey(), Pools.random(product1));
         owners.createPool(owner.getKey(), Pools.random(product2));
         owners.createPool(owner.getKey(), Pools.random(product3));
@@ -560,7 +543,8 @@ public class OwnerResourceSpecTest {
             ProductAttributes.Roles.withValue("Server1,Server2"),
             ProductAttributes.Addons.withValue("addon1,addon2"),
             ProductAttributes.SupportLevel.withValue("mysla"),
-            ProductAttributes.SupportType.withValue("test_support1"));
+            ProductAttributes.SupportType.withValue("test_support1")
+        );
         owners.createPool(owner.getKey(), Pools.random(product));
 
         UserDTO user = UserUtil.createUser(admin, owner);
@@ -695,17 +679,20 @@ public class OwnerResourceSpecTest {
             ProductAttributes.Addons.withValue("addon1,addon2"),
             ProductAttributes.SupportLevel.withValue("Layered"),
             ProductAttributes.SupportLevelExempt.withValue("true"),
-            ProductAttributes.SupportType.withValue("test_support2"));
+            ProductAttributes.SupportType.withValue("test_support2")
+        );
         ProductDTO product3 = createProduct(owner,
             ProductAttributes.Usage.withValue("Exp_Development"),
             ProductAttributes.Roles.withValue("Exp_Server"),
             ProductAttributes.Addons.withValue("Exp_addon"),
-            ProductAttributes.SupportType.withValue("Exp_test_support"));
+            ProductAttributes.SupportType.withValue("Exp_test_support")
+        );
         createProduct(owner,
             ProductAttributes.Usage.withValue("No_Development"),
             ProductAttributes.Roles.withValue("No_Server"),
             ProductAttributes.Addons.withValue("No_addon"),
-            ProductAttributes.SupportType.withValue("No_test_support"));
+            ProductAttributes.SupportType.withValue("No_test_support")
+        );
         owners.createPool(owner.getKey(), Pools.random(product1));
         owners.createPool(owner.getKey(), Pools.random(product2));
         owners.createPool(owner.getKey(), Pools.random(product3)

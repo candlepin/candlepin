@@ -34,7 +34,6 @@ import org.candlepin.dto.ModelTranslator;
 import org.candlepin.guice.CandlepinRequestScope;
 import org.candlepin.guice.TestPrincipalProviderSetter;
 import org.candlepin.junit.LiquibaseExtension;
-import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Cdn;
@@ -126,8 +125,6 @@ import javax.persistence.EntityTransaction;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
-
 /**
  * Test fixture for test classes requiring access to the database.
  */
@@ -143,7 +140,6 @@ public class DatabaseTestFixture {
 
     protected ActivationKeyCurator activationKeyCurator;
     protected ActivationKeyContentOverrideCurator activationKeyContentOverrideCurator;
-    protected AnonymousCloudConsumerCurator anonymousCloudConsumerCurator;
     protected AsyncJobStatusCurator asyncJobCurator;
     protected CdnCurator cdnCurator;
     protected CertificateSerialCurator certSerialCurator;
@@ -273,8 +269,6 @@ public class DatabaseTestFixture {
         activationKeyCurator = this.injector.getInstance(ActivationKeyCurator.class);
         activationKeyContentOverrideCurator = this.injector
             .getInstance(ActivationKeyContentOverrideCurator.class);
-        anonymousCloudConsumerCurator = this.injector
-            .getInstance(AnonymousCloudConsumerCurator.class);
         asyncJobCurator = this.injector.getInstance(AsyncJobStatusCurator.class);
         cdnCurator = this.injector.getInstance(CdnCurator.class);
         certSerialCurator = this.injector.getInstance(CertificateSerialCurator.class);

@@ -14,10 +14,7 @@
  */
 package org.candlepin.service.impl;
 
-import org.candlepin.service.CloudProvider;
 import org.candlepin.service.CloudRegistrationAdapter;
-import org.candlepin.service.model.CloudAccountData;
-import org.candlepin.service.model.CloudAuthenticationResult;
 import org.candlepin.service.model.CloudRegistrationInfo;
 
 
@@ -31,17 +28,6 @@ public class DefaultCloudRegistrationAdapter implements CloudRegistrationAdapter
 
     @Override
     public String resolveCloudRegistrationData(CloudRegistrationInfo cloudRegInfo) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public CloudAuthenticationResult resolveCloudRegistrationDataV2(CloudRegistrationInfo cloudRegInfo) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public CloudAccountData setupCloudAccountOrg(String cloudAccountID, String cloudOfferingID,
-        CloudProvider cloudProviderShortName, String ownerKey) {
         throw new UnsupportedOperationException();
     }
 
