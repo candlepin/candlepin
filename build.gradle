@@ -332,7 +332,7 @@ sonar {
 }
 
 wrapper {
-    distributionType = Wrapper.DistributionType.ALL
+    distributionType = Wrapper.DistributionType.BIN
 }
 
 clean.doFirst {
