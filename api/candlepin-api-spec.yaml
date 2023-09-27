@@ -993,13 +993,13 @@ paths:
         204:
           description: A successful operation.
         403:
-          description: Consumer could not be deleted due to unknown type.
+          description: Consumer could not be deleted due to insufficient permissions.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExceptionMessage'
               example:
-                displayMessage: Consumer could not be deleted due to unknown type.
+                displayMessage: Consumer could not be deleted due to insufficient permissions.
                 requestUuid: c4347004-8792-41fe-a4d8-fccaa0d3898a
         410:
           description: Consumer with this UUID is already deleted.
