@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.3.7
+Version: 4.3.8
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -240,6 +240,162 @@ fi
 
 #raw
 %changelog
+* Wed Sep 27 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.8-1
+- Revert "CANDLEPIN-623: Implement Anonymous Org Creation & Entitlement Job"
+  (nmoumoul@redhat.com)
+- Revert "CANDLEPIN-621: Added auto reg 2.0 instance metadata authentication"
+  (nmoumoul@redhat.com)
+- Revert "CANDLEPIN-646: Add anonymous and claimed fields on Owner API"
+  (nmoumoul@redhat.com)
+- Bump io.smallrye.config:smallrye-config from 3.3.4 to 3.4.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- Disallow creating consumers in org without permission (nmoumoul@redhat.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- Bump actions/checkout from 3 to 4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump docker/build-push-action from 4 to 5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump docker/login-action from 2 to 3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump docker/setup-buildx-action from 2 to 3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Fix to run sonar only agains main branch (sbakaj@redhat.com)
+- Bump org.apache.activemq:artemis-server from 2.30.0 to 2.31.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.activemq:artemis-stomp-protocol from 2.30.0 to 2.31.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-652: Added documentation for using the new container images
+  (joshmalbrecht@gmail.com)
+- Remove Jenkins runs from project (wpoteat@redhat.com)
+- CANDLEPIN-653: Implement solution for sonar to work in forks
+  (sbakaj@redhat.com)
+- Bump com.puppycrawl.tools:checkstyle from 10.12.1 to 10.12.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-641: Revert to checkstyle (wpoteat@redhat.com)
+- CANDLEPIN-253: Remove obsolete Maven/Mead code from candlepin
+  (sbakaj@redhat.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- 2213261: Ensure pool lock order for activation keys (wpoteat@redhat.com)
+- CANDLEPIN-619: Re-run PR workflow when target branch gets pushed
+  (sbakaj@redhat.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 22.0.2 to 22.0.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.gradle.enterprise from 3.14.1 to 3.15
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump docker/build-push-action from 4 to 5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump docker/login-action from 2 to 3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump docker/setup-buildx-action from 2 to 3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.liquibase:liquibase-core from 4.23.1 to 4.23.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.github.ben-manes:gradle-versions-plugin from 0.47.0 to 0.48.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.keycloak:keycloak-servlet-filter-adapter from 22.0.1 to 22.0.2
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Collecting logs from spec tests runners in GH action (sbakaj@redhat.com)
+- CANDLEPIN-419: Remove circular dependency (wpoteat@redhat.com)
+- CANDLEPIN-349: Remove assisted injection (ojanus@redhat.com)
+- CANDLEPIN-621: Added auto reg 2.0 instance metadata authentication
+  (joshmalbrecht@gmail.com)
+- Bump org.slf4j:slf4j-api from 2.0.7 to 2.0.9
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.slf4j:jcl-over-slf4j from 2.0.7 to 2.0.9
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.slf4j:log4j-over-slf4j from 2.0.7 to 2.0.9
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump actions/checkout from 3 to 4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.sonarsource.scanner.gradle:sonarqube-gradle-plugin
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.3.3 to 3.3.4
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-650: Reverted date/time serialization change (crog@redhat.com)
+- CANDLEPIN-646: Add anonymous and claimed fields on Owner API
+  (joshmalbrecht@gmail.com)
+- Remove fedora container from CI (sbakaj@redhat.com)
+- CANDLEPIN-648: Fixed NPE when activating subscriptions in standalone
+  (crog@redhat.com)
+- CANDLEPIN-635: Update publish plugin to create candlepi-api artifact
+  (ojanus@redhat.com)
+- Bump com.diffplug.spotless:spotless-plugin-gradle from 6.20.0 to 6.21.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.mariadb.jdbc:mariadb-java-client from 3.1.4 to 3.2.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.12 to 10.1.13
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump info.picocli:picocli from 4.7.4 to 4.7.5
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-550: Created build stage for dev Candlepin image
+  (joshmalbrecht@gmail.com)
+- CANDLEPIN-431: Reorganize creation of Object Mappers (wpoteat@redhat.com)
+- Bump org.mockito:mockito-junit-jupiter from 5.4.0 to 5.5.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.owasp:dependency-check-gradle from 8.3.1 to 8.4.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- 2231503: Add condition for index creation (wpoteat@redhat.com)
+- 2231503: CertificateCleanupJob execution takes a very long time
+  (wpoteat@redhat.com)
+- Update healt check for GH action compose file (sbakaj@redhat.com)
+- Bump org.apache.tomcat:tomcat-annotations-api from 10.1.11 to 10.1.12
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.liquibase:liquibase-core from 4.23.0 to 4.23.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.4.10 to 1.4.11
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-642: Investigate Spotless issues and find potential solutions
+  (sbakaj@redhat.com)
+- Bump ch.qos.logback:logback-classic from 1.4.9 to 1.4.10
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump ch.qos.logback:logback-classic from 1.4.8 to 1.4.9
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump io.smallrye.config:smallrye-config from 3.3.2 to 3.3.3
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Enable sonar for dependabot (ojanus@redhat.com)
+- CANDLEPIN-619: Run workflow against actual base branch (sbakaj@redhat.com)
+- Add new translations using Weblate (noreply@weblate.org)
+- During i18n job, only check for diffs on the .pot file (nmoumoul@redhat.com)
+- CANDLEPIN-598: Remove uses of property injection (wpoteat@redhat.com)
+- Update Gradle Wrapper to version 8.2.1 (ojanus@redhat.com)
+- CANDLEPIN-623: Implement Anonymous Org Creation & Entitlement Job
+  (sbakaj@redhat.com)
+- CANDLEPIN-638: Relax auth restrictions for activation key management
+  (crog@redhat.com)
+- Added configuration for gitleaks (crog@redhat.com)
+- Bump com.google.guava:guava from 32.1.1-jre to 32.1.2-jre
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.commons:commons-lang3 from 3.12.0 to 3.13.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.activemq:artemis-stomp-protocol from 2.29.0 to 2.30.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.apache.activemq:artemis-server from 2.29.0 to 2.30.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.gradle.enterprise from 3.14 to 3.14.1
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump com.diffplug.spotless:spotless-plugin-gradle from 6.19.0 to 6.20.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- CANDLEPIN-593: Implement conversion to Spotless from Checkstyle
+  (ojanus@redhat.com)
+- Bump org.junit.jupiter:junit-jupiter from 5.9.3 to 5.10.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.junit.jupiter:junit-jupiter-params from 5.9.3 to 5.10.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Bump org.junit.jupiter:junit-jupiter-api from 5.9.3 to 5.10.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Added trigger for merge queue (sbakaj@redhat.com)
+- Bump org.junit.jupiter:junit-jupiter-engine from 5.9.3 to 5.10.0
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- Fix JUnit null param parsing (ojanus@redhat.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- CANDLEPIN-613: Migrated the i18n job to GH actions (joshmalbrecht@gmail.com)
+- CANDLEPIN-173: Created containerfile for production image - Updated spec test
+  containerfile to use entrypoint - Added null check to RyeConfig.toProperties
+  method (joshmalbrecht@gmail.com)
+
 * Wed Jul 19 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.7-1
 - Bump com.gradle.enterprise from 3.13.4 to 3.14
   (49699333+dependabot[bot]@users.noreply.github.com)
