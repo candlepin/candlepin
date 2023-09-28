@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-14 07:07+0000\n"
+"POT-Creation-Date: 2023-09-28 07:07+0000\n"
 "PO-Revision-Date: 2023-04-21 10:20+0000\n"
 "Last-Translator: Charles Lee <lchopn@gmail.com>\n"
 "Language-Team: Chinese (Simplified) <https://translate.fedoraproject.org/"
@@ -276,8 +276,13 @@ msgstr "无效证书"
 msgid "Error contacting user service"
 msgstr "联系用户服务出错"
 
+#: src/main/java/org/candlepin/auth/CloudRegistrationAuth.java:265
+msgid ""
+"cloud provider or account details could not be resolved to an organization"
+msgstr "云供应商或账户详情无法解析到一个组织"
+
 #: src/main/java/org/candlepin/auth/ConsumerAuth.java:69
-#: src/main/java/org/candlepin/resteasy/filter/StoreFactory.java:156
+#: src/main/java/org/candlepin/resteasy/filter/StoreFactory.java:157
 #, java-format
 msgid "Unit {0} has been deleted"
 msgstr "已删除单元 {0}"
@@ -740,7 +745,7 @@ msgid "Activation key with ID \"{0}\" could not be found."
 msgstr "没有找到 ID 为 {0} 的激活码。"
 
 #: src/main/java/org/candlepin/resource/ActivationKeyResource.java:153
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1017
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1019
 #, java-format
 msgid ""
 "The activation key name \"{0}\" must be alphanumeric or include the "
@@ -782,68 +787,13 @@ msgstr "CDN证书有空密钥或证书。"
 msgid "No such content delivery network: {0}"
 msgstr "没有这个内容发布网络：{0}"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:95
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:59
 msgid "No cloud registration information provided"
 msgstr "没有提供云注册信息"
 
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:111
-msgid ""
-"cloud provider or account details could not be resolved to an organization"
-msgstr "云供应商或账户详情无法解析到一个组织"
-
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:135
-msgid "unknown cloud authorization version"
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:140
+#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:68
 msgid "Cloud registration is not supported by this Candlepin instance"
 msgstr "该 Candlepin 实例不支持云注册"
-
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:185
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2365
-#: src/main/java/org/candlepin/resource/ConsumerResource.java:2708
-#: src/main/java/org/candlepin/resource/EnvironmentResource.java:431
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:126
-#: src/main/java/org/candlepin/resource/HypervisorResource.java:156
-#: src/main/java/org/candlepin/resource/JobResource.java:361
-#: src/main/java/org/candlepin/resource/OwnerProductResource.java:246
-#: src/main/java/org/candlepin/resource/OwnerResource.java:965
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1303
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1445
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1507
-#, java-format
-msgid "An unexpected exception occurred while scheduling job \"{0}\""
-msgstr "在调度作业 “{0}” 时发生意外的异常"
-
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:260
-#, fuzzy
-#| msgid ""
-#| "cloud provider or account details could not be resolved to an organization"
-msgid "cloud account ID could not be resolved"
-msgstr "云供应商或账户详情无法解析到一个组织"
-
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:267
-#, fuzzy
-#| msgid "Product with ID \"{0}\" could not be found."
-msgid "cloud instance ID could not be resolved"
-msgstr "无法找到 ID 是 \"{0}\" 的产品。"
-
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:274
-#, fuzzy
-#| msgid ""
-#| "cloud provider or account details could not be resolved to an organization"
-msgid "cloud provider could not be resolved"
-msgstr "云供应商或账户详情无法解析到一个组织"
-
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:281
-msgid "offer ID could not be resolved"
-msgstr ""
-
-#: src/main/java/org/candlepin/resource/CloudRegistrationResource.java:288
-#, fuzzy
-#| msgid "Product with ID \"{0}\" could not be found."
-msgid "product ID could not be resolved"
-msgstr "无法找到 ID 是 \"{0}\" 的产品。"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
@@ -864,7 +814,7 @@ msgstr "必须指定至少一个搜索标准。"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:621
 #: src/main/java/org/candlepin/resource/JobResource.java:215
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1137
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1139
 #, java-format
 msgid ""
 "This endpoint does not support returning more than {0} results at a time, "
@@ -950,7 +900,7 @@ msgstr "{0} 没有授权可以使用机构 {1} 注册"
 # keys
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:1398
 #: src/main/java/org/candlepin/resource/HypervisorResource.java:170
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1285
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1287
 #, java-format
 msgid "owner with key: {0} was not found."
 msgstr "无法找到密钥 {0} 的所有者。"
@@ -1028,6 +978,21 @@ msgstr "无法绑定多个参数。"
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2274
 msgid "Cannot specify a quantity when auto-binding."
 msgstr "在自动绑定时无法指定数量。"
+
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2365
+#: src/main/java/org/candlepin/resource/ConsumerResource.java:2708
+#: src/main/java/org/candlepin/resource/EnvironmentResource.java:431
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:126
+#: src/main/java/org/candlepin/resource/HypervisorResource.java:156
+#: src/main/java/org/candlepin/resource/JobResource.java:361
+#: src/main/java/org/candlepin/resource/OwnerProductResource.java:246
+#: src/main/java/org/candlepin/resource/OwnerResource.java:967
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1305
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1447
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1509
+#, java-format
+msgid "An unexpected exception occurred while scheduling job \"{0}\""
+msgstr "在调度作业 “{0}” 时发生意外的异常"
 
 #: src/main/java/org/candlepin/resource/ConsumerResource.java:2404
 #, java-format
@@ -1308,7 +1273,7 @@ msgstr "无法找到 id 为 {0} 的单元类型。"
 
 #: src/main/java/org/candlepin/resource/OwnerContentResource.java:235
 #: src/main/java/org/candlepin/resource/OwnerProductResource.java:344
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1645
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1648
 #, java-format
 msgid "Owner with key \"{0}\" was not found."
 msgstr "无法找到密钥 \"{0}\" 的所有者。"
@@ -1407,12 +1372,12 @@ msgstr "无法为所有者 \"{1}\" 找到使用 ID 为 \"{0}\" 的产品"
 msgid "Unable to find parent owner: {0}"
 msgstr "无法找到父所有者：{0}"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:879
+#: src/main/java/org/candlepin/resource/OwnerResource.java:881
 #, java-format
 msgid "Content access mode list contains an unsupported mode: {0}"
 msgstr "内容访问模式列表中包含一个不支持的模式：{0}"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:899
+#: src/main/java/org/candlepin/resource/OwnerResource.java:901
 #, java-format
 msgid ""
 "Content access mode is not present in the content access mode list for this "
@@ -1421,21 +1386,21 @@ msgstr "该组织的内容访问模式列表中不存在内容访问模式：{0}
 
 # translation auto-copied from project Candlepin, version master, document
 # keys, author xhuang
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1010
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1012
 msgid "Must provide a name for activation key."
 msgstr "必须为激活密钥提供一个名称。"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1029
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1031
 #, java-format
 msgid "The activation key name \"{0}\" is already in use for owner {1}"
 msgstr "激活码名称 ''{0}'' 已被所有者 {1} 使用"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1072
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1074
 #, java-format
 msgid "{0} is not a valid log level"
 msgstr "{0} 不是有效日志等级"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1196
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1198
 #: src/main/java/org/candlepin/resource/PoolResource.java:122
 #, java-format
 msgid "Unit: {0} not found"
@@ -1443,68 +1408,68 @@ msgstr "没有找到单元 {0}"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1206
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1208
 #: src/main/java/org/candlepin/resource/PoolResource.java:189
 #, java-format
 msgid "User {0} cannot access consumer {1}"
 msgstr "用户 {0} 不能访问客户 {1}"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1216
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1218
 #, java-format
 msgid "ActivationKey with id {0} could not be found."
 msgstr "没有找到 id 为 {0} 的激活码。"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1222
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1224
 msgid "The flags add_future and only_future cannot be used at the same time."
 msgstr "add_future 标识和 only_future 标识不能同时使用。"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1227
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1229
 msgid ""
 "The flags add_future and only_future cannot be used with the parameter after."
 msgstr "add_future 标识和 only_future 标识不能和参数 after 一起使用。"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1334
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1336
 msgid "Pool product ID not specified"
 msgstr "没有指定池产品 ID"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1362
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1364
 #, java-format
 msgid "Unable to find a pool with the ID \"{0}\""
 msgstr "无法找到 ID 为 \"{0}\" 的池"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1370
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1372
 #, java-format
 msgid "Pool \"{0}\" does not belong to the specified owner \"{1}\""
 msgstr "池 \"{0}\" 不属于指定的所有者 \"{1}\""
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1377
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1379
 msgid "Cannot update bonus pools, as they are auto generated"
 msgstr "无法更新加分池，因为加分池是自动生成的"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1479
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1481
 msgid "Unknown conflict to force"
 msgstr "未知冲突的强制"
 
 # translation auto-copied from project Candlepin, version master, document
 # keys
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1516
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1518
 msgid "Error reading export archive"
 msgstr "读取导出归档出错"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1520
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1522
 msgid "Error storing uploaded archive for asynchronous processing"
 msgstr "为异步处理保存上传的归档错误"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1595
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1598
 #, java-format
 msgid "uber certificate for owner {0} was not found. Please generate one."
 msgstr "没有找到为所有者 {0} 的 uber 证书，请生成一个。"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1671
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1673
 msgid "Owners must be created with a valid key"
 msgstr "所有者必需使用一个有效的码创建"
 
-#: src/main/java/org/candlepin/resource/OwnerResource.java:1680
+#: src/main/java/org/candlepin/resource/OwnerResource.java:1682
 msgid "The default service level cannot be specified during owner creation"
 msgstr "在所有者创建时不能指定默认服务级别"
 
@@ -2015,6 +1980,30 @@ msgstr "脚本表达式 \"{0}\" 未评估为 true"
 #: src/main/java/org/candlepin/validation/CandlepinMessageInterpolator.java:89
 msgid "must be a valid URL"
 msgstr "必须是有效 URL"
+
+#, fuzzy
+#~| msgid ""
+#~| "cloud provider or account details could not be resolved to an "
+#~| "organization"
+#~ msgid "cloud account ID could not be resolved"
+#~ msgstr "云供应商或账户详情无法解析到一个组织"
+
+#, fuzzy
+#~| msgid "Product with ID \"{0}\" could not be found."
+#~ msgid "cloud instance ID could not be resolved"
+#~ msgstr "无法找到 ID 是 \"{0}\" 的产品。"
+
+#, fuzzy
+#~| msgid ""
+#~| "cloud provider or account details could not be resolved to an "
+#~| "organization"
+#~ msgid "cloud provider could not be resolved"
+#~ msgstr "云供应商或账户详情无法解析到一个组织"
+
+#, fuzzy
+#~| msgid "Product with ID \"{0}\" could not be found."
+#~ msgid "product ID could not be resolved"
+#~ msgstr "无法找到 ID 是 \"{0}\" 的产品。"
 
 #, java-format
 #~ msgid "Auto-attach is disabled for owner {0}{1}."
