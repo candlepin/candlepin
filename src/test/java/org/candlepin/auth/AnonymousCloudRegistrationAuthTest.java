@@ -14,19 +14,15 @@
  */
 package org.candlepin.auth;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
-import org.candlepin.model.Owner;
-import org.candlepin.model.OwnerCurator;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
 import org.candlepin.service.CloudRegistrationAdapter;
@@ -52,18 +48,16 @@ import org.mockito.quality.Strictness;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.Map;
 
 
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-public class CloudRegistrationAuthTest {
+public class AnonymousCloudRegistrationAuthTest {
     private DevConfig config;
     private CertificateReader certificateReader;
     private CloudRegistrationAdapter mockCloudRegistrationAdapter;
-    private OwnerCurator mockOwnerCurator;
+    private AnonymousCloudConsumerCurator anonymousCloudConsumerCurator;
 
     @BeforeEach
     public void init() {
@@ -71,17 +65,7 @@ public class CloudRegistrationAuthTest {
         this.certificateReader = this.setupCertificateReader();
 
         this.mockCloudRegistrationAdapter = mock(CloudRegistrationAdapter.class);
-        this.mockOwnerCurator = mock(OwnerCurator.class);
-
-        Map<String, Owner> ownerCache = new HashMap<>();
-
-        doAnswer(iom -> {
-            String ownerKey = (String) iom.getArguments()[0];
-            return ownerCache.computeIfAbsent(ownerKey, key -> new Owner()
-                .setKey(key)
-                .setDisplayName(key)
-                .setId(Util.generateUUID()));
-        }).when(this.mockOwnerCurator).getByKey(anyString());
+        this.anonymousCloudConsumerCurator = mock(AnonymousCloudConsumerCurator.class);
 
         doAnswer(iom -> {
             CloudRegistrationInfo cinfo = (CloudRegistrationInfo) iom.getArguments()[0];
@@ -110,8 +94,9 @@ public class CloudRegistrationAuthTest {
         }
     }
 
-    private CloudRegistrationAuth buildAuthProvider() {
-        return new CloudRegistrationAuth(this.config, this.mockOwnerCurator, this.certificateReader);
+    private AnonymousCloudRegistrationAuth buildAuthProvider() {
+        return new AnonymousCloudRegistrationAuth(this.config, this.anonymousCloudConsumerCurator,
+            this.certificateReader);
     }
 
     private MockHttpRequest buildHttpRequest() {
@@ -183,49 +168,14 @@ public class CloudRegistrationAuthTest {
         assertNull(principal);
     }
 
-    /**
-     * This test is to verify that the token generation method provided by this test suite will
-     * generate a valid token if properly populated. This test must pass for the malformed token
-     * tests to be considered valid.
-     */
-    @Test
-    public void testGetPrincipalAcceptsTestToken() {
-        String ownerKey = "test_org";
-        int ctSeconds = this.getCurrentSeconds() - 5;
-
-        String token = this.buildMalformedToken(new JsonWebToken()
-            .type(CloudAuthTokenType.STANDARD.toString())
-            .subject("test_subject")
-            .audience(ownerKey)
-            .issuedAt(ctSeconds)
-            .notBefore(ctSeconds)
-            .expiration(ctSeconds + 300));
-
-        MockHttpRequest request = this.buildHttpRequest();
-        request.header("Authorization", "Bearer " + token);
-
-        Principal principal = this.buildAuthProvider()
-            .getPrincipal(request);
-
-        assertNotNull(principal);
-        assertTrue(principal instanceof UserPrincipal);
-
-        // Test note:
-        // The owner key resolves to the cloud registration type due to the mock adapter implementation
-        // we've defined in our test init, which *always* uses the type as the owner key. In the real
-        // implementation, this isn't guaranteed.
-        Owner owner = this.mockOwnerCurator.getByKey(ownerKey);
-        assertTrue(principal.canAccess(owner, SubResource.CONSUMERS, Access.CREATE));
-    }
-
     @Test
     public void testGetPrincipalIgnoresTokensWithWrongType() {
         int ctSeconds = this.getCurrentSeconds() - 5;
 
         String token = this.buildMalformedToken(new JsonWebToken()
-            .type("invalid_token_type")
-            .subject("test_subject")
-            .audience("test_org")
+            .type("invalid-token-type")
+            .subject("test-subject")
+            .audience("test-org")
             .issuedAt(ctSeconds)
             .notBefore(ctSeconds)
             .expiration(ctSeconds + 300));
@@ -244,8 +194,8 @@ public class CloudRegistrationAuthTest {
         int ctSeconds = this.getCurrentSeconds() - 5;
 
         String token = this.buildMalformedToken(new JsonWebToken()
-            .subject("test_subject")
-            .audience("test_org")
+            .subject("test-subject")
+            .audience("test-org")
             .issuedAt(ctSeconds)
             .notBefore(ctSeconds)
             .expiration(ctSeconds + 300));
@@ -264,8 +214,8 @@ public class CloudRegistrationAuthTest {
         int ctSeconds = this.getCurrentSeconds() - 5;
 
         String token = this.buildMalformedToken(new JsonWebToken()
-            .type(CloudAuthTokenType.STANDARD.toString())
-            .audience("test_org")
+            .type(CloudAuthTokenType.ANONYMOUS.toString())
+            .audience("test-audience")
             .issuedAt(ctSeconds)
             .notBefore(ctSeconds)
             .expiration(ctSeconds + 300));
@@ -284,8 +234,8 @@ public class CloudRegistrationAuthTest {
         int ctSeconds = this.getCurrentSeconds() - 5;
 
         String token = this.buildMalformedToken(new JsonWebToken()
-            .type(CloudAuthTokenType.STANDARD.toString())
-            .subject("test_subject")
+            .type(CloudAuthTokenType.ANONYMOUS.toString())
+            .subject("test-subject")
             .issuedAt(ctSeconds)
             .notBefore(ctSeconds)
             .expiration(ctSeconds + 300));
@@ -304,9 +254,9 @@ public class CloudRegistrationAuthTest {
         int ctSeconds = this.getCurrentSeconds();
 
         String token = this.buildMalformedToken(new JsonWebToken()
-            .type(CloudAuthTokenType.STANDARD.toString())
-            .subject("test_subject")
-            .audience("test_org")
+            .type(CloudAuthTokenType.ANONYMOUS.toString())
+            .subject("test-subject")
+            .audience("test-audience")
             .issuedAt(ctSeconds - 15)
             .notBefore(ctSeconds - 15)
             .expiration(ctSeconds - 10));
@@ -325,9 +275,9 @@ public class CloudRegistrationAuthTest {
         int ctSeconds = this.getCurrentSeconds();
 
         String token = this.buildMalformedToken(new JsonWebToken()
-            .type(CloudAuthTokenType.STANDARD.toString())
-            .subject("test_subject")
-            .audience("test_org")
+            .type(CloudAuthTokenType.ANONYMOUS.toString())
+            .subject("test-subject")
+            .audience("test-audience")
             .issuedAt(ctSeconds + 15)
             .notBefore(ctSeconds + 15)
             .expiration(ctSeconds + 25));

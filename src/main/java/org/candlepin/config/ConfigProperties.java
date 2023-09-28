@@ -18,6 +18,7 @@ import static org.candlepin.config.ConfigurationPrefixes.JPA_CONFIG_PREFIX;
 
 import org.candlepin.async.tasks.ActiveEntitlementJob;
 import org.candlepin.async.tasks.CertificateCleanupJob;
+import org.candlepin.async.tasks.CloudAccountOrgSetupJob;
 import org.candlepin.async.tasks.EntitlerJob;
 import org.candlepin.async.tasks.ExpiredPoolsCleanupJob;
 import org.candlepin.async.tasks.ImportRecordCleanerJob;
@@ -60,7 +61,7 @@ public class ConfigProperties {
     public static final String CA_KEY_PASSWORD = "candlepin.ca_key_password";
 
     /*
-     * XXX The actual property key refers to HornetQ which was ActiveMQ's ancestor.  We have to keep the
+     * XXX The actual property key refers to HornetQ which was ActiveMQ's ancestor. We have to keep the
      * key unchanged for compatibility reasons. These are deprecated, however, and should be replaced by
      * newer configuration values as features are added.
      */
@@ -142,6 +143,7 @@ public class ConfigProperties {
     // JWT configuration
     public static final String JWT_ISSUER = "candlepin.jwt.issuer";
     public static final String JWT_TOKEN_TTL = "candlepin.jwt.token_ttl";
+    public static final String ANON_JWT_TOKEN_TTL = "candlepin.jwt.anon_token_ttl";
 
     /**
      * A possibility to enable Suspend Mode. By default, the suspend mode is enabled
@@ -212,8 +214,7 @@ public class ConfigProperties {
     private static final String INTEGER_FACT_LIST = "";
 
     public static final String NON_NEG_INTEGER_FACTS = "candlepin.positive_integer_facts";
-    private static final String NON_NEG_INTEGER_FACT_LIST =
-        "cpu.core(s)_per_socket," +
+    private static final String NON_NEG_INTEGER_FACT_LIST = "cpu.core(s)_per_socket," +
         "cpu.cpu(s)," +
         "cpu.cpu_socket(s)," +
         "lscpu.core(s)_per_socket," +
@@ -226,8 +227,7 @@ public class ConfigProperties {
     private static final String INTEGER_ATTRIBUTE_LIST = "";
 
     public static final String NON_NEG_INTEGER_ATTRIBUTES = "candlepin.positive_integer_attributes";
-    private static final String NON_NEG_INTEGER_ATTRIBUTE_LIST =
-        "sockets," +
+    private static final String NON_NEG_INTEGER_ATTRIBUTE_LIST = "sockets," +
         "warning_period," +
         "ram," +
         "cores";
@@ -239,8 +239,7 @@ public class ConfigProperties {
     private static final String NON_NEG_LONG_ATTRIBUTE_LIST = "metadata_expire";
 
     public static final String BOOLEAN_ATTRIBUTES = "candlepin.boolean_attributes";
-    private static final String BOOLEAN_ATTRIBUTE_LIST =
-        "management_enabled," +
+    private static final String BOOLEAN_ATTRIBUTE_LIST = "management_enabled," +
         "virt_only";
 
     public static final String IDENTITY_CERT_YEAR_ADDENDUM = "candlepin.identityCert.yr.addendum";
@@ -266,7 +265,8 @@ public class ConfigProperties {
     public static final String ASYNC_JOBS_RECEIVE_ADDRESS = "candlepin.async.receive_address";
     public static final String ASYNC_JOBS_RECEIVE_FILTER = "candlepin.async.receive_filter";
 
-    // Whether or not we should allow queuing new jobs on this node while the job manager is suspended/paused
+    // Whether or not we should allow queuing new jobs on this node while the job manager is
+    // suspended/paused
     public static final String ASYNC_JOBS_QUEUE_WHILE_SUSPENDED = "candlepin.async.queue_while_suspended";
 
     // Used for per-job configuration. The full syntax is "PREFIX.{job_key}.SUFFIX". For instance,
@@ -290,7 +290,8 @@ public class ConfigProperties {
         ManifestCleanerJob.JOB_KEY,
         OrphanCleanupJob.JOB_KEY,
         UnmappedGuestEntitlementCleanerJob.JOB_KEY,
-        InactiveConsumerCleanerJob.JOB_KEY
+        InactiveConsumerCleanerJob.JOB_KEY,
+        CloudAccountOrgSetupJob.JOB_KEY
     };
 
     // How long (in seconds) to wait for job threads to finish during a graceful Tomcat shutdown
@@ -347,6 +348,7 @@ public class ConfigProperties {
 
             this.put(JWT_ISSUER, "Candlepin");
             this.put(JWT_TOKEN_TTL, "600"); // seconds
+            this.put(ANON_JWT_TOKEN_TTL, "172800"); // seconds
 
             this.put(CA_KEY, "/etc/candlepin/certs/candlepin-ca.key");
             this.put(CA_CERT, "/etc/candlepin/certs/candlepin-ca.crt");
@@ -376,7 +378,7 @@ public class ConfigProperties {
 
             this.put(AUDIT_LISTENERS,
                 "org.candlepin.audit.LoggingListener," +
-                "org.candlepin.audit.ActivationListener");
+                    "org.candlepin.audit.ActivationListener");
             this.put(AUDIT_FILTER_ENABLED, "false");
 
             this.put(ENTITLER_BULK_SIZE, "1000");
@@ -384,10 +386,10 @@ public class ConfigProperties {
             // These default DO_NOT_FILTER events are those events needed by other Satellite components.
             this.put(AUDIT_FILTER_DO_NOT_FILTER,
                 "CREATED-ENTITLEMENT," +
-                "DELETED-ENTITLEMENT," +
-                "CREATED-POOL," +
-                "DELETED-POOL," +
-                "CREATED-COMPLIANCE");
+                    "DELETED-ENTITLEMENT," +
+                    "CREATED-POOL," +
+                    "DELETED-POOL," +
+                    "CREATED-COMPLIANCE");
 
             this.put(AUDIT_FILTER_DO_FILTER, "");
             this.put(AUDIT_FILTER_DEFAULT_POLICY, "DO_FILTER");
