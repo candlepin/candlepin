@@ -14,7 +14,9 @@
  */
 package org.candlepin.model;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.collection;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.candlepin.test.DatabaseTestFixture;
@@ -38,10 +40,11 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testCreate() throws Exception {
+        String expectedProductId = "productId";
         AnonymousCloudConsumer expected = new AnonymousCloudConsumer()
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of(expectedProductId))
             .setCloudProviderShortName("shortName");
 
         this.anonymousCloudConsumerCurator.create(expected);
@@ -54,7 +57,8 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .returns(expected.getCloudAccountId(), AnonymousCloudConsumer::getCloudAccountId)
             .returns(expected.getCloudInstanceId(), AnonymousCloudConsumer::getCloudInstanceId)
             .returns(expected.getCloudProviderShortName(), AnonymousCloudConsumer::getCloudProviderShortName)
-            .returns(expected.getProductId(), AnonymousCloudConsumer::getProductId);
+            .extracting(AnonymousCloudConsumer::getProductIds, as(collection(String.class)))
+            .containsExactly(expectedProductId);
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
@@ -64,7 +68,7 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
         AnonymousCloudConsumer expected = new AnonymousCloudConsumer()
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         this.anonymousCloudConsumerCurator.create(expected);
@@ -79,7 +83,7 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
         AnonymousCloudConsumer expected = new AnonymousCloudConsumer()
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
         this.anonymousCloudConsumerCurator.create(expected);
 
@@ -90,10 +94,11 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetByUuidWithExistingUuid() {
+        String expectedProductId = "productId";
         AnonymousCloudConsumer expected = new AnonymousCloudConsumer()
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of(expectedProductId))
             .setCloudProviderShortName("shortName");
         this.anonymousCloudConsumerCurator.create(expected);
 
@@ -106,7 +111,8 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .returns(expected.getCloudAccountId(), AnonymousCloudConsumer::getCloudAccountId)
             .returns(expected.getCloudInstanceId(), AnonymousCloudConsumer::getCloudInstanceId)
             .returns(expected.getCloudProviderShortName(), AnonymousCloudConsumer::getCloudProviderShortName)
-            .returns(expected.getProductId(), AnonymousCloudConsumer::getProductId);
+            .extracting(AnonymousCloudConsumer::getProductIds, as(collection(String.class)))
+            .containsExactly(expectedProductId);
     }
 
     @Test
@@ -129,17 +135,18 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetByUuidsWithExistingAnonymousCloudConsumer() {
+        String expectedProductId = "productId";
         AnonymousCloudConsumer expected = new AnonymousCloudConsumer()
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of(expectedProductId))
             .setCloudProviderShortName("shortName");
         expected = this.anonymousCloudConsumerCurator.create(expected);
 
         AnonymousCloudConsumer other = new AnonymousCloudConsumer()
             .setCloudAccountId("otherCloudAccountId")
             .setCloudInstanceId("otherInstanceId")
-            .setProductId("otherProductId")
+            .setProductIds(List.of("otherProductId"))
             .setCloudProviderShortName("shortName");
         other = this.anonymousCloudConsumerCurator.create(other);
 
@@ -153,7 +160,8 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .returns(expected.getCloudAccountId(), AnonymousCloudConsumer::getCloudAccountId)
             .returns(expected.getCloudInstanceId(), AnonymousCloudConsumer::getCloudInstanceId)
             .returns(expected.getCloudProviderShortName(), AnonymousCloudConsumer::getCloudProviderShortName)
-            .returns(expected.getProductId(), AnonymousCloudConsumer::getProductId);
+            .extracting(AnonymousCloudConsumer::getProductIds, as(collection(String.class)))
+            .containsExactly(expectedProductId);
     }
 
     @ParameterizedTest(name = "{displayName} {index}: {0}")
@@ -163,7 +171,7 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
         AnonymousCloudConsumer expected = new AnonymousCloudConsumer()
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         this.anonymousCloudConsumerCurator.create(expected);
@@ -176,10 +184,11 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
 
     @Test
     public void testGetByCloudInstanceIdWithExistingInstanceId() {
+        String expectedProductId = "productId";
         AnonymousCloudConsumer expected = new AnonymousCloudConsumer()
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of(expectedProductId))
             .setCloudProviderShortName("shortName");
         this.anonymousCloudConsumerCurator.create(expected);
 
@@ -193,7 +202,8 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
             .returns(expected.getCloudAccountId(), AnonymousCloudConsumer::getCloudAccountId)
             .returns(expected.getCloudInstanceId(), AnonymousCloudConsumer::getCloudInstanceId)
             .returns(expected.getCloudProviderShortName(), AnonymousCloudConsumer::getCloudProviderShortName)
-            .returns(expected.getProductId(), AnonymousCloudConsumer::getProductId);
+            .extracting(AnonymousCloudConsumer::getProductIds, as(collection(String.class)))
+            .containsExactly(expectedProductId);
     }
 
     @Test
@@ -201,7 +211,7 @@ public class AnonymousCloudConsumerCuratorTest extends DatabaseTestFixture {
         AnonymousCloudConsumer expected = new AnonymousCloudConsumer()
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
         this.anonymousCloudConsumerCurator.create(expected);
 

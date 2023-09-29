@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -757,12 +758,15 @@ public class HostedTestResource {
             throw new BadRequestException("cloud offer ID is null");
         }
 
-        String productId = root.get("productId").asText();
-        if (productId == null) {
-            throw new BadRequestException("product ID is null");
+        JsonNode productIdsNode = root.get("productIds");
+        if (productIdsNode == null) {
+            throw new BadRequestException("productIds is null");
         }
 
-        this.datastore.setProductIdForCloudOfferId(offerId, productId);
+        List<String> productIds = new ArrayList<>();
+        productIdsNode.elements().forEachRemaining(prod -> productIds.add(prod.asText()));
+
+        this.datastore.setProductIdsForCloudOfferId(offerId, productIds);
     }
 
     @POST

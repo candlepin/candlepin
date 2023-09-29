@@ -51,6 +51,7 @@ import org.mockito.quality.Strictness;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.X509Certificate;
+import java.util.List;
 
 
 
@@ -304,7 +305,7 @@ public class AnonymousCloudRegistrationAuthTest {
             .setUuid(anonymousConsumerUuid)
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         doReturn(consumer).when(anonymousCloudConsumerCurator).getByUuid(anonymousConsumerUuid);

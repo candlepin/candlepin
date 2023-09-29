@@ -44,7 +44,7 @@ public class AnonymousCloudConsumerPermissionTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumerPermission permission = new AnonymousCloudConsumerPermission(consumer);
@@ -77,7 +77,7 @@ public class AnonymousCloudConsumerPermissionTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumerPermission permission = new AnonymousCloudConsumerPermission(consumer);
@@ -92,7 +92,7 @@ public class AnonymousCloudConsumerPermissionTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumer consumer2 = new AnonymousCloudConsumer()
@@ -100,7 +100,7 @@ public class AnonymousCloudConsumerPermissionTest {
             .setUuid("uuid2")
             .setCloudAccountId("cloudAccountId2")
             .setCloudInstanceId("instanceId2")
-            .setProductId("productId2")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumerPermission permission = new AnonymousCloudConsumerPermission(consumer1);
@@ -115,7 +115,7 @@ public class AnonymousCloudConsumerPermissionTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumerPermission permission = new AnonymousCloudConsumerPermission(consumer);
