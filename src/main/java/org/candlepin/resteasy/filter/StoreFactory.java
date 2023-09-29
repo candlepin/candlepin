@@ -15,6 +15,8 @@
 package org.candlepin.resteasy.filter;
 
 import org.candlepin.exceptions.GoneException;
+import org.candlepin.model.AnonymousCloudConsumer;
+import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.model.AsyncJobStatus;
 import org.candlepin.model.AsyncJobStatusCurator;
 import org.candlepin.model.Consumer;
@@ -48,6 +50,8 @@ import java.util.Map;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+
+
 /**
  * This class should be bound to an instance
  */
@@ -60,6 +64,7 @@ public class StoreFactory {
         storeMap.put(Owner.class, injector.getInstance(OwnerStore.class));
         storeMap.put(Environment.class, injector.getInstance(EnvironmentStore.class));
         storeMap.put(Consumer.class, injector.getInstance(ConsumerStore.class));
+        storeMap.put(AnonymousCloudConsumer.class, injector.getInstance(AnonymousCloudConsumerStore.class));
         storeMap.put(Entitlement.class, injector.getInstance(EntitlementStore.class));
         storeMap.put(Pool.class, injector.getInstance(PoolStore.class));
         storeMap.put(User.class, new UserStore());
@@ -175,6 +180,37 @@ public class StoreFactory {
         public Owner getOwner(Consumer entity) {
             return ownerCurator.findOwnerById(entity.getOwnerId());
         }
+    }
+
+    private static class AnonymousCloudConsumerStore implements EntityStore<AnonymousCloudConsumer> {
+        private AnonymousCloudConsumerCurator anonymousConsumerCurator;
+
+        @Inject
+        public AnonymousCloudConsumerStore(AnonymousCloudConsumerCurator anonymousConsumerCurator) {
+            this.anonymousConsumerCurator = anonymousConsumerCurator;
+        }
+
+        @Override
+        public AnonymousCloudConsumer lookup(String consumerUuid) {
+            if (consumerUuid == null || consumerUuid.isBlank()) {
+                return null;
+            }
+
+            return anonymousConsumerCurator.getByUuid(consumerUuid);
+        }
+
+        @Override
+        public Collection<AnonymousCloudConsumer> lookup(
+            Collection<String> keys) {
+            return this.anonymousConsumerCurator.getByUuids(keys);
+        }
+
+        @Override
+        public Owner getOwner(AnonymousCloudConsumer entity) {
+            // Anonymous cloud consumers do not have an owner
+            return null;
+        }
+
     }
 
     private static class EntitlementStore implements EntityStore<Entitlement> {

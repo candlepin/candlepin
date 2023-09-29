@@ -83,19 +83,20 @@ public class AnonymousCloudRegistrationAuth implements AuthProvider {
     @Override
     public Principal getPrincipal(HttpRequest httpRequest) {
         if (!this.enabled) {
-            // If cloud auth isn't enabled, don't even attempt to validate anything
+            log.debug("Cloud authentication is disabled");
             return null;
         }
 
         String auth = AuthUtil.getHeader(httpRequest, "Authorization");
         if (auth.isEmpty()) {
-            // Auth header is empty; no type or token provided
+            log.debug("Header with key value \"Authorization\" is missing in http request");
             return null;
         }
 
         String[] authChunks = auth.split(" ");
         if (!AUTH_TYPE.equalsIgnoreCase(authChunks[0]) || authChunks.length != 2) {
             // Not a type we handle; ignore it and hope another auth filter picks it up
+            log.debug("Header is not Bearer token or unable to parse token");
             return null;
         }
 
@@ -115,18 +116,17 @@ public class AnonymousCloudRegistrationAuth implements AuthProvider {
             // Verify the token has the JWT type we're expecting
             if (CloudAuthTokenType.ANONYMOUS.equalsType(token.getType())) {
                 String subject = token.getSubject();
-                String consumerUuid = audiences != null && audiences.length > 0 ? audiences[0] : null;
-
                 if (subject == null || subject.isEmpty()) {
                     throw new VerificationException("Token contains an invalid subject: " + subject);
                 }
 
+                String consumerUuid = audiences != null && audiences.length > 0 ? audiences[0] : null;
                 if (consumerUuid == null || consumerUuid.isEmpty()) {
                     throw new VerificationException("Token contains an invalid audience: " + consumerUuid);
                 }
 
                 log.info("Token type used for authentication: {}", CloudAuthTokenType.ANONYMOUS);
-                return this.createCloudUserPrincipal(subject, consumerUuid);
+                return this.createCloudUserPrincipal(consumerUuid);
             }
         }
         catch (VerificationException e) {
@@ -140,12 +140,15 @@ public class AnonymousCloudRegistrationAuth implements AuthProvider {
         return null;
     }
 
-    private UserPrincipal createCloudUserPrincipal(String subject, String consumerUuid) {
+    private AnonymousCloudConsumerPrincipal createCloudUserPrincipal(String consumerUuid) {
         AnonymousCloudConsumer consumer = anonymousCloudConsumerCurator.getByUuid(consumerUuid);
+        if (consumer == null) {
+            log.debug("Anonymous cloud consumer with UUID {} could not be found", consumerUuid);
+            return null;
+        }
 
-        // TODO: Handle as part of CANDLEPIN-625
-
-        return null;
+        log.debug("Principal created for anonymous cloud consumer UUID {}", consumerUuid);
+        return new AnonymousCloudConsumerPrincipal(consumer);
     }
 
 }

@@ -14,14 +14,17 @@
  */
 package org.candlepin.auth;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import org.candlepin.config.ConfigProperties;
 import org.candlepin.config.DevConfig;
 import org.candlepin.config.TestConfig;
+import org.candlepin.model.AnonymousCloudConsumer;
 import org.candlepin.model.AnonymousCloudConsumerCurator;
 import org.candlepin.pki.CertificateReader;
 import org.candlepin.pki.impl.JSSPrivateKeyReader;
@@ -290,4 +293,60 @@ public class AnonymousCloudRegistrationAuthTest {
 
         assertNull(principal);
     }
+
+    @Test
+    public void testGetPrincipalWithExistingAnonymousCloudConsumer() {
+        int ctSeconds = this.getCurrentSeconds() - 5;
+
+        String anonymousConsumerUuid = "uuid";
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setId("id")
+            .setUuid(anonymousConsumerUuid)
+            .setCloudAccountId("cloudAccountId")
+            .setCloudInstanceId("instanceId")
+            .setProductId("productId")
+            .setCloudProviderShortName("shortName");
+
+        doReturn(consumer).when(anonymousCloudConsumerCurator).getByUuid(anonymousConsumerUuid);
+
+        String token = this.buildMalformedToken(new JsonWebToken()
+            .type(CloudAuthTokenType.ANONYMOUS.toString())
+            .subject("test-subject")
+            .audience(anonymousConsumerUuid)
+            .issuedAt(ctSeconds)
+            .notBefore(ctSeconds)
+            .expiration(ctSeconds + 300));
+
+        MockHttpRequest request = this.buildHttpRequest();
+        request.header("Authorization", "Bearer " + token);
+
+        Principal principal = this.buildAuthProvider()
+            .getPrincipal(request);
+
+        assertThat(principal)
+            .isNotNull()
+            .returns(AnonymousCloudConsumerPrincipal.class, Principal::getClass);
+    }
+
+    @Test
+    public void testGetPrincipalWithNonExistingAnonymousCloudConsumer() {
+        int ctSeconds = this.getCurrentSeconds() - 5;
+
+        String token = this.buildMalformedToken(new JsonWebToken()
+            .type(CloudAuthTokenType.ANONYMOUS.toString())
+            .subject("test-subject")
+            .audience("anon-consumer-uuid")
+            .issuedAt(ctSeconds)
+            .notBefore(ctSeconds)
+            .expiration(ctSeconds + 300));
+
+        MockHttpRequest request = this.buildHttpRequest();
+        request.header("Authorization", "Bearer " + token);
+
+        Principal principal = this.buildAuthProvider()
+            .getPrincipal(request);
+
+        assertNull(principal);
+    }
+
 }
