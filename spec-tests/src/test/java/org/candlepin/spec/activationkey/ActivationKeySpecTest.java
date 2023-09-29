@@ -136,10 +136,22 @@ public class ActivationKeySpecTest {
     }
 
     /**
-     * Generates all known combinations of roles and access that should have access to create and
-     * modify activation keys
+     * Generates all known roles that should have the ability to read activation keys.
      */
-    public static List<Arguments> genRolesWithActivationKeyCreation() {
+    public static List<Arguments> listRolesWithActivationKeyRead() {
+        return List.of(
+            Arguments.of(Permissions.OWNER, "ALL"),
+            Arguments.of(Permissions.OWNER, "CREATE"),
+            Arguments.of(Permissions.OWNER, "READ_ONLY"),
+            Arguments.of(Permissions.MANAGE_ACTIVATION_KEYS, "ALL"),
+            Arguments.of(Permissions.MANAGE_ACTIVATION_KEYS, "CREATE"),
+            Arguments.of(Permissions.MANAGE_ACTIVATION_KEYS, "READ_ONLY"));
+    }
+
+    /**
+     * Generates all known roles that should have the ability to create activation keys.
+     */
+    public static List<Arguments> listRolesWithActivationKeyCreate() {
         return List.of(
             Arguments.of(Permissions.OWNER, "ALL"),
             Arguments.of(Permissions.OWNER, "CREATE"),
@@ -148,63 +160,132 @@ public class ActivationKeySpecTest {
     }
 
     /**
-     * Generates all known combinations of roles and access that should have access to create and
-     * modify activation keys
+     * Generates all known roles that should have the ability to update or delete activation keys.
      */
-    public static List<Arguments> genRolesWithActivationKeyManagement() {
+    public static List<Arguments> listRolesWithActivationKeyUpdateOrDelete() {
         return List.of(
             Arguments.of(Permissions.OWNER, "ALL"),
             Arguments.of(Permissions.MANAGE_ACTIVATION_KEYS, "ALL"));
     }
 
     /**
-     * Generates all known combinations of roles and access that should not have access to create
-     * activation keys
+     * Generates all known roles without the ability to update or delete activation keys
      */
-    public static List<Arguments> genRolesLackingActivationKeyCreation() {
-        List<Arguments> allowedRoles = genRolesWithActivationKeyCreation();
-        List<Arguments> disallowed = new ArrayList<>();
+    public static List<Arguments> listRolesExcludingRoles(List<Arguments> excludeRoles) {
+        List<Arguments> roles = new ArrayList<>();
 
         for (Permissions permission : Permissions.values()) {
             access: for (String access : Set.of("ALL", "CREATE", "READ_ONLY", "NONE")) {
-                for (Arguments allowed : allowedRoles) {
-                    if (allowed.get()[0].equals(permission) && allowed.get()[1].equals(access)) {
+                for (Arguments excluded : excludeRoles) {
+                    if (excluded.get()[0].equals(permission) && excluded.get()[1].equals(access)) {
                         continue access;
                     }
                 }
 
-                disallowed.add(Arguments.of(permission, access));
+                roles.add(Arguments.of(permission, access));
             }
         }
 
-        return disallowed;
+        return roles;
     }
 
     /**
-     * Generates all known combinations of roles and access that should not have access to modify
-     * activation keys
+     * Generates all known roles without the ability to create activation keys
      */
-    public static List<Arguments> genRolesLackingActivationKeyManagement() {
-        List<Arguments> allowedRoles = genRolesWithActivationKeyManagement();
-        List<Arguments> disallowed = new ArrayList<>();
+    public static List<Arguments> listRolesLackingActivationKeyUpdateOrDelete() {
+        return listRolesExcludingRoles(listRolesWithActivationKeyUpdateOrDelete());
+    }
 
-        for (Permissions permission : Permissions.values()) {
-            access: for (String access : Set.of("ALL", "CREATE", "READ_ONLY", "NONE")) {
-                for (Arguments allowed : allowedRoles) {
-                    if (allowed.get()[0].equals(permission) && allowed.get()[1].equals(access)) {
-                        continue access;
-                    }
-                }
+    /**
+     * Generates all known roles without the ability to create activation keys
+     */
+    public static List<Arguments> listRolesLackingActivationKeyCreate() {
+        return listRolesExcludingRoles(listRolesWithActivationKeyCreate());
+    }
 
-                disallowed.add(Arguments.of(permission, access));
-            }
-        }
-
-        return disallowed;
+    /**
+     * Generates all known roles without the ability to read activation keys
+     */
+    public static List<Arguments> listRolesLackingActivationKeyRead() {
+        return listRolesExcludingRoles(listRolesWithActivationKeyRead());
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesWithActivationKeyCreation")
+    @MethodSource("listRolesWithActivationKeyRead")
+    public void shouldAllowAuthorizedAccountsToReadActivationKeys(Permissions permission, String access) {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        ActivationKeyDTO result = userClient.activationKeys().getActivationKey(key.getId());
+        assertThat(result).isEqualTo(key);
+    }
+
+    @ParameterizedTest
+    @MethodSource("listRolesLackingActivationKeyRead")
+    public void shouldNotAllowUnauthorizedAccountsToReadActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+
+        ActivationKeyDTO key = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        assertForbidden(() -> userClient.activationKeys().getActivationKey(key.getId()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("listRolesWithActivationKeyRead")
+    public void shouldAllowAuthorizedAccountsToListActivationKeys(Permissions permission, String access) {
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+
+        ActivationKeyDTO key1 = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+        ActivationKeyDTO key2 = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+        ActivationKeyDTO key3 = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        List<ActivationKeyDTO> result = userClient.owners().ownerActivationKeys(owner.getKey(), null);
+
+        assertThat(result)
+            .isNotNull()
+            .hasSize(3)
+            .contains(key1, key2, key3);
+    }
+
+    @ParameterizedTest
+    @MethodSource("listRolesLackingActivationKeyRead")
+    public void shouldNotAllowUnauthorizedAccountsToListActivationKeys(Permissions permission,
+        String access) {
+
+        ApiClient adminClient = ApiClients.admin();
+        OwnerDTO owner = createOwner(adminClient);
+
+        ActivationKeyDTO key1 = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+        ActivationKeyDTO key2 = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+        ActivationKeyDTO key3 = adminClient.owners()
+            .createActivationKey(owner.getKey(), ActivationKeys.random(owner));
+
+        ApiClient userClient = this.createUserClient(owner, permission, access);
+
+        assertForbidden(() -> userClient.owners().ownerActivationKeys(owner.getKey(), null));
+    }
+
+    @ParameterizedTest
+    @MethodSource("listRolesWithActivationKeyCreate")
     public void shouldAllowAuthorizedAccountsToCreateActivationKeys(Permissions permission, String access) {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = createOwner(adminClient);
@@ -222,7 +303,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesWithActivationKeyManagement")
+    @MethodSource("listRolesWithActivationKeyUpdateOrDelete")
     public void shouldAllowAuthorizedAccountsToModifyActivationKeys(Permissions permission, String access) {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = createOwner(adminClient);
@@ -245,7 +326,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesWithActivationKeyManagement")
+    @MethodSource("listRolesWithActivationKeyUpdateOrDelete")
     public void shouldAllowAuthorizedAccountsToAddProductsToActivationKeys(Permissions permission,
         String access) {
 
@@ -271,7 +352,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesWithActivationKeyManagement")
+    @MethodSource("listRolesWithActivationKeyUpdateOrDelete")
     public void shouldAllowAuthorizedAccountsToRemoveProductsFromActivationKeys(Permissions permission,
         String access) {
 
@@ -305,7 +386,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesWithActivationKeyManagement")
+    @MethodSource("listRolesWithActivationKeyUpdateOrDelete")
     public void shouldAllowAuthorizedAccountsToAddContentOverridesToActivationKeys(Permissions permission,
         String access) {
 
@@ -333,7 +414,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesWithActivationKeyManagement")
+    @MethodSource("listRolesWithActivationKeyUpdateOrDelete")
     public void shouldAllowAuthorizedAccountsToRemoveContentOverridesFromActivationKeys(
         Permissions permission, String access) {
 
@@ -369,7 +450,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesWithActivationKeyManagement")
+    @MethodSource("listRolesWithActivationKeyUpdateOrDelete")
     public void shouldAllowAuthorizedAccountsToDeleteActivationKeys(Permissions permission, String access) {
         ApiClient adminClient = ApiClients.admin();
         OwnerDTO owner = createOwner(adminClient);
@@ -386,7 +467,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesLackingActivationKeyCreation")
+    @MethodSource("listRolesLackingActivationKeyCreate")
     public void shouldNotAllowUnauthorizedAccountsToCreateActivationKeys(Permissions permission,
         String access) {
 
@@ -401,7 +482,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesLackingActivationKeyManagement")
+    @MethodSource("listRolesLackingActivationKeyUpdateOrDelete")
     public void shouldNotAllowUnauthorizedAccountsToModifyActivationKeys(Permissions permission,
         String access) {
 
@@ -425,7 +506,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesLackingActivationKeyManagement")
+    @MethodSource("listRolesLackingActivationKeyUpdateOrDelete")
     public void shouldNotAllowUnauthorizedAccountsToAddProductsToActivationKeys(Permissions permission,
         String access) {
 
@@ -447,7 +528,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesLackingActivationKeyManagement")
+    @MethodSource("listRolesLackingActivationKeyUpdateOrDelete")
     public void shouldNotAllowUnauthorizedAccountsToRemoveProductsFromActivationKeys(Permissions permission,
         String access) {
 
@@ -483,7 +564,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesLackingActivationKeyManagement")
+    @MethodSource("listRolesLackingActivationKeyUpdateOrDelete")
     public void shouldNotAllowUnauthorizedAccountsToAddOverridesToActivationKeys(Permissions permission,
         String access) {
 
@@ -505,7 +586,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesLackingActivationKeyManagement")
+    @MethodSource("listRolesLackingActivationKeyUpdateOrDelete")
     public void shouldNotAllowUnauthorizedAccountsToRemoveOverridesFromActivationKeys(
         Permissions permission, String access) {
 
@@ -545,7 +626,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesLackingActivationKeyManagement")
+    @MethodSource("listRolesLackingActivationKeyUpdateOrDelete")
     public void shouldNotAllowUnauthorizedAccountsToDeleteActivationKeys(Permissions permission,
         String access) {
 
@@ -568,7 +649,7 @@ public class ActivationKeySpecTest {
     // tests require a bit more effort to setup properly
 
     @ParameterizedTest
-    @MethodSource("genRolesWithActivationKeyManagement")
+    @MethodSource("listRolesWithActivationKeyUpdateOrDelete")
     public void shouldAllowAuthorizedAccountsToAddPoolsToActivationKeys(Permissions permission,
         String access) {
 
@@ -616,7 +697,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesWithActivationKeyManagement")
+    @MethodSource("listRolesWithActivationKeyUpdateOrDelete")
     public void shouldAllowAuthorizedAccountsToRemovePoolsFromActivationKeys(Permissions permission,
         String access) {
 
@@ -672,7 +753,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesLackingActivationKeyManagement")
+    @MethodSource("listRolesLackingActivationKeyUpdateOrDelete")
     public void shouldNotAllowUnauthorizedAccountsToAddPoolsToActivationKeys(Permissions permission,
         String access) {
 
@@ -719,7 +800,7 @@ public class ActivationKeySpecTest {
     }
 
     @ParameterizedTest
-    @MethodSource("genRolesLackingActivationKeyManagement")
+    @MethodSource("listRolesLackingActivationKeyUpdateOrDelete")
     public void shouldNotAllowUnauthorizedAccountsToRemovePoolsFromActivationKeys(Permissions permission,
         String access) {
 
