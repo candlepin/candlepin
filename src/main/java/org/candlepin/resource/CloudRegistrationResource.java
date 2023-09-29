@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import org.xnap.commons.i18n.I18n;
 
 import java.util.Objects;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.MediaType;
@@ -204,8 +205,9 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
         String anonymousConsumerUuid = null;
         if (!createAnonConsumer) {
             anonymousConsumerUuid = existingAnonConsumer == null ? null : existingAnonConsumer.getUuid();
-            boolean ownerAndPoolExists = poolCurator.hasPoolForProduct(ownerKey, authResult.getProductId());
-            if ((!ownerAndPoolExists && existingAnonConsumer == null)) {
+            boolean ownerAndPoolsExists = poolCurator
+                .hasPoolsForProducts(ownerKey, authResult.getProductIds());
+            if ((!ownerAndPoolsExists && existingAnonConsumer == null)) {
                 createAnonConsumer = true;
             }
         }
@@ -214,7 +216,7 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             AnonymousCloudConsumer createdAnonConsumer = new AnonymousCloudConsumer()
                 .setCloudAccountId(authResult.getCloudAccountId())
                 .setCloudInstanceId(authResult.getCloudInstanceId())
-                .setProductId(authResult.getProductId())
+                .setProductIds(authResult.getProductIds())
                 .setCloudProviderShortName(authResult.getCloudProvider().shortName());
 
             createdAnonConsumer = anonymousCloudConsumerCurator.create(createdAnonConsumer);
@@ -283,12 +285,13 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             throw new CloudRegistrationAuthorizationException(errmsg);
         }
 
-        String productId = result.getProductId();
-        if (productId == null || productId.isBlank()) {
-            String errmsg = this.i18n.tr("product ID could not be resolved");
+        Set<String> productIds = result.getProductIds();
+        if (productIds == null || productIds.isEmpty()) {
+            String errmsg = this.i18n.tr("product IDs could not be resolved");
 
             throw new CloudRegistrationAuthorizationException(errmsg);
         }
+
     }
 
 }

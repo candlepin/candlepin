@@ -44,7 +44,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
@@ -61,7 +61,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
@@ -77,7 +77,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
@@ -93,7 +93,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
@@ -108,7 +108,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
@@ -124,7 +124,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
@@ -139,7 +139,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
@@ -154,7 +154,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
@@ -169,7 +169,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumerPrincipal principal = new AnonymousCloudConsumerPrincipal(consumer);
@@ -184,7 +184,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumer consumer2 = new AnonymousCloudConsumer()
@@ -192,7 +192,7 @@ public class AnonymousCloudConsumerPrincipalTest {
             .setUuid("uuid")
             .setCloudAccountId("cloudAccountId")
             .setCloudInstanceId("instanceId")
-            .setProductId("productId")
+            .setProductIds(List.of("productId"))
             .setCloudProviderShortName("shortName");
 
         AnonymousCloudConsumerPrincipal principal1 = new AnonymousCloudConsumerPrincipal(consumer1);

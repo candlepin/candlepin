@@ -58,7 +58,9 @@ import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import javax.ws.rs.core.Response;
 
@@ -164,7 +166,7 @@ public class CloudRegistrationResourceTest {
 
         CloudAuthenticationResult result = buildMockAuthResult(cloudAccountId, "instanceId",
             CloudProvider.AWS,
-            "ownerKey", "offerId", "productId", true);
+            "ownerKey", "offerId", Set.of("productId"), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -183,7 +185,7 @@ public class CloudRegistrationResourceTest {
 
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", instanceId,
             CloudProvider.AWS,
-            "ownerKey", "offerId", "productId", true);
+            "ownerKey", "offerId", Set.of("productId"), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -198,7 +200,7 @@ public class CloudRegistrationResourceTest {
             .signature("test-signature");
 
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", "instanceId", null,
-            "ownerKey", "offerId", "productId", true);
+            "ownerKey", "offerId", Set.of("productId"), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -208,8 +210,7 @@ public class CloudRegistrationResourceTest {
     @ParameterizedTest(name = "{displayName} {index}: {0}")
     @NullAndEmptySource
     @ValueSource(strings = { "  " })
-    public void testCloudAuthorizeWithInvalidOfferIdUsingV2Auth(String offerId)
-        throws Exception {
+    public void testCloudAuthorizeWithInvalidOfferIdUsingV2Auth(String offerId) throws Exception {
         CloudRegistrationDTO dto = new CloudRegistrationDTO()
             .type("test-type")
             .metadata("test-metadata")
@@ -217,25 +218,37 @@ public class CloudRegistrationResourceTest {
 
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", "instanceId",
             CloudProvider.AWS,
-            "ownerKey", offerId, "productId", true);
+            "ownerKey", offerId, Set.of("productId"), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
         assertThrows(NotAuthorizedException.class, () -> cloudRegResource.cloudAuthorize(dto, 2));
     }
 
-    @ParameterizedTest(name = "{displayName} {index}: {0}")
-    @NullAndEmptySource
-    @ValueSource(strings = { "  " })
-    public void testCloudAuthorizeWithInvalidProductIdUsingV2Auth(String productId) throws Exception {
+    @Test
+    public void testCloudAuthorizeWithNullProductIdsUsingV2Auth() throws Exception {
         CloudRegistrationDTO dto = new CloudRegistrationDTO()
             .type("test-type")
             .metadata("test-metadata")
             .signature("test-signature");
 
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", "instanceId",
-            CloudProvider.AWS,
-            "ownerKey", "offerId", productId, true);
+            CloudProvider.AWS, "ownerKey", "offerId", null, true);
+        doReturn(result).when(mockCloudRegistrationAdapter)
+            .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
+
+        assertThrows(NotAuthorizedException.class, () -> cloudRegResource.cloudAuthorize(dto, 2));
+    }
+
+    @Test
+    public void testCloudAuthorizeWithEmptyProductIdsUsingV2Auth() throws Exception {
+        CloudRegistrationDTO dto = new CloudRegistrationDTO()
+            .type("test-type")
+            .metadata("test-metadata")
+            .signature("test-signature");
+
+        CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", "instanceId",
+            CloudProvider.AWS, "ownerKey", "offerId", Set.of(), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -253,12 +266,12 @@ public class CloudRegistrationResourceTest {
         String prodId = "productId";
         CloudAuthenticationResult result = buildMockAuthResult("cloudAccountId", "instanceId",
             CloudProvider.AWS,
-            expectedOwnerKey, "offerId", prodId, true);
+            expectedOwnerKey, "offerId", Set.of(prodId), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
         Owner owner = new Owner().setKey(expectedOwnerKey);
         doReturn(owner).when(mockOwnerCurator).getByKey(expectedOwnerKey);
-        doReturn(true).when(mockPoolCurator).hasPoolForProduct(owner.getKey(), prodId);
+        doReturn(true).when(mockPoolCurator).hasPoolsForProducts(owner.getKey(), Set.of(prodId));
 
         String expectedToken = "standard-token";
         doReturn(expectedToken).when(mockTokenGenerator).buildStandardRegistrationToken(principal,
@@ -289,11 +302,11 @@ public class CloudRegistrationResourceTest {
             .metadata("test-metadata")
             .signature("test-signature");
 
-        String prodId = "productId";
+        Set<String> prodIds = Set.of("productId");
         String accountId = "cloudAccountId";
         String offeringId = "offerId";
         CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId", CloudProvider.AWS,
-            null, offeringId, prodId, true);
+            null, offeringId, prodIds, true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -301,7 +314,7 @@ public class CloudRegistrationResourceTest {
             .setCloudAccountId(accountId)
             .setCloudInstanceId("instanceId")
             .setCloudProviderShortName(CloudProvider.AWS.shortName())
-            .setProductId(prodId);
+            .setProductIds(prodIds);
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
         String expectedToken = "anon-token";
@@ -337,18 +350,18 @@ public class CloudRegistrationResourceTest {
         String prodId = "productId";
         String accountId = "cloudAccountId";
         CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId", CloudProvider.AWS,
-            expectedOwnerKey, "offerId", prodId, false);
+            expectedOwnerKey, "offerId", Set.of(prodId), false);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
         Owner owner = new Owner().setKey(expectedOwnerKey);
         doReturn(owner).when(mockOwnerCurator).getByKey(expectedOwnerKey);
-        doReturn(true).when(mockPoolCurator).hasPoolForProduct(owner.getKey(), prodId);
+        doReturn(true).when(mockPoolCurator).hasPoolsForProducts(owner.getKey(), List.of(prodId));
 
         AnonymousCloudConsumer anonConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId(accountId)
             .setCloudInstanceId("instanceId")
             .setCloudProviderShortName(CloudProvider.AWS.shortName())
-            .setProductId(prodId);
+            .setProductIds(Set.of(prodId));
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
         String expectedToken = "anon-token";
@@ -381,10 +394,10 @@ public class CloudRegistrationResourceTest {
             .signature("test-signature");
 
         String expectedOwnerKey = "ownerKey";
-        String prodId = "productId";
+        Set<String> prodIds = Set.of("productId");
         String accountId = "cloudAccountId";
         CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId", CloudProvider.AWS,
-            expectedOwnerKey, "offerId", prodId, true);
+            expectedOwnerKey, "offerId", prodIds, true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
 
@@ -392,7 +405,7 @@ public class CloudRegistrationResourceTest {
             .setCloudAccountId(accountId)
             .setCloudInstanceId("instanceId")
             .setCloudProviderShortName(CloudProvider.AWS.shortName())
-            .setProductId(prodId);
+            .setProductIds(prodIds);
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
         String expectedToken = "anon-token";
@@ -428,18 +441,18 @@ public class CloudRegistrationResourceTest {
         String prodId = "productId";
         String accountId = "cloudAccountId";
         CloudAuthenticationResult result = buildMockAuthResult(accountId, "instanceId", CloudProvider.AWS,
-            expectedOwnerKey, "offerId", prodId, true);
+            expectedOwnerKey, "offerId", Set.of(prodId), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
         Owner owner = new Owner().setKey(expectedOwnerKey);
         doReturn(owner).when(mockOwnerCurator).getByKey(expectedOwnerKey);
-        doReturn(false).when(mockPoolCurator).hasPoolForProduct(owner.getKey(), prodId);
+        doReturn(false).when(mockPoolCurator).hasPoolsForProducts(owner.getKey(), List.of(prodId));
 
         AnonymousCloudConsumer anonConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId(accountId)
             .setCloudInstanceId("instanceId")
             .setCloudProviderShortName(CloudProvider.AWS.shortName())
-            .setProductId(prodId);
+            .setProductIds(Set.of(prodId));
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).create(any(AnonymousCloudConsumer.class));
 
         String expectedToken = "anon-token";
@@ -476,18 +489,18 @@ public class CloudRegistrationResourceTest {
         String accountId = "cloudAccountId";
         String instanceId = "instanceId";
         CloudAuthenticationResult result = buildMockAuthResult(accountId, instanceId, CloudProvider.AWS,
-            expectedOwnerKey, "offerId", prodId, true);
+            expectedOwnerKey, "offerId", Set.of(prodId), true);
         doReturn(result).when(mockCloudRegistrationAdapter)
             .resolveCloudRegistrationDataV2(getCloudRegistrationData(dto));
         Owner owner = new Owner().setKey(expectedOwnerKey);
         doReturn(owner).when(mockOwnerCurator).getByKey(expectedOwnerKey);
-        doReturn(false).when(mockPoolCurator).hasPoolForProduct(owner.getKey(), prodId);
+        doReturn(false).when(mockPoolCurator).hasPoolsForProducts(owner.getKey(), List.of(prodId));
 
         AnonymousCloudConsumer anonConsumer = new AnonymousCloudConsumer()
             .setCloudAccountId(accountId)
             .setCloudInstanceId(instanceId)
             .setCloudProviderShortName(CloudProvider.AWS.shortName())
-            .setProductId(prodId);
+            .setProductIds(Set.of(prodId));
         doReturn(anonConsumer).when(mockAnonCloudConsumerCurator).getByCloudInstanceId(instanceId);
 
         String expectedToken = "anon-token";
@@ -528,14 +541,14 @@ public class CloudRegistrationResourceTest {
 
     private CloudAuthenticationResult buildMockAuthResult(String cloudAccountId, String instanceId,
         CloudProvider provider,
-        String ownerKey, String offerId, String productId, boolean isEntitled) {
+        String ownerKey, String offerId, Set<String> productIds, boolean isEntitled) {
         CloudAuthenticationResult mockResult = mock(CloudAuthenticationResult.class);
         doReturn(cloudAccountId).when(mockResult).getCloudAccountId();
         doReturn(instanceId).when(mockResult).getCloudInstanceId();
         doReturn(provider).when(mockResult).getCloudProvider();
         doReturn(ownerKey).when(mockResult).getOwnerKey();
         doReturn(offerId).when(mockResult).getOfferId();
-        doReturn(productId).when(mockResult).getProductId();
+        doReturn(productIds).when(mockResult).getProductIds();
         doReturn(isEntitled).when(mockResult).isEntitled();
 
         return mockResult;

@@ -775,32 +775,40 @@ public class PoolCurator extends AbstractHibernateCurator<Pool> {
     }
 
     /**
-     * Determines if the owner has a pool for the product
+     * Determines if the owner has pools for all of the products that are provided
      *
      * @param ownerKey
-     *  the key to the owner who owns the pool
+     *  the key to the owner who owns the pools
      *
-     * @param productId
-     *   the ID of the product to check for
+     * @param productIds
+     *   the IDs of the products to check for existing pools
      *
-     * @return true if the owner has a pool for the product, or false if there is no pool
+     * @throws IllegalArgumentException
+     *  if the owner key is null or blank or if the product IDs are null or empty
+     *
+     * @return true if the owner has pools for all of the products,
+     *  or false if there is a missing pool for any of the products
      */
-    public boolean hasPoolForProduct(String ownerKey, String productId) {
-        if (ownerKey == null || ownerKey.isBlank() || productId == null || productId.isBlank()) {
-            return false;
+    public boolean hasPoolsForProducts(String ownerKey, Collection<String> productIds) {
+        if (ownerKey == null || ownerKey.isBlank()) {
+            throw new IllegalArgumentException("Owner key cannot be null or blank");
         }
 
-        String jpql = "SELECT pool.id " +
-            "FROM Pool pool JOIN pool.owner owner JOIN pool.product prod " +
-            "WHERE owner.key = :owner_key AND prod.id = :product_id";
+        if (productIds == null || productIds.isEmpty()) {
+            throw new IllegalArgumentException("Product IDs cannot be null or empty");
+        }
 
-        return !this.getEntityManager()
+        String jpql = "SELECT prod.id " +
+            "FROM Pool pool JOIN pool.owner owner JOIN pool.product prod " +
+            "WHERE owner.key = :owner_key AND prod.id IN (:product_ids)";
+
+        List<String> productsWithPools = this.getEntityManager()
             .createQuery(jpql)
             .setParameter("owner_key", ownerKey)
-            .setParameter("product_id", productId)
-            .setMaxResults(1)
-            .getResultList()
-            .isEmpty();
+            .setParameter("product_ids", productIds)
+            .getResultList();
+
+        return productsWithPools.containsAll(productIds);
     }
 
     @Transactional
