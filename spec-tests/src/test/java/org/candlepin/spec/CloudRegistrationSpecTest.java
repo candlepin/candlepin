@@ -46,6 +46,7 @@ import org.candlepin.spec.bootstrap.data.util.StringUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import org.junit.jupiter.api.Test;
@@ -54,7 +55,9 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.Base64;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -132,7 +135,7 @@ class CloudRegistrationSpecTest {
         String instanceId = StringUtil.random("cloud-instance-id-");
         String offerId = StringUtil.random("cloud-offer-");
 
-        associateProductIdToCloudOffer(adminClient, offerId, prod.getId());
+        associateProductIdToCloudOffer(adminClient, offerId, List.of(prod.getId()));
         associateOwnerToCloudAccount(adminClient, accountId, owner.getKey());
 
         String metadata = buildMetadataJson(adminClient.MAPPER, accountId, instanceId, offerId);
@@ -161,7 +164,7 @@ class CloudRegistrationSpecTest {
         String instanceId = StringUtil.random("cloud-instance-id-");
         String offerId = StringUtil.random("cloud-offer-");
 
-        associateProductIdToCloudOffer(adminClient, offerId, prod.getId());
+        associateProductIdToCloudOffer(adminClient, offerId, List.of(prod.getId()));
         associateOwnerToCloudAccount(adminClient, accountId, owner.getKey());
 
         String metadata = buildMetadataJson(adminClient.MAPPER, accountId, instanceId, offerId);
@@ -187,7 +190,7 @@ class CloudRegistrationSpecTest {
         String instanceId = StringUtil.random("cloud-instance-id-");
         String offerId = StringUtil.random("cloud-offer-");
 
-        associateProductIdToCloudOffer(adminClient, offerId, StringUtil.random("prod-"));
+        associateProductIdToCloudOffer(adminClient, offerId, List.of(StringUtil.random("prod-")));
         associateOwnerToCloudAccount(adminClient, accountId, owner.getKey());
 
         String metadata = buildMetadataJson(adminClient.MAPPER, accountId, instanceId, offerId);
@@ -210,7 +213,7 @@ class CloudRegistrationSpecTest {
         String instanceId = StringUtil.random("cloud-instance-id-");
         String offerId = StringUtil.random("cloud-offer-");
 
-        associateProductIdToCloudOffer(adminClient, offerId, StringUtil.random("prod-"));
+        associateProductIdToCloudOffer(adminClient, offerId, List.of(StringUtil.random("prod-")));
 
         String metadata = buildMetadataJson(adminClient.MAPPER, accountId, instanceId, offerId);
 
@@ -236,7 +239,7 @@ class CloudRegistrationSpecTest {
         String instanceId = StringUtil.random("cloud-instance-id-");
         String offerId = StringUtil.random("cloud-offer-");
 
-        associateProductIdToCloudOffer(adminClient, offerId, prod.getId());
+        associateProductIdToCloudOffer(adminClient, offerId, List.of(prod.getId()));
         associateOwnerToCloudAccount(adminClient, accountId, owner.getKey());
 
         String metadata = buildMetadataJson(adminClient.MAPPER, accountId, instanceId, offerId);
@@ -261,11 +264,17 @@ class CloudRegistrationSpecTest {
         adminClient.hosted().createProduct(prod);
         adminClient.hosted().createSubscription(Subscriptions.random(owner, prod));
 
+        ProductDTO prodWithPool = adminClient.ownerProducts()
+            .createProductByOwner(owner.getKey(), Products.random());
+        adminClient.hosted().createProduct(prodWithPool);
+        adminClient.owners().createPool(owner.getKey(), Pools.random(prodWithPool));
+        adminClient.hosted().createSubscription(Subscriptions.random(owner, prodWithPool));
+
         String accountId = StringUtil.random("cloud-account-id-");
         String instanceId = StringUtil.random("cloud-instance-id-");
         String offerId = StringUtil.random("cloud-offer-");
 
-        associateProductIdToCloudOffer(adminClient, offerId, prod.getId());
+        associateProductIdToCloudOffer(adminClient, offerId, List.of(prod.getId(), prodWithPool.getId()));
         associateOwnerToCloudAccount(adminClient, accountId, owner.getKey());
 
         String metadata = buildMetadataJson(adminClient.MAPPER, accountId, instanceId, offerId);
@@ -290,7 +299,7 @@ class CloudRegistrationSpecTest {
         String instanceId = StringUtil.random("cloud-instance-id-");
         String offerId = StringUtil.random("cloud-offer-");
 
-        associateProductIdToCloudOffer(adminClient, offerId, StringUtil.random("prod-"));
+        associateProductIdToCloudOffer(adminClient, offerId, List.of(StringUtil.random("prod-")));
         associateOwnerToCloudAccount(adminClient, accountId, owner.getKey());
 
         String metadata = buildMetadataJson(adminClient.MAPPER, accountId, instanceId, offerId);
@@ -318,7 +327,7 @@ class CloudRegistrationSpecTest {
         String instanceId = StringUtil.random("cloud-instance-id-");
         String offerId = StringUtil.random("cloud-offer-");
 
-        associateProductIdToCloudOffer(adminClient, offerId, prod.getId());
+        associateProductIdToCloudOffer(adminClient, offerId, List.of(prod.getId()));
 
         String metadata = buildMetadataJson(adminClient.MAPPER, null, instanceId, offerId);
 
@@ -335,7 +344,7 @@ class CloudRegistrationSpecTest {
         String cloudAccountId = StringUtil.random("cloud-account-id-");
         String offerId = StringUtil.random("cloud-offer-");
 
-        associateProductIdToCloudOffer(adminClient, offerId, prod.getId());
+        associateProductIdToCloudOffer(adminClient, offerId, List.of(prod.getId()));
 
         String metadata = buildMetadataJson(adminClient.MAPPER, cloudAccountId, null, offerId);
 
@@ -391,7 +400,7 @@ class CloudRegistrationSpecTest {
         String instanceId = StringUtil.random("cloud-instance-id-");
         String offerId = StringUtil.random("cloud-offer-");
 
-        associateProductIdToCloudOffer(adminClient, offerId, StringUtil.random("prod-"));
+        associateProductIdToCloudOffer(adminClient, offerId, List.of(StringUtil.random("prod-")));
         associateOwnerToCloudAccount(adminClient, accountId, owner.getKey());
 
         String metadata = buildMetadataJson(adminClient.MAPPER, accountId, instanceId, offerId);
@@ -426,7 +435,7 @@ class CloudRegistrationSpecTest {
         String instanceId = StringUtil.random("cloud-instance-id-");
         String offerId = StringUtil.random("cloud-offer-");
 
-        associateProductIdToCloudOffer(adminClient, offerId, StringUtil.random("prod-"));
+        associateProductIdToCloudOffer(adminClient, offerId, List.of(StringUtil.random("prod-")));
         associateOwnerToCloudAccount(adminClient, accountId, owner.getKey());
 
         String metadata = buildMetadataJson(adminClient.MAPPER, accountId, instanceId, offerId);
@@ -446,7 +455,7 @@ class CloudRegistrationSpecTest {
     }
 
     /**
-     * Associates a cloud offering ID to a product ID in the hosted test adapters.
+     * Associates a cloud offering ID to product IDs in the hosted test adapters.
      *
      * @param client
      *     client used to make the request to the hosted test endpoint
@@ -454,13 +463,17 @@ class CloudRegistrationSpecTest {
      * @param cloudOfferId
      *     the offering ID to associate to a product ID
      *
-     * @param productId
-     *     the product ID to associate to an offering ID
+     * @param productIds
+     *     the product IDs to associate to an offering ID
      */
-    private void associateProductIdToCloudOffer(ApiClient client, String cloudOfferId, String productId) {
+    private void associateProductIdToCloudOffer(ApiClient client, String cloudOfferId,
+        Collection<String> productIds) {
         ObjectNode objectNode = ApiClient.MAPPER.createObjectNode();
         objectNode.put("cloudOfferId", cloudOfferId);
-        objectNode.put("productId", productId);
+
+        ArrayNode productsNode = ApiClient.MAPPER.createArrayNode();
+        productIds.forEach(prod -> productsNode.add(prod));
+        objectNode.putPOJO("productIds", productsNode);
 
         Response response = Request.from(client)
             .setPath("/hostedtest/cloud/offers")

@@ -236,7 +236,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
             .setCloudAccountId("account-id")
             .setCloudInstanceId("instance-id")
             .setCloudProviderShortName("short-name")
-            .setProductId("product-id");
+            .setProductIds(List.of("product-id"));
         consumer = this.anonymousCloudConsumerCurator.create(consumer);
 
         String uri = "http://localhost/candlepin/fake/multiValueVerify/" + consumer.getUuid();
@@ -292,7 +292,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
             .setCloudAccountId("account-id")
             .setCloudInstanceId("instance-id")
             .setCloudProviderShortName("short-name")
-            .setProductId("product-id");
+            .setProductIds(List.of("product-id"));
         consumer = this.anonymousCloudConsumerCurator.create(consumer);
         mockPathParameters.addAll("uuid", List.of(consumer.getUuid(), Util.generateUUID()));
 

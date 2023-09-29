@@ -30,6 +30,7 @@ import org.candlepin.util.ObjectMapperFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -130,8 +131,8 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
         }
 
         String ownerKey = this.datastore.getOwnerKeyForCloudAccountId(accountId);
-        String productId = this.datastore.getProductIdForOfferId(offerId);
-        boolean isEntitled = isOwnerEntitledToProduct(ownerKey, productId);
+        Set<String> productIds = this.datastore.getProductIdsForOfferId(offerId);
+        boolean isEntitled = isOwnerEntitledToProducts(ownerKey, productIds);
 
         return new CloudAuthenticationResult() {
             @Override
@@ -160,8 +161,8 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
             }
 
             @Override
-            public String getProductId() {
-                return productId;
+            public Set<String> getProductIds() {
+                return productIds;
             }
 
             @Override
@@ -181,19 +182,44 @@ public class HostedTestCloudRegistrationAdapter implements CloudRegistrationAdap
         return new CloudAccountData("owner_key", false);
     }
 
-    private boolean isOwnerEntitledToProduct(String ownerKey, String productId) {
-        if (ownerKey == null || productId == null) {
+    /**
+     * Determines if the owner is entitled to all of the provided product IDs by verifying
+     * that the owner has a subscription for each product.
+     *
+     * @param ownerKey
+     *  the key of the owner that entitlements are being checked for
+     *
+     * @param productIds
+     *  the IDs of all the products that must have a subscription
+     *
+     * @return true if the owner has a subscription for all product IDs, or false if a product
+     *  does not have a subscription
+     */
+    private boolean isOwnerEntitledToProducts(String ownerKey, Collection<String> productIds) {
+        if (ownerKey == null) {
             return false;
         }
 
-        Set<String> subIds = this.datastore.productSubscriptionMap
-            .getOrDefault(productId, Collections.emptySet());
+        if (productIds == null || productIds.isEmpty()) {
+            return true;
+        }
 
-        return subIds.stream()
-            .map(this.datastore::getSubscription)
-            .filter(Objects::nonNull)
-            .map(SubscriptionInfo::getOwner)
-            .anyMatch(owner -> ownerKey.equals(owner.getKey()));
+        for (String prodId : productIds) {
+            Set<String> subIds = this.datastore.productSubscriptionMap
+                .getOrDefault(prodId, Collections.emptySet());
+
+            boolean entitled = subIds.stream()
+                .map(this.datastore::getSubscription)
+                .filter(Objects::nonNull)
+                .map(SubscriptionInfo::getOwner)
+                .anyMatch(owner -> ownerKey.equals(owner.getKey()));
+
+            if (!entitled) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
 }

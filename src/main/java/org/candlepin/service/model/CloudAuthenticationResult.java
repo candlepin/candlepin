@@ -16,6 +16,8 @@ package org.candlepin.service.model;
 
 import org.candlepin.service.CloudProvider;
 
+import java.util.Set;
+
 
 
 /**
@@ -51,10 +53,10 @@ public interface CloudAuthenticationResult {
     String getOfferId();
 
     /**
-     * @return the product ID that is associated to the cloud offering ID that is found in the
+     * @return the product IDs that are associated to the cloud offering ID that is found in the
      * {@link CloudRegistrationInfo} metadata
      */
-    String getProductId();
+    Set<String> getProductIds();
 
     /**
      * @return true if the owner is entitled to the product associated to the cloud offering ID found in

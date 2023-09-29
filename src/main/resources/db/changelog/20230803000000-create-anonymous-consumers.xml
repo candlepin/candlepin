@@ -25,7 +25,7 @@
             <column name="cloud_provider_short_name" type="varchar(15)">
                 <constraints nullable="false"/>
             </column>
-            <column name="product_id" type="varchar(32)">
+            <column name="product_ids" type="TEXT">
                 <constraints nullable="false"/>
             </column>
         </createTable>

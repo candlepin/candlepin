@@ -18,7 +18,11 @@ import org.candlepin.util.Util;
 
 import org.hibernate.annotations.GenericGenerator;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -50,8 +54,6 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     public static final int CLOUD_INSTANCE_ID_MAX_LENGTH = 85;
     /** Max length for a value in the cloud provider short name field */
     public static final int CLOUD_PROVIDER_SHORT_NAME_MAX_LENGTH = 15;
-    /** Max length for a value in the product ID field */
-    public static final int PRODUCT_ID_MAX_LENGTH = 32;
 
     @Id
     @GeneratedValue(generator = "system-uuid")
@@ -75,9 +77,9 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     @NotNull
     private String cloudProviderShortName;
 
-    @Column(name = "product_id")
+    @Column(name = "product_ids")
     @NotNull
-    private String productId;
+    private String productIds;
 
     public AnonymousCloudConsumer() {
         this.uuid = Util.generateUUID();
@@ -215,38 +217,52 @@ public class AnonymousCloudConsumer extends AbstractHibernateObject<AnonymousClo
     }
 
     /**
-     * @return the product ID for this anonymous cloud consumer
+     * @return the product IDs for this anonymous cloud consumer
      */
-    public String getProductId() {
-        return this.productId;
+    public Set<String> getProductIds() {
+        Set<String> productIds = new HashSet<>();
+        productIds = Set.copyOf(Util.toList(this.productIds));
+
+        productIds = productIds.stream()
+            .filter(str -> str != null && !str.isBlank())
+            .collect(Collectors.toSet());
+
+        return productIds;
     }
 
     /**
-     * @param productId
-     *     the product ID to set for this anonymous cloud consumer
+     * @param productIds
+     *     the product IDs to set for this anonymous cloud consumer
      *
      * @return a reference to this AnonymousCloudConsumer instance
      */
-    public AnonymousCloudConsumer setProductId(String productId) {
-        if (productId == null) {
-            throw new IllegalArgumentException("productId is null");
+    public AnonymousCloudConsumer setProductIds(Collection<String> productIds) {
+        if (productIds == null) {
+            throw new IllegalArgumentException("productIds is null");
         }
 
-        if (productId.length() > PRODUCT_ID_MAX_LENGTH) {
-            throw new IllegalArgumentException("productId exceeds the max length");
+        if (productIds.isEmpty()) {
+            throw new IllegalArgumentException("productIds is empty");
         }
 
-        this.productId = productId;
+        // filter null and blank strings and collect as set to remove duplicates
+        Set<String> productSet = productIds.stream()
+            .filter(str -> str != null && !str.isBlank())
+            .collect(Collectors.toSet());
+
+        if (productSet.isEmpty()) {
+            throw new IllegalArgumentException("productIds is empty after removing null and blank entries");
+        }
+
+        this.productIds = String.join(",", productSet);
         return this;
     }
 
     @Override
     public String toString() {
         return String.format(
-            "Anonymous Consumer [id: %s, uuid: %s, cloudAccountId: %s, cloudProviderShortName: %s," +
-            "productId: %s]",
-            this.getId(), this.getUuid(), this.getCloudAccountId(), this.getCloudProviderShortName(),
-            this.getProductId());
+            "Anonymous Consumer [id: %s, uuid: %s, cloudAccountId: %s, cloudProviderShortName: %s]",
+            this.getId(), this.getUuid(), this.getCloudAccountId(), this.getCloudProviderShortName());
     }
 
     @Override
