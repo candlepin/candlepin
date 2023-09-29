@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - candlepin-*-HOTFIX
+      - feature/autoreg_v2
   workflow_dispatch:
     inputs:
       branch-name:
