@@ -31,6 +31,8 @@ import org.candlepin.async.JobManager;
 import org.candlepin.audit.EventFactory;
 import org.candlepin.audit.EventSink;
 import org.candlepin.auth.Access;
+import org.candlepin.auth.ActivationKeyPrincipal;
+import org.candlepin.auth.AuthenticationMethod;
 import org.candlepin.auth.NoAuthPrincipal;
 import org.candlepin.auth.Principal;
 import org.candlepin.auth.TrustedUserPrincipal;
@@ -474,19 +476,21 @@ public class ConsumerResourceCreationTest {
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
         resource.createConsumer(consumer, null, owner.getKey(), null, true);
+        assertEquals(AuthenticationMethod.TRUSTED_USER, p.getAuthenticationMethod());
     }
 
     @Test
     public void registerWithKeys() {
-        // No auth should be required for registering with keys:
-        Principal p = new NoAuthPrincipal();
         Set<String> keys = mockActivationKeys();
+        Principal p = new ActivationKeyPrincipal(createKeysString(keys));
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
 
-        resource.createConsumer(consumer, null, owner.getKey(), createKeysString(keys), true);
+        consumer = resource.createConsumer(consumer, null, owner.getKey(), createKeysString(keys), true);
 
         verify(activationKeyCurator).findByKeyNames(owner.getKey(), keys);
+        assertEquals(AuthenticationMethod.ACTIVATION_KEY.getDescription(),
+            consumer.getRegistrationAuthenticationMethod());
     }
 
     @Test
@@ -512,8 +516,8 @@ public class ConsumerResourceCreationTest {
 
     @Test
     public void orgRequiredWithActivationKeys() {
-        Principal p = new NoAuthPrincipal();
         Set<String> keys = mockActivationKeys();
+        Principal p = new ActivationKeyPrincipal(createKeysString(keys));
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
 
@@ -523,8 +527,8 @@ public class ConsumerResourceCreationTest {
 
     @Test
     public void cannotMixUsernameWithActivationKeys() {
-        Principal p = new NoAuthPrincipal();
         Set<String> keys = mockActivationKeys();
+        Principal p = new ActivationKeyPrincipal(createKeysString(keys));
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
         when(this.principalProvider.get()).thenReturn(p);
 
@@ -534,8 +538,8 @@ public class ConsumerResourceCreationTest {
 
     @Test
     public void passIfOnlyOneActivationKeyDoesNotExistForOrg() {
-        Principal p = new NoAuthPrincipal();
         Set<String> keys = mockActivationKeys();
+        Principal p = new ActivationKeyPrincipal(createKeysString(keys));
         keys.add("NoSuchKey");
         when(this.principalProvider.get()).thenReturn(p);
         ConsumerDTO consumer = TestUtil.createConsumerDTO("sys.example.com", null, null, systemDto);
@@ -655,5 +659,16 @@ public class ConsumerResourceCreationTest {
 
         consumer = resource.createConsumer(consumer, USER, owner.getKey(), null, true);
         assertEquals(2, consumer.getEnvironments().size());
+    }
+
+    @Test
+    public void registerWithTrustedUserAuthMethod() {
+        Principal p = new TrustedUserPrincipal("anyuser");
+        when(this.principalProvider.get()).thenReturn(p);
+        ConsumerDTO consumer = TestUtil.createConsumerDTO("consumerName", null, null, systemDto);
+        consumer = resource.createConsumer(consumer, USER, owner.getKey(), null, true);
+        assertNull(consumer.getEnvironments());
+        assertEquals(AuthenticationMethod.TRUSTED_USER.getDescription(),
+            consumer.getRegistrationAuthenticationMethod());
     }
 }

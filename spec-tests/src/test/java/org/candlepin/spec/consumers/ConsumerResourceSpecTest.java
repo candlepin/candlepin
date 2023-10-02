@@ -295,7 +295,7 @@ public class ConsumerResourceSpecTest {
 
         List<String> uuids = List.of(consumer1.getUuid(), consumer2.getUuid());
         List<ConsumerDTOArrayElement> consumers = adminClient.consumers()
-            .searchConsumers(null, Set.of("system"), null, uuids, null, null, null, null, null, null);
+            .searchConsumers(null, Set.of("system"), null, uuids, null, null, null, null, null, null, null);
 
         assertThat(consumers)
             .extracting(ConsumerDTOArrayElement::getUuid)
@@ -311,7 +311,7 @@ public class ConsumerResourceSpecTest {
 
         List<ConsumerDTOArrayElement> consumers = adminClient.consumers()
             .searchConsumers(null, null, null, List.of(consumer1.getUuid(), consumer2.getUuid()), null, null,
-            null, null, null, null);
+            null, null, null, null, null);
 
         assertThat(consumers)
             .extracting(ConsumerDTOArrayElement::getUuid)
@@ -324,7 +324,7 @@ public class ConsumerResourceSpecTest {
         ConsumerDTO consumer = adminClient.consumers().createConsumer(Consumers.random(owner));
 
         List<ConsumerDTOArrayElement> consumers = adminClient.consumers()
-            .searchConsumers(null, null, owner.getKey(), null, null, null, null, null, null, null);
+            .searchConsumers(null, null, owner.getKey(), null, null, null, null, null, null, null, null);
 
         assertThat(consumers)
             .singleElement()
@@ -342,7 +342,7 @@ public class ConsumerResourceSpecTest {
 
         List<ConsumerDTOArrayElement> consumers = adminClient.consumers()
             .searchConsumers(user.getUsername(), Set.of("person"), null, null, null, null, null, null,
-            null, null);
+            null, null, null);
 
         assertThat(consumers)
             .singleElement()
@@ -361,7 +361,7 @@ public class ConsumerResourceSpecTest {
 
         List<ConsumerDTOArrayElement> consumers = adminClient.consumers()
             .searchConsumers(user.getUsername(), Set.of("person"), owner2.getKey(), null, null, null,
-            null, null, null, null);
+            null, null, null, null, null);
 
         assertThat(consumers)
             .singleElement()
@@ -856,7 +856,8 @@ public class ConsumerResourceSpecTest {
         List<String> facts = List.of("fact1:value1");
 
         List<ConsumerDTOArrayElement> output = this.adminClient.consumers()
-            .searchConsumers(null, null, this.owner.getKey(), null, null, facts, null, null, null, null);
+            .searchConsumers(null, null, this.owner.getKey(), null, null, null, facts, null, null,
+            null, null);
 
         assertThat(output)
             .isNotNull()
@@ -888,7 +889,7 @@ public class ConsumerResourceSpecTest {
         userClient.consumers().createConsumer(Consumers.random(owner)
             .facts(Map.of("newkey", "some" + valueRand)));
         assertThat(adminClient.consumers().searchConsumers(null, null, null, null,
-            null, List.of("*key*:*" + valueRand + "*"), null, null, null, null))
+            null, null, List.of("*key*:*" + valueRand + "*"), null, null, null, null))
             .hasSize(3);
     }
 
@@ -906,7 +907,7 @@ public class ConsumerResourceSpecTest {
 
         List<String> expectedUuids = List.of(consumer1.getUuid(), consumer2.getUuid());
         List<ConsumerDTOArrayElement> consumers = adminClient.consumers().searchConsumers(null, null, null,
-            expectedUuids, null, List.of("oth*key*:*" + valueRand), null, null, null, null);
+            expectedUuids, null, null, List.of("oth*key*:*" + valueRand), null, null, null, null);
         assertThat(consumers).hasSize(2)
             .map(x -> x.getUuid())
             .containsAll(expectedUuids);
@@ -920,7 +921,8 @@ public class ConsumerResourceSpecTest {
         ConsumerDTO consumer1 = userClient.consumers().createConsumer(Consumers.random(owner)
             .facts(Map.of("trolol", valueRand + "); DROP TABLE cp_consumer;")));
         assertThat(adminClient.consumers().searchConsumers(null, null, null, null,
-            null, List.of("trolol:" + valueRand + "); DROP TABLE cp_consumer;"), null, null, null, null))
+            null, null, List.of("trolol:" + valueRand + "); DROP TABLE cp_consumer;"), null, null,
+            null, null))
             .singleElement()
             .returns(consumer1.getUuid(), x -> x.getUuid());
     }

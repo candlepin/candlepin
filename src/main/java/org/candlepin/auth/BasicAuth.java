@@ -65,7 +65,8 @@ public class BasicAuth extends UserAuth {
                 }
 
                 if (userServiceAdapter.validateUser(username, password)) {
-                    Principal principal = createPrincipal(username);
+                    Principal principal = ((UserPrincipal) createPrincipal(username))
+                        .setAuthenticationMethod(AuthenticationMethod.BASIC);
                     log.debug("principal created for user '{}'", username);
                     return principal;
                 }

@@ -175,7 +175,7 @@ public class CloudRegistrationAuth implements AuthProvider {
         // Add any additional permissions here as needed
         );
 
-        return new UserPrincipal(subject, permissions, false);
+        return new UserPrincipal(subject, permissions, false, null, AuthenticationMethod.CLOUD);
     }
 
 }

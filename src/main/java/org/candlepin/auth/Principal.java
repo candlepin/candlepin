@@ -40,6 +40,8 @@ public abstract class Principal implements Serializable, java.security.Principal
 
     public abstract String getType();
 
+    public abstract AuthenticationMethod getAuthenticationMethod();
+
     public abstract boolean hasFullAccess();
 
     public List<Permission> getPermissions() {
