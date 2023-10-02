@@ -22,7 +22,7 @@
 %global __jar_repack %{nil}
 
 Name: candlepin
-Version: 4.3.8
+Version: 4.3.9
 Release: 1%{?dist}
 #if $epoch
 Epoch: $epoch
@@ -240,6 +240,16 @@ fi
 
 #raw
 %changelog
+* Mon Oct 02 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.9-1
+- Add new translations using Weblate (noreply@weblate.org)
+- CANDLEPIN-683: Fixed missing permission in ak management blueprint
+  (crog@redhat.com)
+- Enable sonar & CI re-runs for autoreg v2 feature branch (nmoumoul@redhat.com)
+- Bump org.sonarsource.scanner.gradle:sonarqube-gradle-plugin
+  (49699333+dependabot[bot]@users.noreply.github.com)
+- updated po/keys.pot template (3229038+candlepin-bot@users.noreply.github.com)
+- Fix confusing string in Spec API (jhnidek@redhat.com)
+
 * Wed Sep 27 2023 candlepin-bot <3229038+candlepin-bot@users.noreply.github.com> 4.3.8-1
 - Revert "CANDLEPIN-623: Implement Anonymous Org Creation & Entitlement Job"
   (nmoumoul@redhat.com)
