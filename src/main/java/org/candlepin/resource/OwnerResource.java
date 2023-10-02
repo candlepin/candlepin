@@ -993,7 +993,9 @@ public class OwnerResource implements OwnerApi {
 
     @Override
     public CandlepinQuery<ActivationKeyDTO> ownerActivationKeys(
-        @Verify(Owner.class) String ownerKey, String keyName) {
+        @Verify(value = Owner.class, subResource = SubResource.ACTIVATION_KEYS) String ownerKey,
+        String keyName) {
+
         Owner owner = findOwnerByKey(ownerKey);
 
         CandlepinQuery<ActivationKey> keys = this.activationKeyCurator.listByOwner(owner, keyName);

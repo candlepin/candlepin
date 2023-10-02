@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -157,20 +156,19 @@ public class PermissionFactory {
             new ConsumerOrgHypervisorPermission(res.resolve(bp.getOwner()))));
 
         builders.put(PermissionType.MANAGE_ACTIVATION_KEYS.name(), (user, bp, res) -> {
-            List<Permission> output = new ArrayList<>();
+            Owner resolved = res.resolve(bp.getOwner());
+            Access accessLevel = Access.valueOf(bp.getAccessLevel());
 
-            switch (Access.valueOf(bp.getAccessLevel())) {
-                case ALL:
-                    output.add(new ActivationKeyManagementPermission(res.resolve(bp.getOwner())));
-
-                case CREATE:
-                    output.add(new ActivationKeyCreationPermission(res.resolve(bp.getOwner())));
-
-                default:
-                    // intentionally left empty
-            }
-
-            return output;
+            // Impl note:
+            // Activation key verifications are split between two types:
+            //  - @Verify(Owner.class, subResource=SubResources.ACTIVATION_KEY)
+            //  - @Verify(ActivationKey.class)
+            //
+            // As a result of this, we need to return both permission objects with the appropriate
+            // level to ensure all of the CRUD operations are covered
+            return List.of(
+                new ActivationKeyPermission(resolved, accessLevel),
+                new OwnerActivationKeyPermission(resolved, accessLevel));
         });
 
         return builders;

@@ -35,6 +35,8 @@ public enum Access {
     }
 
     public boolean provides(Access desiredAccess) {
-        return this.getLevel() >= desiredAccess.getLevel();
+        int desiredAccessLevel = desiredAccess != null ? desiredAccess.getLevel() : 0;
+
+        return this.getLevel() >= desiredAccessLevel;
     }
 }

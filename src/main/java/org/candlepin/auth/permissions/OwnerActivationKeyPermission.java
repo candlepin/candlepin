@@ -27,39 +27,45 @@ import javax.persistence.criteria.Predicate;
 
 
 /**
- * Grants permission to create activation keys under the specified org.
+ * Grants permission to create or list activation keys under the specified org.
  *
- * Note: this permission's existence is a function of the way the API verifies on the org during
- * key creation. The creation API is scoped by org, but the management APIs are not, which means
- * creation must be verified as a subresource of Owner, where management is a verify on the keys
- * directly.
+ * Note: this permission's existence is a function of the way the API verifies objects on the
+ * activation key listing and creation operations. Both operations are scoped by org, but the management
+ * APIs are not, which means creation and listing must be verified as a subresource of Owner, where management
+ * is a verify on the keys directly.
  */
-public class ActivationKeyCreationPermission extends TypedPermission<Owner> {
+public class OwnerActivationKeyPermission extends TypedPermission<Owner> {
 
     private final Owner owner;
     private final String ownerId;
 
     /**
-     * Creates a new activation key management permission providing write access to create or modify
-     * activation keys within the specified owner (organization).
+     * Creates a new permission which provides potential access to API endpoints which verify on the
+     * owner with a subresource of activation keys. Note that this permission itself does not
+     * provide access to endpoints which verify on activation keys directly.
      *
      * @param owner
      *  the owner/org for which activation key creation permissions should be granted
      *
+     * @param access
+     *  the access granted by this permission
+     *
      * @throws IllegalArgumentException
-     *  if the provided owner is null or lacks an owner ID
+     *  if the provided owner is null or lacks an owner ID, or the provided access is null
      */
-    public ActivationKeyCreationPermission(Owner owner) {
+    public OwnerActivationKeyPermission(Owner owner, Access access) {
         if (owner == null || owner.getId() == null) {
             throw new IllegalArgumentException("owner is null or lacks an ID");
+        }
+
+        if (access == null) {
+            throw new IllegalArgumentException("access is null");
         }
 
         this.owner = owner;
         this.ownerId = owner.getId();
 
-        // TODO: FIXME: this should be set by calling a constructor in our superclass rather than
-        // explicitly setting the field directly.
-        this.access = Access.CREATE;
+        this.access = access;
     }
 
     /**

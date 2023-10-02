@@ -30,34 +30,38 @@ import javax.persistence.criteria.Predicate;
 /**
  * Grants permissions to manage activation keys under a given organization.
  */
-public class ActivationKeyManagementPermission extends TypedPermission<ActivationKey> {
+public class ActivationKeyPermission extends TypedPermission<ActivationKey> {
 
     private final Owner owner;
     private final String ownerId;
 
     /**
-     * Creates a new activation key management permission providing write access to create or modify
-     * activation keys within the specified owner (organization).
+     * Creates a new permission which provides potential access to API endpoints which verify on the
+     * activation key. Note that this permission itself does not provide access to endpoints which
+     * verify on the owner with a subresource of activation key.
      *
      * @param owner
      *  the owner/org for which activation key management permissions should be granted
      *
+     * @param access
+     *  the access granted by this permission
+     *
      * @throws IllegalArgumentException
-     *  if the provided owner is null or lacks an owner ID
+     *  if the provided owner is null or lacks an owner ID, or the provided access is null
      */
-    public ActivationKeyManagementPermission(Owner owner) {
+    public ActivationKeyPermission(Owner owner, Access access) {
         if (owner == null || owner.getId() == null) {
             throw new IllegalArgumentException("owner is null or lacks an ID");
+        }
+
+        if (access == null) {
+            throw new IllegalArgumentException("access is null");
         }
 
         this.owner = owner;
         this.ownerId = owner.getId();
 
-        // TODO: FIXME: this should be set by calling a constructor in our superclass rather than
-        // explicitly setting the field directly.
-        // If the permissions are ever made more granular, the access should become a constructor
-        // parameter rather than being hardcoded here.
-        this.access = Access.ALL;
+        this.access = access;
     }
 
     /**
