@@ -22,8 +22,8 @@ import java.util.Map;
 public enum AuthenticationMethod {
     BASIC("User"),
     ACTIVATION_KEY("ActivationKey"),
-    ANONYMOUS_CLOUD("AnonymousCloud"),
-    CLOUD("Cloud"),
+    ANONYMOUS_CLOUD("AnonCloudAutoReg"),
+    CLOUD("CloudAutoReg"),
     CONSUMER("Consumer"),
     KEYCLOAK("KeyCloak"),
     NO_AUTH("NoAuth"),
