@@ -42,4 +42,9 @@ public class SystemPrincipal extends Principal {
         return true;
     }
 
+    @Override
+    public AuthenticationMethod getAuthenticationMethod() {
+        return AuthenticationMethod.SYSTEM;
+    }
+
 }

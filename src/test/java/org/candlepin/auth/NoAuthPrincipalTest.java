@@ -37,4 +37,9 @@ public class NoAuthPrincipalTest {
     public void name() {
         assertEquals("Anonymous", principal.getPrincipalName());
     }
+
+    @Test
+    public void authMethod() {
+        assertEquals(AuthenticationMethod.NO_AUTH, principal.getAuthenticationMethod());
+    }
 }

@@ -14,6 +14,7 @@
  */
 package org.candlepin.model;
 
+import org.candlepin.auth.AuthenticationMethod;
 import org.candlepin.exceptions.DuplicateEntryException;
 import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.util.Util;
@@ -47,6 +48,8 @@ import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -318,6 +321,10 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
     @Cascade({org.hibernate.annotations.CascadeType.ALL})
     @Fetch(FetchMode.SELECT)
     private Map<String, String> environmentIds;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reg_auth_method")
+    private AuthenticationMethod registrationAuthenticationMethod;
 
     public Consumer() {
         this.addOns = new HashSet<>();
@@ -1234,8 +1241,19 @@ public class Consumer extends AbstractHibernateObject<Consumer> implements Linka
                 this.environmentIds.put(String.valueOf(this.environmentIds.size()), envId);
             }
         }
-
         return this;
+    }
+
+    public Consumer setRegistrationAuthenticationMethod(String method) {
+        this.registrationAuthenticationMethod = AuthenticationMethod.get(method);
+        return this;
+    }
+
+    public String getRegistrationAuthenticationMethod() {
+        if (this.registrationAuthenticationMethod == null) {
+            return null;
+        }
+        return this.registrationAuthenticationMethod.getDescription();
     }
 
     /**

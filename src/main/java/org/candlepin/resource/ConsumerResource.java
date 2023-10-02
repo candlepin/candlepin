@@ -567,6 +567,7 @@ public class ConsumerResource implements ConsumerApi {
         String ownerKey,
         List<String> uuids,
         List<String> hypervisorIds,
+        String registrationAuthenticationMethod,
         List<String> facts,
         Integer page, Integer perPage, String order, String sortBy) {
 
@@ -960,6 +961,10 @@ public class ConsumerResource implements ConsumerApi {
         Consumer consumerToCreate = new Consumer();
 
         consumerToCreate.setOwner(owner);
+        consumerToCreate.setRegistrationAuthenticationMethod(
+            principal.getAuthenticationMethod() == null ?
+                null :
+                principal.getAuthenticationMethod().getDescription());
 
         populateEntity(consumerToCreate, consumer);
         consumerToCreate.setType(type);

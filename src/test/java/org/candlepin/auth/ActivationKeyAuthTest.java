@@ -14,6 +14,7 @@
  */
 package org.candlepin.auth;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -132,6 +133,7 @@ class ActivationKeyAuthTest {
         mockKey(TEST_OWNER, "testkey");
 
         Principal principal = auth.getPrincipal(request);
+        assertEquals(AuthenticationMethod.ACTIVATION_KEY, principal.getAuthenticationMethod());
 
         assertNotNull(principal);
     }

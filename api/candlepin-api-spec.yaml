@@ -657,6 +657,11 @@ paths:
             type: array
             items:
               type: string
+        - name: registration_authentication_method
+          in: query
+          description: Registration Authentication Method
+          schema:
+            type: string
         - name: fact
           in: query
           description: The consumer facts
@@ -8350,6 +8355,8 @@ components:
                 items:
                   type: string
               systemPurposeStatus:
+                type: string
+              registrationAuthenticationMethod:
                 type: string
               releaseVer:
                 $ref: '#/components/schemas/ReleaseVerDTO'

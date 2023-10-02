@@ -40,4 +40,9 @@ public class ActivationKeyPrincipal extends Principal {
         return false;
     }
 
+    @Override
+    public AuthenticationMethod getAuthenticationMethod() {
+        return AuthenticationMethod.ACTIVATION_KEY;
+    }
+
 }

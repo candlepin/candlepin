@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.19.xsd">
+
+    <changeSet id="20230021144200-1" author="wpoteat">
+        <comment>
+            Add registration authorization method to the cp_consumer table.
+        </comment>
+
+        <addColumn tableName="cp_consumer">
+            <column name="reg_auth_method" type="VARCHAR(30)">
+               <constraints nullable="true" />
+            </column>
+        </addColumn>
+
+    </changeSet>
+
+</databaseChangeLog>
