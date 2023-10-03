@@ -136,7 +136,8 @@ public class ConsumerTranslator implements ObjectTranslator<Consumer, ConsumerDT
             .contentAccessMode(source.getContentAccessMode())
             .created(Util.toDateTime(source.getCreated()))
             .updated(Util.toDateTime(source.getUpdated()))
-            .href(source.getUuid() != null ? String.format("/consumers/%s", source.getUuid()) : null);
+            .href(source.getUuid() != null ? String.format("/consumers/%s", source.getUuid()) : null)
+            .registrationAuthenticationMethod(source.getRegistrationAuthenticationMethod());
 
         Release release = source.getReleaseVer();
         if (release != null) {

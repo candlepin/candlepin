@@ -30,6 +30,7 @@ import java.util.Collections;
  *
  */
 public class ConsumerPrincipal extends Principal {
+
     private Consumer consumer;
 
     public ConsumerPrincipal(Consumer consumer, Owner owner) {
@@ -99,4 +100,10 @@ public class ConsumerPrincipal extends Principal {
     public boolean hasFullAccess() {
         return false;
     }
+
+    @Override
+    public AuthenticationMethod getAuthenticationMethod() {
+        return AuthenticationMethod.CONSUMER;
+    }
+
 }
