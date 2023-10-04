@@ -24,9 +24,9 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
 import org.candlepin.config.ConfigProperties;
-import org.candlepin.config.Configuration;
+import org.candlepin.config.DevConfig;
+import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.dto.rules.v1.ComplianceStatusDTO;
@@ -46,7 +46,6 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.model.Pool;
 import org.candlepin.model.PoolQuantity;
 import org.candlepin.model.Product;
-import org.candlepin.model.ProductCurator;
 import org.candlepin.model.Rules;
 import org.candlepin.model.RulesCurator;
 import org.candlepin.model.SourceSubscription;
@@ -58,17 +57,19 @@ import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.policy.js.autobind.AutobindRules;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 import org.candlepin.util.X509ExtensionUtil;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -84,20 +85,19 @@ import java.util.Map;
 import java.util.Set;
 
 
-
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class AutobindRulesTest {
     @Mock
     private Provider<JsRunnerRequestCache> cacheProvider;
     @Mock
     private JsRunnerRequestCache cache;
     @Mock
-    private Configuration config;
+    private DevConfig config;
     @Mock
     private RulesCurator rulesCurator;
     @Mock
     private OwnerCurator mockOwnerCurator;
-    @Mock
-    private ProductCurator mockProductCurator;
     @Mock
     private ConsumerTypeCurator consumerTypeCurator;
     @Mock
@@ -117,10 +117,9 @@ public class AutobindRulesTest {
     private Map<String, String> activeGuestAttrs;
 
     @BeforeEach
-    public void createEnforcer() {
-        MockitoAnnotations.initMocks(this);
-
-        when(config.getInt(eq(ConfigProperties.PRODUCT_CACHE_MAX))).thenReturn(100);
+    public void init() {
+        this.config = TestConfig.defaults();
+        this.config.setProperty(ConfigProperties.PRODUCT_CACHE_MAX, "100");
 
         InputStream is = this.getClass().getResourceAsStream(RulesCurator.DEFAULT_RULES_FILE);
         Rules rules = new Rules(Util.readFile(is));
@@ -130,19 +129,15 @@ public class AutobindRulesTest {
         doReturn(cache).when(this.cacheProvider).get();
 
         jsRules = new JsRunnerProvider(rulesCurator, cacheProvider).get();
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-        mapper = injector.getInstance(RulesObjectMapper.class);
+        mapper = ObjectMapperFactory.getRulesObjectMapper();
 
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
-        autobindRules = new AutobindRules(jsRules, mockProductCurator, consumerTypeCurator, mockOwnerCurator,
+        autobindRules = new AutobindRules(jsRules, consumerTypeCurator, mockOwnerCurator,
             mapper, translator);
 
         owner = new Owner();
         owner.setId(TestUtil.randomString());
-        when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+        when(mockOwnerCurator.findOwnerById(owner.getId())).thenReturn(owner);
 
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.SYSTEM);
         ctype.setId("test-ctype");
@@ -153,9 +148,9 @@ public class AutobindRulesTest {
             .setOwner(owner)
             .setType(ctype);
 
-        doReturn(ctype).when(this.consumerTypeCurator).get(eq(ctype.getId()));
-        doReturn(ctype).when(this.consumerTypeCurator).getByLabel(eq(ctype.getLabel()));
-        doReturn(ctype).when(this.consumerTypeCurator).getConsumerType(eq(consumer));
+        doReturn(ctype).when(this.consumerTypeCurator).get(ctype.getId());
+        doReturn(ctype).when(this.consumerTypeCurator).getByLabel(ctype.getLabel());
+        doReturn(ctype).when(this.consumerTypeCurator).getConsumerType(consumer);
 
         compliance = new ComplianceStatus();
         activeGuestAttrs = new HashMap<>();
@@ -3598,9 +3593,6 @@ public class AutobindRulesTest {
             .setOwner(owner)
             .setProduct(product)
             .setQuantity(100L);
-
-        when(mockProductCurator.getPoolDerivedProvidedProductsCached(pool.getId()))
-            .thenReturn(derivedProvided);
 
         List<Pool> pools = new LinkedList<>();
         pools.add(pool);

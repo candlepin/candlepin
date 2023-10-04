@@ -19,16 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.candlepin.TestingModules;
-import org.candlepin.config.Configuration;
-import org.candlepin.config.TestConfig;
 import org.candlepin.dto.api.server.v1.AttributeDTO;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,13 +51,8 @@ class AttributeDeserializerTest {
 
     @BeforeEach
     public void setup() {
-        deserializer = new AttributeDeserializer();
-        Configuration config = TestConfig.defaults();
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-        mapper = injector.getInstance(ObjectMapper.class);
+        this.deserializer = new AttributeDeserializer();
+        this.mapper = ObjectMapperFactory.getObjectMapper();
     }
 
     @Test
@@ -73,9 +64,9 @@ class AttributeDeserializerTest {
         assertTrue(containsName(attributes, ARCH_KEY));
         assertTrue(containsName(attributes, SOCKETS_KEY));
         assertTrue(containsName(attributes, RAM_KEY));
-        assertEquals(findByName(attributes, ARCH_KEY).getValue(), ARCH_VALUE);
-        assertEquals(findByName(attributes, SOCKETS_KEY).getValue(), SOCKETS_VALUE);
-        assertEquals(findByName(attributes, RAM_KEY).getValue(), RAM_VALUE);
+        assertEquals(ARCH_VALUE, findByName(attributes, ARCH_KEY).getValue());
+        assertEquals(SOCKETS_VALUE, findByName(attributes, SOCKETS_KEY).getValue());
+        assertEquals(RAM_VALUE, findByName(attributes, RAM_KEY).getValue());
     }
 
     @Test
@@ -87,9 +78,9 @@ class AttributeDeserializerTest {
         assertTrue(containsName(attributes, ARCH_KEY));
         assertTrue(containsName(attributes, SOCKETS_KEY));
         assertTrue(containsName(attributes, RAM_KEY));
-        assertEquals(findByName(attributes, ARCH_KEY).getValue(), ARCH_VALUE);
-        assertEquals(findByName(attributes, SOCKETS_KEY).getValue(), SOCKETS_VALUE);
-        assertEquals(findByName(attributes, RAM_KEY).getValue(), RAM_VALUE);
+        assertEquals(ARCH_VALUE, findByName(attributes, ARCH_KEY).getValue());
+        assertEquals(SOCKETS_VALUE, findByName(attributes, SOCKETS_KEY).getValue());
+        assertEquals(RAM_VALUE, findByName(attributes, RAM_KEY).getValue());
     }
 
     @Test
@@ -101,9 +92,9 @@ class AttributeDeserializerTest {
         assertTrue(containsName(attributes, ARCH_KEY));
         assertTrue(containsName(attributes, SOCKETS_KEY));
         assertTrue(containsName(attributes, RAM_KEY));
-        assertEquals(findByName(attributes, ARCH_KEY).getValue(), ARCH_VALUE);
-        assertEquals(findByName(attributes, SOCKETS_KEY).getValue(), SOCKETS_VALUE);
-        assertEquals(findByName(attributes, RAM_KEY).getValue(), RAM_VALUE);
+        assertEquals(ARCH_VALUE, findByName(attributes, ARCH_KEY).getValue());
+        assertEquals(SOCKETS_VALUE, findByName(attributes, SOCKETS_KEY).getValue());
+        assertEquals(RAM_VALUE, findByName(attributes, RAM_KEY).getValue());
     }
 
     @Test

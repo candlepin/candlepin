@@ -26,10 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
 import org.candlepin.audit.EventSink;
-import org.candlepin.config.Configuration;
-import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.model.CandlepinQuery;
@@ -52,18 +49,19 @@ import org.candlepin.policy.js.JsContext;
 import org.candlepin.policy.js.JsRunner;
 import org.candlepin.policy.js.JsRunnerProvider;
 import org.candlepin.policy.js.JsRunnerRequestCache;
-import org.candlepin.policy.js.RulesObjectMapper;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Provider;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.xnap.commons.i18n.I18n;
 import org.xnap.commons.i18n.I18nFactory;
 
@@ -83,6 +81,8 @@ import java.util.Set;
 
 
 
+@ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ComplianceRulesTest {
     private Owner owner;
     private ComplianceRules compliance;
@@ -115,20 +115,11 @@ public class ComplianceRulesTest {
     private ModelTranslator translator;
     private I18n i18n;
     private JsRunnerProvider provider;
-    private Injector injector;
-
     private Map<String, String> activeGuestAttrs;
 
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
         translator = new StandardTranslator(consumerTypeCurator, environmentCurator, mockOwnerCurator);
-
-        Configuration config = TestConfig.defaults();
-        injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
 
         Locale locale = new Locale("en_US");
         i18n = I18nFactory.getI18n(getClass(), "org.candlepin.i18n.Messages", locale, I18nFactory.FALLBACK);
@@ -140,14 +131,14 @@ public class ComplianceRulesTest {
         when(cacheProvider.get()).thenReturn(cache);
         provider = new JsRunnerProvider(rulesCuratorMock, cacheProvider);
         compliance = new ComplianceRules(provider.get(), entCurator, new StatusReasonMessageGenerator(i18n),
-            eventSink, consumerCurator, consumerTypeCurator, injector.getInstance(RulesObjectMapper.class),
+            eventSink, consumerCurator, consumerTypeCurator, ObjectMapperFactory.getRulesObjectMapper(),
             translator);
 
         this.owner = new Owner()
             .setId(TestUtil.randomString())
             .setKey("test")
             .setDisplayName("test");
-        when(mockOwnerCurator.findOwnerById(eq(owner.getId()))).thenReturn(owner);
+        when(mockOwnerCurator.findOwnerById(owner.getId())).thenReturn(owner);
 
         activeGuestAttrs = new HashMap<>();
         activeGuestAttrs.put("virtWhoType", "libvirt");
@@ -165,7 +156,7 @@ public class ComplianceRulesTest {
     public void additivePropertiesCanStillDeserialize() {
         JsRunner mockRunner = mock(JsRunner.class);
         compliance = new ComplianceRules(mockRunner, entCurator, new StatusReasonMessageGenerator(i18n),
-            eventSink, consumerCurator, consumerTypeCurator, injector.getInstance(RulesObjectMapper.class),
+            eventSink, consumerCurator, consumerTypeCurator, ObjectMapperFactory.getRulesObjectMapper(),
             translator);
 
         when(mockRunner.runJsFunction(any(Class.class), eq("get_status"),
@@ -183,8 +174,8 @@ public class ComplianceRulesTest {
         Consumer consumer = new Consumer();
         consumer.setType(ctype);
 
-        when(this.consumerTypeCurator.get(eq(ctype.getId()))).thenReturn(ctype);
-        when(this.consumerTypeCurator.getConsumerType(eq(consumer))).thenReturn(ctype);
+        when(this.consumerTypeCurator.get(ctype.getId())).thenReturn(ctype);
+        when(this.consumerTypeCurator.getConsumerType(consumer)).thenReturn(ctype);
 
         for (Product product : installedProducts) {
             consumer.addInstalledProduct(new ConsumerInstalledProduct()
@@ -1131,7 +1122,7 @@ public class ComplianceRulesTest {
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(Arrays.asList(ent));
+        when(cqmock.list()).thenReturn(List.of(ent));
         when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(cqmock);
 
         assertTrue(compliance.isEntitlementCompliant(c, ent, new Date()));
@@ -1146,7 +1137,7 @@ public class ComplianceRulesTest {
         ent.getPool().getProduct().setAttribute(Product.Attributes.SOCKETS, "4");
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(Arrays.asList(ent));
+        when(cqmock.list()).thenReturn(List.of(ent));
         when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(cqmock);
 
         assertTrue(compliance.isEntitlementCompliant(c, ent, new Date()));
@@ -1161,7 +1152,7 @@ public class ComplianceRulesTest {
         ent.getPool().getProduct().setAttribute(Product.Attributes.SOCKETS, "4");
 
         CandlepinQuery cqmock = mock(CandlepinQuery.class);
-        when(cqmock.list()).thenReturn(Arrays.asList(ent));
+        when(cqmock.list()).thenReturn(List.of(ent));
         when(entCurator.listByConsumerAndDate(eq(c), any(Date.class))).thenReturn(cqmock);
 
         assertFalse(compliance.isEntitlementCompliant(c, ent, new Date()));
@@ -1201,7 +1192,7 @@ public class ComplianceRulesTest {
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
         ent.getPool().getProduct().setAttribute(Product.Attributes.CORES, "32");
-        mockEntCurator(c, Arrays.asList(ent));
+        mockEntCurator(c, List.of(ent));
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1218,7 +1209,7 @@ public class ComplianceRulesTest {
 
         Entitlement ent = mockEntitlement(c, PRODUCT_1);
         ent.getPool().getProduct().setAttribute(Product.Attributes.CORES, "4");
-        mockEntCurator(c, Arrays.asList(ent));
+        mockEntCurator(c, List.of(ent));
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1284,7 +1275,7 @@ public class ComplianceRulesTest {
         ent1.getPool().getProduct().setAttribute(Product.Attributes.CORES, "32");
         ent1.getPool().getProduct().setAttribute(Product.Attributes.SOCKETS, "4");
 
-        mockEntCurator(c, Arrays.asList(ent1));
+        mockEntCurator(c, List.of(ent1));
 
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1604,7 +1595,7 @@ public class ComplianceRulesTest {
         ent.getPool().getProduct().setAttribute(Product.Attributes.CORES, "32");
         ent.getPool().getProduct().setAttribute(Product.Attributes.GUEST_LIMIT, "8");
 
-        mockEntCurator(c, Arrays.asList(ent));
+        mockEntCurator(c, List.of(ent));
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -1625,7 +1616,7 @@ public class ComplianceRulesTest {
         ent.getPool().getProduct().setAttribute(Product.Attributes.CORES, "32");
         ent.getPool().getProduct().setAttribute(Product.Attributes.GUEST_LIMIT, "4");
 
-        mockEntCurator(c, Arrays.asList(ent));
+        mockEntCurator(c, List.of(ent));
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
         assertEquals(0, status.getNonCompliantProducts().size());
@@ -2092,7 +2083,7 @@ public class ComplianceRulesTest {
         ent.getPool().setAttribute(Product.Attributes.VIRT_ONLY, "true");
         ent.getPool().setAttribute(Pool.Attributes.DERIVED_POOL, "true");
 
-        mockEntCurator(c, Arrays.asList(ent));
+        mockEntCurator(c, List.of(ent));
         ComplianceStatus status = compliance.getStatus(c, TestUtil.createDate(2011, 8, 30));
 
         assertEquals(0, status.getNonCompliantProducts().size());

@@ -282,7 +282,7 @@ public class JobManagerTest {
     private JobManager createJobManager(JobMessageDispatcher dispatcher, Configuration config) {
         return new JobManager(config, this.schedulerFactory, this.modeManager, this.jobCurator,
             this.ownerCurator, dispatcher, this.receiver, this.principalProvider, this.requestScope,
-            this.injector);
+            () -> this.eventSink, this.injector);
     }
 
     private JobArguments buildJobArguments(Map<String, Object> args) {

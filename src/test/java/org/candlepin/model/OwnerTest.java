@@ -23,19 +23,13 @@ import org.candlepin.test.DatabaseTestFixture;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.Util;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.junit.jupiter.api.Test;
-
-import java.util.Set;
-
 
 
 public class OwnerTest extends DatabaseTestFixture {
 
     @Test
-    public void testCreate() throws Exception {
+    public void testCreate() {
         String ownerName = "Example-Corporation";
         String prefix = "PhredPrefix";
 
@@ -57,7 +51,7 @@ public class OwnerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testList() throws Exception {
+    public void testList() {
         int beforeCount = this.getEntityManager().createQuery("select o from Owner as o")
             .getResultList()
             .size();
@@ -74,7 +68,7 @@ public class OwnerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void testObjectRelationships() throws Exception {
+    public void testObjectRelationships() {
         Owner owner = TestUtil.createOwner("test-owner");
 
         // Product
@@ -93,7 +87,7 @@ public class OwnerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void bidirectionalConsumers() throws Exception {
+    public void bidirectionalConsumers() {
         beginTransaction();
         Owner o = this.createOwner();
         ConsumerType consumerType = this.createConsumerType();
@@ -112,38 +106,6 @@ public class OwnerTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void objectMapper() {
-        Owner o = createOwner();
-        ConsumerType consumerType = this.createConsumerType();
-        Consumer c1 = this.createConsumer(o, consumerType);
-        Consumer c2 = this.createConsumer(o, consumerType);
-        o.addConsumer(c1);
-        o.addConsumer(c2);
-        Set<Consumer> consumers = o.getConsumers();
-
-        System.out.println(consumers.size());
-        ObjectMapper mapper = injector.getInstance(ObjectMapper.class);
-//        AnnotationIntrospector primary = new JacksonAnnotationIntrospector();
-//        AnnotationIntrospector secondary = new JaxbAnnotationIntrospector();
-//        AnnotationIntrospector pair = new AnnotationIntrospector.Pair(primary, secondary);
-//
-        mapper.getSerializationConfig().findMixInClassFor(Consumer.class);
-//        mapper.getSerializationConfig().setAnnotationIntrospector(pair);
-//        mapper.getDeserializationConfig().setAnnotationIntrospector(pair);
-//        mapper.getSerializationConfig().set(
-//            SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
-//            false);
-        try {
-            String jsondata = mapper.writeValueAsString(o);
-            System.out.println(jsondata);
-        }
-        catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
-    @Test
     public void testAutobindDisabledUtilityMethod() {
         Owner o = createOwner();
         o.setAutobindDisabled(true);
@@ -153,8 +115,5 @@ public class OwnerTest extends DatabaseTestFixture {
         assertFalse(o.isAutobindDisabled());
     }
 
-    interface MixIn {
-        @JsonProperty("consumers")
-        Set<Consumer> getConsumers();
-    }
 }
+

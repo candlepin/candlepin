@@ -23,21 +23,17 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.candlepin.TestingModules;
-import org.candlepin.config.Configuration;
-import org.candlepin.config.TestConfig;
 import org.candlepin.jackson.DynamicPropertyFilter;
 import org.candlepin.model.Branding;
 import org.candlepin.model.Content;
 import org.candlepin.model.Product;
 import org.candlepin.model.ProductContent;
 import org.candlepin.service.model.BrandingInfo;
+import org.candlepin.util.ObjectMapperFactory;
 import org.candlepin.util.Util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,10 +50,6 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 
-
-/**
- * Test suite for the ProductData class
- */
 public class ProductDataTest {
 
     public static final String PRODUCT_JSON_BASE = "{" +
@@ -71,33 +63,11 @@ public class ProductDataTest {
         "  \"href\" : \"/products/8a8d01cb570530d001570531389508c7\"," +
         "  \"productContent\" : [ ]";
 
-    // public .* (?:get|is)(.*)\(\) {\npublic .* set\1\(.*\) {
-
-    // @Test
-    // public void testGetSet\1() {
-    //     ProductData dto = new ProductData();
-    //     String input = "test_value";
-
-    //     String output = dto.get\1();
-    //     assertNull(output);
-
-    //     ProductData output2 = dto.set\1(input);
-    //     assertSame(output2, dto);
-
-    //     output = dto.get\1();
-    //     assertEquals(input, output);
-    // }
-
     private ObjectMapper mapper;
 
     @BeforeEach
     public void createObjects() {
-        Configuration config = TestConfig.defaults();
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-        mapper = injector.getInstance(ObjectMapper.class);
+        this.mapper = ObjectMapperFactory.getObjectMapper();
 
         SimpleFilterProvider filterProvider = new SimpleFilterProvider();
         filterProvider.setDefaultFilter(new DynamicPropertyFilter());

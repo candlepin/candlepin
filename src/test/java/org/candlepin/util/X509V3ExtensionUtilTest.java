@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 
-import org.candlepin.TestingModules;
 import org.candlepin.config.Configuration;
 import org.candlepin.controller.util.ContentPrefix;
 import org.candlepin.controller.util.PromotedContent;
@@ -40,15 +39,10 @@ import org.candlepin.util.X509V3ExtensionUtil.PathNode;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.name.Names;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -62,14 +56,9 @@ public class X509V3ExtensionUtilTest {
 
     @BeforeEach
     public void init() {
-        Configuration config = mock(Configuration.class);
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-        this.mapper = injector.getInstance(Key.get(ObjectMapper.class,
-            Names.named("X509V3ExtensionUtilObjectMapper")));
+        this.mapper = ObjectMapperFactory.getX509V3ExtensionUtilObjectMapper();
 
+        Configuration config = mock(Configuration.class);
         EntitlementCurator ec = mock(EntitlementCurator.class);
         util = new X509V3ExtensionUtil(config, ec, this.mapper);
     }
@@ -124,7 +113,7 @@ public class X509V3ExtensionUtilTest {
             .setDisplayName("Test Corporation");
         Product p = new Product(engProdId, "Eng Product 1000");
         p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
-        Set<Product> prods = new HashSet<>(Arrays.asList(p));
+        Set<Product> prods = Set.of(p);
         Product mktProd = new Product("mkt", "MKT SKU");
         mktProd.addBranding(new Branding(null, engProdId, brandedName, "OS"));
         Pool pool = TestUtil.createPool(mktProd);
@@ -234,7 +223,7 @@ public class X509V3ExtensionUtilTest {
             .setDisplayName("Test Corporation");
         Product p = new Product(engProdId, "Eng Product 1000");
         p.setAttribute(Product.Attributes.BRANDING_TYPE, "OS");
-        Set<Product> prods = new HashSet<>(Arrays.asList(p));
+        Set<Product> prods = Set.of(p);
         Product mktProd = new Product("mkt", "MKT SKU");
         mktProd.addBranding(new Branding(null, engProdId, brandedName, "OS"));
         mktProd.addBranding(new Branding(null, engProdId, "another brand name", "OS"));
@@ -286,7 +275,7 @@ public class X509V3ExtensionUtilTest {
 
         org.candlepin.model.dto.Product certProds = util.mapProduct(engProd, sku,
             new PromotedContent(emptyPrefix()), consumer, pool,
-            new HashSet<>(Arrays.asList("content_access")));
+            Set.of("content_access"));
 
         assertEquals(1, certProds.getContent().size());
         assertEquals(1, certProds.getContent().get(0).getArches().size());

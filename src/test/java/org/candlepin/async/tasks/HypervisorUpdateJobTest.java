@@ -32,7 +32,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
 import org.candlepin.async.JobConfig;
 import org.candlepin.async.JobConfigValidationException;
 import org.candlepin.async.JobExecutionContext;
@@ -59,10 +58,9 @@ import org.candlepin.resource.ConsumerResource;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.impl.HypervisorUpdateAction;
 import org.candlepin.test.TestUtil;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -112,11 +110,7 @@ public class HypervisorUpdateJobTest {
         entityManager = mock(EntityManager.class);
         when(owner.getId()).thenReturn("joe");
 
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-        objectMapper = injector.getInstance(ObjectMapper.class);
+        objectMapper = ObjectMapperFactory.getObjectMapper();
 
         ConsumerType ctype = new ConsumerType(ConsumerTypeEnum.HYPERVISOR);
         ctype.setId("test-ctype");

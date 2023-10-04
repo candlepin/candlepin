@@ -46,7 +46,7 @@ import javax.inject.Singleton;
 @Singleton
 public class ActiveMQStatusMonitor implements Closeable, Runnable, CloseListener {
 
-    private static Logger log = LoggerFactory.getLogger(ActiveMQStatusMonitor.class);
+    private static final Logger log = LoggerFactory.getLogger(ActiveMQStatusMonitor.class);
 
     private ServerLocator locator;
     private ClientSessionFactory clientSessionFactory;

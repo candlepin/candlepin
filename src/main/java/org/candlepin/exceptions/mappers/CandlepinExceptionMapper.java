@@ -40,15 +40,12 @@ import javax.ws.rs.core.Response.Status;
 
 
 
-/**
- * CandlepinExceptionMapper
- */
 public class CandlepinExceptionMapper {
-    private static Logger log = LoggerFactory.getLogger(CandlepinExceptionMapper.class);
+    private static final Logger log = LoggerFactory.getLogger(CandlepinExceptionMapper.class);
 
     // This should be an unmodifiable list, but the MediaTypeHelper.getBestType actually manipulates its
     // input lists.
-    private static final List<MediaType> DESIRED_RESPONSE_TYPES = Arrays.<MediaType>asList(
+    private static final List<MediaType> DESIRED_RESPONSE_TYPES = Arrays.asList(
         MediaType.APPLICATION_JSON_TYPE,
         MediaType.TEXT_PLAIN_TYPE,
         MediaType.APPLICATION_ATOM_XML_TYPE
@@ -56,7 +53,7 @@ public class CandlepinExceptionMapper {
 
     // Use a provider so we get a scoped HttpServletRequest
     @Inject
-    private javax.inject.Provider<HttpServletRequest> requestProvider;
+    private Provider<HttpServletRequest> requestProvider;
 
     @Inject
     protected Provider<I18n> i18n;

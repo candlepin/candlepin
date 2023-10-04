@@ -52,7 +52,7 @@ import javax.inject.Inject;
  */
 @CandlepinRequestScoped
 public class EventSinkImpl implements EventSink {
-    private static Logger log = LoggerFactory.getLogger(EventSinkImpl.class);
+    private static final Logger log = LoggerFactory.getLogger(EventSinkImpl.class);
 
     public static final String EVENT_TYPE_KEY = "EVENT_TYPE";
     public static final String EVENT_TARGET_KEY = "EVENT_TARGET";
@@ -69,7 +69,7 @@ public class EventSinkImpl implements EventSink {
     @Inject
     public EventSinkImpl(EventFilter eventFilter, EventFactory eventFactory,
         ObjectMapper mapper, Configuration config, ActiveMQSessionFactory sessionFactory,
-        CandlepinModeManager modeManager) throws ActiveMQException {
+        CandlepinModeManager modeManager) {
 
         this.eventFactory = eventFactory;
         this.mapper = mapper;

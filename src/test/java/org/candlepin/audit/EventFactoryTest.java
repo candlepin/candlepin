@@ -19,12 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.candlepin.TestingModules;
 import org.candlepin.audit.Event.Target;
 import org.candlepin.audit.Event.Type;
 import org.candlepin.auth.Principal;
-import org.candlepin.config.Configuration;
-import org.candlepin.config.TestConfig;
 import org.candlepin.dto.ModelTranslator;
 import org.candlepin.dto.StandardTranslator;
 import org.candlepin.guice.PrincipalProvider;
@@ -38,12 +35,11 @@ import org.candlepin.model.OwnerCurator;
 import org.candlepin.policy.SystemPurposeComplianceStatus;
 import org.candlepin.policy.js.compliance.ComplianceReason;
 import org.candlepin.policy.js.compliance.ComplianceStatus;
+import org.candlepin.util.ObjectMapperFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,12 +64,7 @@ public class EventFactoryTest {
 
     @BeforeEach
     public void init() throws Exception {
-        Configuration config = TestConfig.defaults();
-        Injector injector = Guice.createInjector(
-            new TestingModules.MockJpaModule(),
-            new TestingModules.StandardTest(config),
-            new TestingModules.ServletEnvironmentModule());
-        objectMapper = injector.getInstance(ObjectMapper.class);
+        objectMapper = ObjectMapperFactory.getObjectMapper();
         principalProvider = mock(PrincipalProvider.class);
         Principal principal = mock(Principal.class);
         when(principalProvider.get()).thenReturn(principal);
