@@ -39,11 +39,13 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
     public void testUuidGeneration() throws Exception {
         String expectedCloudAccountId = "cloud-account-id";
         String expectedInstanceId = "instance-id";
+        String expectedOfferId = "offer-id";
         String expectedProductId = "product-id";
         String expectedCloudProviderShortName = "AWS";
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId(expectedCloudAccountId)
             .setCloudInstanceId(expectedInstanceId)
+            .setCloudOfferingId(expectedOfferId)
             .setProductIds(List.of(expectedProductId))
             .setCloudProviderShortName(expectedCloudProviderShortName);
 
@@ -56,6 +58,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
             .returns(expectedCloudAccountId, AnonymousCloudConsumer::getCloudAccountId)
             .returns(expectedInstanceId, AnonymousCloudConsumer::getCloudInstanceId)
             .returns(expectedCloudProviderShortName, AnonymousCloudConsumer::getCloudProviderShortName)
+            .returns(expectedOfferId, AnonymousCloudConsumer::getCloudOfferingId)
             .extracting(AnonymousCloudConsumer::getProductIds, as(collection(String.class)))
             .containsExactly(expectedProductId);
     }
@@ -65,6 +68,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setProductIds(List.of("product-id"))
             .setCloudInstanceId("instance-id")
+            .setCloudOfferingId("offer-id")
             .setCloudProviderShortName("AWS");
 
         assertThrows(ConstraintViolationException.class,
@@ -76,6 +80,19 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId("cloud-account-id")
             .setProductIds(List.of("product-id"))
+            .setCloudOfferingId("offer-id")
+            .setCloudProviderShortName("AWS");
+
+        assertThrows(ConstraintViolationException.class,
+            () -> anonymousCloudConsumerCurator.create(consumer));
+    }
+
+    @Test
+    public void testCloudOfferingIdFieldRequired() throws Exception {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setCloudAccountId("cloud-account-id")
+            .setProductIds(List.of("product-id"))
+            .setCloudInstanceId("instance-id")
             .setCloudProviderShortName("AWS");
 
         assertThrows(ConstraintViolationException.class,
@@ -87,6 +104,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId("cloud-account-id")
             .setCloudInstanceId("instance-id")
+            .setCloudOfferingId("offer-id")
             .setCloudProviderShortName("AWS");
 
         assertThrows(ConstraintViolationException.class,
@@ -98,6 +116,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId("cloud-account-id")
             .setCloudInstanceId("instance-id")
+            .setCloudOfferingId("offer-id")
             .setProductIds(List.of("product-id"));
 
         assertThrows(ConstraintViolationException.class,
@@ -144,9 +163,11 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
         String expectedProductId = "product-id";
         String expectedCloudProviderShortName = "GCP";
         String expectedInstanceId = "instance-id";
+        String expectedOfferId = "offer-id";
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId(expectedCloudAccountId)
             .setCloudInstanceId(expectedInstanceId)
+            .setCloudOfferingId(expectedOfferId)
             .setProductIds(List.of(expectedProductId))
             .setCloudProviderShortName(expectedCloudProviderShortName);
 
@@ -162,6 +183,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
             .returns(expectedUuid, AnonymousCloudConsumer::getUuid)
             .returns(expectedCloudAccountId, AnonymousCloudConsumer::getCloudAccountId)
             .returns(expectedInstanceId, AnonymousCloudConsumer::getCloudInstanceId)
+            .returns(expectedOfferId, AnonymousCloudConsumer::getCloudOfferingId)
             .returns(expectedCloudProviderShortName, AnonymousCloudConsumer::getCloudProviderShortName)
             .extracting(AnonymousCloudConsumer::getProductIds, as(collection(String.class)))
             .containsExactly(expectedProductId);
@@ -187,9 +209,11 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
         String expectedInstanceId = "instance-id";
         String expectedProductId = "product-id";
         String expectedCloudProviderShortName = "GCP";
+        String expectedOfferId = "offer-id";
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId("initial-cloud-account-id")
             .setCloudInstanceId("instance-id")
+            .setCloudOfferingId(expectedOfferId)
             .setProductIds(List.of(expectedProductId))
             .setCloudProviderShortName(expectedCloudProviderShortName);
 
@@ -205,6 +229,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
             .returns(consumer.getUuid(), AnonymousCloudConsumer::getUuid)
             .returns(expectedCloudAccountId, AnonymousCloudConsumer::getCloudAccountId)
             .returns(expectedInstanceId, AnonymousCloudConsumer::getCloudInstanceId)
+            .returns(expectedOfferId, AnonymousCloudConsumer::getCloudOfferingId)
             .returns(expectedCloudProviderShortName, AnonymousCloudConsumer::getCloudProviderShortName)
             .extracting(AnonymousCloudConsumer::getProductIds, as(collection(String.class)))
             .containsExactly(expectedProductId);
@@ -228,11 +253,13 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
     @Test
     public void testUpdateToCloudInstanceId() {
         String expectedCloudAccountId = "cloud-account-id";
+        String expectedOfferId = "offer-id";
         String expectedProductId = "product-id";
         String expectedCloudProviderShortName = "GCP";
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId(expectedCloudAccountId)
             .setCloudInstanceId("init-instance-id")
+            .setCloudOfferingId(expectedOfferId)
             .setProductIds(List.of(expectedProductId))
             .setCloudProviderShortName(expectedCloudProviderShortName);
 
@@ -248,10 +275,58 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
             .returns(consumer.getUuid(), AnonymousCloudConsumer::getUuid)
             .returns(expectedCloudAccountId, AnonymousCloudConsumer::getCloudAccountId)
             .returns(expectedInstanceId, AnonymousCloudConsumer::getCloudInstanceId)
+            .returns(expectedOfferId, AnonymousCloudConsumer::getCloudOfferingId)
             .returns(expectedCloudProviderShortName, AnonymousCloudConsumer::getCloudProviderShortName)
             .extracting(AnonymousCloudConsumer::getProductIds, as(collection(String.class)))
             .containsExactly(expectedProductId);
     }
+
+    @Test
+    public void testSetCloudOfferingIdWithNull() {
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+
+        assertThrows(IllegalArgumentException.class, () -> consumer.setCloudOfferingId(null));
+    }
+
+    @Test
+    public void testSetCloudOfferingIdWithGreaterThanMaxLength() {
+        String offerId = generateString(AnonymousCloudConsumer.CLOUD_OFFERING_ID_MAX_LENGTH + 1);
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer();
+
+        assertThrows(IllegalArgumentException.class, () -> consumer.setCloudOfferingId(offerId));
+    }
+
+    @Test
+    public void testUpdateToCloudOfferingId() {
+        String expectedCloudAccountId = "cloud-account-id";
+        String expectedProductId = "product-id";
+        String expectedInstanceId = "instance-id";
+        String expectedCloudProviderShortName = "GCP";
+        AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
+            .setCloudAccountId(expectedCloudAccountId)
+            .setCloudInstanceId(expectedInstanceId)
+            .setCloudOfferingId("initial-offer-id")
+            .setProductIds(List.of(expectedProductId))
+            .setCloudProviderShortName(expectedCloudProviderShortName);
+
+        consumer = anonymousCloudConsumerCurator.create(consumer);
+        String expectedOfferId = "updated-offer-id";
+        consumer.setCloudOfferingId(expectedOfferId);
+
+        AnonymousCloudConsumer actual = anonymousCloudConsumerCurator.merge(consumer);
+
+        assertThat(actual)
+            .isNotNull()
+            .doesNotReturn(null, AnonymousCloudConsumer::getId)
+            .returns(consumer.getUuid(), AnonymousCloudConsumer::getUuid)
+            .returns(expectedCloudAccountId, AnonymousCloudConsumer::getCloudAccountId)
+            .returns(expectedInstanceId, AnonymousCloudConsumer::getCloudInstanceId)
+            .returns(expectedOfferId, AnonymousCloudConsumer::getCloudOfferingId)
+            .returns(expectedCloudProviderShortName, AnonymousCloudConsumer::getCloudProviderShortName)
+            .extracting(AnonymousCloudConsumer::getProductIds, as(collection(String.class)))
+            .containsExactly(expectedProductId);
+    }
+
 
     @Test
     public void testSetProductIdsWithNull() {
@@ -279,6 +354,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId("account-id")
             .setCloudInstanceId("instance-id")
+            .setCloudOfferingId("offer-id")
             .setProductIds(productIds)
             .setCloudProviderShortName("short-name");
 
@@ -294,10 +370,12 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
     public void testUpdateToProductIds() {
         String expectedCloudAccountId = "cloud-account-id";
         String expectedInstanceId = "instance-id";
+        String expectedOfferId = "offer-id";
         String expectedCloudProviderShortName = "AWS";
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId(expectedCloudAccountId)
             .setCloudInstanceId("instance-id")
+            .setCloudOfferingId(expectedOfferId)
             .setProductIds(List.of("init-prod-id"))
             .setCloudProviderShortName(expectedCloudProviderShortName);
 
@@ -313,6 +391,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
             .returns(consumer.getUuid(), AnonymousCloudConsumer::getUuid)
             .returns(expectedCloudAccountId, AnonymousCloudConsumer::getCloudAccountId)
             .returns(expectedInstanceId, AnonymousCloudConsumer::getCloudInstanceId)
+            .returns(expectedOfferId, AnonymousCloudConsumer::getCloudOfferingId)
             .returns(expectedCloudProviderShortName, AnonymousCloudConsumer::getCloudProviderShortName)
             .extracting(AnonymousCloudConsumer::getProductIds, as(collection(String.class)))
             .containsExactly(expectedProductId);
@@ -338,10 +417,12 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
     public void testUpdateToCloudProviderShortName() {
         String expectedCloudAccountId = "cloud-account-id";
         String expectedInstanceId = "instance-id";
+        String expectedOfferId = "offer-id";
         String expectedProductId = "product-id";
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId(expectedCloudAccountId)
             .setCloudInstanceId(expectedInstanceId)
+            .setCloudOfferingId(expectedOfferId)
             .setProductIds(List.of(expectedProductId))
             .setCloudProviderShortName("AWS");
 
@@ -357,6 +438,7 @@ public class AnonymousCloudConsumerTest extends DatabaseTestFixture {
             .returns(consumer.getUuid(), AnonymousCloudConsumer::getUuid)
             .returns(expectedCloudAccountId, AnonymousCloudConsumer::getCloudAccountId)
             .returns(expectedInstanceId, AnonymousCloudConsumer::getCloudInstanceId)
+            .returns(expectedOfferId, AnonymousCloudConsumer::getCloudOfferingId)
             .returns(expectedCloudProviderShortName, AnonymousCloudConsumer::getCloudProviderShortName)
             .extracting(AnonymousCloudConsumer::getProductIds, as(collection(String.class)))
             .containsExactly(expectedProductId);
