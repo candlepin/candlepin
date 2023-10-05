@@ -22,6 +22,9 @@
             <column name="cloud_instance_id" type="varchar(170)">
                 <constraints nullable="false"/>
             </column>
+            <column name="cloud_offering_id" type="varchar(170)">
+                <constraints nullable="false"/>
+            </column>
             <column name="cloud_provider_short_name" type="varchar(15)">
                 <constraints nullable="false"/>
             </column>

@@ -235,6 +235,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId("account-id")
             .setCloudInstanceId("instance-id")
+            .setCloudOfferingId("offer-id")
             .setCloudProviderShortName("short-name")
             .setProductIds(List.of("product-id"));
         consumer = this.anonymousCloudConsumerCurator.create(consumer);
@@ -291,6 +292,7 @@ public class VerifyAuthorizationFilterTest extends DatabaseTestFixture {
         AnonymousCloudConsumer consumer = new AnonymousCloudConsumer()
             .setCloudAccountId("account-id")
             .setCloudInstanceId("instance-id")
+            .setCloudOfferingId("offer-id")
             .setCloudProviderShortName("short-name")
             .setProductIds(List.of("product-id"));
         consumer = this.anonymousCloudConsumerCurator.create(consumer);

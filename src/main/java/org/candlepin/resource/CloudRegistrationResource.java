@@ -216,6 +216,7 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             AnonymousCloudConsumer createdAnonConsumer = new AnonymousCloudConsumer()
                 .setCloudAccountId(authResult.getCloudAccountId())
                 .setCloudInstanceId(authResult.getCloudInstanceId())
+                .setCloudOfferingId(authResult.getOfferId())
                 .setProductIds(authResult.getProductIds())
                 .setCloudProviderShortName(authResult.getCloudProvider().shortName());
 
