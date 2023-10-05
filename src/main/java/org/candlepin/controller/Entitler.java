@@ -45,6 +45,7 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.exception.product.ProductUnknownRetrievalException;
 import org.candlepin.service.model.ProductInfo;
 
 import com.google.common.collect.Iterables;
@@ -162,14 +163,14 @@ public class Entitler {
         catch (EntitlementRefusedException e) {
             // TODO: Could be multiple errors, but we'll just report the first one for now:
             throw new ForbiddenException(messageTranslator.entitlementErrorToMessage(
-                ent, e.getResults().values().iterator().next().getErrors().get(0)), e
-            );
+                ent, e.getResults().values().iterator().next().getErrors().get(0)), e);
         }
     }
 
     public List<Entitlement> bindByProducts(Collection<String> productIds, String consumerUuid,
         Date entitleDate, Collection<String> fromPools)
-        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException,
+        ProductUnknownRetrievalException {
 
         Consumer consumer = consumerCurator.findByUuid(consumerUuid);
         Owner owner = ownerCurator.findOwnerById(consumer.getOwnerId());
@@ -195,7 +196,8 @@ public class Entitler {
      *         and the owner has it disabled.
      */
     public List<Entitlement> bindByProducts(AutobindData data)
-        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException,
+        ProductUnknownRetrievalException {
 
         return bindByProducts(data, false);
     }
@@ -214,7 +216,8 @@ public class Entitler {
      */
     @Transactional
     public List<Entitlement> bindByProducts(AutobindData data, boolean force)
-        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException,
+        ProductUnknownRetrievalException {
 
         Consumer consumer = data.getConsumer();
         Owner owner = data.getOwner();
@@ -301,8 +304,7 @@ public class Entitler {
 
                 throw new ForbiddenException(i18n.tr(
                     "Development units may only be used on hosted servers" +
-                    " and with orgs that have active subscriptions."
-                ));
+                        " and with orgs that have active subscriptions."));
             }
 
             // Look up the dev pool for this consumer, and if not found
@@ -342,7 +344,7 @@ public class Entitler {
         int interval = MAX_DEV_LIFE_DAYS;
         String prodExp = prod.getAttributeValue(Product.Attributes.TTL);
 
-        if (prodExp != null &&  Integer.parseInt(prodExp) < MAX_DEV_LIFE_DAYS) {
+        if (prodExp != null && Integer.parseInt(prodExp) < MAX_DEV_LIFE_DAYS) {
             interval = Integer.parseInt(prodExp);
         }
 
@@ -364,7 +366,8 @@ public class Entitler {
      * @param sku the product id of the developer SKU.
      * @return the newly created developer pool (note: not yet persisted)
      */
-    protected Pool assembleDevPool(Consumer consumer, Owner owner, String sku) {
+    protected Pool assembleDevPool(Consumer consumer, Owner owner, String sku)
+        throws ProductUnknownRetrievalException {
         DeveloperProducts devProducts = getDeveloperPoolProducts(owner, sku);
         Product skuProduct = devProducts.getSku();
         Date startDate = consumer.getCreated();
@@ -383,7 +386,8 @@ public class Entitler {
         return pool;
     }
 
-    private DeveloperProducts getDeveloperPoolProducts(Owner owner, String sku) {
+    private DeveloperProducts getDeveloperPoolProducts(Owner owner, String sku)
+        throws ProductUnknownRetrievalException {
         DeveloperProducts devProducts = getDevProductMap(owner, sku);
         verifyDevProducts(sku, devProducts);
         return devProducts;
@@ -397,10 +401,10 @@ public class Entitler {
      * @return a {@link DeveloperProducts} object that contains the Product objects
      *         from the adapter.
      */
-    private DeveloperProducts getDevProductMap(Owner owner, String sku) {
+    private DeveloperProducts getDevProductMap(Owner owner, String sku)
+        throws ProductUnknownRetrievalException {
         Collection<? extends ProductInfo> productsByIds = this.productAdapter
             .getProductsByIds(owner.getKey(), Arrays.asList(sku));
-
         Map<String, Product> devProductMap = new HashMap<>();
 
         if (productsByIds != null && !productsByIds.isEmpty()) {
@@ -413,7 +417,7 @@ public class Entitler {
             List<String> devProductIds = new ArrayList<>();
             this.collectDevProductIds(devProductIds, devProduct);
 
-            // Do a refresh so we're all up to date here
+            // Do a refresh, so we're all up to date here
             log.debug("Importing products for dev pool resolution...");
 
             RefreshResult refreshResult = this.refreshWorkerProvider.get()
@@ -493,7 +497,7 @@ public class Entitler {
      * @return List of Entitlements
      */
     public List<PoolQuantity> getDryRun(Consumer consumer, Owner owner,
-        String serviceLevelOverride) {
+        String serviceLevelOverride) throws ProductUnknownRetrievalException {
 
         List<PoolQuantity> result = new ArrayList<>();
         try {
@@ -502,8 +506,7 @@ public class Entitler {
                     !poolCurator.hasActiveEntitlementPools(consumer.getOwnerId(), null)) {
                     throw new ForbiddenException(i18n.tr(
                         "Development units may only be used on hosted servers" +
-                        " and with orgs that have active subscriptions."
-                    ));
+                            " and with orgs that have active subscriptions."));
                 }
 
                 // Look up the dev pool for this consumer, and if not found
@@ -582,7 +585,6 @@ public class Entitler {
             }
         }
     }
-
 
     /**
      * A private sub class that encapsulates the products obtained from the

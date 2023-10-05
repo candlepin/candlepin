@@ -12,21 +12,18 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.service.exception;
-
-
+package org.candlepin.service.exception.user;
 
 /**
- * The CloudRegistrationAuthorizationException is used to reject a registration attempt for a
- * cloud provider or account holder.
+ * The UserUnacceptedTermsException is used to reject a user validation action.
  */
-public class CloudRegistrationAuthorizationException extends RuntimeException {
+public class UserUnacceptedTermsException extends UserServiceException {
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized,
      * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
      */
-    public CloudRegistrationAuthorizationException() {
+    public UserUnacceptedTermsException() {
         super();
     }
 
@@ -38,7 +35,7 @@ public class CloudRegistrationAuthorizationException extends RuntimeException {
      *  the detail message. The detail message is saved for later retrieval by the getMessage()
      *  method.
      */
-    public CloudRegistrationAuthorizationException(String message) {
+    public UserUnacceptedTermsException(String message) {
         super(message);
     }
 
@@ -52,7 +49,7 @@ public class CloudRegistrationAuthorizationException extends RuntimeException {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public CloudRegistrationAuthorizationException(Throwable cause) {
+    public UserUnacceptedTermsException(Throwable cause) {
         super(cause);
     }
 
@@ -70,7 +67,7 @@ public class CloudRegistrationAuthorizationException extends RuntimeException {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public CloudRegistrationAuthorizationException(String message, Throwable cause) {
+    public UserUnacceptedTermsException(String message, Throwable cause) {
         super(message, cause);
     }
 }

@@ -46,6 +46,8 @@ import org.candlepin.auth.SubResource;
 import org.candlepin.auth.UserPrincipal;
 import org.candlepin.config.Configuration;
 import org.candlepin.config.TestConfig;
+import org.candlepin.controller.AutobindDisabledForOwnerException;
+import org.candlepin.controller.AutobindHypervisorDisabledException;
 import org.candlepin.controller.ContentAccessManager;
 import org.candlepin.controller.ContentAccessManager.ContentAccessMode;
 import org.candlepin.controller.EntitlementCertificateGenerator;
@@ -62,6 +64,7 @@ import org.candlepin.dto.api.server.v1.ConsumerDTO;
 import org.candlepin.dto.api.server.v1.ConsumerDTOArrayElement;
 import org.candlepin.dto.api.server.v1.ContentAccessDTO;
 import org.candlepin.exceptions.BadRequestException;
+import org.candlepin.exceptions.ExceptionMessage;
 import org.candlepin.exceptions.GoneException;
 import org.candlepin.exceptions.NotFoundException;
 import org.candlepin.guice.PrincipalProvider;
@@ -109,6 +112,8 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.product.ProductUnknownRetrievalException;
+import org.candlepin.service.exception.subscription.SubscriptionUnknownTermsException;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.FactValidator;
@@ -171,47 +176,82 @@ public class ConsumerResourceTest {
     private Configuration config;
     private FactValidator factValidator;
 
-    @Mock private ConsumerCurator consumerCurator;
-    @Mock private OwnerCurator ownerCurator;
-    @Mock private EntitlementCertServiceAdapter entitlementCertServiceAdapter;
-    @Mock private SubscriptionServiceAdapter subscriptionServiceAdapter;
-    @Mock private ProductServiceAdapter mockProductServiceAdapter;
-    @Mock private PoolManager poolManager;
-    @Mock private RefresherFactory refresherFactory;
-    @Mock private EntitlementCurator entitlementCurator;
-    @Mock private ComplianceRules complianceRules;
-    @Mock private SystemPurposeComplianceRules systemPurposeComplianceRules;
-    @Mock private EventFactory eventFactory;
-    @Mock private EventBuilder eventBuilder;
-    @Mock private ConsumerBindUtil consumerBindUtil;
-    @Mock private ConsumerEnricher consumerEnricher;
-    @Mock private ConsumerTypeCurator consumerTypeCurator;
-    @Mock private ContentAccessManager contentAccessManager;
-    @Mock private EventSink sink;
-    @Mock private EnvironmentCurator environmentCurator;
-    @Mock private IdentityCertServiceAdapter identityCertServiceAdapter;
-    @Mock private ActivationKeyCurator activationKeyCurator;
-    @Mock private Entitler entitler;
-    @Mock private ManifestManager manifestManager;
-    @Mock private CdnCurator cdnCurator;
-    @Mock private UserServiceAdapter userServiceAdapter;
-    @Mock private DeletedConsumerCurator deletedConsumerCurator;
-    @Mock private JobManager jobManager;
-    @Mock private DTOValidator dtoValidator;
-    @Mock private ConsumerRules consumerRules;
-    @Mock private CalculatedAttributesUtil calculatedAttributesUtil;
-    @Mock private DistributorVersionCurator distributorVersionCurator;
-    @Mock private Provider<GuestMigration> guestMigrationProvider;
-    @Mock private PrincipalProvider principalProvider;
-    @Mock private ConsumerContentOverrideCurator consumerContentOverrideCurator;
-    @Mock private ContentOverrideValidator contentOverrideValidator;
-    @Mock private EnvironmentContentCurator environmentContentCurator;
-    @Mock private EntitlementCertificateGenerator entCertGenerator;
+    @Mock
+    private ConsumerCurator consumerCurator;
+    @Mock
+    private OwnerCurator ownerCurator;
+    @Mock
+    private EntitlementCertServiceAdapter entitlementCertServiceAdapter;
+    @Mock
+    private SubscriptionServiceAdapter subscriptionServiceAdapter;
+    @Mock
+    private ProductServiceAdapter mockProductServiceAdapter;
+    @Mock
+    private PoolManager poolManager;
+    @Mock
+    private RefresherFactory refresherFactory;
+    @Mock
+    private EntitlementCurator entitlementCurator;
+    @Mock
+    private ComplianceRules complianceRules;
+    @Mock
+    private SystemPurposeComplianceRules systemPurposeComplianceRules;
+    @Mock
+    private EventFactory eventFactory;
+    @Mock
+    private EventBuilder eventBuilder;
+    @Mock
+    private ConsumerBindUtil consumerBindUtil;
+    @Mock
+    private ConsumerEnricher consumerEnricher;
+    @Mock
+    private ConsumerTypeCurator consumerTypeCurator;
+    @Mock
+    private ContentAccessManager contentAccessManager;
+    @Mock
+    private EventSink sink;
+    @Mock
+    private EnvironmentCurator environmentCurator;
+    @Mock
+    private IdentityCertServiceAdapter identityCertServiceAdapter;
+    @Mock
+    private ActivationKeyCurator activationKeyCurator;
+    @Mock
+    private Entitler entitler;
+    @Mock
+    private ManifestManager manifestManager;
+    @Mock
+    private CdnCurator cdnCurator;
+    @Mock
+    private UserServiceAdapter userServiceAdapter;
+    @Mock
+    private DeletedConsumerCurator deletedConsumerCurator;
+    @Mock
+    private JobManager jobManager;
+    @Mock
+    private DTOValidator dtoValidator;
+    @Mock
+    private ConsumerRules consumerRules;
+    @Mock
+    private CalculatedAttributesUtil calculatedAttributesUtil;
+    @Mock
+    private DistributorVersionCurator distributorVersionCurator;
+    @Mock
+    private Provider<GuestMigration> guestMigrationProvider;
+    @Mock
+    private PrincipalProvider principalProvider;
+    @Mock
+    private ConsumerContentOverrideCurator consumerContentOverrideCurator;
+    @Mock
+    private ContentOverrideValidator contentOverrideValidator;
+    @Mock
+    private EnvironmentContentCurator environmentContentCurator;
+    @Mock
+    private EntitlementCertificateGenerator entCertGenerator;
 
     private ModelTranslator translator;
     private ConsumerResource consumerResource;
     private ConsumerResource mockedConsumerResource;
-
 
     @BeforeEach
     public void setUp() {
@@ -269,8 +309,7 @@ public class ConsumerResourceTest {
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,
             this.entCertGenerator,
-            this.environmentContentCurator
-        );
+            this.environmentContentCurator);
     }
 
     protected ConsumerType buildConsumerType() {
@@ -471,13 +510,11 @@ public class ConsumerResourceTest {
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,
             this.entCertGenerator,
-            this.environmentContentCurator
-        );
+            this.environmentContentCurator);
 
         // Fixme throw custom exception from generator instead of generic RuntimeException
-        assertThrows(RuntimeException.class, () ->
-            consumerResource.regenerateEntitlementCertificates(consumer.getUuid(), "9999", false, false)
-        );
+        assertThrows(RuntimeException.class, () -> consumerResource
+            .regenerateEntitlementCertificates(consumer.getUuid(), "9999", false, false));
     }
 
     private void verifyCertificateSerialNumbers(
@@ -491,7 +528,6 @@ public class ConsumerResourceTest {
             createEntitlementCertificate("key2", "cert2"),
             createEntitlementCertificate("key3", "cert3"));
     }
-
 
     /**
      * Test just verifies that entitler is called only once and it doesn't need
@@ -725,10 +761,105 @@ public class ConsumerResourceTest {
     }
 
     @Test
+    public void testUnacceptedSubscriptionTerms() throws Exception {
+        Owner o = createOwner();
+        Consumer c = createConsumer(o);
+        String[] prodIds = { "notthere" };
+
+        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(eq(o.getKey()))).thenReturn(true);
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(c);
+        when(entitler.bindByProducts(any(AutobindData.class))).thenReturn(null);
+        when(ownerCurator.findOwnerById(eq(o.getId()))).thenReturn(o);
+
+        Response r = consumerResource.bind("fakeConsumer", null, Arrays.asList(prodIds),
+            null, null, null, false, null, null);
+        assertEquals(i18n.tr("You must first accept Red Hat''s Terms and conditions. Please visit {0}",
+            "https://www.redhat.com/wapps/tnc/ackrequired?site=candlepin&event=attachSubscription"),
+            ((ExceptionMessage) r.getEntity()).getDisplayMessage());
+    }
+
+    @Test
+    public void testUnknownSubscriptionTerms() throws Exception {
+        Owner o = createOwner();
+        Consumer c = createConsumer(o);
+        String[] prodIds = { "notthere" };
+
+        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(eq(o.getKey())))
+            .thenThrow(SubscriptionUnknownTermsException.class);
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(c);
+        when(entitler.bindByProducts(any(AutobindData.class))).thenReturn(null);
+        when(ownerCurator.findOwnerById(eq(o.getId()))).thenReturn(o);
+
+        Response r = consumerResource.bind("fakeConsumer", null, Arrays.asList(prodIds),
+            null, null, null, false, null, null);
+        assertEquals(i18n.tr("Unable to determine the state of the subscription terms"),
+            ((ExceptionMessage) r.getEntity()).getDisplayMessage());
+    }
+
+    @Test
+    public void testUnknownProductRetrieval() throws Exception {
+        Owner o = createOwner();
+        Consumer c = createConsumer(o);
+        String[] prodIds = { "notthere" };
+
+        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(eq(o.getKey()))).thenReturn(false);
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(c);
+        when(entitler.bindByProducts(any(AutobindData.class)))
+            .thenThrow(ProductUnknownRetrievalException.class);
+        when(ownerCurator.findOwnerById(eq(o.getId()))).thenReturn(o);
+
+        assertEquals(i18n.tr("Unable to auto-attach. The products are not retrievable by their ID's"),
+            assertThrows(BadRequestException.class, () -> consumerResource.bind("fakeConsumer", null,
+                Arrays.asList(prodIds), null, null, null, false, null, null)).getMessage());
+    }
+
+    @Test
+    public void testAutobindHypervisorDisabled() throws Exception {
+        Owner o = createOwner();
+        Consumer c = createConsumer(o);
+        String[] prodIds = { "notthere" };
+
+        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(eq(o.getKey()))).thenReturn(false);
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(c);
+        when(entitler.bindByProducts(any(AutobindData.class)))
+            .thenThrow(AutobindHypervisorDisabledException.class);
+        when(ownerCurator.findOwnerById(eq(o.getId()))).thenReturn(o);
+
+        assertEquals(i18n.tr("Ignoring request to auto-attach. " +
+            "It is disabled for org \"{0}\" because of the hypervisor autobind setting.",
+            o.getKey()),
+            assertThrows(BadRequestException.class, () -> consumerResource.bind("fakeConsumer", null,
+                Arrays.asList(prodIds), null, null, null, false, null, null)).getMessage());
+    }
+
+    @Test
+    public void testAutobindDisabledForOwner() throws Exception {
+        Owner o = createOwner();
+        Consumer c = createConsumer(o);
+        String[] prodIds = { "notthere" };
+
+        when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(eq(o.getKey()))).thenReturn(false);
+        when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(c);
+        when(entitler.bindByProducts(any(AutobindData.class)))
+            .thenThrow(AutobindDisabledForOwnerException.class);
+        when(ownerCurator.findOwnerById(eq(o.getId()))).thenReturn(o);
+
+        o.setContentAccessMode("org_environment");
+        assertEquals(Response.Status.OK.getStatusCode(), consumerResource.bind("fakeConsumer", null,
+            Arrays.asList(prodIds), null, null, null, false, null, null).getStatus());
+
+        o.setContentAccessMode("entitlement");
+        assertEquals(i18n.tr("Ignoring request to auto-attach. " +
+            "It is disabled for org \"{0}\".", o.getKey()),
+            assertThrows(BadRequestException.class, () -> consumerResource.bind("fakeConsumer", null,
+                Arrays.asList(prodIds), null, null, null, false, null, null)).getMessage());
+    }
+
+    @Test
     public void testProductNoPool() throws Exception {
         Owner o = createOwner();
         Consumer c = createConsumer(o);
-        String[] prodIds = {"notthere"};
+        String[] prodIds = { "notthere" };
 
         when(subscriptionServiceAdapter.hasUnacceptedSubscriptionTerms(eq(o.getKey()))).thenReturn(false);
         when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq("fakeConsumer"))).thenReturn(c);
@@ -770,9 +901,7 @@ public class ConsumerResourceTest {
         when(consumerCurator.verifyAndLookupConsumer(eq("fake uuid"))).thenReturn(consumer);
         when(entitlementCurator.get(any(Serializable.class))).thenReturn(null);
 
-        assertThrows(NotFoundException.class, () ->
-            consumerResource.unbindBySerial("fake uuid", 1234L)
-        );
+        assertThrows(NotFoundException.class, () -> consumerResource.unbindBySerial("fake uuid", 1234L));
     }
 
     /**
@@ -787,9 +916,8 @@ public class ConsumerResourceTest {
         when(entitlementCurator.listByConsumerAndPoolId(eq(consumer), any(String.class)))
             .thenReturn(new ArrayList<>());
 
-        assertThrows(NotFoundException.class, () ->
-            consumerResource.unbindByPool("fake-uuid", "Run Forest!")
-        );
+        assertThrows(NotFoundException.class,
+            () -> consumerResource.unbindByPool("fake-uuid", "Run Forest!"));
     }
 
     @Test
@@ -797,8 +925,7 @@ public class ConsumerResourceTest {
         Consumer c = createConsumer(createOwner());
         when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid()))).thenReturn(c);
         assertThrows(BadRequestException.class, () -> consumerResource.bind(c.getUuid(), "fake pool uuid",
-            Arrays.asList("12232"), 1, null, null, false, null, null)
-        );
+            Arrays.asList("12232"), 1, null, null, false, null, null));
     }
 
     @Test
@@ -807,8 +934,7 @@ public class ConsumerResourceTest {
         when(consumerCurator.verifyAndLookupConsumerWithEntitlements(eq(c.getUuid())))
             .thenThrow(new NotFoundException(""));
         assertThrows(NotFoundException.class, () -> consumerResource.bind(c.getUuid(), "fake pool uuid", null,
-            null, null, null, false, null, null)
-        );
+            null, null, null, false, null, null));
     }
 
     protected EntitlementCertificate createEntitlementCertificate(String key, String cert) {
@@ -849,9 +975,8 @@ public class ConsumerResourceTest {
         when(up.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).thenReturn(true);
         when(this.principalProvider.get()).thenReturn(up);
         // usa.findByLogin() will return null by default no need for a when
-        assertThrows(NotFoundException.class, () ->
-            consumerResource.createConsumer(consumerDto, null, owner.getKey(), null, true)
-        );
+        assertThrows(NotFoundException.class,
+            () -> consumerResource.createConsumer(consumerDto, null, owner.getKey(), null, true));
     }
 
     @Test
@@ -869,9 +994,8 @@ public class ConsumerResourceTest {
         when(up.canAccess(eq(owner), eq(SubResource.CONSUMERS), eq(Access.CREATE))).thenReturn(true);
         when(this.principalProvider.get()).thenReturn(up);
 
-        BadRequestException ex = assertThrows(BadRequestException.class, () ->
-            consumerResource.createConsumer(consumerDto, null, owner.getKey(), null, false)
-        );
+        BadRequestException ex = assertThrows(BadRequestException.class,
+            () -> consumerResource.createConsumer(consumerDto, null, owner.getKey(), null, false));
         assertEquals(String.format("Name of the consumer should be shorter than %d characters.",
             Consumer.MAX_LENGTH_OF_CONSUMER_NAME + 1), ex.getMessage());
     }
@@ -958,7 +1082,7 @@ public class ConsumerResourceTest {
         Consumer consumer = createConsumer(createOwner());
         List<EntitlementCertificate> certificates = createEntitlementCertificates();
 
-        when(entitlementCertServiceAdapter.listForConsumer(consumer)) .thenReturn(certificates);
+        when(entitlementCertServiceAdapter.listForConsumer(consumer)).thenReturn(certificates);
         when(consumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
         when(entitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<>());
 
@@ -971,7 +1095,7 @@ public class ConsumerResourceTest {
         Consumer consumer = createConsumer(createOwner());
         List<EntitlementCertificate> certificates = createEntitlementCertificates();
 
-        when(entitlementCertServiceAdapter.listForConsumer(consumer)) .thenReturn(certificates);
+        when(entitlementCertServiceAdapter.listForConsumer(consumer)).thenReturn(certificates);
         when(consumerCurator.verifyAndLookupConsumer(consumer.getUuid())).thenReturn(consumer);
         when(entitlementCurator.listByConsumer(consumer)).thenReturn(new ArrayList<>());
 
@@ -1054,9 +1178,8 @@ public class ConsumerResourceTest {
         when(uap.canAccess(any(Object.class), any(SubResource.class), any(Access.class)))
             .thenReturn(Boolean.TRUE);
 
-        assertThrows(OptimisticLockException.class, () ->
-            consumerResource.deleteConsumer(consumer.getUuid())
-        );
+        assertThrows(OptimisticLockException.class,
+            () -> consumerResource.deleteConsumer(consumer.getUuid()));
     }
 
     @Test
@@ -1201,15 +1324,15 @@ public class ConsumerResourceTest {
 
     @Test
     public void testSearchConsumersRequiresNonNullSearchCriteria() {
-        assertThrows(BadRequestException.class, () ->
-            consumerResource.searchConsumers(null, null, null, null, null, null, null, null, null, null));
+        assertThrows(BadRequestException.class, () -> consumerResource.searchConsumers(null, null, null, null,
+            null, null, null, null, null, null));
     }
 
     @Test
     @SuppressWarnings("checkstyle:indentation")
     public void testSearchConsumersRequiresNonEmptySearchCriteria() {
-        assertThrows(BadRequestException.class, () ->
-            consumerResource.searchConsumers("", Collections.emptySet(), "", Collections.emptyList(),
+        assertThrows(BadRequestException.class,
+            () -> consumerResource.searchConsumers("", Collections.emptySet(), "", Collections.emptyList(),
                 Collections.emptyList(), Collections.emptyList(), null, null, null, null));
     }
 
@@ -1351,20 +1474,20 @@ public class ConsumerResourceTest {
             .collect(Collectors.toMap(ConsumerType::getLabel, Function.identity()));
 
         doAnswer(new Answer<List<ConsumerType>>() {
-                @Override
-                public List<ConsumerType> answer(InvocationOnMock iom) throws Throwable {
-                    Set<String> labels = (Set<String>) iom.getArguments()[0];
-                    List<ConsumerType> output = new ArrayList<>();
+            @Override
+            public List<ConsumerType> answer(InvocationOnMock iom) throws Throwable {
+                Set<String> labels = (Set<String>) iom.getArguments()[0];
+                List<ConsumerType> output = new ArrayList<>();
 
-                    for (String label : labels) {
-                        if (typeMap.containsKey(label)) {
-                            output.add(typeMap.get(label));
-                        }
+                for (String label : labels) {
+                    if (typeMap.containsKey(label)) {
+                        output.add(typeMap.get(label));
                     }
-
-                    return output;
                 }
-            }).when(this.consumerTypeCurator).getByLabels(anySet());
+
+                return output;
+            }
+        }).when(this.consumerTypeCurator).getByLabels(anySet());
 
         List<Consumer> expected = Stream.generate(this::createConsumer)
             .limit(3)

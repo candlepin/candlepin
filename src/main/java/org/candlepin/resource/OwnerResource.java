@@ -1286,7 +1286,8 @@ public class OwnerResource implements OwnerApi {
                 owner = createOwnerFromDTO(new OwnerDTO().key(ownerKey).displayName(ownerKey));
             }
             else {
-                throw new NotFoundException(i18n.tr("owner with key: {0} was not found.", ownerKey));
+                throw new NotFoundException(
+                    i18n.tr("owner with key: {0} was not found.", ownerKey));
             }
         }
 

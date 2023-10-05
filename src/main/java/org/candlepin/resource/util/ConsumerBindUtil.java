@@ -36,6 +36,7 @@ import org.candlepin.model.activationkeys.ActivationKeyPool;
 import org.candlepin.policy.js.quantity.QuantityRules;
 import org.candlepin.resource.ConsumerResource;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.service.exception.product.ProductUnknownRetrievalException;
 import org.candlepin.util.ServiceLevelValidator;
 import org.candlepin.version.CertVersionConflictException;
 
@@ -88,7 +89,8 @@ public class ConsumerBindUtil {
 
     public void handleActivationKeys(Consumer consumer, List<ActivationKey> keys,
         boolean autoattachDisabledForOwner)
-        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException,
+        ProductUnknownRetrievalException {
 
         boolean listSuccess = false;
         boolean scaEnabledForAny = false;
@@ -188,7 +190,8 @@ public class ConsumerBindUtil {
     }
 
     private void handleActivationKeyAutoBind(Consumer consumer, ActivationKey key)
-        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException,
+        ProductUnknownRetrievalException {
 
         try {
             Set<String> productIds = new HashSet<>();

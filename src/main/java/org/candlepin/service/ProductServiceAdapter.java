@@ -14,6 +14,7 @@
  */
 package org.candlepin.service;
 
+import org.candlepin.service.exception.product.ProductUnknownRetrievalException;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.ProductInfo;
 
@@ -48,7 +49,8 @@ public interface ProductServiceAdapter {
      * @return list of products matching the given string IDs,
      *         empty list if none were found.
      */
-    Collection<? extends ProductInfo> getProductsByIds(String ownerKey, Collection<String> ids);
+    Collection<? extends ProductInfo> getProductsByIds(String ownerKey, Collection<String> ids)
+        throws ProductUnknownRetrievalException;
 
     /**
      * Gets the certificate that defines the given product, creating one

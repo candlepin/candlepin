@@ -14,6 +14,11 @@
  */
 package org.candlepin.service;
 
+import org.candlepin.service.exception.user.UserDisabledException;
+import org.candlepin.service.exception.user.UserLoginNotFoundException;
+import org.candlepin.service.exception.user.UserMissingOwnerException;
+import org.candlepin.service.exception.user.UserServiceException;
+import org.candlepin.service.exception.user.UserUnknownRetrievalException;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.PermissionBlueprintInfo;
 import org.candlepin.service.model.RoleInfo;
@@ -35,7 +40,7 @@ public interface UserServiceAdapter {
      * @return true if username and password combination are valid.
      * @throws Exception if there was an error validating the user
      */
-    boolean validateUser(String username, String password) throws Exception;
+    boolean validateUser(String username, String password) throws UserServiceException;
 
     // User life cycle
     UserInfo createUser(UserInfo user);
@@ -44,7 +49,8 @@ public interface UserServiceAdapter {
 
     void deleteUser(String username);
 
-    UserInfo findByLogin(String username);
+    UserInfo findByLogin(String username) throws UserUnknownRetrievalException,
+        UserMissingOwnerException, UserDisabledException, UserLoginNotFoundException;
 
     Collection<? extends UserInfo> listUsers();
 
@@ -57,7 +63,8 @@ public interface UserServiceAdapter {
      * @return
      *  a collection of owners to which the user is allowed to register
      */
-    Collection<? extends OwnerInfo> getAccessibleOwners(String username);
+    Collection<? extends OwnerInfo> getAccessibleOwners(String username) throws UserDisabledException,
+        UserLoginNotFoundException, UserUnknownRetrievalException;
 
     // Roles
     RoleInfo createRole(RoleInfo role);

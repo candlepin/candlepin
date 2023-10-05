@@ -12,21 +12,18 @@
  * granted to use or replicate Red Hat trademarks that are incorporated
  * in this software or its documentation.
  */
-package org.candlepin.service.exception;
-
-
+package org.candlepin.service.exception.user;
 
 /**
- * The MalformedCloudRegistrationException is used to denote malformed or incomplete cloud
- * registration details
+ * The UserMissingOwnerException is used to reject a user validation action.
  */
-public class MalformedCloudRegistrationException extends RuntimeException {
+public class UserMissingOwnerException extends UserServiceException {
 
     /**
      * Constructs a new exception with null as its detail message. The cause is not initialized,
      * and may subsequently be initialized by a call to initCause(java.lang.Throwable).
      */
-    public MalformedCloudRegistrationException() {
+    public UserMissingOwnerException() {
         super();
     }
 
@@ -38,7 +35,7 @@ public class MalformedCloudRegistrationException extends RuntimeException {
      *  the detail message. The detail message is saved for later retrieval by the getMessage()
      *  method.
      */
-    public MalformedCloudRegistrationException(String message) {
+    public UserMissingOwnerException(String message) {
         super(message);
     }
 
@@ -52,7 +49,7 @@ public class MalformedCloudRegistrationException extends RuntimeException {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public MalformedCloudRegistrationException(Throwable cause) {
+    public UserMissingOwnerException(Throwable cause) {
         super(cause);
     }
 
@@ -70,7 +67,7 @@ public class MalformedCloudRegistrationException extends RuntimeException {
      *  the cause (which is saved for later retrieval by the Throwable.getCause() method). A null
      *  value is permitted, and indicates that the cause is nonexistent or unknown.
      */
-    public MalformedCloudRegistrationException(String message, Throwable cause) {
+    public UserMissingOwnerException(String message, Throwable cause) {
         super(message, cause);
     }
 }

@@ -14,8 +14,8 @@
  */
 package org.candlepin.service;
 
-import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
-import org.candlepin.service.exception.MalformedCloudRegistrationException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationAuthorizationException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationServiceException;
 import org.candlepin.service.model.CloudRegistrationInfo;
 
 
@@ -32,16 +32,31 @@ public interface CloudRegistrationAdapter {
      * @param cloudRegInfo
      *  A CloudRegistrationInfo instance which contains the cloud provider details to process
      *
-     * @throws MalformedCloudRegistrationException
-     *  if the cloud registration info is null, incomplete, or invalid
-     *
      * @throws CloudRegistrationAuthorizationException
      *  if cloud registration is not permitted for the provider or account holder
+     *
+     * @throws CloudRegistrationServiceException
+     *  if there is an exception thrown in the method in the implementation. The subclass of
+     *  the exception will give detail as to the problem
+     *
+     *  CloudRegistrationMissingTypeException
+     *  if the cloud registration info does not contain a value for type
+     *
+     *  CloudRegistrationBadTypeException
+     *  if the cloud registration info contains a value for type that is not on the list
+     *
+     *  CloudRegistrationBadMetadataException
+     *  if the cloud registration info contains meta-data that will not allow for authentication
+     *
+     *  CloudRegistrationAuthorizationException
+     *  if cloud registration is not permitted for the provider or account holder
+     *
+     *  CloudRegistrationUnknownDataException
+     *  if cloud registration is stopped by an unexpected issue
      *
      * @return
      *  the owner key of the owner (organization) to which the cloud user will be registered
      */
     String resolveCloudRegistrationData(CloudRegistrationInfo cloudRegInfo)
-        throws CloudRegistrationAuthorizationException, MalformedCloudRegistrationException;
-
+        throws CloudRegistrationServiceException;
 }

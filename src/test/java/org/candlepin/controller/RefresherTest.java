@@ -15,16 +15,21 @@
 package org.candlepin.controller;
 
 import static org.candlepin.model.SourceSubscription.PRIMARY_POOL_SUB_KEY;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.anyMap;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
@@ -32,6 +37,10 @@ import org.candlepin.model.SourceSubscription;
 import org.candlepin.model.dto.Subscription;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.exception.product.ProductServiceException;
+import org.candlepin.service.exception.product.ProductUnknownRetrievalException;
+import org.candlepin.service.exception.subscription.SubscriptionServiceException;
+import org.candlepin.service.exception.subscription.SubscriptionUnknownRetrievalException;
 import org.candlepin.service.model.SubscriptionInfo;
 import org.candlepin.test.TestUtil;
 
@@ -73,7 +82,8 @@ public class RefresherTest {
     }
 
     @Test
-    public void testOwnerOnlyExaminedOnce() {
+    public void testOwnerOnlyExaminedOnce() throws SubscriptionServiceException,
+        ProductServiceException {
         Owner owner = TestUtil.createOwner();
 
         refresher.add(owner);
@@ -95,7 +105,7 @@ public class RefresherTest {
     }
 
     @Test
-    public void testProductOnlyExaminedOnce() {
+    public void testProductOnlyExaminedOnce() throws SubscriptionServiceException {
         Product product = TestUtil.createProduct();
 
         refresher.add(product);
@@ -106,7 +116,8 @@ public class RefresherTest {
     }
 
     @Test
-    public void testPoolOnlyExaminedOnceProductAndOwner() {
+    public void testPoolOnlyExaminedOnceProductAndOwner() throws SubscriptionServiceException,
+        ProductServiceException {
         Owner owner = TestUtil.createOwner();
         Product product = TestUtil.createProduct();
         product.setUuid("product uuid");
@@ -138,7 +149,50 @@ public class RefresherTest {
     }
 
     @Test
-    public void testPoolOnlyExaminedOnceTwoProducts() {
+    public void testGetSubscriptionUnknownRetrievalException() throws SubscriptionServiceException {
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct();
+        when(subAdapter.getSubscriptionsByProductId(anyString()))
+            .thenThrow(SubscriptionUnknownRetrievalException.class);
+
+        refresher.add(owner);
+        refresher.add(product);
+        assertEquals(String.format("Unable to retrieve subscriptions by product id '%s'", product.getId()),
+            assertThrows(CandlepinException.class, () -> refresher.run()).getMessage());
+    }
+
+    @Test
+    public void testRefreshPoolsSubscriptionUnknownRetrievalException() throws SubscriptionServiceException,
+        ProductServiceException {
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct();
+        doThrow(new SubscriptionUnknownRetrievalException())
+            .when(poolManager).refreshPoolsWithRegeneration(any(SubscriptionServiceAdapter.class),
+                any(ProductServiceAdapter.class), any(Owner.class), any(Boolean.class));
+
+        refresher.add(owner);
+        refresher.add(product);
+        assertEquals(String.format("Unexpected subscription error for organization '%s'", owner.getKey()),
+            assertThrows(CandlepinException.class, () -> refresher.run()).getMessage());
+    }
+
+    @Test
+    public void testRefreshPoolsProductUnknownRetrievalException() throws SubscriptionServiceException,
+        ProductServiceException {
+        Owner owner = TestUtil.createOwner();
+        Product product = TestUtil.createProduct();
+        doThrow(new ProductUnknownRetrievalException())
+            .when(poolManager).refreshPoolsWithRegeneration(any(SubscriptionServiceAdapter.class),
+                any(ProductServiceAdapter.class), any(Owner.class), any(Boolean.class));
+
+        refresher.add(owner);
+        refresher.add(product);
+        assertEquals("Unexpected product error in pool refresh",
+            assertThrows(CandlepinException.class, () -> refresher.run()).getMessage());
+    }
+
+    @Test
+    public void testPoolOnlyExaminedOnceTwoProducts() throws SubscriptionServiceException {
         Product product = TestUtil.createProduct();
         Product product2 = TestUtil.createProduct();
         product.setUuid("product id");
@@ -169,11 +223,13 @@ public class RefresherTest {
             anyMap());
     }
 
-    protected void mockAdapterSubs(String input, Collection<? extends SubscriptionInfo> output) {
+    protected void mockAdapterSubs(String input, Collection<? extends SubscriptionInfo> output)
+        throws SubscriptionServiceException {
         doAnswer(iom -> output).when(this.subAdapter).getSubscriptions(eq(input));
     }
 
-    protected void mockAdapterProductSubs(String input, Collection<? extends SubscriptionInfo> output) {
+    protected void mockAdapterProductSubs(String input, Collection<? extends SubscriptionInfo> output)
+        throws SubscriptionServiceException {
         doAnswer(iom -> output).when(this.subAdapter).getSubscriptionsByProductId(eq(input));
     }
 

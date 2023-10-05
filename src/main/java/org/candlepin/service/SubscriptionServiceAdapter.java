@@ -14,6 +14,9 @@
  */
 package org.candlepin.service;
 
+import org.candlepin.service.exception.subscription.SubscriptionServiceException;
+import org.candlepin.service.exception.subscription.SubscriptionUnknownRetrievalException;
+import org.candlepin.service.exception.subscription.SubscriptionUnknownTermsException;
 import org.candlepin.service.model.ConsumerInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
@@ -34,28 +37,32 @@ public interface SubscriptionServiceAdapter {
      * Return all subscriptions.
      * @return all subscriptions.
      */
-    Collection<? extends SubscriptionInfo> getSubscriptions();
+    Collection<? extends SubscriptionInfo> getSubscriptions()
+        throws SubscriptionUnknownRetrievalException;
 
     /**
      * Lookup a specific subscription.
      * @param subscriptionId id of the subscription to return.
      * @return Subscription whose id matches subscriptionId
      */
-    SubscriptionInfo getSubscription(String subscriptionId);
+    SubscriptionInfo getSubscription(String subscriptionId)
+        throws SubscriptionUnknownRetrievalException;
 
     /**
      * List all subscriptions for the given owner.
      * @param ownerKey Owner of the subscriptions.
      * @return all subscriptions for the given owner.
      */
-    Collection<? extends SubscriptionInfo> getSubscriptions(String ownerKey);
+    Collection<? extends SubscriptionInfo> getSubscriptions(String ownerKey)
+        throws SubscriptionUnknownRetrievalException;
 
     /**
      * List all active subscription ids for the given owner.
      * @param ownerKey Owner of the subscriptions.
      * @return ids of all subscriptions for the given owner.
      */
-    Collection<String> getSubscriptionIds(String ownerKey);
+    Collection<String> getSubscriptionIds(String ownerKey)
+        throws SubscriptionUnknownRetrievalException;
 
     /**
      * Search for all subscriptions that provide a given product.
@@ -63,7 +70,8 @@ public interface SubscriptionServiceAdapter {
      * @param productId the main or provided product to look for.
      * @return a list of subscriptions that provide this product.
      */
-    Collection<? extends SubscriptionInfo> getSubscriptionsByProductId(String productId);
+    Collection<? extends SubscriptionInfo> getSubscriptionsByProductId(String productId)
+        throws SubscriptionUnknownRetrievalException;
 
     /**
      * Checks to see if the customer has subscription terms that need to be accepted
@@ -71,7 +79,8 @@ public interface SubscriptionServiceAdapter {
      * @return false if no subscriptions a runtime exception will a localized message
      * if there are terms to be accepted
      */
-    boolean hasUnacceptedSubscriptionTerms(String ownerKey);
+    boolean hasUnacceptedSubscriptionTerms(String ownerKey)
+        throws SubscriptionUnknownTermsException;
 
     /**
      * A pool for a subscription id has been created. Send the activation email
@@ -96,7 +105,8 @@ public interface SubscriptionServiceAdapter {
      * @param email the email address tied to this consumer
      * @param emailLocale the i18n locale for the email
      */
-    void activateSubscription(ConsumerInfo consumer, String email, String emailLocale);
+    void activateSubscription(ConsumerInfo consumer, String email, String emailLocale)
+        throws SubscriptionServiceException;
 
     /**
      * Some subscription services are read-only. This allows us to avoid certain

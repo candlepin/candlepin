@@ -14,6 +14,7 @@
  */
 package org.candlepin.controller;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -43,6 +44,7 @@ import org.candlepin.model.CandlepinQuery;
 import org.candlepin.model.Consumer;
 import org.candlepin.model.ConsumerCurator;
 import org.candlepin.model.ConsumerInstalledProduct;
+import org.candlepin.model.ConsumerType;
 import org.candlepin.model.ConsumerTypeCurator;
 import org.candlepin.model.Content;
 import org.candlepin.model.ContentCurator;
@@ -63,6 +65,7 @@ import org.candlepin.policy.ValidationResult;
 import org.candlepin.policy.js.entitlement.EntitlementRulesTranslator;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
+import org.candlepin.service.exception.product.ProductUnknownRetrievalException;
 import org.candlepin.test.TestUtil;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -103,25 +106,43 @@ public class EntitlerTest {
     private Entitler entitler;
     private EntitlementRulesTranslator translator;
 
-    @Mock private PoolManager pm;
-    @Mock private EventFactory ef;
-    @Mock private EventSink sink;
-    @Mock private Owner owner;
-    @Mock private Consumer consumer;
-    @Mock private ConsumerCurator cc;
-    @Mock private EntitlementCurator entitlementCurator;
-    @Mock private Configuration config;
-    @Mock private OwnerCurator ownerCurator;
-    @Mock private PoolCurator poolCurator;
-    @Mock private ProductServiceAdapter productAdapter;
-    @Mock private ProductManager productManager;
-    @Mock private ContentManager contentManager;
-    @Mock private ConsumerTypeCurator consumerTypeCurator;
+    @Mock
+    private PoolManager pm;
+    @Mock
+    private EventFactory ef;
+    @Mock
+    private EventSink sink;
+    @Mock
+    private Owner owner;
+    @Mock
+    private Consumer consumer;
+    @Mock
+    private ConsumerCurator cc;
+    @Mock
+    private EntitlementCurator entitlementCurator;
+    @Mock
+    private Configuration config;
+    @Mock
+    private OwnerCurator ownerCurator;
+    @Mock
+    private PoolCurator poolCurator;
+    @Mock
+    private ProductServiceAdapter productAdapter;
+    @Mock
+    private ProductManager productManager;
+    @Mock
+    private ContentManager contentManager;
+    @Mock
+    private ConsumerTypeCurator consumerTypeCurator;
 
-    @Mock private ContentCurator mockContentCurator;
-    @Mock private OwnerContentCurator mockOwnerContentCurator;
-    @Mock private ProductCurator mockProductCurator;
-    @Mock private OwnerProductCurator mockOwnerProductCurator;
+    @Mock
+    private ContentCurator mockContentCurator;
+    @Mock
+    private OwnerContentCurator mockOwnerContentCurator;
+    @Mock
+    private ProductCurator mockProductCurator;
+    @Mock
+    private OwnerProductCurator mockOwnerProductCurator;
 
     private RefreshWorker refreshWorker;
     private Provider<RefreshWorker> refreshWorkerProvider;
@@ -138,8 +159,7 @@ public class EntitlerTest {
         i18n = I18nFactory.getI18n(
             getClass(),
             Locale.US,
-            I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK
-        );
+            I18nFactory.READ_PROPERTIES | I18nFactory.FALLBACK);
         translator = new EntitlementRulesTranslator(i18n);
 
         this.refreshWorker = spy(new RefreshWorker(this.poolCurator, this.mockProductCurator,
@@ -169,7 +189,7 @@ public class EntitlerTest {
 
             return output;
         })
-        .when(this.refreshWorker).execute(eq(owner));
+            .when(this.refreshWorker).execute(eq(owner));
     }
 
     @Test
@@ -228,7 +248,7 @@ public class EntitlerTest {
     }
 
     @Test
-    public void bindByProducts() throws Exception  {
+    public void bindByProducts() throws Exception {
         Set<String> pids = Set.of("prod1", "prod2", "prod3");
         AutobindData data = new AutobindData(consumer, owner)
             .forProducts(pids);
@@ -236,6 +256,47 @@ public class EntitlerTest {
         entitler.bindByProducts(data);
 
         verify(pm).entitleByProducts(data);
+    }
+
+    @Test
+    public void bindByProductsConsumerDevAutoDisabled() {
+        AutobindData data = new AutobindData(consumer, owner);
+        when(owner.isAutobindDisabled()).thenReturn(true);
+        assertThrows(AutobindDisabledForOwnerException.class, () -> entitler.bindByProducts(data));
+    }
+
+    @Test
+    public void bindByProductsConsumerDevAutoHypervisorDisabledHypervisor() {
+        AutobindData data = new AutobindData(consumer, owner);
+        when(owner.isAutobindDisabled()).thenReturn(false);
+        when(owner.isAutobindHypervisorDisabled()).thenReturn(true);
+        when(consumerTypeCurator.getConsumerType(eq(consumer)))
+            .thenReturn(new ConsumerType(ConsumerType.ConsumerTypeEnum.HYPERVISOR));
+        assertThrows(AutobindHypervisorDisabledException.class, () -> entitler.bindByProducts(data));
+    }
+
+    @Test
+    public void bindByProductsConsumerDevAutoDisabledSCA() throws Exception {
+        AutobindData data = new AutobindData(consumer, owner);
+        when(owner.isUsingSimpleContentAccess()).thenReturn(true);
+        assertEquals(0, entitler.bindByProducts(data).size());
+    }
+
+    @Test
+    public void adjustEntitlementQuantity() {
+        Entitlement ent = mock(Entitlement.class);
+        assertDoesNotThrow(() -> entitler.adjustEntitlementQuantity(consumer, ent, 4));
+    }
+
+    @Test
+    public void adjustEntitlementQuantityException() throws Exception {
+        Entitlement ent = mock(Entitlement.class);
+        ValidationResult vr = new ValidationResult();
+        vr.addError("Error");
+        Map<String, ValidationResult> results = Map.of("test", vr);
+        when(pm.adjustEntitlementQuantity(consumer, ent, 4))
+            .thenThrow(new EntitlementRefusedException(results));
+        assertThrows(ForbiddenException.class, () -> entitler.adjustEntitlementQuantity(consumer, ent, 4));
     }
 
     @Test
@@ -366,7 +427,8 @@ public class EntitlerTest {
     }
 
     private void bindByProductErrorTest(String msg) throws EntitlementRefusedException,
-        AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+        AutobindDisabledForOwnerException, AutobindHypervisorDisabledException,
+        ProductUnknownRetrievalException {
 
         Set<String> pids = Set.of("prod1", "prod2", "prod3");
         Map<String, ValidationResult> fakeResult = new HashMap<>();
@@ -612,7 +674,7 @@ public class EntitlerTest {
     }
 
     @Test
-    public void testCreatedDevPoolAttributes() {
+    public void testCreatedDevPoolAttributes() throws ProductUnknownRetrievalException {
         Owner owner = TestUtil.createOwner("o");
 
         Product p1 = TestUtil.createProduct("dev-product", "Dev Product");
@@ -692,7 +754,7 @@ public class EntitlerTest {
         Pool pool = TestUtil.createPool(owner, product);
         pool.setAttribute(Pool.Attributes.UNMAPPED_GUESTS_ONLY, "true");
 
-        Date twelveHoursAgo =  new Date(new Date().getTime() - 12L * 60L * 60L * 1000L);
+        Date twelveHoursAgo = new Date(new Date().getTime() - 12L * 60L * 60L * 1000L);
 
         Consumer c;
         c = TestUtil.createConsumer(owner);

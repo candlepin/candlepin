@@ -26,6 +26,8 @@ import org.candlepin.resource.server.v1.RolesApi;
 import org.candlepin.resource.util.InfoAdapter;
 import org.candlepin.resource.validation.DTOValidator;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.user.UserServiceException;
+import org.candlepin.service.exception.user.UserServiceExceptionMapper;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
 
@@ -36,6 +38,8 @@ import java.util.Collection;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+
+
 
 /**
  * API implementation for Role operations
@@ -108,9 +112,15 @@ public class RoleResource implements RolesApi {
             throw new BadRequestException(this.i18n.tr("username is null or empty"));
         }
 
-        UserInfo user = this.userService.findByLogin(username);
-        if (user == null) {
-            throw new NotFoundException(this.i18n.tr("User not found: {0}", username));
+        UserInfo user = null;
+        try {
+            user = this.userService.findByLogin(username);
+            if (user == null) {
+                throw new NotFoundException(this.i18n.tr("User not found: {0}", username));
+            }
+        }
+        catch (UserServiceException e) {
+            UserServiceExceptionMapper.map(e, username, this.i18n);
         }
 
         return user;

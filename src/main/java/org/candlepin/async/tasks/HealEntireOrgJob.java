@@ -32,6 +32,7 @@ import org.candlepin.model.Entitlement;
 import org.candlepin.model.Owner;
 import org.candlepin.model.OwnerCurator;
 import org.candlepin.resource.dto.AutobindData;
+import org.candlepin.service.exception.product.ProductUnknownRetrievalException;
 import org.candlepin.util.Transactional;
 
 import org.slf4j.Logger;
@@ -147,7 +148,8 @@ public class HealEntireOrgJob implements AsyncJob {
      * Each consumer heal should be a separate transaction
      */
     public String healSingleConsumer(Object... args)
-        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException {
+        throws AutobindDisabledForOwnerException, AutobindHypervisorDisabledException,
+        ProductUnknownRetrievalException {
 
         Consumer consumer = (Consumer) args[0];
         Owner owner = (Owner) args[1];

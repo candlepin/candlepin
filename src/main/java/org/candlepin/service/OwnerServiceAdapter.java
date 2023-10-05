@@ -14,8 +14,6 @@
  */
 package org.candlepin.service;
 
-
-
 /**
  * The OwnerServiceAdapter defines an interface for hooking into some owner/org-specific operations
  * for additional or external verification of values, or for providing data from alternate sources.

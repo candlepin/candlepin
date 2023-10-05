@@ -25,12 +25,14 @@ import org.candlepin.model.Owner;
 import org.candlepin.model.PermissionBlueprint;
 import org.candlepin.model.Role;
 import org.candlepin.model.User;
+import org.candlepin.service.exception.user.UserServiceException;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+
 
 
 /**
@@ -42,7 +44,7 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class PersonConsumerResourceCreationTest extends ConsumerResourceCreationTest {
 
-    public ConsumerType initConsumerType() {
+    public ConsumerType initConsumerType() throws UserServiceException {
         ConsumerType ctype = new ConsumerType(ConsumerType.ConsumerTypeEnum.PERSON);
         this.mockConsumerType(ctype);
 

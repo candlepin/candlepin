@@ -155,6 +155,8 @@ import javax.persistence.PersistenceException;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
 
+
+
 public class OwnerResourceTest extends DatabaseTestFixture {
     private static final String OWNER_NAME = "Jar Jar Binks";
     private CandlepinPoolManager poolManager;
@@ -2311,5 +2313,11 @@ public class OwnerResourceTest extends DatabaseTestFixture {
 
         assertThrows(NotFoundException.class,
             () -> resource.getOwnerContentAccess("test_owner"));
+    }
+
+    @Test
+    void refreshPoolsBadOwner() {
+        assertThrows(NotFoundException.class,
+            () -> ownerResource.refreshPools("This_key_does_not_exist", false));
     }
 }

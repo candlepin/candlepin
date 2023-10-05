@@ -91,6 +91,7 @@ import org.candlepin.service.IdentityCertServiceAdapter;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.user.UserServiceException;
 import org.candlepin.test.TestUtil;
 import org.candlepin.util.ContentOverrideValidator;
 import org.candlepin.util.FactValidator;
@@ -118,6 +119,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+
 
 
 /*
@@ -260,8 +262,7 @@ public class ConsumerResourceCreationTest {
             this.contentOverrideValidator,
             this.consumerContentOverrideCurator,
             this.entCertGenerator,
-            this.environmentContentCurator
-        );
+            this.environmentContentCurator);
 
         this.system = this.initConsumerType();
         this.mockConsumerType(this.system);
@@ -287,7 +288,6 @@ public class ConsumerResourceCreationTest {
         when(consumerCurator.update(any(Consumer.class)))
             .thenAnswer(invocation -> invocation.getArgument(0));
 
-
         when(userService.findByLogin(USER)).thenReturn(user);
         IdentityCertificate cert = new IdentityCertificate();
         cert.setKey("testKey");
@@ -301,7 +301,7 @@ public class ConsumerResourceCreationTest {
             .thenReturn(new ComplianceStatus(new Date()));
     }
 
-    public ConsumerType initConsumerType() {
+    public ConsumerType initConsumerType() throws UserServiceException {
         return new ConsumerType(ConsumerType.ConsumerTypeEnum.SYSTEM);
     }
 

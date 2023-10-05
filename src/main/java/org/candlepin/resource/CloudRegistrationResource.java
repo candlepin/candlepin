@@ -20,12 +20,11 @@ import org.candlepin.auth.Principal;
 import org.candlepin.auth.SecurityHole;
 import org.candlepin.dto.api.server.v1.CloudRegistrationDTO;
 import org.candlepin.exceptions.BadRequestException;
-import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.exceptions.NotImplementedException;
 import org.candlepin.resource.server.v1.CloudRegistrationApi;
 import org.candlepin.resource.validation.DTOValidator;
-import org.candlepin.service.exception.CloudRegistrationAuthorizationException;
-import org.candlepin.service.exception.MalformedCloudRegistrationException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationServiceException;
+import org.candlepin.service.exception.cloudregistration.CloudRegistrationServiceExceptionMapper;
 
 import org.jboss.resteasy.core.ResteasyContext;
 import org.xnap.commons.i18n.I18n;
@@ -68,12 +67,10 @@ public class CloudRegistrationResource implements CloudRegistrationApi {
             String errmsg = this.i18n.tr("Cloud registration is not supported by this Candlepin instance");
             throw new NotImplementedException(errmsg, e);
         }
-        catch (CloudRegistrationAuthorizationException e) {
-            throw new NotAuthorizedException(e.getMessage());
+        catch (CloudRegistrationServiceException e) {
+            CloudRegistrationServiceExceptionMapper.map(e, registrationData.getType(), i18n);
         }
-        catch (MalformedCloudRegistrationException e) {
-            throw new BadRequestException(e.getMessage(), e);
-        }
+        return null;
     }
 
     private CloudRegistrationData getCloudRegistrationData(CloudRegistrationDTO cloudRegistrationDTO) {

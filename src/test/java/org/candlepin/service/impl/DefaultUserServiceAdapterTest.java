@@ -29,6 +29,7 @@ import org.candlepin.model.RoleCurator;
 import org.candlepin.model.User;
 import org.candlepin.model.UserCurator;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.user.UserServiceException;
 import org.candlepin.service.model.RoleInfo;
 import org.candlepin.service.model.UserInfo;
 import org.candlepin.test.DatabaseTestFixture;
@@ -42,6 +43,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+
 
 /**
  * DefaultUserServiceAdapterTest
@@ -155,7 +158,7 @@ public class DefaultUserServiceAdapterTest extends DatabaseTestFixture {
     }
 
     @Test
-    public void findByLogin() {
+    public void findByLogin() throws UserServiceException {
         User u = mock(User.class);
         UserCurator curator = mock(UserCurator.class);
         RoleCurator roleCurator = mock(RoleCurator.class);

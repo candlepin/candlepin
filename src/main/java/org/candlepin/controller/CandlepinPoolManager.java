@@ -71,6 +71,8 @@ import org.candlepin.policy.js.pool.PoolUpdate;
 import org.candlepin.resource.dto.AutobindData;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.exception.product.ProductUnknownRetrievalException;
+import org.candlepin.service.exception.subscription.SubscriptionUnknownRetrievalException;
 import org.candlepin.service.model.CdnInfo;
 import org.candlepin.service.model.CertificateInfo;
 import org.candlepin.service.model.CertificateSerialInfo;
@@ -198,8 +200,9 @@ public class CandlepinPoolManager implements PoolManager {
     @SuppressWarnings("checkstyle:methodlength")
     @Traceable
     void refreshPoolsWithRegeneration(SubscriptionServiceAdapter subAdapter,
-        ProductServiceAdapter prodAdapter,
-        @TraceableParam("owner") Owner owner, boolean lazy) {
+        ProductServiceAdapter prodAdapter, @TraceableParam("owner") Owner owner,
+        boolean lazy) throws SubscriptionUnknownRetrievalException,
+        ProductUnknownRetrievalException {
 
         Date now = new Date();
         Owner resolvedOwner = this.resolveOwner(owner);
@@ -322,7 +325,7 @@ public class CandlepinPoolManager implements PoolManager {
 
             return null;
         }).allowExistingTransactions()
-        .execute();
+            .execute();
     }
 
     private Owner resolveOwner(Owner owner) {
@@ -455,7 +458,8 @@ public class CandlepinPoolManager implements PoolManager {
             count += blockSize;
 
             loop = blockSize >= PoolCurator.EXPIRED_POOL_BLOCK_SIZE;
-        } while (loop);
+        }
+        while (loop);
 
         if (count > 0) {
             log.info("Cleaned up {} expired pools", count);
@@ -1627,7 +1631,6 @@ public class CandlepinPoolManager implements PoolManager {
             throw new EntitlementRefusedException(errorMap);
         }
 
-
         // Grab an exclusive lock on the consumer to prevent deadlock.
         this.consumerCurator.lock(consumer);
 
@@ -1784,7 +1787,7 @@ public class CandlepinPoolManager implements PoolManager {
         }
 
         Set<Pool> poolsToLock = new HashSet<>(poolsToDelete);
-        for (Entitlement ent: entsToRevoke) {
+        for (Entitlement ent : entsToRevoke) {
             poolsToLock.add(ent.getPool());
 
             // If we are deleting a developer entitlement, be sure to delete the
@@ -1830,7 +1833,7 @@ public class CandlepinPoolManager implements PoolManager {
             Consumer consumer = ent.getConsumer();
             ConsumerType ctype = this.consumerTypeCurator.getConsumerType(consumer);
 
-            if (ctype != null  && ctype.isManifest()) {
+            if (ctype != null && ctype.isManifest()) {
                 pool.setExported(pool.getExported() - entQuantity);
             }
 
@@ -2140,8 +2143,8 @@ public class CandlepinPoolManager implements PoolManager {
             Set<Entitlement> entitlements = new HashSet<>();
 
             if (!entitlementIds.isEmpty()) {
-                Iterable<List<String>> blocks =
-                    Iterables.partition(entitlementIds, this.entitlementCurator.getInBlockSize());
+                Iterable<List<String>> blocks = Iterables.partition(entitlementIds,
+                    this.entitlementCurator.getInBlockSize());
 
                 for (List<String> block : blocks) {
                     entitlements.addAll(this.entitlementCurator.listAllByIds(block).list());

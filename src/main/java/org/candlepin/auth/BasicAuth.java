@@ -20,6 +20,8 @@ import org.candlepin.exceptions.NotAuthorizedException;
 import org.candlepin.exceptions.ServiceUnavailableException;
 import org.candlepin.resteasy.filter.AuthUtil;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.user.UserServiceException;
+import org.candlepin.service.exception.user.UserServiceExceptionMapper;
 
 import org.apache.commons.codec.binary.Base64;
 import org.jboss.resteasy.spi.HttpRequest;
@@ -29,6 +31,8 @@ import org.xnap.commons.i18n.I18n;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+
+
 
 /**
  * BasicAuth
@@ -46,6 +50,7 @@ public class BasicAuth extends UserAuth {
 
     @Override
     public Principal getPrincipal(HttpRequest httpRequest) {
+        String username = "";
         try {
             String auth = AuthUtil.getHeader(httpRequest, "Authorization");
 
@@ -53,7 +58,7 @@ public class BasicAuth extends UserAuth {
                 String userpassEncoded = auth.substring(6);
                 String[] userpass = new String(Base64
                     .decodeBase64(userpassEncoded)).split(":", 2);
-                String username = userpass[0];
+                username = userpass[0];
                 String password = null;
                 if (userpass.length > 1) {
                     password = userpass[1];
@@ -74,6 +79,9 @@ public class BasicAuth extends UserAuth {
                 }
             }
         }
+        catch (UserServiceException e) {
+            UserServiceExceptionMapper.map(e, username, i18nProvider.get());
+        }
         catch (CandlepinException e) {
             if (log.isDebugEnabled()) {
                 log.debug("Error getting principal " + e);
@@ -88,5 +96,4 @@ public class BasicAuth extends UserAuth {
         }
         return null;
     }
-
 }

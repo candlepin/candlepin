@@ -17,6 +17,8 @@ package org.candlepin.auth;
 import org.candlepin.auth.permissions.PermissionFactory;
 import org.candlepin.exceptions.BadRequestException;
 import org.candlepin.service.UserServiceAdapter;
+import org.candlepin.service.exception.user.UserServiceException;
+import org.candlepin.service.exception.user.UserServiceExceptionMapper;
 import org.candlepin.service.model.UserInfo;
 
 import org.xnap.commons.i18n.I18n;
@@ -48,8 +50,13 @@ public abstract class UserAuth implements AuthProvider {
      * Creates a user principal for a given username
      */
     protected Principal createPrincipal(String username) {
-        UserInfo user = this.userServiceAdapter.findByLogin(username);
-
+        UserInfo user = null;
+        try {
+            user = this.userServiceAdapter.findByLogin(username);
+        }
+        catch (UserServiceException e) {
+            UserServiceExceptionMapper.map(e, username, i18nProvider.get());
+        }
         if (user == null) {
             throw new BadRequestException(this.i18nProvider.get().tr("User not found: {0}", username));
         }

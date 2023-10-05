@@ -14,17 +14,21 @@
  */
 package org.candlepin.controller;
 
+import org.candlepin.exceptions.CandlepinException;
 import org.candlepin.model.Owner;
 import org.candlepin.model.Pool;
 import org.candlepin.model.Product;
 import org.candlepin.service.ProductServiceAdapter;
 import org.candlepin.service.SubscriptionServiceAdapter;
+import org.candlepin.service.exception.product.ProductUnknownRetrievalException;
+import org.candlepin.service.exception.subscription.SubscriptionUnknownRetrievalException;
 import org.candlepin.service.model.OwnerInfo;
 import org.candlepin.service.model.SubscriptionInfo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -110,8 +114,15 @@ public class Refresher {
             // TODO: This adapter call is not implemented in prod, and cannot be. We plan
             // to fix this whole code path in near future by looking for pools using the
             // given products to be refreshed.
-            Collection<? extends SubscriptionInfo> subs = subAdapter
-                .getSubscriptionsByProductId(product.getId());
+            Collection<? extends SubscriptionInfo> subs = new ArrayList<>();
+            try {
+                subs = subAdapter.getSubscriptionsByProductId(product.getId());
+            }
+            catch (SubscriptionUnknownRetrievalException e) {
+                log.error("Unable to retrieve subscriptions by product id '{}'", product.getId());
+                throw new CandlepinException(null,
+                    String.format("Unable to retrieve subscriptions by product id '%s'", product.getId()));
+            }
 
             log.debug("Will refresh {} subscriptions in all orgs using product: {}",
                 subs.size(), product.getId());
@@ -165,9 +176,18 @@ public class Refresher {
         }
 
         for (Owner owner : this.owners.values()) {
-            poolManager.refreshPoolsWithRegeneration(this.subAdapter, this.prodAdapter, owner, this.lazy);
-            poolManager.recalculatePoolQuantitiesForOwner(owner);
-            ownerManager.updateRefreshDate(owner);
+            try {
+                poolManager.refreshPoolsWithRegeneration(this.subAdapter, this.prodAdapter, owner, this.lazy);
+                poolManager.recalculatePoolQuantitiesForOwner(owner);
+                ownerManager.updateRefreshDate(owner);
+            }
+            catch (SubscriptionUnknownRetrievalException e) {
+                throw new CandlepinException(null,
+                    String.format("Unexpected subscription error for organization '%s'", owner.getKey()));
+            }
+            catch (ProductUnknownRetrievalException e) {
+                throw new CandlepinException(null, "Unexpected product error in pool refresh");
+            }
         }
     }
 
